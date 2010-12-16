@@ -26,7 +26,16 @@ admin.autodiscover()
 urlpatterns = patterns('',
 
     (r'^admin/', include(admin.site.urls)),
-    
+
     # Example:
     # (r'^e_cidadania/', include('e_cidadania.foo.urls')),
 )
+
+# If DEBUG=True in settings.py add static content served by django.
+if settings.DEBUG:
+    urlpatterns += ('',
+    
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': 'static'}),
+    
+    )

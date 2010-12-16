@@ -4,7 +4,7 @@
     
     This file is part of the e-cidadania.
     
-    Distributed under terms of the GLPv3 license.
+    Distributed under terms of the GPLv3 license.
 */
 
 /* CSS RESET */
@@ -130,4 +130,5 @@ img {
     padding: 10px;
     font-size: 9px;
     color: #888;
+    padding: 0 0 0 50px;
 }
