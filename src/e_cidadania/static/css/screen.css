@@ -1,13 +1,12 @@
 /*
-    Copyright (c) Cidadanía Coop. <cidadania@cidadania.coop>
-    Author: Oscar Carballal Prego <info@oscarcp.com>
+    Copyright (c) 2010 Cidadanía Coop.
+    Written by: Oscar Carballal Prego <info@oscarcp.com>
     
-    This file is part of the e-cidadanía project.
+    This file is part of the e-cidadania.
     
     Distributed under terms of the GLPv3 license.
 */
 
-/* --------- */
 /* CSS RESET */
 
 html, body, div, span, applet, object, iframe,
@@ -27,41 +26,42 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 	vertical-align: baseline;
 	background: transparent;
 }
+
 body {
 	line-height: 1;
 }
+
 ol, ul {
 	list-style: none;
 }
+
 blockquote, q {
 	quotes: none;
 }
+
 blockquote:before, blockquote:after,
 q:before, q:after {
 	content: '';
 	content: none;
 }
 
-/* remember to define focus styles! */
 :focus {
 	outline: 0;
 }
 
-/* remember to highlight inserts somehow! */
 ins {
 	text-decoration: none;
 }
+
 del {
 	text-decoration: line-through;
 }
 
-/* tables still need 'cellspacing="0"' in the markup */
 table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
 
-/* -------------------- */
 /* HTML TAGS DEFINITION */
 
 body {
@@ -86,9 +86,48 @@ img {
 	border: none;
 }
 
-/* -------------- */
 /* COMMON CLASSES */
 
 .hidden {
 	display: none;
+}
+
+/* DIVS */
+
+#userbar {
+    float: right;
+    margin-right: 30px;
+    padding: 0 10px 0 10px;
+    line-height: 25px;
+    font-size: 11px;
+    color: #FFF;
+    background: url(../assets/userbar.png);
+    
+    /* Fancy round borders for Webkit, Gecko and standard
+       implementations */
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    -moz-border-radius-bottomleft: 7px;
+    -moz-border-raduis-bottomright: 7px;
+    -webkit-border-bottom-left-radius: 7px;
+    -webkit-border-bottom-right-radius: 7px;
+}
+
+#header {
+    clear: both;
+    margin: 15px, auto, 15px, auto;
+    width: 85%;
+    height: 75px;
+}
+
+#footer {
+    clear: both;
+    height: 100px;
+    width: 100%;
+    background: #000;
+    border-top: 1px solid #CCC;
+    line-height: 25px;
+    padding: 10px;
+    font-size: 9px;
+    color: #888;
 }
