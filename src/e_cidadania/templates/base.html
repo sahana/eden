@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
+	<head>
+		<title>{% block title %}Title{% endblock %}</title>
+		<link rel="stylesheet" type="text/css" media="screen" href="css/screen.css"/>
+		<link rel="shortcut icon" href="favicon.ico" type="image/ico"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="Description" content="Site description"/>
+		<meta name="Robots" content="all"/>
+		<!-- <script src="ruta/a/javascript" type="text/javascript"></script> -->
+	</head>
+	<body>
+	    <div id="userbar">
+	        {% if user.is_authenticated %}
+	            <a href="/accounts/messages">{% trans "Messages" %}</a> | 
+	            <a href="/accounts/logout">{% trans "Logout" %}</a> | 
+	            <a href="/accounts/profile">
+	                {% if user.first_name %}
+	                    {{ user.first_name }} {{ user.last_name }}
+	                {% else %}
+	                    {{ user.username }}
+	                {% endif %}
+	            </a> | 
+	            <a href="/none">{% trans "Language" %}</a>
+	        {% else %}
+	            <a href="/accounts/register">{% trans "Register" %}</a> | 
+	            <a href="/accounts/login">{% trans "Login" %}</a> | 
+	            <a href="/none">{% trans "Language" %}</a>
+	        {% endif %}
+	    </div>
+	    <div id="footer">
+	        blah blah | bleh | puff
+	    </div>
+	</body>
+</html>

@@ -1,0 +1,94 @@
+/*
+    Copyright (c) Cidadanía Coop. <cidadania@cidadania.coop>
+    Author: Oscar Carballal Prego <info@oscarcp.com>
+    
+    This file is part of the e-cidadanía project.
+    
+    Distributed under terms of the GLPv3 license.
+*/
+
+/* --------- */
+/* CSS RESET */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	background: transparent;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+
+/* remember to define focus styles! */
+:focus {
+	outline: 0;
+}
+
+/* remember to highlight inserts somehow! */
+ins {
+	text-decoration: none;
+}
+del {
+	text-decoration: line-through;
+}
+
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* -------------------- */
+/* HTML TAGS DEFINITION */
+
+body {
+	background: #FFF;
+	padding: 0;
+	margin: 0;
+	font-family: Verdana;
+	font-size: 12px;
+	color: #000;
+	cursor: default;
+}
+
+a {
+	text-decoration: none;
+}
+
+p {
+	text-indent: 10px;
+}
+
+img {
+	border: none;
+}
+
+/* -------------- */
+/* COMMON CLASSES */
+
+.hidden {
+	display: none;
+}
