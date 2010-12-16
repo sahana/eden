@@ -19,5 +19,40 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.db import models
+from django.contrib.auth.models import User
 
-# Create your models here.
+class Debate(models.Model):
+
+    """
+    Very basic outline of a debate, or group of sections.
+    """
+    name = models.CharField('Nombre: ', max_length=200)
+    pub_date = models.DateTimeField(auto_now_add=True)
+    
+    def __unicode__(self):
+        return self.name
+    
+class Section(models.Model):
+
+    """
+    basic outline of sections, or gropus of messages.
+    """
+    name = models.CharField('Nombre: ', max_length=200)
+    debate = models.ForeignKey(Debate)
+    
+    def __unicode__(self):
+        return self.debate.name + ' / ' + self.name
+
+class Message(models.Model):
+
+    """
+    The important unit, the message.
+    """
+    name = models.CharField('Nombre: ', max_length=200)
+    description = models.TextField()
+    section = models.ForeignKey(Section)
+    pub_date = models.DateTimeField(auto_now_add=True)
+    pub_author = models.ForeignKey(User)
+    
+    def __unicode__(self):
+        return self.name
