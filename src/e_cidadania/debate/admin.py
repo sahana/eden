@@ -19,6 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.contrib import admin
+
 from e_cidadania.debate.models import Debate, Section, Message
 
 class SectionInline(admin.StackedInline):
