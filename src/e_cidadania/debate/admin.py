@@ -17,3 +17,24 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+from django.contrib import admin
+from e_cidadania.debate.models import Debate, Section, Message
+
+class SectionInline(admin.StackedInline):
+    model = Section
+    extra = 2
+
+class DebateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'pub_date')
+    inlines = [SectionInline]
+    
+class SectionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'debate')
+    
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'pub_date', 'pub_author')
+
+admin.site.register(Debate, DebateAdmin)
+admin.site.register(Section, SectionAdmin)
+admin.site.register(Message, MessageAdmin)
