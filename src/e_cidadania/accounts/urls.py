@@ -19,14 +19,16 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from django.contrib.auth.views import *
+#from django.contrib.auth.views import *
 
-urlpatterns = patterns('accounts.views',
+urlpatterns = patterns('',
 
-    (r'^login/', 'django.contrib.auth.views.login'),
+    (r'login/$', 'django.contrib.auth.views.login',
+                 {'template_name': 'accounts/login.html'}),
 
-    (r'^logout/', 'django.contrib.auth.views.logout'),
+    (r'logout/$', 'django.contrib.auth.views.logout',
+                  {'template_name': 'accounts/logout.html'}),
 
-    (r'^profile/', 'view_profile'),
+    (r'profile/', 'accounts.views.view_profile'),
 
 )

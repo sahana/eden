@@ -1,8 +1,9 @@
+{% load i18n %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
 	<head>
 		<title>{% block title %}Title{% endblock %}</title>
-		<link rel="stylesheet" type="text/css" media="screen" href="css/screen.css"/>
+		<link rel="stylesheet" type="text/css" media="screen" href="/static/css/screen.css"/>
 		<link rel="shortcut icon" href="favicon.ico" type="image/ico"/>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 		<meta name="Description" content="Site description"/>
@@ -29,6 +30,10 @@
 	        {% endif %}
 	    </div>
 	    {% block header %}
+	        <div id="logo">
+	        </div>
+	        <div id="banner">
+	        </div>
 	    {% endblock %}
 	    
 	    {% block rightcol %}
@@ -40,7 +45,8 @@
 	    {% block center %}
 	    {% endblock %}
 	    <div id="footer">
-	        blah blah | bleh | puff
+	        <p>e-cidadania é una ferramenta online de software libre creada pola cooperativa Cidadanía para o emprego libre de quen queira.<p>
+	        <p>Código: Oscar Carballal Prego<p>
 	    </div>
 	</body>
 </html>

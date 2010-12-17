@@ -18,11 +18,16 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.views.generic.list_detail import object_list
-from django.views.generic.list_detail import object_detail
-from django.views.generic.create_update import create_object
-from django.views.generic.create_update import update_object
-from django.views.generic.create_update import delete_object
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+from django.contrib.auth.models import User
+#from django.views.generic.list_detail import object_list
+#from django.views.generic.list_detail import object_detail
+#from django.views.generic.create_update import create_object
+#from django.views.generic.create_update import update_object
+#from django.views.generic.create_update import delete_object
 
 from e_cidadania.accounts.models import UserProfile, Phone
 
@@ -32,7 +37,20 @@ def view_profile(request):
 
     """
     Return the profile of the current logged user.
+    
+    userdata: This variable gets the django basic user profile from
+              the current logged in user.
+    userprofile: Gets all the variables stored by the model UserProfile
+                 using the method get_profile() since it's bound to the
+                 user profile in the settings file.
+    
+    Template tags
+    -------------
+    user: returns any of the data stored by the django user profile.
+    profile: returns any of the data stored by the UserProfile model.
     """
-    return object_detail(request,
-                         queryset = UserProfile.objects.all(),
-                         object_id = userprofile)
+    userdata = get_object_or_404(User, pk=request.user.id)
+    userprofile = User.get_profile(userdata)
+
+    return render_to_response('accounts/profile.html',
+                             {'user': userdata, 'profile': userprofile})

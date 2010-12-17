@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-12-17 15:43+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: accounts/models.py:27
+msgid "Mobile"
+msgstr ""
+
+#: accounts/models.py:28
+msgid "Fixed"
+msgstr ""
+
+#: accounts/models.py:42
+msgid "Province"
+msgstr ""
+
+#: accounts/models.py:43
+msgid "Municipality"
+msgstr ""
+
+#: accounts/models.py:46
+msgid "Address"
+msgstr ""
+
+#: accounts/models.py:47
+msgid "Number"
+msgstr ""
+
+#: accounts/models.py:49
+msgid "Floor"
+msgstr ""
+
+#: accounts/models.py:50
+msgid "Letter"
+msgstr ""
+
+#: accounts/models.py:53
+msgid "Identification document"
+msgstr ""
+
+#: accounts/models.py:56
+msgid "Do you want to participate?"
+msgstr ""
+
+#: accounts/models.py:58
+msgid "Website"
+msgstr ""
+
+#: accounts/models.py:60
+msgid "The URL will be checked"
+msgstr ""
+
+#: accounts/models.py:75
+msgid "Type"
+msgstr ""
+
+#: accounts/models.py:77
+msgid "Phone number"
+msgstr ""
+
+#: accounts/models.py:78
+msgid "9 digits maximum"
+msgstr ""
+
+#: templates/base.html:16
+msgid "Messages"
+msgstr ""
+
+#: templates/base.html:17
+msgid "Logout"
+msgstr ""
+
+#: templates/base.html:25 templates/base.html.py:29
+msgid "Language"
+msgstr ""
+
+#: templates/base.html:27
+msgid "Register"
+msgstr ""
+
+#: templates/base.html:28
+msgid "Login"
+msgstr ""
+
+#: templates/accounts/profile.html:5
+msgid "User"
+msgstr ""

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% trans "User" %}
+    {{ user.first_name }}
+{% endblock %}
+
+{% comment %}
+Remember that this is just a test, it needs to be more polished before going into alpha
+{% endcomment %}
+
+{% block center %}
+<p>Esto es una prueba!</p>
+<p>Nombre usuario: {{ user.username }}</p>
+<p>Nombre real: {{ user.first_name }} {{ user.last_name }}</p>
+<p>Email: {{ user.email }}</p>
+
+<p>Provincia: {{ profile.province }}</p>
+<p>Ciudad: {{ profile.municipality }}</p>
+<p>Dirección: {{ profile.address }} {{ profile.address_number }} {{ profile.address_floor }} {{ profile.address_letter }}</p>
+
+<p>Nombre usuario: {{ profile.nid }}</p>
+<p>Nombre real: {{ profile.website }}</p>
+{% endblock %}

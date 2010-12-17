@@ -19,6 +19,7 @@
 # along with Foobar. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
+from django.conf import settings
 from django.contrib import admin
 
 admin.autodiscover()
@@ -30,14 +31,17 @@ urlpatterns = patterns('',
 
     # User accounts
     (r'^accounts/', include('accounts.urls')),
+    
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': 'static'}),
 
 )
 
 # If DEBUG=True in settings.py add static content served by django.
-if settings.DEBUG:
-    urlpatterns += ('',
-    
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'static'}),
-    
-    )
+#if settings.DEBUG:
+#    urlpatterns += ('',
+#    
+#    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+#        {'document_root': 'static'}),
+#    
+#    )
