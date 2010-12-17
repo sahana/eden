@@ -4,13 +4,14 @@
 	<head>
 		<title>{% block title %}Title{% endblock %}</title>
 		<link rel="stylesheet" type="text/css" media="screen" href="/static/css/screen.css"/>
-		<link rel="shortcut icon" href="favicon.ico" type="image/ico"/>
+		<link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/ico"/>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 		<meta name="Description" content="Site description"/>
 		<meta name="Robots" content="all"/>
 		<!-- <script src="ruta/a/javascript" type="text/javascript"></script> -->
 	</head>
 	<body>
+	    <div id="topbar">
 	    <div id="userbar">
 	        {% if user.is_authenticated %}
 	            <a href="/accounts/messages">{% trans "Messages" %}</a> | 
@@ -28,6 +29,7 @@
 	            <a href="/accounts/login">{% trans "Login" %}</a> | 
 	            <a href="/none">{% trans "Language" %}</a>
 	        {% endif %}
+	    </div>
 	    </div>
 	    {% block header %}
 	        <div id="logo">

@@ -94,6 +94,11 @@ img {
 
 /* DIVS */
 
+#topbar {
+    width: 100%;
+    height: 35px;
+}
+
 #userbar {
     float: right;
     margin-right: 30px;
