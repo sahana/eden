@@ -3,6 +3,9 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# Extending the user profile a bit more
+AUTH_PROFILE_MODULE = "accounts.UserProfile"
+
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
@@ -20,19 +23,8 @@ DATABASES = {
     }
 }
 
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# On Unix systems, a value of None will cause Django to use the same
-# timezone as the operating system.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
 TIME_ZONE = 'Europe/Madrid'
-
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'es-ES'
-
 SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not
@@ -93,5 +85,3 @@ INSTALLED_APPS = (
     'e_cidadania.accounts',
     'e_cidadania.debate',
 )
-
-AUTH_PROFILE_MODULE = "accounts.UserProfile"

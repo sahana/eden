@@ -17,3 +17,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+from django.conf.urls.defaults import *
+from django.contrib.auth.views import *
+
+urlpatterns = patterns('accounts.views',
+
+    (r'^login/', 'django.contrib.auth.views.login'),
+
+    (r'^logout/', 'django.contrib.auth.views.logout'),
+
+    (r'^profile/', 'view_profile'),
+
+)

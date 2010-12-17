@@ -25,10 +25,12 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
 
+    # Django administration
     (r'^admin/', include(admin.site.urls)),
 
-    # Example:
-    # (r'^e_cidadania/', include('e_cidadania.foo.urls')),
+    # User accounts
+    (r'^accounts/', include('accounts.urls')),
+
 )
 
 # If DEBUG=True in settings.py add static content served by django.
