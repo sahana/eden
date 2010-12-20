@@ -1,0 +1,62 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Crop &amp; resize the area you want" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.imgareaselect-0.4.2.min.js"></script>
+<script type="text/javascript">
+	$(function() {
+		function updateValues(img, selection) {
+			$("input[name='left']").val(selection.x1);
+			$("input[name='top']").val(selection.y1);
+			$("input[name='right']").val(selection.x2);
+			$("input[name='bottom']").val(selection.y2);
+		}
+		$(window).load(function() {
+			$("#cropimage").imgAreaSelect({ aspectRatio: "1:1", onSelectEnd: updateValues });
+		});
+	});
+</script>
+{% endblock %}
+
+{% block nav-main %}
+{% include "userprofile/menu.html" %}
+{% endblock %}
+
+{% block content %}
+	<form action="{{ request.path_info }}" method="post" accept-charset="utf-8">
+	<fieldset>
+		<legend>{% trans "Crop &amp; resize the area you want" %}</legend>
+
+		{% if form.errors %}
+			{% for error,desc in form.errors.items %}
+				<p class="error">{{desc|join:"; "}}</p>
+			{% endfor %}
+		{% endif %}
+
+		<div style="text-align: center;">
+			<img src="{{ avatar.image.url }}" id="cropimage" />
+		</div>
+		<input type="hidden" name="top" value="0"/>
+		<input type="hidden" name="bottom" value="0"/>
+		<input type="hidden" name="left" value="0"/>
+		<input type="hidden" name="right" value="0"/>
+	</fieldset>
+	<input type="submit" class="done" value="{% trans 'Done' %}" />
+	</form>
+{% endblock %}
+
+{% block content-related %}
+  <div class="box">
+    <h3>{% trans "Avatar selection page" %}</h3>
+    <p>{% trans "You have several options to select the image you want as avatar on your profile" %}.</p>
+  </div>
+
+  {% load avatars %}
+  <div class="center">
+    <img class="border" id="avatarimg" src="{% avatar 96 %}" />
+  </div>
+
+{% endblock %}

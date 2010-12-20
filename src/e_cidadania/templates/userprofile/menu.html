@@ -1,0 +1,13 @@
+{% load i18n %}
+{% if user.is_authenticated %}
+<div id="nav" class="span-24 last">
+	<ul class="hmenu">
+		<li{% ifequal section "overview" %} class="active"{% endifequal %}><a href="{% url profile_overview %}">{% trans "Overview" %}</a></li>
+		<li{% ifequal section "personal" %} class="active"{% endifequal %}><a href="{% url profile_edit_personal %}">{% trans "Personal information" %}</a></li>
+		<li{% ifequal section "avatar" %} class="active"{% endifequal %}><a href="{% url profile_edit_avatar %}">{% trans "Avatar" %}</a></li>
+		<li{% ifequal section "location" %} class="active"{% endifequal %}><a href="{% url profile_edit_location %}">{% trans "Location" %}</a></li>
+		<li{% ifequal section "delete" %} class="active"{% endifequal %}><a href="{% url profile_delete %}">{% trans "Remove profile" %}</a></li>
+	</ul>
+	<hr class="space" />
+</div>
+{% endif %}

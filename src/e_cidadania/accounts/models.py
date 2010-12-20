@@ -18,25 +18,42 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+
+from userprofile.models import BaseProfile
 
 PHONE_TYPE = (
 
-    ('M', _('Mobile')),
-    ('F', _('Fixed')),
+    ('MO', _('Mobile')),
+    ('FI', _('Fixed')),
 
 )
 
+GENDER = (
 
-class UserProfile(models.Model):
+    ('M', _('Male')),
+    ('F', _('Female')),
+
+)
+
+class UserProfile(BaseProfile):
 
 
     """
     Extends the default User profiles of Django.
     """
-    user = models.ForeignKey(User, unique=True)
+    #user = models.ForeignKey(User, unique=True)
+    
+    firstname = models.CharField(max_length=50, blank=True)
+    surname = models.CharField(max_length=200, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER, blank=True)
+    
+    birthdate = models.DateField(default=datetime.date.today(), blank=True)
     
     # Maybe one day this will be replaced by a list of choices.
     province = models.CharField(_('Province'), max_length=50)
@@ -52,8 +69,6 @@ class UserProfile(models.Model):
     
     nid = models.CharField(_('Identification document'), max_length=200,
                            null=True, blank=True)
-    
-    participate_forum = models.BooleanField(_('Do you want to participate?'))
     
     website = models.URLField(_('Website'), verify_exists=True, max_length=200,
                               null=True, blank=True,

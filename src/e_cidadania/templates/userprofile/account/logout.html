@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Logged out" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block content %}
+<div class="notice">
+	<h3>{% trans "Logged out" %}</h3>
+	<p class="large">{% trans "You've been logged out" %}. (<a href="{% url profile_overview %}">{% trans 'Log in again' %}</a>)</p>
+</div>
+{% endblock %}

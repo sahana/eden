@@ -1,0 +1,22 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Profile removed" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block nav-main %}
+{% include "userprofile/menu.html" %}
+{% endblock %}
+
+{% block content %}
+	<p class="success">
+		{% trans "Your profile information has been removed successfully" %}.
+	</p>
+{% endblock %}
+{% block content-related %}
+  <div class="box">
+    <h3>{% trans "Delete your personal information" %}</h3>
+    <p>{% trans "Deleting all your personal information will erase all your private data, except your username. You can refill the information later if you want to" %}.</p>
+  </div>
+{% endblock %}
+

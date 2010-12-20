@@ -29,6 +29,7 @@ urlpatterns = patterns('',
     (r'logout/$', 'django.contrib.auth.views.logout',
                   {'template_name': 'accounts/logout.html'}),
 
-    (r'profile/', 'accounts.views.view_profile'),
+    (r'^profile/', include('userprofile.urls'))
+    #(r'profile/', 'accounts.views.view_profile'),
 
 )

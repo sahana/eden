@@ -1,0 +1,57 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "User registration" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+	$(function() {
+		$("input#id_username").focus();
+		$("input[type='text'], input[type='password']").addClass("text");
+	});
+</script>
+{% endblock %}
+
+{% block content %}
+	<form action="" method="post" accept-charset="utf-8">
+	<fieldset>
+		<legend>{% trans "User registration" %}</legend>
+		<label for="id_username">{% trans "Username" %}</label>
+		<p>{{ form.username }}
+			{% if form.username.errors %}
+				<span class="quiet red"><br />* {{ form.username.errors|join:"; " }}</span>
+			{% endif %}
+		</p>
+		<label for="id_email">{% trans "E-mail (optional)" %}</label>
+		<p>{{ form.email }}
+			{% if form.email.errors %}
+				<span class="quiet red"><br />* {{ form.email.errors|join:"; " }}</span>
+			{% endif %}
+		</p>
+		<label for="id_password1">{% trans "Password" %}</label>
+		<p>{{ form.password1 }}
+			{% if form.password1.errors %}
+				<span class="quiet red"><br />* {{ form.password1.errors|join:"; " }}</span>
+			{% endif %}
+		</p>
+		<label for="id_password2">{% trans "Password (again)" %}</label>
+		<p>{{ form.password2 }}
+			{% if form.password2.errors %}
+				<span class="quiet red"><br />* {{ form.password2.errors|join:"; " }}</span>
+			{% endif %}
+		</p>
+		{% if form.non_field_errors %}
+			<ul class="quiet red">{{ form.non_field_errors.as_ul }}</ul>
+		{% endif %}
+	</fieldset>
+	<p><input type="submit" value="{% trans 'Register' %}" /></p>
+	</form>
+{% endblock %}
+
+{% block content-related %}
+	<div class="box">
+		<h3>{% trans "Register a new account" %}</h3>
+		<p>{% trans "Joining this community is quick and easy. You only need to fill the form to get access to all the private content" %}.</p>
+	</div>
+{% endblock %}

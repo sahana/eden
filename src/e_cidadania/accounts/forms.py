@@ -17,3 +17,31 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+from django import forms
+from django.utils.translation import ugettext_lazy as _
+
+from registration.forms import RegistrationForm
+from registration.models import RegistrationProfile
+
+from accounts.models import UserProfile
+
+attrs_dict = { 'class': 'required' }
+reg_obj = RegistrationProfile.objects
+
+class RegistrationFormCidadania(RegistrationForm):
+    
+    """
+    """
+    class Meta:
+        model = UserProfile
+    
+    def save(self, profile_callback=None):
+        new_user = reg_obj.create_inactive_user(username=self.cleaned_data['username'],
+        password = self.cleaned_data['password1'],
+        email=self.cleaned_data['email'])
+        
+        new_profile = ZProfile(user=new_user,
+                               favorite_band=self.cleaned_data['band'])
+        new_profile.save()
+        return new_user

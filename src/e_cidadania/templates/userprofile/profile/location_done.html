@@ -1,0 +1,22 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans %}{{ user }}'s Dashboard{% endblocktrans %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block nav-main %}
+{% include "userprofile/menu.html" %}
+{% endblock %}
+
+{% block content %}
+	<p class="success large">
+		{% trans "Your profile information has been updated successfully" %}.
+	</p>
+{% endblock %}
+
+{% block content-related %}
+<div class="box">
+  <h3>{% trans "Location information" %}</h3>
+    <p>{% trans "Define your location information" %}.</p>
+</div>
+{% endblock %}

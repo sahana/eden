@@ -1,0 +1,26 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Delete personal information" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block nav-main %}
+{% include "userprofile/menu.html" %}
+{% endblock %}
+
+{% block content %}
+	<form action="" method="post" enctype="multipart/form-data">
+		<fieldset>
+			<legend>{% trans "Delete your personal information" %}</legend>
+			<p><label for="remove">{% trans "Are you sure?" %}</label> <input id="remove" type="submit" value="{% trans "Yes" %}" /></p>
+		</fieldset>
+	</form>
+{% endblock %}
+
+{% block content-related %}
+	<div class="box">
+		<h3>{% trans "Remove profile" %}</h3>
+		<p>{% trans "It erases all your private data except your username. You can refill the information later if you want to" %}.</p>
+	</div>
+{% endblock %}
+

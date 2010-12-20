@@ -1,0 +1,19 @@
+{% load i18n %}
+
+{% trans "Please do not replay to this email. This message was sent by the user registration system at" %} {{ site.name }}
+
+{% blocktrans %}
+
+This email was sent to you because someone registered with this email
+address. You can activate your account clicking here:
+
+{% endblocktrans %}
+
+http://{{ site.domain }}{% url registration_activate activation_key %}
+
+{% blocktrans %}
+
+Link is valid for {{ expiration_days }} days. If you think that this email
+shouldn't be sent to you, please don't click in the link, and report it to the site administrators.
+
+{% endblocktrans %}

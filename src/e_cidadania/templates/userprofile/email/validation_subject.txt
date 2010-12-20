@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans %}Email validation for {{ site_name }}{% endblocktrans %}.

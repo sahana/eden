@@ -1,0 +1,28 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Avatar selection finished" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block nav-main %}
+{% include "userprofile/menu.html" %}
+{% endblock %}
+
+{% block content %}
+	<p class="success large">
+		{% trans "Your new avatar has been saved successfully" %}.
+	</p>
+{% endblock %}
+
+{% block content-related %}
+  <div class="box">
+    <h3>{% trans "Avatar selection page" %}</h3>
+    <p>{% trans "You have several options to select the image you want as avatar on your profile" %}.</p>
+  </div>
+
+  {% load avatars %}
+  <div class="center">
+    <img class="border" id="avatarimg" src="{% avatar 96 %}" />
+  </div>
+
+{% endblock %}

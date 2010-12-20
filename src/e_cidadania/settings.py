@@ -1,10 +1,22 @@
 # Django settings for e_cidadania project.
 
+# Get the current directory
+import os
+cwd = os.path.dirname(os.path.realpath(__file__))
+
+# Django settings
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 # Extending the user profile a bit more
 AUTH_PROFILE_MODULE = "accounts.UserProfile"
+ACCOUNT_ACTIVATION_DAYS = 2
+LOGIN_REDIRECT_URL = '/accounts/profile'
+
+# Registration mail settings
+EMAIL_HOST = 'localhost'
+DEFAULT_FROM_EMAIL = 'accounts@cidadania.coop'
+
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -37,7 +49,7 @@ USE_L10N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/home/oscar.carballal/devel/e_cidadania/src/e_cidadania/static/'
+MEDIA_ROOT = cwd + '/static/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -70,7 +82,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'e_cidadania.urls'
 
 TEMPLATE_DIRS = (
-    '/home/oscar.carballal/devel/e_cidadania/src/e_cidadania/templates'
+    cwd + '/templates'
 )
 
 INSTALLED_APPS = (
@@ -80,9 +92,9 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.admin',
-    'django.contrib.admindocs',
     'registration',
     
-    #'e_cidadania.accounts',
+    'e_cidadania.userprofile',
+    'e_cidadania.accounts',
     'e_cidadania.debate',
 )

@@ -1,0 +1,59 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Search for an image on Picasa Web" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+	$(function() {
+		$("input[type='text']").focus();
+		$("input[type='text']").addClass("text");
+		$("div.photos a").click(function() {
+			$("form#avatar input[name='url']").val($(this).attr("href"));
+			$("form#avatar").submit();
+			return false;
+		});
+	});
+</script>
+{% endblock %}
+
+{% block nav-main %}
+{% include "userprofile/menu.html" %}
+{% endblock %}
+
+{% block content %}
+	<form action="" method="post" accept-charset="utf-8">
+	<fieldset>
+		<legend>{% trans "Search for an image on Picasa Web" %}</legend>
+		<label for="id_search">{% trans "Search on Picasa Web" %}</label>
+		<p>
+			<input type="text" name="keyword" value="{{ keyword }}" />
+			<input type="submit" value="{% trans "Search" %}"/>
+		</p>
+
+		<div class="photos">
+			{% for thumb,url in images.items %}
+			<a href="{{ url }}"><img src="{{ thumb }}" /></a>
+			{% endfor %}
+		</div>
+	</fieldset>
+	</form>
+
+	<form class="hide" id="avatar" action="{% url profile_edit_avatar %}" method="post" accept-charset="utf-8">
+		<input type="hidden" name="url" value="" />
+	</form>
+{% endblock %}
+
+{% block content-related %}
+  <div class="box">
+    <h3>{% trans "Avatar selection page" %}</h3>
+    <p>{% trans "You have several options to select the image you want as avatar on your profile" %}.</p>
+  </div>
+
+  {% load avatars %}
+  <div class="center">
+    <img class="border" id="avatarimg" src="{% avatar 96 %}" />
+  </div>
+
+{% endblock %}

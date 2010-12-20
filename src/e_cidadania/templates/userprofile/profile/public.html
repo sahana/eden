@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load avatars %}
+
+{% block title %}{{ profile.user }}'s public profile{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block extrajs %}
+	{% if profile.latitude and profile.longitude %}
+	<script type="text/javascript" src="http://www.google.com/jsapi?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+	<script type="text/javascript">google.load("maps", "2");</script>
+	<script type="text/javascript">
+		$(function() {
+		if (google.maps.BrowserIsCompatible()) {
+			var map = new google.maps.Map2(document.getElementById("map"));
+      map.disableDragging();
+			map.setCenter(new google.maps.LatLng({{ profile.latitude }}, {{ profile.longitude }}), 4);
+			var marker = new google.maps.Marker(new google.maps.LatLng({{ profile.latitude }}, {{ profile.longitude }}), {clickable: false });
+			map.addOverlay(marker);
+		}
+		});
+	</script>
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+	<h2>{% blocktrans with profile.user as user %}Public profile of {{ user }}{% endblocktrans %}</h2>
+
+	<div class="vcard">
+		<div class="span-10">
+			<img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
+			<ul>
+				<li>{% trans "Username" %}: <strong>{{ profile.user }}</strong></li>
+				{% if profile.country %}
+				<li>{% trans "Country" %}: <strong>{{ profile.get_country_display }}</strong></li>
+				{% endif %}
+				{% if profile.location %}
+				<li>{% trans "Location" %}: <strong>{{ profile.location }}</strong></li>
+				{% endif %}
+			</ul>
+		</div>
+		{% if profile.latitude and profile.longitude %}
+		<div class="span-10">
+			<div id="map"></div>
+		</div>
+		{% endif %}
+	</div>
+{% endblock %}

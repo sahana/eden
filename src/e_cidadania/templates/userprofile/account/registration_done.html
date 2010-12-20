@@ -1,0 +1,17 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Registration complete" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block content %}
+	<div class="success">
+		<p>{% trans "You have successfully registered a new account. Go to the" %} <a href="{% url profile_overview %}">{% trans "login page" %}</a> {% trans "to authenticate and start using this site" %}.</p>
+	</div>
+{% endblock %}
+{% block content-related %}
+  <div class="box">
+    <h3>{% trans "Register a new account" %}</h3>
+    <p>{% trans "Joining this community is quick and easy. You only need to fill the form to get access to all the private content" %}.</p>
+  </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% load i18n %}
+{% blocktrans %}You're receiving this e-mail because you requested an e-mail validation at {{ site_name }}{% endblocktrans %}.
+
+{% trans "Following this link, you will validate your e-mail address:" %}
+
+http://{{ domain }}{% url email_validation_process key %}
+
+{% trans "Your username, in case you've forgotten:" %} {{ user.username }}
+
+{% trans "Thanks for using our site!" %}
+
+{% blocktrans %}The {{ site_name }} team{% endblocktrans %} - http://{{ domain }}

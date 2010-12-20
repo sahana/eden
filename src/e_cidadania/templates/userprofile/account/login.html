@@ -1,0 +1,49 @@
+{% extends "base_2col.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "User login" %}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+	$(function() {
+		$("input[type='text'], input[type='password']").addClass("text");
+		$("#id_username").focus();
+	});
+</script>
+{% endblock %}
+
+{% block content %}
+	<form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8">
+	<fieldset>
+		<legend>{% trans "User login" %}</legend>
+		<label for="id_username">{% trans "Username" %}</label>
+		<p>{{ form.username }}
+			{% if form.username.errors %}
+				<span class="quiet red">{{ form.username.html_error_list }}</span>
+			{% endif %}
+		</p>
+		<label for="id_password">{% trans "Password" %}</label>
+		<p>{{ form.password }}
+			{% if form.password.errors %}
+				<span class="quiet red">{{ form.password.html_error_list }}</span>
+			{% endif %}
+		</p>
+		{% if form.non_field_errors %}
+			<ul class="quiet red">{{ form.non_field_errors.as_ul }}</ul>
+		{% endif %}
+	</fieldset>
+	<p><input type="submit" value="{% trans 'Login' %}" /></p>
+	</form>
+{% endblock %}
+
+{% block content-related %}
+	<div class="box">
+		<h3>{% trans "Utilities" %}:</h3>
+    {# http://code.djangoproject.com/ticket/7239 #}
+		<a href="{% url password_reset %}">{% trans "Lost your password?" %}</a>
+		<br />
+		<a href="{% url signup %}">{% trans "Sign up!" %}</a>
+		<br />
+	</div>
+{% endblock %}

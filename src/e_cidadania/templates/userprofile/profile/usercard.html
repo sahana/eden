@@ -1,0 +1,15 @@
+{% load i18n %}
+{% load avatars %}
+<div class="vcard span-6">
+	<div class="span-2">
+		<a href="{{ profile.get_absolute_url }}">
+			<img class="border" src="{% avatar 64 profile.user %}" alt="{{ profile.user }}"/>
+		</a>
+	</div>
+	<div class="span-5">
+		<ul>
+		<li class="fn username"><strong>{% trans "Username" %}:</strong> {{ profile.user }}</li>
+		<li><a href="{{ profile.get_absolute_url }}">{% trans "Public profile information" %}</a></li>
+		</ul>
+	</div>
+</div>
