@@ -14,10 +14,10 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ecidadania',
-        'USER': 'root',
-        'PASSWORD': 'cidadania400',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db/sqlite.db',
+        'USER': '',
+        'PASSWORD': '',
         'HOST': '',
         'PORT': '',
     }
@@ -81,7 +81,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admin',
     'django.contrib.admindocs',
+    'registration',
     
-    'e_cidadania.accounts',
+    #'e_cidadania.accounts',
     'e_cidadania.debate',
 )
