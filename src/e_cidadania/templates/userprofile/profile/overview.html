@@ -15,14 +15,20 @@
         	<p><a href="{{ request.path_info }}edit/avatar/">{% if user.get_profile.has_avatar %}{% trans "Change avatar" %}{% else %}{% trans "Add avatar" %}{% endif %}</a></p>
 	    </div>
 	    
-	   	<div class="span-9 last">
-			<p><label for="id_user">{% trans "Username:" %}</label> {{ user }}</p>
-			<p><label for="id_email">{% trans "E-mail:" %}</label>
+	   	<div>
+			<p>{% trans "Username: " %} {{ user }}</p>
+			<p>{% trans "Real name: " %} {{ user.first_name }} {{ user.last_name }}</p>
+			<p>{% trans "Member for: " %} {{ user.date_joined }}</p>
+			<p>{% trans "E-mail:" %}
 				<span class="{% if not email or not validated %}quiet red{% endif %}">
-				{%if not email %}{% trans "Not set yet" %}
-				{% else %}{{ email }}
-				{% if not validated %}{% trans " (Not validated)" %}
-				{% endif %}{% endif %}
+				{%if not email %}
+				    {% trans "Not set yet" %}
+				{% else %}
+				    {{ email }}
+				    {% if not validated %}
+				        {% trans " (Not validated)" %}
+				    {% endif %}
+				{% endif %}
 				</span>
 			</p>
 			<p>
@@ -33,15 +39,20 @@
 				<span class="quiet red">{% trans "Not set" %}</span>
 			{% endif %}
 			</p>
-			{% if GOOGLE_MAPS_API_KEY %}
+			
 			<p>
-			<label for="location">{% trans "Location" %}:</label>
-			{% if user.get_profile.location %}
-				{{ user.get_profile.location }}
-			{% else %}
-				<span class="quiet red">{% trans "Not set" %}</span>
-			{% endif %}
+			    {% trans "Ciudad: " %} {{ user.get_profile.province }}
 			</p>
+			
+			{% if GOOGLE_MAPS_API_KEY %}
+			    <p>
+			        <label for="location">{% trans "Location" %}:</label>
+			        {% if user.get_profile.location %}
+				        {{ user.get_profile.location }}
+			        {% else %}
+				        <span class="quiet red">{% trans "Not set" %}</span>
+			        {% endif %}
+			    </p>
 			{% endif %}
 			{% if user.get_profile.location %}
 		        <div class="span-12 last">

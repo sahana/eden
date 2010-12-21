@@ -49,11 +49,13 @@ class UserProfile(BaseProfile):
     """
     #user = models.ForeignKey(User, unique=True)
     
-    firstname = models.CharField(max_length=50, blank=True)
-    surname = models.CharField(max_length=200, blank=True)
-    gender = models.CharField(max_length=1, choices=GENDER, blank=True)
+    firstname = models.CharField(_('Name'), max_length=50, blank=True)
+    surname = models.CharField(_('Surname'), max_length=200, blank=True)
+    gender = models.CharField(_('Gender'), max_length=1, choices=GENDER,
+                              blank=True)
     
-    birthdate = models.DateField(default=datetime.date.today(), blank=True)
+    birthdate = models.DateField(_('Birth date'), default=datetime.date.today(),
+                                 blank=True)
     
     # Maybe one day this will be replaced by a list of choices.
     province = models.CharField(_('Province'), max_length=50)
@@ -67,6 +69,11 @@ class UserProfile(BaseProfile):
     address_letter = models.CharField(_('Letter'), max_length=2, null=True,
                                       blank=True)
     
+    phone_type = models.CharField(_('Type'), choices=PHONE_TYPE,
+                                  max_length=9)
+    phone = models.CharField(_('Phone number'), max_length=9, null=True,
+                             blank=True, help_text=_('9 digits maximum'))
+
     nid = models.CharField(_('Identification document'), max_length=200,
                            null=True, blank=True)
     
@@ -78,16 +85,3 @@ class UserProfile(BaseProfile):
     #registered = models.DateTimeField('Registered', auto_now_add=True)
     
 User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])
-
-
-class Phone(models.Model):
-
-
-    """
-    This model allows to put more than one phone in the user profile.
-    """
-    profile = models.ForeignKey(UserProfile)
-    phone_type = models.CharField(_('Type'), choices=PHONE_TYPE,
-                                  max_length=9)
-    phone = models.CharField(_('Phone number'), max_length=9, null=True,
-                             blank=True, help_text=_('9 digits maximum'))
