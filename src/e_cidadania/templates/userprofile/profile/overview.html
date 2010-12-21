@@ -6,6 +6,26 @@
 {% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
+    {% if GOOGLE_MAPS_API_KEY and user.get_profile.location %}
+        <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=yes">
+        <script type="text/javascript">
+            function initialize() {
+                var latlng = new google.maps.LatLng( {{ user.get_profile.latitude }}, {{ user.get_profile.longitude }} );
+                var opts = {
+                    zoom: 10,
+                    center: latlng,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                var map = new google.maps.Map(document.getElementById("location"), opts);
+                var marker = new google.maps.Marker({
+                    position: latlng,
+                    map: map,
+                    title:"User!"
+                });
+            };
+        </script>
+    {% endif %}
     <div id="profile">
     <div id="profile_right">
         <div id="avatar" class="span-3 center">
@@ -18,6 +38,7 @@
 	   	<div>
 			<p>{% trans "Username: " %} {{ user }}</p>
 			<p>{% trans "Real name: " %} {{ user.first_name }} {{ user.last_name }}</p>
+			<p>{% trans "Age: " %} {{ user. }}
 			<p>{% trans "Member for: " %} {{ user.date_joined }}</p>
 			<p>{% trans "E-mail:" %}
 				<span class="{% if not email or not validated %}quiet red{% endif %}">
@@ -44,39 +65,24 @@
 			    {% trans "Ciudad: " %} {{ user.get_profile.province }}
 			</p>
 			
-			{% if GOOGLE_MAPS_API_KEY %}
-			    <p>
-			        <label for="location">{% trans "Location" %}:</label>
-			        {% if user.get_profile.location %}
-				        {{ user.get_profile.location }}
-			        {% else %}
-				        <span class="quiet red">{% trans "Not set" %}</span>
-			        {% endif %}
-			    </p>
-			{% endif %}
-			{% if user.get_profile.location %}
-		        <div class="span-12 last">
-			        <div id="location" style="width: 480px; height: 240px;"></div>
-		        </div>
-		    {% endif %}
 		</div>
     </div>
     
     <div id="profile_left">
-        {% if GOOGLE_MAPS_API_KEY and user.get_profile.location %}
-            <script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;key={{ GOOGLE_MAPS_API_KEY }}" type="text/javascript"></script>
-            <script type="text/javascript">
-                $(function() {
-                    if (GBrowserIsCompatible()) {
-                        this.map = new GMap2(document.getElementById("location"));
-                        this.map.disableDragging();
-                        this.map.setCenter(new GLatLng({{ user.get_profile.latitude|default:"30" }}, {{ user.get_profile.longitude|default:"0" }}), 2);
-                        this.marker = new GMarker(new GLatLng({{ user.get_profile.latitude }}, {{ user.get_profile.longitude }}), {clickable: false, draggable: false});    
-                        this.map.addOverlay(this.marker);
-                    }
-                });
-            </script>
-        {% endif %}
+        {% if GOOGLE_MAPS_API_KEY %}
+		    <p>{% trans "Location" %}:
+		        {% if user.get_profile.location %}
+			        {{ user.get_profile.location }}
+		        {% else %}
+			        {% trans "Not set" %}
+		        {% endif %}
+		    </p>
+		{% endif %}
+		{% if user.get_profile.location %}
+		    <div class="span-12 last">
+		        <div id="location" style="width: 480px; height: 240px;"></div>
+		    </div>
+		{% endif %}
     </div>
     </div>
 

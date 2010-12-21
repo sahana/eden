@@ -27,13 +27,6 @@ from django.conf import settings
 
 from userprofile.models import BaseProfile
 
-PHONE_TYPE = (
-
-    ('MO', _('Mobile')),
-    ('FI', _('Fixed')),
-
-)
-
 GENDER = (
 
     ('M', _('Male')),
@@ -69,9 +62,9 @@ class UserProfile(BaseProfile):
     address_letter = models.CharField(_('Letter'), max_length=2, null=True,
                                       blank=True)
     
-    phone_type = models.CharField(_('Type'), choices=PHONE_TYPE,
-                                  max_length=9)
-    phone = models.CharField(_('Phone number'), max_length=9, null=True,
+    phone = models.CharField(_('Phone 1'), max_length=9, null=True,
+                             blank=True, help_text=_('9 digits maximum'))
+    phone_alt = models.CharField(_('Phone 2'), max_length=9, null=True,
                              blank=True, help_text=_('9 digits maximum'))
 
     nid = models.CharField(_('Identification document'), max_length=200,

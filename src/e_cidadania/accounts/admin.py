@@ -20,14 +20,9 @@
 
 from django.contrib import admin
 
-from e_cidadania.accounts.models import UserProfile, Phone
-
-class PhoneInline(admin.StackedInline):
-    model = Phone
-    extra = 2
+from e_cidadania.accounts.models import UserProfile
 
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'website')
-    inlines = [PhoneInline]
     
 admin.site.register(UserProfile, ProfileAdmin)

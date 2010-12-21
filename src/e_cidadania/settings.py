@@ -12,6 +12,7 @@ TEMPLATE_DEBUG = DEBUG
 AUTH_PROFILE_MODULE = "accounts.UserProfile"
 ACCOUNT_ACTIVATION_DAYS = 2
 LOGIN_REDIRECT_URL = '/accounts/profile'
+GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHxRSapJw6ROu7OKaPDPIwetftitHBcw'
 
 # Registration mail settings
 EMAIL_HOST = 'localhost'

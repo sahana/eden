@@ -20,15 +20,18 @@
                     <li><a href="/none">{% trans "Language" %}</a>| </li>
                     <li>
                         <a href="/accounts/profile">
-	                    {% if user.first_name %}
-	                        {{ user.first_name }} {{ user.last_name }}
+	                    {% if user.get_profile.firstname %}
+	                        {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
 	                    {% else %}
 	                        {{ user.username }}
 	                    {% endif %}
 	                    </a>
 	                    <ul class="subnav">
-	                        <li><a href="/accounts/profile/edit">{% trans "Edit profile" %}</li>
-	                        <li><a href="/accounts/logout">{% trans "Logout" %}</li>
+	                        {% if user.is_staff %}
+	                            <li><a href="/admin">{% trans "Administration" %}</a></li>
+	                        {% endif %}
+	                        <li><a href="/accounts/profile/edit/personal">{% trans "Edit profile" %}</li>
+	                        <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
 	                    </ul>
 	                </li>
 	            </ul>
@@ -42,9 +45,12 @@
 	    </div>
 	    </div>
 	    {% block header %}
-	        <div id="logo">
-	        </div>
-	        <div id="banner">
+	        <div id="header">
+	            <div id="logo">
+	                a
+	            </div>
+	            <div id="banner">
+	            </div>
 	        </div>
 	    {% endblock %}
 	    

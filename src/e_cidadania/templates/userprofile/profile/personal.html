@@ -2,39 +2,15 @@
 {% load i18n %}
 
 {% block title %}{% trans "Edit your personal information" %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
-
-{% block extracss %}
-	<link rel="stylesheet" href="{{ MEDIA_URL }}css/ui.datepicker.css" type="text/css" />
-{% endblock %}
-
-{% block extrajs %}
-<script type="text/javascript">
-	$(function() {
-		$("input[type='text']").addClass("text");
-		$("form input")[0].focus();
-	});
-</script>
-{% endblock %}
-
-{% block nav-main %}
-{% include "userprofile/menu.html" %}
-{% endblock %}
 
 {% block content %}
-	<form class="personal" action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
-	<fieldset>
-		<legend>{% trans "Edit your personal information" %}</legend>
-		{{ form.as_p }}
-	</fieldset>
-  <input type="submit" value="{% trans 'Save' %}" />
-	</form>
+    <div id="profile">
+        <form class="personal" action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
+	        <fieldset>
+		        <legend>{% trans "Edit your personal information" %}</legend>
+		            {{ form.as_p }}
+	        </fieldset>
+            <input type="submit" value="{% trans 'Save' %}" />
+	    </form>
+	</div>
 {% endblock %}
-
-{% block content-related %}
-  <div class="box">
-    <h3>{% trans "Personal information" %}</h3>
-    <p>{% trans "Insert some information about you" %}.</p>
-  </div>
-{% endblock %}
-
