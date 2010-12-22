@@ -37,8 +37,8 @@
 	            </ul>
             {% else %}
                 <ul class="topnav">
-                    <li><a href="/accounts/login">{% trans "Login" %}</a></li>
-                    <li><a href="/accounts/register">{% trans "Register" %}</a></li>  
+                    <li><a href="/accounts/login">{% trans "Login" %}</a> | </li>
+                    <li><a href="/accounts/register">{% trans "Register" %}</a>| </li>  
                     <li><a href="/none">{% trans "Language" %}</a></li>
 	            </ul>
 	        {% endif %}
@@ -62,8 +62,16 @@
 	        {% endblock %}
 	    </div>
 	    <div id="footer">
-	        <p>e-cidadania é una ferramenta online de software libre creada pola cooperativa Cidadanía para o emprego libre de quen queira.<p>
-	        <p>Código: Oscar Carballal Prego<p>
+	        <p>(c) 2010 Cidadanía Coop. e-cidadania é unha ferramenta libre.</p>
+	        <p><a href="http://www.djangoproject.com">django</a> | 
+	           <a href="http://www.python.org">python</a> | 
+	           <a href="http://www.w3.org">xhtml</a> | 
+	           <a href="http://www.w3.org">css</a> | 
+	           <a href="http://www.w3.org">xml</a>
+	        </p>
+	        <p>Corredoira das Fraguas, 5, 1º I.</p>
+	        <p>15703 Santiago de Compostela</p>
+	        <p>t: +34 981 589 269 | f: +34 981 554 751</p> 
 	    </div>
 	</body>
 </html>

@@ -92,7 +92,7 @@ input[type="submit"] {
     color: #333;
 }
 
-input[type="text"] {
+input[type="text"], input[type="password"] {
     border: 1px solid #666;
     background: #FFF;
     padding: 2px;
@@ -293,14 +293,24 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 #footer {
     clear: both;
-    margin-top: 100px;
-    height: 100px;
     width: 95%;
     background: #333;
     border-top: 1px solid #CCC;
-    line-height: 25px;
-    padding: 10px;
-    font-size: 9px;
+    line-height: 15px;
+    font-size: 10px;
     color: #888;
-    padding: 0 0 0 50px;
+    padding: 30px;
+    text-align: right;
+}
+
+#footer p {
+    padding: 2px;
+}
+
+#footer a {
+    color: #DDD; 
+}
+
+#footer a:hover, #footer a:visited {
+    color: #666;
 }

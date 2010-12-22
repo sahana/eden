@@ -6,14 +6,16 @@
 
 {% block content %}
     <div id="contenttitles">{% trans "Remove profile" %}</div>
-        <div id="profile_right">
+        <div id="forms" style="margin-left: 20px;">
             <p>{% trans "It erases all your private data except your username. You can refill the information later if you want to." %}</p>
             
             <form action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <fieldset>
-                <legend>{% trans "Delete your personal information" %}</legend></br>
-		    	<p><label for="remove">{% trans "Are you sure?" %}</label> <input id="remove" type="submit" value="{% trans "Yes" %}" /></p>
+                <h3>{% trans "Delete your personal information" %}</h3>
+		    	<p><label for="remove">{% trans "Are you sure?" %}</label>
+		    	   <input id="remove" type="submit" value="{% trans "Yes" %}" />
+		    	</p>
 		    </fieldset>
 	    </form>
         </div>
