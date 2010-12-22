@@ -11,9 +11,9 @@
         <meta name="viewport" content="initial-scale=1.0, user-scalable=yes">
         <script type="text/javascript">
             function initialize() {
-                var latlng = new google.maps.LatLng( {{ user.get_profile.latitude }}, {{ user.get_profile.longitude }} );
+                var latlng = new google.maps.LatLng( {{ user.get_profile.latitude|stringformat:"s" }}, {{ user.get_profile.longitude|stringformat:"s" }} );
                 var opts = {
-                    zoom: 10,
+                    zoom: 15,
                     center: latlng,
                     mapTypeId: google.maps.MapTypeId.ROADMAP
                 };
@@ -26,7 +26,13 @@
             };
         </script>
     {% endif %}
-    <div id="profile">
+    <div id="contenttitles">{{ user.username }} {% trans "profile" %}</div>
+    <div id="useropts">
+	    <a href="/accounts/profile/edit/personal">{% trans "Edit personal data" %}</a> |
+	    <a href="/accounts/profile/edit/location/">{% trans "Edit location" %}</a> |
+	    <a href="/accounts/profile/delete/">{% trans "Delete profile" %}</a> |
+	    <a href="/accounts/profile/{{ user.username }}">{% trans "Public profile" %}</a>
+	</div>
     <div id="profile_right">
         <div id="avatar" class="span-3 center">
         	<a href="{% url profile_edit_avatar %}">
@@ -83,7 +89,6 @@
 		        <div id="location" style="width: 480px; height: 240px;"></div>
 		    </div>
 		{% endif %}
-    </div>
     </div>
 
 {% endblock %}

@@ -204,24 +204,45 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     float: left;
     width: 150px;
     height: 75px;
-    border: 1px solid red;
+    background: url(/static/assets/logo.png) no-repeat;
 }
 
 #banner {
     float: left;
     height: 75px;
-    border: 1px solid blue;
 }
 
 /* User Profile stuff */
-#profile {
+#content {
     clear: both;
     border-top: 1px solid #BBB;
-    width: 100%;
+    width: 98%;
     min-height: 200px;
     margin-top: 15px;
     padding: 10px;
     background: url(/static/assets/profile_bg1.jpg) repeat-x;
+}
+
+#contenttitles {
+    font-size: 20px;
+    color: #000;
+    font-weight: bold;
+    margin-left: 20px;
+    text-transform: capitalize;
+    margin-bottom: 15px;
+}
+
+#useropts {
+    color: #555;
+    margin: 10px 0px 0px 20px;
+}
+
+#useropts a {
+    color: #555;
+}
+
+#useropts a:visited, #useropts a:hover {
+    color: #CCC;
 }
 
 #profile_right {
@@ -249,9 +270,9 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 #footer {
     clear: both;
-    margin-top: 200px;
+    margin-top: 100px;
     height: 100px;
-    width: 100%;
+    width: 95%;
     background: #333;
     border-top: 1px solid #CCC;
     line-height: 25px;

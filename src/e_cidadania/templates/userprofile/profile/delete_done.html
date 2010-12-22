@@ -5,9 +5,12 @@
 {% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-    <div id="profile">
-	    <p class="success">
-		    {% trans "Your profile information has been removed successfully" %}.
-	    </p>
-	</div>
+    <div id="contenttitles">{% trans "Personal data removed" %}</div>
+    <p class="success">
+        {% trans "Your profile information has been removed successfully." %}
+    </p>
+    <div>
+        <a href="/">{% trans "Back to home page" %}</a>
+        <a href="/accounts/profile">{% trans "Back to your profile" %}</a>
+    </div>
 {% endblock %}

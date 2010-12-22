@@ -116,6 +116,6 @@ urlpatterns = patterns('',
         name='signup_complete'),
 
     # Users public profile
-    url(r'^profile/(?P<username>.+)/$', public, name='profile_public'),
+    url(r'^(?P<username>.+)/$', public, name='profile_public'),
 
 )

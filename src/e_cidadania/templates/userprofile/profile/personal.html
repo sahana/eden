@@ -4,13 +4,11 @@
 {% block title %}{% trans "Edit your personal information" %}{% endblock %}
 
 {% block content %}
-    <div id="profile">
-        <form class="personal" action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
-	        <fieldset>
-		        <legend>{% trans "Edit your personal information" %}</legend>
-		            {{ form.as_p }}
-	        </fieldset>
-            <input type="submit" value="{% trans 'Save' %}" />
-	    </form>
-	</div>
+    <form class="personal" action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
+	    <fieldset>
+	        <legend>{% trans "Edit your personal information" %}</legend>
+	            {{ form.as_p }}
+	    </fieldset>
+        <input type="submit" value="{% trans 'Save' %}" />
+	</form>
 {% endblock %}

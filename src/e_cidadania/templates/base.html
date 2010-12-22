@@ -21,14 +21,14 @@
                     <li>
                         <a href="/accounts/profile">
 	                    {% if user.get_profile.firstname %}
-	                        {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
+	                    {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
 	                    {% else %}
-	                        {{ user.username }}
+	                    {{ user.username }}
 	                    {% endif %}
 	                    </a>
 	                    <ul class="subnav">
 	                        {% if user.is_staff %}
-	                            <li><a href="/admin">{% trans "Administration" %}</a></li>
+	                        <li><a href="/admin">{% trans "Administration" %}</a></li>
 	                        {% endif %}
 	                        <li><a href="/accounts/profile/edit/personal">{% trans "Edit profile" %}</li>
 	                        <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
@@ -46,11 +46,8 @@
 	    </div>
 	    {% block header %}
 	        <div id="header">
-	            <div id="logo">
-	                a
-	            </div>
-	            <div id="banner">
-	            </div>
+	            <div id="logo"></div>
+	            <div id="banner"></div>
 	        </div>
 	    {% endblock %}
 	    
@@ -60,8 +57,10 @@
 	    {% block leftcol %}
 	    {% endblock %}
 	    
-	    {% block content %}
-	    {% endblock %}
+	    <div id="content">
+	        {% block content %}
+	        {% endblock %}
+	    </div>
 	    <div id="footer">
 	        <p>e-cidadania é una ferramenta online de software libre creada pola cooperativa Cidadanía para o emprego libre de quen queira.<p>
 	        <p>Código: Oscar Carballal Prego<p>
