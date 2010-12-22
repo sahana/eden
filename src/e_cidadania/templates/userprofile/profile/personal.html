@@ -5,9 +5,12 @@
 
 {% block content %}
     <form class="personal" action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
 	    <fieldset>
-	        <legend>{% trans "Edit your personal information" %}</legend>
-	            {{ form.as_p }}
+	        <div id="contenttitles">{% trans "Edit your personal information" %}</div>
+	            <div id="forms" style="margin-left: 20px;">
+	                {{ form.as_p }}
+	            </div>
 	    </fieldset>
         <input type="submit" value="{% trans 'Save' %}" />
 	</form>

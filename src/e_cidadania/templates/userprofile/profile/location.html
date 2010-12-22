@@ -7,22 +7,25 @@
 {% block content %}
 	<form action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
 	{{ form.errors }}
+	{% csrf_token %}
 	<fieldset>
-		<legend>{% trans "Define your location" %}</legend>
-		<label for="id_country">{% trans "Country" %}<img class="hide" src="{{ MEDIA_URL }}images/loading.gif" /></label>
-		<p>{{ form.country }}</p>
-		{% if GOOGLE_MAPS_API_KEY %}
-			<div class="mapinfo">
-				<label>{% trans "Location" %}</label>
-				<p id="location_info">{{ profile.location }}</p>
-				<label for="map">{% trans "Position" %}</label>
-				<div id="map"></div>
-			</div>
-			<div class="hide">{{ form.location }}{{ form.latitude }}{{ form.longitude }}</div>
-			<div style="display: none;" id="apikey">{{ GOOGLE_MAPS_API_KEY }}</div>
-		{% endif %}
+		<div id="contenttitles">{% trans "Define your location" %}</div>
+		<div id="forms" style="margin-left:20px;">
+		    <h3 for="id_country">{% trans "Country" %}</h3>
+		    <p>{{ form.country }}</p>
+		    {% if GOOGLE_MAPS_API_KEY %}
+			    <div class="mapinfo">
+				    <h3>{% trans "Location" %}</h3>
+				    <p id="location_info">{{ user.get_profile.location }}</p>
+				    <h3 for="map">{% trans "Position" %}</h3>
+				    <div id="map"></div>
+			    </div>
+			    <div style="margin-left:10px;">{{ form.location }} {{ form.latitude }} {{ form.longitude }}</div>
+			    <!-- <div style="display: none;" id="apikey">{{ GOOGLE_MAPS_API_KEY }}</div> -->
+		    {% endif %}
+		    <input type="submit" value="{% trans 'Save' %}" style="margin:12px 0 10px 12px;"/>
+	    </div>
 	</fieldset>
-	<input type="submit" value="{% trans 'Save' %}" />
 	</form>
 {% endblock %}
 

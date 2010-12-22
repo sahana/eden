@@ -1,0 +1,1815 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-12-22 14:19+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: accounts/models.py:32
+msgid "Male"
+msgstr "Hombre"
+
+#: accounts/models.py:33
+msgid "Female"
+msgstr "Mujer"
+
+#: accounts/models.py:45
+msgid "Name"
+msgstr "Nombre"
+
+#: accounts/models.py:46
+msgid "Surname"
+msgstr "Apellidos"
+
+#: accounts/models.py:47
+msgid "Gender"
+msgstr "Género"
+
+#: accounts/models.py:50
+msgid "Birth date"
+msgstr "Fecha de nacimiento"
+
+#: accounts/models.py:54
+msgid "Province"
+msgstr "Provincia"
+
+#: accounts/models.py:55
+msgid "Municipality"
+msgstr "Municipio"
+
+#: accounts/models.py:58
+msgid "Address"
+msgstr "Dirección"
+
+#: accounts/models.py:59
+msgid "Number"
+msgstr "Número"
+
+#: accounts/models.py:61
+msgid "Floor"
+msgstr "Piso"
+
+#: accounts/models.py:62
+msgid "Letter"
+msgstr "Letra"
+
+#: accounts/models.py:65
+msgid "Phone 1"
+msgstr "Teléfono"
+
+#: accounts/models.py:66 accounts/models.py:68
+msgid "9 digits maximum"
+msgstr "9 dígitos máxmimo"
+
+#: accounts/models.py:67
+msgid "Phone 2"
+msgstr "Teléfono 2"
+
+#: accounts/models.py:70
+msgid "Identification document"
+msgstr "DNI"
+
+#: accounts/models.py:73
+msgid "Website"
+msgstr "Página web"
+
+#: accounts/models.py:75
+msgid "The URL will be checked"
+msgstr "La dirección será comprobada"
+
+#: templates/base.html:19
+msgid "Messages"
+msgstr "Mensajes"
+
+#: templates/base.html:20 templates/base.html.py:42
+msgid "Language"
+msgstr "Idioma"
+
+#: templates/base.html:31
+msgid "Administration"
+msgstr "Administración"
+
+#: templates/base.html:33
+msgid "Edit profile"
+msgstr "Editar perfil"
+
+#: templates/base.html:34
+msgid "Logout"
+msgstr "Salir"
+
+#: templates/base.html:40 templates/accounts/login.html:4
+#: templates/userprofile/account/login.html:36
+msgid "Login"
+msgstr "Entrar"
+
+#: templates/base.html:41 templates/registration/login.html:14
+#: templates/userprofile/account/registration.html:48
+msgid "Register"
+msgstr "Registrarse"
+
+#: templates/accounts/login.html:14
+#: templates/userprofile/profile/overview_old.html:18
+msgid "Username:"
+msgstr "Nombre de usuario:"
+
+#: templates/accounts/login.html:17
+msgid "Password:"
+msgstr "Clave:"
+
+#: templates/accounts/logout.html:7
+msgid ""
+"Thanks for using e-cidadania. Now you can continue visting the website or "
+"log in again."
+msgstr "Gracias por utilizar e-cidadania. Ahora puede continuar visitando la web o "
+"entrar de nuevo."
+
+#: templates/accounts/logout.html:9
+msgid "Login again"
+msgstr "Volver a entrar"
+
+#: templates/accounts/profile.html:5
+msgid "User"
+msgstr "Usuario"
+
+#: templates/registration/activate.html:8
+msgid "Account successfully activated"
+msgstr "Cuenta activada satisfactoriamente"
+
+#: templates/registration/activate.html:10 templates/registration/login.html:9
+#: templates/registration/password_reset_complete.html:8
+msgid "Log in"
+msgstr "Entrar"
+
+#: templates/registration/activate.html:14
+msgid "Account activation failed"
+msgstr "La activación de la cuenta ha fallado"
+
+#: templates/registration/login.html:13
+msgid "Forgot password"
+msgstr "¿Has olvidado tu clave?"
+
+#: templates/registration/login.html:13
+msgid "Reset it"
+msgstr "Resetearla"
+
+#: templates/registration/login.html:14
+msgid "Not member"
+msgstr "No es miembro"
+
+#: templates/registration/logout.html:5
+#: templates/userprofile/account/logout.html:4
+#: templates/userprofile/account/logout.html:9
+msgid "Logged out"
+msgstr "Sesión terminada"
+
+#: templates/registration/password_change_done.html:5
+msgid "Password changed"
+msgstr "Clave cambiada"
+
+#: templates/registration/password_change_form.html:8
+#: templates/registration/password_reset_confirm.html:11
+#: templates/registration/password_reset_form.html:8
+#: templates/registration/registration_form.html:8
+msgid "Submit"
+msgstr "Enviar"
+
+#: templates/registration/password_reset_complete.html:6
+msgid "Password reset successfully"
+msgstr "La clave ha sido reseteada satisfactoriamente"
+
+#: templates/registration/password_reset_confirm.html:16
+msgid "Password reset failed"
+msgstr "Ha fallado el reseteo de la clave"
+
+#: templates/registration/password_reset_done.html:5
+msgid "Email with password reset instructions has been sent."
+msgstr "El correo electrónico con las instrucciones para resetear la clave ha sido enviado."
+
+#: templates/registration/password_reset_email.html:2
+#, python-format
+msgid "Reset password at %(site_name)s"
+msgstr "Resetear clave en %(site_name)s"
+
+#: templates/registration/registration_complete.html:5
+msgid "You are now registered. Activation email sent."
+msgstr "Ha sido registrado. El correo electrónic de activación se ha enviado."
+
+#: templates/userprofile/menu.html:5
+msgid "Overview"
+msgstr "Resumen"
+
+#: templates/userprofile/menu.html:6
+#: templates/userprofile/profile/personal_done.html:19
+msgid "Personal information"
+msgstr "Información personal"
+
+#: templates/userprofile/menu.html:7
+msgid "Avatar"
+msgstr "Avatar"
+
+#: templates/userprofile/menu.html:8
+#: templates/userprofile/profile/location.html:16
+#: templates/userprofile/profile/overview.html:79
+#: templates/userprofile/profile/overview_old.html:37
+#: templates/userprofile/profile/public.html:38
+msgid "Location"
+msgstr "Lugar"
+
+#: templates/userprofile/menu.html:9
+#: templates/userprofile/profile/delete.html:8
+msgid "Remove profile"
+msgstr "Borrar perfil"
+
+#: templates/userprofile/account/email_validation.html:4
+#: templates/userprofile/account/email_validation.html:23
+msgid "E-mail change"
+msgstr "Cambiar correo electrónico"
+
+#: templates/userprofile/account/email_validation.html:4
+#: templates/userprofile/account/email_validation.html:23
+#: templates/userprofile/account/email_validation.html:40
+#: templates/userprofile/account/email_validation_processed.html:20
+msgid "Add e-mail"
+msgstr "Añadir correo electrónico"
+
+#: templates/userprofile/account/email_validation.html:24
+msgid "New e-mail address"
+msgstr "Nueva direccion de correo"
+
+#: templates/userprofile/account/email_validation.html:34
+msgid "Send confirmation"
+msgstr "Enviar confirmacion"
+
+#: templates/userprofile/account/email_validation.html:41
+#: templates/userprofile/account/email_validation_processed.html:21
+msgid ""
+"Insert the new e-mail address. An e-mail will be send to it for testing and "
+"confirmation"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:4
+msgid "E-mail validation successful"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:4
+msgid "E-mail change unsuccessful"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:14
+msgid "E-mail address validated successfully"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:16
+msgid ""
+"The key you received via e-mail is no longer valid. Please try the e-mail "
+"validation process again"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:23
+#: templates/userprofile/account/email_validation_reset_response.html:22
+msgid "E-mail validation process"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:24
+#: templates/userprofile/account/email_validation_reset_response.html:23
+msgid "You can manage the e-mail validation process from the"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_done.html:24
+#: templates/userprofile/account/email_validation_reset_response.html:23
+msgid "overview page"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_processed.html:4
+#: templates/userprofile/account/email_validation_processed.html:13
+msgid "E-mail change processed"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_processed.html:14
+msgid ""
+"An e-mail has been sent to the new e-mail address to verify and activate it. "
+"Please access to your e-mail and complete this process following the "
+"instructions specified in the e-mail body"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_reset_response.html:4
+msgid "Validation e-mail sent"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_reset_response.html:4
+msgid "Your user account was already active"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_reset_response.html:14
+msgid "We've e-mailed you the e-mail validation link"
+msgstr ""
+
+#: templates/userprofile/account/email_validation_reset_response.html:16
+msgid "Your e-mail was already validated"
+msgstr ""
+
+#: templates/userprofile/account/login.html:4
+#: templates/userprofile/account/login.html:19
+msgid "User login"
+msgstr "Entrar"
+
+#: templates/userprofile/account/login.html:20
+#: templates/userprofile/account/registration.html:20
+#: templates/userprofile/profile/public.html:33
+#: templates/userprofile/profile/usercard.html:11 userprofile/forms.py:83
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: templates/userprofile/account/login.html:26
+#: templates/userprofile/account/registration.html:32 userprofile/forms.py:85
+msgid "Password"
+msgstr "Clave"
+
+#: templates/userprofile/account/login.html:42
+msgid "Utilities"
+msgstr "Utilidades"
+
+#: templates/userprofile/account/login.html:44
+msgid "Lost your password?"
+msgstr "¿Has perdido la clave?"
+
+#: templates/userprofile/account/login.html:46
+msgid "Sign up!"
+msgstr "Regístrate!"
+
+#: templates/userprofile/account/logout.html:10
+msgid "You've been logged out"
+msgstr "Ha salido de su cuenta"
+
+#: templates/userprofile/account/logout.html:10
+msgid "Log in again"
+msgstr "Entrar de nuevo"
+
+#: templates/userprofile/account/password_change.html:4
+#: templates/userprofile/account/password_change.html:23
+#: templates/userprofile/account/password_reset_confirm.html:4
+msgid "Password change for"
+msgstr "Cambiar clave para"
+
+#: templates/userprofile/account/password_change.html:24
+msgid "Old password"
+msgstr "Clave anterior"
+
+#: templates/userprofile/account/password_change.html:30
+#: templates/userprofile/account/password_reset_confirm.html:26
+msgid "New password"
+msgstr "Nueva clave"
+
+#: templates/userprofile/account/password_change.html:36
+#: templates/userprofile/account/password_reset_confirm.html:32
+msgid "Confirm password"
+msgstr "Confirmar clave"
+
+#: templates/userprofile/account/password_change.html:46
+#: templates/userprofile/account/password_reset_confirm.html:42
+msgid "Change"
+msgstr "Cambiar"
+
+#: templates/userprofile/account/password_change.html:52
+#: templates/userprofile/account/password_change_done.html:19
+msgid "Password change"
+msgstr "Cambiar clave"
+
+#: templates/userprofile/account/password_change.html:53
+#: templates/userprofile/account/password_change_done.html:20
+msgid ""
+"Password change utility page. Please enter your new password twice so we can "
+"verify you typed it in correctly"
+msgstr ""
+
+#: templates/userprofile/account/password_change_done.html:4
+#: templates/userprofile/account/password_reset_complete.html:4
+msgid "Password change successful"
+msgstr "El cambio de clave ha sido un éxito"
+
+#: templates/userprofile/account/password_change_done.html:13
+msgid "The password has been changed successfully"
+msgstr "La clave ha sido cambiada satisfactoriamente"
+
+#: templates/userprofile/account/password_expired.html:4
+msgid "Password key expired"
+msgstr "La llave de la clave ha expirado"
+
+#: templates/userprofile/account/password_expired.html:9
+msgid ""
+"The password key you're trying to use is expired. Please, request a new one"
+msgstr ""
+
+#: templates/userprofile/account/password_reset.html:4
+#: templates/userprofile/account/password_reset.html:20
+#: templates/userprofile/account/password_reset_complete.html:19
+#: templates/userprofile/account/password_reset_confirm.html:55
+msgid "Password reset"
+msgstr ""
+
+#: templates/userprofile/account/password_reset.html:21
+#: userprofile/forms.py:84
+msgid "E-mail address"
+msgstr ""
+
+#: templates/userprofile/account/password_reset.html:31
+msgid "Reset my password"
+msgstr ""
+
+#: templates/userprofile/account/password_reset.html:37
+#: templates/userprofile/account/password_reset_done.html:16
+msgid "Password reset form"
+msgstr ""
+
+#: templates/userprofile/account/password_reset.html:38
+#: templates/userprofile/account/password_reset_done.html:17
+msgid ""
+"Forgotten your password? Enter your e-mail address, and we'll reset your "
+"password and e-mail the new one to you"
+msgstr ""
+
+#: templates/userprofile/account/password_reset_complete.html:13
+msgid "Your password has been set.  You may go ahead and log in now."
+msgstr ""
+
+#: templates/userprofile/account/password_reset_complete.html:20
+#: templates/userprofile/account/password_reset_confirm.html:56
+msgid ""
+"Password reset utility page. Please enter your new password twice so we can "
+"verify you typed it in correctly"
+msgstr ""
+
+#: templates/userprofile/account/password_reset_confirm.html:47
+msgid "Password reset unsuccessful"
+msgstr ""
+
+#: templates/userprofile/account/password_reset_confirm.html:48
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a new password reset."
+msgstr ""
+
+#: templates/userprofile/account/password_reset_done.html:4
+#: templates/userprofile/account/password_reset_done.html:9
+msgid "Password reset successful"
+msgstr ""
+
+#: templates/userprofile/account/password_reset_done.html:10
+msgid ""
+"We've e-mailed you the instructions to obtain a new password. You should be "
+"receiving it shortly"
+msgstr ""
+
+#: templates/userprofile/account/registration.html:4
+#: templates/userprofile/account/registration.html:19
+msgid "User registration"
+msgstr ""
+
+#: templates/userprofile/account/registration.html:26
+msgid "E-mail (optional)"
+msgstr ""
+
+#: templates/userprofile/account/registration.html:38 userprofile/forms.py:86
+msgid "Password (again)"
+msgstr ""
+
+#: templates/userprofile/account/registration.html:54
+#: templates/userprofile/account/registration_done.html:14
+msgid "Register a new account"
+msgstr ""
+
+#: templates/userprofile/account/registration.html:55
+#: templates/userprofile/account/registration_done.html:15
+msgid ""
+"Joining this community is quick and easy. You only need to fill the form to "
+"get access to all the private content"
+msgstr ""
+
+#: templates/userprofile/account/registration_done.html:4
+msgid "Registration complete"
+msgstr ""
+
+#: templates/userprofile/account/registration_done.html:9
+msgid "You have successfully registered a new account. Go to the"
+msgstr ""
+
+#: templates/userprofile/account/registration_done.html:9
+msgid "login page"
+msgstr ""
+
+#: templates/userprofile/account/registration_done.html:9
+msgid "to authenticate and start using this site"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:4
+#: templates/userprofile/avatar/choose.html:33
+msgid "Choose the location of your avatar"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:36
+msgid "Select an image from disk"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:38
+#: templates/userprofile/avatar/choose.html:44
+#: templates/userprofile/avatar/crop.html:47
+msgid "Done"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:42
+msgid ""
+"Select an image from a remote URL. Put the URL on the input below and we'll "
+"retrieve the image for you"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:49
+#: templates/userprofile/avatar/search.html:4
+#: templates/userprofile/avatar/search.html:28
+msgid "Search for an image on Picasa Web"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:59
+#: templates/userprofile/avatar/crop.html:53
+#: templates/userprofile/avatar/done.html:19
+#: templates/userprofile/avatar/search.html:50
+msgid "Avatar selection page"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:60
+#: templates/userprofile/avatar/crop.html:54
+#: templates/userprofile/avatar/done.html:20
+#: templates/userprofile/avatar/search.html:51
+msgid ""
+"You have several options to select the image you want as avatar on your "
+"profile"
+msgstr ""
+
+#: templates/userprofile/avatar/choose.html:66
+msgid "Delete"
+msgstr ""
+
+#: templates/userprofile/avatar/crop.html:4
+#: templates/userprofile/avatar/crop.html:31
+msgid "Crop &amp; resize the area you want"
+msgstr ""
+
+#: templates/userprofile/avatar/done.html:4
+msgid "Avatar selection finished"
+msgstr ""
+
+#: templates/userprofile/avatar/done.html:13
+msgid "Your new avatar has been saved successfully"
+msgstr ""
+
+#: templates/userprofile/avatar/search.html:29
+msgid "Search on Picasa Web"
+msgstr ""
+
+#: templates/userprofile/avatar/search.html:32
+msgid "Search"
+msgstr ""
+
+#: templates/userprofile/profile/delete.html:4
+msgid "Delete personal information"
+msgstr ""
+
+#: templates/userprofile/profile/delete.html:10
+msgid ""
+"It erases all your private data except your username. You can refill the "
+"information later if you want to."
+msgstr ""
+
+#: templates/userprofile/profile/delete.html:15
+msgid "Delete your personal information"
+msgstr ""
+
+#: templates/userprofile/profile/delete.html:16
+msgid "Are you sure?"
+msgstr ""
+
+#: templates/userprofile/profile/delete.html:16
+msgid "Yes"
+msgstr ""
+
+#: templates/userprofile/profile/delete_done.html:4
+msgid "Profile removed"
+msgstr ""
+
+#: templates/userprofile/profile/delete_done.html:8
+msgid "Personal data removed"
+msgstr ""
+
+#: templates/userprofile/profile/delete_done.html:10
+msgid "Your profile information has been removed successfully."
+msgstr ""
+
+#: templates/userprofile/profile/delete_done.html:13
+msgid "Back to home page"
+msgstr ""
+
+#: templates/userprofile/profile/delete_done.html:14
+msgid "Back to your profile"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:4
+#: templates/userprofile/profile/location_done.html:4
+#: templates/userprofile/profile/personal_done.html:4
+#, python-format
+msgid "%(user)s's Dashboard"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:11
+msgid "Define your location"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:12
+#: templates/userprofile/profile/overview.html:62
+#: templates/userprofile/profile/overview_old.html:28
+#: templates/userprofile/profile/public.html:35
+msgid "Country"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:18
+msgid "Position"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:25
+#: templates/userprofile/profile/personal.html:12
+msgid "Save"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:32
+#: templates/userprofile/profile/location_done.html:16
+msgid "Location information"
+msgstr ""
+
+#: templates/userprofile/profile/location.html:33
+#: templates/userprofile/profile/location_done.html:17
+msgid "Define your location information"
+msgstr ""
+
+#: templates/userprofile/profile/location_done.html:10
+msgid "Your profile information has been updated successfully."
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:5
+#: templates/userprofile/profile/overview_old.html:5
+msgid "Overview of your profile"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:29
+msgid "profile"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:31
+msgid "Edit personal data"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:32
+msgid "Edit location"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:33
+msgid "Delete profile"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:34
+msgid "Public profile"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:41
+#: templates/userprofile/profile/overview_old.html:14
+msgid "Change avatar"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:41
+#: templates/userprofile/profile/overview_old.html:14
+msgid "Add avatar"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:45
+msgid "Username: "
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:46
+msgid "Real name: "
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:47
+msgid "Age: "
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:48
+msgid "Member for: "
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:49
+#: templates/userprofile/profile/overview_old.html:19
+msgid "E-mail:"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:52
+#: templates/userprofile/profile/overview_old.html:21
+msgid "Not set yet"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:56
+#: templates/userprofile/profile/overview_old.html:23
+msgid " (Not validated)"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:66
+#: templates/userprofile/profile/overview.html:83
+#: templates/userprofile/profile/overview_old.html:32
+#: templates/userprofile/profile/overview_old.html:41
+msgid "Not set"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:71
+msgid "Ciudad: "
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:98
+#: templates/userprofile/profile/overview_old.html:80
+msgid "Management:"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:99
+#: templates/userprofile/profile/overview_old.html:81
+msgid "Change password"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:101
+#: templates/userprofile/profile/overview_old.html:83
+msgid "Change your e-mail address"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:101
+#: templates/userprofile/profile/overview_old.html:83
+msgid "Add your e-mail address"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:102
+#: templates/userprofile/profile/overview_old.html:84
+msgid "Resend validation e-mail"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:106
+#: templates/userprofile/profile/overview_old.html:88
+msgid "Add location"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:108
+#: templates/userprofile/profile/overview_old.html:90
+msgid "Change location"
+msgstr ""
+
+#: templates/userprofile/profile/personal.html:4
+#: templates/userprofile/profile/personal.html:9
+msgid "Edit your personal information"
+msgstr ""
+
+#: templates/userprofile/profile/personal_done.html:13
+msgid "Your profile information has been updated successfully"
+msgstr ""
+
+#: templates/userprofile/profile/personal_done.html:20
+msgid "Insert some information about you"
+msgstr ""
+
+#: templates/userprofile/profile/public.html:27
+#, python-format
+msgid "Public profile of %(user)s"
+msgstr ""
+
+#: templates/userprofile/profile/usercard.html:12
+msgid "Public profile information"
+msgstr ""
+
+#: userprofile/countries.py:10
+msgid "Andorra"
+msgstr ""
+
+#: userprofile/countries.py:11
+msgid "United Arab Emirates"
+msgstr ""
+
+#: userprofile/countries.py:12
+msgid "Afghanistan"
+msgstr ""
+
+#: userprofile/countries.py:13
+msgid "Antigua & Barbuda"
+msgstr ""
+
+#: userprofile/countries.py:14
+msgid "Anguilla"
+msgstr ""
+
+#: userprofile/countries.py:15
+msgid "Albania"
+msgstr ""
+
+#: userprofile/countries.py:16
+msgid "Armenia"
+msgstr ""
+
+#: userprofile/countries.py:17
+msgid "Netherlands Antilles"
+msgstr ""
+
+#: userprofile/countries.py:18
+msgid "Angola"
+msgstr ""
+
+#: userprofile/countries.py:19
+msgid "Antarctica"
+msgstr ""
+
+#: userprofile/countries.py:20
+msgid "Argentina"
+msgstr ""
+
+#: userprofile/countries.py:21
+msgid "American Samoa"
+msgstr ""
+
+#: userprofile/countries.py:22
+msgid "Austria"
+msgstr ""
+
+#: userprofile/countries.py:23
+msgid "Australia"
+msgstr ""
+
+#: userprofile/countries.py:24
+msgid "Aruba"
+msgstr ""
+
+#: userprofile/countries.py:25
+msgid "Azerbaijan"
+msgstr ""
+
+#: userprofile/countries.py:26
+msgid "Bosnia and Herzegovina"
+msgstr ""
+
+#: userprofile/countries.py:27
+msgid "Barbados"
+msgstr ""
+
+#: userprofile/countries.py:28
+msgid "Bangladesh"
+msgstr ""
+
+#: userprofile/countries.py:29
+msgid "Belgium"
+msgstr ""
+
+#: userprofile/countries.py:30
+msgid "Burkina Faso"
+msgstr ""
+
+#: userprofile/countries.py:31
+msgid "Bulgaria"
+msgstr ""
+
+#: userprofile/countries.py:32
+msgid "Bahrain"
+msgstr ""
+
+#: userprofile/countries.py:33
+msgid "Burundi"
+msgstr ""
+
+#: userprofile/countries.py:34
+msgid "Benin"
+msgstr ""
+
+#: userprofile/countries.py:35
+msgid "Bermuda"
+msgstr ""
+
+#: userprofile/countries.py:36
+msgid "Brunei Darussalam"
+msgstr ""
+
+#: userprofile/countries.py:37
+msgid "Bolivia"
+msgstr ""
+
+#: userprofile/countries.py:38
+msgid "Brazil"
+msgstr ""
+
+#: userprofile/countries.py:39
+msgid "Bahama"
+msgstr ""
+
+#: userprofile/countries.py:40
+msgid "Bhutan"
+msgstr ""
+
+#: userprofile/countries.py:41
+msgid "Bouvet Island"
+msgstr ""
+
+#: userprofile/countries.py:42
+msgid "Botswana"
+msgstr ""
+
+#: userprofile/countries.py:43
+msgid "Belarus"
+msgstr ""
+
+#: userprofile/countries.py:44
+msgid "Belize"
+msgstr ""
+
+#: userprofile/countries.py:45
+msgid "Canada"
+msgstr ""
+
+#: userprofile/countries.py:46
+msgid "Cocos (Keeling) Islands"
+msgstr ""
+
+#: userprofile/countries.py:47
+msgid "Central African Republic"
+msgstr ""
+
+#: userprofile/countries.py:48
+msgid "Congo"
+msgstr ""
+
+#: userprofile/countries.py:49
+msgid "Switzerland"
+msgstr ""
+
+#: userprofile/countries.py:50
+msgid "Ivory Coast"
+msgstr ""
+
+#: userprofile/countries.py:51
+msgid "Cook Islands"
+msgstr ""
+
+#: userprofile/countries.py:52
+msgid "Chile"
+msgstr ""
+
+#: userprofile/countries.py:53
+msgid "Cameroon"
+msgstr ""
+
+#: userprofile/countries.py:54
+msgid "China"
+msgstr ""
+
+#: userprofile/countries.py:55
+msgid "Colombia"
+msgstr ""
+
+#: userprofile/countries.py:56
+msgid "Costa Rica"
+msgstr ""
+
+#: userprofile/countries.py:57
+msgid "Cuba"
+msgstr ""
+
+#: userprofile/countries.py:58
+msgid "Cape Verde"
+msgstr ""
+
+#: userprofile/countries.py:59
+msgid "Christmas Island"
+msgstr ""
+
+#: userprofile/countries.py:60
+msgid "Cyprus"
+msgstr ""
+
+#: userprofile/countries.py:61
+msgid "Czech Republic"
+msgstr ""
+
+#: userprofile/countries.py:62
+msgid "Germany"
+msgstr ""
+
+#: userprofile/countries.py:63
+msgid "Djibouti"
+msgstr ""
+
+#: userprofile/countries.py:64
+msgid "Denmark"
+msgstr ""
+
+#: userprofile/countries.py:65
+msgid "Dominica"
+msgstr ""
+
+#: userprofile/countries.py:66
+msgid "Dominican Republic"
+msgstr ""
+
+#: userprofile/countries.py:67
+msgid "Algeria"
+msgstr ""
+
+#: userprofile/countries.py:68
+msgid "Ecuador"
+msgstr ""
+
+#: userprofile/countries.py:69
+msgid "Estonia"
+msgstr ""
+
+#: userprofile/countries.py:70
+msgid "Egypt"
+msgstr ""
+
+#: userprofile/countries.py:71
+msgid "Western Sahara"
+msgstr ""
+
+#: userprofile/countries.py:72
+msgid "Eritrea"
+msgstr ""
+
+#: userprofile/countries.py:73
+msgid "Spain"
+msgstr ""
+
+#: userprofile/countries.py:74
+msgid "Ethiopia"
+msgstr ""
+
+#: userprofile/countries.py:75
+msgid "Finland"
+msgstr ""
+
+#: userprofile/countries.py:76
+msgid "Fiji"
+msgstr ""
+
+#: userprofile/countries.py:77
+msgid "Falkland Islands (Malvinas)"
+msgstr ""
+
+#: userprofile/countries.py:78
+msgid "Micronesia"
+msgstr ""
+
+#: userprofile/countries.py:79
+msgid "Faroe Islands"
+msgstr ""
+
+#: userprofile/countries.py:80
+msgid "France"
+msgstr ""
+
+#: userprofile/countries.py:81
+msgid "France, Metropolitan"
+msgstr ""
+
+#: userprofile/countries.py:82
+msgid "Gabon"
+msgstr ""
+
+#: userprofile/countries.py:83
+msgid "United Kingdom (Great Britain)"
+msgstr ""
+
+#: userprofile/countries.py:84
+msgid "Grenada"
+msgstr ""
+
+#: userprofile/countries.py:85
+msgid "Georgia"
+msgstr ""
+
+#: userprofile/countries.py:86
+msgid "French Guiana"
+msgstr ""
+
+#: userprofile/countries.py:87
+msgid "Ghana"
+msgstr ""
+
+#: userprofile/countries.py:88
+msgid "Gibraltar"
+msgstr ""
+
+#: userprofile/countries.py:89
+msgid "Greenland"
+msgstr ""
+
+#: userprofile/countries.py:90
+msgid "Gambia"
+msgstr ""
+
+#: userprofile/countries.py:91
+msgid "Guinea"
+msgstr ""
+
+#: userprofile/countries.py:92
+msgid "Guadeloupe"
+msgstr ""
+
+#: userprofile/countries.py:93
+msgid "Equatorial Guinea"
+msgstr ""
+
+#: userprofile/countries.py:94
+msgid "Greece"
+msgstr ""
+
+#: userprofile/countries.py:95
+msgid "South Georgia and the South Sandwich Islands"
+msgstr ""
+
+#: userprofile/countries.py:96
+msgid "Guatemala"
+msgstr ""
+
+#: userprofile/countries.py:97
+msgid "Guam"
+msgstr ""
+
+#: userprofile/countries.py:98
+msgid "Guinea-Bissau"
+msgstr ""
+
+#: userprofile/countries.py:99
+msgid "Guyana"
+msgstr ""
+
+#: userprofile/countries.py:100
+msgid "Hong Kong"
+msgstr ""
+
+#: userprofile/countries.py:101
+msgid "Heard & McDonald Islands"
+msgstr ""
+
+#: userprofile/countries.py:102
+msgid "Honduras"
+msgstr ""
+
+#: userprofile/countries.py:103
+msgid "Croatia"
+msgstr ""
+
+#: userprofile/countries.py:104
+msgid "Haiti"
+msgstr ""
+
+#: userprofile/countries.py:105
+msgid "Hungary"
+msgstr ""
+
+#: userprofile/countries.py:106
+msgid "Indonesia"
+msgstr ""
+
+#: userprofile/countries.py:107
+msgid "Ireland"
+msgstr ""
+
+#: userprofile/countries.py:108
+msgid "Israel"
+msgstr ""
+
+#: userprofile/countries.py:109
+msgid "India"
+msgstr ""
+
+#: userprofile/countries.py:110
+msgid "British Indian Ocean Territory"
+msgstr ""
+
+#: userprofile/countries.py:111
+msgid "Iraq"
+msgstr ""
+
+#: userprofile/countries.py:112
+msgid "Islamic Republic of Iran"
+msgstr ""
+
+#: userprofile/countries.py:113
+msgid "Iceland"
+msgstr ""
+
+#: userprofile/countries.py:114
+msgid "Italy"
+msgstr ""
+
+#: userprofile/countries.py:115
+msgid "Jamaica"
+msgstr ""
+
+#: userprofile/countries.py:116
+msgid "Jordan"
+msgstr ""
+
+#: userprofile/countries.py:117
+msgid "Japan"
+msgstr ""
+
+#: userprofile/countries.py:118
+msgid "Kenya"
+msgstr ""
+
+#: userprofile/countries.py:119
+msgid "Kyrgyzstan"
+msgstr ""
+
+#: userprofile/countries.py:120
+msgid "Cambodia"
+msgstr ""
+
+#: userprofile/countries.py:121
+msgid "Kiribati"
+msgstr ""
+
+#: userprofile/countries.py:122
+msgid "Comoros"
+msgstr ""
+
+#: userprofile/countries.py:123
+msgid "St. Kitts and Nevis"
+msgstr ""
+
+#: userprofile/countries.py:124
+msgid "Korea, Democratic People's Republic of"
+msgstr ""
+
+#: userprofile/countries.py:125
+msgid "Korea, Republic of"
+msgstr ""
+
+#: userprofile/countries.py:126
+msgid "Kuwait"
+msgstr ""
+
+#: userprofile/countries.py:127
+msgid "Cayman Islands"
+msgstr ""
+
+#: userprofile/countries.py:128
+msgid "Kazakhstan"
+msgstr ""
+
+#: userprofile/countries.py:129
+msgid "Lao People's Democratic Republic"
+msgstr ""
+
+#: userprofile/countries.py:130
+msgid "Lebanon"
+msgstr ""
+
+#: userprofile/countries.py:131
+msgid "Saint Lucia"
+msgstr ""
+
+#: userprofile/countries.py:132
+msgid "Liechtenstein"
+msgstr ""
+
+#: userprofile/countries.py:133
+msgid "Sri Lanka"
+msgstr ""
+
+#: userprofile/countries.py:134
+msgid "Liberia"
+msgstr ""
+
+#: userprofile/countries.py:135
+msgid "Lesotho"
+msgstr ""
+
+#: userprofile/countries.py:136
+msgid "Lithuania"
+msgstr ""
+
+#: userprofile/countries.py:137
+msgid "Luxembourg"
+msgstr ""
+
+#: userprofile/countries.py:138
+msgid "Latvia"
+msgstr ""
+
+#: userprofile/countries.py:139
+msgid "Libyan Arab Jamahiriya"
+msgstr ""
+
+#: userprofile/countries.py:140
+msgid "Morocco"
+msgstr ""
+
+#: userprofile/countries.py:141
+msgid "Monaco"
+msgstr ""
+
+#: userprofile/countries.py:142
+msgid "Moldova, Republic of"
+msgstr ""
+
+#: userprofile/countries.py:143
+msgid "Madagascar"
+msgstr ""
+
+#: userprofile/countries.py:144
+msgid "Marshall Islands"
+msgstr ""
+
+#: userprofile/countries.py:145
+msgid "Mali"
+msgstr ""
+
+#: userprofile/countries.py:146
+msgid "Mongolia"
+msgstr ""
+
+#: userprofile/countries.py:147
+msgid "Myanmar"
+msgstr ""
+
+#: userprofile/countries.py:148
+msgid "Macau"
+msgstr ""
+
+#: userprofile/countries.py:149
+msgid "Northern Mariana Islands"
+msgstr ""
+
+#: userprofile/countries.py:150
+msgid "Martinique"
+msgstr ""
+
+#: userprofile/countries.py:151
+msgid "Mauritania"
+msgstr ""
+
+#: userprofile/countries.py:152
+msgid "Monserrat"
+msgstr ""
+
+#: userprofile/countries.py:153
+msgid "Malta"
+msgstr ""
+
+#: userprofile/countries.py:154
+msgid "Mauritius"
+msgstr ""
+
+#: userprofile/countries.py:155
+msgid "Maldives"
+msgstr ""
+
+#: userprofile/countries.py:156
+msgid "Malawi"
+msgstr ""
+
+#: userprofile/countries.py:157
+msgid "Mexico"
+msgstr ""
+
+#: userprofile/countries.py:158
+msgid "Malaysia"
+msgstr ""
+
+#: userprofile/countries.py:159
+msgid "Mozambique"
+msgstr ""
+
+#: userprofile/countries.py:160
+msgid "Namibia"
+msgstr ""
+
+#: userprofile/countries.py:161
+msgid "New Caledonia"
+msgstr ""
+
+#: userprofile/countries.py:162
+msgid "Niger"
+msgstr ""
+
+#: userprofile/countries.py:163
+msgid "Norfolk Island"
+msgstr ""
+
+#: userprofile/countries.py:164
+msgid "Nigeria"
+msgstr ""
+
+#: userprofile/countries.py:165
+msgid "Nicaragua"
+msgstr ""
+
+#: userprofile/countries.py:166
+msgid "Netherlands"
+msgstr ""
+
+#: userprofile/countries.py:167
+msgid "Norway"
+msgstr ""
+
+#: userprofile/countries.py:168
+msgid "Nepal"
+msgstr ""
+
+#: userprofile/countries.py:169
+msgid "Nauru"
+msgstr ""
+
+#: userprofile/countries.py:170
+msgid "Niue"
+msgstr ""
+
+#: userprofile/countries.py:171
+msgid "New Zealand"
+msgstr ""
+
+#: userprofile/countries.py:172
+msgid "Oman"
+msgstr ""
+
+#: userprofile/countries.py:173
+msgid "Panama"
+msgstr ""
+
+#: userprofile/countries.py:174
+msgid "Peru"
+msgstr ""
+
+#: userprofile/countries.py:175
+msgid "French Polynesia"
+msgstr ""
+
+#: userprofile/countries.py:176
+msgid "Papua New Guinea"
+msgstr ""
+
+#: userprofile/countries.py:177
+msgid "Philippines"
+msgstr ""
+
+#: userprofile/countries.py:178
+msgid "Pakistan"
+msgstr ""
+
+#: userprofile/countries.py:179
+msgid "Poland"
+msgstr ""
+
+#: userprofile/countries.py:180
+msgid "St. Pierre & Miquelon"
+msgstr ""
+
+#: userprofile/countries.py:181
+msgid "Pitcairn"
+msgstr ""
+
+#: userprofile/countries.py:182
+msgid "Puerto Rico"
+msgstr ""
+
+#: userprofile/countries.py:183
+msgid "Portugal"
+msgstr ""
+
+#: userprofile/countries.py:184
+msgid "Palau"
+msgstr ""
+
+#: userprofile/countries.py:185
+msgid "Paraguay"
+msgstr ""
+
+#: userprofile/countries.py:186
+msgid "Qatar"
+msgstr ""
+
+#: userprofile/countries.py:187
+msgid "Reunion"
+msgstr ""
+
+#: userprofile/countries.py:188
+msgid "Romania"
+msgstr ""
+
+#: userprofile/countries.py:189
+msgid "Russian Federation"
+msgstr ""
+
+#: userprofile/countries.py:190
+msgid "Rwanda"
+msgstr ""
+
+#: userprofile/countries.py:191
+msgid "Saudi Arabia"
+msgstr ""
+
+#: userprofile/countries.py:192
+msgid "Solomon Islands"
+msgstr ""
+
+#: userprofile/countries.py:193
+msgid "Seychelles"
+msgstr ""
+
+#: userprofile/countries.py:194
+msgid "Sudan"
+msgstr ""
+
+#: userprofile/countries.py:195
+msgid "Sweden"
+msgstr ""
+
+#: userprofile/countries.py:196
+msgid "Singapore"
+msgstr ""
+
+#: userprofile/countries.py:197
+msgid "St. Helena"
+msgstr ""
+
+#: userprofile/countries.py:198
+msgid "Slovenia"
+msgstr ""
+
+#: userprofile/countries.py:199
+msgid "Svalbard & Jan Mayen Islands"
+msgstr ""
+
+#: userprofile/countries.py:200
+msgid "Slovakia"
+msgstr ""
+
+#: userprofile/countries.py:201
+msgid "Sierra Leone"
+msgstr ""
+
+#: userprofile/countries.py:202
+msgid "San Marino"
+msgstr ""
+
+#: userprofile/countries.py:203
+msgid "Senegal"
+msgstr ""
+
+#: userprofile/countries.py:204
+msgid "Somalia"
+msgstr ""
+
+#: userprofile/countries.py:205
+msgid "Suriname"
+msgstr ""
+
+#: userprofile/countries.py:206
+msgid "Sao Tome & Principe"
+msgstr ""
+
+#: userprofile/countries.py:207
+msgid "El Salvador"
+msgstr ""
+
+#: userprofile/countries.py:208
+msgid "Syrian Arab Republic"
+msgstr ""
+
+#: userprofile/countries.py:209
+msgid "Swaziland"
+msgstr ""
+
+#: userprofile/countries.py:210
+msgid "Turks & Caicos Islands"
+msgstr ""
+
+#: userprofile/countries.py:211
+msgid "Chad"
+msgstr ""
+
+#: userprofile/countries.py:212
+msgid "French Southern Territories"
+msgstr ""
+
+#: userprofile/countries.py:213
+msgid "Togo"
+msgstr ""
+
+#: userprofile/countries.py:214
+msgid "Thailand"
+msgstr ""
+
+#: userprofile/countries.py:215
+msgid "Tajikistan"
+msgstr ""
+
+#: userprofile/countries.py:216
+msgid "Tokelau"
+msgstr ""
+
+#: userprofile/countries.py:217
+msgid "Turkmenistan"
+msgstr ""
+
+#: userprofile/countries.py:218
+msgid "Tunisia"
+msgstr ""
+
+#: userprofile/countries.py:219
+msgid "Tonga"
+msgstr ""
+
+#: userprofile/countries.py:220
+msgid "East Timor"
+msgstr ""
+
+#: userprofile/countries.py:221
+msgid "Turkey"
+msgstr ""
+
+#: userprofile/countries.py:222
+msgid "Trinidad & Tobago"
+msgstr ""
+
+#: userprofile/countries.py:223
+msgid "Tuvalu"
+msgstr ""
+
+#: userprofile/countries.py:224
+msgid "Taiwan, Province of China"
+msgstr ""
+
+#: userprofile/countries.py:225
+msgid "Tanzania, United Republic of"
+msgstr ""
+
+#: userprofile/countries.py:226
+msgid "Ukraine"
+msgstr ""
+
+#: userprofile/countries.py:227
+msgid "Uganda"
+msgstr ""
+
+#: userprofile/countries.py:228
+msgid "United States Minor Outlying Islands"
+msgstr ""
+
+#: userprofile/countries.py:229
+msgid "United States of America"
+msgstr ""
+
+#: userprofile/countries.py:230
+msgid "Uruguay"
+msgstr ""
+
+#: userprofile/countries.py:231
+msgid "Uzbekistan"
+msgstr ""
+
+#: userprofile/countries.py:232
+msgid "Vatican City State (Holy See)"
+msgstr ""
+
+#: userprofile/countries.py:233
+msgid "St. Vincent & the Grenadines"
+msgstr ""
+
+#: userprofile/countries.py:234
+msgid "Venezuela"
+msgstr ""
+
+#: userprofile/countries.py:235
+msgid "British Virgin Islands"
+msgstr ""
+
+#: userprofile/countries.py:236
+msgid "United States Virgin Islands"
+msgstr ""
+
+#: userprofile/countries.py:237
+msgid "Viet Nam"
+msgstr ""
+
+#: userprofile/countries.py:238
+msgid "Vanuatu"
+msgstr ""
+
+#: userprofile/countries.py:239
+msgid "Wallis & Futuna Islands"
+msgstr ""
+
+#: userprofile/countries.py:240
+msgid "Samoa"
+msgstr ""
+
+#: userprofile/countries.py:241
+msgid "Yemen"
+msgstr ""
+
+#: userprofile/countries.py:242
+msgid "Mayotte"
+msgstr ""
+
+#: userprofile/countries.py:243
+msgid "Yugoslavia"
+msgstr ""
+
+#: userprofile/countries.py:244
+msgid "South Africa"
+msgstr ""
+
+#: userprofile/countries.py:245
+msgid "Zambia"
+msgstr ""
+
+#: userprofile/countries.py:246
+msgid "Zaire"
+msgstr ""
+
+#: userprofile/countries.py:247
+msgid "Zimbabwe"
+msgstr ""
+
+#: userprofile/countries.py:248
+msgid "Unknown or unspecified country"
+msgstr ""
+
+#: userprofile/countries.py:253
+msgid "This value must be in COUNTRIES setting in localflavor.generic package."
+msgstr ""
+
+#: userprofile/forms.py:58
+#, python-format
+msgid "The file type is invalid: %s"
+msgstr ""
+
+#: userprofile/forms.py:63
+msgid "You must enter one of the options"
+msgstr ""
+
+#: userprofile/forms.py:77
+msgid "You must select a portion of the image with a minimum of 96x96 pixels."
+msgstr ""
+
+#: userprofile/forms.py:94
+msgid ""
+"That username has invalid characters. The valid values are letters, numbers "
+"and underscore."
+msgstr ""
+
+#: userprofile/forms.py:99
+msgid "The username is already registered."
+msgstr ""
+
+#: userprofile/forms.py:108
+msgid "The passwords inserted are different."
+msgstr ""
+
+#: userprofile/forms.py:120 userprofile/forms.py:139
+msgid "That e-mail is already used."
+msgstr ""
+
+#: userprofile/forms.py:124
+msgid "That e-mail is already being confirmed."
+msgstr ""
+
+#: userprofile/models.py:39
+#, python-format
+msgid "%s's profile"
+msgstr ""
+
+#: userprofile/models.py:58
+#, python-format
+msgid "%s's Avatar"
+msgstr ""
+
+#: userprofile/models.py:142
+#, python-format
+msgid "Email validation process for %(user)s"
+msgstr ""
+
+#: userprofile/templatetags/avatars.py:68
+msgid ""
+"You have to provide only the size as             an integer (both sides will "
+"be equal) and optionally, the             username."
+msgstr ""

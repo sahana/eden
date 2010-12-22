@@ -86,6 +86,24 @@ img {
 	border: none;
 }
 
+input[type="submit"] {
+    border: 1px solid #AAA;
+    background: #CCC;
+    color: #333;
+}
+
+input[type="text"] {
+    border: 1px solid #666;
+    background: #FFF;
+    padding: 2px;
+    
+    /* Fancy round borders for Webkit, Gecko and standard
+       implementations */
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+
 /* COMMON CLASSES */
 
 .hidden {
@@ -230,6 +248,11 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     margin-left: 20px;
     text-transform: capitalize;
     margin-bottom: 15px;
+}
+#content h3 {
+    font-size: 12px;
+    margin: 10px;
+    text-transform: capitalize;
 }
 
 #useropts {
