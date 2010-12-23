@@ -5,44 +5,46 @@
 {% block title %}{{ profile.user }}'s public profile{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
 
-{% block extrajs %}
-	{% if profile.latitude and profile.longitude %}
-	<script type="text/javascript" src="http://www.google.com/jsapi?key={{ GOOGLE_MAPS_API_KEY }}"></script>
-	<script type="text/javascript">google.load("maps", "2");</script>
-	<script type="text/javascript">
-		$(function() {
-		if (google.maps.BrowserIsCompatible()) {
-			var map = new google.maps.Map2(document.getElementById("map"));
-      map.disableDragging();
-			map.setCenter(new google.maps.LatLng({{ profile.latitude }}, {{ profile.longitude }}), 4);
-			var marker = new google.maps.Marker(new google.maps.LatLng({{ profile.latitude }}, {{ profile.longitude }}), {clickable: false });
-			map.addOverlay(marker);
-		}
-		});
-	</script>
-	{% endif %}
-{% endblock %}
-
 {% block content %}
-	<h2>{% blocktrans with profile.user as user %}Public profile of {{ user }}{% endblocktrans %}</h2>
+    {% if GOOGLE_MAPS_API_KEY and user.get_profile.location %}
+        <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=yes">
+        <script type="text/javascript">
+            function initialize() {
+                var latlng = new google.maps.LatLng( {{ user.get_profile.latitude|stringformat:"s" }}, {{ user.get_profile.longitude|stringformat:"s" }} );
+                var opts = {
+                    zoom: 15,
+                    center: latlng,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                var map = new google.maps.Map(document.getElementById("location"), opts);
+                var marker = new google.maps.Marker({
+                    position: latlng,
+                    map: map,
+                    title:"User!"
+                });
+            };
+        </script>
+    {% endif %}
+	
+	<div id="contenttitles">{% blocktrans with profile.user as user %}Public profile of {{ user }}{% endblocktrans %}</div>
 
-	<div class="vcard">
-		<div class="span-10">
-			<img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
-			<ul>
-				<li>{% trans "Username" %}: <strong>{{ profile.user }}</strong></li>
-				{% if profile.country %}
-				<li>{% trans "Country" %}: <strong>{{ profile.get_country_display }}</strong></li>
-				{% endif %}
-				{% if profile.location %}
-				<li>{% trans "Location" %}: <strong>{{ profile.location }}</strong></li>
-				{% endif %}
-			</ul>
-		</div>
-		{% if profile.latitude and profile.longitude %}
-		<div class="span-10">
-			<div id="map"></div>
-		</div>
-		{% endif %}
+    <div id="contentinside">
+        <img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
+		<ul>
+			<li>{% trans "Username" %}: {{ profile.user }}</li></br>
+			{% if profile.country %}
+			<li>{% trans "Country" %}: {{ profile.get_country_display }}</li></br>
+			{% endif %}
+			{% if profile.location %}
+			<li>{% trans "Location" %}: {{ profile.location }}</li>
+			{% endif %}
+		</ul>
 	</div>
+	
+	{% if profile.latitude and profile.longitude %}
+	<div class="span-10">
+		<div id="location"></div>
+	</div>
+	{% endif %}
 {% endblock %}

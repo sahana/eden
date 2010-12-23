@@ -18,19 +18,14 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls.defaults import *
-#from django.contrib.auth.views import *
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
+from django.contrib.auth.decorators import login_required
 
-urlpatterns = patterns('',
+from django.contrib.auth.models import User
 
-    # No longer required, since they were replaced by django-register
-    (r'login/$', 'django.contrib.auth.views.login',
-                 {'template_name': 'accounts/login.html'}),
+def create_proposal(request):
 
-    (r'logout/$', 'django.contrib.auth.views.logout',
-                  {'template_name': 'accounts/logout.html'}),
-
-    (r'^profile/', include('userprofile.urls'))
-    #(r'profile/', 'accounts.views.view_profile'),
-
-)
+    """
+    """
+    

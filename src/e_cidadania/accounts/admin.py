@@ -23,6 +23,11 @@ from django.contrib import admin
 from e_cidadania.accounts.models import UserProfile
 
 class ProfileAdmin(admin.ModelAdmin):
+
+    """
+    This is a minimal view for Django administration interface. It shows the
+    user and the website.
+    """
     list_display = ('user', 'website')
     
 admin.site.register(UserProfile, ProfileAdmin)

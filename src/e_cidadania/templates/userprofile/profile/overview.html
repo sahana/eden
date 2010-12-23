@@ -43,8 +43,8 @@
 	    
 	   	<div>
 			<p>{% trans "Username: " %} {{ user }}</p>
-			<p>{% trans "Real name: " %} {{ user.first_name }} {{ user.last_name }}</p>
-			<p>{% trans "Age: " %} {{ user. }}
+			<p>{% trans "Real name: " %} {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
+			<p>{% trans "Age: " %} {{ user.get_profile.birthdate }}
 			<p>{% trans "Member for: " %} {{ user.date_joined }}</p>
 			<p>{% trans "E-mail:" %}
 				<span class="{% if not email or not validated %}quiet red{% endif %}">

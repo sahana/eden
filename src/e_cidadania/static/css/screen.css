@@ -249,10 +249,25 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     text-transform: capitalize;
     margin-bottom: 15px;
 }
+
 #content h3 {
     font-size: 12px;
     margin: 10px;
     text-transform: capitalize;
+}
+
+#contentinside {
+    margin: 25px 20px 20px 13px;
+}
+
+table#personal td {
+    padding-bottom: 20px;
+    padding-left: 15px;
+}
+
+table#personal th {
+    font-weight: normal;
+    text-align: right;
 }
 
 #useropts {

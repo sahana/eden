@@ -38,7 +38,9 @@ class UserProfile(BaseProfile):
 
 
     """
-    Extends the default User profiles of Django.
+    Extends the default User profiles of Django. The fields of this model
+    can be obtained by the user.get_profile method and it's extended by the
+    django-profile application.
     """
     #user = models.ForeignKey(User, unique=True)
     

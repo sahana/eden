@@ -6,11 +6,10 @@
 
 {% block content %}
     <div id="contenttitles">{% trans "Personal data removed" %}</div>
-    <p class="success">
-        {% trans "Your profile information has been removed successfully." %}
-    </p>
-    <div>
-        <a href="/">{% trans "Back to home page" %}</a>
-        <a href="/accounts/profile">{% trans "Back to your profile" %}</a>
+    <div id="contentinside">{% trans "Your profile information has been removed successfully." %}
+        <div></br></br>
+            <a href="/">&laquo; {% trans "Back to home page" %}</a></br>
+            <a href="/accounts/profile">&laquo; {% trans "Back to your profile" %}</a>
+        </div>
     </div>
 {% endblock %}

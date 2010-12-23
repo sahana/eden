@@ -18,19 +18,20 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls.defaults import *
-#from django.contrib.auth.views import *
+import datetime
 
-urlpatterns = patterns('',
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
-    # No longer required, since they were replaced by django-register
-    (r'login/$', 'django.contrib.auth.views.login',
-                 {'template_name': 'accounts/login.html'}),
-
-    (r'logout/$', 'django.contrib.auth.views.logout',
-                  {'template_name': 'accounts/logout.html'}),
-
-    (r'^profile/', include('userprofile.urls'))
-    #(r'profile/', 'accounts.views.view_profile'),
-
-)
+class Proposal(models.Model):
+    title = models.CharField(_('Title'), max_length=100, unique=True)
+    message = models.TextField(_('Message'), max_length=200)
+    pub_date = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User)
+    latitude = models.DecimalField(_('Latitude'), max_digits=8,
+                                                  decimal_places=6)
+    longitude = models.DecimalField(_('Logintude'), max_digits=8,
+                                                    decimal_places=6)
+    

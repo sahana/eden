@@ -10,7 +10,7 @@
 	{% csrf_token %}
 	<fieldset>
 		<div id="contenttitles">{% trans "Define your location" %}</div>
-		<div id="forms" style="margin-left:20px;">
+		<div id="contentinside">
 		    <h3 for="id_country">{% trans "Country" %}</h3>
 		    <p>{{ form.country }}</p>
 		    {% if GOOGLE_MAPS_API_KEY %}
@@ -27,12 +27,4 @@
 	    </div>
 	</fieldset>
 	</form>
-{% endblock %}
-
-
-{% block content-related %}
-<div class="box">
-  <h3>{% trans "Location information" %}</h3>
-    <p>{% trans "Define your location information" %}.</p>
-</div>
 {% endblock %}
