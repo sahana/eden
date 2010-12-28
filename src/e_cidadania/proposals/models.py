@@ -25,6 +25,13 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
+CLOSE_REASONS = (
+    ('1', _('Out of money')),
+    ('2', _('Not accepted')),
+    ('3', _('Not estimated')),
+    ('4', _('Not viable')),
+)
+
 class Proposal(models.Model):
     title = models.CharField(_('Title'), max_length=100, unique=True)
     message = models.TextField(_('Message'), max_length=200)
@@ -32,6 +39,7 @@ class Proposal(models.Model):
     author = models.ForeignKey(User)
     latitude = models.DecimalField(_('Latitude'), max_digits=8,
                                                   decimal_places=6)
-    longitude = models.DecimalField(_('Logintude'), max_digits=8,
+    longitude = models.DecimalField(_('Longitude'), max_digits=8,
                                                     decimal_places=6)
-    
+    closed = models.BooleanField(default=False)
+    closed_by = models.ForeignKey(User, blank=True, null=True)
