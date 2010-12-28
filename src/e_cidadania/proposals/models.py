@@ -56,4 +56,9 @@ class Proposal(models.Model):
         Tag.objects.update_tags(self, tags)
 
     def get_tags(self, tags):
-        return Tag.objects.get_for_object(self) 
+        return Tag.objects.get_for_object(self)
+
+class Answer(models.Model):
+    proposal = models.ForeignKey(Proposal)
+    author = models.ForeignKey(User)
+    pub_date = models.DateTimeField(auto_now_add=True)
