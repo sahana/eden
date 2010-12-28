@@ -25,11 +25,13 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
+from tagging.fields import TagField
+from tagging.models import Tag
+
 CLOSE_REASONS = (
-    ('1', _('Out of money')),
-    ('2', _('Not accepted')),
-    ('3', _('Not estimated')),
-    ('4', _('Not viable')),
+    (1, _('Economically not viable')),
+    (2, _('Legally not viable')),
+    (3, _('Technically not viable')),
 )
 
 class Proposal(models.Model):
@@ -37,9 +39,21 @@ class Proposal(models.Model):
     message = models.TextField(_('Message'), max_length=200)
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User)
+    tags = TagField()
     latitude = models.DecimalField(_('Latitude'), max_digits=8,
                                                   decimal_places=6)
     longitude = models.DecimalField(_('Longitude'), max_digits=8,
                                                     decimal_places=6)
     closed = models.BooleanField(default=False)
     closed_by = models.ForeignKey(User, blank=True, null=True)
+    close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
+                                            blank=True)
+    
+    def __unicode__(self):
+        return self.title
+
+    def set_tags(self, tags):
+        Tag.objects.update_tags(self, tags)
+
+    def get_tags(self, tags):
+        return Tag.objects.get_for_object(self) 
