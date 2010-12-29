@@ -22,10 +22,26 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
+from django.views.generic.list_detail import object_list
+from django.views.generic.list_detail import object_detail
+from django.views.generic.create_update import create_object
+from django.views.generic.create_update import update_object
+from django.views.generic.create_update import delete_object
+
 from django.contrib.auth.models import User
 
 def create_proposal(request):
 
     """
     """
-    
+    pass
+
+def list_proposals(request):
+
+    """
+    List all the proposals.
+    """
+    return object_list(request,
+                       queryset = Proposal.objects.all().order_by('votes'),
+                       template_name = 'proposals/list_proposals.html',
+                       template_object_name = 'proposal')

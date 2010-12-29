@@ -94,8 +94,9 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admin',
     'registration',
+    'tagging',
     
     'e_cidadania.userprofile',
     'e_cidadania.accounts',
-    'e_cidadania.debate',
+    'e_cidadania.proposals',
 )

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Add proposal" %}{% endblock %}
+
+{% block content %}
+  {% for proposal in proposals %}
+    <div id="proposal-wrapper">
+      <div id="votes"></div>
+      <!-- Here goes the voting button -->
+      <div id="proposal">
+        <div class="title">{{ proposal.title }}</div>
+        <div class="resume">{{ proposal.resume }}</div>
+        <div class="creator">{% trans "proposed by " %}{{ proposal.author }}</div>
+      </div>
+    </div>
+{% endblock %}

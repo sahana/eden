@@ -34,20 +34,29 @@ CLOSE_REASONS = (
     (3, _('Technically not viable')),
 )
 
-class Proposal(models.Model):
+class CommonData(models.Model):
     title = models.CharField(_('Title'), max_length=100, unique=True)
     message = models.TextField(_('Message'), max_length=200)
     pub_date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User)
+    mod_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        abstract = True
+
+class Proposal(CommonData):
+    author = models.ForeignKey(User, related_name='proposal_authors')
     tags = TagField()
     latitude = models.DecimalField(_('Latitude'), max_digits=8,
                                                   decimal_places=6)
     longitude = models.DecimalField(_('Longitude'), max_digits=8,
                                                     decimal_places=6)
     closed = models.BooleanField(default=False)
-    closed_by = models.ForeignKey(User, blank=True, null=True)
+    closed_by = models.ForeignKey(User, blank=True, null=True,
+                                  related_name='proposal_closed_by')
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
+    anon_allowed = models.BooleanField(default=False)
+    votes = models.IntegerField()
     
     def __unicode__(self):
         return self.title
@@ -58,7 +67,7 @@ class Proposal(models.Model):
     def get_tags(self, tags):
         return Tag.objects.get_for_object(self)
 
-class Answer(models.Model):
+class Comment(CommonData):
     proposal = models.ForeignKey(Proposal)
     author = models.ForeignKey(User)
-    pub_date = models.DateTimeField(auto_now_add=True)
+    votes = models.IntegerField()

@@ -20,34 +20,3 @@
 
 from django.conf.urls.defaults import *
 from django.conf import settings
-from django.contrib import admin
-
-admin.autodiscover()
-
-urlpatterns = patterns('',
-
-    # Django administration
-    (r'^admin/', include(admin.site.urls)),
-
-    # User accounts
-    #(r'^accounts/', include('accounts.urls')),
-    (r'^accounts/', include('registration.urls')),
-    
-    (r'^accounts/profile/', include('userprofile.urls')),
-    
-    (r'^proposals/', include('proposals.urls')),
-    
-    
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'static'}),
-
-)
-
-# If DEBUG=True in settings.py add static content served by django.
-#if settings.DEBUG:
-#    urlpatterns += ('',
-#    
-#    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-#        {'document_root': 'static'}),
-#    
-#    )

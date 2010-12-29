@@ -18,36 +18,16 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls.defaults import *
-from django.conf import settings
 from django.contrib import admin
 
-admin.autodiscover()
+from e_cidadania.proposals.models import Proposal, Comment
 
-urlpatterns = patterns('',
+class ProposalAdmin(admin.ModelAdmin):
 
-    # Django administration
-    (r'^admin/', include(admin.site.urls)),
-
-    # User accounts
-    #(r'^accounts/', include('accounts.urls')),
-    (r'^accounts/', include('registration.urls')),
+    """
+    This is a minimal view for Django administration interface. It shows the
+    user and the website.
+    """
+    list_display = ('title', 'author', 'tags')
     
-    (r'^accounts/profile/', include('userprofile.urls')),
-    
-    (r'^proposals/', include('proposals.urls')),
-    
-    
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'static'}),
-
-)
-
-# If DEBUG=True in settings.py add static content served by django.
-#if settings.DEBUG:
-#    urlpatterns += ('',
-#    
-#    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-#        {'document_root': 'static'}),
-#    
-#    )
+admin.site.register(Proposal, ProposalAdmin)

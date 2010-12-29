@@ -306,6 +306,47 @@ table#personal th {
     margin-right: 25px; 
 }
 
+/* PROPOSALS */
+#proposal-wrapper {
+    width: 100%;
+    border: none;
+    background: none;
+    margin: 10px;
+}
+
+#votes {
+    float: left;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #000;
+    background: #CCC;
+}
+
+#proposal {
+    float: left;
+    width: 100%;
+    border: 1px solid #444;
+    background: #CCC;
+    margin: 10px;
+}
+
+#proposal .title {
+    font-weight: bold;
+    font-size: 14px;
+    
+}
+
+#proposal .resume {
+    
+}
+
+#proposal .creator {
+    font-size: 9px;
+    font-style: italic;
+}
+
+/* FOOTER STYLE*/
+
 #footer {
     clear: both;
     width: 95%;
