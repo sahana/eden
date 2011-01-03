@@ -7,3 +7,4 @@
 *.toc
 *.log
 *.aux
+_build*

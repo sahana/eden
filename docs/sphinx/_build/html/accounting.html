@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cuentas de usuario &mdash; e-cidadania valpha documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     'alpha',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="e-cidadania valpha documentation" href="index.html" />
+    <link rel="next" title="Sistema de propuestas" href="proposals.html" />
+    <link rel="prev" title="Bienvenido a la documentación de e-cidadania!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="proposals.html" title="Sistema de propuestas"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Bienvenido a la documentación de e-cidadania!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">e-cidadania valpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="cuentas-de-usuario">
+<h1>Cuentas de usuario<a class="headerlink" href="#cuentas-de-usuario" title="Permalink to this headline">¶</a></h1>
+<p>El sistema de cuentas de usuario en e-cidadania está basado en el módulo <em>auth</em>
+de django, así como en django-registration y django-profile, creados por James
+Bennet.</p>
+<p>Las cuentas de usuario contienen los siguientes campos:</p>
+<dl class="docutils">
+<dt><strong>username</strong> <em>(CharField, 200 caracteres)</em></dt>
+<dd>Este campo contiene el nombre de usuario. Es accesible como user.username</dd>
+<dt><strong>firstname</strong> <em>(CharField, 50 caracteres)</em></dt>
+<dd>Este campo contiene el nombre <em>real</em> del usuario.</dd>
+<dt><strong>surname</strong> <em>(CharField, 200 caracteres)</em></dt>
+<dd>Este campo contiene los apellidos <em>reales</em> del usuario.</dd>
+<dt><strong>gender</strong> <em>(Choice)</em></dt>
+<dd>Lista de elecciones de género. Opciones válidas: F (Female) y M (Male)</dd>
+<dt><strong>birthdate</strong> <em>(DateField)</em></dt>
+<dd>Fecha de nacimiento del usuario. Utilizada para calcular la edad.</dd>
+<dt><strong>province</strong> <em>(CharField, 50 caracteres)</em></dt>
+<dd>Provincia de residencia del usuario.</dd>
+<dt><strong>municipality</strong> <em>(CharField, 50 caracteres)</em></dt>
+<dd>Municipio o ciudad de residencia del usuario.</dd>
+<dt><strong>address</strong> <em>(CharField)</em></dt>
+<dd>Dirección de residencia (calle) del usuario.</dd>
+<dt><strong>address_number</strong> <em>(CharField, 3 caracteres)</em></dt>
+<dd>Número del edificio de residencia.</dd>
+<dt><strong>address_floor</strong> <em>(CharField, 3 caracteres)</em></dt>
+<dd>Piso</dd>
+<dt><strong>address_letter</strong> <em>(CharField, 2 caracteres)</em></dt>
+<dd>Letra del piso de residencia</dd>
+<dt><strong>phone</strong> <em>(CharField, 9 caracteres)</em></dt>
+<dd>Teléfono de contacto del usuario.</dd>
+<dt><strong>phone_alt</strong> <em>(CharField, 9 caracteres)</em></dt>
+<dd>Teléfono secundario de contacto</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="index.html"
+                                  title="previous chapter">Bienvenido a la documentación de e-cidadania!</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="proposals.html"
+                                  title="next chapter">Sistema de propuestas</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/accounting.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="proposals.html" title="Sistema de propuestas"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Bienvenido a la documentación de e-cidadania!"
+             >previous</a> |</li>
+        <li><a href="index.html">e-cidadania valpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2011, Oscar Carballal Prego.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>
