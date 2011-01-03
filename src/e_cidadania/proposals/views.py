@@ -29,12 +29,18 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from django.contrib.auth.models import User
+from e_cidadania.proposals.models import Proposal
 
-def create_proposal(request):
+def add_proposal(request):
 
     """
+    Create a new proposal.
     """
-    pass
+    return create_object(request,
+                         model = Proposal,
+                         login_required = True,
+                         template_name = 'proposals/add_proposal.html',
+                         post_save_redirect = 'proposals/list/')
 
 def list_proposals(request):
 

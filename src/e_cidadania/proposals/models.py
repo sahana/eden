@@ -35,6 +35,10 @@ CLOSE_REASONS = (
 )
 
 class CommonData(models.Model):
+    
+    """
+    Abstract Base Model for all the common fields in proposals.
+    """
     title = models.CharField(_('Title'), max_length=100, unique=True)
     message = models.TextField(_('Message'), max_length=200)
     pub_date = models.DateTimeField(auto_now_add=True)
@@ -44,6 +48,11 @@ class CommonData(models.Model):
         abstract = True
 
 class Proposal(CommonData):
+    
+    """
+    Proposal model. This will store the user proposal in a similar
+    way that Stackoverflow does.
+    """
     author = models.ForeignKey(User, related_name='proposal_authors')
     tags = TagField()
     latitude = models.DecimalField(_('Latitude'), max_digits=8,
