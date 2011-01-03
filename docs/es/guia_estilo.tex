@@ -1,4 +1,7 @@
 \documentclass[a4paper, 10pt]{report}
+\usepackage[spanish]{babel}
+\usepackage{listings}
+\lstset{language=Python}
 
 \begin{document}
 \title{e-cidadan\'{\i}a\\ Gu\'{\i}a de estilo para desarrolladores}
@@ -15,12 +18,36 @@
 \section{Imports}
 	\begin{enumerate}
 		\item Todos los imports deben estar situados en la cabecera del fichero, por debajo de la cabecera de comentarios.
-		\item Los imports de m\'{o}dulos de sistema o de python deben preceder a los dem\'{a}s
+		\item Los imports de m\'{o}dulos de sistema o de python deben preceder a los dem\'{a}s, y los de las librer\'{\i}as externas deben preceder a los de la aplicaci\'{o}n.
+
+\begin{lstlisting}
+import os
+import sys
+
+from extlib import function
+
+from myapp.module import function
+\end{lstlisting}
+	
 	\end{enumerate}
 
 \section{Columnas}
-El codigo debe de ser de 80 columnas de ancho como maximo salvo en los casos de las plantillas de estilo.
+El c\'{o}digo debe de ser de 80 columnas de ancho como m\'{a}ximo salvo en los casos de las plantillas de estilo.
+
+Si una l\'{\i}nea de c\'{o}digo no cabe en 80 columnas, intenta reducirla declarando variables previamente. Si a\'{u}n as\'{\i} no se puede y la l\'{\i}nea tiene par\'{e}ntensis, debe dividirse por ese lugar. Ejemplo:
+
+\begin{lstlisting}
+website = models.URLField(_('Website'), verify_exists=True,
+			 max_length=200, null=True, blank=True,
+			 help_text=_('The URL will be checked'))
+\end{lstlisting}
+
+\section{Indentaci\'{o}n}
+La indentaci\'{o}n debe ser de 4 {\bf espacios} por nivel. No se pueden utilizar tabulaciones para marcar los niveles de indentaci\'{o}n.
 
 \chapter{HTML}
+
+\section{Columnas}
+El c\'{o}digo HTML no tiene l\'{\i}mite de columnas, pero debe estar indentado de forma que se pueda localizar r\'{a}pidamente cualquier elemento del documento. La disposici\'{o}n indentada en el desarrollo prevalece sobre el resultado renderizado de la aplicaci\'{o}n.
 
 \end{document}

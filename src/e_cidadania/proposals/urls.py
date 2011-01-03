@@ -20,3 +20,15 @@
 
 from django.conf.urls.defaults import *
 from django.conf import settings
+
+urlpatterns = patterns('e_cidadania.proposals',
+    
+    (r'^edit/<prop-id>/', 'edit_proposal'),
+    
+    (r'^add/', 'add_proposal'),
+    
+    (r'^delete/<prop-id>', 'delete_proposal'),
+
+    (r'^list/', 'list_proposals'),
+
+)
