@@ -1,10 +1,12 @@
-==================
 Cuentas de usuario
 ==================
 
 El sistema de cuentas de usuario en e-cidadania está basado en el módulo *auth*
 de django, así como en django-registration y django-profile, creados por James
 Bennet.
+
+Campos de datos
+---------------
 
 Las cuentas de usuario contienen los siguientes campos:
 
@@ -46,3 +48,23 @@ Las cuentas de usuario contienen los siguientes campos:
 
 **phone_alt** *(CharField, 9 caracteres)*
    Teléfono secundario de contacto
+
+django-registration
+-------------------
+
+django-registration se encarga de blahblah.
+
+django-profile
+--------------
+
+django-profile se encarga de lerelere.
+
+accounts
+--------
+
+La aplicación accounts sólo establece los campos extra para el modelo de usuario, el resto de trabajo es realizado por django-profile.
+
+LDAP
+----
+
+El soporte LDAP todavía no está incorporado en esta versión.

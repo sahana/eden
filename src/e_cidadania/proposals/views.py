@@ -48,6 +48,12 @@ def list_proposals(request):
     List all the proposals.
     """
     return object_list(request,
-                       queryset = Proposal.objects.all().order_by('votes'),
+                       queryset = Proposal.objects.all(),
                        template_name = 'proposals/list_proposals.html',
                        template_object_name = 'proposal')
+                       
+def delete_proposal(request):
+    pass
+    
+def edit_proposal(request):
+    pass

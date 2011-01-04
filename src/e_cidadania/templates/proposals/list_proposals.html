@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Add proposal" %}{% endblock %}
+{% block title %}{% trans "View proposals" %}{% endblock %}
 
 {% block content %}
-  {% for proposal in proposals %}
+{{ proposal.title }}
+  {% for p in proposal %}
     <div id="proposal-wrapper">
       <div id="votes"></div>
       <!-- Here goes the voting button -->
       <div id="proposal">
-        <div class="title">{{ proposal.title }}</div>
-        <div class="resume">{{ proposal.resume }}</div>
-        <div class="creator">{% trans "proposed by " %}{{ proposal.author }}</div>
+        <div class="title">{{ p.title }}</div>
+        <div class="resume">{{ p.resume }}</div>
+        <div class="creator">{% trans "proposed by " %}{{ p.author }}</div>
       </div>
     </div>
    {% endfor %}

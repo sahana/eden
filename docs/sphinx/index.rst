@@ -14,15 +14,33 @@ Este programa está basado en el framework `django`_ y en varias librerías exte
 
 .. _django: http://www.djangoproject.com
 
-Contenidos:
-===========
+Referencia
+==========
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 10
 
    accounting
    proposals
+   debates
+   ldap
 
-Indices and tablas
+Desarrollo
+==========
+.. toctree::
+   :maxdepth: 10
+   
+   styleguide
+
+Plantillas
+==========
+.. toctree::
+   :maxdepth: 10
+
+   accounting_templates
+   proposals_templates
+   debates_templates
+
+Indices y tablas
 ==================
 
 * :ref:`genindex`

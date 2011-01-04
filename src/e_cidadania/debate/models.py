@@ -20,39 +20,51 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
+
+from tagging.fields import TagField
+from tagging.models import Tag
 
 class Debate(models.Model):
 
     """
     Very basic outline of a debate, or group of sections.
     """
-    name = models.CharField('Nombre: ', max_length=200)
+    title = models.CharField(_('Title'), max_length=200)
+    objectives = models.CharField(_('Objectives'), max_length=100)
+    description = models.TextField(_('Description'))
+    
     pub_date = models.DateTimeField(auto_now_add=True)
     
     def __unicode__(self):
-        return self.name
+        return self.title
     
-class Section(models.Model):
+class Phases(models.Model):
 
     """
-    basic outline of sections, or gropus of messages.
+    Basic outline of sections, or phases of the debate.
     """
-    name = models.CharField('Nombre: ', max_length=200)
+    title = models.CharField(_('Title'), max_length=200)
+    description = models.TextField(_('Description'))
+    tags = TagField()
+
     debate = models.ForeignKey(Debate)
     
     def __unicode__(self):
-        return self.debate.name + ' / ' + self.name
+        return self.debate.name + ' / ' + self.title
 
 class Message(models.Model):
 
     """
     The important unit, the message.
     """
-    name = models.CharField('Nombre: ', max_length=200)
-    description = models.TextField()
+    message = models.CharField(_('Message'), max_length=100)
+    explanation = models.CharField(_('Explanation'), max_length=100,
+                                   null=True, blank=True)
+
     section = models.ForeignKey(Section)
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
     
     def __unicode__(self):
-        return self.name
+        return self.message
