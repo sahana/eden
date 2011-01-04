@@ -8,3 +8,5 @@
 *.log
 *.aux
 _build*
+_static*
+_templates*
