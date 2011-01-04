@@ -38,7 +38,7 @@ class Post(models.Model):
     post_author = models.ForeignKey(User, verbose_name=_('Author'))
 
     def save(self, *args, **kwargs):
-        post_author = User.username
+        self.post_author = User.username
 
     def __unicode__(self):
         return self.post_title
