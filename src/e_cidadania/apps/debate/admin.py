@@ -22,20 +22,20 @@ from django.contrib import admin
 
 from e_cidadania.apps.debate.models import Debate, Phases, Message
 
-class SectionInline(admin.StackedInline):
-    model = Section
+class PhasesInline(admin.StackedInline):
+    model = Phases
     extra = 2
 
 class DebateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'pub_date')
-    inlines = [SectionInline]
+    list_display = ('title', 'pub_date')
+    inlines = [PhasesInline]
     
-class SectionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'debate')
+class PhasesAdmin(admin.ModelAdmin):
+    list_display = ('title', 'debate')
     
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'pub_date', 'pub_author')
+    list_display = ('message', 'explanation', 'pub_date', 'pub_author')
 
 admin.site.register(Debate, DebateAdmin)
-admin.site.register(Section, SectionAdmin)
+admin.site.register(Phases, PhasesAdmin)
 admin.site.register(Message, MessageAdmin)

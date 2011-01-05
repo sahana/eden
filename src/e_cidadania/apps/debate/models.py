@@ -62,7 +62,7 @@ class Message(models.Model):
     explanation = models.CharField(_('Explanation'), max_length=100,
                                    null=True, blank=True)
 
-    section = models.ForeignKey(Section)
+    section = models.ForeignKey(Phases)
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
     

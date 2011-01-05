@@ -8,7 +8,7 @@ from django.template import loader, Context
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.conf import settings
-from userprofile.countries import CountryField
+from apps.userprofile.countries import CountryField
 import datetime
 import cPickle as pickle
 import base64

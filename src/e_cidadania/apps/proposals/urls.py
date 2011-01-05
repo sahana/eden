@@ -21,7 +21,7 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 
-urlpatterns = patterns('proposals.views',
+urlpatterns = patterns('apps.proposals.views',
     
     (r'^edit/<prop-id>/', 'edit_proposal'),
     
