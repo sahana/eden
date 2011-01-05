@@ -31,11 +31,11 @@ urlpatterns = patterns('',
 
     # User accounts
     #(r'^accounts/', include('accounts.urls')),
-    (r'^accounts/', include('registration.urls')),
+    (r'^accounts/', include('apps.registration.urls')),
     
-    (r'^accounts/profile/', include('userprofile.urls')),
+    (r'^accounts/profile/', include('apps.userprofile.urls')),
     
-    (r'^proposals/', include('proposals.urls')),
+    (r'^proposals/', include('apps.proposals.urls')),
     
     
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',

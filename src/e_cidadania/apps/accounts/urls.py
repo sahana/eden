@@ -18,16 +18,19 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.contrib import admin
+from django.conf.urls.defaults import *
+#from django.contrib.auth.views import *
 
-from e_cidadania.accounts.models import UserProfile
+urlpatterns = patterns('',
 
-class ProfileAdmin(admin.ModelAdmin):
+    # No longer required, since they were replaced by django-register
+    (r'login/$', 'django.contrib.auth.views.login',
+                 {'template_name': 'accounts/login.html'}),
 
-    """
-    This is a minimal view for Django administration interface. It shows the
-    user and the website.
-    """
-    list_display = ('user', 'website')
-    
-admin.site.register(UserProfile, ProfileAdmin)
+    (r'logout/$', 'django.contrib.auth.views.logout',
+                  {'template_name': 'accounts/logout.html'}),
+
+    (r'^profile/', include('apps.userprofile.urls'))
+    #(r'profile/', 'accounts.views.view_profile'),
+
+)

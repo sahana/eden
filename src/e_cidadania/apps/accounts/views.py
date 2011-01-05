@@ -29,7 +29,7 @@ from django.contrib.auth.models import User
 #from django.views.generic.create_update import update_object
 #from django.views.generic.create_update import delete_object
 
-from e_cidadania.accounts.models import UserProfile, Phone
+from e_cidadania.apps.accounts.models import UserProfile, Phone
 
 @login_required
 def view_profile(request):

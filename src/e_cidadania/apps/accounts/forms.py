@@ -21,10 +21,10 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from registration.forms import RegistrationForm
-from registration.models import RegistrationProfile
+from apps.registration.forms import RegistrationForm
+from apps.registration.models import RegistrationProfile
 
-from accounts.models import UserProfile
+from apps.accounts.models import UserProfile
 
 
 # All this cde has been replaced by django-register
