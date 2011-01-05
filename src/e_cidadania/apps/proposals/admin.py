@@ -20,7 +20,7 @@
 
 from django.contrib import admin
 
-from e_cidadania.proposals.models import Proposal, Comment
+from e_cidadania.apps.proposals.models import Proposal, Comment
 
 class ProposalAdmin(admin.ModelAdmin):
 

@@ -20,7 +20,7 @@
 
 from django.contrib import admin
 
-from e_cidadania.debate.models import Debate, Section, Message
+from e_cidadania.apps.debate.models import Debate, Section, Message
 
 class SectionInline(admin.StackedInline):
     model = Section

@@ -29,7 +29,7 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from django.contrib.auth.models import User
-from e_cidadania.proposals.models import Proposal
+from e_cidadania.apps.proposals.models import Proposal
 
 def add_proposal(request):
 
