@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created by diasvg.py -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="349.01575"
+   height="258.37796"
+   viewBox="9.643 2.882 22.875719 9.4262984"
+   id="svg2980"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="Diagrama1.svg">
+  <metadata
+     id="metadata3098">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs3096">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 174.50787 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="258.37796 : 174.50787 : 1"
+       inkscape:persp3d-origin="129.18898 : 116.33858 : 1"
+       id="perspective3100" />
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1024"
+     inkscape:window-height="749"
+     id="namedview3094"
+     showgrid="false"
+     inkscape:zoom="1.4268697"
+     inkscape:cx="183.30906"
+     inkscape:cy="87.604354"
+     inkscape:window-x="-2"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2980" />
+  <rect
+     x="12.378668"
+     y="4.7289963"
+     width="17.771351"
+     height="10.166903"
+     id="rect2982"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907;stroke-dasharray:0.25909536, 0.25909536" />
+  <rect
+     x="12.811357"
+     y="5.1642742"
+     width="10.946779"
+     height="2.448451"
+     id="rect2984"
+     style="fill:#cecece;stroke:none" />
+  <rect
+     x="12.811357"
+     y="5.1642742"
+     width="10.946779"
+     height="2.448451"
+     id="rect2986"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <rect
+     x="25.473347"
+     y="7.7811384"
+     width="4.0626154"
+     height="6.6691141"
+     id="rect2988"
+     style="fill:#cecece;stroke:none" />
+  <rect
+     x="25.473347"
+     y="7.7811384"
+     width="4.0626154"
+     height="6.6691141"
+     id="rect2990"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="27.504656"
+     y="8.3330116"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text2992"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">Platform Intrinsic</text>
+  <text
+     x="27.504656"
+     y="8.7890186"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text2994"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">Services</text>
+  <path
+     d="m 17.179706,1.6017141 c -0.388643,-0.015546 -1.14002,0.2642773 -1.033791,0.8627876 0.106229,0.5985103 0.611465,0.7332399 0.821332,0.559646 0.212459,-0.1735939 -0.32646,0.836878 0.70474,1.1037462 1.03379,0.2668682 1.562345,-0.1606391 1.409479,-0.4663716 -0.152867,-0.3057326 0.904242,0.7202851 1.399115,0.1347296 0.492281,-0.5855556 -0.505236,-1.1452015 -0.295369,-1.064882 0.212458,0.08032 0.857605,-0.02591 0.647738,-1.0234267 C 20.620492,0.71042612 18.718732,1.4799393 18.928599,1.3348459 19.141058,1.1871616 18.612503,0.45651262 17.954401,0.60419702 17.296299,0.74929042 17.249661,1.0135677 17.179706,1.5991232 l 0,0.00259"
+     id="path2996"
+     style="fill:#ffffff;stroke:none" />
+  <path
+     d="m 17.179706,1.6017141 c -0.388643,-0.015546 -1.14002,0.2642773 -1.033791,0.8627876 0.106229,0.5985103 0.611465,0.7332399 0.821332,0.559646 0.212459,-0.1735939 -0.32646,0.836878 0.70474,1.1037462 1.03379,0.2668682 1.562345,-0.1606391 1.409479,-0.4663716 -0.152867,-0.3057326 0.904242,0.7202851 1.399115,0.1347296 0.492281,-0.5855556 -0.505236,-1.1452015 -0.295369,-1.064882 0.212458,0.08032 0.857605,-0.02591 0.647738,-1.0234267 C 20.620492,0.71042612 18.718732,1.4799393 18.928599,1.3348459 19.141058,1.1871616 18.612503,0.45651262 17.954401,0.60419702 17.296299,0.74929042 17.249661,1.0135677 17.179706,1.5991232 l 0,0.00259"
+     id="path2998"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="17.360102"
+     y="2.660712"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3000"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">INTERNET</text>
+  <text
+     x="18.361179"
+     y="5.7601953"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3002"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">Platform Access System</text>
+  <text
+     x="24.807213"
+     y="5.3872871"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3004"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">DJANGO FRAMEWORK</text>
+  <polyline
+     points="10.851,10.377 10.851,10.128 13.838,10.128 13.838,10.379 "
+     id="polyline3006"
+     style="fill:none;stroke:#000000;stroke-width:0.02;stroke-dasharray:0.1, 0.1"
+     transform="matrix(2.5909536,0,0,2.5909536,-13.701871,-18.066215)" />
+  <polyline
+     points="12.346,10.378 12.346,10.710 12.345,10.710 12.345,9.911 "
+     id="polyline3008"
+     style="fill:none;stroke:#000000;stroke-width:0.02;stroke-dasharray:0.1, 0.1"
+     transform="matrix(2.5909536,0,0,2.5909536,-13.701871,-18.066215)" />
+  <polyline
+     points="14.458,9.438 15.904,9.438 15.904,9.976 "
+     id="polyline3010"
+     style="fill:none;stroke:#000000;stroke-width:0.02;stroke-dasharray:0.1, 0.1"
+     transform="matrix(2.5909536,0,0,2.5909536,-13.701871,-18.066215)" />
+  <rect
+     x="13.477232"
+     y="6.1099744"
+     width="2.0598083"
+     height="1.2358849"
+     id="rect3012"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="13.477232"
+     y="6.1099744"
+     width="2.0598083"
+     height="1.2358849"
+     id="rect3014"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="13.912379"
+     y="6.8895001"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3016"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">LDAP</text>
+  <rect
+     x="18.394861"
+     y="6.1151557"
+     width="2.0598083"
+     height="1.2358849"
+     id="rect3018"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="18.394861"
+     y="6.1151557"
+     width="2.0598083"
+     height="1.2358849"
+     id="rect3020"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="18.610128"
+     y="6.8895001"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3022"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">OpenID</text>
+  <rect
+     x="20.830359"
+     y="6.1177454"
+     width="2.5880628"
+     height="1.2358849"
+     id="rect3024"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="20.833509"
+     y="6.1208973"
+     width="2.6047266"
+     height="1.2295811"
+     id="rect3026"
+     style="fill:none;stroke:#000000;stroke-width:0.05812285" />
+  <text
+     x="21.014317"
+     y="6.8895001"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3028"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">Database</text>
+  <rect
+     x="15.943821"
+     y="6.1151557"
+     width="2.0598083"
+     height="1.2358849"
+     id="rect3030"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="15.943821"
+     y="6.1151557"
+     width="2.0598083"
+     height="1.2358849"
+     id="rect3032"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="16.333031"
+     y="6.8946819"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3034"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">DNI-e</text>
+  <line
+     x1="18.286043"
+     y1="11.924073"
+     x2="18.288633"
+     y2="13.185868"
+     id="line3036"
+     style="stroke:#000000;stroke-width:0.05181907" />
+  <rect
+     x="12.645535"
+     y="8.8201103"
+     width="3.5366516"
+     height="3.0987804"
+     id="rect3038"
+     style="fill:#e3e3e3;stroke:none" />
+  <rect
+     x="12.645535"
+     y="8.8201103"
+     width="3.5366516"
+     height="3.0987804"
+     id="rect3040"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="12.972573"
+     y="10.346656"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3042"
+     style="font-size:0.38746038px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">Discussion and</text>
+  <text
+     x="12.972573"
+     y="10.727658"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3044"
+     style="font-size:0.38746038px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">debate system</text>
+  <rect
+     x="16.519011"
+     y="8.8227024"
+     width="3.5366516"
+     height="3.0987804"
+     id="rect3046"
+     style="fill:#e3e3e3;stroke:none" />
+  <rect
+     x="16.519011"
+     y="8.8227024"
+     width="3.5366516"
+     height="3.0987804"
+     id="rect3048"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="18.213495"
+     y="10.294364"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3050"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">Proposals</text>
+  <text
+     x="18.213495"
+     y="10.750371"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3052"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">system</text>
+  <rect
+     x="20.382124"
+     y="8.8252926"
+     width="3.5366516"
+     height="3.0987804"
+     id="rect3054"
+     style="fill:#e3e3e3;stroke:none" />
+  <rect
+     x="20.382124"
+     y="8.8252926"
+     width="3.5366516"
+     height="3.0987804"
+     id="rect3056"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="22.118063"
+     y="10.245135"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3058"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">Voting</text>
+  <text
+     x="22.118063"
+     y="10.701142"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3060"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">service</text>
+  <rect
+     x="12.653309"
+     y="13.185868"
+     width="11.270648"
+     height="1.00529"
+     id="rect3062"
+     style="fill:#cecece;stroke:none" />
+  <rect
+     x="12.653309"
+     y="13.185868"
+     width="11.270648"
+     height="1.00529"
+     id="rect3064"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="18.159086"
+     y="13.833608"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3066"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:middle;fill:#000000;font-family:sans">Operations and Communications Interface</text>
+  <line
+     x1="14.412566"
+     y1="11.921483"
+     x2="14.417747"
+     y2="13.196232"
+     id="line3068"
+     style="stroke:#000000;stroke-width:0.05181907" />
+  <line
+     x1="22.151747"
+     y1="11.924073"
+     x2="22.156927"
+     y2="13.183276"
+     id="line3070"
+     style="stroke:#000000;stroke-width:0.05181907" />
+  <rect
+     x="25.978582"
+     y="12.740225"
+     width="2.9614601"
+     height="1.3602506"
+     id="rect3072"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="25.978582"
+     y="12.740225"
+     width="2.9614601"
+     height="1.3602506"
+     id="rect3074"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="26.168644"
+     y="13.625628"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3076"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">Documents</text>
+  <rect
+     x="26.501957"
+     y="10.890282"
+     width="1.9121237"
+     height="1.3602506"
+     id="rect3078"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="26.501957"
+     y="10.890282"
+     width="1.9121237"
+     height="1.3602506"
+     id="rect3080"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="26.92169"
+     y="11.729752"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3082"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">News</text>
+  <rect
+     x="26.496775"
+     y="9.1854343"
+     width="1.9121237"
+     height="1.3602506"
+     id="rect3084"
+     style="fill:#ffffff;stroke:none" />
+  <rect
+     x="26.496775"
+     y="9.1854343"
+     width="1.9121237"
+     height="1.3602506"
+     id="rect3086"
+     style="fill:none;stroke:#000000;stroke-width:0.05181907" />
+  <text
+     x="26.919102"
+     y="10.024904"
+     font-size="0.18"
+     font-style="normal"
+     font-weight="400"
+     id="text3088"
+     style="font-size:0.46637169px;font-style:normal;font-weight:400;text-anchor:start;fill:#000000;font-family:sans">Email</text>
+  <line
+     x1="23.923958"
+     y1="13.688512"
+     x2="25.465574"
+     y2="13.693696"
+     id="line3090"
+     style="stroke:#000000;stroke-width:0.05181907" />
+  <line
+     x1="18.283453"
+     y1="5.1642742"
+     x2="18.286043"
+     y2="4.2133956"
+     id="line3092"
+     style="stroke:#000000;stroke-width:0.05181907" />
+</svg>
