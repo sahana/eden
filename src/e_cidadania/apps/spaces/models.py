@@ -37,6 +37,9 @@ class Space(models.Model):
     # Modules
     mod_debate = models.BooleanField(_('Debate module'))
     mod_proposals = models.BooleanField(_('Proposals module'))
+    mod_news = models.BooleanField(_('News module'))
+    mod_cal = models.BooleanField(_('Calendar module'))
+    mod_docs = models.BooleanField(_('Documents module'))
 
     def __unicode__(self):
         return self.name

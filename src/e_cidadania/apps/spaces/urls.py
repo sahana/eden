@@ -34,18 +34,18 @@ urlpatterns = patterns('',
     (r'^delete/', 'delete_space'),
     
     # Accounts
-    (r'^accounts/', include('apps.userprofile.urls')),
+    (r'^account/', include('apps.userprofile.urls')),
     
     # Debates
-    
+#    (r'^debate/', include('apps.debates.urls')),
     
     # Proposals
-    
+#    (r'^proposal/', include('apps.proposals.urls')),
     
     # News
-    
+#    (r'^news/', include('apps.news.urls')),
     
     # Documents
-    
+#    (r'^docs/', include('apps.docs.urls')),
 
 )
