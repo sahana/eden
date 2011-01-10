@@ -95,10 +95,11 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'tagging',
     
-    'e_cidadania.apps.registration',
+    #'e_cidadania.apps.registration',
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.accounts',
     'e_cidadania.apps.proposals',
     'e_cidadania.apps.news',
-    'e_cidadania.apps.debate'
+    'e_cidadania.apps.debate',
+    'e_cidadania.apps.spaces',
 )

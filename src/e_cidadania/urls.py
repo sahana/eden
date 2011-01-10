@@ -30,10 +30,12 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
 
     # User accounts
-    #(r'^accounts/', include('accounts.urls')),
-    (r'^accounts/', include('apps.registration.urls')),
+    #(r'^accounts/', include('apps.accounts.urls')),
+    #(r'^accounts/', include('apps.registration.urls')),
     
-    (r'^accounts/profile/', include('apps.userprofile.urls')),
+    (r'^/(?P<space>)/', include('apps.spaces.urls')),
+    
+    (r'^accounts/', include('apps.userprofile.urls')),
     
     (r'^proposals/', include('apps.proposals.urls')),
     

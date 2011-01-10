@@ -18,27 +18,34 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.conf.urls.defaults import *
 from django.conf import settings
+from django.contrib import admin
 
-class Space(models.Model):
+admin.autodiscover()
 
-    """
-    Basic spaces model.
-    """
-    name = models.CharField(_('Name'), max_length=100, unique=True)
-    description = models.TextField(_('Description'))
+urlpatterns = patterns('',
+
+    # Spaces
+    (r'^', 'view_space_index'),
     
-    logo = models.ImageField(_('Logotype'), upload_to='spaces/logos')
-    banner = models.ImageField(_('Banner'), upload_to='spaces/banners')
-    #theme = models.CharField(_('Theme'), m)
+    (r'^edit/', 'edit_space'),
     
-    # Modules
-    mod_debate = models.BooleanField(_('Debate module'))
-    mod_proposals = models.BooleanField(_('Proposals module'))
+    (r'^delete/', 'delete_space'),
+    
+    # Accounts
+    (r'^accounts/', include('apps.userprofile.urls')),
+    
+    # Debates
+    
+    
+    # Proposals
+    
+    
+    # News
+    
+    
+    # Documents
+    
 
-    def __unicode__(self):
-        return self.name
-
-
+)

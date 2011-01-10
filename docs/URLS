@@ -1,0 +1,37 @@
+
+URLs for accounts
+
+/
+/<space>/accounts/
+/<space>/accounts/<user>
+/<space>/accounts/edit
+/<space>/accounts/edit/personal
+/<space>/accounts/edit/location
+/<space>/accounts/edit/avatar
+/<space>/accounts/delete
+
+URLs for debates
+
+/<space>/debate/
+/<space>/debate/new
+/<space>/debate/<debate_no>/
+/<space>/debate/<debate_no/edit
+/<space>/debate/<debate_no>/delete
+/<space>/debate/
+/<space>/debate/
+/<space>/debate/
+/<space>/debate/
+/<space>/debate/
+
+URLs for proposals
+
+/<space>/proposal/
+/<space>/proposal/new
+/<space>/proposal/<proposal_no>/edit
+/<space>/proposal/<proposal_no>/delete
+/<space>/proposal/
+/<space>/proposal/
+/<space>/proposal/
+/<space>/proposal/
+
+
