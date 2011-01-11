@@ -33,7 +33,7 @@ urlpatterns = patterns('',
     #(r'^accounts/', include('apps.accounts.urls')),
     #(r'^accounts/', include('apps.registration.urls')),
     
-    (r'^/(?P<space>)/', include('apps.spaces.urls')),
+    (r'^/(?P<space>\w+)', include('apps.spaces.urls')),
     
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
