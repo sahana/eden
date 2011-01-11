@@ -29,14 +29,24 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from django.contrib.auth.models import User
-from e_cidadania.apps.spaces.models import Space
+from e_cidadania.apps.spaces.models import Space, Entity
 
-def view_index(request, space):
+def view_space_index(request, space):
 
     """
     Show the index page for the requested space.
     """
-    pass
+    place = get_object_or_404(Space, name=space)
+    
+    return object_detail(request,
+                         queryset = Space.objects.all(),
+                         object_id = place.id,
+                         template_name = 'spaces/index.html',
+                         template_object_name = 'get_place')
+
+    #return render_to_response('spaces/index.html',
+    #                           place,
+    #                           )
 
 def show_calendar(request):
 

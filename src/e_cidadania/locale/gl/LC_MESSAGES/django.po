@@ -2,158 +2,159 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-01-11 12:21+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-01-11 13:46\n"
+"Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 
 #: apps/accounts/models.py:32
 msgid "Male"
-msgstr ""
+msgstr "Masculino"
 
 #: apps/accounts/models.py:33
 msgid "Female"
-msgstr ""
+msgstr "Feminino"
 
 #: apps/accounts/models.py:47 apps/spaces/models.py:30
 #: apps/spaces/models.py:56
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #: apps/accounts/models.py:48
 msgid "Surname"
-msgstr ""
+msgstr "Apelido"
 
 #: apps/accounts/models.py:49
 msgid "Gender"
-msgstr ""
+msgstr "Sexo"
 
 #: apps/accounts/models.py:52
 msgid "Birth date"
-msgstr ""
+msgstr "Data de nacemento"
 
 #: apps/accounts/models.py:56
 msgid "Province"
-msgstr ""
+msgstr "Provincia"
 
 #: apps/accounts/models.py:57
 msgid "Municipality"
-msgstr ""
+msgstr "Municipio"
 
 #: apps/accounts/models.py:60
 msgid "Address"
-msgstr ""
+msgstr "Enderezo"
 
 #: apps/accounts/models.py:61
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: apps/accounts/models.py:63
 msgid "Floor"
-msgstr ""
+msgstr "Piso"
 
 #: apps/accounts/models.py:64
 msgid "Letter"
-msgstr ""
+msgstr "Letra"
 
 #: apps/accounts/models.py:67
 msgid "Phone 1"
-msgstr ""
+msgstr "Teléfono 1"
 
 #: apps/accounts/models.py:68 apps/accounts/models.py:70
 msgid "9 digits maximum"
-msgstr ""
+msgstr "Máximo de 9 díxitos"
 
 #: apps/accounts/models.py:69
 msgid "Phone 2"
-msgstr ""
+msgstr "Teléfono 2"
 
 #: apps/accounts/models.py:72
 msgid "Identification document"
-msgstr ""
+msgstr "DNI"
 
 #: apps/accounts/models.py:75
 msgid "Website"
-msgstr ""
+msgstr "Páxina web"
 
 #: apps/accounts/models.py:77
 msgid "The URL will be checked"
-msgstr ""
+msgstr "A URL será verificada"
 
 #: apps/debate/models.py:33 apps/debate/models.py:47 apps/news/models.py:34
 #: apps/proposals/forms.py:38 apps/proposals/models.py:42
 msgid "Title"
-msgstr ""
+msgstr "Título"
 
 #: apps/debate/models.py:34
 msgid "Objectives"
-msgstr ""
+msgstr "Obxectivos"
 
 #: apps/debate/models.py:35 apps/debate/models.py:48 apps/spaces/models.py:31
 msgid "Description"
-msgstr ""
+msgstr "Descrición"
 
 #: apps/debate/models.py:61 apps/proposals/forms.py:39
 #: apps/proposals/models.py:43
 msgid "Message"
-msgstr ""
+msgstr "Mensaxe"
 
 #: apps/debate/models.py:62
 msgid "Explanation"
-msgstr ""
+msgstr "Explicación"
 
 #: apps/news/models.py:35
 msgid "Text"
-msgstr ""
+msgstr "Texto"
 
 #: apps/news/models.py:36
 msgid "Date"
-msgstr ""
+msgstr "Data"
 
 #: apps/news/models.py:37
 msgid "Last update"
-msgstr ""
+msgstr "Última actualización"
 
 #: apps/news/models.py:38
 msgid "Author"
-msgstr ""
+msgstr "Autor"
 
 #: apps/proposals/forms.py:42 apps/proposals/models.py:58
 msgid "Latitude"
-msgstr ""
+msgstr "Latitude"
 
 #: apps/proposals/forms.py:44 apps/proposals/models.py:60
 msgid "Longitude"
-msgstr ""
+msgstr "Lonxitude"
 
 #: apps/proposals/models.py:32
 msgid "Economically not viable"
-msgstr ""
+msgstr "Economicamente non é viable"
 
 #: apps/proposals/models.py:33
 msgid "Legally not viable"
-msgstr ""
+msgstr "Legalmente non é viable"
 
 #: apps/proposals/models.py:34
 msgid "Technically not viable"
-msgstr ""
+msgstr "Tecnicamente non é viable"
 
 #: apps/registration/admin.py:23
 msgid "Activate users"
-msgstr ""
+msgstr "Activar os usuarios"
 
 #: apps/registration/admin.py:43
 msgid "Re-send activation emails"
-msgstr ""
+msgstr "Re-enviar un correo de activación"
 
 #: apps/registration/forms.py:35 apps/userprofile/forms.py:83
 #: templates/userprofile/account/login.html:20
@@ -161,126 +162,118 @@ msgstr ""
 #: templates/userprofile/profile/public.html:35
 #: templates/userprofile/profile/usercard.html:11
 msgid "Username"
-msgstr ""
+msgstr "Nome de Usuario"
 
 #: apps/registration/forms.py:36
 msgid "This value must contain only letters, numbers and underscores."
-msgstr ""
+msgstr "Este valor debería conter letras, números e guións baixos."
 
 #: apps/registration/forms.py:39
 msgid "Email address"
-msgstr ""
+msgstr "Enderezo de correo electrónico"
 
 #: apps/registration/forms.py:41 apps/userprofile/forms.py:85
 #: templates/userprofile/account/login.html:26
 #: templates/userprofile/account/registration.html:32
 msgid "Password"
-msgstr ""
+msgstr "Contrasinal"
 
 #: apps/registration/forms.py:43 apps/userprofile/forms.py:86
 #: templates/userprofile/account/registration.html:38
 msgid "Password (again)"
-msgstr ""
+msgstr "Código (de novo)"
 
 #: apps/registration/forms.py:55
 msgid "A user with that username already exists."
-msgstr ""
+msgstr "Un usuario con ese nome xa existe."
 
 #: apps/registration/forms.py:67
 msgid "The two password fields didn't match."
-msgstr ""
+msgstr "Os dous campos de contrasinal non coinciden."
 
 #: apps/registration/forms.py:78
 msgid "I have read and agree to the Terms of Service"
-msgstr ""
+msgstr "Lin e estou de acordo cos Termos de Servizo"
 
 #: apps/registration/forms.py:79
 msgid "You must agree to the terms to register"
-msgstr ""
+msgstr "Ten que aceptar as condicións de rexistro"
 
 #: apps/registration/forms.py:95
-msgid ""
-"This email address is already in use. Please supply a different email "
-"address."
-msgstr ""
+msgid "This email address is already in use. Please supply a different email address."
+msgstr "Este enderezo de correo-e xa está en uso. Por favor, forneza un enderezo de correo-e diferente."
 
 #: apps/registration/forms.py:122
-msgid ""
-"Registration using free email addresses is prohibited. Please supply a "
-"different email address."
-msgstr ""
+msgid "Registration using free email addresses is prohibited. Please supply a different email address."
+msgstr "Rexistro usando enderezos de correo-e gratuito está prohibida. Por favor, forneza un enderezo de correo-e diferente."
 
 #: apps/registration/models.py:168
 msgid "user"
-msgstr ""
+msgstr "usuario"
 
 #: apps/registration/models.py:169
 msgid "activation key"
-msgstr ""
+msgstr "clave de activación"
 
 #: apps/registration/models.py:174
 msgid "registration profile"
-msgstr ""
+msgstr "perfil de rexistro"
 
 #: apps/registration/models.py:175
 msgid "registration profiles"
-msgstr ""
+msgstr "perfís de rexistro"
 
 #: apps/rosetta/templates/rosetta/languages.html:4
 #: apps/rosetta/templates/rosetta/languages.html:6
 msgid "Language selection"
-msgstr ""
+msgstr "Selección de idioma"
 
 #: apps/rosetta/templates/rosetta/languages.html:6
 #: apps/rosetta/templates/rosetta/pofile.html:18
 msgid "Home"
-msgstr ""
+msgstr "Inicio"
 
 #: apps/rosetta/templates/rosetta/languages.html:17
 msgid "Application"
-msgstr ""
+msgstr "Aplicación"
 
 #: apps/rosetta/templates/rosetta/languages.html:18
 msgid "Progress"
-msgstr ""
+msgstr "Progreso"
 
 #: apps/rosetta/templates/rosetta/languages.html:19 templates/base.html:19
 msgid "Messages"
-msgstr ""
+msgstr "Mensaxes"
 
 #: apps/rosetta/templates/rosetta/languages.html:20
 msgid "Translated"
-msgstr ""
+msgstr "Traducido"
 
 #: apps/rosetta/templates/rosetta/languages.html:21
 #: apps/rosetta/templates/rosetta/pofile.html:57
 msgid "Fuzzy"
-msgstr ""
+msgstr "Fuzzy"
 
 #: apps/rosetta/templates/rosetta/languages.html:22
 msgid "Obsolete"
-msgstr ""
+msgstr "Obsoletos"
 
 #: apps/rosetta/templates/rosetta/languages.html:23
 msgid "File"
-msgstr ""
+msgstr "Arquivo"
 
 #: apps/rosetta/templates/rosetta/languages.html:44
 msgid "Nothing to translate!"
-msgstr ""
+msgstr "Nada que traducir!"
 
 #: apps/rosetta/templates/rosetta/languages.html:45
-msgid ""
-"You haven't specified any languages in your settings file, or haven't yet "
-"generated a batch of translation catalogs."
-msgstr ""
+msgid "You haven't specified any languages in your settings file, or haven't yet generated a batch of translation catalogs."
+msgstr "Non especificou calquera outra lingua no seu arquivo de configuración, ou aínda non teñan xerado un lote de catálogos de tradución."
 
 #: apps/rosetta/templates/rosetta/languages.html:46
 #, python-format
-msgid ""
-"Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N documentation</"
-"a> for a guide on how to set up internationalization for your project."
-msgstr ""
+msgid "Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N documentation</a> for a guide on how to set up internationalization for your project."
+msgstr "Consulte a <a href=\"%(i18n_doc_link)s\">documentación do Django é I18N</a> para unha guía sobre como configurar a internacionalización do seu proxecto."
 
 #: apps/rosetta/templates/rosetta/pofile.html:8
 msgid "Pick another file"
@@ -299,9 +292,7 @@ msgid "File is read-only: download the file when done editing!"
 msgstr ""
 
 #: apps/rosetta/templates/rosetta/pofile.html:24
-msgid ""
-"Some items in your last translation block couldn't be saved: this usually "
-"happens when the catalog file changes on disk after you last loaded it."
+msgid "Some items in your last translation block couldn't be saved: this usually happens when the catalog file changes on disk after you last loaded it."
 msgstr ""
 
 #: apps/rosetta/templates/rosetta/pofile.html:28
@@ -1391,9 +1382,7 @@ msgid "E-mail address"
 msgstr ""
 
 #: apps/userprofile/forms.py:94
-msgid ""
-"That username has invalid characters. The valid values are letters, numbers "
-"and underscore."
+msgid "That username has invalid characters. The valid values are letters, numbers and underscore."
 msgstr ""
 
 #: apps/userprofile/forms.py:99
@@ -1428,9 +1417,7 @@ msgid "Email validation process for %(user)s"
 msgstr ""
 
 #: apps/userprofile/templatetags/avatars.py:68
-msgid ""
-"You have to provide only the size as             an integer (both sides will "
-"be equal) and optionally, the             username."
+msgid "You have to provide only the size as             an integer (both sides will be equal) and optionally, the             username."
 msgstr ""
 
 #: templates/base.html:20 templates/base.html.py:42
@@ -1469,9 +1456,7 @@ msgid "Password:"
 msgstr ""
 
 #: templates/accounts/logout.html:7
-msgid ""
-"Thanks for using e-cidadania. Now you can continue visting the website or "
-"log in again."
+msgid "Thanks for using e-cidadania. Now you can continue visting the website or log in again."
 msgstr ""
 
 #: templates/accounts/logout.html:9
@@ -1604,9 +1589,7 @@ msgstr ""
 
 #: templates/userprofile/account/email_validation.html:41
 #: templates/userprofile/account/email_validation_processed.html:21
-msgid ""
-"Insert the new e-mail address. An e-mail will be send to it for testing and "
-"confirmation"
+msgid "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:4
@@ -1622,9 +1605,7 @@ msgid "E-mail address validated successfully"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:16
-msgid ""
-"The key you received via e-mail is no longer valid. Please try the e-mail "
-"validation process again"
+msgid "The key you received via e-mail is no longer valid. Please try the e-mail validation process again"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:23
@@ -1648,10 +1629,7 @@ msgid "E-mail change processed"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_processed.html:14
-msgid ""
-"An e-mail has been sent to the new e-mail address to verify and activate it. "
-"Please access to your e-mail and complete this process following the "
-"instructions specified in the e-mail body"
+msgid "An e-mail has been sent to the new e-mail address to verify and activate it. Please access to your e-mail and complete this process following the instructions specified in the e-mail body"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
@@ -1727,9 +1705,7 @@ msgstr ""
 
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
-msgid ""
-"Password change utility page. Please enter your new password twice so we can "
-"verify you typed it in correctly"
+msgid "Password change utility page. Please enter your new password twice so we can verify you typed it in correctly"
 msgstr ""
 
 #: templates/userprofile/account/password_change_done.html:4
@@ -1746,8 +1722,7 @@ msgid "Password key expired"
 msgstr ""
 
 #: templates/userprofile/account/password_expired.html:9
-msgid ""
-"The password key you're trying to use is expired. Please, request a new one"
+msgid "The password key you're trying to use is expired. Please, request a new one"
 msgstr ""
 
 #: templates/userprofile/account/password_reset.html:4
@@ -1768,9 +1743,7 @@ msgstr ""
 
 #: templates/userprofile/account/password_reset.html:38
 #: templates/userprofile/account/password_reset_done.html:17
-msgid ""
-"Forgotten your password? Enter your e-mail address, and we'll reset your "
-"password and e-mail the new one to you"
+msgid "Forgotten your password? Enter your e-mail address, and we'll reset your password and e-mail the new one to you"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_complete.html:13
@@ -1779,9 +1752,7 @@ msgstr ""
 
 #: templates/userprofile/account/password_reset_complete.html:20
 #: templates/userprofile/account/password_reset_confirm.html:56
-msgid ""
-"Password reset utility page. Please enter your new password twice so we can "
-"verify you typed it in correctly"
+msgid "Password reset utility page. Please enter your new password twice so we can verify you typed it in correctly"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_confirm.html:47
@@ -1789,9 +1760,7 @@ msgid "Password reset unsuccessful"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_confirm.html:48
-msgid ""
-"The password reset link was invalid, possibly because it has already been "
-"used.  Please request a new password reset."
+msgid "The password reset link was invalid, possibly because it has already been used.  Please request a new password reset."
 msgstr ""
 
 #: templates/userprofile/account/password_reset_done.html:4
@@ -1800,9 +1769,7 @@ msgid "Password reset successful"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_done.html:10
-msgid ""
-"We've e-mailed you the instructions to obtain a new password. You should be "
-"receiving it shortly"
+msgid "We've e-mailed you the instructions to obtain a new password. You should be receiving it shortly"
 msgstr ""
 
 #: templates/userprofile/account/registration.html:4
@@ -1821,9 +1788,7 @@ msgstr ""
 
 #: templates/userprofile/account/registration.html:55
 #: templates/userprofile/account/registration_done.html:15
-msgid ""
-"Joining this community is quick and easy. You only need to fill the form to "
-"get access to all the private content"
+msgid "Joining this community is quick and easy. You only need to fill the form to get access to all the private content"
 msgstr ""
 
 #: templates/userprofile/account/registration_done.html:4
@@ -1862,9 +1827,7 @@ msgid "Done"
 msgstr ""
 
 #: templates/userprofile/avatar/choose.html:50
-msgid ""
-"Select an image from a remote URL. Put the URL on the input below and we'll "
-"retrieve the image for you"
+msgid "Select an image from a remote URL. Put the URL on the input below and we'll retrieve the image for you"
 msgstr ""
 
 #: templates/userprofile/avatar/choose.html:57
@@ -1884,9 +1847,7 @@ msgstr ""
 #: templates/userprofile/avatar/crop.html:54
 #: templates/userprofile/avatar/done.html:20
 #: templates/userprofile/avatar/search.html:51
-msgid ""
-"You have several options to select the image you want as avatar on your "
-"profile"
+msgid "You have several options to select the image you want as avatar on your profile"
 msgstr ""
 
 #: templates/userprofile/avatar/crop.html:4
@@ -1911,9 +1872,7 @@ msgid "Delete personal information"
 msgstr ""
 
 #: templates/userprofile/profile/delete.html:10
-msgid ""
-"It erases all your private data except your username. You can refill the "
-"information later if you want to."
+msgid "It erases all your private data except your username. You can refill the information later if you want to."
 msgstr ""
 
 #: templates/userprofile/profile/delete.html:15

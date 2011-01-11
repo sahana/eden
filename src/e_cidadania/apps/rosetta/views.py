@@ -122,7 +122,7 @@ def home(request):
                 
                 try:
                     rosetta_i18n_pofile.metadata['Last-Translator'] = unicodedata.normalize('NFKD', u"%s %s <%s>" %(request.user.first_name,request.user.last_name,request.user.email)).encode('ascii', 'ignore')
-                    rosetta_i18n_pofile.metadata['X-Translated-Using'] = u"django-rosetta %s" % rosetta.get_version(False)
+                    rosetta_i18n_pofile.metadata['X-Translated-Using'] = u"django-rosetta %s" % e_cidadania.apps.rosetta.get_version(False)
                     rosetta_i18n_pofile.metadata['PO-Revision-Date'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M%z')
                 except UnicodeDecodeError:
                     pass

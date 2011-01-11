@@ -31,10 +31,10 @@ class Space(models.Model):
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
 
-    logo = models.ImageField(verbose_name=_('Logotype'),
-                             upload_to='spaces/logos')
-    banner = models.ImageField(verbose_name=_('Banner'),
-                               upload_to='spaces/banners')
+    logo = models.ImageField(upload_to='spaces/logos',
+                             verbose_name=_('Logotype'))
+    banner = models.ImageField(upload_to='spaces/banners',
+                               verbose_name=_('Banner'))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
@@ -43,6 +43,10 @@ class Space(models.Model):
     mod_news = models.BooleanField(_('News module'))
     mod_cal = models.BooleanField(_('Calendar module'))
     mod_docs = models.BooleanField(_('Documents module'))
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = _('Spaces')
 
     def __unicode__(self):
         return self.name
@@ -56,5 +60,9 @@ class Entity(models.Model):
     name = models.CharField(_('Name'), max_length=100, unique=True)
     space = models.ForeignKey(Space)
     
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = _('Entities')
+
     def __unicode__(self):
         return self.name

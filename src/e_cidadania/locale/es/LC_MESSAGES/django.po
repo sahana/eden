@@ -2,19 +2,20 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-01-11 12:19+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-01-11 12:49\n"
+"Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: apps/accounts/models.py:32
@@ -93,71 +94,68 @@ msgstr "La dirección será comprobada"
 #: apps/debate/models.py:33 apps/debate/models.py:47 apps/news/models.py:34
 #: apps/proposals/forms.py:38 apps/proposals/models.py:42
 msgid "Title"
-msgstr ""
+msgstr "Título"
 
 #: apps/debate/models.py:34
 msgid "Objectives"
-msgstr ""
+msgstr "Objetivos"
 
 #: apps/debate/models.py:35 apps/debate/models.py:48 apps/spaces/models.py:31
-#, fuzzy
 msgid "Description"
-msgstr "Posicion"
+msgstr "Descripción"
 
 #: apps/debate/models.py:61 apps/proposals/forms.py:39
 #: apps/proposals/models.py:43
-#, fuzzy
 msgid "Message"
-msgstr "Mensajes"
+msgstr "Mensaje"
 
 #: apps/debate/models.py:62
 msgid "Explanation"
-msgstr ""
+msgstr "Explicación"
 
 #: apps/news/models.py:35
 msgid "Text"
-msgstr ""
+msgstr "Texto"
 
 #: apps/news/models.py:36
 msgid "Date"
-msgstr ""
+msgstr "Fecha"
 
 #: apps/news/models.py:37
 msgid "Last update"
-msgstr ""
+msgstr "Última actualización"
 
 #: apps/news/models.py:38
 msgid "Author"
-msgstr ""
+msgstr "Autor"
 
 #: apps/proposals/forms.py:42 apps/proposals/models.py:58
 msgid "Latitude"
-msgstr ""
+msgstr "Latitud"
 
 #: apps/proposals/forms.py:44 apps/proposals/models.py:60
 msgid "Longitude"
-msgstr ""
+msgstr "Longitud"
 
 #: apps/proposals/models.py:32
 msgid "Economically not viable"
-msgstr ""
+msgstr "Económicamente no es viable"
 
 #: apps/proposals/models.py:33
 msgid "Legally not viable"
-msgstr ""
+msgstr "Legalmente no es viable"
 
 #: apps/proposals/models.py:34
 msgid "Technically not viable"
-msgstr ""
+msgstr "Técnicamente no es viable"
 
 #: apps/registration/admin.py:23
 msgid "Activate users"
-msgstr ""
+msgstr "Activar los usuarios"
 
 #: apps/registration/admin.py:43
-#, fuzzy
 msgid "Re-send activation emails"
-msgstr "La activación de la cuenta ha fallado"
+msgstr "Reenviar mensajes de correo electrónico de activación"
 
 #: apps/registration/forms.py:35 apps/userprofile/forms.py:83
 #: templates/userprofile/account/login.html:20
@@ -169,12 +167,11 @@ msgstr "Nombre de usuario"
 
 #: apps/registration/forms.py:36
 msgid "This value must contain only letters, numbers and underscores."
-msgstr ""
+msgstr "Este valor debe contener sólo letras, números y subrayados."
 
 #: apps/registration/forms.py:39
-#, fuzzy
 msgid "Email address"
-msgstr "Nueva direccion de correo"
+msgstr "Dirección de correo electrónico"
 
 #: apps/registration/forms.py:41 apps/userprofile/forms.py:85
 #: templates/userprofile/account/login.html:26
@@ -185,76 +182,66 @@ msgstr "Clave"
 #: apps/registration/forms.py:43 apps/userprofile/forms.py:86
 #: templates/userprofile/account/registration.html:38
 msgid "Password (again)"
-msgstr ""
+msgstr "Contraseña (otra vez)"
 
 #: apps/registration/forms.py:55
-#, fuzzy
 msgid "A user with that username already exists."
 msgstr "Ese nombre de usuario ya existe."
 
 #: apps/registration/forms.py:67
 msgid "The two password fields didn't match."
-msgstr ""
+msgstr "Los dos campos de contraseña no coinciden."
 
 #: apps/registration/forms.py:78
 msgid "I have read and agree to the Terms of Service"
-msgstr ""
+msgstr "He leído y estoy de acuerdo con los Términos de Servicio"
 
 #: apps/registration/forms.py:79
 msgid "You must agree to the terms to register"
-msgstr ""
+msgstr "Debe aceptar los términos para registrarse"
 
 #: apps/registration/forms.py:95
-msgid ""
-"This email address is already in use. Please supply a different email "
-"address."
-msgstr ""
+msgid "This email address is already in use. Please supply a different email address."
+msgstr "Esta dirección de correo electrónico ya está en uso. Por favor, facilite una dirección de correo electrónico diferentes."
 
 #: apps/registration/forms.py:122
-msgid ""
-"Registration using free email addresses is prohibited. Please supply a "
-"different email address."
-msgstr ""
+msgid "Registration using free email addresses is prohibited. Please supply a different email address."
+msgstr "Registro de uso de direcciones gratuitas de correo electrónico está prohibido. Por favor, facilite una dirección de correo electrónico diferentes."
 
 #: apps/registration/models.py:168
-#, fuzzy
 msgid "user"
 msgstr "Usuario"
 
 #: apps/registration/models.py:169
-#, fuzzy
 msgid "activation key"
-msgstr "La activación de la cuenta ha fallado"
+msgstr "clave de activación"
 
 #: apps/registration/models.py:174
-#, fuzzy
 msgid "registration profile"
-msgstr "Editar perfil"
+msgstr "registro de perfil"
 
 #: apps/registration/models.py:175
-#, fuzzy
 msgid "registration profiles"
-msgstr "Editar perfil"
+msgstr "perfiles de registro"
 
 #: apps/rosetta/templates/rosetta/languages.html:4
 #: apps/rosetta/templates/rosetta/languages.html:6
-#, fuzzy
 msgid "Language selection"
-msgstr "Cambiar localización"
+msgstr "Selección del idioma"
 
 #: apps/rosetta/templates/rosetta/languages.html:6
 #: apps/rosetta/templates/rosetta/pofile.html:18
 msgid "Home"
-msgstr ""
+msgstr "Inicio"
 
 #: apps/rosetta/templates/rosetta/languages.html:17
 #, fuzzy
 msgid "Application"
-msgstr "Añadir localización"
+msgstr "Aplicación"
 
 #: apps/rosetta/templates/rosetta/languages.html:18
 msgid "Progress"
-msgstr ""
+msgstr "Progreso"
 
 #: apps/rosetta/templates/rosetta/languages.html:19 templates/base.html:19
 msgid "Messages"
@@ -262,106 +249,100 @@ msgstr "Mensajes"
 
 #: apps/rosetta/templates/rosetta/languages.html:20
 msgid "Translated"
-msgstr ""
+msgstr "Traducido"
 
 #: apps/rosetta/templates/rosetta/languages.html:21
 #: apps/rosetta/templates/rosetta/pofile.html:57
 msgid "Fuzzy"
-msgstr ""
+msgstr "Borroso"
 
 #: apps/rosetta/templates/rosetta/languages.html:22
 msgid "Obsolete"
-msgstr ""
+msgstr "Obsoletos"
 
 #: apps/rosetta/templates/rosetta/languages.html:23
 #, fuzzy
 msgid "File"
-msgstr "Mujer"
+msgstr "Archivo"
 
 #: apps/rosetta/templates/rosetta/languages.html:44
 msgid "Nothing to translate!"
-msgstr ""
+msgstr "No hay nada que traducir!"
 
 #: apps/rosetta/templates/rosetta/languages.html:45
-msgid ""
-"You haven't specified any languages in your settings file, or haven't yet "
-"generated a batch of translation catalogs."
-msgstr ""
+msgid "You haven't specified any languages in your settings file, or haven't yet generated a batch of translation catalogs."
+msgstr "No ha especificado ningún idioma en el archivo de configuración, o aún no han generado un lote de catálogos de traducción."
 
 #: apps/rosetta/templates/rosetta/languages.html:46
 #, python-format
-msgid ""
-"Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N documentation</"
-"a> for a guide on how to set up internationalization for your project."
-msgstr ""
+msgid "Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N documentation</a> for a guide on how to set up internationalization for your project."
+msgstr "Por favor, consulte <a href=\"%(i18n_doc_link)s\">la documentación de I18N Django</a> para obtener una guía sobre cómo configurar la internacionalización de su proyecto."
 
 #: apps/rosetta/templates/rosetta/pofile.html:8
 msgid "Pick another file"
-msgstr ""
+msgstr "Elija otro archivo"
 
 #: apps/rosetta/templates/rosetta/pofile.html:9
 msgid "Download this catalog"
-msgstr ""
+msgstr "Descargar este catálogo"
 
 #: apps/rosetta/templates/rosetta/pofile.html:21
 msgid "Progress: %(percent_translated)s%"
-msgstr ""
+msgstr "Progreso:% (percent_translated)% s"
 
 #: apps/rosetta/templates/rosetta/pofile.html:23
 msgid "File is read-only: download the file when done editing!"
-msgstr ""
+msgstr "El archivo es de sólo lectura: descargar el archivo cuando termine de editar!"
 
 #: apps/rosetta/templates/rosetta/pofile.html:24
-msgid ""
-"Some items in your last translation block couldn't be saved: this usually "
-"happens when the catalog file changes on disk after you last loaded it."
-msgstr ""
+msgid "Some items in your last translation block couldn't be saved: this usually happens when the catalog file changes on disk after you last loaded it."
+msgstr "Algunos artículos de su bloque última traducción no puede ser guardado: esto generalmente pasa cuando cambia el archivo de catálogo en el disco después de la última vez que se carga."
 
 #: apps/rosetta/templates/rosetta/pofile.html:28
 #, python-format
 msgid "Translate into %(rosetta_i18n_lang_name)s"
-msgstr ""
+msgstr "Se traducen en %(rosetta_i18n_lang_name)s "
 
 #: apps/rosetta/templates/rosetta/pofile.html:31
 msgid "Display:"
-msgstr ""
+msgstr "Pantalla:"
 
 #: apps/rosetta/templates/rosetta/pofile.html:32
 msgid "Untranslated only"
-msgstr ""
+msgstr "Sin traducir sólo"
 
 #: apps/rosetta/templates/rosetta/pofile.html:33
 msgid "Translated only"
-msgstr ""
+msgstr "Traducido sólo"
 
 #: apps/rosetta/templates/rosetta/pofile.html:34
 msgid "Fuzzy only"
-msgstr ""
+msgstr "Fuzzy sólo"
 
 #: apps/rosetta/templates/rosetta/pofile.html:35
 msgid "All"
-msgstr ""
+msgstr "Todos los"
 
 #: apps/rosetta/templates/rosetta/pofile.html:42
 #: templates/userprofile/avatar/search.html:32
 msgid "Search"
-msgstr ""
+msgstr "Búsqueda"
 
 #: apps/rosetta/templates/rosetta/pofile.html:44
 msgid "Go"
-msgstr ""
+msgstr "Ir"
 
 #: apps/rosetta/templates/rosetta/pofile.html:54
 msgid "Original"
-msgstr ""
+msgstr "Original"
 
 #: apps/rosetta/templates/rosetta/pofile.html:58
 msgid "Occurrences(s)"
-msgstr ""
+msgstr "Ocurrencias (s)"
 
 #: apps/rosetta/templates/rosetta/pofile.html:82
 msgid "suggest"
-msgstr ""
+msgstr "sugieren"
 
 #: apps/rosetta/templates/rosetta/pofile.html:93
 #, python-format
@@ -372,15 +353,15 @@ msgstr[1] ""
 
 #: apps/rosetta/templates/rosetta/pofile.html:105
 msgid "Save and translate next block"
-msgstr ""
+msgstr "Guardar y traducir siguiente bloque"
 
 #: apps/rosetta/templates/rosetta/pofile.html:109
 msgid "Skip to page:"
-msgstr ""
+msgstr "Saltar a la página:"
 
 #: apps/rosetta/templates/rosetta/pofile.html:122
 msgid "Displaying:"
-msgstr ""
+msgstr "Viendo:"
 
 #: apps/rosetta/templates/rosetta/pofile.html:124
 #, python-format
@@ -391,908 +372,908 @@ msgstr[1] ""
 
 #: apps/spaces/admin.py:46
 msgid "Appearance"
-msgstr ""
+msgstr "Apariencia"
 
 #: apps/spaces/admin.py:49
 msgid "Modules"
-msgstr ""
+msgstr "Módulos"
 
 #: apps/spaces/models.py:34
 #, fuzzy
 msgid "Logotype"
-msgstr "Salir"
+msgstr "Logotipo"
 
 #: apps/spaces/models.py:36
 msgid "Banner"
-msgstr ""
+msgstr "Banner"
 
 #: apps/spaces/models.py:41
 msgid "Debate module"
-msgstr ""
+msgstr "Módulo de debate"
 
 #: apps/spaces/models.py:42
 msgid "Proposals module"
-msgstr ""
+msgstr "Módulo de propuestas"
 
 #: apps/spaces/models.py:43
 msgid "News module"
-msgstr ""
+msgstr "Módulo de noticias"
 
 #: apps/spaces/models.py:44
 msgid "Calendar module"
-msgstr ""
+msgstr "Módulo de calendario"
 
 #: apps/spaces/models.py:45
 msgid "Documents module"
-msgstr ""
+msgstr "Módulo de documentos"
 
 #: apps/userprofile/countries.py:10
 msgid "Andorra"
-msgstr ""
+msgstr "Andorra"
 
 #: apps/userprofile/countries.py:11
 msgid "United Arab Emirates"
-msgstr ""
+msgstr "Emiratos Árabes Unidos"
 
 #: apps/userprofile/countries.py:12
 msgid "Afghanistan"
-msgstr ""
+msgstr "Afganistán"
 
 #: apps/userprofile/countries.py:13
 msgid "Antigua & Barbuda"
-msgstr ""
+msgstr "Antigua y Barbuda"
 
 #: apps/userprofile/countries.py:14
 msgid "Anguilla"
-msgstr ""
+msgstr "Anguila"
 
 #: apps/userprofile/countries.py:15
 msgid "Albania"
-msgstr ""
+msgstr "Albania"
 
 #: apps/userprofile/countries.py:16
 msgid "Armenia"
-msgstr ""
+msgstr "Armenia"
 
 #: apps/userprofile/countries.py:17
 msgid "Netherlands Antilles"
-msgstr ""
+msgstr "Antillas Holandesas"
 
 #: apps/userprofile/countries.py:18
 msgid "Angola"
-msgstr ""
+msgstr "Angola"
 
 #: apps/userprofile/countries.py:19
 msgid "Antarctica"
-msgstr ""
+msgstr "Antártida"
 
 #: apps/userprofile/countries.py:20
 msgid "Argentina"
-msgstr ""
+msgstr "Argentina"
 
 #: apps/userprofile/countries.py:21
 msgid "American Samoa"
-msgstr ""
+msgstr "Samoa Americana"
 
 #: apps/userprofile/countries.py:22
 msgid "Austria"
-msgstr ""
+msgstr "Austria"
 
 #: apps/userprofile/countries.py:23
 msgid "Australia"
-msgstr ""
+msgstr "Australia"
 
 #: apps/userprofile/countries.py:24
 msgid "Aruba"
-msgstr ""
+msgstr "Aruba"
 
 #: apps/userprofile/countries.py:25
 msgid "Azerbaijan"
-msgstr ""
+msgstr "Azerbaiyán"
 
 #: apps/userprofile/countries.py:26
 msgid "Bosnia and Herzegovina"
-msgstr ""
+msgstr "Bosnia y Herzegovina"
 
 #: apps/userprofile/countries.py:27
 msgid "Barbados"
-msgstr ""
+msgstr "Barbados"
 
 #: apps/userprofile/countries.py:28
 msgid "Bangladesh"
-msgstr ""
+msgstr "Bangladesh"
 
 #: apps/userprofile/countries.py:29
 msgid "Belgium"
-msgstr ""
+msgstr "Bélgica"
 
 #: apps/userprofile/countries.py:30
 msgid "Burkina Faso"
-msgstr ""
+msgstr "Burkina Faso"
 
 #: apps/userprofile/countries.py:31
 msgid "Bulgaria"
-msgstr ""
+msgstr "Bulgaria"
 
 #: apps/userprofile/countries.py:32
 msgid "Bahrain"
-msgstr ""
+msgstr "Bahrein"
 
 #: apps/userprofile/countries.py:33
 msgid "Burundi"
-msgstr ""
+msgstr "Burundi"
 
 #: apps/userprofile/countries.py:34
 msgid "Benin"
-msgstr ""
+msgstr "Benin"
 
 #: apps/userprofile/countries.py:35
 msgid "Bermuda"
-msgstr ""
+msgstr "Bermudas"
 
 #: apps/userprofile/countries.py:36
 msgid "Brunei Darussalam"
-msgstr ""
+msgstr "Brunei Darussalam"
 
 #: apps/userprofile/countries.py:37
 msgid "Bolivia"
-msgstr ""
+msgstr "Bolivia"
 
 #: apps/userprofile/countries.py:38
 msgid "Brazil"
-msgstr ""
+msgstr "Brasil"
 
 #: apps/userprofile/countries.py:39
 msgid "Bahama"
-msgstr ""
+msgstr "Bahama"
 
 #: apps/userprofile/countries.py:40
 msgid "Bhutan"
-msgstr ""
+msgstr "Bhután"
 
 #: apps/userprofile/countries.py:41
 msgid "Bouvet Island"
-msgstr ""
+msgstr "Isla Bouvet"
 
 #: apps/userprofile/countries.py:42
 msgid "Botswana"
-msgstr ""
+msgstr "Botswana"
 
 #: apps/userprofile/countries.py:43
 msgid "Belarus"
-msgstr ""
+msgstr "Belarús"
 
 #: apps/userprofile/countries.py:44
 msgid "Belize"
-msgstr ""
+msgstr "Belice"
 
 #: apps/userprofile/countries.py:45
 msgid "Canada"
-msgstr ""
+msgstr "Canadá"
 
 #: apps/userprofile/countries.py:46
 msgid "Cocos (Keeling) Islands"
-msgstr ""
+msgstr "Cocos (Keeling)"
 
 #: apps/userprofile/countries.py:47
 msgid "Central African Republic"
-msgstr ""
+msgstr "República Centroafricana"
 
 #: apps/userprofile/countries.py:48
 msgid "Congo"
-msgstr ""
+msgstr "Congo"
 
 #: apps/userprofile/countries.py:49
 msgid "Switzerland"
-msgstr ""
+msgstr "Suiza"
 
 #: apps/userprofile/countries.py:50
 msgid "Ivory Coast"
-msgstr ""
+msgstr "Costa de Marfil"
 
 #: apps/userprofile/countries.py:51
 msgid "Cook Islands"
-msgstr ""
+msgstr "Islas Cook"
 
 #: apps/userprofile/countries.py:52
 msgid "Chile"
-msgstr ""
+msgstr "Chile"
 
 #: apps/userprofile/countries.py:53
 msgid "Cameroon"
-msgstr ""
+msgstr "Camerún"
 
 #: apps/userprofile/countries.py:54
 msgid "China"
-msgstr ""
+msgstr "China"
 
 #: apps/userprofile/countries.py:55
 msgid "Colombia"
-msgstr ""
+msgstr "Colombia"
 
 #: apps/userprofile/countries.py:56
 msgid "Costa Rica"
-msgstr ""
+msgstr "Costa Rica"
 
 #: apps/userprofile/countries.py:57
 msgid "Cuba"
-msgstr ""
+msgstr "Cuba"
 
 #: apps/userprofile/countries.py:58
 msgid "Cape Verde"
-msgstr ""
+msgstr "Cabo Verde"
 
 #: apps/userprofile/countries.py:59
 msgid "Christmas Island"
-msgstr ""
+msgstr "Isla de Navidad"
 
 #: apps/userprofile/countries.py:60
 msgid "Cyprus"
-msgstr ""
+msgstr "Chipre"
 
 #: apps/userprofile/countries.py:61
 msgid "Czech Republic"
-msgstr ""
+msgstr "República Checa"
 
 #: apps/userprofile/countries.py:62
 msgid "Germany"
-msgstr ""
+msgstr "Alemania"
 
 #: apps/userprofile/countries.py:63
 msgid "Djibouti"
-msgstr ""
+msgstr "Djibouti"
 
 #: apps/userprofile/countries.py:64
 msgid "Denmark"
-msgstr ""
+msgstr "Dinamarca"
 
 #: apps/userprofile/countries.py:65
 msgid "Dominica"
-msgstr ""
+msgstr "Dominica"
 
 #: apps/userprofile/countries.py:66
 msgid "Dominican Republic"
-msgstr ""
+msgstr "República Dominicana"
 
 #: apps/userprofile/countries.py:67
 msgid "Algeria"
-msgstr ""
+msgstr "Argelia"
 
 #: apps/userprofile/countries.py:68
 msgid "Ecuador"
-msgstr ""
+msgstr "Ecuador"
 
 #: apps/userprofile/countries.py:69
 msgid "Estonia"
-msgstr ""
+msgstr "Estonia"
 
 #: apps/userprofile/countries.py:70
 msgid "Egypt"
-msgstr ""
+msgstr "Egipto"
 
 #: apps/userprofile/countries.py:71
 msgid "Western Sahara"
-msgstr ""
+msgstr "Sáhara Occidental"
 
 #: apps/userprofile/countries.py:72
 msgid "Eritrea"
-msgstr ""
+msgstr "Eritrea"
 
 #: apps/userprofile/countries.py:73
 msgid "Spain"
-msgstr ""
+msgstr "España"
 
 #: apps/userprofile/countries.py:74
 msgid "Ethiopia"
-msgstr ""
+msgstr "Etiopía"
 
 #: apps/userprofile/countries.py:75
 msgid "Finland"
-msgstr ""
+msgstr "Finlandia"
 
 #: apps/userprofile/countries.py:76
 msgid "Fiji"
-msgstr ""
+msgstr "Fiji"
 
 #: apps/userprofile/countries.py:77
 msgid "Falkland Islands (Malvinas)"
-msgstr ""
+msgstr "Islas Malvinas (Falkland)"
 
 #: apps/userprofile/countries.py:78
 msgid "Micronesia"
-msgstr ""
+msgstr "Micronesia"
 
 #: apps/userprofile/countries.py:79
 msgid "Faroe Islands"
-msgstr ""
+msgstr "Islas Feroe"
 
 #: apps/userprofile/countries.py:80
 msgid "France"
-msgstr ""
+msgstr "Francia"
 
 #: apps/userprofile/countries.py:81
 msgid "France, Metropolitan"
-msgstr ""
+msgstr "Francia, Metropolitana"
 
 #: apps/userprofile/countries.py:82
 msgid "Gabon"
-msgstr ""
+msgstr "Gabón"
 
 #: apps/userprofile/countries.py:83
 msgid "United Kingdom (Great Britain)"
-msgstr ""
+msgstr "Reino Unido (Gran Bretaña)"
 
 #: apps/userprofile/countries.py:84
 msgid "Grenada"
-msgstr ""
+msgstr "Granada"
 
 #: apps/userprofile/countries.py:85
 msgid "Georgia"
-msgstr ""
+msgstr "Georgia"
 
 #: apps/userprofile/countries.py:86
 msgid "French Guiana"
-msgstr ""
+msgstr "Guayana Francesa"
 
 #: apps/userprofile/countries.py:87
 msgid "Ghana"
-msgstr ""
+msgstr "Ghana"
 
 #: apps/userprofile/countries.py:88
 msgid "Gibraltar"
-msgstr ""
+msgstr "Gibraltar"
 
 #: apps/userprofile/countries.py:89
 msgid "Greenland"
-msgstr ""
+msgstr "Groenlandia"
 
 #: apps/userprofile/countries.py:90
 msgid "Gambia"
-msgstr ""
+msgstr "Gambia"
 
 #: apps/userprofile/countries.py:91
 msgid "Guinea"
-msgstr ""
+msgstr "Guinea"
 
 #: apps/userprofile/countries.py:92
 msgid "Guadeloupe"
-msgstr ""
+msgstr "Guadalupe"
 
 #: apps/userprofile/countries.py:93
 msgid "Equatorial Guinea"
-msgstr ""
+msgstr "Guinea Ecuatorial"
 
 #: apps/userprofile/countries.py:94
 msgid "Greece"
-msgstr ""
+msgstr "Grecia"
 
 #: apps/userprofile/countries.py:95
 msgid "South Georgia and the South Sandwich Islands"
-msgstr ""
+msgstr "Georgia del Sur e Islas Sandwich del Sur"
 
 #: apps/userprofile/countries.py:96
 msgid "Guatemala"
-msgstr ""
+msgstr "Guatemala"
 
 #: apps/userprofile/countries.py:97
 msgid "Guam"
-msgstr ""
+msgstr "Guam"
 
 #: apps/userprofile/countries.py:98
 msgid "Guinea-Bissau"
-msgstr ""
+msgstr "Guinea-Bissau"
 
 #: apps/userprofile/countries.py:99
 msgid "Guyana"
-msgstr ""
+msgstr "Guyana"
 
 #: apps/userprofile/countries.py:100
 msgid "Hong Kong"
-msgstr ""
+msgstr "Hong Kong"
 
 #: apps/userprofile/countries.py:101
 msgid "Heard & McDonald Islands"
-msgstr ""
+msgstr "Islas Heard y McDonald"
 
 #: apps/userprofile/countries.py:102
 msgid "Honduras"
-msgstr ""
+msgstr "Honduras"
 
 #: apps/userprofile/countries.py:103
 msgid "Croatia"
-msgstr ""
+msgstr "Croacia"
 
 #: apps/userprofile/countries.py:104
 msgid "Haiti"
-msgstr ""
+msgstr "Haití"
 
 #: apps/userprofile/countries.py:105
 msgid "Hungary"
-msgstr ""
+msgstr "Hungría"
 
 #: apps/userprofile/countries.py:106
 msgid "Indonesia"
-msgstr ""
+msgstr "Indonesia"
 
 #: apps/userprofile/countries.py:107
 msgid "Ireland"
-msgstr ""
+msgstr "Irlanda"
 
 #: apps/userprofile/countries.py:108
 msgid "Israel"
-msgstr ""
+msgstr "Israel"
 
 #: apps/userprofile/countries.py:109
 msgid "India"
-msgstr ""
+msgstr "La India"
 
 #: apps/userprofile/countries.py:110
 msgid "British Indian Ocean Territory"
-msgstr ""
+msgstr "Territorio Británico del Océano"
 
 #: apps/userprofile/countries.py:111
 msgid "Iraq"
-msgstr ""
+msgstr "Irak"
 
 #: apps/userprofile/countries.py:112
 msgid "Islamic Republic of Iran"
-msgstr ""
+msgstr "República Islámica del Irán"
 
 #: apps/userprofile/countries.py:113
 msgid "Iceland"
-msgstr ""
+msgstr "Islandia"
 
 #: apps/userprofile/countries.py:114
 msgid "Italy"
-msgstr ""
+msgstr "Italia"
 
 #: apps/userprofile/countries.py:115
 msgid "Jamaica"
-msgstr ""
+msgstr "Jamaica"
 
 #: apps/userprofile/countries.py:116
 msgid "Jordan"
-msgstr ""
+msgstr "Jordania"
 
 #: apps/userprofile/countries.py:117
 msgid "Japan"
-msgstr ""
+msgstr "Japón"
 
 #: apps/userprofile/countries.py:118
 msgid "Kenya"
-msgstr ""
+msgstr "Kenya"
 
 #: apps/userprofile/countries.py:119
 msgid "Kyrgyzstan"
-msgstr ""
+msgstr "Kirguistán"
 
 #: apps/userprofile/countries.py:120
 msgid "Cambodia"
-msgstr ""
+msgstr "Camboya"
 
 #: apps/userprofile/countries.py:121
 msgid "Kiribati"
-msgstr ""
+msgstr "Kiribati"
 
 #: apps/userprofile/countries.py:122
 msgid "Comoros"
-msgstr ""
+msgstr "Comoras"
 
 #: apps/userprofile/countries.py:123
 msgid "St. Kitts and Nevis"
-msgstr ""
+msgstr "San Kitts y Nevis"
 
 #: apps/userprofile/countries.py:124
 msgid "Korea, Democratic People's Republic of"
-msgstr ""
+msgstr "Corea, República Popular Democrática de"
 
 #: apps/userprofile/countries.py:125
 msgid "Korea, Republic of"
-msgstr ""
+msgstr "Corea del Sur"
 
 #: apps/userprofile/countries.py:126
 msgid "Kuwait"
-msgstr ""
+msgstr "Kuwait"
 
 #: apps/userprofile/countries.py:127
 msgid "Cayman Islands"
-msgstr ""
+msgstr "Las Islas Caimán"
 
 #: apps/userprofile/countries.py:128
 msgid "Kazakhstan"
-msgstr ""
+msgstr "Kazajstán"
 
 #: apps/userprofile/countries.py:129
 msgid "Lao People's Democratic Republic"
-msgstr ""
+msgstr "República Democrática Popular Lao"
 
 #: apps/userprofile/countries.py:130
 msgid "Lebanon"
-msgstr ""
+msgstr "Líbano"
 
 #: apps/userprofile/countries.py:131
 msgid "Saint Lucia"
-msgstr ""
+msgstr "Santa Lucía"
 
 #: apps/userprofile/countries.py:132
 msgid "Liechtenstein"
-msgstr ""
+msgstr "Liechtenstein"
 
 #: apps/userprofile/countries.py:133
 msgid "Sri Lanka"
-msgstr ""
+msgstr "Sri Lanka"
 
 #: apps/userprofile/countries.py:134
 msgid "Liberia"
-msgstr ""
+msgstr "Liberia"
 
 #: apps/userprofile/countries.py:135
 msgid "Lesotho"
-msgstr ""
+msgstr "Lesotho"
 
 #: apps/userprofile/countries.py:136
 msgid "Lithuania"
-msgstr ""
+msgstr "Lituania"
 
 #: apps/userprofile/countries.py:137
 msgid "Luxembourg"
-msgstr ""
+msgstr "Luxemburgo"
 
 #: apps/userprofile/countries.py:138
 msgid "Latvia"
-msgstr ""
+msgstr "Letonia"
 
 #: apps/userprofile/countries.py:139
 msgid "Libyan Arab Jamahiriya"
-msgstr ""
+msgstr "Jamahiriya Árabe Libia"
 
 #: apps/userprofile/countries.py:140
 msgid "Morocco"
-msgstr ""
+msgstr "Marruecos"
 
 #: apps/userprofile/countries.py:141
 msgid "Monaco"
-msgstr ""
+msgstr "Mónaco"
 
 #: apps/userprofile/countries.py:142
 msgid "Moldova, Republic of"
-msgstr ""
+msgstr "Moldova, República de"
 
 #: apps/userprofile/countries.py:143
 msgid "Madagascar"
-msgstr ""
+msgstr "Madagascar"
 
 #: apps/userprofile/countries.py:144
 msgid "Marshall Islands"
-msgstr ""
+msgstr "Las Islas Marshall"
 
 #: apps/userprofile/countries.py:145
 msgid "Mali"
-msgstr ""
+msgstr "Malí"
 
 #: apps/userprofile/countries.py:146
 msgid "Mongolia"
-msgstr ""
+msgstr "Mongolia"
 
 #: apps/userprofile/countries.py:147
 msgid "Myanmar"
-msgstr ""
+msgstr "Myanmar"
 
 #: apps/userprofile/countries.py:148
 msgid "Macau"
-msgstr ""
+msgstr "Macao"
 
 #: apps/userprofile/countries.py:149
 msgid "Northern Mariana Islands"
-msgstr ""
+msgstr "Islas Marianas del Norte"
 
 #: apps/userprofile/countries.py:150
 msgid "Martinique"
-msgstr ""
+msgstr "Martinica"
 
 #: apps/userprofile/countries.py:151
 msgid "Mauritania"
-msgstr ""
+msgstr "Mauritania"
 
 #: apps/userprofile/countries.py:152
 msgid "Monserrat"
-msgstr ""
+msgstr "Montserrat"
 
 #: apps/userprofile/countries.py:153
 msgid "Malta"
-msgstr ""
+msgstr "Malta"
 
 #: apps/userprofile/countries.py:154
 msgid "Mauritius"
-msgstr ""
+msgstr "Mauricio"
 
 #: apps/userprofile/countries.py:155
 msgid "Maldives"
-msgstr ""
+msgstr "Maldivas"
 
 #: apps/userprofile/countries.py:156
 msgid "Malawi"
-msgstr ""
+msgstr "Malawi"
 
 #: apps/userprofile/countries.py:157
 msgid "Mexico"
-msgstr ""
+msgstr "México"
 
 #: apps/userprofile/countries.py:158
 msgid "Malaysia"
-msgstr ""
+msgstr "Malasia"
 
 #: apps/userprofile/countries.py:159
 msgid "Mozambique"
-msgstr ""
+msgstr "Mozambique"
 
 #: apps/userprofile/countries.py:160
 msgid "Namibia"
-msgstr ""
+msgstr "Namibia"
 
 #: apps/userprofile/countries.py:161
 msgid "New Caledonia"
-msgstr ""
+msgstr "Nueva Caledonia"
 
 #: apps/userprofile/countries.py:162
 msgid "Niger"
-msgstr ""
+msgstr "Níger"
 
 #: apps/userprofile/countries.py:163
 msgid "Norfolk Island"
-msgstr ""
+msgstr "Isla Norfolk"
 
 #: apps/userprofile/countries.py:164
 msgid "Nigeria"
-msgstr ""
+msgstr "Nigeria"
 
 #: apps/userprofile/countries.py:165
 msgid "Nicaragua"
-msgstr ""
+msgstr "Nicaragua"
 
 #: apps/userprofile/countries.py:166
 msgid "Netherlands"
-msgstr ""
+msgstr "Países Bajos"
 
 #: apps/userprofile/countries.py:167
 msgid "Norway"
-msgstr ""
+msgstr "Noruega"
 
 #: apps/userprofile/countries.py:168
 msgid "Nepal"
-msgstr ""
+msgstr "Nepal"
 
 #: apps/userprofile/countries.py:169
 msgid "Nauru"
-msgstr ""
+msgstr "Nauru"
 
 #: apps/userprofile/countries.py:170
 msgid "Niue"
-msgstr ""
+msgstr "Niue"
 
 #: apps/userprofile/countries.py:171
 msgid "New Zealand"
-msgstr ""
+msgstr "Nueva Zelanda"
 
 #: apps/userprofile/countries.py:172
 msgid "Oman"
-msgstr ""
+msgstr "Omán"
 
 #: apps/userprofile/countries.py:173
 msgid "Panama"
-msgstr ""
+msgstr "Panamá"
 
 #: apps/userprofile/countries.py:174
 msgid "Peru"
-msgstr ""
+msgstr "Perú"
 
 #: apps/userprofile/countries.py:175
 msgid "French Polynesia"
-msgstr ""
+msgstr "Polinesia francesa"
 
 #: apps/userprofile/countries.py:176
 msgid "Papua New Guinea"
-msgstr ""
+msgstr "Papua Nueva Guinea"
 
 #: apps/userprofile/countries.py:177
 msgid "Philippines"
-msgstr ""
+msgstr "Filipinas"
 
 #: apps/userprofile/countries.py:178
 msgid "Pakistan"
-msgstr ""
+msgstr "Pakistán"
 
 #: apps/userprofile/countries.py:179
 msgid "Poland"
-msgstr ""
+msgstr "Polonia"
 
 #: apps/userprofile/countries.py:180
 msgid "St. Pierre & Miquelon"
-msgstr ""
+msgstr "San Pedro y Miquelón"
 
 #: apps/userprofile/countries.py:181
 msgid "Pitcairn"
-msgstr ""
+msgstr "Pitcairn"
 
 #: apps/userprofile/countries.py:182
 msgid "Puerto Rico"
-msgstr ""
+msgstr "Puerto Rico"
 
 #: apps/userprofile/countries.py:183
 msgid "Portugal"
-msgstr ""
+msgstr "Portugal"
 
 #: apps/userprofile/countries.py:184
 msgid "Palau"
-msgstr ""
+msgstr "Palau"
 
 #: apps/userprofile/countries.py:185
 msgid "Paraguay"
-msgstr ""
+msgstr "Paraguay"
 
 #: apps/userprofile/countries.py:186
 msgid "Qatar"
-msgstr ""
+msgstr "Qatar"
 
 #: apps/userprofile/countries.py:187
 msgid "Reunion"
-msgstr ""
+msgstr "Reunión"
 
 #: apps/userprofile/countries.py:188
 msgid "Romania"
-msgstr ""
+msgstr "Rumania"
 
 #: apps/userprofile/countries.py:189
 msgid "Russian Federation"
-msgstr ""
+msgstr "Federación de Rusia"
 
 #: apps/userprofile/countries.py:190
 msgid "Rwanda"
-msgstr ""
+msgstr "Rwanda"
 
 #: apps/userprofile/countries.py:191
 msgid "Saudi Arabia"
-msgstr ""
+msgstr "Arabia Saudita"
 
 #: apps/userprofile/countries.py:192
 msgid "Solomon Islands"
-msgstr ""
+msgstr "Las Islas Salomón"
 
 #: apps/userprofile/countries.py:193
 msgid "Seychelles"
-msgstr ""
+msgstr "Seychelles"
 
 #: apps/userprofile/countries.py:194
 msgid "Sudan"
-msgstr ""
+msgstr "Sudán"
 
 #: apps/userprofile/countries.py:195
 msgid "Sweden"
-msgstr ""
+msgstr "Suecia"
 
 #: apps/userprofile/countries.py:196
 msgid "Singapore"
-msgstr ""
+msgstr "Singapur"
 
 #: apps/userprofile/countries.py:197
 msgid "St. Helena"
-msgstr ""
+msgstr "Santa Elena"
 
 #: apps/userprofile/countries.py:198
 msgid "Slovenia"
-msgstr ""
+msgstr "Eslovenia"
 
 #: apps/userprofile/countries.py:199
 msgid "Svalbard & Jan Mayen Islands"
-msgstr ""
+msgstr "Islas Svalbard y Jan Mayen"
 
 #: apps/userprofile/countries.py:200
 msgid "Slovakia"
-msgstr ""
+msgstr "Eslovaquia"
 
 #: apps/userprofile/countries.py:201
 msgid "Sierra Leone"
-msgstr ""
+msgstr "Sierra Leona"
 
 #: apps/userprofile/countries.py:202
 msgid "San Marino"
-msgstr ""
+msgstr "San Marino"
 
 #: apps/userprofile/countries.py:203
 msgid "Senegal"
-msgstr ""
+msgstr "Senegal"
 
 #: apps/userprofile/countries.py:204
 msgid "Somalia"
-msgstr ""
+msgstr "Somalia"
 
 #: apps/userprofile/countries.py:205
 msgid "Suriname"
-msgstr ""
+msgstr "Suriname"
 
 #: apps/userprofile/countries.py:206
 msgid "Sao Tome & Principe"
-msgstr ""
+msgstr "Santo Tomé y Príncipe"
 
 #: apps/userprofile/countries.py:207
 msgid "El Salvador"
-msgstr ""
+msgstr "El Salvador"
 
 #: apps/userprofile/countries.py:208
 msgid "Syrian Arab Republic"
-msgstr ""
+msgstr "República Árabe Siria"
 
 #: apps/userprofile/countries.py:209
 msgid "Swaziland"
-msgstr ""
+msgstr "Swazilandia"
 
 #: apps/userprofile/countries.py:210
 msgid "Turks & Caicos Islands"
-msgstr ""
+msgstr "Islas Turcas y Caicos"
 
 #: apps/userprofile/countries.py:211
 msgid "Chad"
-msgstr ""
+msgstr "Chad"
 
 #: apps/userprofile/countries.py:212
 msgid "French Southern Territories"
-msgstr ""
+msgstr "Francés tierras australes"
 
 #: apps/userprofile/countries.py:213
 msgid "Togo"
-msgstr ""
+msgstr "Togo"
 
 #: apps/userprofile/countries.py:214
 msgid "Thailand"
-msgstr ""
+msgstr "Tailandia"
 
 #: apps/userprofile/countries.py:215
 msgid "Tajikistan"
-msgstr ""
+msgstr "Tayikistán"
 
 #: apps/userprofile/countries.py:216
 msgid "Tokelau"
-msgstr ""
+msgstr "Tokelau"
 
 #: apps/userprofile/countries.py:217
 msgid "Turkmenistan"
-msgstr ""
+msgstr "Turkmenistán"
 
 #: apps/userprofile/countries.py:218
 msgid "Tunisia"
-msgstr ""
+msgstr "Túnez"
 
 #: apps/userprofile/countries.py:219
 msgid "Tonga"
-msgstr ""
+msgstr "Tonga"
 
 #: apps/userprofile/countries.py:220
 msgid "East Timor"
-msgstr ""
+msgstr "Timor Oriental"
 
 #: apps/userprofile/countries.py:221
 msgid "Turkey"
-msgstr ""
+msgstr "Turquía"
 
 #: apps/userprofile/countries.py:222
 msgid "Trinidad & Tobago"
-msgstr ""
+msgstr "Trinidad y Tobago"
 
 #: apps/userprofile/countries.py:223
 msgid "Tuvalu"
-msgstr ""
+msgstr "Tuvalu"
 
 #: apps/userprofile/countries.py:224
 msgid "Taiwan, Province of China"
-msgstr ""
+msgstr "Taiwán, Provincia de China"
 
 #: apps/userprofile/countries.py:225
 msgid "Tanzania, United Republic of"
-msgstr ""
+msgstr "Tanzania, República Unida de"
 
 #: apps/userprofile/countries.py:226
 msgid "Ukraine"
-msgstr ""
+msgstr "Ucrania"
 
 #: apps/userprofile/countries.py:227
 msgid "Uganda"
@@ -1405,9 +1386,7 @@ msgid "E-mail address"
 msgstr ""
 
 #: apps/userprofile/forms.py:94
-msgid ""
-"That username has invalid characters. The valid values are letters, numbers "
-"and underscore."
+msgid "That username has invalid characters. The valid values are letters, numbers and underscore."
 msgstr ""
 
 #: apps/userprofile/forms.py:99
@@ -1442,9 +1421,7 @@ msgid "Email validation process for %(user)s"
 msgstr "Proceso de validación de correo electrónico para %(user)s"
 
 #: apps/userprofile/templatetags/avatars.py:68
-msgid ""
-"You have to provide only the size as             an integer (both sides will "
-"be equal) and optionally, the             username."
+msgid "You have to provide only the size as             an integer (both sides will be equal) and optionally, the             username."
 msgstr ""
 
 #: templates/base.html:20 templates/base.html.py:42
@@ -1483,12 +1460,8 @@ msgid "Password:"
 msgstr "Clave:"
 
 #: templates/accounts/logout.html:7
-msgid ""
-"Thanks for using e-cidadania. Now you can continue visting the website or "
-"log in again."
-msgstr ""
-"Gracias por utilizar e-cidadania. Ahora puede continuar visitando la web o "
-"entrar de nuevo."
+msgid "Thanks for using e-cidadania. Now you can continue visting the website or log in again."
+msgstr "Gracias por utilizar e-cidadania. Ahora puede continuar visitando la web o entrar de nuevo."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"
@@ -1562,9 +1535,7 @@ msgstr "Ha fallado el reseteo de la clave"
 
 #: templates/registration/password_reset_done.html:5
 msgid "Email with password reset instructions has been sent."
-msgstr ""
-"El correo electrónico con las instrucciones para resetear la clave ha sido "
-"enviado."
+msgstr "El correo electrónico con las instrucciones para resetear la clave ha sido enviado."
 
 #: templates/registration/password_reset_email.html:2
 #, python-format
@@ -1622,9 +1593,7 @@ msgstr "Enviar confirmacion"
 
 #: templates/userprofile/account/email_validation.html:41
 #: templates/userprofile/account/email_validation_processed.html:21
-msgid ""
-"Insert the new e-mail address. An e-mail will be send to it for testing and "
-"confirmation"
+msgid "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:4
@@ -1640,9 +1609,7 @@ msgid "E-mail address validated successfully"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:16
-msgid ""
-"The key you received via e-mail is no longer valid. Please try the e-mail "
-"validation process again"
+msgid "The key you received via e-mail is no longer valid. Please try the e-mail validation process again"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_done.html:23
@@ -1666,10 +1633,7 @@ msgid "E-mail change processed"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_processed.html:14
-msgid ""
-"An e-mail has been sent to the new e-mail address to verify and activate it. "
-"Please access to your e-mail and complete this process following the "
-"instructions specified in the e-mail body"
+msgid "An e-mail has been sent to the new e-mail address to verify and activate it. Please access to your e-mail and complete this process following the instructions specified in the e-mail body"
 msgstr ""
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
@@ -1745,9 +1709,7 @@ msgstr "Cambiar clave"
 
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
-msgid ""
-"Password change utility page. Please enter your new password twice so we can "
-"verify you typed it in correctly"
+msgid "Password change utility page. Please enter your new password twice so we can verify you typed it in correctly"
 msgstr ""
 
 #: templates/userprofile/account/password_change_done.html:4
@@ -1764,8 +1726,7 @@ msgid "Password key expired"
 msgstr "La llave de la clave ha expirado"
 
 #: templates/userprofile/account/password_expired.html:9
-msgid ""
-"The password key you're trying to use is expired. Please, request a new one"
+msgid "The password key you're trying to use is expired. Please, request a new one"
 msgstr ""
 
 #: templates/userprofile/account/password_reset.html:4
@@ -1786,9 +1747,7 @@ msgstr ""
 
 #: templates/userprofile/account/password_reset.html:38
 #: templates/userprofile/account/password_reset_done.html:17
-msgid ""
-"Forgotten your password? Enter your e-mail address, and we'll reset your "
-"password and e-mail the new one to you"
+msgid "Forgotten your password? Enter your e-mail address, and we'll reset your password and e-mail the new one to you"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_complete.html:13
@@ -1797,9 +1756,7 @@ msgstr ""
 
 #: templates/userprofile/account/password_reset_complete.html:20
 #: templates/userprofile/account/password_reset_confirm.html:56
-msgid ""
-"Password reset utility page. Please enter your new password twice so we can "
-"verify you typed it in correctly"
+msgid "Password reset utility page. Please enter your new password twice so we can verify you typed it in correctly"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_confirm.html:47
@@ -1807,9 +1764,7 @@ msgid "Password reset unsuccessful"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_confirm.html:48
-msgid ""
-"The password reset link was invalid, possibly because it has already been "
-"used.  Please request a new password reset."
+msgid "The password reset link was invalid, possibly because it has already been used.  Please request a new password reset."
 msgstr ""
 
 #: templates/userprofile/account/password_reset_done.html:4
@@ -1818,9 +1773,7 @@ msgid "Password reset successful"
 msgstr ""
 
 #: templates/userprofile/account/password_reset_done.html:10
-msgid ""
-"We've e-mailed you the instructions to obtain a new password. You should be "
-"receiving it shortly"
+msgid "We've e-mailed you the instructions to obtain a new password. You should be receiving it shortly"
 msgstr ""
 
 #: templates/userprofile/account/registration.html:4
@@ -1839,9 +1792,7 @@ msgstr ""
 
 #: templates/userprofile/account/registration.html:55
 #: templates/userprofile/account/registration_done.html:15
-msgid ""
-"Joining this community is quick and easy. You only need to fill the form to "
-"get access to all the private content"
+msgid "Joining this community is quick and easy. You only need to fill the form to get access to all the private content"
 msgstr ""
 
 #: templates/userprofile/account/registration_done.html:4
@@ -1880,9 +1831,7 @@ msgid "Done"
 msgstr ""
 
 #: templates/userprofile/avatar/choose.html:50
-msgid ""
-"Select an image from a remote URL. Put the URL on the input below and we'll "
-"retrieve the image for you"
+msgid "Select an image from a remote URL. Put the URL on the input below and we'll retrieve the image for you"
 msgstr ""
 
 #: templates/userprofile/avatar/choose.html:57
@@ -1902,9 +1851,7 @@ msgstr ""
 #: templates/userprofile/avatar/crop.html:54
 #: templates/userprofile/avatar/done.html:20
 #: templates/userprofile/avatar/search.html:51
-msgid ""
-"You have several options to select the image you want as avatar on your "
-"profile"
+msgid "You have several options to select the image you want as avatar on your profile"
 msgstr ""
 
 #: templates/userprofile/avatar/crop.html:4
@@ -1929,9 +1876,7 @@ msgid "Delete personal information"
 msgstr ""
 
 #: templates/userprofile/profile/delete.html:10
-msgid ""
-"It erases all your private data except your username. You can refill the "
-"information later if you want to."
+msgid "It erases all your private data except your username. You can refill the information later if you want to."
 msgstr ""
 
 #: templates/userprofile/profile/delete.html:15
