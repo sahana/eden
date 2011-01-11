@@ -94,9 +94,13 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admin',
     'tagging',
-    
+
+    # Prebuilt modules
     #'e_cidadania.apps.registration',
+    'e_cidadania.apps.rosetta', # Rosetta is for easy translation
     'e_cidadania.apps.userprofile',
+
+    # Modules created for e-cidadania
     'e_cidadania.apps.accounts',
     'e_cidadania.apps.proposals',
     'e_cidadania.apps.news',

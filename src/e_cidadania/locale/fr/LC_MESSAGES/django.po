@@ -8,87 +8,87 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-11 12:19+0100\n"
+"POT-Creation-Date: 2011-01-11 12:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n>1;\n"
 
 #: apps/accounts/models.py:32
 msgid "Male"
-msgstr "Hombre"
+msgstr ""
 
 #: apps/accounts/models.py:33
 msgid "Female"
-msgstr "Mujer"
+msgstr ""
 
 #: apps/accounts/models.py:47 apps/spaces/models.py:30
 #: apps/spaces/models.py:56
 msgid "Name"
-msgstr "Nombre"
+msgstr ""
 
 #: apps/accounts/models.py:48
 msgid "Surname"
-msgstr "Apellidos"
+msgstr ""
 
 #: apps/accounts/models.py:49
 msgid "Gender"
-msgstr "Género"
+msgstr ""
 
 #: apps/accounts/models.py:52
 msgid "Birth date"
-msgstr "Fecha de nacimiento"
+msgstr ""
 
 #: apps/accounts/models.py:56
 msgid "Province"
-msgstr "Provincia"
+msgstr ""
 
 #: apps/accounts/models.py:57
 msgid "Municipality"
-msgstr "Municipio"
+msgstr ""
 
 #: apps/accounts/models.py:60
 msgid "Address"
-msgstr "Dirección"
+msgstr ""
 
 #: apps/accounts/models.py:61
 msgid "Number"
-msgstr "Número"
+msgstr ""
 
 #: apps/accounts/models.py:63
 msgid "Floor"
-msgstr "Piso"
+msgstr ""
 
 #: apps/accounts/models.py:64
 msgid "Letter"
-msgstr "Letra"
+msgstr ""
 
 #: apps/accounts/models.py:67
 msgid "Phone 1"
-msgstr "Teléfono"
+msgstr ""
 
 #: apps/accounts/models.py:68 apps/accounts/models.py:70
 msgid "9 digits maximum"
-msgstr "9 dígitos máxmimo"
+msgstr ""
 
 #: apps/accounts/models.py:69
 msgid "Phone 2"
-msgstr "Teléfono 2"
+msgstr ""
 
 #: apps/accounts/models.py:72
 msgid "Identification document"
-msgstr "DNI"
+msgstr ""
 
 #: apps/accounts/models.py:75
 msgid "Website"
-msgstr "Página web"
+msgstr ""
 
 #: apps/accounts/models.py:77
 msgid "The URL will be checked"
-msgstr "La dirección será comprobada"
+msgstr ""
 
 #: apps/debate/models.py:33 apps/debate/models.py:47 apps/news/models.py:34
 #: apps/proposals/forms.py:38 apps/proposals/models.py:42
@@ -100,15 +100,13 @@ msgid "Objectives"
 msgstr ""
 
 #: apps/debate/models.py:35 apps/debate/models.py:48 apps/spaces/models.py:31
-#, fuzzy
 msgid "Description"
-msgstr "Posicion"
+msgstr ""
 
 #: apps/debate/models.py:61 apps/proposals/forms.py:39
 #: apps/proposals/models.py:43
-#, fuzzy
 msgid "Message"
-msgstr "Mensajes"
+msgstr ""
 
 #: apps/debate/models.py:62
 msgid "Explanation"
@@ -155,9 +153,8 @@ msgid "Activate users"
 msgstr ""
 
 #: apps/registration/admin.py:43
-#, fuzzy
 msgid "Re-send activation emails"
-msgstr "La activación de la cuenta ha fallado"
+msgstr ""
 
 #: apps/registration/forms.py:35 apps/userprofile/forms.py:83
 #: templates/userprofile/account/login.html:20
@@ -165,22 +162,21 @@ msgstr "La activación de la cuenta ha fallado"
 #: templates/userprofile/profile/public.html:35
 #: templates/userprofile/profile/usercard.html:11
 msgid "Username"
-msgstr "Nombre de usuario"
+msgstr ""
 
 #: apps/registration/forms.py:36
 msgid "This value must contain only letters, numbers and underscores."
 msgstr ""
 
 #: apps/registration/forms.py:39
-#, fuzzy
 msgid "Email address"
-msgstr "Nueva direccion de correo"
+msgstr ""
 
 #: apps/registration/forms.py:41 apps/userprofile/forms.py:85
 #: templates/userprofile/account/login.html:26
 #: templates/userprofile/account/registration.html:32
 msgid "Password"
-msgstr "Clave"
+msgstr ""
 
 #: apps/registration/forms.py:43 apps/userprofile/forms.py:86
 #: templates/userprofile/account/registration.html:38
@@ -188,9 +184,8 @@ msgid "Password (again)"
 msgstr ""
 
 #: apps/registration/forms.py:55
-#, fuzzy
 msgid "A user with that username already exists."
-msgstr "Ese nombre de usuario ya existe."
+msgstr ""
 
 #: apps/registration/forms.py:67
 msgid "The two password fields didn't match."
@@ -217,30 +212,25 @@ msgid ""
 msgstr ""
 
 #: apps/registration/models.py:168
-#, fuzzy
 msgid "user"
-msgstr "Usuario"
+msgstr ""
 
 #: apps/registration/models.py:169
-#, fuzzy
 msgid "activation key"
-msgstr "La activación de la cuenta ha fallado"
+msgstr ""
 
 #: apps/registration/models.py:174
-#, fuzzy
 msgid "registration profile"
-msgstr "Editar perfil"
+msgstr ""
 
 #: apps/registration/models.py:175
-#, fuzzy
 msgid "registration profiles"
-msgstr "Editar perfil"
+msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:4
 #: apps/rosetta/templates/rosetta/languages.html:6
-#, fuzzy
 msgid "Language selection"
-msgstr "Cambiar localización"
+msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:6
 #: apps/rosetta/templates/rosetta/pofile.html:18
@@ -248,9 +238,8 @@ msgid "Home"
 msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:17
-#, fuzzy
 msgid "Application"
-msgstr "Añadir localización"
+msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:18
 msgid "Progress"
@@ -258,7 +247,7 @@ msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:19 templates/base.html:19
 msgid "Messages"
-msgstr "Mensajes"
+msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:20
 msgid "Translated"
@@ -274,9 +263,8 @@ msgid "Obsolete"
 msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:23
-#, fuzzy
 msgid "File"
-msgstr "Mujer"
+msgstr ""
 
 #: apps/rosetta/templates/rosetta/languages.html:44
 msgid "Nothing to translate!"
@@ -398,9 +386,8 @@ msgid "Modules"
 msgstr ""
 
 #: apps/spaces/models.py:34
-#, fuzzy
 msgid "Logotype"
-msgstr "Salir"
+msgstr ""
 
 #: apps/spaces/models.py:36
 msgid "Banner"
@@ -1412,34 +1399,34 @@ msgstr ""
 
 #: apps/userprofile/forms.py:99
 msgid "The username is already registered."
-msgstr "Ese nombre de usuario ya existe."
+msgstr ""
 
 #: apps/userprofile/forms.py:108
 msgid "The passwords inserted are different."
-msgstr "Las claves introducidas son diferentes."
+msgstr ""
 
 #: apps/userprofile/forms.py:120 apps/userprofile/forms.py:139
 msgid "That e-mail is already used."
-msgstr "Esa dirección ya está en uso."
+msgstr ""
 
 #: apps/userprofile/forms.py:124
 msgid "That e-mail is already being confirmed."
-msgstr "Esa dirección de correo electrónico ya ha sido confirmada."
+msgstr ""
 
 #: apps/userprofile/models.py:39
 #, python-format
 msgid "%s's profile"
-msgstr "Perfil de %s"
+msgstr ""
 
 #: apps/userprofile/models.py:58
 #, python-format
 msgid "%s's Avatar"
-msgstr "Avatar de %s"
+msgstr ""
 
 #: apps/userprofile/models.py:142
 #, python-format
 msgid "Email validation process for %(user)s"
-msgstr "Proceso de validación de correo electrónico para %(user)s"
+msgstr ""
 
 #: apps/userprofile/templatetags/avatars.py:68
 msgid ""
@@ -1449,54 +1436,52 @@ msgstr ""
 
 #: templates/base.html:20 templates/base.html.py:42
 msgid "Language"
-msgstr "Idioma"
+msgstr ""
 
 #: templates/base.html:31
 msgid "Administration"
-msgstr "Administración"
+msgstr ""
 
 #: templates/base.html:33
 msgid "Edit profile"
-msgstr "Editar perfil"
+msgstr ""
 
 #: templates/base.html:34
 msgid "Logout"
-msgstr "Salir"
+msgstr ""
 
 #: templates/base.html:40 templates/accounts/login.html:4
 #: templates/userprofile/account/login.html:36
 msgid "Login"
-msgstr "Entrar"
+msgstr ""
 
 #: templates/base.html:41 templates/registration/login.html:14
 #: templates/userprofile/account/registration.html:48
 msgid "Register"
-msgstr "Registrarse"
+msgstr ""
 
 #: templates/accounts/login.html:14
 #: templates/userprofile/profile/overview_old.html:18
 msgid "Username:"
-msgstr "Nombre de usuario:"
+msgstr ""
 
 #: templates/accounts/login.html:17
 msgid "Password:"
-msgstr "Clave:"
+msgstr ""
 
 #: templates/accounts/logout.html:7
 msgid ""
 "Thanks for using e-cidadania. Now you can continue visting the website or "
 "log in again."
 msgstr ""
-"Gracias por utilizar e-cidadania. Ahora puede continuar visitando la web o "
-"entrar de nuevo."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"
-msgstr "Volver a entrar"
+msgstr ""
 
 #: templates/accounts/profile.html:5
 msgid "User"
-msgstr "Usuario"
+msgstr ""
 
 #: templates/proposals/add_proposal.html:4
 msgid "Add proposal"
@@ -1512,80 +1497,78 @@ msgstr ""
 
 #: templates/registration/activate.html:8
 msgid "Account successfully activated"
-msgstr "Cuenta activada satisfactoriamente"
+msgstr ""
 
 #: templates/registration/activate.html:10 templates/registration/login.html:9
 #: templates/registration/password_reset_complete.html:8
 msgid "Log in"
-msgstr "Entrar"
+msgstr ""
 
 #: templates/registration/activate.html:14
 msgid "Account activation failed"
-msgstr "La activación de la cuenta ha fallado"
+msgstr ""
 
 #: templates/registration/login.html:13
 msgid "Forgot password"
-msgstr "¿Has olvidado tu clave?"
+msgstr ""
 
 #: templates/registration/login.html:13
 msgid "Reset it"
-msgstr "Resetearla"
+msgstr ""
 
 #: templates/registration/login.html:14
 msgid "Not member"
-msgstr "No es miembro"
+msgstr ""
 
 #: templates/registration/logout.html:5
 #: templates/userprofile/account/logout.html:4
 #: templates/userprofile/account/logout.html:9
 msgid "Logged out"
-msgstr "Sesión terminada"
+msgstr ""
 
 #: templates/registration/password_change_done.html:5
 msgid "Password changed"
-msgstr "Clave cambiada"
+msgstr ""
 
 #: templates/registration/password_change_form.html:8
 #: templates/registration/password_reset_confirm.html:11
 #: templates/registration/password_reset_form.html:8
 #: templates/registration/registration_form.html:8
 msgid "Submit"
-msgstr "Enviar"
+msgstr ""
 
 #: templates/registration/password_reset_complete.html:6
 msgid "Password reset successfully"
-msgstr "La clave ha sido reseteada satisfactoriamente"
+msgstr ""
 
 #: templates/registration/password_reset_confirm.html:16
 msgid "Password reset failed"
-msgstr "Ha fallado el reseteo de la clave"
+msgstr ""
 
 #: templates/registration/password_reset_done.html:5
 msgid "Email with password reset instructions has been sent."
 msgstr ""
-"El correo electrónico con las instrucciones para resetear la clave ha sido "
-"enviado."
 
 #: templates/registration/password_reset_email.html:2
 #, python-format
 msgid "Reset password at %(site_name)s"
-msgstr "Resetear clave en %(site_name)s"
+msgstr ""
 
 #: templates/registration/registration_complete.html:5
 msgid "You are now registered. Activation email sent."
-msgstr "Ha sido registrado. El correo electrónic de activación se ha enviado."
+msgstr ""
 
 #: templates/userprofile/menu.html:5
 msgid "Overview"
-msgstr "Resumen"
+msgstr ""
 
 #: templates/userprofile/menu.html:6
 msgid "Personal information"
-msgstr "Información personal"
+msgstr ""
 
 #: templates/userprofile/menu.html:7
 msgid "Avatar"
-msgstr "Avatar"
+msgstr ""
 
 #: templates/userprofile/menu.html:8
 #: templates/userprofile/profile/location.html:18
@@ -1593,32 +1576,32 @@ msgstr "Avatar"
 #: templates/userprofile/profile/overview_old.html:37
 #: templates/userprofile/profile/public.html:40
 msgid "Location"
-msgstr "Lugar"
+msgstr ""
 
 #: templates/userprofile/menu.html:9
 #: templates/userprofile/profile/delete.html:8
 msgid "Remove profile"
-msgstr "Borrar perfil"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:4
 #: templates/userprofile/account/email_validation.html:23
 msgid "E-mail change"
-msgstr "Cambiar correo electrónico"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:4
 #: templates/userprofile/account/email_validation.html:23
 #: templates/userprofile/account/email_validation.html:40
 #: templates/userprofile/account/email_validation_processed.html:20
 msgid "Add e-mail"
-msgstr "Añadir correo electrónico"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:24
 msgid "New e-mail address"
-msgstr "Nueva direccion de correo"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:34
 msgid "Send confirmation"
-msgstr "Enviar confirmacion"
+msgstr ""
 
 #: templates/userprofile/account/email_validation.html:41
 #: templates/userprofile/account/email_validation_processed.html:21
@@ -1691,57 +1674,57 @@ msgstr ""
 #: templates/userprofile/account/login.html:4
 #: templates/userprofile/account/login.html:19
 msgid "User login"
-msgstr "Entrar"
+msgstr ""
 
 #: templates/userprofile/account/login.html:42
 msgid "Utilities"
-msgstr "Utilidades"
+msgstr ""
 
 #: templates/userprofile/account/login.html:44
 msgid "Lost your password?"
-msgstr "¿Has perdido la clave?"
+msgstr ""
 
 #: templates/userprofile/account/login.html:46
 msgid "Sign up!"
-msgstr "Regístrate!"
+msgstr ""
 
 #: templates/userprofile/account/logout.html:10
 msgid "You've been logged out"
-msgstr "Ha salido de su cuenta"
+msgstr ""
 
 #: templates/userprofile/account/logout.html:10
 msgid "Log in again"
-msgstr "Entrar de nuevo"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:4
 #: templates/userprofile/account/password_change.html:23
 #: templates/userprofile/account/password_reset_confirm.html:4
 msgid "Password change for"
-msgstr "Cambiar clave para"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:24
 msgid "Old password"
-msgstr "Clave anterior"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:30
 #: templates/userprofile/account/password_reset_confirm.html:26
 msgid "New password"
-msgstr "Nueva clave"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:36
 #: templates/userprofile/account/password_reset_confirm.html:32
 msgid "Confirm password"
-msgstr "Confirmar clave"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:46
 #: templates/userprofile/account/password_reset_confirm.html:42
 msgid "Change"
-msgstr "Cambiar"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:52
 #: templates/userprofile/account/password_change_done.html:19
 msgid "Password change"
-msgstr "Cambiar clave"
+msgstr ""
 
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
@@ -1753,15 +1736,15 @@ msgstr ""
 #: templates/userprofile/account/password_change_done.html:4
 #: templates/userprofile/account/password_reset_complete.html:4
 msgid "Password change successful"
-msgstr "El cambio de clave ha sido un éxito"
+msgstr ""
 
 #: templates/userprofile/account/password_change_done.html:13
 msgid "The password has been changed successfully"
-msgstr "La clave ha sido cambiada satisfactoriamente"
+msgstr ""
 
 #: templates/userprofile/account/password_expired.html:4
 msgid "Password key expired"
-msgstr "La llave de la clave ha expirado"
+msgstr ""
 
 #: templates/userprofile/account/password_expired.html:9
 msgid ""
@@ -1983,16 +1966,16 @@ msgstr ""
 #: templates/userprofile/profile/overview_old.html:28
 #: templates/userprofile/profile/public.html:37
 msgid "Country"
-msgstr "Pais"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:20
 msgid "Position"
-msgstr "Posicion"
+msgstr ""
 
 #: templates/userprofile/profile/location.html:26
 #: templates/userprofile/profile/personal.html:15
 msgid "Save"
-msgstr "Guardar"
+msgstr ""
 
 #: templates/userprofile/profile/location_done.html:9
 #: templates/userprofile/profile/personal_done.html:9
@@ -2002,53 +1985,53 @@ msgstr ""
 #: templates/userprofile/profile/overview.html:5
 #: templates/userprofile/profile/overview_old.html:5
 msgid "Overview of your profile"
-msgstr "Resumen de tu perfil"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:29
 msgid "profile"
-msgstr "perfil"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:31
 msgid "Edit personal data"
-msgstr "Editar datos personales"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:32
 msgid "Edit location"
-msgstr "Editar localización"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:33
 msgid "Delete profile"
-msgstr "Borrar perfil"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:34
 msgid "Public profile"
-msgstr "Perfil público"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:41
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Change avatar"
-msgstr "Cambiar avatar"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:41
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Add avatar"
-msgstr "Añadir avatar"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:45
 msgid "Username: "
-msgstr "Nombre de usuario: "
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:46
 msgid "Real name: "
-msgstr "Nombre real: "
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:47
 msgid "Age: "
-msgstr "Edad: "
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:48
 msgid "Member for: "
-msgstr "Miembro desde: "
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:49
 #: templates/userprofile/profile/overview_old.html:19
@@ -2058,19 +2041,19 @@ msgstr ""
 #: templates/userprofile/profile/overview.html:52
 #: templates/userprofile/profile/overview_old.html:21
 msgid "Not set yet"
-msgstr "No establecido"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:56
 #: templates/userprofile/profile/overview_old.html:23
 msgid " (Not validated)"
-msgstr " (No validado)"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:66
 #: templates/userprofile/profile/overview.html:83
 #: templates/userprofile/profile/overview_old.html:32
 #: templates/userprofile/profile/overview_old.html:41
 msgid "Not set"
-msgstr "No se ha establecido"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:71
 msgid "Ciudad: "
@@ -2104,27 +2087,27 @@ msgstr ""
 #: templates/userprofile/profile/overview.html:106
 #: templates/userprofile/profile/overview_old.html:88
 msgid "Add location"
-msgstr "Añadir localización"
+msgstr ""
 
 #: templates/userprofile/profile/overview.html:108
 #: templates/userprofile/profile/overview_old.html:90
 msgid "Change location"
-msgstr "Cambiar localización"
+msgstr ""
 
 #: templates/userprofile/profile/personal.html:4
 #: templates/userprofile/profile/personal.html:7
 msgid "Edit your personal information"
-msgstr "Editar información personal"
+msgstr ""
 
 #: templates/userprofile/profile/personal_done.html:11
 msgid "Back to home"
-msgstr "Volver al inicio"
+msgstr ""
 
 #: templates/userprofile/profile/public.html:30
 #, python-format
 msgid "Public profile of %(user)s"
-msgstr "Perfil público de %(user)s"
+msgstr ""
 
 #: templates/userprofile/profile/usercard.html:12
 msgid "Public profile information"
-msgstr "Información del perfil público"
+msgstr ""

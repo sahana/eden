@@ -17,3 +17,43 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
+
+from e_cidadania.apps.spaces.models import Space, Entity
+
+class EntityInline(admin.TabularInline):
+
+    """
+    Inline view for entities.
+    """
+    model = Entity
+
+
+class SpaceAdmin(admin.ModelAdmin):
+
+    """
+    Administration view for django admin to create spaces.
+    """
+    list_display = ('name', 'description', 'date')
+    search_fields = ('name',)
+    
+    fieldsets = [
+        (None, {'fields':
+            [('name', 'description')]}),
+
+        (_('Appearance'), {'fields':
+            [('logo', 'banner')]}),
+
+        (_('Modules'), {'fields':
+            [('mod_cal', 'mod_docs', 'mod_news', 'mod_proposals',
+            'mod_debate')]}),
+
+    ]
+    
+    inlines = [
+        EntityInline,
+    ]
+
+admin.site.register(Space, SpaceAdmin)

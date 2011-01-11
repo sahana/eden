@@ -29,9 +29,12 @@ class Space(models.Model):
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
     description = models.TextField(_('Description'))
-    
-    logo = models.ImageField(_('Logotype'), upload_to='spaces/logos')
-    banner = models.ImageField(_('Banner'), upload_to='spaces/banners')
+    date = models.DateTimeField(auto_now_add=True)
+
+    logo = models.ImageField(verbose_name=_('Logotype'),
+                             upload_to='spaces/logos')
+    banner = models.ImageField(verbose_name=_('Banner'),
+                               upload_to='spaces/banners')
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
@@ -44,4 +47,14 @@ class Space(models.Model):
     def __unicode__(self):
         return self.name
 
+class Entity(models.Model):
 
+    """
+    This models stores the name of the entities responsible
+    for the creation of the space.
+    """
+    name = models.CharField(_('Name'), max_length=100, unique=True)
+    space = models.ForeignKey(Space)
+    
+    def __unicode__(self):
+        return self.name
