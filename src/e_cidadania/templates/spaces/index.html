@@ -38,5 +38,5 @@
 {% endblock %}
 
 {% block footer %}
-  <p>Entidades que participan:</p> {% for e in entities %} {% if e|last%} {{ e.name }} {% else %} {{e.name}} | {% endif%} {% endfor %}
+  <p>Entidades que participan:</p> {% for e in entities %} {{e.name}} | {% endfor %}
 {% endblock %}
