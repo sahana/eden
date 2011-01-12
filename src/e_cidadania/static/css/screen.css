@@ -146,6 +146,21 @@ input[type="text"], input[type="password"] {
     color: #AAA;
 }
 
+#leftcol {
+    float: left;
+    padding: 10px;
+    width: 20%;
+    margin: 10px;
+    border: 1px solid #000;
+    background: #EEE;
+}
+
+#centercol {
+    float: left;
+    padding: 10px;
+    width: 50%;
+}
+
 /* USERBAR DROPDOWN */
 ul.topnav {
 	list-style: none;
@@ -222,7 +237,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     float: left;
     width: 150px;
     height: 75px;
-    background: url(/static/assets/logo.png) no-repeat;
+    margin-left: 10px;
 }
 
 #banner {

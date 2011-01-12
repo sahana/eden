@@ -38,31 +38,41 @@
             {% else %}
                 <ul class="topnav">
                     <li><a href="/accounts/login">{% trans "Login" %}</a> | </li>
-                    <li><a href="/accounts/register">{% trans "Register" %}</a>| </li>  
                     <li><a href="/none">{% trans "Language" %}</a></li>
 	            </ul>
 	        {% endif %}
 	    </div>
 	    </div>
+	    <div id="header">
 	    {% block header %}
-	        <div id="header">
-	            <div id="logo"></div>
-	            <div id="banner"></div>
-	        </div>
+	            <div id="logo">
+	            {% block logo %}
+	            {% endblock %}
+	            </div>
+	            <div id="banner">
+	            {% block banner %}
+	            {% endblock %}
+	            </div>
 	    {% endblock %}
-	    
-	    {% block rightcol %}
-	    {% endblock %}
-	    
-	    {% block leftcol %}
-	    {% endblock %}
+	    </div>
 	    
 	    <div id="content">
 	        {% block content %}
+	        
+	        	      {% block leftcol %}
+	                {% endblock %}
+	                
+	                {% block centercol %}
+	                {% endblock %}
+	                
+	          	    {% block rightcol %}
+	                {% endblock %}
+	                
 	        {% endblock %}
 	    </div>
 	    <div id="footer">
-	        <p>(c) 2010 Cidadanía Coop. e-cidadania é unha ferramenta libre.</p>
+	    {% block footer %}
+	    	  <p>(c) 2010 Cidadanía Coop. e-cidadania é unha ferramenta libre.</p>
 	        <p><a href="http://www.djangoproject.com">django</a> | 
 	           <a href="http://www.python.org">python</a> | 
 	           <a href="http://www.w3.org">xhtml</a> | 
@@ -72,6 +82,7 @@
 	        <p>Corredoira das Fraguas, 5, 1º I.</p>
 	        <p>15703 Santiago de Compostela</p>
 	        <p>t: +34 981 589 269 | f: +34 981 554 751</p> 
+	    {% endblock %}
 	    </div>
 	</body>
 </html>

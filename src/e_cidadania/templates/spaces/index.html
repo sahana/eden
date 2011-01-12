@@ -1,12 +1,42 @@
 {% extends "base.html" %}
 {% load i18n %}
 
+{% block title %}{{ get_place.name|capfirst }} - {% trans "Index" %}{% endblock %}
+{% block logo %}<img src="/{{MEDIA_URL}}{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="/{{MEDIA_URL}}{{ get_place.banner }}">{% endblock %}
+
 {% block content %}
 
-Nombre: {{ get_place.name }}<br/>
-Descripcion: {{ get_place.description }}<br/>
-Logo: <img src="/{{MEDIA_URL}}{{ get_place.logo }}" /><br/>
-Banner: <img src="/{{MEDIA_URL}}{{ get_place.banner }}" /><br/>
-Entidades: {% for e in entities %} {{e.name}} {% endfor %}
+  {% if get_place.mod_cal %}
+    {% block leftcol %}
+    <div id="leftcol">
+      <ul>
+        <li>Prrrueba</li>
+        <li>Prrrueba</li>
+        <li>Prrrueba</li>
+        <li>Prrrueba</li>
+      </ul>
+    </div>
+    {% endblock %}
+  {% endif %}
 
+  {% block centercol %}
+    <div id="centercol">
+      <h1>Datos de prueba</h1>
+      Nombre: {{ get_place.name }}<br/>
+      Descripcion: {{ get_place.description }}<br/>
+      Calendario activado: {{ get_place.mod_cal }}<br/>
+      Documentos activado: {{ get_place.mod_docs }}<br/>
+      Noticias activado: {{ get_place.mod_news }}<br/>
+      Debate activado: {{ get_place.mod_debate }}<br/>
+      Propuestas activado: {{ get_place.mod_proposals }}<br/>
+      Este espacio fue creado el: {{ get_place.date }}<br/>
+      Este espacio fue creado por: {{ get_place.author }}<br/>
+    </div>
+  {% endblock %}
+
+{% endblock %}
+
+{% block footer %}
+  <p>Entidades que participan:</p> {% for e in entities %} {{e.name}} | {% endfor %}
 {% endblock %}

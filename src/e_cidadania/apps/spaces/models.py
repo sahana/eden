@@ -21,6 +21,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+from django.contrib.auth.models import User
 
 class Space(models.Model):
 
@@ -30,11 +31,14 @@ class Space(models.Model):
     name = models.CharField(_('Name'), max_length=100, unique=True)
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User, verbose_name=_('Author'))
 
     logo = models.ImageField(upload_to='spaces/logos',
-                             verbose_name=_('Logotype'))
+                             verbose_name=_('Logotype'),
+                             help_text=_('100px width, 75px height'))
     banner = models.ImageField(upload_to='spaces/banners',
-                               verbose_name=_('Banner'))
+                               verbose_name=_('Banner'),
+                               help_text=_('75px height'))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
