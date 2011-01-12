@@ -42,7 +42,8 @@ def view_space_index(request, space_name):
                          queryset = Space.objects.all(),
                          object_id = place.id,
                          template_name = 'spaces/index.html',
-                         template_object_name = 'get_place')
+                         template_object_name = 'get_place',
+                         extra_context = {'entities': Entity.objects.all().filter(space=place.id)})
 
     #return render_to_response('spaces/index.html')
 

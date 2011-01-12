@@ -4,17 +4,9 @@
 {% block content %}
 
 Nombre: {{ get_place.name }}<br/>
+Descripcion: {{ get_place.description }}<br/>
 Logo: <img src="/{{MEDIA_URL}}{{ get_place.logo }}" /><br/>
 Banner: <img src="/{{MEDIA_URL}}{{ get_place.banner }}" /><br/>
-Descripcion: {{ get_place.description }}
-Entidades: {% for entities in %}
+Entidades: {% for e in entities %} {{e.name}} {% endfor %}
 
 {% endblock %}
-
-
-Nombre: {{ get_place.name }}<br/>
-Logo: <img src="/{{MEDIA_URL}}{{ get_place.logo }}" /><br/>
-Banner: <img src="/{{MEDIA_URL}}{{ get_place.banner }}" /><br/>
-Descripcion: {{ get_place.description }}
-
-E
