@@ -19,22 +19,18 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from django.conf import settings
-from django.contrib import admin
 
-admin.autodiscover()
-
-urlpatterns = patterns('',
+urlpatterns = patterns('apps.spaces.views',
 
     # Spaces
-    (r'^', 'view_space_index'),
+    (r'^(?P<space_name>[-\w\./\s]+)/', 'view_space_index'),
     
-    (r'^edit/', 'edit_space'),
+    (r'^(?P<space_name>[-\w\./\s]+)/edit/', 'edit_space'),
     
-    (r'^delete/', 'delete_space'),
+    (r'^(?P<space_name>[-\w\./\s]+)/delete/', 'delete_space'),
     
     # Accounts
-    (r'^account/', include('apps.userprofile.urls')),
+    (r'^(?P<space_name>[-\w\./\s]+)/account/', include('apps.userprofile.urls')),
     
     # Debates
 #    (r'^debate/', include('apps.debates.urls')),

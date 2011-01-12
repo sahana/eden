@@ -2,6 +2,7 @@
 ._*
 .DS*
 *.db
+*.db-journal
 *.ps
 *.dvi
 *.toc
@@ -10,3 +11,5 @@
 _build*
 _static*
 _templates*
+src/e_cidadania/static/spaces/banners/*
+src/e_cidadania/static/spaces/logos/*

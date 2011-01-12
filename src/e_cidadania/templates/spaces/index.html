@@ -1,6 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
 Nombre: {{ get_place.name }}<br/>
-Logo: <img src="{{ get_place.logo }}" /><br/>
-Banner: <img src="{{ get_place.banner }}" /><br/>
+Logo: <img src="/{{MEDIA_URL}}{{ get_place.logo }}" /><br/>
+Banner: <img src="/{{MEDIA_URL}}{{ get_place.banner }}" /><br/>
+Descripcion: {{ get_place.description }}
+Entidades: {% for entities in %}
+
+{% endblock %}
+
+
+Nombre: {{ get_place.name }}<br/>
+Logo: <img src="/{{MEDIA_URL}}{{ get_place.logo }}" /><br/>
+Banner: <img src="/{{MEDIA_URL}}{{ get_place.banner }}" /><br/>
 Descripcion: {{ get_place.description }}
 
-Entidades: {{ get_place.entity }}
+E
