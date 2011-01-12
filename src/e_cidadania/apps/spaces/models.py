@@ -28,7 +28,8 @@ class Space(models.Model):
     """
     Basic spaces model.
     """
-    name = models.CharField(_('Name'), max_length=100, unique=True)
+    name = models.CharField(_('Name'), max_length=100, unique=True,
+                            help_text=_('All lowercase. Obligatory.'))
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, verbose_name=_('Author'))
