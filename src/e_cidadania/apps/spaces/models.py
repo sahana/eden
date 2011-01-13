@@ -26,7 +26,8 @@ from django.contrib.auth.models import User
 class Space(models.Model):
 
     """
-    Basic spaces model.
+    Spaces model. This model stores a "space" or "place". Every place has
+    a minimum set of settings for customization.
     """
     name = models.CharField(_('Name'), max_length=100, unique=True,
                             help_text=_('All lowercase. Obligatory.'))

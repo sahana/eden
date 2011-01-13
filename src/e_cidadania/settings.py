@@ -106,4 +106,5 @@ INSTALLED_APPS = (
     'e_cidadania.apps.news',
     'e_cidadania.apps.debate',
     'e_cidadania.apps.spaces',
+    'e_cidadania.apps.swingtime',
 )

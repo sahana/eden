@@ -35,6 +35,8 @@ urlpatterns = patterns('',
     
     (r'^spaces/', include('apps.spaces.urls')),
     
+    (r'^calendar/', include('apps.swingtime.urls')),
+    
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
 

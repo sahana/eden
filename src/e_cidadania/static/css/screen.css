@@ -161,6 +161,50 @@ input[type="text"], input[type="password"] {
     width: 50%;
 }
 
+/* SWINGTIME CALENDAR */
+table { border-collapse: collapse; font-size: 1em; }
+    td, th { padding: 2px; border: 1px solid #ccc; }
+    th { background-color: #bba; }
+    dt { font-weight: bold; }
+dt { font-weight: bold; }
+    dd { margin-bottom: .5em; }
+form table { width: 100% }
+    form table ul { margin: 0; padding: 0;}
+    form table li { list-style-type: none; }
+    form table th { text-align: right; width: 10em; }
+    form tfoot td { text-align: center; background-color: #566; }
+.form-indent { margin-left: 2.5em; }
+.horizontal { width: 30em; }
+    .horizontal li { float: left; margin: 0; }
+    .horizontal li label { width: 4em; display: block; float: left; }
+#recurrence-options { float: left; }
+    #recurrence-options li { margin-bottom: 4px; }
+.calendar td, .calendar th { min-width: 10em; width: 10em; }
+.month-view td { vertical-align: top; height: 10em; min-height: 10em; }
+    .month-view td, .month-view th { min-width: 10em; width: 10em; }
+    .month-view .day-ordinal { font-weight: bold; font-size: 1.1em; 
+        text-align: right; }
+    .month-view ul { list-style: none; margin: 1px 2px; padding: 0; }
+    .month-view .today { background-color: #eed; }
+.month-divider th, .month-divider td { border-top: 3px double #888; }
+#belts { list-style-type: none; }
+    #belts a { text-align: center; display: block; padding: 4px; width: 70%; 
+        border: 1px solid #ccc; margin-bottom: .5em; font-weight: bold; }
+        #belts a:hover { font-style: italic; }
+#white-belt { background-color: #fff; color: #322; }
+    #yellow-belt { background-color: #fd0; color: #322; }
+    #green-belt { background-color: #693; color: #fff; }
+    #brown-belt { background-color: #655; color: #fff; }
+    #black-belt { background-color: #322; color: #fff; }
+.evt-spc-odd, .evt-spc-even  { background-color: #3b5153; color: #fff; }
+    .evt-spc-odd a, .evt-spc-even a { color: #fff; }
+    .evt-open-even, .evt-open-odd { background-color: #ccd; }
+    .evt-adv-odd, .evt-adv-even { background-color: #cdd; }
+    .evt-bgn-even, .evt-bgn-odd { background-color: #dd8; }
+    .evt-bbc-odd, .evt-bbc-even { background-color: #aaa; }
+    .evt-prv-odd { background-color: #8a9; }
+    .evt-prv-even { background-color: #acb; }
+
 /* USERBAR DROPDOWN */
 ul.topnav {
 	list-style: none;
