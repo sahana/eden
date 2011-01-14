@@ -23,14 +23,14 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('apps.spaces.views',
 
     # Spaces
-    (r'^(?P<space_name>[-\w\./\s]+)/', 'view_space_index'),
+    (r'^(?P<space_name>)/', 'view_space_index'),
     
-    (r'^(?P<space_name>[-\w\./\s]+)/edit/', 'edit_space'),
+    (r'^(?P<space_name>)/edit/', 'edit_space'),
     
-    (r'^(?P<space_name>[-\w\./\s]+)/delete/', 'delete_space'),
+    (r'^(?P<space_name>)/delete/', 'delete_space'),
     
     # Accounts
-    (r'^(?P<space_name>[-\w\./\s]+)/accounts/', include('apps.userprofile.urls')),
+    (r'^(?P<space_name>\w+)/accounts/', include('apps.userprofile.urls')),
     
     # Debates
 #    (r'^debate/', include('apps.debates.urls')),
