@@ -30,7 +30,8 @@ urlpatterns = patterns('apps.spaces.views',
     (r'^(?P<space_name>)/delete/', 'delete_space'),
     
     # Accounts
-    (r'^(?P<space_name>\w+)/accounts/', include('apps.userprofile.urls')),
+    # DISABLED. Accounts will be site-wide
+    #(r'^(?P<space_name>\w+)/accounts/', include('apps.userprofile.urls')),
     
     # Debates
 #    (r'^debate/', include('apps.debates.urls')),

@@ -74,7 +74,7 @@ def fetch_geodata(request, lat, lng):
     else:
         raise Http404()
 
-def public(request, username, space_name):
+def public(request, username):
     try:
         profile = User.objects.get(username=username).get_profile()
     except:
@@ -103,7 +103,7 @@ def searchimages(request):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def overview(request, space_name):
+def overview(request):
     """
     Main profile page
     """
@@ -121,7 +121,7 @@ def overview(request, space_name):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def personal(request, space_name):
+def personal(request):
     """
     Personal data of the user profile
     """
@@ -141,7 +141,7 @@ def personal(request, space_name):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def location(request, space_name):
+def location(request):
     """
     Location selection of the user profile
     """
@@ -161,7 +161,7 @@ def location(request, space_name):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def delete(request, space_name):
+def delete(request):
     if request.method == "POST":
         # Remove the profile and all the information
         Profile.objects.filter(user=request.user).delete()
@@ -181,7 +181,7 @@ def delete(request, space_name):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def avatarchoose(request, space_name):
+def avatarchoose(request):
     """
     Avatar choose
     """
@@ -217,7 +217,7 @@ def avatarchoose(request, space_name):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def avatarcrop(request, space_name):
+def avatarcrop(request):
     """
     Avatar management
     """
@@ -248,7 +248,7 @@ def avatarcrop(request, space_name):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def avatardelete(request, space_name, avatar_id=False):
+def avatardelete(request, avatar_id=False):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
         try:
             Avatar.objects.get(user=request.user, valid=True).delete()
@@ -258,7 +258,7 @@ def avatardelete(request, space_name, avatar_id=False):
     else:
         raise Http404()
 
-def email_validation_process(request, key, space_name):
+def email_validation_process(request, key):
     """
     Verify key and change email
     """

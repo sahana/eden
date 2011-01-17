@@ -365,6 +365,22 @@ table#personal th {
     margin-right: 25px; 
 }
 
+#loginblock {
+    width: 200px;
+    height: 120px;
+    margin: 50px auto 50px auto;
+    background: #DDD;
+    border: 1px solid #666;
+    padding: 10px;
+}
+
+#loginblock fieldset {
+    margin: auto;
+}
+#loginblock legend {
+    margin: 15px;
+}
+
 /* PROPOSALS */
 #proposal-wrapper {
     width: 100%;

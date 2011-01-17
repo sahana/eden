@@ -1,4 +1,4 @@
-{% extends "base_2col.html" %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block title %}{% trans "User login" %}{% endblock %}
@@ -14,7 +14,8 @@
 {% endblock %}
 
 {% block content %}
-	<form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8">
+<div id="loginblock">
+	<form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8">{% csrf_token %}
 	<fieldset>
 		<legend>{% trans "User login" %}</legend>
 		<label for="id_username">{% trans "Username" %}</label>
@@ -35,6 +36,7 @@
 	</fieldset>
 	<p><input type="submit" value="{% trans 'Login' %}" /></p>
 	</form>
+</div>
 {% endblock %}
 
 {% block content-related %}

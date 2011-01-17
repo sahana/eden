@@ -30,7 +30,7 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
 
     # User accounts
-    #(r'^accounts/', include('apps.accounts.urls')),
+    (r'^accounts/', include('apps.userprofile.urls')),
     #(r'^accounts/', include('apps.registration.urls')),
     
     (r'^spaces/', include('apps.spaces.urls')),
