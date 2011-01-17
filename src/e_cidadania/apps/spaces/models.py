@@ -72,3 +72,16 @@ class Entity(models.Model):
 
     def __unicode__(self):
         return self.name
+        
+class Document(models.Model):
+
+    """
+    """
+    title = models.CharField(_('Document title'), max_length=100)
+    space = models.ForeignKey(Space)
+    docfile = models.FileField(upload_to='spaces/documents/%Y/%m/%d')
+    pub_date = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User, verbose_name=_('Author'))
+    
+    class Meta:
+        ordering = ['pub_date']
