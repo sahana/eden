@@ -26,6 +26,8 @@ from django.conf import settings
 from tagging.fields import TagField
 from tagging.models import Tag
 
+from e_cidadania.apps.spaces.models import Space
+
 class Post(models.Model):
     
     """
@@ -36,6 +38,9 @@ class Post(models.Model):
     post_pubdate = models.DateTimeField(_('Date'), auto_now_add=True)
     post_lastup = models.DateTimeField(_('Last update'), auto_now=True)
     post_author = models.ForeignKey(User, verbose_name=_('Author'))
+    post_pub_index = models.BooleanField(_('Publish in index page'))
+    post_space = models.ForeignKey(Space, verbose_name=_('Publish in'),
+        help_text=_('If you want to post to the index leave this blank'))
 
     def save(self, *args, **kwargs):
         self.post_author = User.username
