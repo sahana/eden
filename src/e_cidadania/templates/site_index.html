@@ -9,6 +9,13 @@
 {% endblock %}
 
 {% block centercol %}
+
+  {% for news in post %}
+    <h1>{{ news.post_title }}</h1>
+    <p>{{ news.post_message }}</p>
+    <p>{% trans "Written by" %} {{ news.post_author }} 
+  {% endfor%}
+
 {% endblock %}
 
 {% block rightcol%}

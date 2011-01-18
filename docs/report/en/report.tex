@@ -1,17 +1,23 @@
-\documentclass[12pt,a4paper]{article}
-\usepackage[english]{babel}
-\usepackage{listings, graphicx}
+\documentclass{article}
+\usepackage{listings, graphicx, fontspec}
 \lstset{language=Python}
+
+\setmainfont{YanoneKaffeesatz-Light}
 
 \begin{document}
 
 \begin{titlepage}
 
+\begin{flushright}
+\includegraphics[scale=0.4]{../images/logo_ecidadania.eps}\\
+\end{flushright}
+
+\begin{flushleft}
+\includegraphics[scale=0.55]{../images/logo_name.eps}\\
+\end{flushleft}
+
 \begin{center}
 
-\includegraphics[scale=0.3]{images/logo_ecidadania.eps}\\
-
-\textsc{\Huge e-cidadania}\\
 \large Citizen participation platform based on web services\\[0.3cm]
 
 \textsc{\Large strategy report}\\[1cm]
@@ -70,7 +76,7 @@ In this citizen participation platform the users will have access to the system 
 
 \begin{figure}
 	\centering
-		\includegraphics[scale=1]{images/architecture.eps}\\
+		\includegraphics[scale=1]{../images/architecture.eps}\\
 	\caption{Platform Architecture of e-cidadania}
 
 \end{figure}
