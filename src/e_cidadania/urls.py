@@ -23,8 +23,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.views.generic.simple import direct_to_template
 
-admin.autodiscover()
-
 from e_cidadania.apps.news.models import Post
 
 urlpatterns = patterns('',
@@ -33,7 +31,7 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     
     # Index
-    (r'^/', 'direct_to_template', {'template':'site_index.html',
+    (r'^$', 'direct_to_template', {'template':'site_index.html',
         'extra_context':{'post': Post.objects.all().filter(post_pub_index=True)}}),
 
     # User accounts
