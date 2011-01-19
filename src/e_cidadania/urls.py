@@ -40,7 +40,7 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     
     # Index
-    (r'^$', 'direct_to_template', {
+    (r'^$', direct_to_template, {
         'template':'site_index.html',
         'extra_context': extra_context
         }
