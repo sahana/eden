@@ -19,9 +19,8 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
+from django.contrib.auth.models import User
 
 from tagging.fields import TagField
 from tagging.models import Tag
@@ -42,8 +41,10 @@ class Post(models.Model):
     post_space = models.ForeignKey(Space, verbose_name=_('Publish in'),
         help_text=_('If you want to post to the index leave this blank'))
 
-    def save(self, *args, **kwargs):
-        self.post_author = User.username
+    # Gives this error:
+    # "User object has no attribute username"
+    #def save(self, *args, **kwargs):
+    #    self.post_author = User.username
 
     def __unicode__(self):
         return self.post_title

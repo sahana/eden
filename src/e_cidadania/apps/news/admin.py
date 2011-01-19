@@ -21,47 +21,28 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.spaces.models import Space, Entity
+from e_cidadania.apps.news.models import Post
 
-class EntityInline(admin.TabularInline):
-
-    """
-    Inline view for entities.
-    """
-    model = Entity
-
-
-class SpaceAdmin(admin.ModelAdmin):
+class PostAdmin(admin.ModelAdmin):
 
     """
-    Administration view for django admin to create spaces.
-    
-    The save() method is overriden to store automatically the author
-    of the space.
+    Administration view for news.
     """
-    list_display = ('name', 'description', 'date')
-    search_fields = ('name',)
-    
+    list_display = ('post_title', 'post_pubdate', 'post_lastup', 'post_author',
+                    'post_space', 'post_pub_index')
+    search_fields = ('post_title', 'post_author', 'post_space',
+                     'post_pub_index')
+
     fieldsets = [
         (None, {'fields':
-            [('name', 'description')]}),
-
-        (_('Appearance'), {'fields':
-            [('logo', 'banner')]}),
-
-        (_('Modules'), {'fields':
-            [('mod_cal', 'mod_docs', 'mod_news', 'mod_proposals',
-            'mod_debate')]}),
-
+            ['post_title', 'post_message']}),
+        (_('Other data'), {'fields':
+            ['post_space', 'post_pub_index']})
     ]
-    
-    inlines = [
-        EntityInline,
-    ]
-    
+
     def save_model(self, request, obj, form, change):
         if not change:
-            obj.author = request.user
+            obj.post_author = request.user
         obj.save()
 
-admin.site.register(Space, SpaceAdmin)
+admin.site.register(Post, PostAdmin)

@@ -67,4 +67,4 @@ class SpaceAdmin(admin.ModelAdmin):
 # This register line is commented because it collides with
 # admin.autoregister() in the main urls.py file.
 
-#admin.site.register(Space, SpaceAdmin)
+admin.site.register(Space, SpaceAdmin)

@@ -27,7 +27,12 @@ from e_cidadania.apps.news.models import Post
 
 admin.autodiscover()
 
-pub = Post.objects.all().filter(post_pub_index=True)
+# Index page extra context
+pub = Post.objects.all()
+
+extra_context = {
+    'publication': pub,
+}
 
 urlpatterns = patterns('',
 
@@ -35,7 +40,11 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     
     # Index
-    (r'^$', 'direct_to_template', {'template':'site_index.html', 'extra_context': {'publication': pub}}),
+    (r'^$', 'direct_to_template', {
+        'template':'site_index.html',
+        'extra_context': extra_context
+        }
+    ),
 
     # User accounts
     #(r'^accounts/', include('apps.accounts.urls')),
