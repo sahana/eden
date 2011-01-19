@@ -25,15 +25,17 @@ from django.views.generic.simple import direct_to_template
 
 from e_cidadania.apps.news.models import Post
 
+admin.autodiscover()
+
+pub = Post.objects.all().filter(post_pub_index=True)
+
 urlpatterns = patterns('',
 
     # Django administration
     (r'^admin/', include(admin.site.urls)),
     
     # Index
-    (r'^$', 'direct_to_template',
-            {'template':'site_index.html',
-             'extra_context':{'post': Post.objects.all().filter(post_pub_index=True)}}),
+    (r'^$', 'direct_to_template', {'template':'site_index.html', 'extra_context': {'publication': pub}}),
 
     # User accounts
     #(r'^accounts/', include('apps.accounts.urls')),

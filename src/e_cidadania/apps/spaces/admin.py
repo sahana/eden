@@ -64,4 +64,7 @@ class SpaceAdmin(admin.ModelAdmin):
             obj.author = request.user
         obj.save()
 
-admin.site.register(Space, SpaceAdmin)
+# This register line is commented because it collides with
+# admin.autoregister() in the main urls.py file.
+
+#admin.site.register(Space, SpaceAdmin)
