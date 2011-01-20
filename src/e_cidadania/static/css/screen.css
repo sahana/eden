@@ -298,6 +298,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     margin-top: 15px;
     padding: 10px;
     background: url(/static/assets/profile_bg1.jpg) repeat-x;
+    min-height: 600px;
 }
 
 #contenttitles {
@@ -419,6 +420,35 @@ table#personal th {
     font-size: 9px;
     font-style: italic;
 }
+
+
+/* NEWS */
+
+.post {
+    width: 100%;
+    border: 1px solid #000;
+    background: #EEE;
+    margin: 20px 10px 20px 10px;
+    -webkit-border-top-left-radius: 20px;
+    -webkit-border-bottom-right-radius: 20px;
+    -moz-border-radius-topleft: 20px;
+    -moz-border-radius-bottomright: 20px;
+    border-top-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.post h1 {
+    margin: 15px;
+    font-size: 1.5em;
+}
+
+.post p {
+    font-size: 1em;
+    text-indent: 15px;
+    text-align: justify;
+    margin: 15px;
+}
+/* END NEWS */
 
 /* FOOTER STYLE*/
 
