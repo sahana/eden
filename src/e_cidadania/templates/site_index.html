@@ -6,18 +6,24 @@
 {% block content %}
 
 {% block leftcol %}
+  <div id="leftcol">
+    <p><strong>Crea tu propio espacio</strong> dentro de e-cidadania</p>
+    <span>----</span>
+    <p>¿Qué puedes hacer con e-cidadania? <strong>Descúbrelo</strong></p>
+    <span>----</span>
+  </div>
 {% endblock %}
 
 {% block centercol %}
-
-  {% for news in publication %}
-    <div class="post">
-      <h1>{{ news.post_title }}</h1>
-      <p>{{ news.post_message }}</p>
-      <p>{% trans "Written by" %} {{ news.post_author }} on {{ news.post_pubdate }}</p>
-    </div>
-  {% endfor%}
-
+  <div id="centercol">
+    {% for news in publication %}
+      <div class="post">
+        <h1>{{ news.post_title }}</h1>
+        <p>{{ news.post_message }}</p>
+        <p>{% trans "Written by" %} {{ news.post_author }} on {{ news.post_pubdate }}</p>
+      </div>
+    {% endfor%}
+  </div>
 {% endblock %}
 
 {% block rightcol%}
