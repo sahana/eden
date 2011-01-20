@@ -150,7 +150,7 @@ input[type="text"], input[type="password"] {
     float: left;
     padding: 10px;
     width: 20%;
-    margin: 10px;
+    margin: 30px 5px 10px 10px;
     border: 1px solid #000;
     background: #EEE;
 }
@@ -158,7 +158,16 @@ input[type="text"], input[type="password"] {
 #centercol {
     float: left;
     padding: 10px;
-    width: 50%;
+    width: 47%;
+}
+
+#rightcol {
+    float: right;
+    padding: 10px;
+    width: 20%;
+    margin: 30px 10px 10px 15px;
+    border: 1px solid #000;
+    background: #EEE;
 }
 
 /* SWINGTIME CALENDAR */
