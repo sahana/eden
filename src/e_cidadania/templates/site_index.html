@@ -19,13 +19,21 @@
 
 {% block centercol %}
   <div id="centercol">
-    {% for news in publication %}
+    {% if publication %}
+      {% for news in publication %}
+        {% if news.post_pub_index %}
+          <div class="post">
+            <h1>{{ news.post_title }}</h1>
+            <p>{{ news.post_message }}</p>
+            <p>{% trans "Written by" %} {{ news.post_author }} on {{ news.post_pubdate }}</p>
+          </div>
+        {% endif %}
+      {% endfor%}
+    {% else %}
       <div class="post">
-        <h1>{{ news.post_title }}</h1>
-        <p>{{ news.post_message }}</p>
-        <p>{% trans "Written by" %} {{ news.post_author }} on {{ news.post_pubdate }}</p>
+        <p>¡No se ha publicado nada todavía!</p>
       </div>
-    {% endfor%}
+    {% endif %}
   </div>
 {% endblock %}
 
@@ -44,3 +52,4 @@
 {% block footer %}
 <p>Pie de pagina parala pagina principal</p>
 {% endblock %}
+
