@@ -1,0 +1,29 @@
+{% load i18n %}
+  {% if user.is_authenticated %}
+    <ul class="topnav">
+	  <li><a href="/accounts/messages">{% trans "Messages" %}</a> | </li>
+      <li><a href="/none">{% trans "Language" %}</a>| </li>
+      <li>
+        <a href="/accounts/">
+          {% if user.get_profile.firstname %}
+            {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
+	        {% else %}
+	          {{ user.username }}
+	        {% endif %}
+	      </a>
+	      <ul class="subnav">
+          {% if user.is_staff %}
+	          <li><a href="/admin">{% trans "Administration" %}</a></li>
+	        {% endif %}
+	          <li><a href="/accounts/edit/personal">{% trans "Edit profile" %}</li>
+	          <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
+	      </ul>
+	    </li>
+	  </ul>
+  {% else %}
+    <ul class="topnav">
+      <li><a href="/accounts/login">{% trans "Login" %}</a> | </li>
+      <li><a href="/none">{% trans "Language" %}</a></li>
+	  </ul>
+	{% endif %}
+
