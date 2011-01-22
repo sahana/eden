@@ -28,10 +28,10 @@
     {% endif %}
     <div id="contenttitles">{{ user.username }} {% trans "profile" %}</div>
     <div id="useropts">
-	    <a href="/accounts/profile/edit/personal">{% trans "Edit personal data" %}</a> |
-	    <a href="/accounts/profile/edit/location/">{% trans "Edit location" %}</a> |
-	    <a href="/accounts/profile/delete/">{% trans "Delete profile" %}</a> |
-	    <a href="/accounts/profile/{{ user.username }}">{% trans "Public profile" %}</a>
+	    <a href="{{ request.path.info }}edit/personal">{% trans "Edit personal data" %}</a> |
+	    <a href="{{ request.path.info }}edit/location/">{% trans "Edit location" %}</a> |
+	    <a href="{{ request.path.info }}delete/">{% trans "Delete profile" %}</a> |
+	    <a href="{{ request.path.info }}{{ user.username }}">{% trans "Public profile" %}</a>
 	</div>
     <div id="profile_right">
         <div id="avatar" class="span-3 center">
@@ -40,7 +40,7 @@
 	    	</a>
         	<p><a href="{{ request.path_info }}edit/avatar/">{% if user.get_profile.has_avatar %}{% trans "Change avatar" %}{% else %}{% trans "Add avatar" %}{% endif %}</a></p>
 	    </div>
-	    
+
 	   	<div>
 			<p>{% trans "Username: " %} {{ user }}</p>
 			<p>{% trans "Real name: " %} {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
@@ -66,14 +66,14 @@
 				<span class="quiet red">{% trans "Not set" %}</span>
 			{% endif %}
 			</p>
-			
+
 			<p>
 			    {% trans "Ciudad: " %} {{ user.get_profile.province }}
 			</p>
-			
+
 		</div>
     </div>
-    
+
     <div id="profile_left">
         {% if GOOGLE_MAPS_API_KEY %}
 		    <p>{% trans "Location" %}:
@@ -109,3 +109,4 @@
 		{% endif %}
 	</div>
 {% endblock %}
+

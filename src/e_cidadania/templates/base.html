@@ -15,39 +15,13 @@
 	<body>
 	  <div id="topbar">
 	    <div id="userbar">
-	      {% if user.is_authenticated %}
-	        <ul class="topnav">
-	          <li><a href="/accounts/messages">{% trans "Messages" %}</a> | </li>  
-            <li><a href="/none">{% trans "Language" %}</a>| </li>
-            <li>
-              <a href="/accounts/profile">
-                {% if user.get_profile.firstname %}
-                  {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
-	              {% else %}
-	                {{ user.username }}
-	              {% endif %}
-	            </a>
-	            <ul class="subnav">
-	              {% if user.is_staff %}
-	                <li><a href="/admin">{% trans "Administration" %}</a></li>
-	              {% endif %}
-	              <li><a href="/accounts/profile/edit/personal">{% trans "Edit profile" %}</li>
-	              <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
-	            </ul>
-	          </li>
-	        </ul>
-        {% else %}
-          <ul class="topnav">
-            <li><a href="/accounts/login">{% trans "Login" %}</a> | </li>
-            <li><a href="/none">{% trans "Language" %}</a></li>
-	        </ul>
-	      {% endif %}
+	      {% include "menu.html" %}
 	    </div>
 	  </div>
 
 	  <div id="header">
 	    {% block header %}
-	    
+
 	      <div id="logo">
 	        {% block logo %}
 	          <a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>
@@ -61,28 +35,28 @@
 	      </div>
 	    {% endblock %}
 	  </div>
-	    
+
 	  <div id="content">
 	    {% block content %}
-      
+
         {% block leftcol %}
 	      {% endblock %}
-           
+
         {% block centercol %}
         {% endblock %}
-	                
+
    	    {% block rightcol %}
         {% endblock %}
-	                
+
       {% endblock %}
     </div>
 
     <div id="footer">
 	    {% block footer %}
-        <p><a href="http://www.djangoproject.com">django</a> | 
-           <a href="http://www.python.org">python</a> | 
-           <a href="http://www.w3.org">xhtml</a> | 
-           <a href="http://www.w3.org">css</a> | 
+        <p><a href="http://www.djangoproject.com">django</a> |
+           <a href="http://www.python.org">python</a> |
+           <a href="http://www.w3.org">xhtml</a> |
+           <a href="http://www.w3.org">css</a> |
            <a href="http://www.w3.org">xml</a>
         </p>
 	    {% endblock %}
@@ -91,3 +65,4 @@
     </div>
 	</body>
 </html>
+
