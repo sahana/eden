@@ -29,6 +29,8 @@ urlpatterns = patterns('apps.spaces.views',
     
     (r'^(?P<space_name>\w+)/delete/', 'delete_space'),
     
+    (r'^add/', 'create_space'),
+    
     # Accounts
     # DISABLED. Accounts will be site-wide
     #(r'^(?P<space_name>\w+)/accounts/', include('apps.userprofile.urls')),

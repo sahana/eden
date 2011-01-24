@@ -8,11 +8,14 @@
 {% block leftcol %}
   <div id="leftcol">
     <p><strong>Crea tu propio espacio</strong> dentro de e-cidadania</p>
-    <span>----</span>
+    <hr></hr>
     <p>¿Qué puedes hacer con e-cidadania? <strong>Descúbrelo</strong></p>
-    <span>----</span>
-    <p>Lista de espacios</p>
-    <span>----</span>
+    <hr></hr>
+    <h4>Lista de espacios</h4><br/>
+    {% for space in spaces %}
+      <p><a href="{{ request.path.info }}spaces/{{ space.name }}">{{ space.name|capfirst }}</a></p>
+    {% endfor %}
+    <hr></hr>
     <p>Espacios modificados recientemente</p>
   </div>
 {% endblock %}
@@ -25,13 +28,13 @@
           <div class="post">
             <h1>{{ news.post_title }}</h1>
             <p>{{ news.post_message }}</p>
-            <p>{% trans "Written by" %} {{ news.post_author }} on {{ news.post_pubdate }}</p>
+            <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
           </div>
         {% endif %}
       {% endfor%}
     {% else %}
       <div class="post">
-        <p>¡No se ha publicado nada todavía!</p>
+        <p>{% trans "¡No se ha publicado nada todavía!" %}</p>
       </div>
     {% endif %}
   </div>

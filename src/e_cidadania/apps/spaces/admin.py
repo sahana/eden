@@ -21,7 +21,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.spaces.models import Space, Entity
+from e_cidadania.apps.spaces.models import Space, Entity, Document
 
 class EntityInline(admin.TabularInline):
 
@@ -64,7 +64,25 @@ class SpaceAdmin(admin.ModelAdmin):
             obj.author = request.user
         obj.save()
 
+class DocumentAdmin(admin.ModelAdmin):
+
+    """
+    """
+    list_display = ('title', 'space', 'docfile', 'author', 'pub_date')
+    search_fields = ('title', 'space', 'author', 'pub_date')
+    
+    fieldsets = [
+        (None, {'fields':
+            ['title', 'docfile', 'space']}),
+    ]
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.author = request.user
+        obj.save()
+
 # This register line is commented because it collides with
 # admin.autoregister() in the main urls.py file.
 
 admin.site.register(Space, SpaceAdmin)
+admin.site.register(Document, DocumentAdmin)

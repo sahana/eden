@@ -24,14 +24,17 @@ from django.contrib import admin
 from django.views.generic.simple import direct_to_template
 
 from e_cidadania.apps.news.models import Post
+from e_cidadania.apps.spaces.models import Space
 
 admin.autodiscover()
 
 # Index page extra context
 pub = Post.objects.all()
+space_list = Space.objects.all()
 
 extra_context = {
     'publication': pub,
+    'spaces': space_list,
 }
 
 urlpatterns = patterns('',

@@ -59,3 +59,9 @@ def delete_space(request):
     """
     pass
 
+def create_space(request):
+
+    """
+    """
+    pass
+
