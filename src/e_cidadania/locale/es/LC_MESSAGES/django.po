@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-11 12:19+0100\n"
-"PO-Revision-Date: 2011-01-11 12:49\n"
+"POT-Creation-Date: 2011-01-24 11:03+0100\n"
+"PO-Revision-Date: 2011-01-24 11:11\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -26,8 +26,8 @@ msgstr "Hombre"
 msgid "Female"
 msgstr "Mujer"
 
-#: apps/accounts/models.py:47 apps/spaces/models.py:30
-#: apps/spaces/models.py:56
+#: apps/accounts/models.py:47 apps/spaces/models.py:32
+#: apps/spaces/models.py:66
 msgid "Name"
 msgstr "Nombre"
 
@@ -91,7 +91,7 @@ msgstr "Página web"
 msgid "The URL will be checked"
 msgstr "La dirección será comprobada"
 
-#: apps/debate/models.py:33 apps/debate/models.py:47 apps/news/models.py:34
+#: apps/debate/models.py:33 apps/debate/models.py:47 apps/news/models.py:35
 #: apps/proposals/forms.py:38 apps/proposals/models.py:42
 msgid "Title"
 msgstr "Título"
@@ -100,7 +100,7 @@ msgstr "Título"
 msgid "Objectives"
 msgstr "Objetivos"
 
-#: apps/debate/models.py:35 apps/debate/models.py:48 apps/spaces/models.py:31
+#: apps/debate/models.py:35 apps/debate/models.py:48 apps/spaces/models.py:34
 msgid "Description"
 msgstr "Descripción"
 
@@ -113,21 +113,37 @@ msgstr "Mensaje"
 msgid "Explanation"
 msgstr "Explicación"
 
-#: apps/news/models.py:35
+#: apps/news/admin.py:39
+msgid "Other data"
+msgstr "Otros datos"
+
+#: apps/news/models.py:36
 msgid "Text"
 msgstr "Texto"
 
-#: apps/news/models.py:36
+#: apps/news/models.py:37 apps/swingtime/forms.py:207
 msgid "Date"
 msgstr "Fecha"
 
-#: apps/news/models.py:37
+#: apps/news/models.py:38
 msgid "Last update"
 msgstr "Última actualización"
 
-#: apps/news/models.py:38
+#: apps/news/models.py:39 apps/spaces/models.py:36 apps/spaces/models.py:84
 msgid "Author"
 msgstr "Autor"
+
+#: apps/news/models.py:40
+msgid "Publish in index page"
+msgstr "Publicar en la página de inicio"
+
+#: apps/news/models.py:41
+msgid "Publish in"
+msgstr "Publicado en"
+
+#: apps/news/models.py:42
+msgid "If you want to post to the index leave this blank"
+msgstr "Si desea publicar en el índice de dejarlo en blanco"
 
 #: apps/proposals/forms.py:42 apps/proposals/models.py:58
 msgid "Latitude"
@@ -158,7 +174,7 @@ msgid "Re-send activation emails"
 msgstr "Reenviar mensajes de correo electrónico de activación"
 
 #: apps/registration/forms.py:35 apps/userprofile/forms.py:83
-#: templates/userprofile/account/login.html:20
+#: templates/userprofile/account/login.html:21
 #: templates/userprofile/account/registration.html:20
 #: templates/userprofile/profile/public.html:35
 #: templates/userprofile/profile/usercard.html:11
@@ -174,7 +190,7 @@ msgid "Email address"
 msgstr "Dirección de correo electrónico"
 
 #: apps/registration/forms.py:41 apps/userprofile/forms.py:85
-#: templates/userprofile/account/login.html:26
+#: templates/userprofile/account/login.html:27
 #: templates/userprofile/account/registration.html:32
 msgid "Password"
 msgstr "Clave"
@@ -235,7 +251,6 @@ msgid "Home"
 msgstr "Inicio"
 
 #: apps/rosetta/templates/rosetta/languages.html:17
-#, fuzzy
 msgid "Application"
 msgstr "Aplicación"
 
@@ -243,7 +258,7 @@ msgstr "Aplicación"
 msgid "Progress"
 msgstr "Progreso"
 
-#: apps/rosetta/templates/rosetta/languages.html:19 templates/base.html:19
+#: apps/rosetta/templates/rosetta/languages.html:19 templates/menu.html:4
 msgid "Messages"
 msgstr "Mensajes"
 
@@ -261,7 +276,6 @@ msgid "Obsolete"
 msgstr "Obsoletos"
 
 #: apps/rosetta/templates/rosetta/languages.html:23
-#, fuzzy
 msgid "File"
 msgstr "Archivo"
 
@@ -287,8 +301,9 @@ msgid "Download this catalog"
 msgstr "Descargar este catálogo"
 
 #: apps/rosetta/templates/rosetta/pofile.html:21
-msgid "Progress: %(percent_translated)s%"
-msgstr "Progreso:% (percent_translated)% s"
+#, python-format
+msgid "Progress: %(percent_translated)s%%"
+msgstr "Progreso: %(percent_translated)s%%"
 
 #: apps/rosetta/templates/rosetta/pofile.html:23
 msgid "File is read-only: download the file when done editing!"
@@ -348,8 +363,8 @@ msgstr "sugieren"
 #, python-format
 msgid "%(more_count)s more"
 msgid_plural "%(more_count)s more"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(more_count)s mas"
+msgstr[1] "%(more_count)s mas"
 
 #: apps/rosetta/templates/rosetta/pofile.html:105
 msgid "Save and translate next block"
@@ -367,45 +382,374 @@ msgstr "Viendo:"
 #, python-format
 msgid "%(hits)s/%(message_number)s message"
 msgid_plural "%(hits)s/%(message_number)s messages"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(hits)s/%(message_number)s mensaje"
+msgstr[1] "%(hits)s/%(message_number)s mensajes"
 
-#: apps/spaces/admin.py:46
+#: apps/spaces/admin.py:49
 msgid "Appearance"
 msgstr "Apariencia"
 
-#: apps/spaces/admin.py:49
+#: apps/spaces/admin.py:52
 msgid "Modules"
 msgstr "Módulos"
 
-#: apps/spaces/models.py:34
-#, fuzzy
+#: apps/spaces/models.py:33
+msgid "All lowercase. Obligatory."
+msgstr "Todas las minúsculas. Obligatorio."
+
+#: apps/spaces/models.py:39
 msgid "Logotype"
 msgstr "Logotipo"
 
-#: apps/spaces/models.py:36
+#: apps/spaces/models.py:40
+msgid "100px width, 75px height"
+msgstr "100px de ancho, altura 75 px"
+
+#: apps/spaces/models.py:42
 msgid "Banner"
 msgstr "Banner"
 
-#: apps/spaces/models.py:41
+#: apps/spaces/models.py:43
+msgid "75px height"
+msgstr "altura de 75 px"
+
+#: apps/spaces/models.py:47
 msgid "Debate module"
 msgstr "Módulo de debate"
 
-#: apps/spaces/models.py:42
+#: apps/spaces/models.py:48
 msgid "Proposals module"
 msgstr "Módulo de propuestas"
 
-#: apps/spaces/models.py:43
+#: apps/spaces/models.py:49
 msgid "News module"
 msgstr "Módulo de noticias"
 
-#: apps/spaces/models.py:44
+#: apps/spaces/models.py:50
 msgid "Calendar module"
 msgstr "Módulo de calendario"
 
-#: apps/spaces/models.py:45
+#: apps/spaces/models.py:51
 msgid "Documents module"
 msgstr "Módulo de documentos"
+
+#: apps/spaces/models.py:55
+msgid "Spaces"
+msgstr "Espacios"
+
+#: apps/spaces/models.py:71
+msgid "Entities"
+msgstr "Entidades"
+
+#: apps/spaces/models.py:80
+msgid "Document title"
+msgstr "Título del documento"
+
+#: apps/swingtime/forms.py:17
+msgid "Sun"
+msgstr "Dom"
+
+#: apps/swingtime/forms.py:18
+msgid "Mon"
+msgstr "Lun"
+
+#: apps/swingtime/forms.py:19
+msgid "Tue"
+msgstr "Mar"
+
+#: apps/swingtime/forms.py:20
+msgid "Wed"
+msgstr "Mié"
+
+#: apps/swingtime/forms.py:21
+msgid "Thu"
+msgstr "Jue"
+
+#: apps/swingtime/forms.py:22
+msgid "Fri"
+msgstr "Vie"
+
+#: apps/swingtime/forms.py:23
+msgid "Sat"
+msgstr "Sáb"
+
+#: apps/swingtime/forms.py:27
+msgid "Sunday"
+msgstr "Domingo"
+
+#: apps/swingtime/forms.py:28
+msgid "Monday"
+msgstr "Lunes"
+
+#: apps/swingtime/forms.py:29
+msgid "Tuesday"
+msgstr "Martes"
+
+#: apps/swingtime/forms.py:30
+msgid "Wednesday"
+msgstr "Miércoles"
+
+#: apps/swingtime/forms.py:31
+msgid "Thursday"
+msgstr "Jueves"
+
+#: apps/swingtime/forms.py:32
+msgid "Friday"
+msgstr "Viernes"
+
+#: apps/swingtime/forms.py:33
+msgid "Saturday"
+msgstr "Sábado"
+
+#: apps/swingtime/forms.py:37
+msgid "January"
+msgstr "Enero"
+
+#: apps/swingtime/forms.py:38
+msgid "February"
+msgstr "Febrero"
+
+#: apps/swingtime/forms.py:39
+msgid "March"
+msgstr "Marzo"
+
+#: apps/swingtime/forms.py:40
+msgid "April"
+msgstr "Abril"
+
+#: apps/swingtime/forms.py:41 apps/swingtime/forms.py:56
+msgid "May"
+msgstr "Mayo"
+
+#: apps/swingtime/forms.py:42
+msgid "June"
+msgstr "Junio"
+
+#: apps/swingtime/forms.py:43
+msgid "July"
+msgstr "Julio"
+
+#: apps/swingtime/forms.py:44
+msgid "August"
+msgstr "Agosto"
+
+#: apps/swingtime/forms.py:45
+msgid "September"
+msgstr "Septiembre"
+
+#: apps/swingtime/forms.py:46
+msgid "October"
+msgstr "Octubre"
+
+#: apps/swingtime/forms.py:47
+msgid "November"
+msgstr "Noviembre"
+
+#: apps/swingtime/forms.py:48
+msgid "December"
+msgstr "Diciembre"
+
+#: apps/swingtime/forms.py:52
+msgid "Jan"
+msgstr "Ene"
+
+#: apps/swingtime/forms.py:53
+msgid "Feb"
+msgstr "Febrero"
+
+#: apps/swingtime/forms.py:54
+msgid "Mar"
+msgstr "Mar"
+
+#: apps/swingtime/forms.py:55
+msgid "Apr"
+msgstr "Abril"
+
+#: apps/swingtime/forms.py:57
+msgid "Jun"
+msgstr "Jun"
+
+#: apps/swingtime/forms.py:58
+msgid "Jul"
+msgstr "Jul"
+
+#: apps/swingtime/forms.py:59
+msgid "Aug"
+msgstr "Ago"
+
+#: apps/swingtime/forms.py:60
+msgid "Sep"
+msgstr "Sep"
+
+#: apps/swingtime/forms.py:61
+msgid "Oct"
+msgstr "Oct"
+
+#: apps/swingtime/forms.py:62
+msgid "Nov"
+msgstr "Nov"
+
+#: apps/swingtime/forms.py:63
+msgid "Dec"
+msgstr "Dic"
+
+#: apps/swingtime/forms.py:68
+msgid "first"
+msgstr "primero"
+
+#: apps/swingtime/forms.py:69
+msgid "second"
+msgstr "segundo"
+
+#: apps/swingtime/forms.py:70
+msgid "third"
+msgstr "tercero"
+
+#: apps/swingtime/forms.py:71
+msgid "fourth"
+msgstr "cuarto"
+
+#: apps/swingtime/forms.py:72
+msgid "last"
+msgstr "último"
+
+#: apps/swingtime/forms.py:76
+msgid "Day(s)"
+msgstr "Día(s)"
+
+#: apps/swingtime/forms.py:77
+msgid "Week(s)"
+msgstr "Semana(s)"
+
+#: apps/swingtime/forms.py:78
+msgid "Month(s)"
+msgstr "Mes(es)"
+
+#: apps/swingtime/forms.py:79
+msgid "Year(s)"
+msgstr "Año(s)"
+
+#: apps/swingtime/forms.py:83
+msgid "By count"
+msgstr "Por cuenta"
+
+#: apps/swingtime/forms.py:84
+msgid "Until date"
+msgstr "Hasta la fecha de"
+
+#: apps/swingtime/forms.py:213
+msgid "Start time"
+msgstr "Hora de inicio"
+
+#: apps/swingtime/forms.py:218
+msgid "End time"
+msgstr "Hora de finalización"
+
+#: apps/swingtime/forms.py:226
+msgid "Occurrences"
+msgstr "Ocurrencias"
+
+#: apps/swingtime/forms.py:231
+msgid "Total Occurrences"
+msgstr "Total de ocurrencias"
+
+#: apps/swingtime/forms.py:244
+msgid "Frequency"
+msgstr "Frecuencia"
+
+#: apps/swingtime/forms.py:258
+msgid "Weekly options"
+msgstr "Semanal opciones"
+
+#: apps/swingtime/forms.py:264
+msgid "On the"
+msgstr "En el"
+
+#: apps/swingtime/forms.py:264
+msgid "Each:"
+msgstr "Cada uno:"
+
+#: apps/swingtime/forms.py:267
+msgid "Monthly options"
+msgstr "opciones mensuales"
+
+#: apps/swingtime/forms.py:280
+msgid "Yearly options"
+msgstr "opciones anuales"
+
+#: apps/swingtime/forms.py:377
+#, python-format
+msgid "Unknown interval rule %s"
+msgstr "Regla de intervalo desconocida %s"
+
+#: apps/swingtime/models.py:27 apps/swingtime/models.py:36
+msgid "note"
+msgstr "nota"
+
+#: apps/swingtime/models.py:28
+msgid "created"
+msgstr "creado"
+
+#: apps/swingtime/models.py:30
+msgid "content type"
+msgstr "tipo de contenido"
+
+#: apps/swingtime/models.py:31
+msgid "object id"
+msgstr "Identificación del objeto"
+
+#: apps/swingtime/models.py:37 apps/swingtime/models.py:71
+#: apps/swingtime/models.py:185
+msgid "notes"
+msgstr "notas"
+
+#: apps/swingtime/models.py:50
+msgid "abbreviation"
+msgstr "abreviación"
+
+#: apps/swingtime/models.py:51
+msgid "label"
+msgstr "etiqueta"
+
+#: apps/swingtime/models.py:55 apps/swingtime/models.py:70
+msgid "event type"
+msgstr "tipo de evento"
+
+#: apps/swingtime/models.py:56
+msgid "event types"
+msgstr "tipos de eventos"
+
+#: apps/swingtime/models.py:68
+msgid "title"
+msgstr "Título"
+
+#: apps/swingtime/models.py:69
+msgid "description"
+msgstr "Descripción"
+
+#: apps/swingtime/models.py:75 apps/swingtime/models.py:184
+msgid "event"
+msgstr "evento"
+
+#: apps/swingtime/models.py:76
+msgid "events"
+msgstr "eventos"
+
+#: apps/swingtime/models.py:182
+msgid "start time"
+msgstr "hora de inicio"
+
+#: apps/swingtime/models.py:183
+msgid "end time"
+msgstr "finaliza el"
+
+#: apps/swingtime/models.py:191
+msgid "occurrence"
+msgstr "ocurrencia"
+
+#: apps/swingtime/models.py:192
+msgid "occurrences"
+msgstr "sucesos"
 
 #: apps/userprofile/countries.py:10
 msgid "Andorra"
@@ -1277,117 +1621,117 @@ msgstr "Ucrania"
 
 #: apps/userprofile/countries.py:227
 msgid "Uganda"
-msgstr ""
+msgstr "Uganda"
 
 #: apps/userprofile/countries.py:228
 msgid "United States Minor Outlying Islands"
-msgstr ""
+msgstr "Estados Unidos Islas Menores"
 
 #: apps/userprofile/countries.py:229
 msgid "United States of America"
-msgstr ""
+msgstr "Estados Unidos de América"
 
 #: apps/userprofile/countries.py:230
 msgid "Uruguay"
-msgstr ""
+msgstr "Uruguay"
 
 #: apps/userprofile/countries.py:231
 msgid "Uzbekistan"
-msgstr ""
+msgstr "Uzbekistán"
 
 #: apps/userprofile/countries.py:232
 msgid "Vatican City State (Holy See)"
-msgstr ""
+msgstr "Ciudad del Vaticano (Santa Sede)"
 
 #: apps/userprofile/countries.py:233
 msgid "St. Vincent & the Grenadines"
-msgstr ""
+msgstr "San Vicente y las Granadinas"
 
 #: apps/userprofile/countries.py:234
 msgid "Venezuela"
-msgstr ""
+msgstr "Venezuela"
 
 #: apps/userprofile/countries.py:235
 msgid "British Virgin Islands"
-msgstr ""
+msgstr "Islas Vírgenes Británicas"
 
 #: apps/userprofile/countries.py:236
 msgid "United States Virgin Islands"
-msgstr ""
+msgstr "Islas Vírgenes de Estados Unidos"
 
 #: apps/userprofile/countries.py:237
 msgid "Viet Nam"
-msgstr ""
+msgstr "Viet Nam"
 
 #: apps/userprofile/countries.py:238
 msgid "Vanuatu"
-msgstr ""
+msgstr "Vanuatu"
 
 #: apps/userprofile/countries.py:239
 msgid "Wallis & Futuna Islands"
-msgstr ""
+msgstr "Wallis y Futuna"
 
 #: apps/userprofile/countries.py:240
 msgid "Samoa"
-msgstr ""
+msgstr "Samoa"
 
 #: apps/userprofile/countries.py:241
 msgid "Yemen"
-msgstr ""
+msgstr "Yemen"
 
 #: apps/userprofile/countries.py:242
 msgid "Mayotte"
-msgstr ""
+msgstr "Mayotte"
 
 #: apps/userprofile/countries.py:243
 msgid "Yugoslavia"
-msgstr ""
+msgstr "Yugoslavia"
 
 #: apps/userprofile/countries.py:244
 msgid "South Africa"
-msgstr ""
+msgstr "Sudáfrica"
 
 #: apps/userprofile/countries.py:245
 msgid "Zambia"
-msgstr ""
+msgstr "Zambia"
 
 #: apps/userprofile/countries.py:246
 msgid "Zaire"
-msgstr ""
+msgstr "Zaire"
 
 #: apps/userprofile/countries.py:247
 msgid "Zimbabwe"
-msgstr ""
+msgstr "Zimbabwe"
 
 #: apps/userprofile/countries.py:248
 msgid "Unknown or unspecified country"
-msgstr ""
+msgstr "país desconocido o no especificado"
 
 #: apps/userprofile/countries.py:253
 msgid "This value must be in COUNTRIES setting in localflavor.generic package."
-msgstr ""
+msgstr "Este valor debe ser de países en los localflavor.generic en el paquete."
 
 #: apps/userprofile/forms.py:58
 #, python-format
 msgid "The file type is invalid: %s"
-msgstr ""
+msgstr "El tipo de archivo no es válido:% s"
 
 #: apps/userprofile/forms.py:63
 msgid "You must enter one of the options"
-msgstr ""
+msgstr "Usted debe entrar en una de las opciones"
 
 #: apps/userprofile/forms.py:77
 msgid "You must select a portion of the image with a minimum of 96x96 pixels."
-msgstr ""
+msgstr "Usted debe seleccionar una porción de la imagen con un mínimo de 96x96 píxeles."
 
 #: apps/userprofile/forms.py:84
 #: templates/userprofile/account/password_reset.html:21
 msgid "E-mail address"
-msgstr ""
+msgstr "E-mail"
 
 #: apps/userprofile/forms.py:94
 msgid "That username has invalid characters. The valid values are letters, numbers and underscore."
-msgstr ""
+msgstr "Ese nombre de usuario contiene caracteres no válidos. Los valores válidos son letras, números y subrayado."
 
 #: apps/userprofile/forms.py:99
 msgid "The username is already registered."
@@ -1422,33 +1766,36 @@ msgstr "Proceso de validación de correo electrónico para %(user)s"
 
 #: apps/userprofile/templatetags/avatars.py:68
 msgid "You have to provide only the size as             an integer (both sides will be equal) and optionally, the             username."
-msgstr ""
+msgstr "Usted tiene que proporcionar sólo el tamaño como un entero (ambos lados será igual) y, opcionalmente, el nombre de usuario."
 
-#: templates/base.html:20 templates/base.html.py:42
+#: templates/menu.html:5 templates/menu.html.py:26
 msgid "Language"
 msgstr "Idioma"
 
-#: templates/base.html:31
+#: templates/menu.html:16
 msgid "Administration"
 msgstr "Administración"
 
-#: templates/base.html:33
+#: templates/menu.html:18
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: templates/base.html:34
+#: templates/menu.html:19
 msgid "Logout"
 msgstr "Salir"
 
-#: templates/base.html:40 templates/accounts/login.html:4
-#: templates/userprofile/account/login.html:36
+#: templates/menu.html:25 templates/accounts/login.html:4
+#: templates/userprofile/account/login.html:37
 msgid "Login"
 msgstr "Entrar"
 
-#: templates/base.html:41 templates/registration/login.html:14
-#: templates/userprofile/account/registration.html:48
-msgid "Register"
-msgstr "Registrarse"
+#: templates/site_index.html:4
+msgid "E-Cidadania Index"
+msgstr "Indice de E-Cidadania"
+
+#: templates/site_index.html:28
+msgid "Written by"
+msgstr "Escrito por"
 
 #: templates/accounts/login.html:14
 #: templates/userprofile/profile/overview_old.html:18
@@ -1473,15 +1820,15 @@ msgstr "Usuario"
 
 #: templates/proposals/add_proposal.html:4
 msgid "Add proposal"
-msgstr ""
+msgstr "Añadir propuesta"
 
 #: templates/proposals/list_proposals.html:4
 msgid "View proposals"
-msgstr ""
+msgstr "Ver las propuestas"
 
 #: templates/proposals/list_proposals.html:15
 msgid "proposed by "
-msgstr ""
+msgstr "propuesto por"
 
 #: templates/registration/activate.html:8
 msgid "Account successfully activated"
@@ -1507,6 +1854,11 @@ msgstr "Resetearla"
 #: templates/registration/login.html:14
 msgid "Not member"
 msgstr "No es miembro"
+
+#: templates/registration/login.html:14
+#: templates/userprofile/account/registration.html:48
+msgid "Register"
+msgstr "Registrarse"
 
 #: templates/registration/logout.html:5
 #: templates/userprofile/account/logout.html:4
@@ -1545,6 +1897,10 @@ msgstr "Resetear clave en %(site_name)s"
 #: templates/registration/registration_complete.html:5
 msgid "You are now registered. Activation email sent."
 msgstr "Ha sido registrado. El correo electrónic de activación se ha enviado."
+
+#: templates/spaces/index.html:4
+msgid "Index"
+msgstr "Índice"
 
 #: templates/userprofile/menu.html:5
 msgid "Overview"
@@ -1594,78 +1950,78 @@ msgstr "Enviar confirmacion"
 #: templates/userprofile/account/email_validation.html:41
 #: templates/userprofile/account/email_validation_processed.html:21
 msgid "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation"
-msgstr ""
+msgstr "Introduzca la nueva dirección de correo electrónico. Un correo electrónico será enviado a él para la prueba y la confirmación"
 
 #: templates/userprofile/account/email_validation_done.html:4
 msgid "E-mail validation successful"
-msgstr ""
+msgstr "E-mail de validación exitosa"
 
 #: templates/userprofile/account/email_validation_done.html:4
 msgid "E-mail change unsuccessful"
-msgstr ""
+msgstr "E-mail cambio éxito"
 
 #: templates/userprofile/account/email_validation_done.html:14
 msgid "E-mail address validated successfully"
-msgstr ""
+msgstr "Dirección de correo electrónico validado con éxito"
 
 #: templates/userprofile/account/email_validation_done.html:16
 msgid "The key you received via e-mail is no longer valid. Please try the e-mail validation process again"
-msgstr ""
+msgstr "La clave que recibió por correo electrónico ya no es válida. Por favor, intente el proceso de validación de correo electrónico nuevo"
 
 #: templates/userprofile/account/email_validation_done.html:23
 #: templates/userprofile/account/email_validation_reset_response.html:22
 msgid "E-mail validation process"
-msgstr ""
+msgstr "E-mail proceso de validación"
 
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
 msgid "You can manage the e-mail validation process from the"
-msgstr ""
+msgstr "Puede administrar el proceso de validación de correo electrónico de la"
 
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
 msgid "overview page"
-msgstr ""
+msgstr "vista general"
 
 #: templates/userprofile/account/email_validation_processed.html:4
 #: templates/userprofile/account/email_validation_processed.html:13
 msgid "E-mail change processed"
-msgstr ""
+msgstr "E-mail cambio procesados"
 
 #: templates/userprofile/account/email_validation_processed.html:14
 msgid "An e-mail has been sent to the new e-mail address to verify and activate it. Please access to your e-mail and complete this process following the instructions specified in the e-mail body"
-msgstr ""
+msgstr "Un e-mail ha sido enviado a la nueva dirección de correo electrónico para verificar y activarlo. Por favor, acceda a su correo electrónico y completar este proceso siguiendo las instrucciones especificadas en el cuerpo del correo electrónico"
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
 msgid "Validation e-mail sent"
-msgstr ""
+msgstr "Validación de correo electrónico enviado"
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
 msgid "Your user account was already active"
-msgstr ""
+msgstr "Su cuenta de usuario ya estaba activa"
 
 #: templates/userprofile/account/email_validation_reset_response.html:14
 msgid "We've e-mailed you the e-mail validation link"
-msgstr ""
+msgstr "Hemos electrónico que envió el enlace de confirmación por e-mail"
 
 #: templates/userprofile/account/email_validation_reset_response.html:16
 msgid "Your e-mail was already validated"
-msgstr ""
+msgstr "Tu e-mail fue validado ya"
 
 #: templates/userprofile/account/login.html:4
-#: templates/userprofile/account/login.html:19
+#: templates/userprofile/account/login.html:20
 msgid "User login"
 msgstr "Entrar"
 
-#: templates/userprofile/account/login.html:42
+#: templates/userprofile/account/login.html:44
 msgid "Utilities"
 msgstr "Utilidades"
 
-#: templates/userprofile/account/login.html:44
+#: templates/userprofile/account/login.html:46
 msgid "Lost your password?"
 msgstr "¿Has perdido la clave?"
 
-#: templates/userprofile/account/login.html:46
+#: templates/userprofile/account/login.html:48
 msgid "Sign up!"
 msgstr "Regístrate!"
 
@@ -1710,7 +2066,7 @@ msgstr "Cambiar clave"
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
 msgid "Password change utility page. Please enter your new password twice so we can verify you typed it in correctly"
-msgstr ""
+msgstr "Cambiar la contraseña la página de servicios públicos. Por favor, introduzca su nueva contraseña dos veces para que podamos verificar que la ha escrito correctamente"
 
 #: templates/userprofile/account/password_change_done.html:4
 #: templates/userprofile/account/password_reset_complete.html:4
@@ -1727,201 +2083,201 @@ msgstr "La llave de la clave ha expirado"
 
 #: templates/userprofile/account/password_expired.html:9
 msgid "The password key you're trying to use is expired. Please, request a new one"
-msgstr ""
+msgstr "La clave de contraseña que está tratando de utilizar la fecha de caducidad. Por favor, solicitar una nueva"
 
 #: templates/userprofile/account/password_reset.html:4
 #: templates/userprofile/account/password_reset.html:20
 #: templates/userprofile/account/password_reset_complete.html:19
 #: templates/userprofile/account/password_reset_confirm.html:55
 msgid "Password reset"
-msgstr ""
+msgstr "De restablecimiento de contraseña"
 
 #: templates/userprofile/account/password_reset.html:31
 msgid "Reset my password"
-msgstr ""
+msgstr "Perdí mi contraseña"
 
 #: templates/userprofile/account/password_reset.html:37
 #: templates/userprofile/account/password_reset_done.html:16
 msgid "Password reset form"
-msgstr ""
+msgstr "De restablecimiento de contraseña forma"
 
 #: templates/userprofile/account/password_reset.html:38
 #: templates/userprofile/account/password_reset_done.html:17
 msgid "Forgotten your password? Enter your e-mail address, and we'll reset your password and e-mail the new one to you"
-msgstr ""
+msgstr "¿Olvidó su contraseña? Ingrese su dirección de e-mail, y vamos a restablecer la contraseña y el correo electrónico el nuevo para usted"
 
 #: templates/userprofile/account/password_reset_complete.html:13
 msgid "Your password has been set.  You may go ahead and log in now."
-msgstr ""
+msgstr "Su contraseña se ha establecido. Usted puede seguir adelante e iniciar sesión ahora."
 
 #: templates/userprofile/account/password_reset_complete.html:20
 #: templates/userprofile/account/password_reset_confirm.html:56
 msgid "Password reset utility page. Please enter your new password twice so we can verify you typed it in correctly"
-msgstr ""
+msgstr "Contraseña página de utilidad cero. Por favor, introduzca su nueva contraseña dos veces para que podamos verificar que la ha escrito correctamente"
 
 #: templates/userprofile/account/password_reset_confirm.html:47
 msgid "Password reset unsuccessful"
-msgstr ""
+msgstr "De restablecimiento de contraseña sin éxito"
 
 #: templates/userprofile/account/password_reset_confirm.html:48
 msgid "The password reset link was invalid, possibly because it has already been used.  Please request a new password reset."
-msgstr ""
+msgstr "El enlace de restablecimiento de contraseña no es válida, posiblemente debido a que ya se ha utilizado. Por favor, solicitar un restablecimiento de la contraseña nueva."
 
 #: templates/userprofile/account/password_reset_done.html:4
 #: templates/userprofile/account/password_reset_done.html:9
 msgid "Password reset successful"
-msgstr ""
+msgstr "De restablecimiento de contraseña con éxito"
 
 #: templates/userprofile/account/password_reset_done.html:10
 msgid "We've e-mailed you the instructions to obtain a new password. You should be receiving it shortly"
-msgstr ""
+msgstr "Hemos enviado por correo electrónico que las instrucciones para obtener una nueva contraseña. Usted debe estar recibiendo en breve"
 
 #: templates/userprofile/account/registration.html:4
 #: templates/userprofile/account/registration.html:19
 msgid "User registration"
-msgstr ""
+msgstr "Registro de usuarios"
 
 #: templates/userprofile/account/registration.html:26
 msgid "E-mail (optional)"
-msgstr ""
+msgstr "E-mail (opcional)"
 
 #: templates/userprofile/account/registration.html:54
 #: templates/userprofile/account/registration_done.html:14
 msgid "Register a new account"
-msgstr ""
+msgstr "Registrar una cuenta nueva"
 
 #: templates/userprofile/account/registration.html:55
 #: templates/userprofile/account/registration_done.html:15
 msgid "Joining this community is quick and easy. You only need to fill the form to get access to all the private content"
-msgstr ""
+msgstr "Unirse a esta comunidad es rápido y fácil. Sólo tienes que llenar el formulario para obtener acceso a todo el contenido privado"
 
 #: templates/userprofile/account/registration_done.html:4
 msgid "Registration complete"
-msgstr ""
+msgstr "Registro completo"
 
 #: templates/userprofile/account/registration_done.html:9
 msgid "You have successfully registered a new account. Go to the"
-msgstr ""
+msgstr "Ha registrado una nueva cuenta. Ir a la"
 
 #: templates/userprofile/account/registration_done.html:9
 msgid "login page"
-msgstr ""
+msgstr "Página de inicio de sesión"
 
 #: templates/userprofile/account/registration_done.html:9
 msgid "to authenticate and start using this site"
-msgstr ""
+msgstr "para autenticar y empezar a utilizar este sitio"
 
 #: templates/userprofile/avatar/choose.html:4
 #: templates/userprofile/avatar/choose.html:41
 msgid "Choose the location of your avatar"
-msgstr ""
+msgstr "Elegir la ubicación de tu avatar"
 
 #: templates/userprofile/avatar/choose.html:36
 msgid "Delete"
-msgstr ""
+msgstr "Eliminar"
 
 #: templates/userprofile/avatar/choose.html:44
 msgid "Select an image from disk"
-msgstr ""
+msgstr "Seleccione una imagen de disco"
 
 #: templates/userprofile/avatar/choose.html:46
 #: templates/userprofile/avatar/choose.html:52
 #: templates/userprofile/avatar/crop.html:47
 msgid "Done"
-msgstr ""
+msgstr "Hecho"
 
 #: templates/userprofile/avatar/choose.html:50
 msgid "Select an image from a remote URL. Put the URL on the input below and we'll retrieve the image for you"
-msgstr ""
+msgstr "Seleccione una imagen desde una URL remota. Ponga la dirección URL en la entrada de abajo y vamos a recuperar la imagen para usted"
 
 #: templates/userprofile/avatar/choose.html:57
 #: templates/userprofile/avatar/search.html:4
 #: templates/userprofile/avatar/search.html:28
 msgid "Search for an image on Picasa Web"
-msgstr ""
+msgstr "Buscar una imagen en la web de Picasa"
 
 #: templates/userprofile/avatar/choose.html:67
 #: templates/userprofile/avatar/crop.html:53
 #: templates/userprofile/avatar/done.html:19
 #: templates/userprofile/avatar/search.html:50
 msgid "Avatar selection page"
-msgstr ""
+msgstr "Avatar página de selección de"
 
 #: templates/userprofile/avatar/choose.html:68
 #: templates/userprofile/avatar/crop.html:54
 #: templates/userprofile/avatar/done.html:20
 #: templates/userprofile/avatar/search.html:51
 msgid "You have several options to select the image you want as avatar on your profile"
-msgstr ""
+msgstr "Usted tiene varias opciones para seleccionar la imagen que quieres como avatar en tu perfil"
 
 #: templates/userprofile/avatar/crop.html:4
 #: templates/userprofile/avatar/crop.html:31
 msgid "Crop &amp; resize the area you want"
-msgstr ""
+msgstr "Recortar y cambiar el tamaño del área que desea"
 
 #: templates/userprofile/avatar/done.html:4
 msgid "Avatar selection finished"
-msgstr ""
+msgstr "Avatar de selección de acabados"
 
 #: templates/userprofile/avatar/done.html:13
 msgid "Your new avatar has been saved successfully"
-msgstr ""
+msgstr "Su nuevo avatar se ha guardado correctamente"
 
 #: templates/userprofile/avatar/search.html:29
 msgid "Search on Picasa Web"
-msgstr ""
+msgstr "Buscar en la Web de Picasa"
 
 #: templates/userprofile/profile/delete.html:4
 msgid "Delete personal information"
-msgstr ""
+msgstr "Eliminar la información personal"
 
 #: templates/userprofile/profile/delete.html:10
 msgid "It erases all your private data except your username. You can refill the information later if you want to."
-msgstr ""
+msgstr "Borra todos tus datos privados, excepto su nombre de usuario. Usted puede rellenar la información posteriormente si lo desea."
 
 #: templates/userprofile/profile/delete.html:15
 msgid "Delete your personal information"
-msgstr ""
+msgstr "Eliminar su información personal"
 
 #: templates/userprofile/profile/delete.html:16
 msgid "Are you sure?"
-msgstr ""
+msgstr "¿Estás seguro?"
 
 #: templates/userprofile/profile/delete.html:17
 msgid "Yes"
-msgstr ""
+msgstr "Sí"
 
 #: templates/userprofile/profile/delete_done.html:4
 msgid "Profile removed"
-msgstr ""
+msgstr "Perfil eliminado"
 
 #: templates/userprofile/profile/delete_done.html:8
 msgid "Personal data removed"
-msgstr ""
+msgstr "Los datos personales eliminado"
 
 #: templates/userprofile/profile/delete_done.html:9
 msgid "Your profile information has been removed successfully."
-msgstr ""
+msgstr "La información de su perfil se ha eliminado con éxito."
 
 #: templates/userprofile/profile/delete_done.html:11
 msgid "Back to home page"
-msgstr ""
+msgstr "Volver a la página de inicio"
 
 #: templates/userprofile/profile/delete_done.html:12
 #: templates/userprofile/profile/personal_done.html:12
 msgid "Back to your profile"
-msgstr ""
+msgstr "Volver a tu perfil"
 
 #: templates/userprofile/profile/location.html:4
 #: templates/userprofile/profile/location_done.html:4
 #: templates/userprofile/profile/personal_done.html:4
 #, python-format
 msgid "%(user)s's Dashboard"
-msgstr ""
+msgstr " %(user)s  de escritorio"
 
 #: templates/userprofile/profile/location.html:12
 msgid "Define your location"
-msgstr ""
+msgstr "Definir la ubicación"
 
 #: templates/userprofile/profile/location.html:14
 #: templates/userprofile/profile/overview.html:62
@@ -1942,7 +2298,7 @@ msgstr "Guardar"
 #: templates/userprofile/profile/location_done.html:9
 #: templates/userprofile/profile/personal_done.html:9
 msgid "Your profile information has been updated successfully"
-msgstr ""
+msgstr "La información de su perfil se ha actualizado correctamente"
 
 #: templates/userprofile/profile/overview.html:5
 #: templates/userprofile/profile/overview_old.html:5
@@ -1998,7 +2354,7 @@ msgstr "Miembro desde: "
 #: templates/userprofile/profile/overview.html:49
 #: templates/userprofile/profile/overview_old.html:19
 msgid "E-mail:"
-msgstr ""
+msgstr "E-mail:"
 
 #: templates/userprofile/profile/overview.html:52
 #: templates/userprofile/profile/overview_old.html:21
@@ -2019,32 +2375,32 @@ msgstr "No se ha establecido"
 
 #: templates/userprofile/profile/overview.html:71
 msgid "Ciudad: "
-msgstr ""
+msgstr "Ciudad:"
 
 #: templates/userprofile/profile/overview.html:98
 #: templates/userprofile/profile/overview_old.html:80
 msgid "Management:"
-msgstr ""
+msgstr "Gestión:"
 
 #: templates/userprofile/profile/overview.html:99
 #: templates/userprofile/profile/overview_old.html:81
 msgid "Change password"
-msgstr ""
+msgstr "Cambiar la contraseña"
 
 #: templates/userprofile/profile/overview.html:101
 #: templates/userprofile/profile/overview_old.html:83
 msgid "Change your e-mail address"
-msgstr ""
+msgstr "Cambiar su dirección de e-mail"
 
 #: templates/userprofile/profile/overview.html:101
 #: templates/userprofile/profile/overview_old.html:83
 msgid "Add your e-mail address"
-msgstr ""
+msgstr "Inserte su dirección de e-mail"
 
 #: templates/userprofile/profile/overview.html:102
 #: templates/userprofile/profile/overview_old.html:84
 msgid "Resend validation e-mail"
-msgstr ""
+msgstr "Vuelva a enviar por e-mail de validación"
 
 #: templates/userprofile/profile/overview.html:106
 #: templates/userprofile/profile/overview_old.html:88
