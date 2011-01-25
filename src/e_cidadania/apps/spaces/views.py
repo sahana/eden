@@ -29,7 +29,7 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from django.contrib.auth.models import User
-from e_cidadania.apps.spaces.models import Space, Entity
+from e_cidadania.apps.spaces.models import Space, Entity, Document
 
 def view_space_index(request, space_name):
 
@@ -43,7 +43,11 @@ def view_space_index(request, space_name):
                          object_id = place.id,
                          template_name = 'spaces/index.html',
                          template_object_name = 'get_place',
-                         extra_context = {'entities': Entity.objects.all().filter(space=place.id)})
+                         extra_context = {
+                            'entities': Entity.objects.all().filter(space=place.id),
+                            'documents': Document.objects.all().filter(space=place.id),
+                            }
+                        )
 
     #return render_to_response('spaces/index.html')
 

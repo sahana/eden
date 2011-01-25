@@ -7,21 +7,30 @@
 
 {% block content %}
 
-  {% if get_place.mod_cal %}
-    {% block leftcol %}
+  {% block leftcol %}
     <div id="leftcol">
-      <ul>
-        <li>Prrrueba</li>
-        <li>Prrrueba</li>
-        <li>Prrrueba</li>
-        <li>Prrrueba</li>
-      </ul>
+    
+        {% if get_place.mod_docs %}
+          <h2>Documentos</h2>
+          <ul>
+            {% for doc in documents %}
+              <li><a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a></li>
+            {% endfor %}
+          </ul>
+          <hr></hr>
+        {% endif %}
+        
+        {% if get_place.mod_cal %}
+          <h2>Calendario</h2>
+          <p>El calendario está activado</p>
+        {% endif %}
+
     </div>
-    {% endblock %}
-  {% endif %}
+  {% endblock %}
 
   {% block centercol %}
     <div id="centercol">
+      
       <h1>Datos de prueba</h1>
       Nombre: {{ get_place.name }}<br/>
       Descripcion: {{ get_place.description }}<br/>
