@@ -5,6 +5,9 @@
 {% block logo %}<img src="/{{MEDIA_URL}}{{ get_place.logo }}">{% endblock %}
 {% block banner %}<img src="/{{MEDIA_URL}}{{ get_place.banner }}">{% endblock %}
 
+{% block menu%}
+{% endblock %}
+
 {% block content %}
 
   {% block leftcol %}
@@ -47,5 +50,5 @@
 {% endblock %}
 
 {% block footer %}
-  <p>Entidades que participan:</p> {% for e in entities %} {{e.name}} | {% endfor %}
+  <p>Entidades que participan:</p> {% for e in entities %} {{e.name}} - {% endfor %}
 {% endblock %}
