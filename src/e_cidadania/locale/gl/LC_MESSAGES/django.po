@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-01-11 12:21+0100\n"
-"PO-Revision-Date: 2011-01-11 13:46\n"
-"Last-Translator: <a@a.com>\n"
+"PO-Revision-Date: 2011-02-01 11:39\n"
+"Last-Translator: Cidadania R.A.S <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -150,7 +150,7 @@ msgstr "Tecnicamente non é viable"
 
 #: apps/registration/admin.py:23
 msgid "Activate users"
-msgstr "Activar os usuarios"
+msgstr "Activar persoas usuarias"
 
 #: apps/registration/admin.py:43
 msgid "Re-send activation emails"
@@ -162,7 +162,7 @@ msgstr "Re-enviar un correo de activación"
 #: templates/userprofile/profile/public.html:35
 #: templates/userprofile/profile/usercard.html:11
 msgid "Username"
-msgstr "Nome de Usuario"
+msgstr "Nome de usuario ou usuaria"
 
 #: apps/registration/forms.py:36
 msgid "This value must contain only letters, numbers and underscores."
@@ -181,11 +181,11 @@ msgstr "Contrasinal"
 #: apps/registration/forms.py:43 apps/userprofile/forms.py:86
 #: templates/userprofile/account/registration.html:38
 msgid "Password (again)"
-msgstr "Código (de novo)"
+msgstr "Contrasinal (de novo)"
 
 #: apps/registration/forms.py:55
 msgid "A user with that username already exists."
-msgstr "Un usuario con ese nome xa existe."
+msgstr "Ese nome xa existe."
 
 #: apps/registration/forms.py:67
 msgid "The two password fields didn't match."
@@ -201,7 +201,7 @@ msgstr "Ten que aceptar as condicións de rexistro"
 
 #: apps/registration/forms.py:95
 msgid "This email address is already in use. Please supply a different email address."
-msgstr "Este enderezo de correo-e xa está en uso. Por favor, forneza un enderezo de correo-e diferente."
+msgstr "Este enderezo de correo electrónico xa está en uso. Por favor, sinale un novo enderezo."
 
 #: apps/registration/forms.py:122
 msgid "Registration using free email addresses is prohibited. Please supply a different email address."
@@ -209,7 +209,7 @@ msgstr "Rexistro usando enderezos de correo-e gratuito está prohibida. Por favo
 
 #: apps/registration/models.py:168
 msgid "user"
-msgstr "usuario"
+msgstr "usuario ou usuaria"
 
 #: apps/registration/models.py:169
 msgid "activation key"
@@ -2045,27 +2045,27 @@ msgstr ""
 #: templates/userprofile/profile/overview.html:106
 #: templates/userprofile/profile/overview_old.html:88
 msgid "Add location"
-msgstr ""
+msgstr "Engadir situación"
 
 #: templates/userprofile/profile/overview.html:108
 #: templates/userprofile/profile/overview_old.html:90
 msgid "Change location"
-msgstr ""
+msgstr "Cambiar local"
 
 #: templates/userprofile/profile/personal.html:4
 #: templates/userprofile/profile/personal.html:7
 msgid "Edit your personal information"
-msgstr ""
+msgstr "Edita a súa información persoal"
 
 #: templates/userprofile/profile/personal_done.html:11
 msgid "Back to home"
-msgstr ""
+msgstr "Voltar a casa"
 
 #: templates/userprofile/profile/public.html:30
 #, python-format
 msgid "Public profile of %(user)s"
-msgstr ""
+msgstr "Perfil público de %(user)s "
 
 #: templates/userprofile/profile/usercard.html:12
 msgid "Public profile information"
-msgstr ""
+msgstr "Información publica do perfil"

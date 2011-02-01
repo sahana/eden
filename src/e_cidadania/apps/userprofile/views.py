@@ -287,7 +287,7 @@ def email_validation(request, space_name):
     data = { 'form': form, }
     return render_to_response(template, data, context_instance=RequestContext(request))
 
-def register(request, space_name):
+def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():

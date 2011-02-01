@@ -1,20 +1,12 @@
-{% extends "base_2col.html" %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block title %}{% trans "User registration" %}{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
 
-{% block extrajs %}
-<script type="text/javascript">
-	$(function() {
-		$("input#id_username").focus();
-		$("input[type='text'], input[type='password']").addClass("text");
-	});
-</script>
-{% endblock %}
-
 {% block content %}
 	<form action="" method="post" accept-charset="utf-8">
+	{% csrf_token %}
 	<fieldset>
 		<legend>{% trans "User registration" %}</legend>
 		<label for="id_username">{% trans "Username" %}</label>

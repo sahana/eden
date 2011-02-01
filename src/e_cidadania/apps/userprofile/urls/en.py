@@ -105,15 +105,15 @@ urlpatterns = patterns('',
         name='logout'),
 
     # Registration
-#    url(r'^register/$', register, name='signup'),
+    url(r'^register/$', register, name='signup'),
 
-#    url(r'^register/validate/$', direct_to_template,
-#        {'template' : 'userprofile/account/validate.html'},
-#        name='signup_validate'),
+    url(r'^register/validate/$', direct_to_template,
+        {'template' : 'userprofile/account/validate.html'},
+        name='signup_validate'),
 
-#    url(r'^register/complete/$', direct_to_template,
-#        {'template': 'userprofile/account/registration_done.html'},
-#        name='signup_complete'),
+    url(r'^register/complete/$', direct_to_template,
+        {'template': 'userprofile/account/registration_done.html'},
+        name='signup_complete'),
 
     # Users public profile
     url(r'^(?P<username>.+)/$', public, name='profile_public'),
