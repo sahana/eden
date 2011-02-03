@@ -26,13 +26,17 @@
             };
         </script>
     {% endif %}
-    <div id="contenttitles">{{ user.username }} {% trans "profile" %}</div>
+    <div id="contenttitles">
+      {% blocktrans with user.username as username %}
+        {{ username }} profile
+      {% endblocktrans %}
+    </div>
     <div id="useropts">
 	    <a href="{{ request.path.info }}edit/personal">{% trans "Edit personal data" %}</a> |
 	    <a href="{{ request.path.info }}edit/location/">{% trans "Edit location" %}</a> |
 	    <a href="{{ request.path.info }}delete/">{% trans "Delete profile" %}</a> |
 	    <a href="{{ request.path.info }}{{ user.username }}">{% trans "Public profile" %}</a>
-	</div>
+	  </div>
     <div id="profile_right">
         <div id="avatar" class="span-3 center">
         	<a href="{% url profile_edit_avatar %}">

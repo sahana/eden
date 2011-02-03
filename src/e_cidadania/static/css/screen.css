@@ -321,7 +321,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     width: 98%;
     min-height: 200px;
     margin-top: 15px;
-    padding: 10px;
+    padding: 25px 10px 10px 10px;
     background: url(/static/assets/profile_bg1.jpg) repeat-x;
     min-height: 600px;
 }
