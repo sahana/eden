@@ -62,13 +62,15 @@ table {
 	border-spacing: 0;
 }
 
+/* END CSS RESET */
+
 /* HTML TAGS DEFINITION */
 
 body {
 	background: #FFF;
 	padding: 0;
 	margin: 0;
-	font-family: Verdana, "Lucida Sans";
+	font-family: Verdana, "Lucida Sans", Arial;
 	font-size: 12px;
 	color: #000;
 	cursor: default;
@@ -115,6 +117,7 @@ input[type="text"], input[type="password"] {
 #topbar {
     width: 100%;
     height: 35px;
+    background: url(../assets/userbar.png) #000 repeat;
 }
 
 #userbar {
@@ -122,11 +125,12 @@ input[type="text"], input[type="password"] {
     margin-right: 50px;
     margin-bottom: 10px;
     padding: 0 10px 2px 10px;
-    height: 22px;
-    line-height: 22px;
+    height: 32px;
+    line-height: 32px;
     font-size: 11px;
     color: #FFF;
     background: url(../assets/userbar.png) #000 repeat;
+    font-size: 1em;
 
     /* Fancy round borders for Webkit, Gecko and standard
        implementations */
@@ -257,14 +261,14 @@ ul.topnav li span { /*--Drop down trigger styles--*/
 	width: 17px;
 	height: 35px;
 	float: left;
-	margin-top: -5px;
+	margin-top: 0px;
 	background: url(/static/assets/subnav_btn.gif) no-repeat center top;
 }
 ul.topnav li span.subhover {background-position: center bottom; cursor: pointer;} /*--Hover effect for trigger--*/
 ul.topnav li ul.subnav {
 	list-style: none;
 	position: absolute; /*--Important - Keeps subnav from affecting main navigation flow--*/
-	left: 0; top: 22px;
+	left: 0; top: 32px;
 	background: #333;
 	margin: 0; padding: 0;
 	display: none;
