@@ -20,7 +20,14 @@
     <p>¿Qué puedes hacer con e-cidadania? <strong>Descúbrelo</strong></p>
     <hr></hr>
     <h4>Lista de espacios</h4><br/>
-      <!-- <p><a href="{{ request.path.info }}spaces/{{ space.name }}">{{ space.name|capfirst }}</a></p> -->
+      {% comment %}
+        The first implementation was creating a list of hyperlinks to the
+        spaces. I thought a dropdown list was better, but the code for the
+        hyperlinks will remain here just in case.
+        
+        <p><a href="{{ request.path.info }}spaces/{{ space.name }}">{{ space.name|capfirst }}</a></p>
+        
+      {% endcomment %}
       <select>
         {% for space in spaces %}
           <option>{{ space.name|capfirst }}</option>
