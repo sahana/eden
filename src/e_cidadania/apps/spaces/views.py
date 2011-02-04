@@ -66,6 +66,13 @@ def delete_space(request):
 def create_space(request):
 
     """
+    Create a new space using django shortcuts.
     """
-    pass
+    return create_object(request,
+                         model = Space,
+                         login_required = True,
+                         template_name = 'spaces/add.html',
+                         # Change this, must redirect to the newly created
+                         # space.
+                         post_save_redirect = '/')
 

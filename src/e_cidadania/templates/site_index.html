@@ -20,9 +20,12 @@
     <p>¿Qué puedes hacer con e-cidadania? <strong>Descúbrelo</strong></p>
     <hr></hr>
     <h4>Lista de espacios</h4><br/>
-    {% for space in spaces %}
-      <p><a href="{{ request.path.info }}spaces/{{ space.name }}">{{ space.name|capfirst }}</a></p>
-    {% endfor %}
+      <!-- <p><a href="{{ request.path.info }}spaces/{{ space.name }}">{{ space.name|capfirst }}</a></p> -->
+      <select>
+        {% for space in spaces %}
+          <option>{{ space.name|capfirst }}</option>
+        {% endfor %}
+      </select>
     <hr></hr>
     <p>Espacios modificados recientemente</p>
   </div>
@@ -51,10 +54,10 @@
 {% block rightcol%}
   <div id="rightcol">
     <p>¡Conectate a través de Facebook, Twitter, RSS, o lo que quieras!</p>
-    <span>----</span>
+    <hr></hr>
     <p>Desarrollo de e-cidadania</p>
     <p>¿Quieres echarnos una mano? Accede</p>
-    <span>----</span>
+    <hr></hr>
   </div>
 {% endblock %}
 

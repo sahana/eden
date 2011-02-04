@@ -164,26 +164,27 @@ input[type="text"], input[type="password"] {
 
 #leftcol {
     float: left;
-    padding: 10px;
+    padding: 50px 10px 50px 10px;
     width: 20%;
-    margin: 30px 5px 10px 10px;
-    border: 1px solid #000;
-    background: #EEE;
+    margin: 30px 5px 10px 5px;
+    border-right: 1px solid #aaa;
+    background: #FFF;
 }
 
 #centercol {
-    float: left;
-    padding: 10px;
-    width: 47%;
+    /*float: left;*/
+    padding: 15px;
+    width: 50%;
+    margin: auto;
 }
 
 #rightcol {
     float: right;
-    padding: 10px;
+    padding: 50px 10px 50px 10px;
     width: 20%;
-    margin: 30px 10px 10px 15px;
-    border: 1px solid #000;
-    background: #EEE;
+    margin: 30px 10px 10px 5px;
+    border-left: 1px solid #aaa;
+    background: #FFF;
 }
 
 /* SWINGTIME CALENDAR */
@@ -296,22 +297,24 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 /* END STYLE FOR DROPDOWN */
 
 #header {
-    margin: 15px, auto, 15px, auto;
+    margin: 0px auto;
     width: 100%;
-    height: 75px;
-
+    height: 130px;
+    border-bottom: 1px solid #000;
 }
 
 #logo {
     float: left;
+    /* The logo image must be 75px height */
     width: 150px;
-    height: 75px;
-    margin-left: 10px;
+    height: 130px;
+    padding: 25px 37px 0px 37px; 
 }
 
 #banner {
     float: left;
-    height: 75px;
+    height: 130px;
+    padding-top: 25px;
 }
 
 /* User Profile stuff */
@@ -319,8 +322,6 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     clear: both;
     border-top: 1px solid #BBB;
     width: 98%;
-    min-height: 200px;
-    margin-top: 15px;
     padding: 25px 10px 10px 10px;
     background: url(/static/assets/profile_bg1.jpg) repeat-x;
     min-height: 600px;
@@ -451,9 +452,9 @@ table#personal th {
 
 .post {
     width: 100%;
-    border: 1px solid #000;
-    background: #EEE;
-    margin: 20px 10px 20px 10px;
+    border: 1px solid #aaa;
+    background: #fff;
+    margin: 20px 5px 20px 5px;
     -webkit-border-top-left-radius: 20px;
     -webkit-border-bottom-right-radius: 20px;
     -moz-border-radius-topleft: 20px;
@@ -479,18 +480,20 @@ table#personal th {
 
 #footer {
     clear: both;
-    width: 95%;
+    width: 100%;
     background: #333;
     border-top: 1px solid #CCC;
     line-height: 15px;
     font-size: 10px;
     color: #888;
-    padding: 30px;
     text-align: right;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 #footer p {
     padding: 2px;
+    margin: 5px 30px 5px 30px;
 }
 
 #footer a {

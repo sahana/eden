@@ -23,13 +23,13 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('apps.spaces.views',
 
     # Spaces
-    (r'^(?P<space_name>\w+)/', 'view_space_index'),
-    
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
     
     (r'^(?P<space_name>\w+)/delete/', 'delete_space'),
     
     (r'^add/', 'create_space'),
+    
+    (r'^(?P<space_name>\w+)/', 'view_space_index'),
     
     # Accounts
     # DISABLED. Accounts will be site-wide
