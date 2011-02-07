@@ -21,7 +21,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 class Space(models.Model):
 
@@ -41,6 +41,8 @@ class Space(models.Model):
     banner = models.ImageField(upload_to='spaces/banners',
                                verbose_name=_('Banner'),
                                help_text=_('75px height'))
+    authorized_groups = models.ManyToManyField(Group,
+                                            verbose_name=_('Authorized groups'))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules

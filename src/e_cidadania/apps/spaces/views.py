@@ -28,7 +28,7 @@ from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from e_cidadania.apps.spaces.models import Space, Entity, Document
 
 def view_space_index(request, space_name):
@@ -51,11 +51,22 @@ def view_space_index(request, space_name):
 
     #return render_to_response('spaces/index.html')
 
-def edit_space(request):
+def edit_space(request, space_name):
 
     """
+    Only people registered to that space or site administrators will be able
+    to edit spaces.
     """
-    pass
+    place = get_object_or_404(Space, name=space_name)
+    auth_groups = space_name.authorized_groups
+    
+    return update_object(request,
+                         model = Space,
+                         object_id = place,
+                         login_required = True,
+                         template_name = 'spaces/edit.html',
+                         template_object_name = 'get_place',
+                         post_save_redirect = '/')
     
 def delete_space(request):
 
