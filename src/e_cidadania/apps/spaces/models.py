@@ -25,7 +25,7 @@ from django.contrib.auth.models import User
 
 class Space(models.Model):
 
-    """
+    """     
     Spaces model. This model stores a "space" or "place". Every place has
     a minimum set of settings for customization.
     """
@@ -76,6 +76,7 @@ class Entity(models.Model):
 class Document(models.Model):
 
     """
+    Document model
     """
     title = models.CharField(_('Document title'), max_length=100)
     space = models.ForeignKey(Space)
