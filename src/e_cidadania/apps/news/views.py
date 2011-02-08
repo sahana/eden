@@ -34,10 +34,34 @@ from e_cidadania.apps.news.models import Post
 def add_post(request):
     
     """
-    Create a new post.
+    Create a new post. Only registered users belonging to a concrete group
+    are allowed to create news. nly site administrators will be able to
+    post news in the index page.
     """
     return create_object(request,
                          model = Post,
                          login_required = True,
                          template_name = 'news/add_post.html',
                          post_save_redirect = '/')
+                         
+def delete_post(request):
+
+    """
+    Delete an existent post. Post deletion is only reserved to spaces
+    administrators or site admins.
+    """
+    return delete_object(request,
+                         model = Post,
+                         login_required=True,
+                         template_name = 'news/delete_post.html')
+
+def edit_post(request):
+
+    """
+    Edit an existent post.
+    """
+    return update_object(request,
+                         model = Post,
+                         login_required = True,
+                         template_name = 'news/edit_post.html',
+                         post_update_redirect = '/')
