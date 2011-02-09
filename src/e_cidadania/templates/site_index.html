@@ -1,76 +1,88 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "E-Cidadania Index" %}{% endblock %}
+{% block title %}{% trans "e-cidadania" %}{% endblock %}
 {% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
 
-{% block menubar %}
-  <ul>
-    <li>tururu</li>
-  </ul>
-{% endblock %}
 
 {% block content %}
 
-{% block leftcol %}
-  <div id="leftcol">
-    <p><strong>Crea tu propio espacio</strong> dentro de e-cidadania</p>
-    <hr></hr>
-    <p>¿Qué puedes hacer con e-cidadania? <strong>Descúbrelo</strong></p>
-    <hr></hr>
-    <h4>Lista de espacios</h4><br/>
-      {% comment %}
-        The first implementation was creating a list of hyperlinks to the
-        spaces. I thought a dropdown list was better, but the code for the
-        hyperlinks will remain here just in case.
-        
-        <p><a href="{{ request.path.info }}spaces/{{ space.name }}">{{ space.name|capfirst }}</a></p>
-        
-      {% endcomment %}
-      <select>
-        {% for space in spaces %}
-          <option>{{ space.name|capfirst }}</option>
-        {% endfor %}
-      </select>
-    <hr></hr>
-    <p>Espacios modificados recientemente</p>
+{% block centercol %}
+  <div id="centercol">
+  
+  
+    {% comment %}
+      The following div is just a test, it's not menat to be in production
+    {% endcomment %}
+    <div>
+      <p><span style="font-size:3em;font-weight:bold;">e-cidadania</span> democracias participativas 2.0</p></br></br>
+      <p style="font-size:1.3em;line-height:1.5em;text-align:justify;">e-cidadania es una herramienta de democracia participativa para
+         ciudadanos. Tiene sistema de debates, propuestas, versionado de
+         documentos, creación de espacios específicos para cada cliente,
+         así como otras muchas funciones pero mejor pruébalo tú mismo.
+      </p>
+    </div>
+    
+    
+    {% for news in publication %}
+      {% if news.post_pub_index %}
+        <div class="post">
+          <h1>{{ news.post_title }}</h1>
+          <p>{{ news.post_message }}</p>
+          <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
+        </div>
+      {% endif %}
+    {% empty %}
+      <div class="post">
+        <p>{% trans "Nothing published yet." %}</p>
+      </div>
+    {% endfor%}
   </div>
 {% endblock %}
 
-{% block centercol %}
-  <div id="centercol">
-    {% if publication %}
-      {% for news in publication %}
-        {% if news.post_pub_index %}
-          <div class="post">
-            <h1>{{ news.post_title }}</h1>
-            <p>{{ news.post_message }}</p>
-            <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
-          </div>
-        {% endif %}
-      {% endfor%}
-    {% else %}
-      <div class="post">
-        <p>{% trans "¡No se ha publicado nada todavía!" %}</p>
-      </div>
-    {% endif %}
-  </div>
-{% endblock %}
 
 {% block rightcol%}
   <div id="rightcol">
-    <p>¡Conectate a través de Facebook, Twitter, RSS, o lo que quieras!</p>
-    <hr></hr>
-    <p>Desarrollo de e-cidadania</p>
-    <p>¿Quieres echarnos una mano? Accede</p>
-    <hr></hr>
+
+    <div id="widget">
+      <p style="font-size: 16px;"><strong><span style="font-size: 23px;"><a href="/spaces/add">Crea tu propio espacio</a></span></strong> dentro de e-cidadania</p>
+    </div>
+
+    <div id="widget">
+      <p>¿Qué puedes hacer con e-cidadania? <strong>Descúbrelo</strong></p>
+    </div>
+    
+    <div id="widget">
+      <h4>Lista de espacios</h4><br/>      
+        <select>
+          {% for space in spaces %}
+            <option>{{ space.name|capfirst }}</option>
+          {% empty %}
+            <option>{% trans "No spaces" %}</option>
+          {% endfor %}
+        </select>
+    </div>
+    
+    <div id="widget">
+      <p>Espacios modificados recientemente</p>
+    </div>
+    
+    <div id="widget">
+      <p>¡Conectate a través de Facebook, Twitter, RSS, o lo que quieras!</p>
+    </div>
+    
+    <div id="widget">
+      <p>Desarrollo de e-cidadania</p>
+      <p>¿Quieres echarnos una mano? Accede</p>
+    </div>
+
   </div>
 {% endblock %}
 
 {% endblock %}
 
 {% block footer %}
-<p>Pie de pagina parala pagina principal</p>
+<p>Pie de pagina parala pagina principal</p></br></br>
 {% endblock %}
 

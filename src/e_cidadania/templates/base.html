@@ -42,19 +42,26 @@
 	  <div id="content">
 	    {% block content %}
 
-        {% block leftcol %}
-	      {% endblock %}
-
         {% block centercol %}
         {% endblock %}
 
-   	    {% block rightcol %}
+  	    {% block rightcol %}
         {% endblock %}
 
       {% endblock %}
     </div>
 
     <div id="footer">
+      
+      <div id="footerimg">
+        {% block footerimg %}
+          <img src="/{{ MEDIA_URL }}assets/logocidadania.jpg" /></br>
+          Corredoira das Fraguas, 5, 1 izq.</br>
+          15703 Santiago de Compostela</br>
+          A Coruña</br>
+          Tlf: 999 999 999</br>
+        {% endblock %}
+      </div>
 	    {% block footer %}
         <p><a href="http://www.djangoproject.com">django</a> |
            <a href="http://www.python.org">python</a> |

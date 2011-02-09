@@ -115,8 +115,14 @@ input[type="text"], input[type="password"] {
 /* DIVS */
 
 #topbar {
+    display: block;
+    position: fixed;
+    opacity: 0.7;
+    filter: alpha(opacity=70)
     width: 100%;
     height: 35px;
+    margin: 0;
+    padding: 0;
     background: url(../assets/userbar.png) #000 repeat;
 }
 
@@ -162,30 +168,28 @@ input[type="text"], input[type="password"] {
     float: right;
 }
 
-#leftcol {
-    float: left;
-    padding: 50px 10px 50px 10px;
-    width: 20%;
-    margin: 30px 5px 10px 5px;
-    border-right: 1px solid #aaa;
-    background: #FFF;
-}
-
 #centercol {
-    /*float: left;*/
+    float: left;
     padding: 15px;
-    width: 50%;
-    margin: auto;
+    width: 60%;
 }
 
 #rightcol {
     float: right;
     padding: 50px 10px 50px 10px;
-    width: 20%;
+    width: 30%;
     margin: 30px 10px 10px 5px;
     border-left: 1px solid #aaa;
     background: #FFF;
 }
+
+#widget {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 10px 10px 10px;
+    border-bottom: 1px solid #AAA;
+}
+
 
 /* SWINGTIME CALENDAR */
 table { border-collapse: collapse; font-size: 1em; }
@@ -300,7 +304,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     margin: 0px auto;
     width: 100%;
     height: 130px;
-    border-bottom: 1px solid #000;
+
 }
 
 #logo {
@@ -502,5 +506,10 @@ table#personal th {
 
 #footer a:hover, #footer a:visited {
     color: #666;
+}
+
+#footerimg {
+    float: left;
+    margin-left: 30px;
 }
 

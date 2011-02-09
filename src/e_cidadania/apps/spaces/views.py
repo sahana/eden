@@ -37,7 +37,7 @@ def view_space_index(request, space_name):
     Show the index page for the requested space.
     """
     place = get_object_or_404(Space, name=space_name)
-    
+
     return object_detail(request,
                          queryset = Space.objects.all(),
                          object_id = place.id,
@@ -51,6 +51,7 @@ def view_space_index(request, space_name):
 
     #return render_to_response('spaces/index.html')
 
+@login_required
 def edit_space(request, space_name):
 
     """
@@ -58,15 +59,19 @@ def edit_space(request, space_name):
     to edit spaces.
     """
     place = get_object_or_404(Space, name=space_name)
-    auth_groups = space_name.authorized_groups
+    current_user = User.objects.get(username=request.user.username)
+    get_user_perm = current_user.has_perm('Space.edit_space')
     
-    return update_object(request,
-                         model = Space,
-                         object_id = place,
-                         login_required = True,
-                         template_name = 'spaces/edit.html',
-                         template_object_name = 'get_place',
-                         post_save_redirect = '/')
+    if get_user_perm:
+        return update_object(request,
+                             model = Space,
+                             object_id = place,
+                             login_required = True,
+                             template_name = 'spaces/edit.html',
+                             template_object_name = 'get_place',
+                             post_save_redirect = '/')
+    else:
+        return render_to_response('other/notallowed.html')
     
 def delete_space(request):
 
