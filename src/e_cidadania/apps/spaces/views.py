@@ -73,10 +73,13 @@ def edit_space(request, space_name):
     else:
         return render_to_response('other/notallowed.html')
     
-def delete_space(request):
+def delete_space(request, space_name):
 
     """
     """
+    return delete_object(request,
+                         model = Space,
+                         )
     pass
 
 def create_space(request):

@@ -1,7 +1,14 @@
-{% extends "base.html" %}
 {% load i18n %}
-
-<style type="text/css">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
+	<head>
+		<title>{% block title %}404 - Not Found{% endblock %}</title>
+		<link rel="shortcut icon" href="/{{ MEDIA_URL }}assets/favicon.ico" type="image/ico"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="Description" content="Site description"/>
+		<meta name="Robots" content="all"/>
+		
+		<style type="text/css">
 		  #message {
 		    font-family: arial;
 		    font-size: 2em;
@@ -23,11 +30,12 @@
 		 #message h1 {
 		  text-align: right;
 		 }
-</style>
-
-{% block content %}
+		</style>
+	</head>
+	<body>
 	  <div id="message">
 	    <h1>404</h1>
 	    <p>{% trans "A meiga stole this page, you better not mess with her." %}</p>
 	  </div>
-{% endblock %}
+  </body>
+</html>
