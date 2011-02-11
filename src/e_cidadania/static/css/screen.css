@@ -405,7 +405,7 @@ table#personal th {
 /* LOGIN */
 #loginblock {
     width: 300px;
-    height: 150px;
+    height: 175px;
     margin: 50px auto 50px auto;
     background: #f9f9f9;
     border: 1px solid #ddd;
@@ -420,8 +420,8 @@ table#personal th {
 }
 
 #loginblock fieldset legend {
-    padding: 0;
-    margin: 10px;
+    padding-top: 7px;
+    margin: 25px 10px 10px 10px;
     font-size: 1.6em;
     font-weight: bold;
 }
@@ -429,6 +429,15 @@ table#personal th {
 #loginblock label {
     margin: 15px;
     padding-top: 10px;
+}
+
+#loginblock a {
+    color: #666;
+}
+
+#loginblock a:hover {
+    color: #000;
+    text-decoration: underline;
 }
 /* ENDLOGIN */
 
