@@ -77,10 +77,14 @@ def delete_space(request, space_name):
 
     """
     """
+    place = get_object_or_404(Space, name=space_name)
     return delete_object(request,
                          model = Space,
-                         )
-    pass
+                         object_id = place.id,
+                         login_required = True,
+                         template_name = 'spaces/delete.html',
+                         template_object_name = 'get_place',
+                         post_delete_redirect = '/')
 
 def create_space(request):
 

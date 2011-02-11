@@ -124,7 +124,7 @@ input[type="text"], input[type="password"] {
 
 #userbar {
     float: right;
-    margin-right: 50px;
+    margin-right: 20px;
     margin-bottom: 10px;
     padding: 0 10px 2px 10px;
     height: 32px;
@@ -150,6 +150,16 @@ input[type="text"], input[type="password"] {
 
 #userbar a:hover {
     color: #AAA;
+}
+
+#userbar a.username {
+    color: #ededed;
+    line-height: 20px;
+    margin-top: 6px;
+    background: #5d5d5d;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
 }
 
 #menubar {
@@ -392,21 +402,36 @@ table#personal th {
     margin-right: 25px;
 }
 
+/* LOGIN */
 #loginblock {
-    width: 200px;
-    height: 120px;
+    width: 300px;
+    height: 150px;
     margin: 50px auto 50px auto;
-    background: #DDD;
-    border: 1px solid #666;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
     padding: 10px;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
 }
 
 #loginblock fieldset {
     margin: auto;
 }
-#loginblock legend {
-    margin: 15px;
+
+#loginblock fieldset legend {
+    padding: 0;
+    margin: 10px;
+    font-size: 1.6em;
+    font-weight: bold;
 }
+
+#loginblock label {
+    margin: 15px;
+    padding-top: 10px;
+}
+/* ENDLOGIN */
+
 
 /* PROPOSALS */
 #proposal-wrapper {

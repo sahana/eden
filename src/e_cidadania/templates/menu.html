@@ -2,9 +2,16 @@
   {% if user.is_authenticated %}
     <ul class="topnav">
       <li><a href="/">{% trans "Home" %}</a> | </li>
-      <li><a href="/none">{% trans "Language" %}</a>| </li>
       <li>
-        <a href="/accounts/">
+        <a href="/none">{% trans "Language" %}</a>
+        <ul class="subnav">
+          <li>Español</li>
+          <li>Gallego</li>
+          <li>Inglés</li>
+        </ul>
+      </li>
+      <li>
+        <a href="/accounts/" class="username">
           {% if user.get_profile.firstname %}
             {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
 	        {% else %}
@@ -23,7 +30,8 @@
 	  </ul>
   {% else %}
     <ul class="topnav">
-      <li><a href="/accounts/login">{% trans "Login" %}</a> | </li>
+      <li><a href="/">{% trans "Home" %}</a> | </li>
+      <li><a href="/accounts/login">{% trans "Login" %}</a>| </li>
       <li><a href="/none">{% trans "Language" %}</a></li>
 	  </ul>
 	{% endif %}

@@ -58,6 +58,9 @@ urlpatterns = patterns('',
     
     (r'^calendar/', include('apps.swingtime.urls')),
     
+    # i18n switcher
+    (r'^i18n/', include('django.conf.urls.i18n')),
+    
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
 
