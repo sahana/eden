@@ -2,89 +2,90 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-14 10:50+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-02-14 12:51\n"
+"Last-Translator: <admin@admin.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: models.py:32
 msgid "Male"
-msgstr ""
+msgstr "Hombre"
 
 #: models.py:33
 msgid "Female"
-msgstr ""
+msgstr "Mujer"
 
 #: models.py:47
 msgid "Name"
-msgstr ""
+msgstr "Nombre"
 
 #: models.py:48
 msgid "Surname"
-msgstr ""
+msgstr "Apellidos"
 
 #: models.py:49
 msgid "Gender"
-msgstr ""
+msgstr "Género"
 
 #: models.py:52
 msgid "Birth date"
-msgstr ""
+msgstr "Fecha de nacimiento"
 
 #: models.py:56
 msgid "Province"
-msgstr ""
+msgstr "Provincia"
 
 #: models.py:57
 msgid "Municipality"
-msgstr ""
+msgstr "Municipio"
 
 #: models.py:60
 msgid "Address"
-msgstr ""
+msgstr "Dirección"
 
 #: models.py:61
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: models.py:63
 msgid "Floor"
-msgstr ""
+msgstr "Piso"
 
 #: models.py:64
 msgid "Letter"
-msgstr ""
+msgstr "Letra"
 
 #: models.py:67
 msgid "Phone 1"
-msgstr ""
+msgstr "Teléfono 1"
 
 #: models.py:68 models.py:70
 msgid "9 digits maximum"
-msgstr ""
+msgstr "9 dígitos máximo"
 
 #: models.py:69
 msgid "Phone 2"
-msgstr ""
+msgstr "Teléfono 2"
 
 #: models.py:72
 msgid "Identification document"
-msgstr ""
+msgstr "Documento de identificación"
 
 #: models.py:75
 msgid "Website"
-msgstr ""
+msgstr "Sitio web"
 
 #: models.py:77
 msgid "The URL will be checked"
-msgstr ""
+msgstr "La URL se comprobará"

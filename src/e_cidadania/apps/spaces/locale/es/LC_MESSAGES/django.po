@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-14 10:49+0100\n"
-"PO-Revision-Date: 2011-02-14 10:56\n"
+"PO-Revision-Date: 2011-02-14 12:31\n"
 "Last-Translator: <admin@admin.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -60,36 +60,36 @@ msgstr "altura de 75 px"
 
 #: models.py:45
 msgid "Authorized groups"
-msgstr ""
+msgstr "Grupos autorizados"
 
 #: models.py:49
 msgid "Debate module"
-msgstr ""
+msgstr "Módulo de debate"
 
 #: models.py:50
 msgid "Proposals module"
-msgstr ""
+msgstr "Módulo de propuestas"
 
 #: models.py:51
 msgid "News module"
-msgstr ""
+msgstr "Módulo de noticias"
 
 #: models.py:52
 msgid "Calendar module"
-msgstr ""
+msgstr "Módulo de calendario"
 
 #: models.py:53
 msgid "Documents module"
-msgstr ""
+msgstr "Módulo de documentos"
 
 #: models.py:57
 msgid "Spaces"
-msgstr ""
+msgstr "Espacios"
 
 #: models.py:73
 msgid "Entities"
-msgstr ""
+msgstr "Entidades"
 
 #: models.py:83
 msgid "Document title"
-msgstr ""
+msgstr "Título del documento"
