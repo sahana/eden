@@ -16,13 +16,13 @@
       The following div is just a test, it's not menat to be in production
     {% endcomment %}
     <div>
-      <p><span style="font-size:3em;font-weight:bold;">e-cidadania</span> democracias participativas 2.0</p></br></br>
+      <p><span style="font-size:3em;font-weight:bold;">e-cidadania</span> democracias participativas 2.0</p><br /><br />
       <p style="font-size:1.3em;line-height:1.5em;text-align:justify;">e-cidadania es una herramienta de democracia participativa para
          ciudadanos. Tiene sistema de debates, propuestas, versionado de
          documentos, creación de espacios específicos para cada cliente,
          así como otras muchas funciones pero mejor pruébalo tú mismo.
       </p>
-      </br><span style="margin-left: 35%;"><img src="/{{ MEDIA_URL }}assets/sep.png"/></span></br>
+      <br /><span style="margin-left: 35%;"><img src="/{{ MEDIA_URL }}assets/sep.png"/></span><br />
     </div>
     
     
@@ -55,7 +55,7 @@
     </div>
     
     <div id="widget">
-      <h4>Lista de espacios</h4><br/>      
+      <h4>Lista de espacios</h4><br />      
         <select>
           {% for space in spaces %}
             <option>{{ space.name|capfirst }}</option>
@@ -84,6 +84,6 @@
 {% endblock %}
 
 {% block footer %}
-<p>Pie de pagina parala pagina principal</p></br></br>
+<p>Pie de pagina parala pagina principal</p><br /><br />
 {% endblock %}
 

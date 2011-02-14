@@ -17,3 +17,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+from django.forms import ModelForm
+
+from e_cidadania.apps.spaces.models import Space
+
+class SpaceForm(ModelForm):
+    
+    """
+    """
+    class Meta:
+        model = Space

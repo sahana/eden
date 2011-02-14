@@ -8,14 +8,14 @@
 <div id="loginblock">
 	<form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8">{% csrf_token %}
 	<fieldset>
-		<legend>{% trans "User login" %}</legend></br></br>
+		<legend>{% trans "User login" %}</legend>
 		
 		<label for="id_username">{% trans "Username" %}</label>
 		<p>{{ form.username }}
 			{% if form.username.errors %}
 				<span class="quiet red">{{ form.username.html_error_list }}</span>
 			{% endif %}
-		</p></br>
+		</p><br />
 		
 		<label for="id_password">{% trans "Password" %}</label>
 		<p>{{ form.password }}
@@ -26,7 +26,7 @@
 		{% if form.non_field_errors %}
 			<ul class="quiet red">{{ form.non_field_errors.as_ul }}</ul>
 		{% endif %}
-	</fieldset></br>
+	</fieldset><br />
 	<p><input type="submit" value="{% trans 'Login' %}" />
 	   <a href="{% url password_reset %}">{% trans "Lost your password?" %}</a> / 
 	   <a href="{% url signup %}">{% trans "Sign up!" %}</a>
