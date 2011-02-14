@@ -80,6 +80,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
+
 ROOT_URLCONF = 'e_cidadania.urls'
 
 TEMPLATE_DIRS = (

@@ -4,6 +4,12 @@
 {% block title %}{% trans "User login" %}{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
 
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+
 {% block content %}
 <div id="loginblock">
 	<form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8">{% csrf_token %}

@@ -19,8 +19,13 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.http import HttpResponse, HttpResponseRedirect
+
 from django.shortcuts import render_to_response, get_object_or_404
-from django.contrib.auth.decorators import login_required
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User, Group
+
+from django.contrib import messages
 
 from django.views.generic.list_detail import object_list
 from django.views.generic.list_detail import object_detail
@@ -28,8 +33,8 @@ from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
-from django.contrib.auth.models import User, Group
 from e_cidadania.apps.spaces.models import Space, Entity, Document
+from e_cidadania.apps.spaces.forms import SpaceForm
 
 def view_space_index(request, space_name):
 
@@ -41,6 +46,7 @@ def view_space_index(request, space_name):
     return object_detail(request,
                          queryset = Space.objects.all(),
                          object_id = place.id,
+                         #template_loader = 'django.template.loader',
                          template_name = 'spaces/index.html',
                          template_object_name = 'get_place',
                          extra_context = {
@@ -51,7 +57,6 @@ def view_space_index(request, space_name):
 
     #return render_to_response('spaces/index.html')
 
-@login_required
 def edit_space(request, space_name):
 
     """
@@ -71,7 +76,8 @@ def edit_space(request, space_name):
                              template_object_name = 'get_place',
                              post_save_redirect = '/')
     else:
-        return render_to_response('other/notallowed.html')
+        messages.warning(request, 'Que te crees que haces?')
+        #return render_to_response('userprofile/account/login.html')
     
 def delete_space(request, space_name):
 
@@ -86,6 +92,7 @@ def delete_space(request, space_name):
                          template_object_name = 'get_place',
                          post_delete_redirect = '/')
 
+@permission_required('Space.add_space')
 def create_space(request):
 
     """
@@ -98,4 +105,18 @@ def create_space(request):
                          # Change this, must redirect to the newly created
                          # space.
                          post_save_redirect = '/')
+
+#@permission_required('Space.add_space')
+#def create_space(request):
+
+#    """
+#    """
+#    space = Space()
+#    if request.POST:
+#        form = SpaceForm(data=request.POST, instance=space)
+#        form.is_valid():
+#            form.save()
+#    return render_to_response()
+
+
 
