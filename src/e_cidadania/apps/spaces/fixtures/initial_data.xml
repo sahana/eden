@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="1" model="spaces.space">
+        <field type="CharField" name="name">ejemplo</field>
+        <field type="TextField" name="description">Este es un espacio de ejemplo</field>
+        <field type="DateTimeField" name="date">2011-02-15 13:01:36</field>
+        <field to="auth.user" name="author" rel="ManyToOneRel">1</field>
+        <field type="FileField" name="logo">spaces/logos/logo_1.png</field>
+        <field type="FileField" name="banner">spaces/banners/banner_1.png</field>
+        <field type="BooleanField" name="mod_debate">False</field>
+        <field type="BooleanField" name="mod_proposals">False</field>
+        <field type="BooleanField" name="mod_news">True</field>
+        <field type="BooleanField" name="mod_cal">True</field>
+        <field type="BooleanField" name="mod_docs">True</field>
+        <field to="auth.group" name="authorized_groups" rel="ManyToManyRel"></field>
+    </object>
+    <object pk="1" model="spaces.entity">
+        <field type="CharField" name="name">Cidadania S. Coop.</field>
+        <field to="spaces.space" name="space" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="2" model="spaces.entity">
+        <field type="CharField" name="name">Otra entidad</field>
+        <field to="spaces.space" name="space" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="1" model="spaces.document">
+        <field type="CharField" name="title">Documento de ejemplo</field>
+        <field to="spaces.space" name="space" rel="ManyToOneRel">1</field>
+        <field type="FileField" name="docfile">spaces/documents/2011/02/15/guia_estilo.pdf</field>
+        <field type="DateTimeField" name="pub_date">2011-02-15 13:02:37</field>
+        <field to="auth.user" name="author" rel="ManyToOneRel">1</field>
+    </object>
+</django-objects><?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="1" model="spaces.space">
+        <field type="CharField" name="name">ejemplo</field>
+        <field type="TextField" name="description">Este es un espacio de ejemplo</field>
+        <field type="DateTimeField" name="date">2011-02-15 13:01:36</field>
+        <field to="auth.user" name="author" rel="ManyToOneRel">1</field>
+        <field type="FileField" name="logo">spaces/logos/logo_1.png</field>
+        <field type="FileField" name="banner">spaces/banners/banner_1.png</field>
+        <field type="BooleanField" name="mod_debate">False</field>
+        <field type="BooleanField" name="mod_proposals">False</field>
+        <field type="BooleanField" name="mod_news">True</field>
+        <field type="BooleanField" name="mod_cal">True</field>
+        <field type="BooleanField" name="mod_docs">True</field>
+        <field to="auth.group" name="authorized_groups" rel="ManyToManyRel"></field>
+    </object>
+    <object pk="1" model="spaces.entity">
+        <field type="CharField" name="name">Cidadania S. Coop.</field>
+        <field to="spaces.space" name="space" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="2" model="spaces.entity">
+        <field type="CharField" name="name">Otra entidad</field>
+        <field to="spaces.space" name="space" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="1" model="spaces.document">
+        <field type="CharField" name="title">Documento de ejemplo</field>
+        <field to="spaces.space" name="space" rel="ManyToOneRel">1</field>
+        <field type="FileField" name="docfile">spaces/documents/2011/02/15/guia_estilo.pdf</field>
+        <field type="DateTimeField" name="pub_date">2011-02-15 13:02:37</field>
+        <field to="auth.user" name="author" rel="ManyToOneRel">1</field>
+    </object>
+</django-objects>

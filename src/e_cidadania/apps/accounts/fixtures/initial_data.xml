@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="1" model="accounts.userprofile">
+        <field to="auth.user" name="user" rel="ManyToOneRel">1</field>
+        <field type="DateTimeField" name="date">2011-02-15 11:00:12</field>
+        <field type="CharField" name="country">ES</field>
+        <field type="DecimalField" name="latitude"><None></None></field>
+        <field type="DecimalField" name="longitude"><None></None></field>
+        <field type="CharField" name="location">Santiago de Compostela</field>
+        <field type="CharField" name="firstname">Administrador</field>
+        <field type="CharField" name="surname">Cidadania</field>
+        <field type="CharField" name="gender">M</field>
+        <field type="DateField" name="birthdate">1985-02-15</field>
+        <field type="CharField" name="province">A Coruña</field>
+        <field type="CharField" name="municipality">Santiago de Compostela</field>
+        <field type="CharField" name="address">Corredoira das Fraguas</field>
+        <field type="CharField" name="address_number">5</field>
+        <field type="CharField" name="address_floor">1</field>
+        <field type="CharField" name="address_letter">I</field>
+        <field type="CharField" name="phone"></field>
+        <field type="CharField" name="phone_alt"></field>
+        <field type="CharField" name="nid"></field>
+        <field type="CharField" name="website">http://www.cidadania.coop/</field>
+    </object>
+</django-objects>

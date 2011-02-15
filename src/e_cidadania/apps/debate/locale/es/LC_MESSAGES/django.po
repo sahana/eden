@@ -2,36 +2,37 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-14 20:20+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-02-15 09:55\n"
+"Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 
 #: models.py:33 models.py:47
 msgid "Title"
-msgstr ""
+msgstr "Título"
 
 #: models.py:34
 msgid "Objectives"
-msgstr ""
+msgstr "Objetivos"
 
 #: models.py:35 models.py:48
 msgid "Description"
-msgstr ""
+msgstr "Descripción"
 
 #: models.py:61
 msgid "Message"
-msgstr ""
+msgstr "Mensaje"
 
 #: models.py:62
 msgid "Explanation"
-msgstr ""
+msgstr "Explicación"

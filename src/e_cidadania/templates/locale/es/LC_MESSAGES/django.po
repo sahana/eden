@@ -1,0 +1,73 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-02-15 10:51+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: 404.html:38
+msgid ""
+"A meiga stole this page, you better not mess with her! For that we provide "
+"you an exit"
+msgstr "Una meiga nosha robado la página, mejor que no te metas con ella. Para "
+"ello te damos una salida"
+
+#: menu.html:4 menu.html.py:33
+msgid "Home"
+msgstr "Inicio"
+
+#: menu.html:6 menu.html.py:35
+msgid "Language"
+msgstr "Idioma"
+
+#: menu.html:23
+msgid "Administration"
+msgstr "Administración"
+
+#: menu.html:25
+msgid "Messages"
+msgstr "Mensajes"
+
+#: menu.html:26
+msgid "Edit profile"
+msgstr "Editar perfil"
+
+#: menu.html:27
+msgid "Logout"
+msgstr "Salir"
+
+#: menu.html:34
+msgid "Login"
+msgstr "Entrar"
+
+#: site_index.html:4
+msgid "e-cidadania"
+msgstr "e-cidadania"
+
+#: site_index.html:34
+msgid "Written by"
+msgstr "Escrito por"
+
+#: site_index.html:34
+msgid "on"
+msgstr "el"
+
+#: site_index.html:39
+msgid "Nothing published yet."
+msgstr "No hay nada publicado todavía."
+
+#: site_index.html:63
+msgid "No spaces"
+msgstr "No hay espacios"

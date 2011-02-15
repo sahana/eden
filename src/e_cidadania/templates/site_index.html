@@ -56,7 +56,7 @@
     
     <div id="widget">
       <h4>Lista de espacios</h4><br />      
-        <select>
+        <select onChange="submit()">
           {% for space in spaces %}
             <option>{{ space.name|capfirst }}</option>
           {% empty %}
