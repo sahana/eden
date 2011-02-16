@@ -27,6 +27,8 @@ from django.contrib.auth.models import User, Group
 
 from django.contrib import messages
 
+from django.template import RequestContext
+
 from django.views.generic.list_detail import object_list
 from django.views.generic.list_detail import object_detail
 from django.views.generic.create_update import create_object
@@ -92,31 +94,37 @@ def delete_space(request, space_name):
                          template_object_name = 'get_place',
                          post_delete_redirect = '/')
 
-@permission_required('Space.add_space')
-def create_space(request):
-
-    """
-    Create a new space using django shortcuts.
-    """
-    return create_object(request,
-                         model = Space,
-                         login_required = True,
-                         template_name = 'spaces/add.html',
-                         # Change this, must redirect to the newly created
-                         # space.
-                         post_save_redirect = '/')
-
 #@permission_required('Space.add_space')
 #def create_space(request):
 
 #    """
+#    Create a new space using django shortcuts.
 #    """
-#    space = Space()
-#    if request.POST:
-#        form = SpaceForm(data=request.POST, instance=space)
-#        form.is_valid():
-#            form.save()
-#    return render_to_response()
+#    return create_object(request,
+#                         model = Space,
+#                         login_required = True,
+#                         template_name = 'spaces/add.html',
+#                         # Change this, must redirect to the newly created
+#                         # space.
+#                         post_save_redirect = '/')
+
+@permission_required('Space.add_space')
+def create_space(request):
+
+    """
+    """
+    space = Space()
+    if request.POST:
+        form = SpaceForm(request.POST, request.FILES, instance=space)
+        if form.is_valid():
+            handle_uploaded_file(request.FILES['file'])
+            form.save()
+            return render_to_response('/')
+    else:
+        form = SpaceForm()
+    return render_to_response('spaces/add.html',
+                             {'form': form},
+                             context_instance=RequestContext(request)) 
 
 
 

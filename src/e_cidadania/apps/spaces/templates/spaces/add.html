@@ -5,21 +5,26 @@
 {% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
 
-{% block menubar %}
-{% endblock %}
-
 {% block content %}
 
-  {% block leftcol%}
-  {% endblock %}
-  
   {% block centercol %}
     <div id="centercol">
       <form action="" method="post">{% csrf_token %}
-        {{ form.as_p }}    
-        <p><input type="submit" value="Continue &rarr;" /></p>
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.name.errors }}
+          <label for="id_name">{% trans "Space name" %}:</label>
+          {{ form.name }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.description.errors }}
+          <label for="id_description">{% trans "Description" %}:</label>
+          {{ form.description }}
+        </div>
+        <p><input type="submit" value="{% trans 'Create' %}" /></p>
       </form>
     </div>
+
   {% endblock %}
   
   
