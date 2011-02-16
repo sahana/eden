@@ -29,7 +29,7 @@ from e_cidadania.apps.spaces.models import Space
 admin.autodiscover()
 
 # Index page extra context
-pub = Post.objects.all()
+pub = Post.objects.all().order_by(-pub_date)
 space_list = Space.objects.all()
 
 extra_context = {

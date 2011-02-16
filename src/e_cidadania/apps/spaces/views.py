@@ -118,6 +118,7 @@ def create_space(request):
         form = SpaceForm(request.POST, request.FILES, instance=space)
         if form.is_valid():
             handle_uploaded_file(request.FILES['file'])
+            form.author = request.user
             form.save()
             return render_to_response('/')
     else:

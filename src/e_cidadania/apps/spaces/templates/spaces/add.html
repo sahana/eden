@@ -21,7 +21,54 @@
           <label for="id_description">{% trans "Description" %}:</label>
           {{ form.description }}
         </div>
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
+        <div class="fieldWrapper">
+          {{ form.logo.errors }}
+          <label for="id_logo">{% trans "Logotype" %}:</label>
+          {{ form.logo }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.banner.errors }}
+          <label for="id_banner">{% trans "Banner" %}:</label>
+          {{ form.banner }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.authorized_groups.errors }}
+          <label for="id_authorized_groups">{% trans "authorized_groups" %}:</label>
+          {{ form.authorized_groups }}
+        </div>
+        
+        <hr/>
+        
+        <div class="fieldWrapper">
+          {{ form.mod_debate.errors }}
+          <label for="id_mod_debate">{% trans "Debate module" %}:</label>
+          {{ form.mod_debate }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.mod_proposals.errors }}
+          <label for="id_mod_proposals">{% trans "Proposals module" %}:</label>
+          {{ form.mod_proposals }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.mod_news.errors }}
+          <label for="id_mod_news">{% trans "News module" %}:</label>
+          {{ form.mod_news }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.mod_cal.errors }}
+          <label for="id_mod_cal">{% trans "Calendar module" %}:</label>
+          {{ form.mod_cal }}
+        </div>
+        <div class="fieldWrapper">
+          {{ form.mod_docs.errors }}
+          <label for="id_mod_docs">{% trans "Documentation module" %}:</label>
+          {{ form.mod_docs }}
+        </div>
+        
+        <hr />
+        
+        <p><input type<input type="submit" value="{% trans 'Create' %}" /></p>
+        <p><a href="/">&laquo; {% trans "Go back" %}</a></p> 
       </form>
     </div>
 
