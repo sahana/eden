@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-14 20:22+0100\n"
-"PO-Revision-Date: 2011-02-15 09:57\n"
+"POT-Creation-Date: 2011-02-17 11:07+0100\n"
+"PO-Revision-Date: 2011-02-17 11:19\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -33,7 +33,7 @@ msgstr "Nombre"
 msgid "All lowercase. Obligatory."
 msgstr "Todo en minúsculas. Obligatorio."
 
-#: models.py:34
+#: models.py:34 templates/spaces/add.html:21
 msgid "Description"
 msgstr "Descripción"
 
@@ -41,7 +41,7 @@ msgstr "Descripción"
 msgid "Author"
 msgstr "Autor"
 
-#: models.py:39
+#: models.py:39 templates/spaces/add.html:26
 msgid "Logotype"
 msgstr "Logotipo"
 
@@ -49,7 +49,7 @@ msgstr "Logotipo"
 msgid "100px width, 75px height"
 msgstr "100px de ancho, altura 75 px"
 
-#: models.py:42
+#: models.py:42 templates/spaces/add.html:31
 msgid "Banner"
 msgstr "Banner"
 
@@ -61,19 +61,19 @@ msgstr "altura de 75 px"
 msgid "Authorized groups"
 msgstr "Grupos autorizados"
 
-#: models.py:49
+#: models.py:49 templates/spaces/add.html:44
 msgid "Debate module"
 msgstr "Módulo de debate"
 
-#: models.py:50
+#: models.py:50 templates/spaces/add.html:49
 msgid "Proposals module"
 msgstr "Módulo de propuestas"
 
-#: models.py:51
+#: models.py:51 templates/spaces/add.html:54
 msgid "News module"
 msgstr "Módulo de noticias"
 
-#: models.py:52
+#: models.py:52 templates/spaces/add.html:59
 msgid "Calendar module"
 msgstr "Módulo de calendario"
 
@@ -97,6 +97,30 @@ msgstr "Título del documento"
 msgid "E-Cidadania Index"
 msgstr "e-cidadania Indice"
 
+#: templates/spaces/add.html:16
+msgid "Space name"
+msgstr "Nombre del espacio"
+
+#: templates/spaces/add.html:36
+msgid "authorized_groups"
+msgstr "Grupos autorizados"
+
+#: templates/spaces/add.html:64
+msgid "Documentation module"
+msgstr "Módulo de documentos"
+
+#: templates/spaces/add.html:70
+msgid "Create"
+msgstr "Crear"
+
+#: templates/spaces/add.html:71
+msgid "Go back"
+msgstr "Volver"
+
 #: templates/spaces/index.html:4
 msgid "Index"
 msgstr "Índice"
+
+#: templates/spaces/index.html:39
+msgid "No documents available"
+msgstr "Sin documentos"

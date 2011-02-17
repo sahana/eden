@@ -8,94 +8,123 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-14 20:22+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2011-02-17 11:07+0100\n"
+"PO-Revision-Date: 2011-02-17 10:47\n"
+"Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 
 #: admin.py:49
 msgid "Appearance"
-msgstr ""
+msgstr "Aparencia"
 
 #: admin.py:52
 msgid "Modules"
-msgstr ""
+msgstr "Módulos"
 
 #: models.py:32 models.py:68
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #: models.py:33
 msgid "All lowercase. Obligatory."
-msgstr ""
+msgstr "Todo en letras minúsculas. Obrigatorio."
 
-#: models.py:34
+#: models.py:34 templates/spaces/add.html:21
 msgid "Description"
-msgstr ""
+msgstr "Descrición"
 
 #: models.py:36 models.py:87
 msgid "Author"
-msgstr ""
+msgstr "Autor"
 
-#: models.py:39
+#: models.py:39 templates/spaces/add.html:26
 msgid "Logotype"
-msgstr ""
+msgstr "Logotipo"
 
 #: models.py:40
 msgid "100px width, 75px height"
-msgstr ""
+msgstr "ancho de 100px, altura 75px"
 
-#: models.py:42
+#: models.py:42 templates/spaces/add.html:31
 msgid "Banner"
-msgstr ""
+msgstr "Banner"
 
 #: models.py:43
 msgid "75px height"
-msgstr ""
+msgstr "altura 75px"
 
 #: models.py:45
 msgid "Authorized groups"
-msgstr ""
+msgstr "Grupos autorizados"
 
-#: models.py:49
+#: models.py:49 templates/spaces/add.html:44
 msgid "Debate module"
-msgstr ""
+msgstr "Módulo de debate"
 
-#: models.py:50
+#: models.py:50 templates/spaces/add.html:49
 msgid "Proposals module"
-msgstr ""
+msgstr "Módulo de propostas"
 
-#: models.py:51
+#: models.py:51 templates/spaces/add.html:54
 msgid "News module"
-msgstr ""
+msgstr "Módulo de noticias"
 
-#: models.py:52
+#: models.py:52 templates/spaces/add.html:59
 msgid "Calendar module"
-msgstr ""
+msgstr "Módulo de calendario"
 
 #: models.py:53
 msgid "Documents module"
-msgstr ""
+msgstr "Módulo de documentos"
 
 #: models.py:57
 msgid "Spaces"
-msgstr ""
+msgstr "Espazos"
 
 #: models.py:73
 msgid "Entities"
-msgstr ""
+msgstr "Entidades"
 
 #: models.py:83
 msgid "Document title"
-msgstr ""
+msgstr "Título do documento"
 
 #: templates/spaces/add.html:4
 msgid "E-Cidadania Index"
+msgstr "Índice de e-cidadanía"
+
+#: templates/spaces/add.html:16
+#, fuzzy
+msgid "Space name"
+msgstr "Espazos"
+
+#: templates/spaces/add.html:36
+#, fuzzy
+msgid "authorized_groups"
+msgstr "Grupos autorizados"
+
+#: templates/spaces/add.html:64
+#, fuzzy
+msgid "Documentation module"
+msgstr "Módulo de documentos"
+
+#: templates/spaces/add.html:70
+msgid "Create"
+msgstr ""
+
+#: templates/spaces/add.html:71
+msgid "Go back"
 msgstr ""
 
 #: templates/spaces/index.html:4
 msgid "Index"
-msgstr ""
+msgstr "Índice"
+
+#: templates/spaces/index.html:39
+#, fuzzy
+msgid "No documents available"
+msgstr "Título do documento"

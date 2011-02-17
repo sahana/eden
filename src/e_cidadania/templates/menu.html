@@ -21,6 +21,7 @@
 	      <ul class="subnav">
           {% if user.is_staff %}
 	          <li><a href="/admin">{% trans "Administration" %}</a></li>
+	          <li><a href="/rosetta">{% trans "Translation" %}</a></li>
 	        {% endif %}
 	          <li><a href="/accounts/messages">{% trans "Messages" %}</a></li>
 	          <li><a href="/accounts/edit/personal">{% trans "Edit profile" %}</li>

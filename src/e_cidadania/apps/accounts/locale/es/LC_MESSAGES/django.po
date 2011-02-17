@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-14 20:18+0100\n"
+"POT-Creation-Date: 2011-02-17 11:06+0100\n"
 "PO-Revision-Date: 2011-02-15 09:59\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -102,8 +102,12 @@ msgid "Password:"
 msgstr "Contraseña:"
 
 #: templates/accounts/logout.html:7
-msgid "Thanks for using e-cidadania. Now you can continue visting the website or log in again."
-msgstr "Gracias por usar e-Ciudadanía. Ahora puedes seguir visitando la página web o conectarse de nuevo."
+msgid ""
+"Thanks for using e-cidadania. Now you can continue visting the website or "
+"log in again."
+msgstr ""
+"Gracias por usar e-Ciudadanía. Ahora puedes seguir visitando la página web o "
+"conectarse de nuevo."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"

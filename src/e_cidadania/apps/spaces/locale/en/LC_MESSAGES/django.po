@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-14 20:22+0100\n"
+"POT-Creation-Date: 2011-02-17 11:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,7 +32,7 @@ msgstr ""
 msgid "All lowercase. Obligatory."
 msgstr ""
 
-#: models.py:34
+#: models.py:34 templates/spaces/add.html:21
 msgid "Description"
 msgstr ""
 
@@ -40,7 +40,7 @@ msgstr ""
 msgid "Author"
 msgstr ""
 
-#: models.py:39
+#: models.py:39 templates/spaces/add.html:26
 msgid "Logotype"
 msgstr ""
 
@@ -48,7 +48,7 @@ msgstr ""
 msgid "100px width, 75px height"
 msgstr ""
 
-#: models.py:42
+#: models.py:42 templates/spaces/add.html:31
 msgid "Banner"
 msgstr ""
 
@@ -60,19 +60,19 @@ msgstr ""
 msgid "Authorized groups"
 msgstr ""
 
-#: models.py:49
+#: models.py:49 templates/spaces/add.html:44
 msgid "Debate module"
 msgstr ""
 
-#: models.py:50
+#: models.py:50 templates/spaces/add.html:49
 msgid "Proposals module"
 msgstr ""
 
-#: models.py:51
+#: models.py:51 templates/spaces/add.html:54
 msgid "News module"
 msgstr ""
 
-#: models.py:52
+#: models.py:52 templates/spaces/add.html:59
 msgid "Calendar module"
 msgstr ""
 
@@ -96,6 +96,30 @@ msgstr ""
 msgid "E-Cidadania Index"
 msgstr ""
 
+#: templates/spaces/add.html:16
+msgid "Space name"
+msgstr ""
+
+#: templates/spaces/add.html:36
+msgid "authorized_groups"
+msgstr ""
+
+#: templates/spaces/add.html:64
+msgid "Documentation module"
+msgstr ""
+
+#: templates/spaces/add.html:70
+msgid "Create"
+msgstr ""
+
+#: templates/spaces/add.html:71
+msgid "Go back"
+msgstr ""
+
 #: templates/spaces/index.html:4
 msgid "Index"
+msgstr ""
+
+#: templates/spaces/index.html:39
+msgid "No documents available"
 msgstr ""

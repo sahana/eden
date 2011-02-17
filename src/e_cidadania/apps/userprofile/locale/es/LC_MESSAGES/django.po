@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-14 20:22+0100\n"
+"POT-Creation-Date: 2011-02-17 11:07+0100\n"
 "PO-Revision-Date: 2011-02-15 10:47\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -975,7 +975,9 @@ msgstr "país desconocido o no especificado"
 
 #: countries.py:253
 msgid "This value must be in COUNTRIES setting in localflavor.generic package."
-msgstr "Este valor debe estar en la variable COUNTRIES en el paquete localflavor.generic."
+msgstr ""
+"Este valor debe estar en la variable COUNTRIES en el paquete localflavor."
+"generic."
 
 #: forms.py:58
 #, python-format
@@ -988,7 +990,8 @@ msgstr "Debe seleccionar una de las opciones"
 
 #: forms.py:77
 msgid "You must select a portion of the image with a minimum of 96x96 pixels."
-msgstr "Debe seleccionar una porción de la imagen con un mínimo de 96x96 píxeles."
+msgstr ""
+"Debe seleccionar una porción de la imagen con un mínimo de 96x96 píxeles."
 
 #: forms.py:83 templates/userprofile/account/login.html:19
 #: templates/userprofile/account/registration.html:12
@@ -1011,8 +1014,12 @@ msgid "Password (again)"
 msgstr "Contraseña (otra vez)"
 
 #: forms.py:94
-msgid "That username has invalid characters. The valid values are letters, numbers and underscore."
-msgstr "Ese nombre de usuario contiene caracteres no válidos. Los valores válidos son letras, números y guión bajo."
+msgid ""
+"That username has invalid characters. The valid values are letters, numbers "
+"and underscore."
+msgstr ""
+"Ese nombre de usuario contiene caracteres no válidos. Los valores válidos "
+"son letras, números y guión bajo."
 
 #: forms.py:99
 msgid "The username is already registered."
@@ -1092,8 +1099,12 @@ msgstr "Enviar confirmación"
 
 #: templates/userprofile/account/email_validation.html:41
 #: templates/userprofile/account/email_validation_processed.html:21
-msgid "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation"
-msgstr "Introduzca la nueva dirección de correo electrónico. Un correo electrónico será enviado a él para la prueba y la confirmación"
+msgid ""
+"Insert the new e-mail address. An e-mail will be send to it for testing and "
+"confirmation"
+msgstr ""
+"Introduzca la nueva dirección de correo electrónico. Un correo electrónico "
+"será enviado a él para la prueba y la confirmación"
 
 #: templates/userprofile/account/email_validation_done.html:4
 msgid "E-mail validation successful"
@@ -1108,8 +1119,12 @@ msgid "E-mail address validated successfully"
 msgstr "Dirección de correo electrónico validado con éxito"
 
 #: templates/userprofile/account/email_validation_done.html:16
-msgid "The key you received via e-mail is no longer valid. Please try the e-mail validation process again"
-msgstr "La clave que recibió por correo electrónico ya no es válida. Por favor, intente el proceso de validación de correo electrónico nuevo"
+msgid ""
+"The key you received via e-mail is no longer valid. Please try the e-mail "
+"validation process again"
+msgstr ""
+"La clave que recibió por correo electrónico ya no es válida. Por favor, "
+"intente el proceso de validación de correo electrónico nuevo"
 
 #: templates/userprofile/account/email_validation_done.html:23
 #: templates/userprofile/account/email_validation_reset_response.html:22
@@ -1119,7 +1134,8 @@ msgstr "Proceso de validación de correo electrónico"
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
 msgid "You can manage the e-mail validation process from the"
-msgstr "Puede administrar el proceso de validación de correo electrónico desde la"
+msgstr ""
+"Puede administrar el proceso de validación de correo electrónico desde la"
 
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
@@ -1132,8 +1148,15 @@ msgid "E-mail change processed"
 msgstr "Cambio de e-mail procesado"
 
 #: templates/userprofile/account/email_validation_processed.html:14
-msgid "An e-mail has been sent to the new e-mail address to verify and activate it. Please access to your e-mail and complete this process following the instructions specified in the e-mail body"
-msgstr "Un e-mail ha sido enviado a la nueva dirección de correo electrónico para verificar y activarlo. Por favor, acceda a su correo electrónico y complete este proceso siguiendo las instrucciones especificadas en el mensaje del correo electrónico"
+msgid ""
+"An e-mail has been sent to the new e-mail address to verify and activate it. "
+"Please access to your e-mail and complete this process following the "
+"instructions specified in the e-mail body"
+msgstr ""
+"Un e-mail ha sido enviado a la nueva dirección de correo electrónico para "
+"verificar y activarlo. Por favor, acceda a su correo electrónico y complete "
+"este proceso siguiendo las instrucciones especificadas en el mensaje del "
+"correo electrónico"
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
 msgid "Validation e-mail sent"
@@ -1213,8 +1236,12 @@ msgstr "Cambio de contraseña"
 
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
-msgid "Password change utility page. Please enter your new password twice so we can verify you typed it in correctly"
-msgstr "Página de cambio de la contraseña. Por favor introduzca su nueva contraseña dos veces para que podamos verificar que esta correctamente escrita"
+msgid ""
+"Password change utility page. Please enter your new password twice so we can "
+"verify you typed it in correctly"
+msgstr ""
+"Página de cambio de la contraseña. Por favor introduzca su nueva contraseña "
+"dos veces para que podamos verificar que esta correctamente escrita"
 
 #: templates/userprofile/account/password_change_done.html:4
 #: templates/userprofile/account/password_reset_complete.html:4
@@ -1230,8 +1257,11 @@ msgid "Password key expired"
 msgstr "La llave de la contraseña ha expirado"
 
 #: templates/userprofile/account/password_expired.html:9
-msgid "The password key you're trying to use is expired. Please, request a new one"
-msgstr "La llave de contraseña que está tratando de utilizar ha expirado. Por favor, solicite una nueva"
+msgid ""
+"The password key you're trying to use is expired. Please, request a new one"
+msgstr ""
+"La llave de contraseña que está tratando de utilizar ha expirado. Por favor, "
+"solicite una nueva"
 
 #: templates/userprofile/account/password_reset.html:4
 #: templates/userprofile/account/password_reset.html:20
@@ -1251,25 +1281,40 @@ msgstr "Formulario de restablecimiento de contraseña"
 
 #: templates/userprofile/account/password_reset.html:38
 #: templates/userprofile/account/password_reset_done.html:17
-msgid "Forgotten your password? Enter your e-mail address, and we'll reset your password and e-mail the new one to you"
-msgstr "¿Olvidó su contraseña? Ingrese su dirección de e-mail y restableceremos la contraseña. Le enviaremos la nueva contraseña por correo electrónico."
+msgid ""
+"Forgotten your password? Enter your e-mail address, and we'll reset your "
+"password and e-mail the new one to you"
+msgstr ""
+"¿Olvidó su contraseña? Ingrese su dirección de e-mail y restableceremos la "
+"contraseña. Le enviaremos la nueva contraseña por correo electrónico."
 
 #: templates/userprofile/account/password_reset_complete.html:13
 msgid "Your password has been set.  You may go ahead and log in now."
-msgstr "Su contraseña se ha establecido. Puede seguir adelante e iniciar sesión ahora."
+msgstr ""
+"Su contraseña se ha establecido. Puede seguir adelante e iniciar sesión "
+"ahora."
 
 #: templates/userprofile/account/password_reset_complete.html:20
 #: templates/userprofile/account/password_reset_confirm.html:56
-msgid "Password reset utility page. Please enter your new password twice so we can verify you typed it in correctly"
-msgstr "Página de reestablecimiento de contraseña. Por favor introduzca su nueva clave dos veces para que podamos verificar que está bien escrita."
+msgid ""
+"Password reset utility page. Please enter your new password twice so we can "
+"verify you typed it in correctly"
+msgstr ""
+"Página de reestablecimiento de contraseña. Por favor introduzca su nueva "
+"clave dos veces para que podamos verificar que está bien escrita."
 
 #: templates/userprofile/account/password_reset_confirm.html:47
 msgid "Password reset unsuccessful"
 msgstr "De restablecimiento de contraseña sin éxito"
 
 #: templates/userprofile/account/password_reset_confirm.html:48
-msgid "The password reset link was invalid, possibly because it has already been used.  Please request a new password reset."
-msgstr "El enlace de restablecimiento de contraseña no es válido, posiblemente debido a que ya se ha utilizado. Por favor, solicite un restablecimiento de la contraseña nueva."
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a new password reset."
+msgstr ""
+"El enlace de restablecimiento de contraseña no es válido, posiblemente "
+"debido a que ya se ha utilizado. Por favor, solicite un restablecimiento de "
+"la contraseña nueva."
 
 #: templates/userprofile/account/password_reset_done.html:4
 #: templates/userprofile/account/password_reset_done.html:9
@@ -1277,8 +1322,12 @@ msgid "Password reset successful"
 msgstr "Contraseña restablecida con éxito"
 
 #: templates/userprofile/account/password_reset_done.html:10
-msgid "We've e-mailed you the instructions to obtain a new password. You should be receiving it shortly"
-msgstr "Hemos enviado por correo electrónico las instrucciones para obtener una nueva contraseña. Debería recibirlo en breves"
+msgid ""
+"We've e-mailed you the instructions to obtain a new password. You should be "
+"receiving it shortly"
+msgstr ""
+"Hemos enviado por correo electrónico las instrucciones para obtener una "
+"nueva contraseña. Debería recibirlo en breves"
 
 #: templates/userprofile/account/registration.html:4
 #: templates/userprofile/account/registration.html:11
@@ -1300,8 +1349,12 @@ msgstr "Registrar una cuenta nueva"
 
 #: templates/userprofile/account/registration.html:47
 #: templates/userprofile/account/registration_done.html:15
-msgid "Joining this community is quick and easy. You only need to fill the form to get access to all the private content"
-msgstr "Unirse a esta comunidad es rápido y fácil. Sólo tienes que llenar el formulario para obtener acceso a todo el contenido privado"
+msgid ""
+"Joining this community is quick and easy. You only need to fill the form to "
+"get access to all the private content"
+msgstr ""
+"Unirse a esta comunidad es rápido y fácil. Sólo tienes que llenar el "
+"formulario para obtener acceso a todo el contenido privado"
 
 #: templates/userprofile/account/registration_done.html:4
 msgid "Registration complete"
@@ -1339,8 +1392,12 @@ msgid "Done"
 msgstr "Hecho"
 
 #: templates/userprofile/avatar/choose.html:50
-msgid "Select an image from a remote URL. Put the URL on the input below and we'll retrieve the image for you"
-msgstr "Seleccione una imagen desde una URL remota. Ponga la dirección URL en la entrada de abajo y vamos a recuperar la imagen para usted"
+msgid ""
+"Select an image from a remote URL. Put the URL on the input below and we'll "
+"retrieve the image for you"
+msgstr ""
+"Seleccione una imagen desde una URL remota. Ponga la dirección URL en la "
+"entrada de abajo y vamos a recuperar la imagen para usted"
 
 #: templates/userprofile/avatar/choose.html:57
 #: templates/userprofile/avatar/search.html:4
@@ -1359,8 +1416,12 @@ msgstr "Avatar página de selección de"
 #: templates/userprofile/avatar/crop.html:54
 #: templates/userprofile/avatar/done.html:20
 #: templates/userprofile/avatar/search.html:51
-msgid "You have several options to select the image you want as avatar on your profile"
-msgstr "Usted tiene varias opciones para seleccionar la imagen que quieres como avatar en tu perfil"
+msgid ""
+"You have several options to select the image you want as avatar on your "
+"profile"
+msgstr ""
+"Usted tiene varias opciones para seleccionar la imagen que quieres como "
+"avatar en tu perfil"
 
 #: templates/userprofile/avatar/crop.html:4
 #: templates/userprofile/avatar/crop.html:31
@@ -1388,8 +1449,12 @@ msgid "Delete personal information"
 msgstr "Eliminar la información personal"
 
 #: templates/userprofile/profile/delete.html:10
-msgid "It erases all your private data except your username. You can refill the information later if you want to."
-msgstr "Borra todos tus datos privados, excepto su nombre de usuario. Usted puede rellenar la información posteriormente si lo desea."
+msgid ""
+"It erases all your private data except your username. You can refill the "
+"information later if you want to."
+msgstr ""
+"Borra todos tus datos privados, excepto su nombre de usuario. Usted puede "
+"rellenar la información posteriormente si lo desea."
 
 #: templates/userprofile/profile/delete.html:15
 msgid "Delete your personal information"
@@ -1601,5 +1666,9 @@ msgid "Public profile information"
 msgstr "Información pública de perfil"
 
 #: templatetags/avatars.py:68
-msgid "You have to provide only the size as             an integer (both sides will be equal) and optionally, the             username."
-msgstr "Usted tiene que proporcionar sólo el tamaño como un entero (ambos lados será igual) y, opcionalmente, el nombre de usuario."
+msgid ""
+"You have to provide only the size as             an integer (both sides will "
+"be equal) and optionally, the             username."
+msgstr ""
+"Usted tiene que proporcionar sólo el tamaño como un entero (ambos lados será "
+"igual) y, opcionalmente, el nombre de usuario."

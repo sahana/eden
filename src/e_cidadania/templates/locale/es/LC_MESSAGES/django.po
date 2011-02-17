@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-15 10:51+0100\n"
+"POT-Creation-Date: 2011-02-17 11:17+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,8 +21,9 @@ msgstr ""
 msgid ""
 "A meiga stole this page, you better not mess with her! For that we provide "
 "you an exit"
-msgstr "Una meiga nosha robado la página, mejor que no te metas con ella. Para "
-"ello te damos una salida"
+msgstr ""
+"Una meiga nosha robado la página, mejor que no te metas con ella. Para ello "
+"te damos una salida"
 
 #: menu.html:4 menu.html.py:33
 msgid "Home"
@@ -71,3 +72,87 @@ msgstr "No hay nada publicado todavía."
 #: site_index.html:63
 msgid "No spaces"
 msgstr "No hay espacios"
+
+#, fuzzy
+#~ msgid "Login again"
+#~ msgstr "Entrar"
+
+#, fuzzy
+#~ msgid "Message"
+#~ msgstr "Mensajes"
+
+#, fuzzy
+#~ msgid "registration profile"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "registration profiles"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "Log in"
+#~ msgstr "Entrar"
+
+#, fuzzy
+#~ msgid "Logged out"
+#~ msgstr "Salir"
+
+#, fuzzy
+#~ msgid "Language selection"
+#~ msgstr "Idioma"
+
+#, fuzzy
+#~ msgid "Logotype"
+#~ msgstr "Salir"
+
+#, fuzzy
+#~ msgid "Spaces"
+#~ msgstr "No hay espacios"
+
+#, fuzzy
+#~ msgid "E-Cidadania Index"
+#~ msgstr "e-cidadania"
+
+#, fuzzy
+#~ msgid "Mon"
+#~ msgstr "el"
+
+#, fuzzy
+#~ msgid "Togo"
+#~ msgstr "Salir"
+
+#, fuzzy
+#~ msgid "%s's profile"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "Location"
+#~ msgstr "Entrar"
+
+#, fuzzy
+#~ msgid "Remove profile"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "Done"
+#~ msgstr "el"
+
+#, fuzzy
+#~ msgid "Edit personal data"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "Delete profile"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "Public profile"
+#~ msgstr "Editar perfil"
+
+#, fuzzy
+#~ msgid "Not set yet"
+#~ msgstr "No hay nada publicado todavía."
+
+#, fuzzy
+#~ msgid "Not set"
+#~ msgstr "No hay espacios"
