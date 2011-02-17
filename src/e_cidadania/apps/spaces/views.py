@@ -36,6 +36,7 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.spaces.models import Space, Entity, Document
+from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm
 
 def view_space_index(request, space_name):
@@ -45,15 +46,18 @@ def view_space_index(request, space_name):
     """
     place = get_object_or_404(Space, name=space_name)
 
+    extra_context = {
+        'entities': Entity.objects.all().filter(space=place.id),
+        'documents': Document.objects.all().filter(space=place.id),
+        'news': Post.objects.all().filter(post_space=place.id).order_by('-post_pubdate'),
+    }
+    
     return object_detail(request,
                          queryset = Space.objects.all(),
                          object_id = place.id,
                          template_name = 'spaces/index.html',
                          template_object_name = 'get_place',
-                         extra_context = {
-                            'entities': Entity.objects.all().filter(space=place.id),
-                            'documents': Document.objects.all().filter(space=place.id),
-                            }
+                         extra_context = extra_context,
                         )
 
     #return render_to_response('spaces/index.html')
