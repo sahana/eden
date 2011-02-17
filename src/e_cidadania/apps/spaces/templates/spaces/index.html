@@ -10,27 +10,6 @@
 
 {% block content %}
 
-  {% block leftcol %}
-    <div id="leftcol">
-    
-        {% if get_place.mod_docs %}
-          <h2>Documentos</h2>
-          <ul>
-            {% for doc in documents %}
-              <li><a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a></li>
-            {% endfor %}
-          </ul>
-          <hr></hr>
-        {% endif %}
-        
-        {% if get_place.mod_cal %}
-          <h2>Calendario</h2>
-          <p>El calendario está activado</p>
-        {% endif %}
-
-    </div>
-  {% endblock %}
-
   {% block centercol %}
     <div id="centercol">
       
@@ -44,6 +23,32 @@
       Propuestas activado: {{ get_place.mod_proposals }}<br/>
       Este espacio fue creado el: {{ get_place.date }}<br/>
       Este espacio fue creado por: {{ get_place.author }}<br/>
+    </div>
+  {% endblock %}
+
+  {% block rightcol %}
+    <div id="rightcol">
+    
+        {% if get_place.mod_docs %}
+        <div id="widget">
+          <h2>Documentos</h2>
+          <ul>
+            {% for doc in documents %}
+              <li><a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a></li>
+            {% empty %}
+              <p>{% trans "No documents available" %}</p>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        
+        {% if get_place.mod_cal %}
+        <div id="widget">
+          <h2>Calendario</h2>
+          <p>El calendario está activado</p>
+        </div>
+        {% endif %}
+
     </div>
   {% endblock %}
 

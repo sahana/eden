@@ -21,21 +21,9 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib import admin
-from django.views.generic.simple import direct_to_template
-
-from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.spaces.models import Space
+#from django.views.generic.simple import direct_to_template
 
 admin.autodiscover()
-
-# Index page extra context
-pub = Post.objects.all().order_by(-pub_date)
-space_list = Space.objects.all()
-
-extra_context = {
-    'publication': pub,
-    'spaces': space_list,
-}
 
 urlpatterns = patterns('',
 
@@ -43,29 +31,32 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     
     # Index
-    (r'^$', direct_to_template, {
-        'template':'site_index.html',
-        'extra_context': extra_context
-        }
-    ),
+    (r'^$', 'views.index_view'),
+    #(r'^$', direct_to_template, {
+    #    'template':'site_index.html',
+    #    'extra_context': extra_context
+    #    }
+    #),
 
     # User accounts
-    #(r'^accounts/', include('apps.accounts.urls')),
     (r'^accounts/', include('apps.userprofile.urls')),
-    #(r'^accounts/', include('apps.registration.urls')),
     
+    # Spaces
     (r'^spaces/', include('apps.spaces.urls')),
     
+    # Calendar
     (r'^calendar/', include('apps.swingtime.urls')),
     
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
     
+    # Static content #### FOR DEVELOPMENT!! ####
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
 
 )
 
+# Activate rosetta translation engine
 if 'e_cidadania.apps.rosetta' in settings.INSTALLED_APPS:
     urlpatterns += patterns('',
         url(r'^rosetta/', include('apps.rosetta.urls')),

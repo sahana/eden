@@ -48,7 +48,6 @@ def view_space_index(request, space_name):
     return object_detail(request,
                          queryset = Space.objects.all(),
                          object_id = place.id,
-                         #template_loader = 'django.template.loader',
                          template_name = 'spaces/index.html',
                          template_object_name = 'get_place',
                          extra_context = {
