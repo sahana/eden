@@ -31,7 +31,7 @@ def index_view(request):
     because using directo_to_template in urls.py doesn't refresh the content
     (it's loaded only once).
     """
-    pub = Post.objects.all().order_by('-post_pubdate')
+    pub = Post.objects.filter(post_pub_index=True).order_by('-post_pubdate')
     space_list = Space.objects.all()
     
     extra_context = {

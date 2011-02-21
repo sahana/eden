@@ -47,9 +47,10 @@ def view_space_index(request, space_name):
     place = get_object_or_404(Space, name=space_name)
 
     extra_context = {
-        'entities': Entity.objects.all().filter(space=place.id),
-        'documents': Document.objects.all().filter(space=place.id),
-        'news': Post.objects.all().filter(post_space=place.id).order_by('-post_pubdate'),
+        'entities': Entity.objects.filter(space=place.id),
+        'documents': Document.objects.filter(space=place.id),
+        'publication': Post.objects.filter(post_space=place.id).order_by('-post_pubdate'),
+        'user': User.objects.get(username=place.author)
     }
     
     return object_detail(request,

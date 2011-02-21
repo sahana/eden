@@ -13,27 +13,26 @@
   {% block centercol %}
     <div id="centercol">
       
-      {% for news in publication %}
-      {% if news.post_pub_index %}
-        <div class="post">
-          <h1>{{ news.post_title }}</h1>
-          <p>{{ news.post_message }}</p>
-          <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
-        </div>
+      {% if get_place.mod_news %}
+        {% for news in publication %}
+          {% if news.post_pub_index %}
+            <div class="post">
+              <h1>{{ news.post_title }}</h1>
+              <p>{{ news.post_message }}</p>
+              <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
+            </div>
+          {% endif %}
+        {% empty %}
+          <div class="post">
+            <p>{% trans "Nothing published yet." %}</p>
+          </div>
+        {% endfor %}
       {% endif %}
-      {% empty %}
-      <div class="post">
-        <p>{% trans "Nothing published yet." %}</p>
-      </div>
-      {% endfor%}
     
     
       <h1>Datos de prueba</h1>
       Nombre: {{ get_place.name }}<br/>
       Descripcion: {{ get_place.description }}<br/>
-      Calendario activado: {{ get_place.mod_cal }}<br/>
-      Documentos activado: {{ get_place.mod_docs }}<br/>
-      Noticias activado: {{ get_place.mod_news }}<br/>
       Debate activado: {{ get_place.mod_debate }}<br/>
       Propuestas activado: {{ get_place.mod_proposals }}<br/>
       Este espacio fue creado el: {{ get_place.date }}<br/>
@@ -71,5 +70,7 @@
 {% endblock %}
 
 {% block footer %}
-  <p>Entidades que participan:</p> {% for e in entities %} {{e.name}} - {% endfor %}
+  <p>Entidades que participan:</p>
+  <p>{% for e in entities %} {{e.name}} - {% endfor %}</p>
+  <p>Espacio creado por: {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
 {% endblock %}
