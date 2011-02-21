@@ -27,17 +27,7 @@
             <p>{% trans "Nothing published yet." %}</p>
           </div>
         {% endfor %}
-      {% endif %}
-    
-    
-      <h1>Datos de prueba</h1>
-      Nombre: {{ get_place.name }}<br/>
-      Descripcion: {{ get_place.description }}<br/>
-      Debate activado: {{ get_place.mod_debate }}<br/>
-      Propuestas activado: {{ get_place.mod_proposals }}<br/>
-      Este espacio fue creado el: {{ get_place.date }}<br/>
-      Este espacio fue creado por: {{ get_place.author }}<br/>
-      
+      {% endif %}      
     </div>
   {% endblock %}
 
@@ -72,5 +62,5 @@
 {% block footer %}
   <p>Entidades que participan:</p>
   <p>{% for e in entities %} {{e.name}} - {% endfor %}</p>
-  <p>Espacio creado por: {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
+  <p>Espacio creado por: {{ user.get_profile.firstname }} {{ user.get_profile.surname }} el {{ get_place.date|date:"j/m/Y G:i"}}</p>
 {% endblock %}
