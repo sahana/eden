@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+import datetime
+
 from django.http import HttpResponse, HttpResponseRedirect
 
 from django.shortcuts import render_to_response, get_object_or_404
@@ -123,6 +125,7 @@ def create_space(request):
         if form.is_valid():
             handle_uploaded_file(request.FILES['file'])
             form.author = request.user
+            form.date = datetime.datetime.now()
             form.save()
             return render_to_response('/')
     else:
