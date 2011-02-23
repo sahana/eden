@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "E-Cidadania Index" %}{% endblock %}
+{% block title %}{% trans "Create new space" %}{% endblock %}
 {% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
 
@@ -36,9 +36,9 @@
           <label for="id_authorized_groups">{% trans "Authorized Groups" %}:</label>
           {{ form.authorized_groups }}
         </div>
-        
+
         <hr/>
-        
+
         <div class="fieldWrapper">
           {{ form.mod_debate.errors }}
           <label for="id_mod_debate">{% trans "Debate module" %}:</label>
@@ -64,18 +64,19 @@
           <label for="id_mod_docs">{% trans "Documentation module" %}:</label>
           {{ form.mod_docs }}
         </div>
-        
+
         <hr />
-        
-        <p><input type<input type="submit" value="{% trans 'Create' %}" /></p>
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p> 
+
+        <p><input type="submit" value="{% trans 'Create' %}" /></p>
+        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
       </form>
     </div>
 
   {% endblock %}
-  
-  
+
+
   {% block rightcol %}
   {% endblock %}
 
 {% endblock %}
+

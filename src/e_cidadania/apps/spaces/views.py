@@ -54,7 +54,7 @@ def view_space_index(request, space_name):
         'publication': Post.objects.filter(post_space=place.id).order_by('-post_pubdate'),
         'user': User.objects.get(username=place.author)
     }
-    
+
     return object_detail(request,
                          queryset = Space.objects.all(),
                          object_id = place.id,
@@ -63,8 +63,7 @@ def view_space_index(request, space_name):
                          extra_context = extra_context,
                         )
 
-    #return render_to_response('spaces/index.html')
-
+@permission_required('Space.edit_space')
 def edit_space(request, space_name):
 
     """
@@ -72,21 +71,21 @@ def edit_space(request, space_name):
     to edit spaces.
     """
     place = get_object_or_404(Space, name=space_name)
-    current_user = User.objects.get(username=request.user.username)
-    get_user_perm = current_user.has_perm('Space.edit_space')
-    
-    if get_user_perm:
-        return update_object(request,
-                             model = Space,
-                             object_id = place,
-                             login_required = True,
-                             template_name = 'spaces/edit.html',
-                             template_object_name = 'get_place',
-                             post_save_redirect = '/')
-    else:
-        messages.warning(request, 'Que te crees que haces?')
+#    current_user = User.objects.get(request.user)
+#    get_user_perm = current_user.has_perm('Space.edit_space')
+
+#    if get_user_perm:
+    return update_object(request,
+                         model = Space,
+                         object_id = place.id,
+                         login_required = True,
+                         template_name = 'spaces/edit.html',
+                         template_object_name = 'get_place',
+                         post_save_redirect = '/')
+#    else:
+#        messages.warning(request, 'Que te crees que haces?')
         #return render_to_response('userprofile/account/login.html')
-    
+
 def delete_space(request, space_name):
 
     """
@@ -100,39 +99,23 @@ def delete_space(request, space_name):
                          template_object_name = 'get_place',
                          post_delete_redirect = '/')
 
-#@permission_required('Space.add_space')
-#def create_space(request):
-
-#    """
-#    Create a new space using django shortcuts.
-#    """
-#    return create_object(request,
-#                         model = Space,
-#                         login_required = True,
-#                         template_name = 'spaces/add.html',
-#                         # Change this, must redirect to the newly created
-#                         # space.
-#                         post_save_redirect = '/')
-
 @permission_required('Space.add_space')
 def create_space(request):
 
     """
+    Create new spaces.
     """
     space = Space()
-    if request.POST:
-        form = SpaceForm(request.POST, request.FILES, instance=space)
-        if form.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            form.author = request.user
-            form.date = datetime.datetime.now()
-            form.save()
-            return render_to_response('/')
-    else:
-        form = SpaceForm()
+    form = SpaceForm(request.POST or None, request.FILES or None, instance=space)
+
+    if request.POST and form.is_valid():
+        handle_uploaded_file(request.FILES['file'])
+        form.author = request.user
+        form.date = datetime.datetime.now()
+        form.save(commit=False)
+        return render_to_response('/')
+
     return render_to_response('spaces/add.html',
                              {'form': form},
-                             context_instance=RequestContext(request)) 
-
-
+                             context_instance=RequestContext(request))
 
