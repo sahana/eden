@@ -33,7 +33,7 @@ class Space(models.Model):
                             help_text=_('All lowercase. Obligatory.'))
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, verbose_name=_('Author'))
+    author = models.ForeignKey(User, blank=True, null=True, verbose_name=_('Author'))
 
     logo = models.ImageField(upload_to='spaces/logos',
                              verbose_name=_('Logotype'),

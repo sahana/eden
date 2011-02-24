@@ -112,13 +112,11 @@ def create_space(request):
         form_uncommited = form.save(commit=False)
         form_uncommited.author = request.user
         if form.is_valid():
-        #handle_uploaded_file(request.FILES['file'])
-        #form.date = datetime.datetime.now()
-            form.uncommited.save()
+            form_uncommited.save()
             space = form.name
             return render_to_response(space)
-        else:
-            return render_to_response('spaces/add.html',
-                                     {'form': form},
-                                     context_instance=RequestContext(request))
+    
+    return render_to_response('spaces/add.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
 
