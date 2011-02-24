@@ -38,6 +38,12 @@ DATABASES = {
 
 TIME_ZONE = 'Europe/Madrid'
 LANGUAGE_CODE = 'es-ES'
+LANGUAGES = (
+    ('es', 'Spanish'),
+    ('en', 'English'),
+    ('gl', 'Galician'),
+)
+
 SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not
@@ -86,6 +92,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 )
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
@@ -118,3 +125,4 @@ INSTALLED_APPS = (
     'e_cidadania.apps.spaces',
     'e_cidadania.apps.swingtime',
 )
+
