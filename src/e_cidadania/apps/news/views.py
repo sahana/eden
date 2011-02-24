@@ -53,7 +53,7 @@ def add_post(request, space_name):
         space = Space.objects.get(name=space_name)
         form_uncommited.post_space = space.id
         
-        if form.is_valid():
+        if form_uncommited.is_valid():
             form_uncommited.save()
             return redirect('/')
     

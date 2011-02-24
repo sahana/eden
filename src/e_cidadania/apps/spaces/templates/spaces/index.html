@@ -30,6 +30,11 @@
           {% endif %}
         {% empty %}
           <div class="post">
+            {% if user.is_staff %}
+              <div id="tools">
+                <a href="{{ request.path }}news/add/">{% trans "Add news" %}</a>
+              </div>
+            {% endif %}
             <p>{% trans "Nothing published yet." %}</p>
           </div>
         {% endfor %}
