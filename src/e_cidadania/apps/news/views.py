@@ -36,31 +36,31 @@ from e_cidadania.apps.news.forms import NewsForm
 
 @permission_required('Post.add_post')
 def add_post(request, space_name):
-    
+
     """
     Create a new post. Only registered users belonging to a concrete group
     are allowed to create news. nly site administrators will be able to
     post news in the index page.
     """
-    
+
     form = NewsForm(request.POST or None)
-    
+
     if request.POST:
         form_uncommited = form.save(commit=False)
         form_uncommited.post_author = request.user
-        
+
         # Get space id
         space = Space.objects.get(name=space_name)
-        form_uncommited.post_space = space.id
-        
-        if form_uncommited.is_valid():
+        form_uncommited.post_space = space
+
+        if form.is_valid():
             form_uncommited.save()
             return redirect('/')
-    
+
     return render_to_response('news/add_post.html',
                               {'form': form},
                               context_instance=RequestContext(request))
-                         
+
 def delete_post(request, space_name):
 
     """
@@ -82,3 +82,4 @@ def edit_post(request):
                          login_required = True,
                          template_name = 'news/edit_post.html',
                          post_update_redirect = '/')
+

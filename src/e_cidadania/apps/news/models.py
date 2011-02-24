@@ -28,7 +28,7 @@ from tagging.models import Tag
 from e_cidadania.apps.spaces.models import Space
 
 class Post(models.Model):
-    
+
     """
     Model of a news post.
     """
@@ -36,9 +36,11 @@ class Post(models.Model):
     post_message = models.TextField(_('Text'))
     post_pubdate = models.DateTimeField(_('Date'), auto_now_add=True)
     post_lastup = models.DateTimeField(_('Last update'), auto_now=True)
-    post_author = models.ForeignKey(User, verbose_name=_('Author'))
+    post_author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
+                                    null=True)
     post_pub_index = models.BooleanField(_('Publish in index page'))
     post_space = models.ForeignKey(Space, verbose_name=_('Publish in'),
+                                   blank=True, null=True,
         help_text=_('If you want to post to the index leave this blank'))
 
     # Gives this error:
@@ -48,3 +50,4 @@ class Post(models.Model):
 
     def __unicode__(self):
         return self.post_title
+
