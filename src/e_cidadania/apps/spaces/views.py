@@ -22,7 +22,7 @@ import datetime
 
 from django.http import HttpResponse, HttpResponseRedirect
 
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
@@ -113,8 +113,8 @@ def create_space(request):
         form_uncommited.author = request.user
         if form.is_valid():
             form_uncommited.save()
-            space = form.name
-            return render_to_response(space)
+            space = form_uncommited.name
+            return redirect('/spaces/' + space)
     
     return render_to_response('spaces/add.html',
                               {'form': form},
