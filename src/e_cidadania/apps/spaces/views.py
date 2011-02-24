@@ -71,10 +71,7 @@ def edit_space(request, space_name):
     to edit spaces.
     """
     place = get_object_or_404(Space, name=space_name)
-#    current_user = User.objects.get(request.user)
-#    get_user_perm = current_user.has_perm('Space.edit_space')
 
-#    if get_user_perm:
     return update_object(request,
                          model = Space,
                          object_id = place.id,
@@ -82,13 +79,11 @@ def edit_space(request, space_name):
                          template_name = 'spaces/edit.html',
                          template_object_name = 'get_place',
                          post_save_redirect = '/')
-#    else:
-#        messages.warning(request, 'Que te crees que haces?')
-        #return render_to_response('userprofile/account/login.html')
 
 def delete_space(request, space_name):
 
     """
+    Delete the selected space and return to the index page.
     """
     place = get_object_or_404(Space, name=space_name)
     return delete_object(request,
@@ -103,7 +98,8 @@ def delete_space(request, space_name):
 def create_space(request):
 
     """
-    Create new spaces.
+    Create new spaces. In this view the author field is automatically filled
+    so we can't use a generic view.
     """
     space = Space()
     form = SpaceForm(request.POST or None, request.FILES or None, instance=space)

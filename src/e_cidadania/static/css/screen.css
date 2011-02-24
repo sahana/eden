@@ -112,6 +112,21 @@ input[type="text"], input[type="password"] {
 	display: none;
 }
 
+.fieldWrapper {
+    margin: 10px;
+    padding: 5px;
+    margin-left: 30px;
+}
+
+.fieldWrapper label {
+    display: block;
+    margin: 5px 12px 5px 12px;
+}
+
+.fieldWrapper #form_help_text {
+    display: block;
+    margin: 5px;
+}
 /* DIVS */
 
 #topbar {
@@ -191,7 +206,6 @@ input[type="text"], input[type="password"] {
     margin: 10px 10px 10px 10px;
     border-bottom: 1px solid #AAA;
 }
-
 
 /* SWINGTIME CALENDAR */
 table { border-collapse: collapse; font-size: 1em; }

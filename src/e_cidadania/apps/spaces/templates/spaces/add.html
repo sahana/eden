@@ -14,7 +14,8 @@
         <div class="fieldWrapper">
           {{ form.name.errors }}
           <label for="id_name">{% trans "Space name" %}:</label>
-          {{ form.name }}
+          <p>{{ form.name }}</p>
+          <p id="form_help_text">{{ form.name.help_text }}</p>
         </div>
         <div class="fieldWrapper">
           <label for="id_description">{% trans "Description" %}:</label>
@@ -34,32 +35,17 @@
         </div>
 
         <hr/>
+        <h3>{% trans "Modules" %}</h3>
 
         <div class="fieldWrapper">
-          <label for="id_mod_debate">{% trans "Debate module" %}:</label>
-          {{ form.mod_debate }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_mod_proposals">{% trans "Proposals module" %}:</label>
-          {{ form.mod_proposals }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_mod_news">{% trans "News module" %}:</label>
-          {{ form.mod_news }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_mod_cal">{% trans "Calendar module" %}:</label>
-          {{ form.mod_cal }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_mod_docs">{% trans "Documentation module" %}:</label>
-          {{ form.mod_docs }}
+          <label for="id_mod_debate">{% trans "Debate" %}:</label>{{ form.mod_debate }}
+          <label for="id_mod_proposals">{% trans "Proposals" %}:</label>{{ form.mod_proposals }}
+          <label for="id_mod_news">{% trans "News" %}:</label>{{ form.mod_news }}
+          <label for="id_mod_cal">{% trans "Calendar" %}:</label>{{ form.mod_cal }}
+          <label for="id_mod_docs">{% trans "Documentation" %}:</label>{{ form.mod_docs }}
         </div>
 
-        <div class="fieldWrapper">
-          <label for="id_author">{% trans "Author" %}:</label>
           {{ form.author.as_hidden }}
-        </div>
 
         <hr />
 
@@ -73,6 +59,11 @@
 
 
   {% block rightcol %}
+    <div id="rightcol">
+      <div id="widget">
+        <p>sadfsadfas</p>
+      </div>
+    </div>
   {% endblock %}
 
 {% endblock %}
