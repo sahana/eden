@@ -207,6 +207,10 @@ input[type="text"], input[type="password"] {
     border-bottom: 1px solid #AAA;
 }
 
+#tools {
+    float: right;
+    margin: 10px;
+}
 /* SWINGTIME CALENDAR */
 table { border-collapse: collapse; font-size: 1em; }
     td, th { padding: 2px; border: 1px solid #ccc; }

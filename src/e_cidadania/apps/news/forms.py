@@ -18,33 +18,13 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls.defaults import *
+from django.forms import ModelForm
 
-urlpatterns = patterns('apps.spaces.views',
+from e_cidadania.apps.news.models import Post
 
-    # News
-    (r'^(?P<space_name>\w+)/news/', include('apps.news.urls')),
+class NewsForm(ModelForm):
     
-    # Spaces
-    (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
-    
-    (r'^(?P<space_name>\w+)/delete/', 'delete_space'),
-    
-    (r'^add/', 'create_space'),
-    
-    (r'^(?P<space_name>\w+)/', 'view_space_index'),
-    
-    # Accounts
-    # DISABLED. Accounts will be site-wide
-    #(r'^(?P<space_name>\w+)/accounts/', include('apps.userprofile.urls')),
-    
-    # Debates
-#    (r'^debate/', include('apps.debates.urls')),
-    
-    # Proposals
-#    (r'^proposal/', include('apps.proposals.urls')),
-    
-    # Documents
-#    (r'^docs/', include('apps.docs.urls')),
-
-)
+    """
+    """
+    class Meta:
+        model = Post

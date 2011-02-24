@@ -27,6 +27,6 @@ urlpatterns = patterns('apps.news.views',
     
     (r'^delete/<post_id>/', 'delete_post'),
     
-    (r'^edit/<post_id>', 'edit_post')
+    (r'^edit/<post_id>', 'edit_post'),
 
 )

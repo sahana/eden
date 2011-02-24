@@ -52,7 +52,14 @@ def view_space_index(request, space_name):
         'entities': Entity.objects.filter(space=place.id),
         'documents': Document.objects.filter(space=place.id),
         'publication': Post.objects.filter(post_space=place.id).order_by('-post_pubdate'),
-        'user': User.objects.get(username=place.author)
+            
+        # BIG FUCKING SECURITY WARNING
+        # DO NOT TOUCH THIS. PIRATES ARE WATCHING
+        # When activating this line, accesing to a space gives
+        # automatically the permissions of the author (this can be
+        # from a simple moderator to the main admin of the system)
+        
+        #'user': User.objects.get(username=place.author)
     }
 
     return object_detail(request,
