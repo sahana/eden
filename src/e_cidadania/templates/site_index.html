@@ -7,8 +7,10 @@
 
 {% block centercol %}
   <div id="centercol">
-  
-  
+
+    <div id="tools">
+      <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
+    </div>
     {% comment %}
       The following div is just a test, it's not menat to be in production
     {% endcomment %}
@@ -21,8 +23,8 @@
       </p>
       <br /><span style="margin-left: 35%;"><img src="/{{ MEDIA_URL }}assets/sep.png"/></span><br />
     </div>
-    
-    
+
+
     {% for news in publication %}
       {% if news.post_pub_index %}
         <div class="post">
@@ -46,11 +48,11 @@
     <div id="widget">
       <p><span style="font-size: 23px;">¿Qué puedes hacer con e-cidadania?</span> <strong>Descúbrelo</strong></p>
     </div>
-    
+
     <div id="widget">
       <p><a href="/spaces/add">Crea tu propio espacio</a> dentro de e-cidadania</p>
     </div>
-    
+
     <div id="widget">
       <h4>Lista de espacios</h4><br />
         <form method="post" action="">{% csrf_token %}
@@ -63,15 +65,15 @@
           </select>
         </form>
     </div>
-    
+
     <div id="widget">
       <p>Espacios modificados recientemente</p>
     </div>
-    
+
     <div id="widget">
       <p>¡Conectate a través de Facebook, Twitter, RSS, o lo que quieras!</p>
     </div>
-    
+
     <div id="widget">
       <p>Desarrollo de e-cidadania</p>
       <p>¿Quieres echarnos una mano? Accede</p>

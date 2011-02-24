@@ -29,27 +29,25 @@ urlpatterns = patterns('',
 
     # Django administration
     (r'^admin/', include(admin.site.urls)),
-    
+
     # Index
     (r'^$', 'views.index_view'),
-    #(r'^$', direct_to_template, {
-    #    'template':'site_index.html',
-    #    'extra_context': extra_context
-    #    }
-    #),
 
     # User accounts
     (r'^accounts/', include('apps.userprofile.urls')),
-    
+
     # Spaces
     (r'^spaces/', include('apps.spaces.urls')),
-    
+
+    # News (this view of news is only for the index)
+    (r'^news/add', 'views.add_news'),
+
     # Calendar
     (r'^calendar/', include('apps.swingtime.urls')),
-    
+
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
-    
+
     # Static content #### FOR DEVELOPMENT!! ####
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
@@ -65,8 +63,9 @@ if 'e_cidadania.apps.rosetta' in settings.INSTALLED_APPS:
 # If DEBUG=True in settings.py add static content served by django.
 #if settings.DEBUG:
 #    urlpatterns += ('',
-#    
+#
 #    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
 #        {'document_root': 'static'}),
-#    
+#
 #    )
+
