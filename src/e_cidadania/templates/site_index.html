@@ -3,8 +3,6 @@
 
 {% block title %}{% trans "e-cidadania" %}{% endblock %}
 
-
-
 {% block content %}
 
 {% block centercol %}
@@ -54,14 +52,16 @@
     </div>
     
     <div id="widget">
-      <h4>Lista de espacios</h4><br />      
-        <select onChange="submit()">
-          {% for space in spaces %}
-            <option>{{ space.name|capfirst }}</option>
-          {% empty %}
-            <option>{% trans "No spaces" %}</option>
-          {% endfor %}
-        </select>
+      <h4>Lista de espacios</h4><br />
+        <form method="post" action="">{% csrf_token %}
+          <select onchange="window.location='/spaces/' + this.options[this.selectedIndex].value;">
+            {% for space in spaces %}
+              <option>{{ space.name }}</option>
+            {% empty %}
+              <option>{% trans "No spaces" %}</option>
+            {% endfor %}
+          </select>
+        </form>
     </div>
     
     <div id="widget">
