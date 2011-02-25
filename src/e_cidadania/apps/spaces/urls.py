@@ -32,6 +32,8 @@ urlpatterns = patterns('apps.spaces.views',
     
     (r'^add/', 'create_space'),
     
+    (r'^go/', 'go_to_space'),
+    
     (r'^(?P<space_name>\w+)/', 'view_space_index'),
     
     # Accounts

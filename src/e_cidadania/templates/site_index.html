@@ -69,14 +69,15 @@
 
     <div id="widget">
       <h4>Lista de espacios</h4><br />
-        <form method="post" action="">{% csrf_token %}
-          <select onchange="window.location='/spaces/' + this.options[this.selectedIndex].value;">
+        <form method="post" action="/spaces/go/">{% csrf_token %}
+          <select name="spaces">
             {% for space in spaces %}
               <option>{{ space.name }}</option>
             {% empty %}
               <option>{% trans "No spaces" %}</option>
             {% endfor %}
           </select>
+          <input type="submit" value="Go" />
         </form>
     </div>
 

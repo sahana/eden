@@ -41,6 +41,15 @@ from e_cidadania.apps.spaces.models import Space, Entity, Document
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm
 
+
+def go_to_space(request):
+
+    """
+    """
+    
+    if request.POST:
+        return redirect('/spaces/' + request.POST['spaces'])
+
 def view_space_index(request, space_name):
 
     """

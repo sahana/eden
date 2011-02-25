@@ -35,6 +35,7 @@ class Debate(models.Model):
     description = models.TextField(_('Description'))
     
     pub_date = models.DateTimeField(auto_now_add=True)
+    pub_author = models.ForeignKey(User)
     
     def __unicode__(self):
         return self.title
@@ -68,3 +69,5 @@ class Message(models.Model):
     
     def __unicode__(self):
         return self.message
+        
+#class Matrix(modes.Model)
