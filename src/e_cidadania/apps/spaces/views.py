@@ -45,6 +45,8 @@ from e_cidadania.apps.spaces.forms import SpaceForm
 def go_to_space(request):
 
     """
+    This view redirects to the space selected in the dropdown list in the
+    index page. It only uses a POST petition.
     """
     
     if request.POST:
