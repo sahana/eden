@@ -29,9 +29,9 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from django.contrib.auth.models import User
-from e_cidadania.apps.proposals.models import Proposal
+from apps.proposals.models import Proposal
 
-def add_proposal(request):
+def add_proposal(request, space_name):
 
     """
     Create a new proposal.
@@ -39,21 +39,27 @@ def add_proposal(request):
     return create_object(request,
                          model = Proposal,
                          login_required = True,
-                         template_name = 'proposals/add_proposal.html',
-                         post_save_redirect = 'proposals/list/')
+                         template_name = 'proposal/add_proposal.html',
+                         post_save_redirect = 'proposal/list/')
 
-def list_proposals(request):
+def list_proposals(request, space_name):
 
     """
     List all the proposals.
     """
     return object_list(request,
                        queryset = Proposal.objects.all(),
-                       template_name = 'proposals/list_proposals.html',
+                       template_name = 'proposal/list_proposals.html',
                        template_object_name = 'proposal')
                        
-def delete_proposal(request):
+def delete_proposal(request, space_name, prop_id):
     pass
     
-def edit_proposal(request):
+def edit_proposal(request, space_name, prop_id):
     pass
+
+def view_proposal(request, space_name, prop_id):
+    pass
+
+
+

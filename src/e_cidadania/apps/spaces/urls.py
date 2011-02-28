@@ -22,6 +22,9 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('apps.spaces.views',
 
+    # Proposals
+    (r'^(?P<space_name>\w+)/proposal/', include('apps.proposals.urls')),
+    
     # News
     (r'^(?P<space_name>\w+)/news/', include('apps.news.urls')),
     
@@ -42,9 +45,6 @@ urlpatterns = patterns('apps.spaces.views',
     
     # Debates
 #    (r'^debate/', include('apps.debates.urls')),
-    
-    # Proposals
-#    (r'^proposal/', include('apps.proposals.urls')),
     
     # Documents
 #    (r'^docs/', include('apps.docs.urls')),

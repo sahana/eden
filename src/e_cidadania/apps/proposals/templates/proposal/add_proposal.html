@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Add proposal" %}{% endblock %}
+
+{% block content %}
+    <form action="" method="post">{% csrf_token %}
+      {{ form.non_field_errors }}
+      
+      <div class="fieldWrapper">
+        {{ form.title.errors }}
+        <label for="id_name">{% trans "Title" %}:</label>
+        <p>{{ form.title }}</p>
+        <p id="form_help_text">{{ form.title.help_text }}</p>
+      </div>
+      
+      <div class="fieldWrapper">
+        {{ form.message.errors }}
+        <label for="id_description">{% trans "Message" %}:</label>
+        {{ form.message }}
+      </div>
+      
+      <div class="fieldWrapper">
+        {{ form.latitude.errors }}
+        <label for="id_logo">{% trans "Latitude" %}:</label>
+        {{ form.latitude }}
+      </div>
+      
+      <div class="fieldWrapper">
+        {{ form.longitude.errors }}
+        <label for="id_banner">{% trans "Longitude" %}:</label>
+        {{ form.longitude }}
+      </div>
+
+{% comment %}
+There are some fields that must be implemented, and show them when an admin
+edits.
+{% endcomment %}
+
+        <p><input type="submit" value="Continue &rarr;" /></p>
+    </form>
+{% endblock %}

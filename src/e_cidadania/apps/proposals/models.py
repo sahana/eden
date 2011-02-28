@@ -53,12 +53,13 @@ class Proposal(CommonData):
     Proposal model. This will store the user proposal in a similar
     way that Stackoverflow does.
     """
-    author = models.ForeignKey(User, related_name='proposal_authors')
+    author = models.ForeignKey(User, related_name='proposal_authors',
+                               blank=True, null=True)
     tags = TagField()
-    latitude = models.DecimalField(_('Latitude'), max_digits=8,
-                                                  decimal_places=6)
-    longitude = models.DecimalField(_('Longitude'), max_digits=8,
-                                                    decimal_places=6)
+    latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
+                                   max_digits=8, decimal_places=6)
+    longitude = models.DecimalField(_('Longitude'), blank=True, null=True,
+                                    max_digits=8, decimal_places=6)
     closed = models.BooleanField(default=False)
     closed_by = models.ForeignKey(User, blank=True, null=True,
                                   related_name='proposal_closed_by')
@@ -80,3 +81,5 @@ class Comment(CommonData):
     proposal = models.ForeignKey(Proposal)
     author = models.ForeignKey(User)
     votes = models.IntegerField()
+
+

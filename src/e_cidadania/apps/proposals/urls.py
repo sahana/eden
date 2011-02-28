@@ -22,13 +22,14 @@ from django.conf.urls.defaults import *
 from django.conf import settings
 
 urlpatterns = patterns('apps.proposals.views',
-    
-    (r'^edit/<prop-id>/', 'edit_proposal'),
-    
+
     (r'^add/', 'add_proposal'),
     
-    (r'^delete/<prop-id>', 'delete_proposal'),
+    (r'^edit/<prop_id>/', 'edit_proposal'),
+    
+    (r'^delete/<prop_id>', 'delete_proposal'),
 
     (r'^list/', 'list_proposals'),
 
+    (r'^(?P<prop_id>\w+)/', 'view_proposal'),
 )
