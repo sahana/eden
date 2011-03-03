@@ -30,7 +30,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecidadaniadotorg',
         'USER': 'pizte',
-        'PASSWORD': 's8yaz82bg14',
+        'PASSWORD': 'cGU809HEQpGaY',
         'HOST': 'mysql.ecidadania.org',
         'PORT': '',
     }
