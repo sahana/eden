@@ -9,7 +9,7 @@ import itertools
 from django.db.models.query import QuerySet
 from django.utils.safestring import mark_safe
 from dateutil import rrule
-from apps.swingtime.conf import settings as swingtime_settings
+from e_cidadania.apps.swingtime.conf import settings as swingtime_settings
 
 
 #-------------------------------------------------------------------------------

@@ -7,9 +7,9 @@ from django.db import models
 from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404, render_to_response
 
-from apps.swingtime.models import Event, Occurrence
-from apps.swingtime import utils, forms
-from apps.swingtime.conf import settings as swingtime_settings
+from e_cidadania.apps.swingtime.models import Event, Occurrence
+from e_cidadania.apps.swingtime import utils, forms
+from e_cidadania.apps.swingtime.conf import settings as swingtime_settings
 
 from dateutil import parser
 

@@ -1,6 +1,6 @@
 from django.contrib.contenttypes import generic
 from django.contrib import admin
-from apps.swingtime.models import *
+from e_cidadania.apps.swingtime.models import *
 
 #===============================================================================
 class EventTypeAdmin(admin.ModelAdmin):

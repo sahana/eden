@@ -9,9 +9,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.forms.extras.widgets import SelectDateWidget
 
 from dateutil import rrule
-from apps.swingtime.conf import settings as swingtime_settings
-from apps.swingtime import utils
-from apps.swingtime.models import *
+from e_cidadania.apps.swingtime.conf import settings as swingtime_settings
+from e_cidadania.apps.swingtime import utils
+from e_cidadania.apps.swingtime.models import *
 
 WEEKDAY_SHORT = (
     (7, _(u'Sun')),

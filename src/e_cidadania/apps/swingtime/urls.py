@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-from apps.swingtime import views
+from e_cidadania.apps.swingtime import views
 
 urlpatterns = patterns('',
     url(
