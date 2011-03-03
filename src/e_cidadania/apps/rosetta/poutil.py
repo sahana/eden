@@ -1,6 +1,6 @@
 import re, string, sys, os
 from django.conf import settings
-from apps.rosetta.conf import settings as rosetta_settings
+from e_cidadania.apps.rosetta.conf import settings as rosetta_settings
 
 try:
     set

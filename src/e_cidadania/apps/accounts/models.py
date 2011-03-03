@@ -25,7 +25,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from apps.userprofile.models import BaseProfile
+from e_cidadania.apps.userprofile.models import BaseProfile
 
 GENDER = (
 

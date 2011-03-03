@@ -31,19 +31,19 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
 
     # Index
-    (r'^$', 'views.index_view'),
+    (r'^$', 'e_cidadania.views.index_view'),
 
     # User accounts
-    (r'^accounts/', include('apps.userprofile.urls')),
+    (r'^accounts/', include('e_cidadania.apps.userprofile.urls')),
 
     # Spaces
-    (r'^spaces/', include('apps.spaces.urls')),
+    (r'^spaces/', include('e_cidadania.apps.spaces.urls')),
 
     # News (this view of news is only for the index)
-    (r'^news/add', 'views.add_news'),
+    (r'^news/add', 'e_cidadania.views.add_news'),
 
     # Calendar
-    (r'^calendar/', include('apps.swingtime.urls')),
+    (r'^calendar/', include('e_cidadania.apps.swingtime.urls')),
 
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
@@ -57,7 +57,7 @@ urlpatterns = patterns('',
 # Activate rosetta translation engine
 if 'e_cidadania.apps.rosetta' in settings.INSTALLED_APPS:
     urlpatterns += patterns('',
-        url(r'^rosetta/', include('apps.rosetta.urls')),
+        url(r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
     )
 
 # If DEBUG=True in settings.py add static content served by django.

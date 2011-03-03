@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 from django.views.generic.simple import direct_to_template
-from apps.userprofile.views import *
+from e_cidadania.apps.userprofile.views import *
 from django.conf import settings
 
 urlpatterns = patterns('',

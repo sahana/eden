@@ -20,13 +20,13 @@
 
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('apps.spaces.views',
+urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     # Proposals
-    (r'^(?P<space_name>\w+)/proposal/', include('apps.proposals.urls')),
+    (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
     
     # News
-    (r'^(?P<space_name>\w+)/news/', include('apps.news.urls')),
+    (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
     
     # Spaces
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
@@ -41,12 +41,12 @@ urlpatterns = patterns('apps.spaces.views',
     
     # Accounts
     # DISABLED. Accounts will be site-wide
-    #(r'^(?P<space_name>\w+)/accounts/', include('apps.userprofile.urls')),
+    #(r'^(?P<space_name>\w+)/accounts/', include('e_cidadania.apps.userprofile.urls')),
     
     # Debates
-#    (r'^debate/', include('apps.debates.urls')),
+#    (r'^debate/', include('e_cidadania.apps.debates.urls')),
     
     # Documents
-#    (r'^docs/', include('apps.docs.urls')),
+#    (r'^docs/', include('e_cidadania.apps.docs.urls')),
 
 )

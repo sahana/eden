@@ -27,11 +27,11 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db/sqlite.db',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'ecidadaniadotorg',
+        'USER': 'pizte',
+        'PASSWORD': 's8yaz82bg14',
+        'HOST': 'mysql.ecidadania.org',
         'PORT': '',
     }
 }
@@ -110,12 +110,12 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.admin',
-    'tagging',
 
     # Prebuilt modules
     #'e_cidadania.apps.registration',
     'e_cidadania.apps.rosetta', # Rosetta is for easy translation
     'e_cidadania.apps.userprofile',
+    'e_cidadania.apps.tagging',
 
     # Modules created for e-cidadania
     'e_cidadania.apps.accounts',
@@ -123,6 +123,6 @@ INSTALLED_APPS = (
     'e_cidadania.apps.news',
     'e_cidadania.apps.debate',
     'e_cidadania.apps.spaces',
-    'e_cidadania.apps.swingtime',
+    #'e_cidadania.apps.swingtime',
 )
 

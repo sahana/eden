@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 from django.views.generic.simple import direct_to_template
-urlpatterns = patterns('apps.rosetta.views',
+urlpatterns = patterns('e_cidadania.apps.rosetta.views',
     url(r'^$', 'home', name='rosetta-home'),
     url(r'^pick/$', 'list_languages', name='rosetta-pick-file'),
     url(r'^download/$', 'download_file', name='rosetta-download-file'),

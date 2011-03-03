@@ -5,9 +5,9 @@ from django.db.models import signals
 from django.db.models.fields import CharField
 from django.utils.translation import ugettext_lazy as _
 
-from tagging import settings
-from tagging.models import Tag
-from tagging.utils import edit_string_for_tags
+from e_cidadania.apps.tagging import settings
+from e_cidadania.apps.tagging.models import Tag
+from e_cidadania.apps.tagging.utils import edit_string_for_tags
 
 class TagField(CharField):
     """

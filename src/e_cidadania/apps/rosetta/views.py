@@ -7,9 +7,9 @@ from django.shortcuts import render_to_response
 from django.utils.encoding import smart_unicode, force_unicode, iri_to_uri
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
-from apps.rosetta.polib import pofile
-from apps.rosetta.poutil import find_pos, pagination_range
-from apps.rosetta.conf import settings as rosetta_settings
+from e_cidadania.apps.rosetta.polib import pofile
+from e_cidadania.apps.rosetta.poutil import find_pos, pagination_range
+from e_cidadania.apps.rosetta.conf import settings as rosetta_settings
 import re, os, e_cidadania.apps.rosetta, datetime, unicodedata, hashlib
 from django.template import RequestContext
 

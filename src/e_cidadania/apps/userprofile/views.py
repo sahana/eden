@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.translation import ugettext as _
-from apps.userprofile.forms import AvatarForm, AvatarCropForm, EmailValidationForm, \
+from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, EmailValidationForm, \
                               ProfileForm, RegistrationForm, LocationForm, \
                               PublicFieldsForm
 from django.http import Http404
@@ -13,7 +13,7 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from django.db import models
 from django.contrib.auth.models import User, SiteProfileNotAvailable
-from apps.userprofile.models import EmailValidation, Avatar
+from e_cidadania.apps.userprofile.models import EmailValidation, Avatar
 from django.template import RequestContext
 from django.conf import settings
 from xml.dom import minidom
