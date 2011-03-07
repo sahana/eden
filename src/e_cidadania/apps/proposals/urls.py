@@ -29,7 +29,7 @@ urlpatterns = patterns('apps.proposals.views',
     
     (r'^delete/<prop_id>', 'delete_proposal'),
 
-    (r'^list/', 'list_proposals'),
-
-    (r'^(?P<prop_id>\w+)/', 'view_proposal'),
+    (r'^view/(?P<prop_id>\w+)/', 'view_proposal'),
+        
+    (r'^$', 'list_proposals'),
 )

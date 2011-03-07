@@ -27,11 +27,11 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ecidadaniadotorg',
-        'USER': 'pizte',
-        'PASSWORD': 'cGU809HEQpGaY',
-        'HOST': 'mysql.ecidadania.org',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db/sqlite.db',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
         'PORT': '',
     }
 }

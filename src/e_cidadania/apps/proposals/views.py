@@ -21,6 +21,7 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 from django.views.generic.list_detail import object_list
 from django.views.generic.list_detail import object_detail
@@ -28,8 +29,8 @@ from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
-from django.contrib.auth.models import User
-from apps.proposals.models import Proposal
+from e_cidadania.apps.proposals.models import Proposal
+from e_cidadania.apps.spaces.models import Space
 
 def add_proposal(request, space_name):
 
@@ -47,8 +48,11 @@ def list_proposals(request, space_name):
     """
     List all the proposals.
     """
+    current_space = get_object_or_404(Space, name=space_name)
+    
     return object_list(request,
-                       queryset = Proposal.objects.all(),
+                       queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
+                       paginate_by = 50,
                        template_name = 'proposal/list_proposals.html',
                        template_object_name = 'proposal')
                        

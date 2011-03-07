@@ -5,14 +5,19 @@
 
 {% block content %}
 {{ proposal.title }}
-  {% for p in proposal %}
+  {% for p in proposal_list %}
     <div id="proposal-wrapper">
       <div id="votes"></div>
       <!-- Here goes the voting button -->
       <div id="proposal">
         <div class="title">{{ p.title }}</div>
-        <div class="resume">{{ p.resume }}</div>
-        <div class="creator">{% trans "proposed by " %}{{ p.author }}</div>
+        <div class="message">{{ p.message }}</div>
+        <div class="creator">{% trans "proposed by " %}{{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
+      </div>
+      <div class="proposal-tools">
+        <a href="edit/">{% trans "Edit" %}</a> |
+        <a href="add/">{% trans "Add" %}</a> | 
+        <a href="delete/">{% trans "Delete" %}</a>
       </div>
     </div>
    {% endfor %}

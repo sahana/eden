@@ -27,11 +27,13 @@ from django.conf import settings
 
 from e_cidadania.apps.tagging.fields import TagField
 from e_cidadania.apps.tagging.models import Tag
+from e_cidadania.apps.spaces.models import Space
 
 CLOSE_REASONS = (
     (1, _('Economically not viable')),
     (2, _('Legally not viable')),
     (3, _('Technically not viable')),
+    (4, _('Offtopic'))
 )
 
 class CommonData(models.Model):
@@ -53,8 +55,10 @@ class Proposal(CommonData):
     Proposal model. This will store the user proposal in a similar
     way that Stackoverflow does.
     """
+    belongs_to = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
                                blank=True, null=True)
+    #debatelink = models,ForeignKey()
     tags = TagField()
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
                                    max_digits=8, decimal_places=6)
@@ -66,7 +70,7 @@ class Proposal(CommonData):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     anon_allowed = models.BooleanField(default=False)
-    votes = models.IntegerField()
+    support_votes = models.IntegerField()
     
     def __unicode__(self):
         return self.title
