@@ -458,23 +458,32 @@ table#personal th {
 
 /* PROPOSALS */
 #proposal-wrapper {
-    width: 100%;
     border: none;
     background: none;
     margin: 10px;
+    border: 1px solid #000;
+        /* Fancy round borders for Webkit, Gecko and standard
+       implementations */
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    -moz-border-radius-bottomleft: 7px;
+    -moz-border-radius-bottomright: 7px;
+    -webkit-border-bottom-left-radius: 7px;
+    -webkit-border-bottom-right-radius: 7px;
 }
 
 #votes {
     float: left;
-    width: 100px;
-    height: 100px;
+    display: block;
+    width: 50px;
+    height: 50px;
     border: 1px solid #000;
     background: #CCC;
+    margin: 10px;
 }
 
 #proposal {
     float: left;
-    width: 100%;
     border: 1px solid #444;
     background: #CCC;
     margin: 10px;

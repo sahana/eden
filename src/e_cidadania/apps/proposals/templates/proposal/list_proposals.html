@@ -4,21 +4,32 @@
 {% block title %}{% trans "View proposals" %}{% endblock %}
 
 {% block content %}
-{{ proposal.title }}
-  {% for p in proposal_list %}
-    <div id="proposal-wrapper">
-      <div id="votes"></div>
-      <!-- Here goes the voting button -->
-      <div id="proposal">
-        <div class="title">{{ p.title }}</div>
-        <div class="message">{{ p.message }}</div>
-        <div class="creator">{% trans "proposed by " %}{{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
+
+  {% block centercol %}
+    <div id="centercol">
+    {{ proposal.title }}
+    {% for p in proposal_list %}
+      <div id="proposal-wrapper">
+        <div id="votes"></div>
+        <!-- Here goes the voting button -->
+        <div id="proposal">
+          <div class="title">{{ p.title }}</div>
+          <div class="message">{{ p.message }}</div>
+          <div class="creator">{% trans "proposed by " %}{{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
+        </div>
+        <div class="proposal-tools">
+          <a href="edit/">{% trans "Edit" %}</a> |
+          <a href="add/">{% trans "Add" %}</a> | 
+          <a href="delete/">{% trans "Delete" %}</a>
+        </div>
+        <div style="clear:left;"></div>
       </div>
-      <div class="proposal-tools">
-        <a href="edit/">{% trans "Edit" %}</a> |
-        <a href="add/">{% trans "Add" %}</a> | 
-        <a href="delete/">{% trans "Delete" %}</a>
-      </div>
+    {% endfor %}
     </div>
-   {% endfor %}
+  {% endblock %}
+  
+  {% block rightcol %}
+    Esto es una columna, ¿lo ves?
+  {% endblock %}
+
 {% endblock %}
