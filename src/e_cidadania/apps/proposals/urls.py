@@ -21,7 +21,7 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 
-urlpatterns = patterns('apps.proposals.views',
+urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
     (r'^add/', 'add_proposal'),
     
