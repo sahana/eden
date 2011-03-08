@@ -185,6 +185,12 @@ input[type="text"], input[type="password"] {
     border-radius: 5px;
 }
 
+#userbar form select {
+    background: #222;
+    border: none;
+    color: #EDEDED;
+}
+
 #centercol {
     float: left;
     padding: 15px;

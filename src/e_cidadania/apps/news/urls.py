@@ -21,7 +21,7 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 
-urlpatterns = patterns('apps.news.views',
+urlpatterns = patterns('e_cidadania.apps.news.views',
     
     (r'^add/', 'add_post'),
     
