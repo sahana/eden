@@ -8,10 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-17 11:17+0100\n"
+"POT-Creation-Date: 2011-03-09 18:37+0100\n"
 "PO-Revision-Date: 2011-02-17 10:45\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -25,134 +26,105 @@ msgstr ""
 "Unha meiga roubou esta páxina, é mellor non xogar con ela! Por iso "
 "ofrecémoslle unha saída"
 
-#: menu.html:4 menu.html.py:33
+#: base.html:74
+msgid "created by"
+msgstr "creado por"
+
+#: base.html:75
+msgid ""
+"We guarantee that this program will not become aware and take over the world"
+msgstr ""
+"Garantimos que este programa non vai tomar conciencia e apoderarse do mundo"
+
+#: menu.html:4 menu.html.py:36
 msgid "Home"
 msgstr "Inicio"
 
-#: menu.html:6 menu.html.py:35
-msgid "Language"
-msgstr "Idioma"
-
-#: menu.html:23
+#: menu.html:25
 msgid "Administration"
 msgstr "Administración"
 
-#: menu.html:25
+#: menu.html:26
+msgid "Translation"
+msgstr "Traducción"
+
+#: menu.html:28
 msgid "Messages"
 msgstr "Mensaxes"
 
-#: menu.html:26
+#: menu.html:29
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: menu.html:27
+#: menu.html:30
 msgid "Logout"
 msgstr "Saír"
 
-#: menu.html:34
+#: menu.html:37
 msgid "Login"
 msgstr "Entrar"
+
+#: menu.html:38
+msgid "Language"
+msgstr "Idioma"
 
 #: site_index.html:4
 msgid "e-cidadania"
 msgstr "e-cidadanía"
 
-#: site_index.html:34
+#: site_index.html:13
+msgid "Add news"
+msgstr "Engadir novas"
+
+#: site_index.html:32
 msgid "Written by"
 msgstr "Escrito por"
 
-#: site_index.html:34
+#: site_index.html:32
 msgid "on"
 msgstr "o"
 
-#: site_index.html:39
+#: site_index.html:37
 msgid "Nothing published yet."
 msgstr "Non hai nada publicado todavía."
 
-#: site_index.html:63
+#: site_index.html:52
+msgid "Create your own space"
+msgstr "Crea o teu propio espazo"
+
+#: site_index.html:52
+msgid "inside e-cidadania"
+msgstr "dentro de e-cidadanía"
+
+#: site_index.html:56
+msgid "Spaces list"
+msgstr "Lista de espazos"
+
+#: site_index.html:62
 msgid "No spaces"
 msgstr "Sen espazos"
 
-#, fuzzy
-#~ msgid "Login again"
-#~ msgstr "Entrar"
+#: site_index.html:65
+msgid "Go"
+msgstr "Ir"
 
-#, fuzzy
-#~ msgid "Message"
-#~ msgstr "Mensaxes"
+#: site_index.html:70
+msgid "Recently updated spaces"
+msgstr "Espazos actualizados recentemente"
 
+#: site_index.html:78
 #, fuzzy
-#~ msgid "registration profile"
-#~ msgstr "Editar perfil"
+msgid "e-cidadania development"
+msgstr "Desenvolvemento de e-cidadanía"
 
-#, fuzzy
-#~ msgid "registration profiles"
-#~ msgstr "Editar perfil"
+#: site_index.html:79
+msgid "Do you want to help?"
+msgstr "¿Queres axudar?"
 
-#, fuzzy
-#~ msgid "Log in"
-#~ msgstr "Entrar"
+#: site_index.html:79
+msgid "Access"
+msgstr "Accesa"
 
-#, fuzzy
-#~ msgid "Logged out"
-#~ msgstr "Saír"
-
-#, fuzzy
-#~ msgid "Language selection"
-#~ msgstr "Idioma"
-
-#, fuzzy
-#~ msgid "Logotype"
-#~ msgstr "Saír"
-
-#, fuzzy
-#~ msgid "Spaces"
-#~ msgstr "Sen espazos"
-
-#, fuzzy
-#~ msgid "E-Cidadania Index"
-#~ msgstr "e-cidadanía"
-
-#, fuzzy
-#~ msgid "Mon"
-#~ msgstr "o"
-
-#, fuzzy
-#~ msgid "Togo"
-#~ msgstr "Saír"
-
-#, fuzzy
-#~ msgid "%s's profile"
-#~ msgstr "Editar perfil"
-
-#, fuzzy
-#~ msgid "Location"
-#~ msgstr "Entrar"
-
-#, fuzzy
-#~ msgid "Remove profile"
-#~ msgstr "Editar perfil"
-
-#, fuzzy
-#~ msgid "Done"
-#~ msgstr "o"
-
-#, fuzzy
-#~ msgid "Edit personal data"
-#~ msgstr "Editar perfil"
-
-#, fuzzy
-#~ msgid "Delete profile"
-#~ msgstr "Editar perfil"
-
-#, fuzzy
-#~ msgid "Public profile"
-#~ msgstr "Editar perfil"
-
-#, fuzzy
-#~ msgid "Not set yet"
-#~ msgstr "Non hai nada publicado todavía."
-
-#, fuzzy
-#~ msgid "Not set"
-#~ msgstr "Sen espazos"
+#: site_index.html:88
+msgid "Main page footer"
+msgstr "Pé de páxina principal"

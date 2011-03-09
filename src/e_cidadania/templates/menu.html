@@ -35,7 +35,17 @@
     <ul class="topnav">
       <li><a href="/">{% trans "Home" %}</a> | </li>
       <li><a href="/accounts/login">{% trans "Login" %}</a>| </li>
-      <li><a href="/none">{% trans "Language" %}</a></li>
+      <li>
+        <form action="/i18n/setlang/" method="post">{% csrf_token %}
+          <input name="next" type="hidden" value="/" />
+          <select name="language" onchange="this.form.submit()">
+            <option>{% trans "Language" %}</option>
+            {% for lang in LANGUAGES %}
+              <option value="{{ lang.0 }}">{{ lang.1 }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </li>
 	  </ul>
 	{% endif %}
 

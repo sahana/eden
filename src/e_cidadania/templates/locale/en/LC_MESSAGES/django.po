@@ -8,10 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-17 11:17+0100\n"
+"POT-Creation-Date: 2011-03-09 18:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -22,50 +23,103 @@ msgid ""
 "you an exit"
 msgstr ""
 
-#: menu.html:4 menu.html.py:33
+#: base.html:74
+msgid "created by"
+msgstr ""
+
+#: base.html:75
+msgid ""
+"We guarantee that this program will not become aware and take over the world"
+msgstr ""
+
+#: menu.html:4 menu.html.py:36
 msgid "Home"
 msgstr ""
 
-#: menu.html:6 menu.html.py:35
-msgid "Language"
-msgstr ""
-
-#: menu.html:23
+#: menu.html:25
 msgid "Administration"
 msgstr ""
 
-#: menu.html:25
+#: menu.html:26
+msgid "Translation"
+msgstr ""
+
+#: menu.html:28
 msgid "Messages"
 msgstr ""
 
-#: menu.html:26
+#: menu.html:29
 msgid "Edit profile"
 msgstr ""
 
-#: menu.html:27
+#: menu.html:30
 msgid "Logout"
 msgstr ""
 
-#: menu.html:34
+#: menu.html:37
 msgid "Login"
+msgstr ""
+
+#: menu.html:38
+msgid "Language"
 msgstr ""
 
 #: site_index.html:4
 msgid "e-cidadania"
 msgstr ""
 
-#: site_index.html:34
+#: site_index.html:13
+msgid "Add news"
+msgstr ""
+
+#: site_index.html:32
 msgid "Written by"
 msgstr ""
 
-#: site_index.html:34
+#: site_index.html:32
 msgid "on"
 msgstr ""
 
-#: site_index.html:39
+#: site_index.html:37
 msgid "Nothing published yet."
 msgstr ""
 
-#: site_index.html:63
+#: site_index.html:52
+msgid "Create your own space"
+msgstr ""
+
+#: site_index.html:52
+msgid "inside e-cidadania"
+msgstr ""
+
+#: site_index.html:56
+msgid "Spaces list"
+msgstr ""
+
+#: site_index.html:62
 msgid "No spaces"
+msgstr ""
+
+#: site_index.html:65
+msgid "Go"
+msgstr ""
+
+#: site_index.html:70
+msgid "Recently updated spaces"
+msgstr ""
+
+#: site_index.html:78
+msgid "e-cidadania development"
+msgstr ""
+
+#: site_index.html:79
+msgid "Do you want to help?"
+msgstr ""
+
+#: site_index.html:79
+msgid "Access"
+msgstr ""
+
+#: site_index.html:88
+msgid "Main page footer"
 msgstr ""
