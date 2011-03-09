@@ -8,15 +8,14 @@
 {% block centercol %}
   <div id="centercol">
 
+    {% if user.is_staff %}
     <div id="tools">
       <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
     </div>
-    {% comment %}
-      The following div is just a test, it's not menat to be in production
-    {% endcomment %}
+    {% endif %}
     <div>
-      <p><span style="font-size:3em;font-weight:bold;">e-cidadania</span> democracias participativas 2.0</p><br /><br />
-      <p style="font-size:1.3em;line-height:1.5em;text-align:justify;">e-cidadania es una herramienta de democracia participativa para
+      <p><span class="introtitle">e-cidadania</span> democracias participativas 2.0</p><br /><br />
+      <p class="intro">e-cidadania es una herramienta de democracia participativa para
          ciudadanos. Tiene sistema de debates, propuestas, versionado de
          documentos, creación de espacios específicos para cada cliente,
          así como otras muchas funciones pero mejor pruébalo tú mismo.
@@ -50,11 +49,11 @@
     </div>
 
     <div id="widget">
-      <p><a href="/spaces/add">Crea tu propio espacio</a> dentro de e-cidadania</p>
+      <p><a href="/spaces/add">{% trans "Create your own space" %}</a> {% trans "inside e-cidadania" %}</p>
     </div>
 
     <div id="widget">
-      <h4>Lista de espacios</h4><br />
+      <h4>{% trans "Spaces list" %}</h4><br />
         <form method="post" action="/spaces/go/">{% csrf_token %}
           <select name="spaces">
             {% for space in spaces %}
@@ -63,12 +62,12 @@
               <option>{% trans "No spaces" %}</option>
             {% endfor %}
           </select>
-          <input type="submit" value="Go" />
+          <input type="submit" value="{% trans 'Go' %}" />
         </form>
     </div>
 
     <div id="widget">
-      <p>Espacios modificados recientemente</p>
+      <p>{% trans "Recently updated spaces" %}</p>
     </div>
 
     <div id="widget">
@@ -76,8 +75,8 @@
     </div>
 
     <div id="widget">
-      <p>Desarrollo de e-cidadania</p>
-      <p>¿Quieres echarnos una mano? Accede</p>
+      <p>{% trans "e-cidadania development" %}</p>
+      <p>{% trans "Do you want to help?" %} <a href="dev.e-cidadania.org">{% trans "Access" %}</a></p>
     </div>
 
   </div>
@@ -86,6 +85,6 @@
 {% endblock %}
 
 {% block footer %}
-<p>Pie de pagina parala pagina principal</p><br /><br />
+<p>{% trans "Main page footer" %}</p><br /><br />
 {% endblock %}
 

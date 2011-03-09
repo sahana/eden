@@ -8,7 +8,6 @@
 */
 
 /* CSS RESET */
-
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -61,11 +60,10 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
-
 /* END CSS RESET */
 
-/* HTML TAGS DEFINITION */
 
+/* HTML TAGS DEFINITION */
 body {
 	background: #FFF;
 	padding: 0;
@@ -87,7 +85,10 @@ p {
 img {
 	border: none;
 }
+/* END HTML TAGS DEFINITION */
 
+
+/* CUSTOMIZATIONS */
 input[type="submit"] {
     border: 1px solid #AAA;
     background: #CCC;
@@ -106,12 +107,6 @@ input[type="text"], input[type="password"] {
     -webkit-border-radius: 4px;
 }
 
-/* COMMON CLASSES */
-
-.hidden {
-	display: none;
-}
-
 .fieldWrapper {
     margin: 10px;
     padding: 5px;
@@ -127,8 +122,31 @@ input[type="text"], input[type="password"] {
     display: block;
     margin: 5px;
 }
-/* DIVS */
+/* END CUSTOMIZATIONS */
 
+
+/* COMMON CLASSES */
+.hidden {
+	display: none;
+}
+/* END COMMON CLASSES */
+
+
+/* OTHER CLASSES */
+.introtitle {
+    font-size: 3em;
+    font-weight: bold;
+}
+
+.intro {
+    font-size: 1.3em;
+    line-height: 1.5em;
+    text-align: justify;
+}
+/* END OTHER CLASSES */
+
+
+/* DIVS */
 #topbar {
     width: 100%;
     height: 35px;
@@ -217,114 +235,6 @@ input[type="text"], input[type="password"] {
     float: right;
     margin: 10px;
 }
-/* SWINGTIME CALENDAR */
-table { border-collapse: collapse; font-size: 1em; }
-    td, th { padding: 2px; border: 1px solid #ccc; }
-    th { background-color: #bba; }
-    dt { font-weight: bold; }
-dt { font-weight: bold; }
-    dd { margin-bottom: .5em; }
-form table { width: 100% }
-    form table ul { margin: 0; padding: 0;}
-    form table li { list-style-type: none; }
-    form table th { text-align: right; width: 10em; }
-    form tfoot td { text-align: center; background-color: #566; }
-.form-indent { margin-left: 2.5em; }
-.horizontal { width: 30em; }
-    .horizontal li { float: left; margin: 0; }
-    .horizontal li label { width: 4em; display: block; float: left; }
-#recurrence-options { float: left; }
-    #recurrence-options li { margin-bottom: 4px; }
-.calendar td, .calendar th { min-width: 10em; width: 10em; }
-.month-view td { vertical-align: top; height: 10em; min-height: 10em; }
-    .month-view td, .month-view th { min-width: 10em; width: 10em; }
-    .month-view .day-ordinal { font-weight: bold; font-size: 1.1em;
-        text-align: right; }
-    .month-view ul { list-style: none; margin: 1px 2px; padding: 0; }
-    .month-view .today { background-color: #eed; }
-.month-divider th, .month-divider td { border-top: 3px double #888; }
-#belts { list-style-type: none; }
-    #belts a { text-align: center; display: block; padding: 4px; width: 70%;
-        border: 1px solid #ccc; margin-bottom: .5em; font-weight: bold; }
-        #belts a:hover { font-style: italic; }
-#white-belt { background-color: #fff; color: #322; }
-    #yellow-belt { background-color: #fd0; color: #322; }
-    #green-belt { background-color: #693; color: #fff; }
-    #brown-belt { background-color: #655; color: #fff; }
-    #black-belt { background-color: #322; color: #fff; }
-.evt-spc-odd, .evt-spc-even  { background-color: #3b5153; color: #fff; }
-    .evt-spc-odd a, .evt-spc-even a { color: #fff; }
-    .evt-open-even, .evt-open-odd { background-color: #ccd; }
-    .evt-adv-odd, .evt-adv-even { background-color: #cdd; }
-    .evt-bgn-even, .evt-bgn-odd { background-color: #dd8; }
-    .evt-bbc-odd, .evt-bbc-even { background-color: #aaa; }
-    .evt-prv-odd { background-color: #8a9; }
-    .evt-prv-even { background-color: #acb; }
-
-/* USERBAR DROPDOWN */
-ul.topnav {
-	list-style: none;
-	padding: 0 0px;
-	margin: 0;
-	float: left;
-	/*width: 920px;*/
-	background: #222;
-	/*font-size: 1.2em;*/
-	background: url(topnav_bg.gif) repeat-x;
-}
-ul.topnav li {
-	float: left;
-	margin: 0;
-	padding: 0 0 0 0;
-	position: relative; /*--Declare X and Y axis base for sub navigation--*/
-}
-ul.topnav li a{
-	padding: 0px 5px;
-	color: #fff;
-	display: block;
-	text-decoration: none;
-	float: left;
-}
-ul.topnav li a:hover{
-	background: url(topnav_hover.gif) no-repeat center top;
-}
-ul.topnav li span { /*--Drop down trigger styles--*/
-	width: 17px;
-	height: 35px;
-	float: left;
-	margin-top: 0px;
-	background: url(/static/assets/subnav_btn.gif) no-repeat center top;
-}
-ul.topnav li span.subhover {background-position: center bottom; cursor: pointer;} /*--Hover effect for trigger--*/
-ul.topnav li ul.subnav {
-	list-style: none;
-	position: absolute; /*--Important - Keeps subnav from affecting main navigation flow--*/
-	left: 0; top: 32px;
-	background: #333;
-	margin: 0; padding: 0;
-	display: none;
-	float: left;
-	width: 100px;
-	border: 1px solid #111;
-}
-ul.topnav li ul.subnav li{
-	margin: 0; padding: 0;
-	border-top: 1px solid #252525; /*--Create bevel effect--*/
-	border-bottom: 1px solid #444; /*--Create bevel effect--*/
-	clear: both;
-	width: 100px;
-}
-html ul.topnav li ul.subnav li a {
-	float: left;
-	width: 90px;
-	background: #333 url(dropdown_linkbg.gif) no-repeat 10px center;
-	padding-left: -3px;
-}
-html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
-	background: #222 url(dropdown_linkbg.gif) no-repeat 10px center;
-}
-
-/* END STYLE FOR DROPDOWN */
 
 #header {
     margin: 0px auto;
@@ -422,6 +332,158 @@ table#personal th {
     margin-right: 25px;
 }
 
+/* FOOTER STYLE*/
+
+#footer {
+    clear: both;
+    width: 100%;
+    background: #333;
+    border-top: 1px solid #CCC;
+    line-height: 15px;
+    font-size: 10px;
+    color: #888;
+    text-align: right;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+#footer p {
+    padding: 2px;
+    margin: 5px 30px 5px 30px;
+}
+
+#footer a {
+    color: #DDD;
+}
+
+#footer a:hover, #footer a:visited {
+    color: #666;
+}
+
+#footerimg {
+    float: left;
+    margin-left: 30px;
+}
+/* END DIVS */
+
+
+/* SWINGTIME CALENDAR */
+table { border-collapse: collapse; font-size: 1em; }
+    td, th { padding: 2px; border: 1px solid #ccc; }
+    th { background-color: #bba; }
+    dt { font-weight: bold; }
+dt { font-weight: bold; }
+    dd { margin-bottom: .5em; }
+form table { width: 100% }
+    form table ul { margin: 0; padding: 0;}
+    form table li { list-style-type: none; }
+    form table th { text-align: right; width: 10em; }
+    form tfoot td { text-align: center; background-color: #566; }
+.form-indent { margin-left: 2.5em; }
+.horizontal { width: 30em; }
+    .horizontal li { float: left; margin: 0; }
+    .horizontal li label { width: 4em; display: block; float: left; }
+#recurrence-options { float: left; }
+    #recurrence-options li { margin-bottom: 4px; }
+.calendar td, .calendar th { min-width: 10em; width: 10em; }
+.month-view td { vertical-align: top; height: 10em; min-height: 10em; }
+    .month-view td, .month-view th { min-width: 10em; width: 10em; }
+    .month-view .day-ordinal { font-weight: bold; font-size: 1.1em;
+        text-align: right; }
+    .month-view ul { list-style: none; margin: 1px 2px; padding: 0; }
+    .month-view .today { background-color: #eed; }
+.month-divider th, .month-divider td { border-top: 3px double #888; }
+#belts { list-style-type: none; }
+    #belts a { text-align: center; display: block; padding: 4px; width: 70%;
+        border: 1px solid #ccc; margin-bottom: .5em; font-weight: bold; }
+        #belts a:hover { font-style: italic; }
+#white-belt { background-color: #fff; color: #322; }
+    #yellow-belt { background-color: #fd0; color: #322; }
+    #green-belt { background-color: #693; color: #fff; }
+    #brown-belt { background-color: #655; color: #fff; }
+    #black-belt { background-color: #322; color: #fff; }
+.evt-spc-odd, .evt-spc-even  { background-color: #3b5153; color: #fff; }
+    .evt-spc-odd a, .evt-spc-even a { color: #fff; }
+    .evt-open-even, .evt-open-odd { background-color: #ccd; }
+    .evt-adv-odd, .evt-adv-even { background-color: #cdd; }
+    .evt-bgn-even, .evt-bgn-odd { background-color: #dd8; }
+    .evt-bbc-odd, .evt-bbc-even { background-color: #aaa; }
+    .evt-prv-odd { background-color: #8a9; }
+    .evt-prv-even { background-color: #acb; }
+/* END SWINGTIME CALENDAR */
+
+
+/* USERBAR DROPDOWN */
+ul.topnav {
+	list-style: none;
+	padding: 0 0px;
+	margin: 0;
+	float: left;
+	/*width: 920px;*/
+	background: #222;
+	/*font-size: 1.2em;*/
+	background: url(topnav_bg.gif) repeat-x;
+}
+ul.topnav li {
+	float: left;
+	margin: 0;
+	padding: 0 0 0 0;
+	position: relative; /*--Declare X and Y axis base for sub navigation--*/
+}
+ul.topnav li a{
+	padding: 0px 5px;
+	color: #fff;
+	display: block;
+	text-decoration: none;
+	float: left;
+}
+ul.topnav li a:hover{
+	background: url(topnav_hover.gif) no-repeat center top;
+}
+ul.topnav li span { /*--Drop down trigger styles--*/
+	width: 17px;
+	height: 35px;
+	float: left;
+	margin-top: 0px;
+	background: url(/static/assets/subnav_btn.gif) no-repeat center top;
+}
+ul.topnav li span.subhover {background-position: center bottom; cursor: pointer;} /*--Hover effect for trigger--*/
+ul.topnav li ul.subnav {
+	list-style: none;
+	position: absolute; /*--Important - Keeps subnav from affecting main navigation flow--*/
+	left: 0; top: 32px;
+	background: #333;
+	margin: 0; padding: 0;
+	display: none;
+	float: left;
+	width: 100px;
+	border: 1px solid #111;
+}
+ul.topnav li ul.subnav li{
+	margin: 0; padding: 0;
+	border-top: 1px solid #252525; /*--Create bevel effect--*/
+	border-bottom: 1px solid #444; /*--Create bevel effect--*/
+	clear: both;
+	width: 100px;
+}
+html ul.topnav li ul.subnav li a {
+	float: left;
+	width: 90px;
+	background: #333 url(dropdown_linkbg.gif) no-repeat 10px center;
+	padding-left: -3px;
+}
+html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
+	background: #222 url(dropdown_linkbg.gif) no-repeat 10px center;
+}
+
+/* END STYLE FOR DROPDOWN */
+
+
+
+/********************/
+/* CUSTOM PAGES CSS */
+/********************/
+
 /* LOGIN */
 #loginblock {
     width: 300px;
@@ -468,7 +530,7 @@ table#personal th {
     background: none;
     margin: 10px;
     border: 1px solid #000;
-        /* Fancy round borders for Webkit, Gecko and standard
+    /* Fancy round borders for Webkit, Gecko and standard
        implementations */
     border-bottom-left-radius: 7px;
     border-bottom-right-radius: 7px;
@@ -538,37 +600,4 @@ table#personal th {
     margin: 15px;
 }
 /* END NEWS */
-
-/* FOOTER STYLE*/
-
-#footer {
-    clear: both;
-    width: 100%;
-    background: #333;
-    border-top: 1px solid #CCC;
-    line-height: 15px;
-    font-size: 10px;
-    color: #888;
-    text-align: right;
-    padding-top: 20px;
-    padding-bottom: 20px;
-}
-
-#footer p {
-    padding: 2px;
-    margin: 5px 30px 5px 30px;
-}
-
-#footer a {
-    color: #DDD;
-}
-
-#footer a:hover, #footer a:visited {
-    color: #666;
-}
-
-#footerimg {
-    float: left;
-    margin-left: 30px;
-}
 
