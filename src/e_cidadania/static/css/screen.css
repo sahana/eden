@@ -198,6 +198,7 @@ input[type="text"], input[type="password"] {
     line-height: 20px;
     margin-top: 6px;
     background: #5d5d5d;
+    margin-left: 5px;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
@@ -232,8 +233,9 @@ input[type="text"], input[type="password"] {
 }
 
 #tools {
-    float: right;
-    margin: 10px;
+    text-align: right;
+    margin: 5px;
+    padding: 5px;
 }
 
 #header {

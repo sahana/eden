@@ -8,11 +8,6 @@
 {% block centercol %}
   <div id="centercol">
 
-    {% if user.is_staff %}
-    <div id="tools">
-      <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
-    </div>
-    {% endif %}
     <div>
       <p><span class="introtitle">e-cidadania</span> democracias participativas 2.0</p><br /><br />
       <p class="intro">e-cidadania es una herramienta de democracia participativa para
@@ -23,10 +18,22 @@
       <br /><span style="margin-left: 35%;"><img src="/{{ MEDIA_URL }}assets/sep.png"/></span><br />
     </div>
 
-
+    {% if user.is_staff %}
+    <div id="tools">
+      <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
+    </div>
+    {% endif %}
+    
     {% for news in publication %}
       {% if news.post_pub_index %}
         <div class="post">
+          {% if user.is_staff %}
+            <div id="tools">
+              {% comment %}¡¡CAREFUL!! This does not work{% endcomment %}
+              <a href="edit/">{% trans "Edit" %}</a> | 
+              <a href="delete/">{% trans "Delete" %}</a>
+            </div>
+          {% endif %}
           <h1>{{ news.post_title }}</h1>
           <p>{{ news.post_message }}</p>
           <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
@@ -67,16 +74,20 @@
     </div>
 
     <div id="widget">
-      <p>{% trans "Recently updated spaces" %}</p>
+      <h4>{% trans "Recently updated spaces" %}</h4>
     </div>
 
     <div id="widget">
-      <p>¡Conectate a través de Facebook, Twitter, RSS, o lo que quieras!</p>
+      <h4>Compartir</h4><br />
+      <img src="/{{ MEDIA_URL }}assets/logos/rss_logo.png" alt="Feed RSS"/>
+      <a href="http://www.facebook.com/cidadania.coop"><img src="/{{ MEDIA_URL }}assets/logos/facebook_logo.png" alt="Facebook"/></a>
+      <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
+      <a href="http://identi.ca/ecidadania"><img src="/{{ MEDIA_URL }}assets/logos/identica_logo.png" alt="Compartir en Identi.ca"/></a>
     </div>
 
     <div id="widget">
       <p>{% trans "e-cidadania development" %}</p>
-      <p>{% trans "Do you want to help?" %} <a href="dev.e-cidadania.org">{% trans "Access" %}</a></p>
+      <p>{% trans "Do you want to help?" %} <a href="http://dev.e-cidadania.org">{% trans "Access" %}</a></p>
     </div>
 
   </div>
