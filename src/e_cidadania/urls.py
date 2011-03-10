@@ -21,7 +21,7 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib import admin
-#from django.views.generic.simple import direct_to_template
+from django.views.generic.simple import direct_to_template
 
 admin.autodiscover()
 
@@ -51,6 +51,12 @@ urlpatterns = patterns('',
     # Static content #### FOR DEVELOPMENT!! ####
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
+    
+    # Terms of service
+    (r'^terms/', 'direct_to_template', {'template': 'terms.html'}),
+
+    # About
+    (r'^about/', 'direct_to_template', {'template': 'about.html'}),
 
 )
 

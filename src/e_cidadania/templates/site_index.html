@@ -84,11 +84,11 @@
       <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
       <a href="http://tuenti.com"><img src="/{{ MEDIA_URL }}assets/logos/tuenti_logo.png" alt="Compartir en Tuenti"/></a>
       <a href="http://identi.ca/ecidadania"><img src="/{{ MEDIA_URL }}assets/logos/identica_logo.png" alt="Compartir en Identi.ca"/></a>
-      {% trans "If you are in another netkwork, please tell us!" %}
+      <p><br />{% trans "Your favourite social site isn't here? Tell us!" %}</p>
     </div>
 
     <div id="widget">
-      <p>{% trans "e-cidadania development" %}</p>
+      <h4>{% trans "e-cidadania development" %}</h4>
       <p>{% trans "Do you want to help?" %} <a href="http://dev.e-cidadania.org">{% trans "Access" %}</a></p>
     </div>
 
@@ -98,6 +98,6 @@
 {% endblock %}
 
 {% block footer %}
-<p>{% trans "Main page footer" %}</p><br /><br />
+<p>{% trans "About" %} | {% trans "Developers" %} | {% trans "Terms of service" %} | {% trans "Help"%}</p><br /><br />
 {% endblock %}
 
