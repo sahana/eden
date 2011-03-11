@@ -1,0 +1,49 @@
+{% load i18n %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
+	<head>
+		<title>{% block title %}500 - Server error{% endblock %}</title>
+		<link rel="shortcut icon" href="/{{ MEDIA_URL }}assets/favicon.ico" type="image/ico"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="Description" content="Site description"/>
+		<meta name="Robots" content="all"/>
+		
+		<style type="text/css">
+		  body {
+		    background: #000;
+		    font-family: arial;
+		    color: #5d5d5d;
+		  }
+		  
+		  a {
+		    color: #5d5d5d;
+		    text-decoration: none;
+		  }
+		  
+		  a:visited {
+		    color: #333;
+		  }
+		  #message {
+		    background: #000;
+		    font-size: 50px;
+
+		    margin: auto;
+		  }
+		  
+		</style>
+	</head>
+	<body>
+	  <p style="font-size: 30px;">500 Server error</p>
+	  <div id="message">{% trans "Now you did it, the server is broken." %}</div>
+	  	  <p>We must send the spaguetti squad to repair this.</p><br /><br />
+	      <strong>{% trans "Take me out of here!" %}</strong><br /><br />
+	      <a href="http://ecidadania.org">{% trans "Home" %}</a> | 
+	      <a href="http://dev.ecidadania.org">{% trans "Development" %}</a> |
+	      <a href="#">{% trans "Help" %}</a> |
+	      <a href="#">{% trans "Terms of service" %}</a> |
+	      <a href="#">{% trans "Privacy" %}</a> |
+	      <a href="#">{% trans "About" %}</a>
+	    </p>
+	  </div>
+  </body>
+</html>
