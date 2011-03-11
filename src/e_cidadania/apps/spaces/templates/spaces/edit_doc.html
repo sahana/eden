@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Edit news" %}{% endblock %}
+{% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div id="centercol">
+      <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+
+        {{ form.as_p }}
+
+        <hr />
+
+        <p><input type="submit" value="{% trans 'Create' %}" /></p>
+        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
+      </form>
+    </div>
+  {% endblock %}
+
+{% endblock %}
+

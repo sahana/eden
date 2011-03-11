@@ -44,12 +44,15 @@
 
         {% if get_place.mod_docs %}
         <div id="widget">
-          <h2>Documentos</h2>
+          <h2>{% trans "Documents" %}</h2>
           <ul>
             {% for doc in documents %}
               <li><a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a></li>
             {% empty %}
               <p>{% trans "No documents available" %}</p>
+              {% if user.is_staff %}
+                <br /><p><a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</p>
+              {% endif %}
             {% endfor %}
           </ul>
         </div>
@@ -57,7 +60,7 @@
 
         {% if get_place.mod_cal %}
         <div id="widget">
-          <h2>Calendario</h2>
+          <h2>{% trans "Calendar" %}</h2>
           <p>El calendario está activado</p>
         </div>
         {% endif %}

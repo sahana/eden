@@ -31,10 +31,8 @@ from django.contrib import messages
 
 from django.template import RequestContext
 
-from django.views.generic.list_detail import object_list
-from django.views.generic.list_detail import object_detail
-from django.views.generic.create_update import create_object
-from django.views.generic.create_update import update_object
+from django.views.generic.list_detail import object_list, object_detail
+from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.spaces.models import Space, Entity, Document
@@ -134,3 +132,34 @@ def create_space(request):
                               {'form': form},
                               context_instance=RequestContext(request))
 
+#
+# DOCUMENTS VIEWS
+#
+
+def add_doc(request, space_name):
+    
+    """
+    """
+    
+    return create_object(request,
+                         model = Document,
+                         )
+    pass
+
+def edit_doc(request, space_name, doc_id):
+
+    """
+    """
+    pass
+
+def delete_doc(request, space_name, doc_id):
+
+    """
+    """
+    pass
+
+def list_all_docs(request, space_name):
+
+    """
+    """
+    pass
