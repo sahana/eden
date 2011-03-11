@@ -61,7 +61,7 @@ def add_post(request, space_name):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-def delete_post(request, space_name):
+def delete_post(request, space_name, post_id):
 
     """
     Delete an existent post. Post deletion is only reserved to spaces
@@ -69,21 +69,21 @@ def delete_post(request, space_name):
     """
     return delete_object(request,
                          model = Post,
+                         object_id = post_id,
                          login_required=True,
-                         template_name = 'news/delete_post.html')
+                         template_name = 'news/delete_post.html',
+                         post_delete_redirect = '/')
 
+@permission_required('Post.edit_post')
 def edit_post(request, space_name, post_id):
 
     """
     Edit an existent post.
     """
 
-    current_post = get_object_or_404(Post, post_space=space_name)
-
     return update_object(request,
                          model = Post,
-                         object_id = current_post.id,
+                         object_id = post_id,
                          login_required = True,
-                         template_name = 'news/edit_post.html',
-                         post_update_redirect = '/')
+                         template_name = 'news/edit_post.html')
 

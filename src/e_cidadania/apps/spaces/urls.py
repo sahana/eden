@@ -22,11 +22,11 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
-    # Proposals
-    (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
-    
     # News
     (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
+    
+    # Proposals
+    (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
     
     # Spaces
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),

@@ -16,29 +16,22 @@
         <div id="tools">
           <a href="{{ request.path }}edit/">{% trans "Edit space" %}</a> |
           <a href="{{ request.path }}delete/">{% trans "Delete space" %}</a> |
-          <a href="{{ request.path }}news/add"}>{% trans "Add news" %}</a>
+          <a href="{{ request.path }}news/add/"}>{% trans "Add news" %}</a>
         </div>
       {% endif %}
       {% if get_place.mod_news %}
         {% for news in publication %}
-          {% if news.post_pub_index %}
             <div class="post">
               <div id="tools">
-                <a href="news/edit/{{ news.id }}">Edit</a> |
-                <a href="news/delete/{{ news.id }}">Delete</a>
+                <a href="{{ request.path }}news/edit/{{ news.id }}/">Edit</a> |
+                <a href="{{ request.path }}news/delete/{{ news.id }}/">Delete</a>
               </div>
               <h1>{{ news.post_title }}</h1>
               <p>{{ news.post_message }}</p>
               <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
             </div>
-          {% endif %}
         {% empty %}
           <div class="post">
-            {% if user.is_staff %}
-              <div id="tools">
-                <a href="{{ request.path }}news/add/">{% trans "Add news" %}</a>
-              </div>
-            {% endif %}
             <p>{% trans "Nothing published yet." %}</p>
           </div>
         {% endfor %}
