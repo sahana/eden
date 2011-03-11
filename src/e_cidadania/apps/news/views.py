@@ -72,13 +72,17 @@ def delete_post(request, space_name):
                          login_required=True,
                          template_name = 'news/delete_post.html')
 
-def edit_post(request):
+def edit_post(request, space_name, post_id):
 
     """
     Edit an existent post.
     """
+
+    current_post = get_object_or_404(Post, post_space=space_name)
+
     return update_object(request,
                          model = Post,
+                         object_id = current_post.id,
                          login_required = True,
                          template_name = 'news/edit_post.html',
                          post_update_redirect = '/')
