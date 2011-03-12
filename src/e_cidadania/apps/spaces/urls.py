@@ -24,36 +24,37 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     # News
     (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
-    
+
     # Proposals
     (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
-    
+
     # Spaces
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
-    
+
     (r'^(?P<space_name>\w+)/delete/', 'delete_space'),
-    
+
     (r'^add/', 'create_space'),
-    
+
     (r'^go/', 'go_to_space'),
-    
+
     (r'^(?P<space_name>\w+)/', 'view_space_index'),
-    
+
     # Accounts
     # DISABLED. Accounts will be site-wide
     #(r'^(?P<space_name>\w+)/accounts/', include('e_cidadania.apps.userprofile.urls')),
-    
+
     # Debates
     #(r'^debate/', include('e_cidadania.apps.debates.urls')),
-    
+
     # Documents
-    # Please note: Documents are integrated in spaces, they share views.    
+    # Please note: Documents are integrated in spaces, they share views.
     (r'^(?P<space_name>\w+)/docs/add', 'add_doc'),
-    
+
     (r'^(?P<space_name>\w+)/docs/edit/(?P<doc_id>\d+)/', 'edit_doc'),
-    
+
     (r'^(?P<space_name>\w+)/docs/delete/(?P<doc_id>\d+)/', 'delete_doc'),
-    
+
     (r'^(?P<space_name>\w+)/docs/', 'list_all_docs'),
-    
+
 )
+

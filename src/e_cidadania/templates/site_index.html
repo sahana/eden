@@ -23,15 +23,15 @@
       <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
     </div>
     {% endif %}
-    
+
     {% for news in publication %}
       {% if news.post_pub_index %}
         <div class="post">
           {% if user.is_staff %}
             <div id="tools">
               {% comment %}¡¡CAREFUL!! This does not work{% endcomment %}
-              <a href="edit/">{% trans "Edit" %}</a> | 
-              <a href="delete/">{% trans "Delete" %}</a>
+              <a href="{{ request.path }}news/edit/{{ news.id }}">{% trans "Edit" %}</a> |
+              <a href="{{ request.path }}news/delete/{{ news.id }}">{% trans "Delete" %}</a>
             </div>
           {% endif %}
           <h1>{{ news.post_title }}</h1>

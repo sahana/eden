@@ -46,7 +46,7 @@ def go_to_space(request):
     This view redirects to the space selected in the dropdown list in the
     index page. It only uses a POST petition.
     """
-    
+
     if request.POST:
         return redirect('/spaces/' + request.POST['spaces'])
 
@@ -61,13 +61,13 @@ def view_space_index(request, space_name):
         'entities': Entity.objects.filter(space=place.id),
         'documents': Document.objects.filter(space=place.id),
         'publication': Post.objects.filter(post_space=place.id).order_by('-post_pubdate'),
-            
+
         # BIG FUCKING SECURITY WARNING
         # DO NOT TOUCH THIS. PIRATES ARE WATCHING
         # When activating this line, accesing to a space gives
         # automatically the permissions of the author (this can be
         # from a simple moderator to the main admin of the system)
-        
+
         #'user': User.objects.get(username=place.author)
     }
 
@@ -127,7 +127,7 @@ def create_space(request):
             form_uncommited.save()
             space = form_uncommited.name
             return redirect('/spaces/' + space)
-    
+
     return render_to_response('spaces/add.html',
                               {'form': form},
                               context_instance=RequestContext(request))
@@ -137,14 +137,16 @@ def create_space(request):
 #
 
 def add_doc(request, space_name):
-    
+
     """
+    Upload a new document whithin a space.
     """
-    
+
     return create_object(request,
                          model = Document,
-                         )
-    pass
+                         login_required = True,
+                         template_name = 'spaces/add_doc.html',
+                         post_save_redirect = '/')
 
 def edit_doc(request, space_name, doc_id):
 
@@ -163,3 +165,4 @@ def list_all_docs(request, space_name):
     """
     """
     pass
+
