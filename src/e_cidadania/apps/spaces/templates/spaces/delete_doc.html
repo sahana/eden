@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Delete news" %}{% endblock %}
+{% block title %}{% trans "Delete document" %}{% endblock %}
 {% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
 
@@ -10,7 +10,7 @@
   {% block centercol %}
     <div id="centercol">
         <form action="" method="post">{% csrf_token %}
-          <p>{% trans "Are you sure you want to delete this post? This action cannot be undone." %}</p>
+          <p>{% trans "Are you sure you want to delete this document? This action cannot be undone." %}</p>
 
           <p><input type="submit" value="{% trans 'Delete' %}" /></p>
           <p><a href="/">&laquo; {% trans "Go back" %}</a></p>

@@ -179,12 +179,23 @@ def edit_doc(request, space_name, doc_id):
 def delete_doc(request, space_name, doc_id):
 
     """
+    Delete an uploaded document
     """
-    pass
+    return delete_object(request,
+                         model = Document,
+                         object_id = doc_id,
+                         login_required = True,
+                         template_name = 'spaces/delete_doc.html',
+                         template_object_name = 'doc',
+                         post_delete_redirect = '/')
 
 def list_all_docs(request, space_name):
 
     """
+    List all docuemnts stored within a space.
     """
-    pass
+    return object_list(request,
+                       queryset = Document.objects.all().order_by('pub_date'),
+                       template_name = 'spaces/list_docs.html',
+                       template_object_name = 'doc')
 

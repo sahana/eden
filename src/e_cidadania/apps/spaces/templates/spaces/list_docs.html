@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Document list" %}{% endblock %}
+{% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div id="centercol">
+      {% for doc in doc_list %}
+        <p><a href="{{ doc.docfile }}">{{ doc.title }}</a></p>
+        <p>{% trans "Published" %} {{ doc.pub_date }}</p>
+      {% endfor %}
+      <a href="/">{% trans "Go back" %}</a>
+    </div>
+  {% endblock %}
+
+{% endblock %}
+
