@@ -26,7 +26,6 @@
         <div class="post">
           {% if user.is_staff %}
             <div id="tools">
-              {% comment %}¡¡CAREFUL!! This does not work{% endcomment %}
               <a href="{{ request.path }}news/edit/{{ news.id }}">{% trans "Edit" %}</a> |
               <a href="{{ request.path }}news/delete/{{ news.id }}">{% trans "Delete" %}</a>
             </div>
