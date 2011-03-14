@@ -56,10 +56,10 @@
               </li>
             {% empty %}
               <p>{% trans "No documents available" %}</p>
-              {% if user.is_staff %}
-                <br /><p><a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</p>
-              {% endif %}
             {% endfor %}
+            {% if user.is_staff %}
+              <br /><p><a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</p>
+            {% endif %}
           </ul>
         </div>
         {% endif %}
