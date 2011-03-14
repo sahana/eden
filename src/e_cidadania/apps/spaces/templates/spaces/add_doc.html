@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Create new space" %}{% endblock %}
+{% block title %}{% trans "Upload new document" %}{% endblock %}
 {% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
 
@@ -9,34 +9,27 @@
 
   {% block centercol %}
     <div id="centercol">
-      <form action="" method="post">{% csrf_token %}
+      <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
       
         {{ form.non_field_errors }}
         <div class="fieldWrapper">
-          {{ form.post_title.errors }}
-          <label for="id_post_title">{% trans "Title" %}:</label>
-          <p>{{ form.post_title }}</p>
-          <p id="form_help_text">{{ form.post_title.help_text }}</p>
+          {{ form.title.errors }}
+          <label for="id_title">{% trans "Title" %}:</label>
+          <p>{{ form.title }}</p>
+          <p id="form_help_text">{{ form.title.help_text }}</p>
         </div>
         
         <div class="fieldWrapper">
-          {{ form.post_message.errors }}
-          <label for="id_name">{% trans "Text" %}:</label>
-          <p>{{ form.post_message }}</p>
-          <p id="form_help_text">{{ form.post_message.help_text }}</p>
+          {{ form.docfile.errors }}
+          <label for="id_name">{% trans "Select your file" %}:</label>
+          <p>{{ form.docfile }}</p>
+          <p id="form_help_text">{{ form.docfile.help_text }}</p>
         </div>
         
-        <div class="fieldWrapper">
-          {{ form.post_pub_index.errors }}
-          <label for="id_name">{% trans "Publish in index page" %}:</label>
-          <p>{{ form.post_pub_index }}</p>
-          <p id="form_help_text">{{ form.post_pub_index.help_text }}</p>
-        </div>
-        
-        {{ form.post_author.as_hidden }}
-        {{ form.post_space.as_hidden }}
+        {{ form.space.as_hidden }}
+        {{ form.author.as_hidden }}
 
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
+        <p><input type="submit" value="{% trans 'Upload' %}" /></p>
 
         <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
       </form>
@@ -48,7 +41,7 @@
   {% block rightcol %}
     <div id="rightcol">
       <div id="widget">
-        <p>sadfsadfas</p>
+        <p>The document upload system is blah blah blah</p>
       </div>
     </div>
   {% endblock %}

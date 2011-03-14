@@ -81,10 +81,11 @@ class Document(models.Model):
     Document model
     """
     title = models.CharField(_('Document title'), max_length=100)
-    space = models.ForeignKey(Space)
+    space = models.ForeignKey(Space, blank=True, null=True)
     docfile = models.FileField(upload_to='spaces/documents/%Y/%m/%d')
     pub_date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, verbose_name=_('Author'))
+    author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
+                               null=True)
     
     class Meta:
         ordering = ['pub_date']

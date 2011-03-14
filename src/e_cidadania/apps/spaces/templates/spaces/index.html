@@ -44,10 +44,16 @@
 
         {% if get_place.mod_docs %}
         <div id="widget">
-          <h2>{% trans "Documents" %}</h2>
+          <h2>{% trans "Documents" %}</h2><br />
           <ul>
             {% for doc in documents %}
-              <li><a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a></li>
+              <li>
+                <a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a>
+                {% if user.is_staff %}
+                  (<a href="{{ request.path }}docs/edit/{{ doc.id }}/">Edit</a> | 
+                  <a href="{{ request.path }}docs/delete/{{ doc.id }}/">Delete</a>)
+                {% endif %}
+              </li>
             {% empty %}
               <p>{% trans "No documents available" %}</p>
               {% if user.is_staff %}

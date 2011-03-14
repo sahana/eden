@@ -37,7 +37,7 @@ from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.spaces.models import Space, Entity, Document
 from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.spaces.forms import SpaceForm
+from e_cidadania.apps.spaces.forms import SpaceForm, DocForm
 
 
 def go_to_space(request):
@@ -136,23 +136,45 @@ def create_space(request):
 # DOCUMENTS VIEWS
 #
 
+@permission_required('Document.add_document')
 def add_doc(request, space_name):
 
     """
-    Upload a new document whithin a space.
+    Upload a new document whithin a space. This view is exactly as the create
+    space view.
     """
-
-    return create_object(request,
-                         model = Document,
-                         login_required = True,
-                         template_name = 'spaces/add_doc.html',
-                         post_save_redirect = '/')
+    
+    doc = Document()
+    form = DocForm(request.POST or None, request.FILES or None, instance=doc)
+    
+    # Get current space
+    space = get_object_or_404(Space, name=space_name)
+    
+    if request.POST:
+        form_uncommited = form.save(commit=False)
+        form_uncommited.space = space
+        form_uncommited.author = request.user
+        if form.is_valid():
+            form_uncommited.save()
+            return redirect('/spaces/' + space_name)
+    
+    return render_to_response('spaces/add_doc.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
 
 def edit_doc(request, space_name, doc_id):
 
     """
+    Edit uploaded documents :)
     """
-    pass
+    
+    return update_object(request,
+                         model = Document,
+                         object_id = doc_id,
+                         login_required = True,
+                         template_name = 'spaces/edit_doc.html',
+                         template_object_name = 'doc',
+                         post_save_redirect = '/')
 
 def delete_doc(request, space_name, doc_id):
 

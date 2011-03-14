@@ -28,6 +28,16 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
     # Proposals
     (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
 
+    # Documents
+    # Please note: Documents are integrated in spaces, they share views.
+    (r'^(?P<space_name>\w+)/docs/add', 'add_doc'),
+
+    (r'^(?P<space_name>\w+)/docs/edit/(?P<doc_id>\d+)/', 'edit_doc'),
+
+    (r'^(?P<space_name>\w+)/docs/delete/(?P<doc_id>\d+)/', 'delete_doc'),
+
+    (r'^(?P<space_name>\w+)/docs/', 'list_all_docs'),
+
     # Spaces
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
 
@@ -45,16 +55,6 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     # Debates
     #(r'^debate/', include('e_cidadania.apps.debates.urls')),
-
-    # Documents
-    # Please note: Documents are integrated in spaces, they share views.
-    (r'^(?P<space_name>\w+)/docs/add', 'add_doc'),
-
-    (r'^(?P<space_name>\w+)/docs/edit/(?P<doc_id>\d+)/', 'edit_doc'),
-
-    (r'^(?P<space_name>\w+)/docs/delete/(?P<doc_id>\d+)/', 'delete_doc'),
-
-    (r'^(?P<space_name>\w+)/docs/', 'list_all_docs'),
 
 )
 
