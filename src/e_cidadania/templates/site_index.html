@@ -10,10 +10,7 @@
 
     <div>
       <p><img src="/{{ MEDIA_URL }}assets/indextitle.png" /></p><br /><br />
-      <p class="intro">e-cidadania es una herramienta de democracia participativa para
-         ciudadanos. Tiene sistema de debates, propuestas, versionado de
-         documentos, creación de espacios específicos para cada cliente,
-         así como otras muchas funciones pero mejor pruébalo tú mismo.
+      <p class="intro">{% trans "e-cidadania is a participative democracy tool for citizens. It has an advanced debate system, proposals, document versioning, and you can create specific spaces for every process, it has a lot of functions more but it's better that you try it by yourself." %}
       </p>
       <br /><span style="margin-left: 35%;"><img src="/{{ MEDIA_URL }}assets/sep.png"/></span><br />
     </div>
@@ -52,7 +49,7 @@
   <div id="rightcol">
 
     <div id="widget">
-      <p><span style="font-size: 23px;">¿Qué puedes hacer con e-cidadania?</span> <strong>Descúbrelo</strong></p>
+      <p><span style="font-size: 23px;">{% trans "What can you do with e-cidadania?" %}</span> <strong><a href="/about">{% trans "Discover it here" %}</a></strong></p>
     </div>
 
     <div id="widget">

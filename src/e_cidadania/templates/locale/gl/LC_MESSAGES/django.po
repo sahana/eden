@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-09 18:37+0100\n"
+"POT-Creation-Date: 2011-03-14 17:34+0100\n"
 "PO-Revision-Date: 2011-02-17 10:45\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,13 +18,52 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Translated-Using: django-rosetta 0.5.6\n"
 
-#: 404.html:38
+#: 404.html:60
+msgid "Not Found!"
+msgstr "¡Non atopado!"
+
+#: 404.html:63
 msgid ""
-"A meiga stole this page, you better not mess with her! For that we provide "
-"you an exit"
-msgstr ""
-"Unha meiga roubou esta páxina, é mellor non xogar con ela! Por iso "
-"ofrecémoslle unha saída"
+"A meiga stole this page. You better get out of here now that you can, before "
+"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
+"pitchforks and go in search of her. Don't worry about us, we will manage "
+"somehow."
+msgstr "Unha meiga roubou esta páxina. É mellor que marches de aquí canto"
+"antes, antes de que te bote mal de ollo. Mentres tanto, nos colleremos as"
+"antorchas e ghinchas e imos na súa busca. Non te preocupes por nós, xa nos"
+"apañaremos como poidamos."
+
+#: 404.html:64 500.html:39
+msgid "Take me out of here!"
+msgstr "¡Sácame de aquí!"
+
+#: 404.html:65 500.html:40 menu.html:4 menu.html.py:39
+msgid "Home"
+msgstr "Inicio"
+
+#: 404.html:66 500.html:41
+msgid "Development"
+msgstr "Desenvolvemento"
+
+#: 404.html:67 500.html:42 site_index.html:99
+msgid "Help"
+msgstr "Axuda"
+
+#: 404.html:68 500.html:43 site_index.html:99
+msgid "Terms of service"
+msgstr "Termos de servizo"
+
+#: 404.html:69 500.html:44
+msgid "Privacy"
+msgstr "Privacidade"
+
+#: 404.html:70 500.html:45 site_index.html:99
+msgid "About"
+msgstr "Acerca de"
+
+#: 500.html:37
+msgid "Now you did it, the server is broken."
+msgstr "Agora a fixeches boa, o servidor está roto."
 
 #: base.html:74
 msgid "created by"
@@ -36,95 +75,121 @@ msgid ""
 msgstr ""
 "Garantimos que este programa non vai tomar conciencia e apoderarse do mundo"
 
-#: menu.html:4 menu.html.py:36
-msgid "Home"
-msgstr "Inicio"
-
-#: menu.html:25
-msgid "Administration"
-msgstr "Administración"
-
-#: menu.html:26
-msgid "Translation"
-msgstr "Traducción"
-
-#: menu.html:28
-msgid "Messages"
-msgstr "Mensaxes"
-
-#: menu.html:29
-msgid "Edit profile"
-msgstr "Editar perfil"
-
-#: menu.html:30
-msgid "Logout"
-msgstr "Saír"
-
-#: menu.html:37
-msgid "Login"
-msgstr "Entrar"
-
-#: menu.html:38
+#: menu.html:10 menu.html.py:45
 msgid "Language"
 msgstr "Idioma"
 
-#: site_index.html:4
+#: menu.html:28
+msgid "Administration"
+msgstr "Administración"
+
+#: menu.html:29
+msgid "Translation"
+msgstr "Traducción"
+
+#: menu.html:31
+msgid "Messages"
+msgstr "Mensaxes"
+
+#: menu.html:32
+msgid "Edit profile"
+msgstr "Editar perfil"
+
+#: menu.html:33
+msgid "Logout"
+msgstr "Saír"
+
+#: menu.html:40
+msgid "Login"
+msgstr "Entrar"
+
+#: site_index.html:4 terms.html:4
 msgid "e-cidadania"
-msgstr "e-cidadanía"
+msgstr "e-cidadania"
 
 #: site_index.html:13
+msgid ""
+"e-cidadania is a participative democracy tool for citizens. It has an "
+"advanced debate system, proposals, document versioning, and you can create "
+"specific spaces for every process, it has a lot of functions more but it's "
+"better that you try it by yourself."
+msgstr "e-cidadania é una ferramenta de democracia participativa para cidadáns"
+"e cidadadanas. Contén un avanzado sistema de debate, propostas, versionado de"
+"documentos, espazos independentes para cada proceso e moitas funcións mais,"
+"pero será mellor que o probes tí mesmo."
+
+#: site_index.html:20
 msgid "Add news"
 msgstr "Engadir novas"
 
-#: site_index.html:32
+#: site_index.html:30
+msgid "Edit"
+msgstr "Editar"
+
+#: site_index.html:31
+msgid "Delete"
+msgstr "Borrar"
+
+#: site_index.html:36
 msgid "Written by"
 msgstr "Escrito por"
 
-#: site_index.html:32
+#: site_index.html:36
 msgid "on"
 msgstr "o"
 
-#: site_index.html:37
+#: site_index.html:41
 msgid "Nothing published yet."
 msgstr "Non hai nada publicado todavía."
 
 #: site_index.html:52
+msgid "What can you do with e-cidadania?"
+msgstr "¿Qué podo facer con e-cidadania?"
+
+#: site_index.html:52
+msgid "Discover it here"
+msgstr "Descúbreo aquí"
+
+#: site_index.html:56
 msgid "Create your own space"
 msgstr "Crea o teu propio espazo"
 
-#: site_index.html:52
+#: site_index.html:56
 msgid "inside e-cidadania"
 msgstr "dentro de e-cidadanía"
 
-#: site_index.html:56
+#: site_index.html:60
 msgid "Spaces list"
 msgstr "Lista de espazos"
 
-#: site_index.html:62
+#: site_index.html:66
 msgid "No spaces"
 msgstr "Sen espazos"
 
-#: site_index.html:65
+#: site_index.html:69
 msgid "Go"
 msgstr "Ir"
 
-#: site_index.html:70
+#: site_index.html:74
 msgid "Recently updated spaces"
 msgstr "Espazos actualizados recentemente"
 
-#: site_index.html:78
-#, fuzzy
+#: site_index.html:85
+msgid "Your favourite social site isn't here? Tell us!"
+msgstr "¿A tua rede social favorita non está aquí? ¡Díno-lo!"
+
+#: site_index.html:89
 msgid "e-cidadania development"
 msgstr "Desenvolvemento de e-cidadanía"
 
-#: site_index.html:79
+#: site_index.html:90
 msgid "Do you want to help?"
 msgstr "¿Queres axudar?"
 
-#: site_index.html:79
+#: site_index.html:90
 msgid "Access"
 msgstr "Accesa"
 
-#: site_index.html:88
-msgid "Main page footer"
-msgstr "Pé de páxina principal"
+#: site_index.html:99
+msgid "Developers"
+msgstr "Desenvolvedores"
