@@ -72,6 +72,15 @@
           <p>El calendario está activado</p>
         </div>
         {% endif %}
+        
+        {% if get_place.mod_proposals %}
+        <div id="widget">
+          <h2>{% trans "Newest proposals" %}</h2><br />
+          {% for proposal in proposals %}
+            <p><a href="{{ request.path }}proposal/{{ proposal.id }}">{{ proposal.title }}</a></p>
+          {% endfor %}
+        </div>
+        {% endif %}
 
     </div>
   {% endblock %}

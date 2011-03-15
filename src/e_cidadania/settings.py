@@ -108,14 +108,15 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'django.contrib.messages',
+    'django.contrib.messages', 
     'django.contrib.admin',
+    'django.contrib.comments', # Basic comments system
 
     # Prebuilt modules
-    #'e_cidadania.apps.registration',
-    'e_cidadania.apps.rosetta', # Rosetta is for easy translation
+    'e_cidadania.apps.rosetta', # Easy translation system
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
+    #'e_cidadania.apps.swingtime',
 
     # Modules created for e-cidadania
     'e_cidadania.apps.accounts',
@@ -123,6 +124,5 @@ INSTALLED_APPS = (
     'e_cidadania.apps.news',
     'e_cidadania.apps.debate',
     'e_cidadania.apps.spaces',
-    #'e_cidadania.apps.swingtime',
 )
 

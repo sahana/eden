@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load comments %}
 
 {% block title %}{% trans "View proposals" %}{% endblock %}
 
@@ -15,7 +16,12 @@
         <div id="proposal">
           <div class="title">{{ p.title }}</div>
           <div class="message">{{ p.message }}</div>
-          <div class="creator">{% trans "proposed by " %}{{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
+          <div class="creator">{% trans "proposed by " %} {{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
+          {% comment %}
+          ADAPTAR LO QUE VIENE
+          {% endcomment %}
+          {% get_comment_count for p as comment_count %}
+          <div>Esta propuesta tiene {{ comment_count }} comentarios.</div>
         </div>
         <div class="proposal-tools">
           <a href="edit/">{% trans "Edit" %}</a> |

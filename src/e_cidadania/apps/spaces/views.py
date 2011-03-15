@@ -38,6 +38,7 @@ from django.views.generic.create_update import delete_object
 from e_cidadania.apps.spaces.models import Space, Entity, Document
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm
+from e_cidadania.apps.proposals.models import Proposal, Comment
 
 
 def go_to_space(request):
@@ -60,6 +61,7 @@ def view_space_index(request, space_name):
     extra_context = {
         'entities': Entity.objects.filter(space=place.id),
         'documents': Document.objects.filter(space=place.id),
+        'proposals': Proposal.objects.filter(belongs_to=place.id).order_by('-pub_date'),
         'publication': Post.objects.filter(post_space=place.id).order_by('-post_pubdate'),
 
         # BIG FUCKING SECURITY WARNING

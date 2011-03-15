@@ -29,7 +29,7 @@ from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
-from e_cidadania.apps.proposals.models import Proposal
+from e_cidadania.apps.proposals.models import Proposal, Comment
 from e_cidadania.apps.spaces.models import Space
 
 def add_proposal(request, space_name):
@@ -57,13 +57,37 @@ def list_proposals(request, space_name):
                        template_object_name = 'proposal')
                        
 def delete_proposal(request, space_name, prop_id):
-    pass
+
+    """
+    Delete a proposal.
+    """
+    return delete_object(request,
+                         model = Proposal,
+                         object_id = prop_id,
+                         login_required = True,
+                         template_name = 'proposal/delete_proposal.html',
+                         template_object_name = 'proposal',
+                         post_delete_redirect = '/')
     
 def edit_proposal(request, space_name, prop_id):
     pass
 
 def view_proposal(request, space_name, prop_id):
-    pass
 
+    """
+    View a proposal.
+    """
+    current_space = get_object_or_404(Space, name=space_name)
+    
+    extra_context = {
+        'comments': Comment.objects.all().filter(proposal=prop_id)
+    }
+    
+    return object_detail(request,
+                         queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
+                         object_id = prop_id,
+                         template_name = 'proposal/view_proposal.html',
+                         template_object_name = 'proposal',
+                         extra_context = extra_context)
 
 
