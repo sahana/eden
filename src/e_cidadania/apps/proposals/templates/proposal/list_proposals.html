@@ -22,7 +22,7 @@
           <div class="title"><a href="{{ request.path }}view/{{ p.id }}/">{{ p.title }}</a></div>
           <div class="message">{{ p.message|truncatewords:12 }}</div>
           {% get_comment_count for p as comment_count %}
-          <div class="creator">{% trans "proposed by " %} <a href="/accounts/{{ p.author }}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} | <a href="{{ request.path }}view/{{ p.id }}#comments">{{ comment_count }} {% trans "comments" %}</a></div>
+          <div class="creator">{% trans "proposed by " %} <a href="/accounts/{{ p.author }}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} | <a href="{{ request.path }}view/{{ p.id }}/">{{ comment_count }} {% trans "comments" %}</a></div>
         </div>
         {% comment %}
           The following div is to make the wrapper to wrap everything.

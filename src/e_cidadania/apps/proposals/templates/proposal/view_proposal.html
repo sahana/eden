@@ -21,10 +21,13 @@
           <div class="title">{{ proposal.title }}</div>
           <div class="message">{{ proposal.message }}</div>
           <div class="creator">{% trans "proposed by " %} {{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
-          {% render_comment_list for proposal %}
         </div>
         <div style="clear:left;"></div>
       </div>
+      
+      <p>{% render_comment_list for proposal %}</p>
+      
+      <p>{% render_comment_form for proposal%}</p>
       
     </div>
   {% endblock%}

@@ -57,6 +57,9 @@ urlpatterns = patterns('',
 
     # About
     (r'^about/', 'direct_to_template', {'template': 'about.html'}),
+    
+    # This urls is for the django comments system
+    (r'^comments/', include('django.contrib.comments.urls')),
 
 )
 

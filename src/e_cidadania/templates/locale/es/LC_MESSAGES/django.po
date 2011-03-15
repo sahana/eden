@@ -2,36 +2,30 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-03-14 17:25+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-03-15 16:41\n"
+"Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: 404.html:60
 msgid "Not Found!"
-msgstr ""
+msgstr "¡No encontrado!"
 
 #: 404.html:63
-msgid ""
-"A meiga stole this page. You better get out of here now that you can, before "
-"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
-"pitchforks and go in search of her. Don't worry about us, we will manage "
-"somehow."
-msgstr "Una meiga ha robado esta página. Será mejor que te vayas de aquí antes"
-"de que te eche mal de ojo. Mientras tanto, nosotros cogeremos las antorchas y"
-"las horquillas e iremos en su busca. No te preocupes por nosotros, nos"
-"apañaremos de alguna forma."
+msgid "A meiga stole this page. You better get out of here now that you can, before she gives you the evil eye. Meanwhile, we are going to get the torchs and pitchforks and go in search of her. Don't worry about us, we will manage somehow."
+msgstr "Una meiga ha robado esta página. Será mejor que te vayas de aquí antesde que te eche mal de ojo. Mientras tanto, nosotros cogeremos las antorchas ylas horquillas e iremos en su busca. No te preocupes por nosotros, nosapañaremos de alguna forma."
 
 #: 404.html:64 500.html:39
 msgid "Take me out of here!"
@@ -70,10 +64,8 @@ msgid "created by"
 msgstr "creado por"
 
 #: base.html:75
-msgid ""
-"We guarantee that this program will not become aware and take over the world"
-msgstr "Garantizamos que este programa no tomará conciencia yse apoderará del"
-"mundo"
+msgid "We guarantee that this program will not become aware and take over the world"
+msgstr "Garantizamos que este programa no tomará conciencia yse apoderará delmundo"
 
 #: menu.html:10 menu.html.py:45
 msgid "Language"
@@ -108,16 +100,8 @@ msgid "e-cidadania"
 msgstr "e-cidadania"
 
 #: site_index.html:13
-msgid ""
-"e-cidadania is a participative democracy tool for citizens. It has an "
-"advanced debate system, proposals, document versioning, and you can create "
-"specific spaces for every process, it has a lot of functions more but it's "
-"better that you try it by yourself."
-msgstr ""
-"e-cidadania es una herramienta de democracia participativa para ciudadanos y ciudadanas."
-"Tiene sistema de debates, propuestas, versionado de documentos, creación de"
-"espacios específicos para cada proceso, así como otras muchas funciones pero"
-"será mejor que lo compruebes por tí mismo."
+msgid "e-cidadania is a participative democracy tool for citizens. It has an advanced debate system, proposals, document versioning, and you can create specific spaces for every process, it has a lot of functions more but it's better that you try it by yourself."
+msgstr "e-cidadania es una herramienta de democracia participativa para ciudadanos y ciudadanas.Tiene sistema de debates, propuestas, versionado de documentos, creación deespacios específicos para cada proceso, así como otras muchas funciones peroserá mejor que lo compruebes por tí mismo."
 
 #: site_index.html:20
 msgid "Add news"
