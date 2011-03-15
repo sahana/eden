@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load comments %}
+
+{% block title %}{% trans "View proposal" %} {{ proposal.id }} {% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div id="centercol">
+    
+      <div id="proposal-wrapper">
+        <div id="tools">
+          <a href="add/">{% trans "Add" %}</a> | 
+          <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
+          <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
+        </div>
+        <div id="votes"></div>
+        <!-- Here goes the voting button -->
+        <div id="proposal">
+          <div class="title">{{ proposal.title }}</div>
+          <div class="message">{{ proposal.message }}</div>
+          <div class="creator">{% trans "proposed by " %} {{ p.author }} {% trans " at " %} {{ p.pub_date }}</div>
+          {% render_comment_list for proposal %}
+        </div>
+        <div style="clear:left;"></div>
+      </div>
+      
+    </div>
+  {% endblock%}
+  
+  {% block rightcol %}
+  {% endblock%}
+
+{% endblock %}

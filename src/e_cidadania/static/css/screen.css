@@ -545,33 +545,32 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 #votes {
     float: left;
     display: block;
+    text-align: center;
     width: 50px;
     height: 50px;
-    border: 1px solid #000;
-    background: #CCC;
     margin: 10px;
 }
 
 #proposal {
     float: left;
-    border: 1px solid #444;
-    background: #CCC;
     margin: 10px;
 }
 
 #proposal .title {
-    font-weight: bold;
-    font-size: 14px;
+    font-size: 1.7em;
+    margin-bottom: 10px;
 
 }
 
-#proposal .resume {
-
+#proposal .message {
+    margin-bottom: 10px;
+    font-size: 12px;
 }
 
 #proposal .creator {
-    font-size: 9px;
+    font-size: 10px;
     font-style: italic;
+    margin-bottom: 5px;
 }
 
 
