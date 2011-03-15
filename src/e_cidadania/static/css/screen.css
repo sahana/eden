@@ -554,6 +554,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 #proposal {
     float: left;
     margin: 10px;
+    width: 80%;
 }
 
 #proposal .title {
@@ -573,7 +574,29 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     margin-bottom: 5px;
 }
 
+#comments {
+    margin-top: 40px;
+}
 
+#ctitle {
+    font-size: 2em;
+    margin-left: 10px;
+    margin-bottom: 15px;
+}
+
+#comment {
+    border: 1px solid #000;
+    margin: 10px;
+}
+
+#comment .comment_text {
+    margin: 20px;
+    font-size: 14px;
+}
+
+#comment .comment_data {
+    margin: 5px;
+}
 /* NEWS */
 
 .post {

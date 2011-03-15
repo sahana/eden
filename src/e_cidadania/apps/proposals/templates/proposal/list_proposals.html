@@ -11,12 +11,16 @@
     {{ proposal.title }}
     {% for p in proposal_list %}
       <div id="proposal-wrapper">
+        {% if user.is_staff %}
         <div id="tools">
           <a href="add/">{% trans "Add" %}</a> | 
           <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
           <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
         </div>
-        <div id="votes"><span style="font-size:30px;text-align:center;">0</span><br/>apoyos</div>
+        {% endif %}
+        <div id="votes">
+          <span style="font-size:30px;text-align:center;">{{ p.support_votes }}</span><br/>apoyos
+        </div>
         <!-- Here goes the voting button -->
         <div id="proposal">
           <div class="title"><a href="{{ request.path }}view/{{ p.id }}/">{{ p.title }}</a></div>
