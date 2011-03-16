@@ -39,9 +39,9 @@ DATABASES = {
 TIME_ZONE = 'Europe/Madrid'
 LANGUAGE_CODE = 'es-ES'
 LANGUAGES = (
-    ('es', 'Spanish'),
+    ('es', 'Espanol'),
     ('en', 'English'),
-    ('gl', 'Galician'),
+    ('gl', 'Galego'),
 )
 
 SITE_ID = 1

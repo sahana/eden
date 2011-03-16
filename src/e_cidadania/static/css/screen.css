@@ -129,6 +129,12 @@ input[type="text"], input[type="password"] {
 .hidden {
 	display: none;
 }
+
+.error {
+    background: #DDBBBB;
+    border: 1px solid #FF6666;
+}
+
 /* END COMMON CLASSES */
 
 
@@ -574,6 +580,11 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     margin-bottom: 5px;
 }
 
+.commentform {
+    border: 1px solid #DDD;
+    background: #EEE;
+    padding: 20px 0 20px 0;
+}
 #comments {
     margin-top: 40px;
 }
@@ -585,7 +596,6 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 }
 
 #comment {
-    border: 1px solid #000;
     margin: 10px;
 }
 
@@ -596,6 +606,11 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 #comment .comment_data {
     margin: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    background: #CCC;
+    padding: 5px;
 }
 /* NEWS */
 
