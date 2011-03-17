@@ -22,13 +22,31 @@
       
       <div class="fieldWrapper">
         {{ form.latitude.errors }}
-        <label for="id_logo">{% trans "Latitude" %}:</label>
+        <label for="id_logo">{% trans "Latitude" %} {% trans "(optional)" %}:</label>
         {{ form.latitude }}
       </div>
       
       <div class="fieldWrapper">
         {{ form.longitude.errors }}
-        <label for="id_banner">{% trans "Longitude" %}:</label>
+        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
+        {{ form.longitude }}
+      </div>
+      
+            <div class="fieldWrapper">
+        {{ form.longitude.errors }}
+        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
+        {{ form.longitude }}
+      </div>
+      
+            <div class="fieldWrapper">
+        {{ form.longitude.errors }}
+        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
+        {{ form.longitude }}
+      </div>
+      
+            <div class="fieldWrapper">
+        {{ form.longitude.errors }}
+        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
         {{ form.longitude }}
       </div>
 

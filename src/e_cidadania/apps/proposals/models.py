@@ -70,7 +70,7 @@ class Proposal(CommonData):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     anon_allowed = models.BooleanField(default=False)
-    support_votes = models.IntegerField()
+    support_votes = models.IntegerField(blank=True, null=True)
     
     def __unicode__(self):
         return self.title

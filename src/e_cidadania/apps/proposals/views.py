@@ -20,7 +20,7 @@
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User
 
 from django.views.generic.list_detail import object_list
@@ -30,18 +30,33 @@ from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.proposals.models import Proposal, Comment
+from e_cidadania.apps.proposals.forms import ProposalForm
 from e_cidadania.apps.spaces.models import Space
 
+@permission_required('Proposal.add_proposal')
 def add_proposal(request, space_name):
 
     """
     Create a new proposal.
     """
-    return create_object(request,
-                         model = Proposal,
-                         login_required = True,
-                         template_name = 'proposal/add_proposal.html',
-                         post_save_redirect = 'proposal/list/')
+    prop_space = get_object_or_404(Space, name=space_name)
+    
+    proposal = Proposal()
+    form = ProposalForm(request.POST or None, request.FILES or None, instance=proposal)
+
+    if request.POST:
+        form_uncommited = form.save(commit=False)
+        from_uncommited.belongs_to = prop_space.id
+        from_uncommited.support_votes = 0
+        form_uncommited.author = request.user
+        if form.is_valid():
+            form_uncommited.save()
+            space = form_uncommited.name
+            return redirect('/spaces/' + space_name)
+
+    return render_to_response('proposal/add_proposal.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
 
 def list_proposals(request, space_name):
 
@@ -55,7 +70,8 @@ def list_proposals(request, space_name):
                        paginate_by = 50,
                        template_name = 'proposal/list_proposals.html',
                        template_object_name = 'proposal')
-                       
+
+@permission_required('Proposal.delete_proposal')
 def delete_proposal(request, space_name, prop_id):
 
     """
