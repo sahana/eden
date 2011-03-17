@@ -274,7 +274,7 @@ msgstr "Propuestas recientes"
 
 #: templates/spaces/index.html:86
 msgid "No proposals available"
-msgstr "Sin documentos"
+msgstr "Sin propuestas"
 
 #: templates/spaces/index.html:89
 msgid "View all proposals"
