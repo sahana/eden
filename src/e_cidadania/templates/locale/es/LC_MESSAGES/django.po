@@ -2,20 +2,20 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-14 17:25+0100\n"
+"Project-Id-Version: 0.1 alpha\n"
+"Report-Msgid-Bugs-To: oscar@cidadania.coop\n"
+"POT-Creation-Date: 2011-03-17 13:25+0100\n"
 "PO-Revision-Date: 2011-03-15 16:41\n"
-"Last-Translator: <a@a.com>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
+"Language-Team: ES <ecidadania-es@ecidadania.org>\n"
+"Language: Spanish\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -24,8 +24,16 @@ msgid "Not Found!"
 msgstr "¡No encontrado!"
 
 #: 404.html:63
-msgid "A meiga stole this page. You better get out of here now that you can, before she gives you the evil eye. Meanwhile, we are going to get the torchs and pitchforks and go in search of her. Don't worry about us, we will manage somehow."
-msgstr "Una meiga ha robado esta página. Será mejor que te vayas de aquí antesde que te eche mal de ojo. Mientras tanto, nosotros cogeremos las antorchas ylas horquillas e iremos en su busca. No te preocupes por nosotros, nosapañaremos de alguna forma."
+msgid ""
+"A meiga stole this page. You better get out of here now that you can, before "
+"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
+"pitchforks and go in search of her. Don't worry about us, we will manage "
+"somehow."
+msgstr ""
+"Una meiga ha robado esta página. Será mejor que te vayas de aquí antesde que "
+"te eche mal de ojo. Mientras tanto, nosotros cogeremos las antorchas y las "
+"horquillas e iremos en su busca. No te preocupes por nosotros, nos apañaremos "
+"de alguna forma."
 
 #: 404.html:64 500.html:39
 msgid "Take me out of here!"
@@ -39,11 +47,11 @@ msgstr "Inicio"
 msgid "Development"
 msgstr "Desarrollo"
 
-#: 404.html:67 500.html:42 site_index.html:99
+#: 404.html:67 500.html:42 site_index.html:98
 msgid "Help"
 msgstr "Ayuda"
 
-#: 404.html:68 500.html:43 site_index.html:99
+#: 404.html:68 500.html:43 site_index.html:98
 msgid "Terms of service"
 msgstr "Términos de servicio"
 
@@ -51,7 +59,7 @@ msgstr "Términos de servicio"
 msgid "Privacy"
 msgstr "Privacidad"
 
-#: 404.html:70 500.html:45 site_index.html:99
+#: 404.html:70 500.html:45 site_index.html:98
 msgid "About"
 msgstr "Acerca de"
 
@@ -100,81 +108,193 @@ msgid "e-cidadania"
 msgstr "e-cidadania"
 
 #: site_index.html:13
-msgid "e-cidadania is a participative democracy tool for citizens. It has an advanced debate system, proposals, document versioning, and you can create specific spaces for every process, it has a lot of functions more but it's better that you try it by yourself."
-msgstr "e-cidadania es una herramienta de democracia participativa para ciudadanos y ciudadanas.Tiene sistema de debates, propuestas, versionado de documentos, creación deespacios específicos para cada proceso, así como otras muchas funciones peroserá mejor que lo compruebes por tí mismo."
+msgid ""
+"e-cidadania is a participative democracy tool for citizens. It has an "
+"advanced debate system, proposals, document versioning, and you can create "
+"specific spaces for every process, it has a lot of functions more but it's "
+"better that you try it by yourself."
+msgstr ""
+"e-cidadania es una herramienta de democracia participativa para ciudadanos y "
+"ciudadanas.Tiene sistema de debates, propuestas, versionado de documentos, "
+"creación deespacios específicos para cada proceso, así como otras muchas "
+"funciones peroserá mejor que lo compruebes por tí mismo."
 
 #: site_index.html:20
 msgid "Add news"
 msgstr "Agregar noticias"
 
-#: site_index.html:30
+#: site_index.html:29
 msgid "Edit"
 msgstr "Editar"
 
-#: site_index.html:31
+#: site_index.html:30
 msgid "Delete"
 msgstr "Borrar"
 
-#: site_index.html:36
+#: site_index.html:35
 msgid "Written by"
 msgstr "Escrito por"
 
-#: site_index.html:36
+#: site_index.html:35
 msgid "on"
 msgstr "el"
 
-#: site_index.html:41
+#: site_index.html:40
 msgid "Nothing published yet."
 msgstr "No hay nada publicado todavía."
 
-#: site_index.html:52
+#: site_index.html:51
 msgid "What can you do with e-cidadania?"
 msgstr "¿Qué puedo hacer con e-cidadania?"
 
-#: site_index.html:52
+#: site_index.html:51
 msgid "Discover it here"
 msgstr "Descúbrelo aquí"
 
-#: site_index.html:56
+#: site_index.html:55
 msgid "Create your own space"
 msgstr "Crea tu propio espacio"
 
-#: site_index.html:56
+#: site_index.html:55
 msgid "inside e-cidadania"
 msgstr "en e-cidadania"
 
-#: site_index.html:60
+#: site_index.html:59
 msgid "Spaces list"
 msgstr "Lista de espacios"
 
-#: site_index.html:66
+#: site_index.html:65
 msgid "No spaces"
 msgstr "No hay espacios"
 
-#: site_index.html:69
+#: site_index.html:68
 msgid "Go"
 msgstr "Ir"
 
-#: site_index.html:74
+#: site_index.html:73
 msgid "Recently updated spaces"
 msgstr "Espacios actualizados recientemente"
 
-#: site_index.html:85
+#: site_index.html:84
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr "¿Tu red social favorita no está aquí? ¡Dínoslo!"
 
-#: site_index.html:89
+#: site_index.html:88
 msgid "e-cidadania development"
 msgstr "Desarrollo de e-cidadania"
 
-#: site_index.html:90
+#: site_index.html:89
 msgid "Do you want to help?"
 msgstr "¿Quieres ayudar?"
 
-#: site_index.html:90
+#: site_index.html:89
 msgid "Access"
 msgstr "Accede"
 
-#: site_index.html:99
+#: site_index.html:98
 msgid "Developers"
 msgstr "Desarrolladores"
+
+#: comments/approve.html:4
+msgid "Approve a comment"
+msgstr "Aprobar un comentario"
+
+#: comments/approve.html:7
+msgid "Really make this comment public?"
+msgstr "¿Hacer este comentario público?"
+
+#: comments/approve.html:12
+msgid "Approve"
+msgstr "Aprobar"
+
+#: comments/approved.html:4
+msgid "Thanks for approving"
+msgstr "Gracias por aprobarlo"
+
+#: comments/approved.html:7 comments/deleted.html:7 comments/flagged.html:7
+msgid ""
+"Thanks for taking the time to improve the quality of discussion on our site"
+msgstr "Gracias por pasar el tiempo mejorando la calidad de las "
+"conversaciones de nuestra web."
+
+#: comments/delete.html:4
+msgid "Remove a comment"
+msgstr "Eliminar un comentario"
+
+#: comments/delete.html:7
+msgid "Really remove this comment?"
+msgstr "¿Eliminar realmente este comentario?"
+
+#: comments/delete.html:12
+msgid "Remove"
+msgstr "Eliminar"
+
+#: comments/deleted.html:4
+msgid "Thanks for removing"
+msgstr "Gracias por eliminar"
+
+#: comments/flag.html:4
+msgid "Flag this comment"
+msgstr "Marcar este comentario"
+
+#: comments/flag.html:7
+msgid "Really flag this comment?"
+msgstr "¿Quieres marcar este comentario?"
+
+#: comments/flag.html:12
+msgid "Flag"
+msgstr "Marcar"
+
+#: comments/flagged.html:4
+msgid "Thanks for flagging"
+msgstr "Gracias por marcarlo"
+
+#: comments/form.html:2
+msgid "Leave a comment"
+msgstr "Deja un comentario"
+
+#: comments/form.html:18 comments/preview.html:36
+msgid "Post"
+msgstr "Publicar"
+
+#: comments/form.html:19 comments/preview.html:37
+msgid "Preview"
+msgstr "Previsualizar"
+
+#: comments/list.html:3
+msgid "Comments"
+msgstr "Comentarios"
+
+#: comments/list.html:8
+msgid "said"
+msgstr "dijo"
+
+#: comments/posted.html:4
+msgid "Thanks for commenting"
+msgstr "Gracias por comentar"
+
+#: comments/posted.html:7
+msgid "Thank you for your comment"
+msgstr "Gracias por tu comentario"
+
+#: comments/preview.html:4 comments/preview.html.py:17
+msgid "Preview your comment"
+msgstr "Previsualizar el comentario"
+
+#: comments/preview.html:15
+msgid "Please correct the error below"
+msgid_plural "Please correct the errors below"
+msgstr[0] "Por favor, corrija el siguiente error"
+msgstr[1] "Por favor, corrija los siguientes errores"
+
+#: comments/preview.html:20
+msgid "and"
+msgstr "y"
+
+#: comments/preview.html:20
+msgid "Post your comment"
+msgstr "Publicar el comentario"
+
+#: comments/preview.html:20
+msgid "or make changes"
+msgstr "o hacer cambios"
