@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Create new space" %}{% endblock %}
+{% block title %}{% trans "Add new post" %}{% endblock %}
 {% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
 
 {% block content %}
 
+  <div id="contenttitles">
+  {% trans "Add new post" %}
+  </div>
+  
   {% block centercol %}
     <div id="centercol">
       <form action="" method="post">{% csrf_token %}
@@ -24,6 +28,13 @@
           <label for="id_name">{% trans "Text" %}:</label>
           <p>{{ form.post_message }}</p>
           <p id="form_help_text">{{ form.post_message.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.post_tags.errors }}
+          <label for="id_post_tags">{% trans "Tags" %}:</label>
+          <p>{{ form.post_tags }}</p>
+          <p id="form_help_text">{{ form.post_tags.help_text }}</p>
         </div>
         
         <div class="fieldWrapper">
@@ -48,7 +59,13 @@
   {% block rightcol %}
     <div id="rightcol">
       <div id="widget">
-        <p>sadfsadfas</p>
+        <h2>{% trans "How to add new posts" %}</h2><br/>
+        <ul class="instructions">
+          <li><strong>{% trans "Title" %}</strong>: {% trans "An spectacular title! (100 characters)" %}</li>
+          <li><strong>{% trans "Text" %}</strong>: {% trans "Your story." %}</li>
+          <li><strong>{% trans "Tags" %}</strong>: {% trans "Please use them carefully, you are limited to 4 tags." %}</li>
+          <li><strong>{% trans "Publish in index" %}</strong>: {% trans "If you mark this, the post will appear in the spaces index page AND in the main index." %}</li>
+        </ul>
       </div>
     </div>
   {% endblock %}

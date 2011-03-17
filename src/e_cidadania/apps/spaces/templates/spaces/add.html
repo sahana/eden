@@ -7,6 +7,9 @@
 
 {% block content %}
 
+  <div id="contenttitles">
+  {% trans "Create a new space" %}
+  </div>
   {% block centercol %}
     <div id="centercol">
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
@@ -38,11 +41,11 @@
         <h3>{% trans "Modules" %}</h3>
 
         <div class="fieldWrapper">
-          <label for="id_mod_debate">{% trans "Debate" %}:</label>{{ form.mod_debate }}
-          <label for="id_mod_proposals">{% trans "Proposals" %}:</label>{{ form.mod_proposals }}
-          <label for="id_mod_news">{% trans "News" %}:</label>{{ form.mod_news }}
-          <label for="id_mod_cal">{% trans "Calendar" %}:</label>{{ form.mod_cal }}
-          <label for="id_mod_docs">{% trans "Documentation" %}:</label>{{ form.mod_docs }}
+          <p>{{ form.mod_debate }} {% trans "Debate" %}</p>
+          <p>{{ form.mod_proposals }} {% trans "Proposals" %}</p>
+          <p>{{ form.mod_news }} {% trans "News" %}</p>
+          <p>{{ form.mod_cal }} {% trans "Calendar" %}</p>
+          <p>{{ form.mod_docs }} {% trans "Documentation" %}</p>
         </div>
 
           {{ form.author.as_hidden }}
@@ -61,7 +64,15 @@
   {% block rightcol %}
     <div id="rightcol">
       <div id="widget">
-        <p>sadfsadfas</p>
+       <h2>{% trans "How to add new spaces" %}</h2><br/>
+        <ul class="instructions">
+          <li><strong>{% trans "Space name" %}</strong>: {% trans "The name of the space. Have in mind that this name will be used as the URL of your space. We recommend to use all lowercase. (100 chars)" %}</li>
+          <li><strong>{% trans "Description" %}</strong>: {% trans "An optional description for your space. It won't be showed to the users, but to the admins." %}</li>
+          <li><strong>{% trans "Logotype" %}</strong>: {% trans "An image of 75px height and 100px width." %}</li>
+          <li><strong>{% trans "Banner" %}</strong>: {% trans "Another image. 75px height." %}</li>
+          <li><strong>{% trans "Authorized groups" %}</strong>: {% trans "This will set up what users can access to your space." %}</li>
+          <li><strong>{% trans "Modules" %}</strong>: {% trans "Select the modules you will use in your space. This can be edited afterwards." %}</li>
+        </ul>
       </div>
     </div>
   {% endblock %}

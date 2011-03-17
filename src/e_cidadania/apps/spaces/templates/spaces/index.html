@@ -69,7 +69,7 @@
 
         {% if get_place.mod_cal %}
         <div id="widget">
-          <h2>{% trans "Calendar" %}</h2>
+          <h2>{% trans "Calendar" %}</h2><br />
           <p>El calendario está activado</p>
         </div>
         {% endif %}
@@ -82,6 +82,8 @@
             <li>
               <a href="{{ request.path }}proposal/view/{{ proposal.id }}/">{{ proposal.title }}</a>
             </li>
+          {% empty %}
+            <p>{% trans "No proposals available" %}</p>
           {% endfor %}
           </ul>
           <br /><p><a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>

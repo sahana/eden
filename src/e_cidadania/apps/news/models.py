@@ -42,7 +42,8 @@ class Post(models.Model):
     post_space = models.ForeignKey(Space, verbose_name=_('Publish in'),
                                    blank=True, null=True,
         help_text=_('If you want to post to the index leave this blank'))
-
+    post_tags = TagField()
+    
     # Gives this error:
     # "User object has no attribute username"
     #def save(self, *args, **kwargs):
