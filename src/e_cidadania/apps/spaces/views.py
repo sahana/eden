@@ -20,7 +20,7 @@
 
 import datetime
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 
@@ -50,6 +50,8 @@ def go_to_space(request):
 
     if request.POST:
         return redirect('/spaces/' + request.POST['spaces'])
+    
+    raise Http404
 
 def view_space_index(request, space_name):
 

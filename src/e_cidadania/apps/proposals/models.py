@@ -81,6 +81,10 @@ class Proposal(CommonData):
     def get_tags(self, tags):
         return Tag.objects.get_for_object(self)
 
+    class Meta:
+        permissions = (
+            ('view', 'Can view the object'),
+        )
 class Comment(CommonData):
     proposal = models.ForeignKey(Proposal)
     author = models.ForeignKey(User)
