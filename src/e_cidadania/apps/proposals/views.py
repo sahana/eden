@@ -21,7 +21,6 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
 
 from django.views.generic.list_detail import object_list
 from django.views.generic.list_detail import object_detail
