@@ -31,17 +31,3 @@ class ProposalForm(ModelForm):
     """
     class Meta:
         model = Proposal
-        
-class CustomProposal(ModelForm):
-    
-    """
-    Proposal form for users.
-    """
-    title = forms.CharField(_('Title'), max_length=100, unique=True)
-    message = forms.TextField(_('Message'), max_length=200)
-    pub_date = forms.DateTimeField(auto_now_add=True)
-    
-    latitude = models.DecimalField(_('Latitude'), max_digits=8,
-                                                  decimal_places=6)
-    longitude = models.DecimalField(_('Longitude'), max_digits=8,
-                                                    decimal_places=6)

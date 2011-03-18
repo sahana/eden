@@ -28,7 +28,7 @@ from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 
-from e_cidadania.apps.proposals.models import Proposal, Comment
+from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.proposals.forms import ProposalForm
 from e_cidadania.apps.spaces.models import Space
 
