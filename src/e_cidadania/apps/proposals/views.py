@@ -19,8 +19,9 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
+from django.template import RequestContext
 
 from django.views.generic.list_detail import object_list
 from django.views.generic.list_detail import object_detail
@@ -45,12 +46,11 @@ def add_proposal(request, space_name):
 
     if request.POST:
         form_uncommited = form.save(commit=False)
-        from_uncommited.belongs_to = prop_space.id
-        from_uncommited.support_votes = 0
+        form_uncommited.belongs_to = prop_space
+        form_uncommited.support_votes = 0
         form_uncommited.author = request.user
         if form.is_valid():
             form_uncommited.save()
-            space = form_uncommited.name
             return redirect('/spaces/' + space_name)
 
     return render_to_response('proposal/add_proposal.html',
@@ -95,15 +95,15 @@ def view_proposal(request, space_name, prop_id):
     """
     current_space = get_object_or_404(Space, name=space_name)
     
-    extra_context = {
-        'comments': Comment.objects.all().filter(proposal=prop_id)
-    }
+#    extra_context = {
+#        'comments': Comment.objects.all().filter(proposal=prop_id)
+#    }
     
     return object_detail(request,
                          queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
                          object_id = prop_id,
                          template_name = 'proposal/view_proposal.html',
-                         template_object_name = 'proposal',
-                         extra_context = extra_context)
+                         template_object_name = 'proposal')
+#                         extra_context = extra_context)
 
 

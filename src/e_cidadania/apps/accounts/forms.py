@@ -20,31 +20,19 @@
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.localflavor.es.forms import ESProvinceSelect, ESRegionSelect
 
 from apps.registration.forms import RegistrationForm
 from apps.registration.models import RegistrationProfile
 
 from apps.accounts.models import UserProfile
 
-
-# All this cde has been replaced by django-register
-
-#attrs_dict = { 'class': 'required' }
-#reg_obj = RegistrationProfile.objects
-
-#class RegistrationFormCidadania(RegistrationForm):
-#    
-#    """
-#    """
-#    class Meta:
-#        model = UserProfile
-#    
-#    def save(self, profile_callback=None):
-#        new_user = reg_obj.create_inactive_user(username=self.cleaned_data['username'],
-#        password = self.cleaned_data['password1'],
-#        email=self.cleaned_data['email'])
-#        
-#        new_profile = ZProfile(user=new_user,
-#                               favorite_band=self.cleaned_data['band'])
-#        new_profile.save()
-#        return new_user
+class Registration(RegistrationForm):
+    
+    """
+    """
+    province = ESProvinceSelect()
+    region = ESRegionSelect()
+    
+    class Meta:
+        model = UserProfile

@@ -58,18 +58,18 @@ class Proposal(CommonData):
     belongs_to = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
                                blank=True, null=True)
-    #debatelink = models,ForeignKey()
+    #debatelink = models.ForeignKey()
     tags = TagField()
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
                                    max_digits=8, decimal_places=6)
     longitude = models.DecimalField(_('Longitude'), blank=True, null=True,
                                     max_digits=8, decimal_places=6)
-    closed = models.BooleanField(default=False)
+    closed = models.NullBooleanField(default=False, blank=True)
     closed_by = models.ForeignKey(User, blank=True, null=True,
                                   related_name='proposal_closed_by')
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
-    anon_allowed = models.BooleanField(default=False)
+    anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.IntegerField(blank=True, null=True)
     
     def __unicode__(self):

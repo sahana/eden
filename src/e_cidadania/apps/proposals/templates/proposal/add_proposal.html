@@ -32,28 +32,15 @@
         {{ form.longitude }}
       </div>
       
-            <div class="fieldWrapper">
-        {{ form.longitude.errors }}
-        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
-        {{ form.longitude }}
-      </div>
-      
-            <div class="fieldWrapper">
-        {{ form.longitude.errors }}
-        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
-        {{ form.longitude }}
-      </div>
-      
-            <div class="fieldWrapper">
-        {{ form.longitude.errors }}
-        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
-        {{ form.longitude }}
+      <div class="fieldWrapper">
+        {{ form.tags.errors }}
+        <label for="id_banner">{% trans "Tags" %} {% trans "(optional)" %}:</label>
+        {{ form.tags }}
       </div>
 
-{% comment %}
-There are some fields that must be implemented, and show them when an admin
-edits.
-{% endcomment %}
+      {{ form.belongs_to.as_hidden }}
+      {{ form.author.as_hidden }}
+      {{ form.support_votes.as_hidden }}
 
         <p><input type="submit" value="Continue &rarr;" /></p>
     </form>
