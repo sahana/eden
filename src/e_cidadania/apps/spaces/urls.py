@@ -49,10 +49,6 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     (r'^(?P<space_name>\w+)/', 'view_space_index'),
 
-    # Accounts
-    # DISABLED. Accounts will be site-wide
-    #(r'^(?P<space_name>\w+)/accounts/', include('e_cidadania.apps.userprofile.urls')),
-
     # Debates
     #(r'^debate/', include('e_cidadania.apps.debates.urls')),
 

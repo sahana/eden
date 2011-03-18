@@ -20,7 +20,9 @@
 
 from django.forms import ModelForm, forms
 from django.core import validators
-from django.contrib.auth import User
+from django.contrib.auth.models import User
+
+from e_cidadania.apps.proposals.models import Proposal
 
 class ProposalForm(ModelForm):
 

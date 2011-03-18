@@ -57,6 +57,7 @@ def add_proposal(request, space_name):
                               {'form': form},
                               context_instance=RequestContext(request))
 
+@login_required
 def list_proposals(request, space_name):
 
     """
