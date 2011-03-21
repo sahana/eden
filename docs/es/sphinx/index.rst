@@ -17,9 +17,10 @@ externas.
 .. image:: images/models.png
     :align: center
 
-.. warning:: e-cidadania está en una versión muy temprana y sus modelos
-             de datos, así como partes del programa pueden cambiar sin previo
-             aviso.
+.. warning:: e-cidadania está en una fase de desarrollo muy temprana y por ello
+             algunas partes del programa así como los modelos de datos pueden
+             sufrir grandes cambios hasta dentro de algunas versiones.
+
 .. _django: http://www.djangoproject.com
 
 Documentación
