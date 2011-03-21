@@ -43,6 +43,7 @@ Desarrollo
     reference/proposals
     reference/debates
     reference/ldap
+    reference/docs_i18n
 
 Plantillas
 ----------
