@@ -27,9 +27,10 @@ Documentación
 .. toctree::
     :maxdepth: 20
 
-    install
-    configure
-    manual
+    docs/install
+    docs/configure
+    docs/adminmanual
+    docs/usermanual
 
 Desarrollo
 ----------
