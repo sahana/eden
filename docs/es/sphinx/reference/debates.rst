@@ -1,2 +1,2 @@
-Sistema de debates
-==================
+Módulo de debates
+=================

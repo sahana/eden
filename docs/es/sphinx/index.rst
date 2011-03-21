@@ -14,10 +14,16 @@ con geolocalización y mensajería.
 Este programa está basado en el framework `django`_ y en varias librerías
 externas.
 
+.. image:: images/models.png
+    :align: center
+
+.. warning:: e-cidadania está en una versión muy temprana y sus modelos
+             de datos, así como partes del programa pueden cambiar sin previo
+             aviso.
 .. _django: http://www.djangoproject.com
 
 Documentación
-=============
+-------------
 .. toctree::
     :maxdepth: 20
 
@@ -26,7 +32,7 @@ Documentación
     manual
 
 Desarrollo
-==========
+----------
 .. toctree::
     :maxdepth: 10
 
@@ -37,7 +43,7 @@ Desarrollo
     reference/ldap
 
 Plantillas
-==========
+----------
 .. toctree::
    :maxdepth: 10
 
@@ -46,7 +52,7 @@ Plantillas
    theming/othertemplates
 
 Indices y tablas
-==================
+----------------
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -49,22 +49,16 @@ Las cuentas de usuario contienen los siguientes campos:
 **phone_alt** *(CharField, 9 caracteres)*
    Teléfono secundario de contacto
 
-django-registration
--------------------
+django-userprofile
+------------------
 
-django-registration se encarga de blahblah.
-
-django-profile
---------------
-
-django-profile se encarga de lerelere.
+*django-userprofile* se encarga de proveeder las vistas y funciones para extender
+el modelo de datos de usuario en django. Junto a un módulo creado para extender
+el modelo de datos todo va perfecto.
 
 accounts
 --------
 
-La aplicación accounts sólo establece los campos extra para el modelo de usuario, el resto de trabajo es realizado por django-profile.
-
-LDAP
-----
-
-El soporte LDAP todavía no está incorporado en esta versión.
+El módulo accounts es nuestro modelo extendido de usuario. En él se encuentran
+todos los campos extra de usuario que se necesitan y que serán incorporados de
+forma transparente a *django-userprofile*.

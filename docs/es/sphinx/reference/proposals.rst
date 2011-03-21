@@ -1,5 +1,5 @@
-Sistema de propuestas
-=====================
+Módulo de propuestas
+====================
 
 El sistema de propuestas consta de varios elementos muy similares al ya
 archiconocido sistema de preguntas de *Stack Overflow*.
