@@ -9,6 +9,4 @@
 *.log
 *.aux
 _build*
-_static*
-_templates*
 src/e_cidadania/static/spaces/*

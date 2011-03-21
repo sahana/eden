@@ -6,39 +6,44 @@
 Bienvenido a la documentación de e-cidadania!
 =============================================
 
-**e-cidadania** es una aplicación web destinada a la participación ciudadana.
+**e-cidadania** es una plataforma web destinada a la participación ciudadana.
 Para ello cuenta con una serie de herramientas clave como son el sistema de
-propuestas o un perfil avanzado de usuario con geolocalización y mensajería.
+propuestas, un revolucionario sistema de debate o un perfil avanzado de usuario
+con geolocalización y mensajería.
 
-Este programa está basado en el framework `django`_ y en varias librerías externas como pueden ser LDAP o similares.
+Este programa está basado en el framework `django`_ y en varias librerías
+externas.
 
 .. _django: http://www.djangoproject.com
 
-Referencia
-==========
+Documentación
+=============
 .. toctree::
-   :maxdepth: 10
+    :maxdepth: 20
 
-   accounting
-   proposals
-   debates
-   ldap
+    install
+    configure
+    manual
 
 Desarrollo
 ==========
 .. toctree::
-   :maxdepth: 10
-   
-   styleguide
+    :maxdepth: 10
+
+    reference/styleguide
+    reference/accounting
+    reference/proposals
+    reference/debates
+    reference/ldap
 
 Plantillas
 ==========
 .. toctree::
    :maxdepth: 10
 
-   accounting_templates
-   proposals_templates
-   debates_templates
+   theming/reference
+   theming/createyourown
+   theming/othertemplates
 
 Indices y tablas
 ==================
