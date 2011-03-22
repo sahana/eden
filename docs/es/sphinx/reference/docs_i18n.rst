@@ -53,8 +53,8 @@ de Google Translate y te dará el resultado que el crea correcto.
 .. warning:: Nunca te fies del resultado del botón "sugerir" ya que en muchas ocasiones
    es incorrecto.
 
-Traduciendo con gettext (a mano)
-................................
+Traduciendo con gettext
+.......................
 
 Gettext es una herramienta de sobra conocida por todos los traductores del mundo. 
 Es un estándar. Gracias al *middleware* de traducción que trae django de serie
