@@ -61,6 +61,7 @@ def add_post(request, space_name):
                               {'form': form},
                               context_instance=RequestContext(request))
 
+@permission_required('Post.delete_post')
 def delete_post(request, space_name, post_id):
 
     """

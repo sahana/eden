@@ -84,7 +84,7 @@ def delete_proposal(request, space_name, prop_id):
                          template_object_name = 'proposal',
                          post_delete_redirect = '/')
 
-@permission_required('Proposal.change_proposal')
+@permission_required('Proposal.edit_proposal')
 def edit_proposal(request, space_name, prop_id):
     pass
 
