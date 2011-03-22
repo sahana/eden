@@ -57,7 +57,6 @@ def add_proposal(request, space_name):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-@login_required
 def list_proposals(request, space_name):
 
     """
@@ -84,7 +83,8 @@ def delete_proposal(request, space_name, prop_id):
                          template_name = 'proposal/delete_proposal.html',
                          template_object_name = 'proposal',
                          post_delete_redirect = '/')
-    
+
+@permission_required('Proposal.change_proposal')
 def edit_proposal(request, space_name, prop_id):
     pass
 
