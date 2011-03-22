@@ -21,14 +21,10 @@
 import datetime
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-
 from django.shortcuts import render_to_response, get_object_or_404, redirect
-
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
-
 from django.contrib import messages
-
 from django.template import RequestContext
 
 from django.views.generic.list_detail import object_list, object_detail
@@ -46,6 +42,9 @@ def go_to_space(request):
     """
     This view redirects to the space selected in the dropdown list in the
     index page. It only uses a POST petition.
+    
+    The 'raise Http404' isn't necessary, since if a space doesn't exist, it
+    doesn't show, but just for security we will leave it.
     """
 
     if request.POST:
@@ -56,7 +55,8 @@ def go_to_space(request):
 def view_space_index(request, space_name):
 
     """
-    Show the index page for the requested space.
+    Show the index page for the requested space. This is a conglomerate of
+    various modules.
     """
     place = get_object_or_404(Space, name=space_name)
 

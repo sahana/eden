@@ -2,20 +2,20 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-03-14 17:34+0100\n"
-"PO-Revision-Date: 2011-02-17 10:45\n"
-"Last-Translator: <a@a.com>\n"
+"PO-Revision-Date: 2011-03-18 18:25\n"
+"Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 "X-Translated-Using: django-rosetta 0.5.6\n"
 
 #: 404.html:60
@@ -23,15 +23,8 @@ msgid "Not Found!"
 msgstr "¡Non atopado!"
 
 #: 404.html:63
-msgid ""
-"A meiga stole this page. You better get out of here now that you can, before "
-"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
-"pitchforks and go in search of her. Don't worry about us, we will manage "
-"somehow."
-msgstr "Unha meiga roubou esta páxina. É mellor que marches de aquí canto"
-"antes, antes de que te bote mal de ollo. Mentres tanto, nos colleremos as"
-"antorchas e ghinchas e imos na súa busca. Non te preocupes por nós, xa nos"
-"apañaremos como poidamos."
+msgid "A meiga stole this page. You better get out of here now that you can, before she gives you the evil eye. Meanwhile, we are going to get the torchs and pitchforks and go in search of her. Don't worry about us, we will manage somehow."
+msgstr "Unha meiga roubou esta páxina. É mellor que marches de aquí canto antes, antes de que te bote mal de ollo. Mentres tanto, nós colleremos as antorchas e ghinchas e imos na súa busca. Non te preocupes por nós, xa nos apañaremos como poidamos."
 
 #: 404.html:64 500.html:39
 msgid "Take me out of here!"
@@ -63,17 +56,15 @@ msgstr "Acerca de"
 
 #: 500.html:37
 msgid "Now you did it, the server is broken."
-msgstr "Agora a fixeches boa, o servidor está roto."
+msgstr "Fixechela boa, o servidor está roto."
 
 #: base.html:74
 msgid "created by"
 msgstr "creado por"
 
 #: base.html:75
-msgid ""
-"We guarantee that this program will not become aware and take over the world"
-msgstr ""
-"Garantimos que este programa non vai tomar conciencia e apoderarse do mundo"
+msgid "We guarantee that this program will not become aware and take over the world"
+msgstr "Garantimos que este programa non vai tomar conciencia e apoderarse do mundo"
 
 #: menu.html:10 menu.html.py:45
 msgid "Language"
@@ -108,15 +99,8 @@ msgid "e-cidadania"
 msgstr "e-cidadania"
 
 #: site_index.html:13
-msgid ""
-"e-cidadania is a participative democracy tool for citizens. It has an "
-"advanced debate system, proposals, document versioning, and you can create "
-"specific spaces for every process, it has a lot of functions more but it's "
-"better that you try it by yourself."
-msgstr "e-cidadania é una ferramenta de democracia participativa para cidadáns"
-"e cidadadanas. Contén un avanzado sistema de debate, propostas, versionado de"
-"documentos, espazos independentes para cada proceso e moitas funcións mais,"
-"pero será mellor que o probes tí mesmo."
+msgid "e-cidadania is a participative democracy tool for citizens. It has an advanced debate system, proposals, document versioning, and you can create specific spaces for every process, it has a lot of functions more but it's better that you try it by yourself."
+msgstr "e-cidadania é una ferramenta de democracia participativa para a cidadanía. Contén un avanzado sistema de debate, propostas, versionado de documentos, espazos independentes para cada proceso e moitas funcións máis, pero será mellor que o probes tí mesmo/mesma."
 
 #: site_index.html:20
 msgid "Add news"
@@ -136,7 +120,7 @@ msgstr "Escrito por"
 
 #: site_index.html:36
 msgid "on"
-msgstr "o"
+msgstr "en"
 
 #: site_index.html:41
 msgid "Nothing published yet."
@@ -144,7 +128,7 @@ msgstr "Non hai nada publicado todavía."
 
 #: site_index.html:52
 msgid "What can you do with e-cidadania?"
-msgstr "¿Qué podo facer con e-cidadania?"
+msgstr "Qué podo facer con e-cidadania?"
 
 #: site_index.html:52
 msgid "Discover it here"
@@ -176,7 +160,7 @@ msgstr "Espazos actualizados recentemente"
 
 #: site_index.html:85
 msgid "Your favourite social site isn't here? Tell us!"
-msgstr "¿A tua rede social favorita non está aquí? ¡Díno-lo!"
+msgstr "A túa rede social favorita non está aquí? ¡Díno-lo!"
 
 #: site_index.html:89
 msgid "e-cidadania development"
@@ -184,7 +168,7 @@ msgstr "Desenvolvemento de e-cidadanía"
 
 #: site_index.html:90
 msgid "Do you want to help?"
-msgstr "¿Queres axudar?"
+msgstr "Queres axudar?"
 
 #: site_index.html:90
 msgid "Access"
