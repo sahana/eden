@@ -20,6 +20,9 @@
 
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
+from django.contrib.auth.decorators import login_required, permission_required
+from django.views.generic.create_update import update_object
+from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -44,6 +47,14 @@ def index_view(request):
                               extra_context,
                               context_instance=RequestContext(request))
 
+###############
+# BIG WARNING #
+###############
+
+# The following code violates the DRY principle. Repeating exactly the same
+# code as in apps/news/views.py
+
+@permission_required('Post.add_post')
 def add_news(request):
 
     """
@@ -64,4 +75,32 @@ def add_news(request):
     return render_to_response('news/add_post.html',
                               {'form': form},
                               context_instance=RequestContext(request))
+
+@permission_required('Post.delete_post')
+def delete_post(request, post_id):
+
+    """
+    Delete an existent post. Post deletion is only reserved to spaces
+    administrators or site admins.
+    """
+    return delete_object(request,
+                         model = Post,
+                         object_id = post_id,
+                         login_required=True,
+                         template_name = 'news/delete_post.html',
+                         post_delete_redirect = '/')
+
+@permission_required('Post.edit_post')
+def edit_post(request, post_id):
+
+    """
+    Edit an existent post.
+    """
+
+    return update_object(request,
+                         model = Post,
+                         object_id = post_id,
+                         login_required = True,
+                         template_name = 'news/edit_post.html')
+
 
