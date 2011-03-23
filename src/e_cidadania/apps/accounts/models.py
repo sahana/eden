@@ -26,6 +26,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from e_cidadania.apps.userprofile.models import BaseProfile
+from e_cidadania.apps.spaces.models import Space
 
 GENDER = (
 
@@ -33,6 +34,12 @@ GENDER = (
     ('F', _('Female')),
 
 )
+
+class Interest(models.Model):
+
+    """
+    """
+    item = models.CharField(_('Interes'), max_length=50)
 
 class UserProfile(BaseProfile):
 
@@ -76,6 +83,8 @@ class UserProfile(BaseProfile):
     website = models.URLField(_('Website'), verify_exists=True, max_length=200,
                               null=True, blank=True,
                               help_text=_('The URL will be checked'))
+    spaces = models.ManyToManyField(Space)
+    interests = models.ManyToManyField(Interest)
     
     # Not required since User module automatically sets the register time.
     #registered = models.DateTimeField('Registered', auto_now_add=True)
