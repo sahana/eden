@@ -25,8 +25,10 @@ urlpatterns = patterns('e_cidadania.apps.news.views',
     
     (r'^add/', 'add_post'),
     
-    (r'^delete/(?P<post_id>\d+)/', 'delete_post'),
+    (r'^(?P<post_id>\d+)/delete/', 'delete_post'),
     
-    (r'^edit/(?P<post_id>\d+)/', 'edit_post'),
+    (r'^(?P<post_id>\d+)/edit/', 'edit_post'),
+    
+    (r'^(?P<post_id>\d+)', 'view_news')
 
 )

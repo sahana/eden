@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load comments %}
+
+{% block title %}{{ news.post_title }} {% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div id="centercol">
+      <div class="post">
+        {% if user.is_staff %}
+          <div id="tools">
+            <a href="{{ request.path }}news/{{ news.id }}/edit/">Edit</a> |
+            <a href="{{ request.path }}news/{{ news.id }}/delete/">Delete</a>
+          </div>
+        {% endif %}
+        <h1>{{ news.post_title }}</h1>
+        <p>{{ news.post_message }}</p>
+        <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
+      </div>
+      
+      <p>{% render_comment_list for news %}</p>
+      
+      <p>{% render_comment_form for news %}</p>
+      
+    </div>
+  {% endblock%}
+  
+  {% block rightcol %}
+  {% endblock%}
+
+{% endblock %}

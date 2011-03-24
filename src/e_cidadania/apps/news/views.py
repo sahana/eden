@@ -88,3 +88,18 @@ def edit_post(request, space_name, post_id):
                          login_required = True,
                          template_name = 'news/edit_post.html')
 
+
+def view_news(request, space_name, post_id):
+
+    """
+    View a post with comments.
+    """
+    current_space = get_object_or_404(Space, name=space_name)
+    
+    return object_detail(request,
+                         queryset = Post.objects.all().filter(post_space=current_space.id),
+                         object_id = post_id,
+                         template_name = 'news/view_news.html',
+                         template_object_name = 'news')
+
+

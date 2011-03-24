@@ -32,9 +32,9 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
     # Please note: Documents are integrated in spaces, they share views.
     (r'^(?P<space_name>\w+)/docs/add', 'add_doc'),
 
-    (r'^(?P<space_name>\w+)/docs/edit/(?P<doc_id>\d+)/', 'edit_doc'),
+    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/', 'edit_doc'),
 
-    (r'^(?P<space_name>\w+)/docs/delete/(?P<doc_id>\d+)/', 'delete_doc'),
+    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/', 'delete_doc'),
 
     (r'^(?P<space_name>\w+)/docs/', 'list_all_docs'),
 
