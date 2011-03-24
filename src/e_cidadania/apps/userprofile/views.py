@@ -24,6 +24,7 @@ import base64
 import Image
 import urllib
 import os
+from e_cidadania.apps.proposals.models import Proposal
 
 if not settings.AUTH_PROFILE_MODULE:
     raise SiteProfileNotAvailable
@@ -107,6 +108,10 @@ def overview(request):
     """
     Main profile page
     """
+    # Get the data of what the user did
+    # WARNING, THIS IS HARDCODED, MUST BE IMPLEMENTED WELL
+    # AFTER TESTING
+    proposals = Proposal.objects.all().filter(author=request.user.id)
     profile, created = Profile.objects.get_or_create(user=request.user)
     validated = False
     try:
@@ -117,7 +122,7 @@ def overview(request):
 
     template = "userprofile/profile/overview.html"
     data = { 'section': 'overview', 'GOOGLE_MAPS_API_KEY': GOOGLE_MAPS_API_KEY,
-             'email': email, 'validated': validated }
+             'email': email, 'validated': validated, 'proposals': proposals }
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
