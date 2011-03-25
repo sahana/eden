@@ -30,7 +30,7 @@
               <a href="{{ request.path }}news/delete/{{ news.id }}">{% trans "Delete" %}</a>
             </div>
           {% endif %}
-          <h1>{{ news.post_title }}</h1>
+          <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
           <p>{{ news.post_message }}</p>
           <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
         </div>

@@ -41,10 +41,12 @@ urlpatterns = patterns('',
 
     # News (this view of news is only for the index)
     (r'^news/add', 'e_cidadania.views.add_news'),
-    
+
     (r'^news/delete/(?P<post_id>\w+)', 'e_cidadania.views.delete_post'),
-    
+
     (r'^news/edit/(?P<post_id>\w+)', 'e_cidadania.views.edit_post'),
+
+    (r'^news/(?P<post_id>\w+)', 'e_cidadania.views.view_post'),
 
     # Calendar
     (r'^calendar/', include('e_cidadania.apps.swingtime.urls')),
@@ -55,13 +57,13 @@ urlpatterns = patterns('',
     # Static content #### FOR DEVELOPMENT!! ####
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
-    
+
     # Terms of service
     (r'^terms/', 'direct_to_template', {'template': 'terms.html'}),
 
     # About
     (r'^about/', 'direct_to_template', {'template': 'about.html'}),
-    
+
     # This urls is for the django comments system
     (r'^comments/', include('django.contrib.comments.urls')),
 

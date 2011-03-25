@@ -23,6 +23,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required, permission_required
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
+from django.views.generic.list_detail import object_detail
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -103,4 +104,15 @@ def edit_post(request, post_id):
                          login_required = True,
                          template_name = 'news/edit_post.html')
 
+def view_post(request, post_id):
+
+    """
+    View a post with comments.
+    """
+
+    return object_detail(request,
+                         queryset = Post.objects.all(),
+                         object_id = post_id,
+                         template_name = 'news/view_news.html',
+                         template_object_name = 'news')
 
