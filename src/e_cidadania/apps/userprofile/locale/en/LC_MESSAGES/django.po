@@ -8,10 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-17 11:07+0100\n"
+"POT-Creation-Date: 2011-03-25 23:17+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1060,7 +1061,7 @@ msgstr ""
 
 #: templates/userprofile/menu.html:8
 #: templates/userprofile/profile/location.html:18
-#: templates/userprofile/profile/overview.html:83
+#: templates/userprofile/profile/overview.html:117
 #: templates/userprofile/profile/overview_old.html:37
 #: templates/userprofile/profile/public.html:40
 msgid "Location"
@@ -1346,6 +1347,7 @@ msgid "Choose the location of your avatar"
 msgstr ""
 
 #: templates/userprofile/avatar/choose.html:36
+#: templates/userprofile/profile/overview.html:90
 msgid "Delete"
 msgstr ""
 
@@ -1463,7 +1465,7 @@ msgid "Define your location"
 msgstr ""
 
 #: templates/userprofile/profile/location.html:14
-#: templates/userprofile/profile/overview.html:66
+#: templates/userprofile/profile/overview.html:71
 #: templates/userprofile/profile/overview_old.html:28
 #: templates/userprofile/profile/public.html:37
 msgid "Country"
@@ -1492,7 +1494,7 @@ msgstr ""
 msgid "Overview of your profile"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:30
+#: templates/userprofile/profile/overview.html:32
 #, python-format
 msgid ""
 "\n"
@@ -1500,111 +1502,120 @@ msgid ""
 "      "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:35
+#: templates/userprofile/profile/overview.html:38
 msgid "Edit personal data"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:36
+#: templates/userprofile/profile/overview.html:39
 msgid "Edit location"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:37
+#: templates/userprofile/profile/overview.html:40
 msgid "Delete profile"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:38
+#: templates/userprofile/profile/overview.html:41
 msgid "Public profile"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:45
+#: templates/userprofile/profile/overview.html:49
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Change avatar"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:45
+#: templates/userprofile/profile/overview.html:49
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Add avatar"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:49
+#: templates/userprofile/profile/overview.html:53
 msgid "Username: "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:50
+#: templates/userprofile/profile/overview.html:54
 msgid "Real name: "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:51
+#: templates/userprofile/profile/overview.html:55
 msgid "Age: "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:52
+#: templates/userprofile/profile/overview.html:56
 msgid "Member for: "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:53
+#: templates/userprofile/profile/overview.html:58
 #: templates/userprofile/profile/overview_old.html:19
 msgid "E-mail:"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:56
+#: templates/userprofile/profile/overview.html:61
 #: templates/userprofile/profile/overview_old.html:21
 msgid "Not set yet"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:60
+#: templates/userprofile/profile/overview.html:65
 #: templates/userprofile/profile/overview_old.html:23
 msgid " (Not validated)"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:70
-#: templates/userprofile/profile/overview.html:87
+#: templates/userprofile/profile/overview.html:75
+#: templates/userprofile/profile/overview.html:121
 #: templates/userprofile/profile/overview_old.html:32
 #: templates/userprofile/profile/overview_old.html:41
 msgid "Not set"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:75
-msgid "Ciudad: "
+#: templates/userprofile/profile/overview.html:80
+msgid "City: "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:102
-#: templates/userprofile/profile/overview_old.html:80
-msgid "Management:"
+#: templates/userprofile/profile/overview.html:88
+msgid "Add"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:103
-#: templates/userprofile/profile/overview_old.html:81
-msgid "Change password"
+#: templates/userprofile/profile/overview.html:89
+msgid "Edit"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:105
-#: templates/userprofile/profile/overview_old.html:83
-msgid "Change your e-mail address"
+#: templates/userprofile/profile/overview.html:100
+msgid "proposed by "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:105
-#: templates/userprofile/profile/overview_old.html:83
-msgid "Add your e-mail address"
-msgstr ""
-
-#: templates/userprofile/profile/overview.html:106
-#: templates/userprofile/profile/overview_old.html:84
-msgid "Resend validation e-mail"
-msgstr ""
-
-#: templates/userprofile/profile/overview.html:110
-#: templates/userprofile/profile/overview_old.html:88
-msgid "Add location"
-msgstr ""
-
-#: templates/userprofile/profile/overview.html:112
-#: templates/userprofile/profile/overview_old.html:90
-msgid "Change location"
+#: templates/userprofile/profile/overview.html:100
+msgid " at "
 msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:18
 msgid "Username:"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:80
+msgid "Management:"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:81
+msgid "Change password"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:83
+msgid "Change your e-mail address"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:83
+msgid "Add your e-mail address"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:84
+msgid "Resend validation e-mail"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:88
+msgid "Add location"
+msgstr ""
+
+#: templates/userprofile/profile/overview_old.html:90
+msgid "Change location"
 msgstr ""
 
 #: templates/userprofile/profile/personal.html:4

@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.1 alpha\n"
-"Report-Msgid-Bugs-To: oscar@cidadania.coop\n"
-"POT-Creation-Date: 2011-03-17 13:25+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-03-25 23:19+0100\n"
 "PO-Revision-Date: 2011-03-15 16:41\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: ES <ecidadania-es@ecidadania.org>\n"
@@ -32,8 +32,8 @@ msgid ""
 msgstr ""
 "Una meiga ha robado esta página. Será mejor que te vayas de aquí antesde que "
 "te eche mal de ojo. Mientras tanto, nosotros cogeremos las antorchas y las "
-"horquillas e iremos en su busca. No te preocupes por nosotros, nos apañaremos "
-"de alguna forma."
+"horquillas e iremos en su busca. No te preocupes por nosotros, nos "
+"apañaremos de alguna forma."
 
 #: 404.html:64 500.html:39
 msgid "Take me out of here!"
@@ -72,8 +72,10 @@ msgid "created by"
 msgstr "creado por"
 
 #: base.html:75
-msgid "We guarantee that this program will not become aware and take over the world"
-msgstr "Garantizamos que este programa no tomará conciencia yse apoderará delmundo"
+msgid ""
+"We guarantee that this program will not become aware and take over the world"
+msgstr ""
+"Garantizamos que este programa no tomará conciencia yse apoderará delmundo"
 
 #: menu.html:10 menu.html.py:45
 msgid "Language"
@@ -214,8 +216,9 @@ msgstr "Gracias por aprobarlo"
 #: comments/approved.html:7 comments/deleted.html:7 comments/flagged.html:7
 msgid ""
 "Thanks for taking the time to improve the quality of discussion on our site"
-msgstr "Gracias por pasar el tiempo mejorando la calidad de las "
-"conversaciones de nuestra web."
+msgstr ""
+"Gracias por pasar el tiempo mejorando la calidad de las conversaciones de "
+"nuestra web."
 
 #: comments/delete.html:4
 msgid "Remove a comment"

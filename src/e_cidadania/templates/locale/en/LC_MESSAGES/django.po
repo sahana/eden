@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-09 18:25+0100\n"
+"POT-Creation-Date: 2011-03-25 23:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,10 +17,48 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: 404.html:38
+#: 404.html:60
+msgid "Not Found!"
+msgstr ""
+
+#: 404.html:63
 msgid ""
-"A meiga stole this page, you better not mess with her! For that we provide "
-"you an exit"
+"A meiga stole this page. You better get out of here now that you can, before "
+"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
+"pitchforks and go in search of her. Don't worry about us, we will manage "
+"somehow."
+msgstr ""
+
+#: 404.html:64 500.html:39
+msgid "Take me out of here!"
+msgstr ""
+
+#: 404.html:65 500.html:40 menu.html:4 menu.html.py:39
+msgid "Home"
+msgstr ""
+
+#: 404.html:66 500.html:41
+msgid "Development"
+msgstr ""
+
+#: 404.html:67 500.html:42 site_index.html:98
+msgid "Help"
+msgstr ""
+
+#: 404.html:68 500.html:43 site_index.html:98
+msgid "Terms of service"
+msgstr ""
+
+#: 404.html:69 500.html:44
+msgid "Privacy"
+msgstr ""
+
+#: 404.html:70 500.html:45 site_index.html:98
+msgid "About"
+msgstr ""
+
+#: 500.html:37
+msgid "Now you did it, the server is broken."
 msgstr ""
 
 #: base.html:74
@@ -32,94 +70,221 @@ msgid ""
 "We guarantee that this program will not become aware and take over the world"
 msgstr ""
 
-#: menu.html:4 menu.html.py:36
-msgid "Home"
-msgstr ""
-
-#: menu.html:25
-msgid "Administration"
-msgstr ""
-
-#: menu.html:26
-msgid "Translation"
-msgstr ""
-
-#: menu.html:28
-msgid "Messages"
-msgstr ""
-
-#: menu.html:29
-msgid "Edit profile"
-msgstr ""
-
-#: menu.html:30
-msgid "Logout"
-msgstr ""
-
-#: menu.html:37
-msgid "Login"
-msgstr ""
-
-#: menu.html:38
+#: menu.html:10 menu.html.py:45
 msgid "Language"
 msgstr ""
 
-#: site_index.html:4
+#: menu.html:28
+msgid "Administration"
+msgstr ""
+
+#: menu.html:29
+msgid "Translation"
+msgstr ""
+
+#: menu.html:31
+msgid "Messages"
+msgstr ""
+
+#: menu.html:32
+msgid "Edit profile"
+msgstr ""
+
+#: menu.html:33
+msgid "Logout"
+msgstr ""
+
+#: menu.html:40
+msgid "Login"
+msgstr ""
+
+#: site_index.html:4 terms.html:4
 msgid "e-cidadania"
 msgstr ""
 
 #: site_index.html:13
+msgid ""
+"e-cidadania is a participative democracy tool for citizens. It has an "
+"advanced debate system, proposals, document versioning, and you can create "
+"specific spaces for every process, it has a lot of functions more but it's "
+"better that you try it by yourself."
+msgstr ""
+
+#: site_index.html:20
 msgid "Add news"
 msgstr ""
 
-#: site_index.html:32
+#: site_index.html:29
+msgid "Edit"
+msgstr ""
+
+#: site_index.html:30
+msgid "Delete"
+msgstr ""
+
+#: site_index.html:35
 msgid "Written by"
 msgstr ""
 
-#: site_index.html:32
+#: site_index.html:35
 msgid "on"
 msgstr ""
 
-#: site_index.html:37
+#: site_index.html:40
 msgid "Nothing published yet."
 msgstr ""
 
-#: site_index.html:52
+#: site_index.html:51
+msgid "What can you do with e-cidadania?"
+msgstr ""
+
+#: site_index.html:51
+msgid "Discover it here"
+msgstr ""
+
+#: site_index.html:55
 msgid "Create your own space"
 msgstr ""
 
-#: site_index.html:52
+#: site_index.html:55
 msgid "inside e-cidadania"
 msgstr ""
 
-#: site_index.html:56
+#: site_index.html:59
 msgid "Spaces list"
 msgstr ""
 
-#: site_index.html:62
+#: site_index.html:65
 msgid "No spaces"
 msgstr ""
 
-#: site_index.html:65
+#: site_index.html:68
 msgid "Go"
 msgstr ""
 
-#: site_index.html:70
+#: site_index.html:73
 msgid "Recently updated spaces"
 msgstr ""
 
-#: site_index.html:78
-msgid "e-cidadania development"
-msgstr ""
-
-#: site_index.html:79
-msgid "Do you want to help?"
-msgstr ""
-
-#: site_index.html:79
-msgid "Access"
+#: site_index.html:84
+msgid "Your favourite social site isn't here? Tell us!"
 msgstr ""
 
 #: site_index.html:88
-msgid "Main page footer"
+msgid "e-cidadania development"
+msgstr ""
+
+#: site_index.html:89
+msgid "Do you want to help?"
+msgstr ""
+
+#: site_index.html:89
+msgid "Access"
+msgstr ""
+
+#: site_index.html:98
+msgid "Developers"
+msgstr ""
+
+#: comments/approve.html:4
+msgid "Approve a comment"
+msgstr ""
+
+#: comments/approve.html:7
+msgid "Really make this comment public?"
+msgstr ""
+
+#: comments/approve.html:12
+msgid "Approve"
+msgstr ""
+
+#: comments/approved.html:4
+msgid "Thanks for approving"
+msgstr ""
+
+#: comments/approved.html:7 comments/deleted.html:7 comments/flagged.html:7
+msgid ""
+"Thanks for taking the time to improve the quality of discussion on our site"
+msgstr ""
+
+#: comments/delete.html:4
+msgid "Remove a comment"
+msgstr ""
+
+#: comments/delete.html:7
+msgid "Really remove this comment?"
+msgstr ""
+
+#: comments/delete.html:12
+msgid "Remove"
+msgstr ""
+
+#: comments/deleted.html:4
+msgid "Thanks for removing"
+msgstr ""
+
+#: comments/flag.html:4
+msgid "Flag this comment"
+msgstr ""
+
+#: comments/flag.html:7
+msgid "Really flag this comment?"
+msgstr ""
+
+#: comments/flag.html:12
+msgid "Flag"
+msgstr ""
+
+#: comments/flagged.html:4
+msgid "Thanks for flagging"
+msgstr ""
+
+#: comments/form.html:2
+msgid "Leave a comment"
+msgstr ""
+
+#: comments/form.html:18 comments/preview.html:36
+msgid "Post"
+msgstr ""
+
+#: comments/form.html:19 comments/preview.html:37
+msgid "Preview"
+msgstr ""
+
+#: comments/list.html:3
+msgid "Comments"
+msgstr ""
+
+#: comments/list.html:8
+msgid "said"
+msgstr ""
+
+#: comments/posted.html:4
+msgid "Thanks for commenting"
+msgstr ""
+
+#: comments/posted.html:7
+msgid "Thank you for your comment"
+msgstr ""
+
+#: comments/preview.html:4 comments/preview.html.py:17
+msgid "Preview your comment"
+msgstr ""
+
+#: comments/preview.html:15
+msgid "Please correct the error below"
+msgid_plural "Please correct the errors below"
+msgstr[0] ""
+msgstr[1] ""
+
+#: comments/preview.html:20
+msgid "and"
+msgstr ""
+
+#: comments/preview.html:20
+msgid "Post your comment"
+msgstr ""
+
+#: comments/preview.html:20
+msgid "or make changes"
 msgstr ""

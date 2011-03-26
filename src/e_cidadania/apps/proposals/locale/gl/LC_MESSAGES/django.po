@@ -2,36 +2,21 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-16 10:05-0700\n"
+"POT-Creation-Date: 2011-03-25 23:15+0100\n"
 "PO-Revision-Date: 2011-03-18 18:27\n"
 "Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Translated-Using: django-rosetta 0.5.6\n"
-
-#: forms.py:38 models.py:44 templates/proposal/add_proposal.html:12
-msgid "Title"
-msgstr "Título"
-
-#: forms.py:39 models.py:45 templates/proposal/add_proposal.html:19
-msgid "Message"
-msgstr "Mensaxe"
-
-#: forms.py:42 models.py:63 templates/proposal/add_proposal.html:25
-msgid "Latitude"
-msgstr "Latitude"
-
-#: forms.py:44 models.py:65 templates/proposal/add_proposal.html:31
-msgid "Longitude"
-msgstr "Lonxitude"
 
 #: models.py:33
 msgid "Economically not viable"
@@ -49,17 +34,46 @@ msgstr "Tecnicamente non é viable"
 msgid "Offtopic"
 msgstr "Fora da temática tratada"
 
+#: models.py:44 templates/proposal/add_proposal.html:12
+msgid "Title"
+msgstr "Título"
+
+#: models.py:45 templates/proposal/add_proposal.html:19
+msgid "Message"
+msgstr "Mensaxe"
+
+#: models.py:63 templates/proposal/add_proposal.html:25
+msgid "Latitude"
+msgstr "Latitude"
+
+#: models.py:65 templates/proposal/add_proposal.html:31
+msgid "Longitude"
+msgstr "Lonxitude"
+
 #: templates/proposal/add_proposal.html:4
 msgid "Add proposal"
 msgstr "Engadir proposta"
+
+#: templates/proposal/add_proposal.html:25
+#: templates/proposal/add_proposal.html:31
+#: templates/proposal/add_proposal.html:37
+msgid "(optional)"
+msgstr ""
+
+#: templates/proposal/add_proposal.html:37
+msgid "Tags"
+msgstr ""
 
 #: templates/proposal/delete_proposal.html:4
 msgid "Delete proposal"
 msgstr "Borrar proposta"
 
 #: templates/proposal/delete_proposal.html:13
-msgid "Are you sure you want to delete this proposal? This action cannot be undone."
-msgstr "Estás seguro/segura de querer borrar esta proposta? Esta acción non se pode desfacer"
+msgid ""
+"Are you sure you want to delete this proposal? This action cannot be undone."
+msgstr ""
+"Estás seguro/segura de querer borrar esta proposta? Esta acción non se pode "
+"desfacer"
 
 #: templates/proposal/delete_proposal.html:15
 #: templates/proposal/list_proposals.html:18

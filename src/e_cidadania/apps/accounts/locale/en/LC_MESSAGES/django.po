@@ -8,83 +8,92 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-17 11:06+0100\n"
+"POT-Creation-Date: 2011-03-25 23:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: models.py:32
+#: models.py:33
 msgid "Male"
 msgstr ""
 
-#: models.py:33
+#: models.py:34
 msgid "Female"
 msgstr ""
 
-#: models.py:47
+#: models.py:42
+msgid "Interes"
+msgstr ""
+
+#: models.py:54
 msgid "Name"
 msgstr ""
 
-#: models.py:48
+#: models.py:55
 msgid "Surname"
 msgstr ""
 
-#: models.py:49
+#: models.py:56
 msgid "Gender"
 msgstr ""
 
-#: models.py:52
+#: models.py:59
 msgid "Birth date"
 msgstr ""
 
-#: models.py:56
+#: models.py:63
 msgid "Province"
 msgstr ""
 
-#: models.py:57
-msgid "Municipality"
+#: models.py:64
+msgid "Region"
 msgstr ""
 
-#: models.py:60
+#: models.py:65
+msgid "Neighborhood"
+msgstr ""
+
+#: models.py:68
 msgid "Address"
 msgstr ""
 
-#: models.py:61
+#: models.py:69
 msgid "Number"
 msgstr ""
 
-#: models.py:63
+#: models.py:71
 msgid "Floor"
 msgstr ""
 
-#: models.py:64
+#: models.py:72
 msgid "Letter"
 msgstr ""
 
-#: models.py:67
+#: models.py:75
 msgid "Phone 1"
 msgstr ""
 
-#: models.py:68 models.py:70
+#: models.py:76 models.py:78
 msgid "9 digits maximum"
 msgstr ""
 
-#: models.py:69
+#: models.py:77
 msgid "Phone 2"
 msgstr ""
 
-#: models.py:72
+#: models.py:80
 msgid "Identification document"
 msgstr ""
 
-#: models.py:75
+#: models.py:83
 msgid "Website"
 msgstr ""
 
-#: models.py:77
+#: models.py:85
 msgid "The URL will be checked"
 msgstr ""
 

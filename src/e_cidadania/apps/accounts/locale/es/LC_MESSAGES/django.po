@@ -2,90 +2,99 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-17 11:06+0100\n"
-"PO-Revision-Date: 2011-02-15 09:59\n"
+"POT-Creation-Date: 2011-03-25 23:13+0100\n"
+"PO-Revision-Date: 2011-03-25 23:41\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 "X-Translated-Using: django-rosetta 0.5.6\n"
 
-#: models.py:32
+#: models.py:33
 msgid "Male"
 msgstr "Hombre"
 
-#: models.py:33
+#: models.py:34
 msgid "Female"
 msgstr "Mujer"
 
-#: models.py:47
+#: models.py:42
+msgid "Interes"
+msgstr "Interes"
+
+#: models.py:54
 msgid "Name"
 msgstr "Nombre"
 
-#: models.py:48
+#: models.py:55
 msgid "Surname"
 msgstr "Apellido"
 
-#: models.py:49
+#: models.py:56
 msgid "Gender"
 msgstr "Género"
 
-#: models.py:52
+#: models.py:59
 msgid "Birth date"
 msgstr "Fecha de nacimiento"
 
-#: models.py:56
+#: models.py:63
 msgid "Province"
 msgstr "Provincia"
 
-#: models.py:57
-msgid "Municipality"
+#: models.py:64
+msgid "Region"
+msgstr "Provincia"
+
+#: models.py:65
+msgid "Neighborhood"
 msgstr "Municipio"
 
-#: models.py:60
+#: models.py:68
 msgid "Address"
 msgstr "Dirección"
 
-#: models.py:61
+#: models.py:69
 msgid "Number"
 msgstr "Número"
 
-#: models.py:63
+#: models.py:71
 msgid "Floor"
 msgstr "Piso"
 
-#: models.py:64
+#: models.py:72
 msgid "Letter"
 msgstr "Letra"
 
-#: models.py:67
+#: models.py:75
 msgid "Phone 1"
 msgstr "Teléfono 1"
 
-#: models.py:68 models.py:70
+#: models.py:76 models.py:78
 msgid "9 digits maximum"
 msgstr "9 dígitos máximo"
 
-#: models.py:69
+#: models.py:77
 msgid "Phone 2"
 msgstr "Teléfono 2"
 
-#: models.py:72
+#: models.py:80
 msgid "Identification document"
 msgstr "Documento de identificación"
 
-#: models.py:75
+#: models.py:83
 msgid "Website"
 msgstr "Sitio web"
 
-#: models.py:77
+#: models.py:85
 msgid "The URL will be checked"
 msgstr "La URL se comprobará"
 
@@ -102,12 +111,8 @@ msgid "Password:"
 msgstr "Contraseña:"
 
 #: templates/accounts/logout.html:7
-msgid ""
-"Thanks for using e-cidadania. Now you can continue visting the website or "
-"log in again."
-msgstr ""
-"Gracias por usar e-Ciudadanía. Ahora puedes seguir visitando la página web o "
-"conectarse de nuevo."
+msgid "Thanks for using e-cidadania. Now you can continue visting the website or log in again."
+msgstr "Gracias por usar e-Ciudadanía. Ahora puedes seguir visitando la página web o conectarse de nuevo."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"
@@ -116,3 +121,6 @@ msgstr "Ingresar de nuevo"
 #: templates/accounts/profile.html:5
 msgid "User"
 msgstr "Usuario"
+
+#~ msgid "Municipality"
+#~ msgstr "Municipio"

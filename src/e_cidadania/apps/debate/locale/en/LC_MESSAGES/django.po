@@ -8,15 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-17 11:06+0100\n"
+"POT-Creation-Date: 2011-03-25 23:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: models.py:33 models.py:47
+#: models.py:33 models.py:48
 msgid "Title"
 msgstr ""
 
@@ -24,14 +25,14 @@ msgstr ""
 msgid "Objectives"
 msgstr ""
 
-#: models.py:35 models.py:48
+#: models.py:35 models.py:49
 msgid "Description"
 msgstr ""
 
-#: models.py:61
+#: models.py:62
 msgid "Message"
 msgstr ""
 
-#: models.py:62
+#: models.py:63
 msgid "Explanation"
 msgstr ""
