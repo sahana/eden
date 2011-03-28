@@ -2,8 +2,8 @@
 {% load i18n %}
 
 {% block title %}{% trans "Document list" %}{% endblock %}
-{% block logo %}<a href="/"><img src="/{{ MEDIA_URL }}spaces/logos/logo_index.png"/></a>{% endblock %}
-{% block banner %}<img src="/{{ MEDIA_URL }}spaces/banners/banner_index.png"/>{% endblock %}
+{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
 

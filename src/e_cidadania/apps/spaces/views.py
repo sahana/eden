@@ -163,7 +163,7 @@ def add_doc(request, space_name):
             return redirect('/spaces/' + space_name)
     
     return render_to_response('spaces/add_doc.html',
-                              {'form': form},
+                              {'form': form, 'get_place': space},
                               context_instance=RequestContext(request))
 
 def edit_doc(request, space_name, doc_id):

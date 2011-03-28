@@ -52,7 +52,7 @@
           <ul>
             {% for doc in documents %}
               <li>
-                <a href="/{{ MEDIA_URL }}{{ doc.docfile }}">{{ doc.title }}</a>
+                <a href="/{{ MEDIA_URL }}/{{ doc.docfile }}">{{ doc.title }}</a>
                 {% if user.is_staff %}
                   (<a href="{{ request.path }}docs/{{ doc.id }}/edit/">Edit</a> | 
                   <a href="{{ request.path }}docs/{{ doc.id }}/delete/">Delete</a>)
