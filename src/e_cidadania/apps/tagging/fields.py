@@ -101,7 +101,7 @@ class TagField(CharField):
         return 'CharField'
 
     def formfield(self, **kwargs):
-        from tagging import forms
+        from e_cidadania.apps.tagging import forms
         defaults = {'form_class': forms.TagField}
         defaults.update(kwargs)
         return super(TagField, self).formfield(**defaults)

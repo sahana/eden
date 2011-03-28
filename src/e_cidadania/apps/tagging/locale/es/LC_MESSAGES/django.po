@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-03-25 23:17+0100\n"
-"PO-Revision-Date: 2011-03-25 23:40\n"
+"PO-Revision-Date: 2011-03-28 12:02\n"
 "Last-Translator: <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -87,25 +87,25 @@ msgstr "La entrada de etiqueta fue invalida."
 #: utils.py:236
 #, python-format
 msgid "Invalid distribution algorithm specified: %s."
-msgstr ""
+msgstr "Algoritmo de distribución especificado no válido: %s."
 
 #: views.py:33
 msgid "tagged_object_list must be called with a queryset or a model."
-msgstr ""
+msgstr "tagged_object_list tiene que ser llamado mediante un queryset o un modelo."
 
 #: views.py:39
 msgid "tagged_object_list must be called with a tag."
-msgstr ""
+msgstr "tagged_object_list tine que ser llamado con una etiqueta."
 
 #: views.py:43
 #, python-format
 msgid "No Tag found matching \"%s\"."
-msgstr ""
+msgstr "No hay ninguna etiqueta que coincida con \"%s\"."
 
 #: templatetags/tagging_tags.py:19
 #, python-format
 msgid "tags_for_model tag was given an invalid model: %s"
-msgstr ""
+msgstr "Se ha dado un modelo inválido para tags_for: %s"
 
 #: templatetags/tagging_tags.py:32
 #, python-format
