@@ -58,6 +58,10 @@ urlpatterns = patterns('',
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
 
+    # Static content #### FOR DEVELOPMENT!! ####
+    (r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': 'uploads'}),
+
     # Terms of service
     (r'^terms/', 'direct_to_template', {'template': 'terms.html'}),
 
