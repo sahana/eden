@@ -2,6 +2,8 @@
 {% load i18n %}
 
 {% block title %}{% trans "Add proposal" %}{% endblock %}
+{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
     <form action="" method="post">{% csrf_token %}
