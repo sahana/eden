@@ -169,8 +169,8 @@ def add_doc(request, space_name):
             return redirect('/spaces/' + space_name)
     
     return render_to_response('spaces/document_add.html',
-                              {'form': form, 'get_place': place},
-                              context_instance=RequestContext(request))
+                              {'form': form},
+                              context_instance = RequestContext(request))
 
 def edit_doc(request, space_name, doc_id):
 
@@ -185,8 +185,7 @@ def edit_doc(request, space_name, doc_id):
                          login_required = True,
                          template_name = 'spaces/document_edit.html',
                          template_object_name = 'doc',
-                         post_save_redirect = '/',
-                         extra_context = {'get_place': place})
+                         post_save_redirect = '/')
 
 def delete_doc(request, space_name, doc_id):
 
@@ -201,8 +200,7 @@ def delete_doc(request, space_name, doc_id):
                          login_required = True,
                          template_name = 'spaces/document_delete.html',
                          template_object_name = 'doc',
-                         post_delete_redirect = '/',
-                         extra_context = {'get_place': place})
+                         post_delete_redirect = '/')
 
 def list_all_docs(request, space_name):
 
@@ -214,6 +212,5 @@ def list_all_docs(request, space_name):
     return object_list(request,
                        queryset = Document.objects.all().filter(space=place.id).order_by('pub_date'),
                        template_name = 'spaces/document_list.html',
-                       template_object_name = 'doc',
-                       extra_context = {'get_place': place})
+                       template_object_name = 'doc')
 
