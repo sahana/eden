@@ -54,8 +54,8 @@ def add_proposal(request, space_name):
             return redirect('/spaces/' + space_name)
 
     return render_to_response('proposal/add_proposal.html',
-                              {'form': form},
-                              context_instance=RequestContext(request))
+                              {'form': form, 'get_place': prop_space},
+                              context_instance = RequestContext(request))
 
 def list_proposals(request, space_name):
 
@@ -68,7 +68,8 @@ def list_proposals(request, space_name):
                        queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
                        paginate_by = 50,
                        template_name = 'proposal/list_proposals.html',
-                       template_object_name = 'proposal')
+                       template_object_name = 'proposal',
+                       extra_context = {'get_place': current_space})
 
 @permission_required('Proposal.delete_proposal')
 def delete_proposal(request, space_name, prop_id):
@@ -76,13 +77,16 @@ def delete_proposal(request, space_name, prop_id):
     """
     Delete a proposal.
     """
+    current_space = get_object_or_404(Space, name=space_name)
+
     return delete_object(request,
                          model = Proposal,
                          object_id = prop_id,
                          login_required = True,
                          template_name = 'proposal/delete_proposal.html',
                          template_object_name = 'proposal',
-                         post_delete_redirect = '/')
+                         post_delete_redirect = '/',
+                         extra_context = {'get_place': current_space})
 
 @permission_required('Proposal.edit_proposal')
 def edit_proposal(request, space_name, prop_id):
@@ -95,15 +99,10 @@ def view_proposal(request, space_name, prop_id):
     """
     current_space = get_object_or_404(Space, name=space_name)
     
-#    extra_context = {
-#        'comments': Comment.objects.all().filter(proposal=prop_id)
-#    }
-    
     return object_detail(request,
                          queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
                          object_id = prop_id,
                          template_name = 'proposal/view_proposal.html',
-                         template_object_name = 'proposal')
-#                         extra_context = extra_context)
-
+                         template_object_name = 'proposal',
+                         extra_context = {'get_place': current_space})
 
