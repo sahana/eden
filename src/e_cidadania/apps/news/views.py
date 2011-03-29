@@ -58,8 +58,8 @@ def add_post(request, space_name):
             return redirect('/spaces/' + space_name)
 
     return render_to_response('news/post_add.html',
-                              {'form': form},
-                              context_instance=RequestContext(request))
+                              {'form': form, 'get_place': current_space},
+                              context_instance = RequestContext(request))
 
 @permission_required('Post.delete_post')
 def delete_post(request, space_name, post_id):
@@ -75,7 +75,8 @@ def delete_post(request, space_name, post_id):
                          object_id = post_id,
                          login_required=True,
                          template_name = 'news/post_delete.html',
-                         post_delete_redirect = '/spaces/' + space_name)
+                         post_delete_redirect = '/spaces/' + space_name,
+                         extra_context = {'get_place': current_space})
 
 @permission_required('Post.edit_post')
 def edit_post(request, space_name, post_id):
@@ -89,7 +90,8 @@ def edit_post(request, space_name, post_id):
                          model = Post,
                          object_id = post_id,
                          login_required = True,
-                         template_name = 'news/post_edit.html')
+                         template_name = 'news/post_edit.html',
+                         extra_context = {'get_place': current_space})
 
 
 def view_news(request, space_name, post_id):
@@ -103,6 +105,7 @@ def view_news(request, space_name, post_id):
                          queryset = Post.objects.all().filter(post_space=current_space.id),
                          object_id = post_id,
                          template_name = 'news/post_detail.html',
-                         template_object_name = 'news')
+                         template_object_name = 'news',
+                         extra_context = {'get_place': current_space})
 
 

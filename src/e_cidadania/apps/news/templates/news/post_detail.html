@@ -3,6 +3,8 @@
 {% load comments %}
 
 {% block title %}{{ news.post_title }} {% endblock %}
+{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
 
