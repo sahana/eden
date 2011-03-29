@@ -88,5 +88,19 @@ class UserProfile(BaseProfile):
     
     # Not required since User module automatically sets the register time.
     #registered = models.DateTimeField('Registered', auto_now_add=True)
-    
+
+    get_age(self):
+        
+        """
+        Get the current user age.
+        """
+
+        if self.birth_date is not None:
+            diff = datetime.date.today() - self.birth_date
+            years = diff.days/365
+            return years
+        else:
+            return '??'
+    age.short_description = 'Edad'
+
 User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])

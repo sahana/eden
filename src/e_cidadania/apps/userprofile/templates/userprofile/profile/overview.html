@@ -52,7 +52,7 @@
 	   	<div>
 			  <p>{% trans "Username: " %} {{ user }}</p>
 			  <p>{% trans "Real name: " %} {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
-			  <p>{% trans "Age: " %} {{ user.get_profile.birthdate }}
+			  <p>{% trans "Age: " %} {{ user.get_profile.age }}
 			  <p>{% trans "Member for: " %} {{ user.date_joined }}</p>
 			  
 			  <p>{% trans "E-mail:" %}
@@ -79,8 +79,10 @@
 			  <p>
 			    {% trans "City: " %} {{ user.get_profile.province }}
 			  </p>
-			
-			  <h1>Tus propuestas</h1>
+			  
+			  <h1>{% trans "Your spaces" %}: {{user.get_profile.spaces }}</h1>
+			  
+			  <h1>{% trans "Your proposals" %}</h1>
           {% for p in proposals %}
           <div id="proposal-wrapper">
             {% if user.is_staff %}
