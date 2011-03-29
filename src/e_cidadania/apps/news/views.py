@@ -55,7 +55,7 @@ def add_post(request, space_name):
 
         if form.is_valid():
             form_uncommited.save()
-            return redirect('/')
+            return redirect('/spaces/' + space_name)
 
     return render_to_response('news/post_add.html',
                               {'form': form},
@@ -75,7 +75,7 @@ def delete_post(request, space_name, post_id):
                          object_id = post_id,
                          login_required=True,
                          template_name = 'news/post_delete.html',
-                         post_delete_redirect = '/')
+                         post_delete_redirect = '/spaces/' + space_name)
 
 @permission_required('Post.edit_post')
 def edit_post(request, space_name, post_id):
