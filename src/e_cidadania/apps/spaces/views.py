@@ -105,6 +105,7 @@ def edit_space(request, space_name):
                          template_object_name = 'get_place',
                          post_save_redirect = '/')
 
+@permission_required('Space.delete_space')
 def delete_space(request, space_name):
 
     """
