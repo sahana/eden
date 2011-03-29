@@ -37,6 +37,11 @@ from e_cidadania.apps.spaces.forms import SpaceForm, DocForm
 from e_cidadania.apps.proposals.models import Proposal, Comment
 
 
+
+#
+# SPACE VIEWS
+#
+
 def go_to_space(request):
 
     """
@@ -78,7 +83,7 @@ def view_space_index(request, space_name):
     return object_detail(request,
                          queryset = Space.objects.all(),
                          object_id = place.id,
-                         template_name = 'spaces/index.html',
+                         template_name = 'spaces/space_index.html',
                          template_object_name = 'get_place',
                          extra_context = extra_context,
                         )
@@ -96,7 +101,7 @@ def edit_space(request, space_name):
                          model = Space,
                          object_id = place.id,
                          login_required = True,
-                         template_name = 'spaces/edit.html',
+                         template_name = 'spaces/space_edit.html',
                          template_object_name = 'get_place',
                          post_save_redirect = '/')
 
@@ -110,7 +115,7 @@ def delete_space(request, space_name):
                          model = Space,
                          object_id = place.id,
                          login_required = True,
-                         template_name = 'spaces/delete.html',
+                         template_name = 'spaces/space_delete.html',
                          template_object_name = 'get_place',
                          post_delete_redirect = '/')
 
@@ -132,7 +137,7 @@ def create_space(request):
             space = form_uncommited.name
             return redirect('/spaces/' + space)
 
-    return render_to_response('spaces/add.html',
+    return render_to_response('spaces/space_add.html',
                               {'form': form},
                               context_instance=RequestContext(request))
 
@@ -162,7 +167,7 @@ def add_doc(request, space_name):
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
     
-    return render_to_response('spaces/add_doc.html',
+    return render_to_response('spaces/document_add.html',
                               {'form': form, 'get_place': space},
                               context_instance=RequestContext(request))
 
@@ -176,7 +181,7 @@ def edit_doc(request, space_name, doc_id):
                          model = Document,
                          object_id = doc_id,
                          login_required = True,
-                         template_name = 'spaces/edit_doc.html',
+                         template_name = 'spaces/document_edit.html',
                          template_object_name = 'doc',
                          post_save_redirect = '/')
 
@@ -189,7 +194,7 @@ def delete_doc(request, space_name, doc_id):
                          model = Document,
                          object_id = doc_id,
                          login_required = True,
-                         template_name = 'spaces/delete_doc.html',
+                         template_name = 'spaces/document_delete.html',
                          template_object_name = 'doc',
                          post_delete_redirect = '/')
 
@@ -200,6 +205,6 @@ def list_all_docs(request, space_name):
     """
     return object_list(request,
                        queryset = Document.objects.all().order_by('pub_date'),
-                       template_name = 'spaces/list_docs.html',
+                       template_name = 'spaces/document_list.html',
                        template_object_name = 'doc')
 
