@@ -42,7 +42,7 @@ def add_post(request, space_name):
     are allowed to create news. nly site administrators will be able to
     post news in the index page.
     """
-
+    current_space = get_object_or_404(Space, name=space_name)
     form = NewsForm(request.POST or None)
 
     if request.POST:
@@ -57,8 +57,8 @@ def add_post(request, space_name):
             form_uncommited.save()
             return redirect('/')
 
-    return render_to_response('news/add_post.html',
-                              {'form': form},
+    return render_to_response('news/post_add.html',
+                              {'form': form, 'get_place': current_space},
                               context_instance=RequestContext(request))
 
 @permission_required('Post.delete_post')
@@ -68,12 +68,15 @@ def delete_post(request, space_name, post_id):
     Delete an existent post. Post deletion is only reserved to spaces
     administrators or site admins.
     """
+    current_space = get_object_or_404(Space, name=space_name)
+
     return delete_object(request,
                          model = Post,
                          object_id = post_id,
                          login_required=True,
-                         template_name = 'news/delete_post.html',
-                         post_delete_redirect = '/')
+                         template_name = 'news/post_delete.html',
+                         post_delete_redirect = '/',
+                         extra_context = {'get_place': current_space})
 
 @permission_required('Post.edit_post')
 def edit_post(request, space_name, post_id):
@@ -81,12 +84,14 @@ def edit_post(request, space_name, post_id):
     """
     Edit an existent post.
     """
+    current_space = get_object_or_404(Space, name=space_name)
 
     return update_object(request,
                          model = Post,
                          object_id = post_id,
                          login_required = True,
-                         template_name = 'news/edit_post.html')
+                         template_name = 'news/post_edit.html',
+                         extra_context = {'get_place': current_space})
 
 
 def view_news(request, space_name, post_id):
@@ -99,7 +104,8 @@ def view_news(request, space_name, post_id):
     return object_detail(request,
                          queryset = Post.objects.all().filter(post_space=current_space.id),
                          object_id = post_id,
-                         template_name = 'news/view_news.html',
-                         template_object_name = 'news')
+                         template_name = 'news/post_detail.html',
+                         template_object_name = 'news',
+                         extra_context = {'get_place': current_space})
 
 
