@@ -158,18 +158,18 @@ def add_doc(request, space_name):
     form = DocForm(request.POST or None, request.FILES or None, instance=doc)
     
     # Get current space
-    space = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, name=space_name)
     
     if request.POST:
         form_uncommited = form.save(commit=False)
-        form_uncommited.space = space
+        form_uncommited.space = place
         form_uncommited.author = request.user
         if form.is_valid():
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
     
     return render_to_response('spaces/document_add.html',
-                              {'form': form, 'get_place': space},
+                              {'form': form, 'get_place': place},
                               context_instance=RequestContext(request))
 
 def edit_doc(request, space_name, doc_id):
@@ -177,6 +177,7 @@ def edit_doc(request, space_name, doc_id):
     """
     Edit uploaded documents :)
     """
+    place = get_object_or_404(Space, name=space_name)
     
     return update_object(request,
                          model = Document,
@@ -184,28 +185,35 @@ def edit_doc(request, space_name, doc_id):
                          login_required = True,
                          template_name = 'spaces/document_edit.html',
                          template_object_name = 'doc',
-                         post_save_redirect = '/')
+                         post_save_redirect = '/',
+                         extra_context = {'get_place': place})
 
 def delete_doc(request, space_name, doc_id):
 
     """
     Delete an uploaded document
     """
+    place = get_object_or_404(Space, name=space_name)
+    
     return delete_object(request,
                          model = Document,
                          object_id = doc_id,
                          login_required = True,
                          template_name = 'spaces/document_delete.html',
                          template_object_name = 'doc',
-                         post_delete_redirect = '/')
+                         post_delete_redirect = '/',
+                         extra_context = {'get_place': place})
 
 def list_all_docs(request, space_name):
 
     """
     List all docuemnts stored within a space.
     """
+    place = get_object_or_404(Space, name=space_name)
+    
     return object_list(request,
-                       queryset = Document.objects.all().order_by('pub_date'),
+                       queryset = Document.objects.all().filter(space=place.id).order_by('pub_date'),
                        template_name = 'spaces/document_list.html',
-                       template_object_name = 'doc')
+                       template_object_name = 'doc',
+                       extra_context = {'get_place': place})
 
