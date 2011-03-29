@@ -53,7 +53,7 @@ def add_proposal(request, space_name):
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
 
-    return render_to_response('proposal/add_proposal.html',
+    return render_to_response('proposal/proposal_add.html',
                               {'form': form, 'get_place': prop_space},
                               context_instance = RequestContext(request))
 
@@ -67,7 +67,7 @@ def list_proposals(request, space_name):
     return object_list(request,
                        queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
                        paginate_by = 50,
-                       template_name = 'proposal/list_proposals.html',
+                       template_name = 'proposal/proposal_list.html',
                        template_object_name = 'proposal',
                        extra_context = {'get_place': current_space})
 
@@ -83,7 +83,7 @@ def delete_proposal(request, space_name, prop_id):
                          model = Proposal,
                          object_id = prop_id,
                          login_required = True,
-                         template_name = 'proposal/delete_proposal.html',
+                         template_name = 'proposal/proposal_delete.html',
                          template_object_name = 'proposal',
                          post_delete_redirect = '/',
                          extra_context = {'get_place': current_space})
@@ -102,7 +102,7 @@ def view_proposal(request, space_name, prop_id):
     return object_detail(request,
                          queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
                          object_id = prop_id,
-                         template_name = 'proposal/view_proposal.html',
+                         template_name = 'proposal/proposal_detail.html',
                          template_object_name = 'proposal',
                          extra_context = {'get_place': current_space})
 
