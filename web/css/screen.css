@@ -1,0 +1,190 @@
+body {
+	padding:20px 80px;
+	font-family:"Lucida Grande","bitstream vera sans","trebuchet ms",sans-serif,verdana;
+	background: #DDD; /*A5EB4B;*/
+}
+
+/* get rid of those system borders being generated for A tags */
+a:active {
+  outline:none;
+}
+
+:focus {
+  -moz-outline-style:none;
+}
+
+	#header {
+	  height: 100px;
+	  margin-bottom: 15px;
+	  border-bottom: 7px solid #AAA;
+	}
+	
+	/* main vertical scroll */
+	#main {
+		position:relative;
+		overflow:hidden;
+		height: 450px;
+	}
+	
+	/* root element for pages */
+	#pages {
+		position:absolute;
+		height:20000em;
+	}
+	
+	/* single page */
+	.page {
+		padding:10px;
+		height: 450px;
+		background: #DDD; /*url(../assets/h600.png) 0 0 repeat-x;*/
+		width: 710px;
+	}
+	
+	/* root element for horizontal scrollables */
+	.scrollable {
+		position:relative;
+		overflow:hidden;
+		width: 510px;
+		height: 450px;
+	}
+	
+	/* root element for scrollable items */
+	.scrollable .items {
+		width:20000em;
+		position:absolute;
+		clear:both;
+	}
+	
+	/* single scrollable item */
+	.item {
+		float:left;
+		cursor:pointer;
+		width:500px;
+		height:450px;
+		padding:10px;
+	}
+	
+	/* main navigator */
+	#main_navi {
+		float:left;
+		padding:0px !important;
+		margin:0px !important;
+	}
+	
+	#main_navi li {
+		background: #AAA url(../assets/h75.png) 0 0 repeat-x;
+		border-top:1px solid #666;
+		clear:both;
+		color:#FFFFFF;
+		font-size:12px;
+		height:75px;
+		list-style-type:none;
+		padding:10px;
+		width:250px;
+		cursor:pointer;
+		-webkit-border-radius: 15px;
+        -moz-border-radius: 15px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+	}
+	
+	#main_navi li:hover {
+		background-color:#444;
+	}
+	
+	#main_navi li.active {
+		background-color:#555;
+	}
+	
+	#main_navi img {
+		float:left;
+		margin-right:10px;
+	}
+	
+	#main_navi strong {
+		display:block;
+	}
+	
+	#main div.navi {
+	    margin: 0;
+		margin-left:250px;
+		cursor:pointer;
+	}
+	
+	.help {
+	    font-size: 0.75em;
+	    color: #FFF;
+	    font-weight: bold;
+	    margin-left: 240px;
+	}
+	
+/* THIS IS A DEPRECATED PART OF THE SCROLLER, BUT NEEDED FOR THE SLIDER */
+
+/* DEPRECATED FILE */
+
+/* this makes it possible to add next button beside scrollable */
+.scrollable {
+	float:left;	
+}
+
+/* prev, next, prevPage and nextPage buttons */
+a.prev, a.next, a.prevPage, a.nextPage {
+	display:block;
+	width:18px;
+	height:18px;
+	background:url(../img/scrollable/arrow/left.png) no-repeat;
+	float:left;
+	margin:43px 10px;
+	cursor:pointer;
+	font-size:1px;
+}
+
+/* mouseover state */
+a.prev:hover, a.next:hover, a.prevPage:hover, a.nextPage:hover {
+	background-position:0px -18px;		
+}
+
+/* disabled navigational button */
+a.disabled {
+	visibility:hidden !important;		
+}
+
+/* next button uses another background image */
+a.next, a.nextPage {
+	background-image:url(../img/scrollable/arrow/right.png);
+	clear:right;	
+}
+
+
+
+/*********** navigator ***********/
+
+
+/* position and dimensions of the navigator */
+.navi {
+	margin-left:328px;
+	width:200px;
+	height:20px;
+}
+
+
+/* items inside navigator */
+.navi a {
+	width:8px;
+	height:8px;
+	float:left;
+	margin:3px;
+	background:url(../assets/navigator.png) 0 0 no-repeat;
+	display:block;
+	font-size:1px;
+}
+
+/* mouseover state */
+.navi a:hover {
+	background-position:0 -8px;      
+}
+
+/* active state (current page state) */
+.navi a.active {
+	background-position:0 -16px;     
+} 	
