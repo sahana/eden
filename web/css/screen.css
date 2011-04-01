@@ -1,7 +1,7 @@
 body {
 	padding:20px 80px;
 	font-family:"Lucida Grande","bitstream vera sans","trebuchet ms",sans-serif,verdana;
-	background: #DDD; /*A5EB4B;*/
+	background: #FFF; /*A5EB4B;*/
 }
 
 /* get rid of those system borders being generated for A tags */
@@ -36,8 +36,9 @@ a:active {
 	.page {
 		padding:10px;
 		height: 450px;
-		background: #DDD; /*url(../assets/h600.png) 0 0 repeat-x;*/
+		background: #FFF; /*url(../assets/h600.png) 0 0 repeat-x;*/
 		width: 710px;
+		color: #000;
 	}
 	
 	/* root element for horizontal scrollables */
@@ -73,7 +74,6 @@ a:active {
 	
 	#main_navi li {
 		background: #AAA url(../assets/h75.png) 0 0 repeat-x;
-		border-top:1px solid #666;
 		clear:both;
 		color:#FFFFFF;
 		font-size:12px;
@@ -154,8 +154,6 @@ a.next, a.nextPage {
 	background-image:url(../img/scrollable/arrow/right.png);
 	clear:right;	
 }
-
-
 
 /*********** navigator ***********/
 
