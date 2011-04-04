@@ -68,5 +68,20 @@ var timeline_data = {  // save as a global variable
         'title': 'Incorporación de mejoras',
         'description': 'Incorporación de mejoras de las dos fuentes de contraste: la técnica y la que nos viene de los presupuestos participativos de Ferrol, donde se constituye una comisión de e-participación formada por internatutas de la ciudad',
         },
+        
+        {'start': '2011-10-01 09:00:00',
+        'title': 'Se finaliza el primer paquete de funciones',
+        'description': 'Se incorpora el módulo de votaciones. Se finaliza el primer paquete de funcionalidades',
+        },
+        
+        {'start': '2011-11-01 09:00:00',
+        'title': 'Se desarrollan nuevos módulos',
+        'description': 'Se inicia el desarrollo de nuevos módulos. Uno de ellos es el módulo de seguimiento de las propuestas aprobadas',
+        },
+
+        {'start': '2012-01-01 09:00:00',
+        'title': 'Se siguen incorporando mejoras',
+        'description': 'La herramienta sigue incorporando funcionalidades y mejoras, en contraste con los procesos para los que se utiliza, no sólo por parte de Cidadania y Algueirada, sino por la comunidad de software libre que pueda ir incorporándose.',
+        },
 ]
 }
