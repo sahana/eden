@@ -1,7 +1,7 @@
 body {
 	padding:20px 80px;
 	font-family:"Lucida Grande","bitstream vera sans","trebuchet ms",sans-serif,verdana;
-	background: #FFF; /*A5EB4B;*/
+	background: #FFF;
 }
 
 a {
@@ -26,7 +26,7 @@ a:active {
 	#header {
 	  height: 100px;
 	  margin-bottom: 15px;
-	  border-bottom: 7px solid #b5ff00;
+	  border-bottom: 7px solid #222;
 	}
 	
 	/* main vertical scroll */
@@ -46,7 +46,7 @@ a:active {
 	.page {
 		padding:10px;
 		height: 450px;
-		background: #FFF; /*url(../assets/h600.png) 0 0 repeat-x;*/
+		/* background: #FFF; /*url(../assets/h600.png) 0 0 repeat-x;*/
 		width: 710px;
 		color: #000;
 	}
