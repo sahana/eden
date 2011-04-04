@@ -16,7 +16,7 @@ a:active {
 	#header {
 	  height: 100px;
 	  margin-bottom: 15px;
-	  border-bottom: 7px solid #AAA;
+	  border-bottom: 7px solid #b5ff00;
 	}
 	
 	/* main vertical scroll */
@@ -73,9 +73,9 @@ a:active {
 	}
 	
 	#main_navi li {
-		background: #AAA url(../assets/h75.png) 0 0 repeat-x;
+		background: url(../assets/h75.png) 0 0 repeat-x;
 		clear:both;
-		color:#FFFFFF;
+		color:#000;
 		font-size:12px;
 		height:75px;
 		list-style-type:none;
@@ -89,11 +89,13 @@ a:active {
 	}
 	
 	#main_navi li:hover {
-		background-color:#444;
+		background-color:#666;
+		color: #FFF;
 	}
 	
 	#main_navi li.active {
-		background-color:#555;
+		background-color:#888;
+		color: #FFF;
 	}
 	
 	#main_navi img {
@@ -118,6 +120,9 @@ a:active {
 	    margin-left: 240px;
 	}
 	
+	.timeline-event-label{
+	    font-size: 9px;
+	}
 /* THIS IS A DEPRECATED PART OF THE SCROLLER, BUT NEEDED FOR THE SLIDER */
 
 /* DEPRECATED FILE */
