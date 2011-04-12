@@ -122,6 +122,12 @@ input[type="text"], input[type="password"] {
     display: block;
     margin: 5px;
 }
+
+@font-face {
+    font-family: "SansationRegular";
+    src: url('http://www.fontsforweb.com/public/fonts/424/SansationRegular.eot');
+    src: local("Sansation"), url('http://www.fontsforweb.com/public/fonts/424/SansationRegular.ttf') format("truetype");
+}
 /* END CUSTOMIZATIONS */
 
 
@@ -623,7 +629,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 .post {
     width: 100%;
-    border: 1px 1px 5px 1px solid #aaa;
+    border-bottom: 5px solid #aaa;
     background: #fff;
     margin: 20px 5px 20px 5px;
     -webkit-border-top-left-radius: 20px;
@@ -636,11 +642,24 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 .post h1 {
     margin: 15px;
-    font-size: 1.5em;
+    font-size: 2em;
+    font-family: 'SansationRegular';
 }
 
+.post h4 {
+    font-size: 0.95em;
+    color: #000;
+    margin-top: -15px;
+    margin-left: 16px;
+    font-weight: normal;
+}
 .post a {
     color: #333;
+}
+
+.post a:hover {
+    color: #aaa;
+    text-decoration: underline;
 }
 
 .post p {

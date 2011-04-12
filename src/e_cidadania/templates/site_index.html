@@ -26,13 +26,13 @@
         <div class="post">
           {% if user.is_staff %}
             <div id="tools">
-              <a href="{{ request.path }}news/edit/{{ news.id }}">{% trans "Edit" %}</a> |
-              <a href="{{ request.path }}news/delete/{{ news.id }}">{% trans "Delete" %}</a>
+              <a href="{{ request.path }}news/{{ news.id }}/edit/">{% trans "Edit" %}</a> |
+              <a href="{{ request.path }}news/{{ news.id }}/delete/">{% trans "Delete" %}</a>
             </div>
           {% endif %}
           <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
+          <h4>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</h4>
           <p>{{ news.post_message|safe }}</p>
-          <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
         </div>
       {% endif %}
     {% empty %}
