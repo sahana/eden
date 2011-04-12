@@ -73,7 +73,7 @@ def add_news(request):
             form_uncommited.save()
             return redirect('/')
 
-    return render_to_response('news/add_post.html',
+    return render_to_response('news/post_add.html',
                               {'form': form},
                               context_instance=RequestContext(request))
 
@@ -88,7 +88,7 @@ def delete_post(request, post_id):
                          model = Post,
                          object_id = post_id,
                          login_required=True,
-                         template_name = 'news/delete_post.html',
+                         template_name = 'news/post_delete.html',
                          post_delete_redirect = '/')
 
 @permission_required('Post.edit_post')
@@ -102,7 +102,7 @@ def edit_post(request, post_id):
                          model = Post,
                          object_id = post_id,
                          login_required = True,
-                         template_name = 'news/edit_post.html')
+                         template_name = 'news/post_edit.html')
 
 def view_post(request, post_id):
 
@@ -113,6 +113,6 @@ def view_post(request, post_id):
     return object_detail(request,
                          queryset = Post.objects.all(),
                          object_id = post_id,
-                         template_name = 'news/view_news.html',
+                         template_name = 'news/post_detail.html',
                          template_object_name = 'news')
 

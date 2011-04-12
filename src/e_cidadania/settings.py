@@ -131,6 +131,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.comments', # Basic comments system
 
+    # System-wide apps
+    'django_wysiwyg',
+
     # Prebuilt modules
     'e_cidadania.apps.rosetta', # Easy translation system
     'e_cidadania.apps.userprofile',
