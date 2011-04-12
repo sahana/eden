@@ -52,3 +52,9 @@ class Post(models.Model):
     def __unicode__(self):
         return self.post_title
 
+    def set_tags(self, tags):
+        Tag.objects.update_tags(self, tags)
+
+    def get_tags(self, tags):
+        return Tag.objects.get_for_object(self)
+

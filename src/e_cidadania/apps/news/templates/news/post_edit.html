@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load wysiwyg %}
 
 {% block title %}{% trans "Edit news" %}{% endblock %}
 {% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
@@ -11,7 +12,49 @@
     <div id="centercol">
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
-        {{ form.as_p|safe }}
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.post_title.errors }}
+          <label for="id_post_title">{% trans "Title" %}:</label>
+          <p>{{ form.post_title }}</p>
+          <p id="form_help_text">{{ form.post_title.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.post_message.errors }}
+          <label for="id_name">{% trans "Text" %}:</label>
+          <p>{{ form.post_message|safe }}</p>
+          {% wysiwyg_editor "id_post_message" %}
+          <p id="form_help_text">{{ form.post_message.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.post_tags.errors }}
+          <label for="id_post_tags">{% trans "Tags" %}:</label>
+          <p>{{ form.post_tags }}</p>
+          <p id="form_help_text">{{ form.post_tags.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.post_pub_index.errors }}
+          <label for="id_name">{% trans "Publish in index page" %}:</label>
+          <p>{{ form.post_pub_index }}</p>
+          <p id="form_help_text">{{ form.post_pub_index.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.post_author.errors }}
+          <label for="id_name">{% trans "Author" %}:</label>
+          <p>{{ form.post_author }}</p>
+          <p id="form_help_text">{{ form.post_author.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.post_space.errors }}
+          <label for="id_name">{% trans "Publish in space" %}:</label>
+          <p>{{ form.post_space }}</p>
+          <p id="form_help_text">{{ form.post_space.help_text }}</p>
+        </div>
 
         <hr />
 
