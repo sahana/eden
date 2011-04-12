@@ -102,6 +102,7 @@ def edit_post(request, post_id):
                          model = Post,
                          object_id = post_id,
                          login_required = True,
+                         post_save_redirect = '/',
                          template_name = 'news/post_edit.html')
 
 def view_post(request, post_id):

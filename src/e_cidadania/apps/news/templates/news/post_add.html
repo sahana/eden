@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load wysiwyg %}
 
 {% block title %}{% trans "Add new post" %}{% endblock %}
 {% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
@@ -27,6 +28,7 @@
           {{ form.post_message.errors }}
           <label for="id_name">{% trans "Text" %}:</label>
           <p>{{ form.post_message }}</p>
+          {% wysiwyg_editor "id_post_message" %}
           <p id="form_help_text">{{ form.post_message.help_text }}</p>
         </div>
         

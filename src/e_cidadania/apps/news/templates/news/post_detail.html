@@ -13,8 +13,8 @@
       <div class="post">
         {% if user.is_staff %}
           <div id="tools">
-            <a href="{{ request.path }}news/{{ news.id }}/edit/">Edit</a> |
-            <a href="{{ request.path }}news/{{ news.id }}/delete/">Delete</a>
+            <a href="{{ request.path }}/edit/">Edit</a> |
+            <a href="{{ request.path }}/delete/">Delete</a>
           </div>
         {% endif %}
         <h1>{{ news.post_title }}</h1>
