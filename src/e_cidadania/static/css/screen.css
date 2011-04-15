@@ -65,7 +65,7 @@ table {
 
 /* HTML TAGS DEFINITION */
 body {
-	background: #FFF;
+	background: #FAFAFA;
 	padding: 0;
 	margin: 0;
 	font-family: Verdana, "Lucida Sans", Arial;
@@ -286,7 +286,7 @@ input[type="text"], input[type="password"] {
     border-top: 1px solid #BBB;
     width: 98%;
     padding: 25px 10px 10px 10px;
-    background: url(/static/assets/profile_bg1.jpg) repeat-x;
+    background: url(/static/assets/shadow.png) repeat-x;
     min-height: 600px;
 }
 

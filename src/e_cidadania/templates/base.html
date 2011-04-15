@@ -4,11 +4,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
 	<head>
 		<title>{% block title %}{% endblock %}</title>
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/reset.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/text.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/grid.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/layout.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/nav.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/reset.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/text.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/grid.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/layout.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/nav.css" media="screen" />
 		<link rel="stylesheet" type="text/css" media="screen" href="/{{ STATIC_URL }}/css/screen.css"/>
 		<link rel="shortcut icon" href="/{{ STATIC_URL }}/assets/favicon.ico" type="image/ico"/>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -35,7 +35,7 @@
 	  </div>
 
 	  <div class="container_16">
-      
+
       <div class="grid_16">
         {% block header %}
 	        <div id="logo">
@@ -43,17 +43,17 @@
 	            <a href="/"><img src="/{{ STATIC_URL }}/assets/logos/index.png"/></a>
 	          {% endblock %}
 	        </div>
-
-  	      <div id="banner">
-  	        {% block banner %}
-  	          <img src="/{{ STATIC_URL }}/assets/banners/index.png"/>
-  	        {% endblock %}
-  	      </div>
-  	    {% endblock %}
+  
+ 	        <div id="banner">
+	          {% block banner %}
+              <img src="/{{ STATIC_URL }}/assets/banners/index.png"/>
+ 	          {% endblock %}
+	        </div>
+	      {% endblock %}
       </div>
 
       <div class="clear"></div>
-      
+        
         {% block content %}
         <div id="grid">
           {% block centercol %}
