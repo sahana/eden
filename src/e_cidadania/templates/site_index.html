@@ -6,7 +6,7 @@
 {% block content %}
 
 {% block centercol %}
-  <div id="centercol">
+  <div class="grid_11">
 
     <div>
       <p><img src="/{{ STATIC_URL }}/assets/indextitle.png" /></p><br /><br />
@@ -43,9 +43,8 @@
   </div>
 {% endblock %}
 
-
 {% block rightcol%}
-  <div id="rightcol">
+  <div class="grid_5">
 
     <div id="widget">
       <p><span style="font-size: 23px;">{% trans "What can you do with e-cidadania?" %}</span> <strong><a href="/about">{% trans "Discover it here" %}</a></strong></p>
@@ -88,7 +87,6 @@
       <h4>{% trans "e-cidadania development" %}</h4><br />
       <p>{% trans "Do you want to help?" %} <a href="http://dev.ecidadania.org">{% trans "Access" %}</a></p>
     </div>
-
   </div>
 {% endblock %}
 
