@@ -48,7 +48,7 @@
       <div class="clear"></div>
       
       
-      <div class="grid_8">
+      <div class="grid_8 userinfo">
         <div id="avatar" class="span-3 center">
         	<a href="{% url profile_edit_avatar %}">
          		<img class="border" src="/static/generic.96.jpg" />
@@ -58,12 +58,12 @@
          	</p>
 	      </div>
 
-	   	  <div>
-			    <p>{% trans "Username: " %} {{ user }}</p>
-			    <p>{% trans "Real name: " %} {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
-			    <p>{% trans "Age: " %} {{ user.get_profile.get_age }} {% trans "years" %}
-			    <p>{% trans "Member since: " %} {{ user.date_joined }}</p>
-			    <p>{% trans "E-mail:" %}
+	   	  <div class="data">
+			    <p><strong>{% trans "Username" %}</strong>: {{ user }}</p>
+			    <p><strong>{% trans "Real name" %}</strong>: {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
+			    <p><strong>{% trans "Age" %}</strong>: {{ user.get_profile.get_age }} {% trans "years" %}
+			    <p><strong>{% trans "Member since" %}</strong>: {{ user.date_joined }}</p>
+			    <p><strong>{% trans "E-mail" %}</strong>: 
 				    <span class="{% if not email or not validated %}quiet red{% endif %}">
 				    {%if not email %}
 				      {% trans "Not set yet" %}
@@ -76,7 +76,7 @@
 				    </span>
 			    </p>
 			  
-			    <p><label for="location">{% trans "Country" %}:</label>
+			    <p><label for="location"><strong>{% trans "Country" %}</strong>:</label>
 			      {% if user.get_profile.country %}
 				      {{ user.get_profile.get_country_display }}
 			      {% else %}
@@ -85,14 +85,14 @@
 			    </p>
 
 			    <p>
-			      {% trans "City: " %} {{ user.get_profile.province }}
+			      <strong>{% trans "City" %}</strong>: {{ user.get_profile.province }}
 			    </p>
 			  </div>
 	    </div>
 	    
 
   
-      <div class="grid_8">
+      <div class="grid_8 userinfo">
         {% if GOOGLE_MAPS_API_KEY %}
 		      <p>{% trans "Location" %}:
 		        {% if user.get_profile.location %}
@@ -113,37 +113,43 @@
       <div class="clear"></div>
       
       <div class="grid_16">
-        <h1>{% trans "Your spaces" %}</h1>
-			  {% for space in user.get_profile.spaces.all %}
-			    <p><a href="/spaces/{{ space }}">{{ space }}</a></p>
-			  {% endfor %}
-			  
-			  <h1>{% trans "Your proposals" %}</h1>
-        {% for p in proposals %}
-          <div id="proposal-wrapper">
-            {% if user.is_staff %}
-              <div id="tools">
-                <a href="add/">{% trans "Add" %}</a> | 
-                <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
-                <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
-              </div>
-            {% endif %}
-          <div id="votes">
-            <span style="font-size:30px;text-align:center;">{{ p.support_votes }}</span><br/>apoyos
-          </div>
-          <!-- Here goes the voting button -->
-          <div id="proposal">
-            <div class="title"><a href="{{ request.path }}view/{{ p.id }}/">{{ p.title }}</a></div>
-            <div class="message">{{ p.message|truncatewords:12 }}</div>
-            <div class="creator">{% trans "proposed by " %} <a href="/accounts/{{ p.author }}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }}</div>
-          </div>
-            {% comment %}
-              The following div is to make the wrapper to wrap everything.
-            {% endcomment %}
-          <div style="clear:left;"></div>
-        {% endfor %}
-      </div>
       
-      <div class="clear"></div>
+        <div class="spaces">
+          <h1>{% trans "Your spaces" %}</h1>
+          <ul class="spaces">
+            {% for space in user.get_profile.spaces.all %}
+              <li><a href="/spaces/{{ space }}">{{ space }}</a></li>
+            {% endfor %}
+          </ul>
+			  </div>
+			  
+			  <div class="activity">
+			    <h1>{% trans "Your proposals" %}</h1>
+          {% for p in proposals %}
+            <div id="proposal-wrapper">
+              {% if user.is_staff %}
+                <div id="tools">
+                  <a href="add/">{% trans "Add" %}</a> | 
+                  <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
+                  <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
+                </div>
+              {% endif %}
+            <div id="votes">
+              <span style="font-size:30px;text-align:center;">{{ p.support_votes }}</span><br/>apoyos
+            </div>
+            <!-- Here goes the voting button -->
+            <div id="proposal">
+              <div class="title"><a href="{{ request.path }}view/{{ p.id }}/">{{ p.title }}</a></div>
+              <div class="message">{{ p.message|truncatewords:12 }}</div>
+              <div class="creator">{% trans "proposed by " %} <a href="/accounts/{{ p.author }}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }}</div>
+            </div>
+              {% comment %}
+                The following div is to make the wrapper to wrap everything.
+              {% endcomment %}
+            <div style="clear:left;"></div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
 
 {% endblock %}

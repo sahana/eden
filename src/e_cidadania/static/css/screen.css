@@ -286,6 +286,18 @@ input[type="text"], input[type="password"] {
 }
 
 /* User Profile stuff */
+.userinfo, .spaces, .activity {
+    margin: 30px 0px 20px 0px;
+}
+
+.data p {
+    margin: 5px;
+}
+
+ul.spaces {
+    list-style-type: square;
+    margin: 0px 0px 0px 30px;
+}
 #content {
     clear: both;
     border-top: 1px solid #BBB;
@@ -299,7 +311,6 @@ input[type="text"], input[type="password"] {
     font-size: 20px;
     color: #000;
     font-weight: bold;
-    margin-left: 20px;
     margin-bottom: 15px;
 }
 
@@ -325,7 +336,7 @@ table#personal th {
 
 #useropts {
     color: #555;
-    margin: 10px 0px 0px 20px;
+    margin: 10px 0px 0px 10px;
 }
 
 #useropts a {
