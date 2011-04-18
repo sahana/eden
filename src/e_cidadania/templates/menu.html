@@ -1,8 +1,10 @@
 {% load i18n %}
   {% if user.is_authenticated %}
     <ul class="topnav">
-      <li><a href="/">{% trans "Home" %}</a> | </li>
+      <li><a href="/">{% trans "Home" %}</a></li>
 
+      <li class="sep"></li>      
+      
       <li>
         <form action="/i18n/setlang/" method="post">{% csrf_token %}
           <input name="next" type="hidden" value="/" />
@@ -14,6 +16,8 @@
           </select>
         </form>
       </li>
+      
+      <li class="sep"></li>
       
       <li>
         <a href="/accounts/" class="username">
@@ -36,8 +40,10 @@
 	  </ul>
   {% else %}
     <ul class="topnav">
-      <li><a href="/">{% trans "Home" %}</a> | </li>
-      <li><a href="/accounts/login">{% trans "Login" %}</a>| </li>
+      <li><a href="/">{% trans "Home" %}</a></li>
+      <li class="sep"></li>
+      <li><a href="/accounts/login">{% trans "Login" %}</a></li>
+      <li class="sep"></li>
       <li>
         <form action="/i18n/setlang/" method="post">{% csrf_token %}
           <input name="next" type="hidden" value="/" />

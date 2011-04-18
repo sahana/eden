@@ -469,6 +469,13 @@ ul.topnav li {
 	padding: 0 0 0 0;
 	position: relative; /*--Declare X and Y axis base for sub navigation--*/
 }
+
+ul.topnav li.sep {
+    border-left: 1px solid #262626;
+    border-right: 1px solid #515151;
+	margin: 7.5px 5px 0 5px;
+	height: 20px;
+}
 ul.topnav li a{
 	padding: 0px 5px;
 	color: #fff;
