@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-25 23:15+0100\n"
+"POT-Creation-Date: 2011-04-18 11:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,83 +33,83 @@ msgstr ""
 msgid "Offtopic"
 msgstr ""
 
-#: models.py:44 templates/proposal/add_proposal.html:12
+#: models.py:44 templates/proposal/proposal_add.html:14
 msgid "Title"
 msgstr ""
 
-#: models.py:45 templates/proposal/add_proposal.html:19
+#: models.py:45 templates/proposal/proposal_add.html:21
 msgid "Message"
 msgstr ""
 
-#: models.py:63 templates/proposal/add_proposal.html:25
+#: models.py:63 templates/proposal/proposal_add.html:27
 msgid "Latitude"
 msgstr ""
 
-#: models.py:65 templates/proposal/add_proposal.html:31
+#: models.py:65 templates/proposal/proposal_add.html:33
 msgid "Longitude"
 msgstr ""
 
-#: templates/proposal/add_proposal.html:4
+#: templates/proposal/proposal_add.html:4
 msgid "Add proposal"
 msgstr ""
 
-#: templates/proposal/add_proposal.html:25
-#: templates/proposal/add_proposal.html:31
-#: templates/proposal/add_proposal.html:37
+#: templates/proposal/proposal_add.html:27
+#: templates/proposal/proposal_add.html:33
+#: templates/proposal/proposal_add.html:39
 msgid "(optional)"
 msgstr ""
 
-#: templates/proposal/add_proposal.html:37
+#: templates/proposal/proposal_add.html:39
 msgid "Tags"
 msgstr ""
 
-#: templates/proposal/delete_proposal.html:4
+#: templates/proposal/proposal_delete.html:4
 msgid "Delete proposal"
 msgstr ""
 
-#: templates/proposal/delete_proposal.html:13
+#: templates/proposal/proposal_delete.html:13
 msgid ""
 "Are you sure you want to delete this proposal? This action cannot be undone."
 msgstr ""
 
-#: templates/proposal/delete_proposal.html:15
-#: templates/proposal/list_proposals.html:18
-#: templates/proposal/view_proposal.html:17
+#: templates/proposal/proposal_delete.html:15
+#: templates/proposal/proposal_detail.html:19
+#: templates/proposal/proposal_list.html:20
 msgid "Delete"
 msgstr ""
 
-#: templates/proposal/delete_proposal.html:16
+#: templates/proposal/proposal_delete.html:16
 msgid "Go back"
 msgstr ""
 
-#: templates/proposal/list_proposals.html:5
-msgid "View proposals"
+#: templates/proposal/proposal_detail.html:5
+msgid "View proposal"
 msgstr ""
 
-#: templates/proposal/list_proposals.html:16
-#: templates/proposal/view_proposal.html:15
+#: templates/proposal/proposal_detail.html:17
+#: templates/proposal/proposal_list.html:18
 msgid "Add"
 msgstr ""
 
-#: templates/proposal/list_proposals.html:17
-#: templates/proposal/view_proposal.html:16
+#: templates/proposal/proposal_detail.html:18
+#: templates/proposal/proposal_list.html:19
 msgid "Edit"
 msgstr ""
 
-#: templates/proposal/list_proposals.html:29
-#: templates/proposal/view_proposal.html:27
+#: templates/proposal/proposal_detail.html:29
+#: templates/proposal/proposal_list.html:31
 msgid "proposed by "
 msgstr ""
 
-#: templates/proposal/list_proposals.html:29
-#: templates/proposal/view_proposal.html:27
+#: templates/proposal/proposal_detail.html:29
+#: templates/proposal/proposal_list.html:31
 msgid " at "
 msgstr ""
 
-#: templates/proposal/list_proposals.html:29
-msgid "comments"
+#: templates/proposal/proposal_list.html:5
+msgid "View proposals"
 msgstr ""
 
-#: templates/proposal/view_proposal.html:5
-msgid "View proposal"
+#: templates/proposal/proposal_list.html:31
+msgid "comments"
 msgstr ""

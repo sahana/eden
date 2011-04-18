@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-25 23:17+0100\n"
+"POT-Creation-Date: 2011-04-18 11:42+0200\n"
 "PO-Revision-Date: 2011-03-18 18:20\n"
 "Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1016,6 +1016,7 @@ msgstr "Debes seleccionar unha parte da imaxe cun mínimo de 96x96 pixels"
 
 #: forms.py:83 templates/userprofile/account/login.html:19
 #: templates/userprofile/account/registration.html:12
+#: templates/userprofile/profile/overview.html:62
 #: templates/userprofile/profile/public.html:35
 #: templates/userprofile/profile/usercard.html:11
 msgid "Username"
@@ -1087,7 +1088,7 @@ msgstr "Avatar"
 
 #: templates/userprofile/menu.html:8
 #: templates/userprofile/profile/location.html:18
-#: templates/userprofile/profile/overview.html:117
+#: templates/userprofile/profile/overview.html:97
 #: templates/userprofile/profile/overview_old.html:37
 #: templates/userprofile/profile/public.html:40
 msgid "Location"
@@ -1398,7 +1399,7 @@ msgid "Choose the location of your avatar"
 msgstr "Escolle o lugar da túa imaxe de perfil"
 
 #: templates/userprofile/avatar/choose.html:36
-#: templates/userprofile/profile/overview.html:90
+#: templates/userprofile/profile/overview.html:134
 msgid "Delete"
 msgstr "Borrar"
 
@@ -1521,7 +1522,7 @@ msgid "Define your location"
 msgstr "Definir a túa localidade"
 
 #: templates/userprofile/profile/location.html:14
-#: templates/userprofile/profile/overview.html:71
+#: templates/userprofile/profile/overview.html:79
 #: templates/userprofile/profile/overview_old.html:28
 #: templates/userprofile/profile/public.html:37
 msgid "Country"
@@ -1550,103 +1551,117 @@ msgstr "Voltar ao teu perfil"
 msgid "Overview of your profile"
 msgstr "Descrición xeral do teu perfil"
 
-#: templates/userprofile/profile/overview.html:32
-#, python-format
+#: templates/userprofile/profile/overview.html:34
+#, fuzzy, python-format
 msgid ""
 "\n"
-"        %(username)s profile\n"
-"      "
+"            %(username)s profile\n"
+"          "
 msgstr ""
 "\n"
 "Perfil de %(username)s"
 
-#: templates/userprofile/profile/overview.html:38
+#: templates/userprofile/profile/overview.html:40
 msgid "Edit personal data"
 msgstr "Editar información persoal"
 
-#: templates/userprofile/profile/overview.html:39
+#: templates/userprofile/profile/overview.html:41
 msgid "Edit location"
 msgstr "Editar situación"
 
-#: templates/userprofile/profile/overview.html:40
+#: templates/userprofile/profile/overview.html:42
 msgid "Delete profile"
 msgstr "Borrar perfil"
 
-#: templates/userprofile/profile/overview.html:41
+#: templates/userprofile/profile/overview.html:43
 msgid "Public profile"
 msgstr "Perfil público"
 
-#: templates/userprofile/profile/overview.html:49
+#: templates/userprofile/profile/overview.html:57
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Change avatar"
 msgstr "Cambiar a imaxe "
 
-#: templates/userprofile/profile/overview.html:49
+#: templates/userprofile/profile/overview.html:57
 #: templates/userprofile/profile/overview_old.html:14
 msgid "Add avatar"
 msgstr "Engadir imaxe de perfil"
 
-#: templates/userprofile/profile/overview.html:53
-msgid "Username: "
-msgstr "Nome de usuario/usuaria"
-
-#: templates/userprofile/profile/overview.html:54
-msgid "Real name: "
+#: templates/userprofile/profile/overview.html:63
+#, fuzzy
+msgid "Real name"
 msgstr "Nome real:"
 
-#: templates/userprofile/profile/overview.html:55
-msgid "Age: "
+#: templates/userprofile/profile/overview.html:64
+#, fuzzy
+msgid "Age"
 msgstr "Idade:"
 
-#: templates/userprofile/profile/overview.html:56
-msgid "Member for: "
-msgstr "Membro dende:"
+#: templates/userprofile/profile/overview.html:64
+msgid "years"
+msgstr ""
 
-#: templates/userprofile/profile/overview.html:58
-#: templates/userprofile/profile/overview_old.html:19
-msgid "E-mail:"
+#: templates/userprofile/profile/overview.html:65
+msgid "Member since"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:66
+#, fuzzy
+msgid "E-mail"
 msgstr "Correo electrónico:"
 
-#: templates/userprofile/profile/overview.html:61
+#: templates/userprofile/profile/overview.html:69
 #: templates/userprofile/profile/overview_old.html:21
 msgid "Not set yet"
 msgstr "Ainda non foi definido"
 
-#: templates/userprofile/profile/overview.html:65
+#: templates/userprofile/profile/overview.html:73
 #: templates/userprofile/profile/overview_old.html:23
 msgid " (Not validated)"
 msgstr "(Non validada)"
 
-#: templates/userprofile/profile/overview.html:75
-#: templates/userprofile/profile/overview.html:121
+#: templates/userprofile/profile/overview.html:83
+#: templates/userprofile/profile/overview.html:101
 #: templates/userprofile/profile/overview_old.html:32
 #: templates/userprofile/profile/overview_old.html:41
 msgid "Not set"
 msgstr "Non definido"
 
-#: templates/userprofile/profile/overview.html:80
-msgid "City: "
+#: templates/userprofile/profile/overview.html:88
+msgid "City"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:88
+#: templates/userprofile/profile/overview.html:118
+msgid "Your spaces"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:127
+msgid "Your proposals"
+msgstr ""
+
+#: templates/userprofile/profile/overview.html:132
 msgid "Add"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:89
+#: templates/userprofile/profile/overview.html:133
 msgid "Edit"
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:100
+#: templates/userprofile/profile/overview.html:144
 msgid "proposed by "
 msgstr ""
 
-#: templates/userprofile/profile/overview.html:100
+#: templates/userprofile/profile/overview.html:144
 msgid " at "
 msgstr ""
 
 #: templates/userprofile/profile/overview_old.html:18
 msgid "Username:"
 msgstr "Nome de usuario/usuaria:"
+
+#: templates/userprofile/profile/overview_old.html:19
+msgid "E-mail:"
+msgstr "Correo electrónico:"
 
 #: templates/userprofile/profile/overview_old.html:80
 msgid "Management:"
@@ -1701,6 +1716,12 @@ msgid ""
 msgstr ""
 "Tes que proporcionar só o tamaño como un enteiro (ambos os dous lados serán "
 "iguais) e, opcionalmente, o nome do usuario/usuaria."
+
+#~ msgid "Username: "
+#~ msgstr "Nome de usuario/usuaria"
+
+#~ msgid "Member for: "
+#~ msgstr "Membro dende:"
 
 #~ msgid "Ciudad: "
 #~ msgstr "Cidade:"
