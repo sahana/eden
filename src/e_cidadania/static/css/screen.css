@@ -676,5 +676,9 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     text-align: justify;
     margin: 15px;
 }
+
+.post img {
+    margin: 10px;
+}
 /* END NEWS */
 
