@@ -8,11 +8,11 @@ from django.template import RequestContext
 from django.utils.encoding import smart_unicode, iri_to_uri
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
-from rosetta.conf import settings as rosetta_settings
-from rosetta.polib import pofile
-from rosetta.poutil import find_pos, pagination_range
-from rosetta.signals import entry_changed, post_save
-import re, rosetta, datetime, unicodedata, hashlib, os
+from e_cidadania.apps.rosetta.conf import settings as rosetta_settings
+from e_cidadania.apps.rosetta.polib import pofile
+from e_cidadania.apps.rosetta.poutil import find_pos, pagination_range
+from e_cidadania.apps.rosetta.signals import entry_changed, post_save
+import re, e_cidadania.apps.rosetta, datetime, unicodedata, hashlib, os
 
 
 def home(request):
@@ -40,7 +40,7 @@ def home(request):
             out_ = out_.rstrip()
         return out_
     
-    version = rosetta.get_version(True)
+    version = e_cidadania.apps.rosetta.get_version(True)
     if 'rosetta_i18n_fn' in request.session:
         rosetta_i18n_fn=request.session.get('rosetta_i18n_fn')
         rosetta_i18n_app = get_app_name(rosetta_i18n_fn)
@@ -125,7 +125,7 @@ def home(request):
                 
                 try:
                     rosetta_i18n_pofile.metadata['Last-Translator'] = unicodedata.normalize('NFKD', u"%s %s <%s>" %(request.user.first_name,request.user.last_name,request.user.email)).encode('ascii', 'ignore')
-                    rosetta_i18n_pofile.metadata['X-Translated-Using'] = u"django-rosetta %s" % rosetta.get_version(False)
+                    rosetta_i18n_pofile.metadata['X-Translated-Using'] = u"django-rosetta %s" % e_cidadania.apps.rosetta.get_version(False)
                     rosetta_i18n_pofile.metadata['PO-Revision-Date'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M%z')
                 except UnicodeDecodeError:
                     pass
@@ -308,7 +308,7 @@ def list_languages(request):
             )
         )
     ADMIN_MEDIA_PREFIX = settings.ADMIN_MEDIA_PREFIX
-    version = rosetta.get_version(True)
+    version = e_cidadania.apps.rosetta.get_version(True)
     return render_to_response('rosetta/languages.html', locals(), context_instance=RequestContext(request))    
 list_languages=user_passes_test(lambda user:can_translate(user),settings.LOGIN_URL)(list_languages)
 list_languages=never_cache(list_languages)

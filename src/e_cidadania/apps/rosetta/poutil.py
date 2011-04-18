@@ -1,6 +1,6 @@
 import os, django
 from django.conf import settings
-from rosetta.conf import settings as rosetta_settings
+from e_cidadania.apps.rosetta.conf import settings as rosetta_settings
 from django.core.cache import cache
 
 try:

@@ -2,301 +2,301 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-04-18 11:41+0200\n"
-"PO-Revision-Date: 2011-02-15 10:47\n"
-"Last-Translator: <a@a.com>\n"
+"PO-Revision-Date: 2011-04-18 12:17\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Translated-Using: django-rosetta 0.5.6\n"
+"Language: \n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: countries.py:10
 msgid "Andorra"
-msgstr ""
+msgstr "Andorra"
 
 #: countries.py:11
 msgid "United Arab Emirates"
-msgstr ""
+msgstr "Emiratos Árabes Unidos"
 
 #: countries.py:12
 msgid "Afghanistan"
-msgstr ""
+msgstr "Afganistán"
 
 #: countries.py:13
 msgid "Antigua & Barbuda"
-msgstr ""
+msgstr "Antigua y Barbuda"
 
 #: countries.py:14
 msgid "Anguilla"
-msgstr ""
+msgstr "Anguila"
 
 #: countries.py:15
 msgid "Albania"
-msgstr ""
+msgstr "Albania"
 
 #: countries.py:16
 msgid "Armenia"
-msgstr ""
+msgstr "Armenia"
 
 #: countries.py:17
 msgid "Netherlands Antilles"
-msgstr ""
+msgstr "Antillas Holandesas"
 
 #: countries.py:18
 msgid "Angola"
-msgstr ""
+msgstr "Angola"
 
 #: countries.py:19
 msgid "Antarctica"
-msgstr ""
+msgstr "La Antártida"
 
 #: countries.py:20
 msgid "Argentina"
-msgstr ""
+msgstr "Argentina"
 
 #: countries.py:21
 msgid "American Samoa"
-msgstr ""
+msgstr "Samoa Americana"
 
 #: countries.py:22
 msgid "Austria"
-msgstr ""
+msgstr "Austria"
 
 #: countries.py:23
 msgid "Australia"
-msgstr ""
+msgstr "Australia"
 
 #: countries.py:24
 msgid "Aruba"
-msgstr ""
+msgstr "Aruba"
 
 #: countries.py:25
 msgid "Azerbaijan"
-msgstr ""
+msgstr "Azerbaiyán"
 
 #: countries.py:26
 msgid "Bosnia and Herzegovina"
-msgstr ""
+msgstr "Bosnia y Herzegovina"
 
 #: countries.py:27
 msgid "Barbados"
-msgstr ""
+msgstr "Barbados"
 
 #: countries.py:28
 msgid "Bangladesh"
-msgstr ""
+msgstr "Bangladesh"
 
 #: countries.py:29
 msgid "Belgium"
-msgstr ""
+msgstr "Bélgica"
 
 #: countries.py:30
 msgid "Burkina Faso"
-msgstr ""
+msgstr "Burkina Faso"
 
 #: countries.py:31
 msgid "Bulgaria"
-msgstr ""
+msgstr "Bulgaria"
 
 #: countries.py:32
 msgid "Bahrain"
-msgstr ""
+msgstr "Bahrein"
 
 #: countries.py:33
 msgid "Burundi"
-msgstr ""
+msgstr "Burundi"
 
 #: countries.py:34
 msgid "Benin"
-msgstr ""
+msgstr "Benin"
 
 #: countries.py:35
 msgid "Bermuda"
-msgstr ""
+msgstr "Bermudas"
 
 #: countries.py:36
 msgid "Brunei Darussalam"
-msgstr ""
+msgstr "Brunei Darussalam"
 
 #: countries.py:37
 msgid "Bolivia"
-msgstr ""
+msgstr "Bolivia"
 
 #: countries.py:38
 msgid "Brazil"
-msgstr ""
+msgstr "Brasil"
 
 #: countries.py:39
 msgid "Bahama"
-msgstr ""
+msgstr "Bahama"
 
 #: countries.py:40
 msgid "Bhutan"
-msgstr ""
+msgstr "Bhután"
 
 #: countries.py:41
 msgid "Bouvet Island"
-msgstr ""
+msgstr "Isla Bouvet"
 
 #: countries.py:42
 msgid "Botswana"
-msgstr ""
+msgstr "Botswana"
 
 #: countries.py:43
 msgid "Belarus"
-msgstr ""
+msgstr "Belarús"
 
 #: countries.py:44
 msgid "Belize"
-msgstr ""
+msgstr "Belice"
 
 #: countries.py:45
 msgid "Canada"
-msgstr ""
+msgstr "Canadá"
 
 #: countries.py:46
 msgid "Cocos (Keeling) Islands"
-msgstr ""
+msgstr "Cocos (Keeling)"
 
 #: countries.py:47
 msgid "Central African Republic"
-msgstr ""
+msgstr "República Centroafricana"
 
 #: countries.py:48
 msgid "Congo"
-msgstr ""
+msgstr "Congo"
 
 #: countries.py:49
 msgid "Switzerland"
-msgstr ""
+msgstr "Suiza"
 
 #: countries.py:50
 msgid "Ivory Coast"
-msgstr ""
+msgstr "Costa de Marfil"
 
 #: countries.py:51
 msgid "Cook Islands"
-msgstr ""
+msgstr "Islas Cook"
 
 #: countries.py:52
 msgid "Chile"
-msgstr ""
+msgstr "Chile"
 
 #: countries.py:53
 msgid "Cameroon"
-msgstr ""
+msgstr "Camerún"
 
 #: countries.py:54
 msgid "China"
-msgstr ""
+msgstr "China"
 
 #: countries.py:55
 msgid "Colombia"
-msgstr ""
+msgstr "Colombia"
 
 #: countries.py:56
 msgid "Costa Rica"
-msgstr ""
+msgstr "Costa Rica"
 
 #: countries.py:57
 msgid "Cuba"
-msgstr ""
+msgstr "Cuba"
 
 #: countries.py:58
 msgid "Cape Verde"
-msgstr ""
+msgstr "Cabo Verde"
 
 #: countries.py:59
 msgid "Christmas Island"
-msgstr ""
+msgstr "Isla de Navidad"
 
 #: countries.py:60
 msgid "Cyprus"
-msgstr ""
+msgstr "Chipre"
 
 #: countries.py:61
 msgid "Czech Republic"
-msgstr ""
+msgstr "República Checa"
 
 #: countries.py:62
 msgid "Germany"
-msgstr ""
+msgstr "Alemania"
 
 #: countries.py:63
 msgid "Djibouti"
-msgstr ""
+msgstr "Djibouti"
 
 #: countries.py:64
 msgid "Denmark"
-msgstr ""
+msgstr "Dinamarca"
 
 #: countries.py:65
 msgid "Dominica"
-msgstr ""
+msgstr "Dominica"
 
 #: countries.py:66
 msgid "Dominican Republic"
-msgstr ""
+msgstr "República Dominicana"
 
 #: countries.py:67
 msgid "Algeria"
-msgstr ""
+msgstr "Argelia"
 
 #: countries.py:68
 msgid "Ecuador"
-msgstr ""
+msgstr "Ecuador"
 
 #: countries.py:69
 msgid "Estonia"
-msgstr ""
+msgstr "Estonia"
 
 #: countries.py:70
 msgid "Egypt"
-msgstr ""
+msgstr "Egipto"
 
 #: countries.py:71
 msgid "Western Sahara"
-msgstr ""
+msgstr "Sáhara Occidental"
 
 #: countries.py:72
 msgid "Eritrea"
-msgstr ""
+msgstr "Eritrea"
 
 #: countries.py:73
 msgid "Spain"
-msgstr ""
+msgstr "España"
 
 #: countries.py:74
 msgid "Ethiopia"
-msgstr ""
+msgstr "Etiopía"
 
 #: countries.py:75
 msgid "Finland"
-msgstr ""
+msgstr "Finlandia"
 
 #: countries.py:76
 msgid "Fiji"
-msgstr ""
+msgstr "Fiji"
 
 #: countries.py:77
 msgid "Falkland Islands (Malvinas)"
-msgstr ""
+msgstr "Islas Malvinas (Falkland)"
 
 #: countries.py:78
 msgid "Micronesia"
-msgstr ""
+msgstr "Micronesia"
 
 #: countries.py:79
 msgid "Faroe Islands"
-msgstr ""
+msgstr "Islas Feroe"
 
 #: countries.py:80
 msgid "France"
@@ -977,8 +977,8 @@ msgstr "país desconocido o no especificado"
 #: countries.py:253
 msgid "This value must be in COUNTRIES setting in localflavor.generic package."
 msgstr ""
-"Este valor debe estar en la variable COUNTRIES en el paquete localflavor."
-"generic."
+"Este valor debe estar en la variable COUNTRIES en el paquete "
+"localflavor.generic."
 
 #: forms.py:58
 #, python-format
@@ -992,7 +992,8 @@ msgstr "Debe seleccionar una de las opciones"
 #: forms.py:77
 msgid "You must select a portion of the image with a minimum of 96x96 pixels."
 msgstr ""
-"Debe seleccionar una porción de la imagen con un mínimo de 96x96 píxeles."
+"Debe seleccionar una porción de la imagen con un mínimo de 96x96 "
+"píxeles."
 
 #: forms.py:83 templates/userprofile/account/login.html:19
 #: templates/userprofile/account/registration.html:12
@@ -1017,11 +1018,11 @@ msgstr "Contraseña (otra vez)"
 
 #: forms.py:94
 msgid ""
-"That username has invalid characters. The valid values are letters, numbers "
-"and underscore."
+"That username has invalid characters. The valid values are letters, "
+"numbers and underscore."
 msgstr ""
-"Ese nombre de usuario contiene caracteres no válidos. Los valores válidos "
-"son letras, números y guión bajo."
+"Ese nombre de usuario contiene caracteres no válidos. Los valores "
+"válidos son letras, números y guión bajo."
 
 #: forms.py:99
 msgid "The username is already registered."
@@ -1102,11 +1103,11 @@ msgstr "Enviar confirmación"
 #: templates/userprofile/account/email_validation.html:41
 #: templates/userprofile/account/email_validation_processed.html:21
 msgid ""
-"Insert the new e-mail address. An e-mail will be send to it for testing and "
-"confirmation"
+"Insert the new e-mail address. An e-mail will be send to it for testing"
+" and confirmation"
 msgstr ""
-"Introduzca la nueva dirección de correo electrónico. Un correo electrónico "
-"será enviado a él para la prueba y la confirmación"
+"Introduzca la nueva dirección de correo electrónico. Un correo "
+"electrónico será enviado a él para la prueba y la confirmación"
 
 #: templates/userprofile/account/email_validation_done.html:4
 msgid "E-mail validation successful"
@@ -1122,11 +1123,11 @@ msgstr "Dirección de correo electrónico validado con éxito"
 
 #: templates/userprofile/account/email_validation_done.html:16
 msgid ""
-"The key you received via e-mail is no longer valid. Please try the e-mail "
-"validation process again"
+"The key you received via e-mail is no longer valid. Please try the "
+"e-mail validation process again"
 msgstr ""
-"La clave que recibió por correo electrónico ya no es válida. Por favor, "
-"intente el proceso de validación de correo electrónico nuevo"
+"La clave que recibió por correo electrónico ya no es válida. Por "
+"favor, intente el proceso de validación de correo electrónico nuevo"
 
 #: templates/userprofile/account/email_validation_done.html:23
 #: templates/userprofile/account/email_validation_reset_response.html:22
@@ -1137,7 +1138,8 @@ msgstr "Proceso de validación de correo electrónico"
 #: templates/userprofile/account/email_validation_reset_response.html:23
 msgid "You can manage the e-mail validation process from the"
 msgstr ""
-"Puede administrar el proceso de validación de correo electrónico desde la"
+"Puede administrar el proceso de validación de correo electrónico desde"
+" la"
 
 #: templates/userprofile/account/email_validation_done.html:24
 #: templates/userprofile/account/email_validation_reset_response.html:23
@@ -1151,14 +1153,14 @@ msgstr "Cambio de e-mail procesado"
 
 #: templates/userprofile/account/email_validation_processed.html:14
 msgid ""
-"An e-mail has been sent to the new e-mail address to verify and activate it. "
-"Please access to your e-mail and complete this process following the "
-"instructions specified in the e-mail body"
+"An e-mail has been sent to the new e-mail address to verify and "
+"activate it. Please access to your e-mail and complete this process "
+"following the instructions specified in the e-mail body"
 msgstr ""
-"Un e-mail ha sido enviado a la nueva dirección de correo electrónico para "
-"verificar y activarlo. Por favor, acceda a su correo electrónico y complete "
-"este proceso siguiendo las instrucciones especificadas en el mensaje del "
-"correo electrónico"
+"Un e-mail ha sido enviado a la nueva dirección de correo electrónico "
+"para verificar y activarlo. Por favor, acceda a su correo electrónico "
+"y complete este proceso siguiendo las instrucciones especificadas en "
+"el mensaje del correo electrónico"
 
 #: templates/userprofile/account/email_validation_reset_response.html:4
 msgid "Validation e-mail sent"
@@ -1239,11 +1241,12 @@ msgstr "Cambio de contraseña"
 #: templates/userprofile/account/password_change.html:53
 #: templates/userprofile/account/password_change_done.html:20
 msgid ""
-"Password change utility page. Please enter your new password twice so we can "
-"verify you typed it in correctly"
+"Password change utility page. Please enter your new password twice so "
+"we can verify you typed it in correctly"
 msgstr ""
-"Página de cambio de la contraseña. Por favor introduzca su nueva contraseña "
-"dos veces para que podamos verificar que esta correctamente escrita"
+"Página de cambio de la contraseña. Por favor introduzca su nueva "
+"contraseña dos veces para que podamos verificar que esta correctamente"
+" escrita"
 
 #: templates/userprofile/account/password_change_done.html:4
 #: templates/userprofile/account/password_reset_complete.html:4
@@ -1260,10 +1263,11 @@ msgstr "La llave de la contraseña ha expirado"
 
 #: templates/userprofile/account/password_expired.html:9
 msgid ""
-"The password key you're trying to use is expired. Please, request a new one"
+"The password key you're trying to use is expired. Please, request a new"
+" one"
 msgstr ""
-"La llave de contraseña que está tratando de utilizar ha expirado. Por favor, "
-"solicite una nueva"
+"La llave de contraseña que está tratando de utilizar ha expirado. Por "
+"favor, solicite una nueva"
 
 #: templates/userprofile/account/password_reset.html:4
 #: templates/userprofile/account/password_reset.html:20
@@ -1284,26 +1288,28 @@ msgstr "Formulario de restablecimiento de contraseña"
 #: templates/userprofile/account/password_reset.html:38
 #: templates/userprofile/account/password_reset_done.html:17
 msgid ""
-"Forgotten your password? Enter your e-mail address, and we'll reset your "
-"password and e-mail the new one to you"
+"Forgotten your password? Enter your e-mail address, and we'll reset "
+"your password and e-mail the new one to you"
 msgstr ""
-"¿Olvidó su contraseña? Ingrese su dirección de e-mail y restableceremos la "
-"contraseña. Le enviaremos la nueva contraseña por correo electrónico."
+"¿Olvidó su contraseña? Ingrese su dirección de e-mail y "
+"restableceremos la contraseña. Le enviaremos la nueva contraseña por "
+"correo electrónico."
 
 #: templates/userprofile/account/password_reset_complete.html:13
 msgid "Your password has been set.  You may go ahead and log in now."
 msgstr ""
-"Su contraseña se ha establecido. Puede seguir adelante e iniciar sesión "
-"ahora."
+"Su contraseña se ha establecido. Puede seguir adelante e iniciar "
+"sesión ahora."
 
 #: templates/userprofile/account/password_reset_complete.html:20
 #: templates/userprofile/account/password_reset_confirm.html:56
 msgid ""
-"Password reset utility page. Please enter your new password twice so we can "
-"verify you typed it in correctly"
+"Password reset utility page. Please enter your new password twice so we"
+" can verify you typed it in correctly"
 msgstr ""
-"Página de reestablecimiento de contraseña. Por favor introduzca su nueva "
-"clave dos veces para que podamos verificar que está bien escrita."
+"Página de reestablecimiento de contraseña. Por favor introduzca su "
+"nueva clave dos veces para que podamos verificar que está bien "
+"escrita."
 
 #: templates/userprofile/account/password_reset_confirm.html:47
 msgid "Password reset unsuccessful"
@@ -1311,12 +1317,12 @@ msgstr "De restablecimiento de contraseña sin éxito"
 
 #: templates/userprofile/account/password_reset_confirm.html:48
 msgid ""
-"The password reset link was invalid, possibly because it has already been "
-"used.  Please request a new password reset."
+"The password reset link was invalid, possibly because it has already "
+"been used.  Please request a new password reset."
 msgstr ""
-"El enlace de restablecimiento de contraseña no es válido, posiblemente "
-"debido a que ya se ha utilizado. Por favor, solicite un restablecimiento de "
-"la contraseña nueva."
+"El enlace de restablecimiento de contraseña no es válido, posiblemente"
+" debido a que ya se ha utilizado. Por favor, solicite un "
+"restablecimiento de la contraseña nueva."
 
 #: templates/userprofile/account/password_reset_done.html:4
 #: templates/userprofile/account/password_reset_done.html:9
@@ -1325,11 +1331,11 @@ msgstr "Contraseña restablecida con éxito"
 
 #: templates/userprofile/account/password_reset_done.html:10
 msgid ""
-"We've e-mailed you the instructions to obtain a new password. You should be "
-"receiving it shortly"
+"We've e-mailed you the instructions to obtain a new password. You "
+"should be receiving it shortly"
 msgstr ""
-"Hemos enviado por correo electrónico las instrucciones para obtener una "
-"nueva contraseña. Debería recibirlo en breves"
+"Hemos enviado por correo electrónico las instrucciones para obtener "
+"una nueva contraseña. Debería recibirlo en breves"
 
 #: templates/userprofile/account/registration.html:4
 #: templates/userprofile/account/registration.html:11
@@ -1352,8 +1358,8 @@ msgstr "Registrar una cuenta nueva"
 #: templates/userprofile/account/registration.html:47
 #: templates/userprofile/account/registration_done.html:15
 msgid ""
-"Joining this community is quick and easy. You only need to fill the form to "
-"get access to all the private content"
+"Joining this community is quick and easy. You only need to fill the "
+"form to get access to all the private content"
 msgstr ""
 "Unirse a esta comunidad es rápido y fácil. Sólo tienes que llenar el "
 "formulario para obtener acceso a todo el contenido privado"
@@ -1396,11 +1402,11 @@ msgstr "Hecho"
 
 #: templates/userprofile/avatar/choose.html:50
 msgid ""
-"Select an image from a remote URL. Put the URL on the input below and we'll "
-"retrieve the image for you"
+"Select an image from a remote URL. Put the URL on the input below and "
+"we'll retrieve the image for you"
 msgstr ""
-"Seleccione una imagen desde una URL remota. Ponga la dirección URL en la "
-"entrada de abajo y vamos a recuperar la imagen para usted"
+"Seleccione una imagen desde una URL remota. Ponga la dirección URL en "
+"la entrada de abajo y vamos a recuperar la imagen para usted"
 
 #: templates/userprofile/avatar/choose.html:57
 #: templates/userprofile/avatar/search.html:4
@@ -1420,11 +1426,11 @@ msgstr "Avatar página de selección de"
 #: templates/userprofile/avatar/done.html:20
 #: templates/userprofile/avatar/search.html:51
 msgid ""
-"You have several options to select the image you want as avatar on your "
-"profile"
+"You have several options to select the image you want as avatar on your"
+" profile"
 msgstr ""
-"Usted tiene varias opciones para seleccionar la imagen que quieres como "
-"avatar en tu perfil"
+"Usted tiene varias opciones para seleccionar la imagen que quieres "
+"como avatar en tu perfil"
 
 #: templates/userprofile/avatar/crop.html:4
 #: templates/userprofile/avatar/crop.html:31
@@ -1453,11 +1459,11 @@ msgstr "Eliminar la información personal"
 
 #: templates/userprofile/profile/delete.html:10
 msgid ""
-"It erases all your private data except your username. You can refill the "
-"information later if you want to."
+"It erases all your private data except your username. You can refill "
+"the information later if you want to."
 msgstr ""
-"Borra todos tus datos privados, excepto su nombre de usuario. Usted puede "
-"rellenar la información posteriormente si lo desea."
+"Borra todos tus datos privados, excepto su nombre de usuario. Usted "
+"puede rellenar la información posteriormente si lo desea."
 
 #: templates/userprofile/profile/delete.html:15
 msgid "Delete your personal information"
@@ -1581,11 +1587,11 @@ msgstr "Edad:"
 
 #: templates/userprofile/profile/overview.html:64
 msgid "years"
-msgstr ""
+msgstr "años"
 
 #: templates/userprofile/profile/overview.html:65
 msgid "Member since"
-msgstr ""
+msgstr "Miembro desde"
 
 #: templates/userprofile/profile/overview.html:66
 #, fuzzy
@@ -1611,31 +1617,31 @@ msgstr "No establecido"
 
 #: templates/userprofile/profile/overview.html:88
 msgid "City"
-msgstr ""
+msgstr "Ciudad"
 
 #: templates/userprofile/profile/overview.html:118
 msgid "Your spaces"
-msgstr ""
+msgstr "Tus espacios"
 
 #: templates/userprofile/profile/overview.html:127
 msgid "Your proposals"
-msgstr ""
+msgstr "Tus propuestas"
 
 #: templates/userprofile/profile/overview.html:132
 msgid "Add"
-msgstr ""
+msgstr "Añadir"
 
 #: templates/userprofile/profile/overview.html:133
 msgid "Edit"
-msgstr ""
+msgstr "Editar"
 
 #: templates/userprofile/profile/overview.html:144
 msgid "proposed by "
-msgstr ""
+msgstr "propuesto por"
 
 #: templates/userprofile/profile/overview.html:144
 msgid " at "
-msgstr ""
+msgstr "a las"
 
 #: templates/userprofile/profile/overview_old.html:18
 msgid "Username:"
@@ -1693,11 +1699,11 @@ msgstr "Información pública de perfil"
 
 #: templatetags/avatars.py:68
 msgid ""
-"You have to provide only the size as             an integer (both sides will "
-"be equal) and optionally, the             username."
+"You have to provide only the size as             an integer (both sides"
+" will be equal) and optionally, the             username."
 msgstr ""
-"Usted tiene que proporcionar sólo el tamaño como un entero (ambos lados será "
-"igual) y, opcionalmente, el nombre de usuario."
+"Usted tiene que proporcionar sólo el tamaño como un entero (ambos "
+"lados será igual) y, opcionalmente, el nombre de usuario."
 
 #~ msgid "Username: "
 #~ msgstr "Nombre de usuario:"
