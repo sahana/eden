@@ -8,7 +8,7 @@ google.setOnLoadCallback(function() {
     $('a.suggest').click(function() {
         var a=$(this), 
             str=a.html(), 
-            orig=$('.original', 
+            orig=$('.original .message', 
             a.parents('tr')).html(), 
             trans=$('textarea',a.parent());
         orig = unescape(orig).replace(/<br\s?\/?>/g,'\n').replace(/<code>/g,'').replace(/<\/code>/g,'').replace(/&gt;/g,'>').replace(/&lt;/g,'<');
@@ -57,5 +57,7 @@ google.setOnLoadCallback(function() {
             return true;
         }
     });
+
+    $('.translation textarea').eq(0).focus();
     
 });

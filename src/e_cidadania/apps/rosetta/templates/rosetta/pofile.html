@@ -40,7 +40,7 @@
             <div><!-- DIV needed for valid HTML -->
                 {% rosetta_csrf_token %}
                 <label for="searchbar"><img src="{{ADMIN_MEDIA_PREFIX}}img/admin/icon_searchbox.png" alt="{% trans "Search" %}" /></label>
-                <input type="text" size="40" name="query" value="{% if query %}{{query}}{% endif %}" id="searchbar" />
+                <input type="text" size="40" name="query" value="{% if query %}{{query}}{% endif %}" id="searchbar" tabindex="0" />
                 <input type="submit" name="search" value="{% trans "Go" %}" />
             </div>
         </form>
@@ -67,18 +67,36 @@
                                     <span class="part">{{message.msgid|format_message|linebreaksbr}}</span>
                                     <span class="part">{{message.msgid_plural|format_message|linebreaksbr}}</span>
                                 </div>
+                                
+                                {% if message.msgctxt %}
+                                    <span class="context">{% trans "Context hint" %}: {{message.msgctxt}}</span>
+                                {% else %}
+                                    {% if message.comment %}
+                                    <span class="context">{% trans "Context hint" %}: {{message.comment}}</span>
+                                    {% endif %}
+                                {% endif %}
+                                
                             </td>
                             <td class="translation">
                                 {% for k, msgstr in message.msgstr_plural.items|dictsort:"0"  %}
                                     <label for="m_{{message.md5hash}}_{{k}}">{{k}}:</label>
-                                    <textarea rows="{{message.msgid|format_message|lines_count}}" cols="40" id="m_{{message.md5hash}}_{{k}}" name="m_{{message.md5hash}}_{{k}}">{{msgstr}}</textarea>
+                                    <textarea rows="{{message.msgid|format_message|lines_count}}" cols="40" id="m_{{message.md5hash}}_{{k}}" name="m_{{message.md5hash}}_{{k}}" tabindex="{% increment tab_idx %}">{{msgstr}}</textarea>
                                 {% endfor %}
                             </td>
                         {% else %}
-                            <td class="original">{{ message.msgid|format_message|linebreaksbr }}</td>
+                            <td class="original">
+                                <span class="message">{{ message.msgid|format_message|linebreaksbr }}</span>
+                            {% if message.msgctxt %}
+                                <span class="context">{% trans "Contextual hint" %}: "{{message.msgctxt}}"</span>
+                                {% else %}
+                                {% if message.comment %}
+                                <span class="context">{% trans "Context hint" %}: {{message.comment}}</span>
+                                {% endif %}                        
+                            {% endif %}
+                            </td>
                             {% if main_language %}<td class="original">{{ message.main_lang|format_message|linebreaksbr }}</td>{% endif %}
                             <td class="translation">
-                                <textarea rows="{{message.msgid|format_message|lines_count}}" cols="40" name="m_{{message.md5hash}}">{{message.msgstr}}</textarea>
+                                <textarea rows="{{message.msgid|format_message|lines_count}}" cols="40" name="m_{{message.md5hash}}" tabindex="{% increment tab_idx %}">{{message.msgstr}}</textarea>
                                 {% if ENABLE_TRANSLATION_SUGGESTIONS %}<a href="#" class="suggest">{% trans "suggest" %}</a>{% endif %}
                             </td>
                         {% endif %}
@@ -102,7 +120,7 @@
                     {% if query %}
                         <input type="hidden" name="query" value="{{query}}"  />
                     {% endif %}
-                    <input type="submit" class="default" name="_next" value="{% trans "Save and translate next block" %}"/>
+                    <input type="submit" class="default" name="_next" value="{% trans "Save and translate next block" %}" tabindex="{% increment tab_idx %}"/>
                     
                     
                     {% if needs_pagination %}
@@ -121,7 +139,10 @@
                     {% else %}
                     {% trans "Displaying:" %}
                     {% endif %}
-                    <strong>{% blocktrans count rosetta_i18n_pofile|length as message_number and paginator.object_list|length as hits %}{{hits}}/{{message_number}} message{% plural %}{{hits}}/{{message_number}} messages{% endblocktrans %}</strong>
+                    
+                    {% with paginator.object_list|length as hits %}
+                    <strong>{% blocktrans count rosetta_i18n_pofile|length as message_number %}{{hits}}/{{message_number}} message{% plural %}{{hits}}/{{message_number}} messages{% endblocktrans %}</strong>    
+                    {% endwith %}
 
                     
                 </p>

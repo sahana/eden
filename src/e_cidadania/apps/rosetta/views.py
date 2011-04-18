@@ -1,31 +1,19 @@
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-from django.core.paginator import Paginator, InvalidPage
-from django.core.urlresolvers import reverse, resolve, Resolver404
+from django.core.paginator import Paginator
+from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
-from django.utils.encoding import smart_unicode, force_unicode, iri_to_uri
+from django.template import RequestContext
+from django.utils.encoding import smart_unicode, iri_to_uri
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
-from e_cidadania.apps.rosetta.polib import pofile
-from e_cidadania.apps.rosetta.poutil import find_pos, pagination_range
-from e_cidadania.apps.rosetta.conf import settings as rosetta_settings
-import re, os, e_cidadania.apps.rosetta, datetime, unicodedata, hashlib
-from django.template import RequestContext
+from rosetta.conf import settings as rosetta_settings
+from rosetta.polib import pofile
+from rosetta.poutil import find_pos, pagination_range
+from rosetta.signals import entry_changed, post_save
+import re, rosetta, datetime, unicodedata, hashlib, os
 
-
-try:
-    resolve(settings.LOGIN_URL)
-except Resolver404:
-    try:
-        resolve('/admin/')
-    except Resolver404:
-        raise Exception('Rosetta cannot log you in!\nYou must define a LOGIN_URL in your settings if you don\'t run the Django admin site at a standard URL.')
-    else:
-        LOGIN_URL = '/admin/'
-else:
-    LOGIN_URL = settings.LOGIN_URL
-        
 
 def home(request):
     """
@@ -52,7 +40,7 @@ def home(request):
             out_ = out_.rstrip()
         return out_
     
-    version = e_cidadania.apps.rosetta.get_version(True)
+    version = rosetta.get_version(True)
     if 'rosetta_i18n_fn' in request.session:
         rosetta_i18n_fn=request.session.get('rosetta_i18n_fn')
         rosetta_i18n_app = get_app_name(rosetta_i18n_fn)
@@ -100,6 +88,9 @@ def home(request):
                     # If someone did a makemessage, some entries might
                     # have been removed, so we need to check.
                     if entry:
+                        old_msgstr = entry.msgstr
+                        
+                        
                         if plural_id is not None:
                             plural_string = fix_nls(entry.msgstr_plural[plural_id], value)
                             entry.msgstr_plural[plural_id] = plural_string
@@ -107,12 +98,24 @@ def home(request):
                             entry.msgstr = fix_nls(entry.msgid, value)
 
                         is_fuzzy = bool(request.POST.get('f_%s' % md5hash, False))
-
-                        if 'fuzzy' in entry.flags and not is_fuzzy:
+                        old_fuzzy = 'fuzzy' in entry.flags
+                        
+                        if old_fuzzy and not is_fuzzy:
                             entry.flags.remove('fuzzy')
-                        elif 'fuzzy' not in entry.flags and is_fuzzy:
+                        elif not old_fuzzy and is_fuzzy:
                             entry.flags.append('fuzzy')
+                            
                         file_change = True
+                        
+                        if old_msgstr != value or old_fuzzy != is_fuzzy:
+                            entry_changed.send(sender=entry,
+                                               user=request.user,
+                                               old_msgstr = old_msgstr,
+                                               old_fuzzy = old_fuzzy,
+                                               pofile = rosetta_i18n_fn,
+                                               language_code = rosetta_i18n_lang_code,
+                                               )
+                                               
                     else:
                         request.session['rosetta_last_save_error'] = True
                         
@@ -122,13 +125,16 @@ def home(request):
                 
                 try:
                     rosetta_i18n_pofile.metadata['Last-Translator'] = unicodedata.normalize('NFKD', u"%s %s <%s>" %(request.user.first_name,request.user.last_name,request.user.email)).encode('ascii', 'ignore')
-                    rosetta_i18n_pofile.metadata['X-Translated-Using'] = u"django-rosetta %s" % e_cidadania.apps.rosetta.get_version(False)
+                    rosetta_i18n_pofile.metadata['X-Translated-Using'] = u"django-rosetta %s" % rosetta.get_version(False)
                     rosetta_i18n_pofile.metadata['PO-Revision-Date'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M%z')
                 except UnicodeDecodeError:
                     pass
                 try:
                     rosetta_i18n_pofile.save()
                     rosetta_i18n_pofile.save_as_mofile(rosetta_i18n_fn.replace('.po','.mo'))
+                    
+                    post_save.send(sender=None,language_code=rosetta_i18n_lang_code,request=request)
+                    
                     
                     # Try auto-reloading via the WSGI daemon mode reload mechanism
                     if  rosetta_settings.WSGI_AUTO_RELOAD and \
@@ -140,6 +146,15 @@ def home(request):
                                 os.utime(request.environ.get('SCRIPT_FILENAME'), None)
                             except OSError:
                                 pass
+                    # Try auto-reloading via uwsgi daemon reload mechanism
+                    if rosetta_settings.UWSGI_AUTO_RELOAD:
+                        try:
+                            import uwsgi
+                            # pretty easy right?
+                            uwsgi.reload()
+                        except:
+                            # we may not be running under uwsgi :P
+                            pass
                         
                 except:
                     request.session['rosetta_i18n_write'] = False
@@ -220,7 +235,7 @@ def home(request):
         
     else:
         return list_languages(request)
-home=user_passes_test(lambda user:can_translate(user),LOGIN_URL)(home)
+home=user_passes_test(lambda user:can_translate(user),settings.LOGIN_URL)(home)
 home=never_cache(home)
 
 
@@ -258,7 +273,7 @@ def download_file(request):
 
         return HttpResponseRedirect(reverse('rosetta-home'))
         
-download_file=user_passes_test(lambda user:can_translate(user),LOGIN_URL)(download_file)
+download_file=user_passes_test(lambda user:can_translate(user),settings.LOGIN_URL)(download_file)
 download_file=never_cache(download_file)
         
 
@@ -269,11 +284,22 @@ def list_languages(request):
     that can be translated and their translation progress
     """
     languages = []
-    do_django = 'django' in request.GET
-    do_rosetta = 'rosetta' in request.GET
+    
+    if 'filter' in request.GET:
+        if request.GET.get('filter') in ('project', 'third-party', 'django', 'all'):
+            filter_ = request.GET.get('filter')
+            request.session['rosetta_i18n_catalog_filter'] = filter_
+            return HttpResponseRedirect(reverse('rosetta-pick-file'))
+    
+    rosetta_i18n_catalog_filter = request.session.get('rosetta_i18n_catalog_filter', 'project')
+    
+    third_party_apps = rosetta_i18n_catalog_filter in ('all', 'third-party')
+    django_apps = rosetta_i18n_catalog_filter in ('all', 'django')
+    project_apps = rosetta_i18n_catalog_filter in ('all', 'project')
+    
     has_pos = False
     for language in settings.LANGUAGES:
-        pos = find_pos(language[0],include_djangos=do_django,include_rosetta=do_rosetta)        
+        pos = find_pos(language[0], project_apps=project_apps,django_apps=django_apps,third_party_apps=third_party_apps)
         has_pos = has_pos or len(pos)
         languages.append(
             (language[0], 
@@ -282,9 +308,9 @@ def list_languages(request):
             )
         )
     ADMIN_MEDIA_PREFIX = settings.ADMIN_MEDIA_PREFIX
-    version = e_cidadania.apps.rosetta.get_version(True)
+    version = rosetta.get_version(True)
     return render_to_response('rosetta/languages.html', locals(), context_instance=RequestContext(request))    
-list_languages=user_passes_test(lambda user:can_translate(user),LOGIN_URL)(list_languages)
+list_languages=user_passes_test(lambda user:can_translate(user),settings.LOGIN_URL)(list_languages)
 list_languages=never_cache(list_languages)
 
 def get_app_name(path):
@@ -299,10 +325,13 @@ def lang_sel(request,langid,idx):
         raise Http404
     else:
         
-        do_django = 'django' in request.GET
-        do_rosetta = 'rosetta' in request.GET
+        rosetta_i18n_catalog_filter = request.session.get('rosetta_i18n_catalog_filter', 'project')
         
-        file_ = find_pos(langid,include_djangos=do_django,include_rosetta=do_rosetta)[int(idx)]
+        third_party_apps = rosetta_i18n_catalog_filter in ('all', 'third-party')
+        django_apps = rosetta_i18n_catalog_filter in ('all', 'django')
+        project_apps = rosetta_i18n_catalog_filter in ('all', 'project')
+        
+        file_ = find_pos(langid, project_apps=project_apps,django_apps=django_apps,third_party_apps=third_party_apps)[int(idx)]
         
         request.session['rosetta_i18n_lang_code'] = langid
         request.session['rosetta_i18n_lang_name'] = unicode([l[1] for l in settings.LANGUAGES if l[0] == langid][0])
@@ -320,13 +349,13 @@ def lang_sel(request,langid,idx):
             request.session['rosetta_i18n_write'] = False
             
         return HttpResponseRedirect(reverse('rosetta-home'))
-lang_sel=user_passes_test(lambda user:can_translate(user),LOGIN_URL)(lang_sel)
+lang_sel=user_passes_test(lambda user:can_translate(user),settings.LOGIN_URL)(lang_sel)
 lang_sel=never_cache(lang_sel)
 
 def can_translate(user):
     if not user.is_authenticated():
         return False
-    elif user.is_superuser:
+    elif user.is_superuser and user.is_staff:
         return True
     else:
         try:

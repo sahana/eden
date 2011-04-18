@@ -2,11 +2,12 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.dispatch import receiver
 from django.test import TestCase
 from django.test.client import Client
-from django.utils.translation import ugettext_lazy as _
 from rosetta.conf import settings as rosetta_settings
-import datetime, os, shutil, hashlib
+from rosetta.signals import entry_changed, post_save
+import os, shutil, django
 
 
 class RosettaTestCase(TestCase):
@@ -17,15 +18,20 @@ class RosettaTestCase(TestCase):
         super(RosettaTestCase,self).__init__(*args,**kwargs)
         self.curdir = os.path.dirname(__file__)
         self.dest_file = os.path.normpath(os.path.join(self.curdir, '../locale/xx/LC_MESSAGES/django.po'))
-
+        self.django_version_major, self.django_version_minor = django.VERSION[0],django.VERSION[1]
+        
 
     def setUp(self):
         user    = User.objects.create_user('test_admin', 'test@test.com', 'test_password')
         user2   = User.objects.create_user('test_admin2', 'test@test2.com', 'test_password')
+        user3   = User.objects.create_user('test_admin3', 'test@test2.com', 'test_password')
         
-        user.is_superuser, user2.is_superuser = True,True
+        user.is_superuser, user2.is_superuser, user3.is_superuser = True,True, True
+        user.is_staff, user2.is_staff, user3.is_staff = True,True, False
+        
         user.save()
         user2.save()
+        user3.save()
         
         self.client2 = Client()
         
@@ -37,17 +43,21 @@ class RosettaTestCase(TestCase):
         
 
     def test_1_ListLoading(self):
-        r = self.client.get(reverse('rosetta-pick-file') +'?rosetta')
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        r = self.client.get(reverse('rosetta-pick-file'))
         self.assertTrue(os.path.normpath('rosetta/locale/xx/LC_MESSAGES/django.po') in r.content)
         
         
     def test_2_PickFile(self):
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
         r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
         r = self.client.get(reverse('rosetta-home'))
         
         self.assertTrue('dummy language' in r.content)
         
     def test_3_DownloadZIP(self):
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        
         r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
         r = self.client.get(reverse('rosetta-home'))
         r = self.client.get(reverse('rosetta-download-file' ) +'?rosetta')
@@ -61,7 +71,8 @@ class RosettaTestCase(TestCase):
         shutil.copy(os.path.normpath(os.path.join(self.curdir,'./django.po.template')), self.dest_file)
 
         # Load the template file
-        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
+        r = self.client.get(reverse('rosetta-pick-file')  +'?filter=third-party')
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
         r = self.client.get(reverse('rosetta-home') + '?filter=untranslated')
         r = self.client.get(reverse('rosetta-home'))
         
@@ -111,6 +122,8 @@ class RosettaTestCase(TestCase):
         del(content)
         
         # Load the template file
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        
         r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
         r = self.client.get(reverse('rosetta-home') + '?filter=untranslated')
         r = self.client.get(reverse('rosetta-home'))
@@ -140,7 +153,8 @@ class RosettaTestCase(TestCase):
         
         rosetta_settings.EXCLUDED_APPLICATIONS = ('rosetta',)
         
-        r = self.client.get(reverse('rosetta-pick-file') +'?rosetta')
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        r = self.client.get(reverse('rosetta-pick-file'))
         self.assertTrue('rosetta/locale/xx/LC_MESSAGES/django.po' not in r.content)
         
         rosetta_settings.EXCLUDED_APPLICATIONS = ()
@@ -149,15 +163,19 @@ class RosettaTestCase(TestCase):
         self.assertTrue('rosetta/locale/xx/LC_MESSAGES/django.po' in r.content)
         
     def test_7_selfInApplist(self):    
-        r = self.client.get(reverse('rosetta-pick-file') +'?rosetta')
+        self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        r = self.client.get(reverse('rosetta-pick-file'))
         self.assertTrue('rosetta/locale/xx/LC_MESSAGES/django.po' in r.content)
 
+        self.client.get(reverse('rosetta-pick-file') + '?filter=project')
         r = self.client.get(reverse('rosetta-pick-file'))
         self.assertTrue('rosetta/locale/xx/LC_MESSAGES/django.po' not in r.content)
 
 
     def test_8_hideObsoletes(self):
-        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        r = self.client.get(reverse('rosetta-pick-file'))
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
         
         # not in listing
         for p in range(1,5):
@@ -174,9 +192,11 @@ class RosettaTestCase(TestCase):
         shutil.copy(self.dest_file, self.dest_file + '.orig')
         shutil.copy(os.path.normpath(os.path.join(self.curdir,'./django.po.template')), self.dest_file)
         
+        r = self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        r = self.client2.get(reverse('rosetta-pick-file') +'?filter=third-party')
         
-        self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
-        self.client2.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
+        self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) )
+        self.client2.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
 
         # Load the template file
         r   = self.client.get(reverse('rosetta-home') + '?filter=untranslated')
@@ -239,3 +259,155 @@ class RosettaTestCase(TestCase):
         shutil.move(self.dest_file+'.orig', self.dest_file)
 
         
+    def test_10_issue_79_num_entries(self):
+        shutil.copy(self.dest_file, self.dest_file + '.orig')
+        shutil.copy(os.path.normpath(os.path.join(self.curdir,'./django.po.issue79.template')), self.dest_file)
+        
+        self.client.get(reverse('rosetta-pick-file') +'?filter=third-party')
+        r = self.client.get(reverse('rosetta-pick-file'))
+        
+        self.assertTrue('<td class="ch-messages r">1</td>' in r.content)
+        self.assertTrue('<td class="ch-progress r">0.00%</td>' in r.content)
+        self.assertTrue('<td class="ch-obsolete r">1</td>' in r.content)
+        
+        # reset the original file
+        shutil.move(self.dest_file+'.orig', self.dest_file)
+    
+    def test_11_issue_80_tab_indexes(self):
+        self.client.get(reverse('rosetta-pick-file')+'?filter=third-party')
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
+        r = self.client.get(reverse('rosetta-home'))
+        self.assertTrue('tabindex="3"' in r.content)
+
+
+    def test_12_issue_82_staff_user(self):
+        self.client3 = Client()
+        self.client3.login(username='test_admin3',password='test_password')
+
+        
+        r = self.client3.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ) +'?rosetta')
+        r = self.client3.get(reverse('rosetta-home'))
+        self.assertTrue(not r.content)
+
+    
+    def test_13_catalog_filters(self):
+        settings.LANGUAGES = (('fr','French'),('xx','Dummy Language'),)
+        
+        
+        
+        self.client.get(reverse('rosetta-pick-file')+'?filter=third-party')
+        r = self.client.get(reverse('rosetta-pick-file'))
+        self.assertTrue(os.path.normpath('rosetta/locale/xx/LC_MESSAGES/django.po') in r.content)
+        self.assertTrue(('contrib') not in r.content)
+        
+        self.client.get(reverse('rosetta-pick-file')+'?filter=django')
+        r = self.client.get(reverse('rosetta-pick-file'))
+        self.assertTrue(os.path.normpath('rosetta/locale/xx/LC_MESSAGES/django.po') not in r.content)
+        
+        if self.django_version_major >=1 and self.django_version_minor >=3:
+            self.assertTrue(('contrib') in r.content)
+        
+        self.client.get(reverse('rosetta-pick-file')+'?filter=all')
+        r = self.client.get(reverse('rosetta-pick-file'))
+        self.assertTrue(os.path.normpath('rosetta/locale/xx/LC_MESSAGES/django.po') in r.content)
+        
+        if self.django_version_major >=1 and self.django_version_minor >=3:
+            self.assertTrue(('contrib') in r.content)
+        
+        self.client.get(reverse('rosetta-pick-file')+'?filter=project')
+        r = self.client.get(reverse('rosetta-pick-file'))
+        self.assertTrue(os.path.normpath('rosetta/locale/xx/LC_MESSAGES/django.po') not in r.content)
+        
+        if self.django_version_major >=1 and self.django_version_minor >=3:
+            self.assertTrue(('contrib') not in r.content)
+
+
+    def test_14_issue_99_context_and_comments(self):
+        self.client.get(reverse('rosetta-pick-file')+'?filter=third-party')
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
+        r = self.client.get(reverse('rosetta-home'))
+        self.assertTrue('This is a text of the base template' in r.content)
+        self.assertTrue('Context hint' in r.content)
+
+
+    def test_14_issue_87_entry_changed_signal(self):
+        # copy the template file
+        shutil.copy(self.dest_file, self.dest_file + '.orig')
+        shutil.copy(os.path.normpath(os.path.join(self.curdir,'./django.po.template')), self.dest_file)
+        
+        
+        self.client.get(reverse('rosetta-pick-file')+'?filter=third-party')
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
+        r = self.client.get(reverse('rosetta-home'))
+        
+        @receiver(entry_changed)
+        def test_receiver(sender, **kwargs):
+            self.test_old_msgstr = kwargs.get('old_msgstr')
+            self.test_new_msgstr = sender.msgstr
+            self.test_msg_id = sender.msgid
+    
+        
+        self.assertTrue('m_e48f149a8b2e8baa81b816c0edf93890' in r.content)
+
+        # post a translation
+        r = self.client.post(reverse('rosetta-home'), dict(m_e48f149a8b2e8baa81b816c0edf93890='Hello, world', _next='_next'))
+        
+        self.assertTrue(self.test_old_msgstr == '')
+        self.assertTrue(self.test_new_msgstr == 'Hello, world')
+        self.assertTrue(self.test_msg_id == 'String 2')
+        
+        del(self.test_old_msgstr, self.test_new_msgstr, self.test_msg_id)
+        
+        # reset the original file
+        shutil.move(self.dest_file+'.orig', self.dest_file)
+
+    def test_15_issue_101_post_save_signal(self):
+        # copy the template file
+        shutil.copy(self.dest_file, self.dest_file + '.orig')
+        shutil.copy(os.path.normpath(os.path.join(self.curdir,'./django.po.template')), self.dest_file)
+        
+        
+        self.client.get(reverse('rosetta-pick-file')+'?filter=third-party')
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
+        r = self.client.get(reverse('rosetta-home'))
+        
+        @receiver(post_save)
+        def test_receiver(sender, **kwargs):
+            self.test_sig_lang = kwargs.get('language_code')
+    
+        self.assertTrue('m_e48f149a8b2e8baa81b816c0edf93890' in r.content)
+
+        # post a translation
+        r = self.client.post(reverse('rosetta-home'), dict(m_e48f149a8b2e8baa81b816c0edf93890='Hello, world', _next='_next'))
+        
+        self.assertTrue(self.test_sig_lang == 'xx')
+        del(self.test_sig_lang)
+        # reset the original file
+        shutil.move(self.dest_file+'.orig', self.dest_file)
+        
+
+    def test_16_issue_103_post_save_signal_has_request(self):
+        # copy the template file
+        shutil.copy(self.dest_file, self.dest_file + '.orig')
+        shutil.copy(os.path.normpath(os.path.join(self.curdir,'./django.po.template')), self.dest_file)
+
+
+        self.client.get(reverse('rosetta-pick-file')+'?filter=third-party')
+        r = self.client.get(reverse('rosetta-language-selection', args=('xx',0,), kwargs=dict() ))
+        r = self.client.get(reverse('rosetta-home'))
+
+        @receiver(post_save)
+        def test_receiver(sender, **kwargs):
+            self.test_16_has_request = 'request' in kwargs
+
+        self.assertTrue('m_e48f149a8b2e8baa81b816c0edf93890' in r.content)
+
+        # post a translation
+        r = self.client.post(reverse('rosetta-home'), dict(m_e48f149a8b2e8baa81b816c0edf93890='Hello, world', _next='_next'))
+
+        self.assertTrue(self.test_16_has_request)
+        del(self.test_16_has_request)
+        # reset the original file
+        shutil.move(self.dest_file+'.orig', self.dest_file)
+
+

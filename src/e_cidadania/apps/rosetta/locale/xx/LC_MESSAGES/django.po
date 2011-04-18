@@ -23,4 +23,15 @@ msgstr ""
 msgid "String 2"
 msgstr ""
 
+#. Translators: This is a text of the base template
+#: templates/base.html:43
+msgid "String 3 with comment"
+msgstr ""
+
+msgctxt "Context hint"
+msgid "String 4"
+msgstr ""
+
+
+
 

@@ -38,6 +38,7 @@ Refs:
 
 """
 WSGI_AUTO_RELOAD = getattr(settings,'ROSETTA_WSGI_AUTO_RELOAD', False)
+UWSGI_AUTO_RELOAD = getattr(settings,'ROSETTA_UWSGI_AUTO_RELOAD', False)
 
 
 # Exclude applications defined in this list from being translated
