@@ -67,7 +67,7 @@ urlpatterns = patterns('',
 
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
-    (r'^(?P<slug>\w+)/', include('e_cidadania.apps.staticpages.urls')),
+    (r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
 )
 
 # Activate rosetta translation engine
