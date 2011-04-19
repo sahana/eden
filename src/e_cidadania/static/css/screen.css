@@ -167,6 +167,10 @@ input[type="text"], input[type="password"] {
 
 
 /* DIVS */
+#grid {
+    min-height: 500px;
+}
+
 .topbar {
     width: 100%;
     height: 25px;
@@ -702,3 +706,11 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 }
 /* END NEWS */
 
+/* PAGES */
+.pageinfo {
+    font-size: 9px;
+    float: right;
+    color: #555;
+    margin: 20px 10px 20px 10px;
+    text-shadow: 1px 1px 1px #FFF;
+}

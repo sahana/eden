@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ page.name }}{% endblock %}
+    
+{% block content %}
+    <div class="grid_16">
+      {{ page.content|safe }}
+      
+      <div class="pageinfo">
+        {% trans "created" %} {{ page.date }} {% trans "by" %} {{ page.author }}
+      </div>
+    </div>
+{% endblock %}
