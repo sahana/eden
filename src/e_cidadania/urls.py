@@ -62,15 +62,12 @@ urlpatterns = patterns('',
     (r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'uploads'}),
 
-    # Terms of service
-    (r'^terms/', 'direct_to_template', {'template': 'terms.html'}),
-
-    # About
-    (r'^about/', 'direct_to_template', {'template': 'about.html'}),
-
     # This urls is for the django comments system
     (r'^comments/', include('django.contrib.comments.urls')),
 
+    # This url is for the access to static pages. I hope this doesn't collide
+    # with the index view
+    (r'^(?P<slug>\w+)/', include('e_cidadania.apps.staticpages.urls')),
 )
 
 # Activate rosetta translation engine
