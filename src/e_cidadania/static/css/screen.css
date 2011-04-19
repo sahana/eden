@@ -655,8 +655,9 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 .post {
     width: 100%;
     /* border-bottom: 5px solid #aaa;*/
-    background: #fff;
+    background: #f3f3f3;
     margin: 20px 5px 20px 5px;
+    padding: 5px;
     -webkit-border-top-left-radius: 20px;
     -webkit-border-bottom-right-radius: 20px;
     -moz-border-radius-topleft: 20px;
