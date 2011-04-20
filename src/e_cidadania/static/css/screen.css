@@ -713,4 +713,17 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     color: #555;
     margin: 20px 10px 20px 10px;
     text-shadow: 1px 1px 1px #FFF;
+    clear: both;
+}
+
+.pagebutton {
+    font-size: 1em;
+    float: right;
+    padding: 5px;
+    margin: 10px;
+    background: #999;
+    color: #FFF;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
 }

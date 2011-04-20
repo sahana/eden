@@ -122,25 +122,34 @@ TEMPLATE_DIRS = (
     cwd + '/templates'
 )
 
-INSTALLED_APPS = (
+
+# We separate the applications so we can manage them through scripts
+# Please do not touch this unless you know very well what you're doing
+
+DJANGO_APPS = (
+    # This list is from the builtin applications in django that are used in
+    # e-cidadania
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
+    #'django.contrib.sites',
     'django.contrib.messages', 
     'django.contrib.admin',
-    'django.contrib.comments', # Basic comments system
+    'django.contrib.comments',
+)
 
-    # System-wide apps
-    'django_wysiwyg',
-
-    # Prebuilt modules
-    'e_cidadania.apps.rosetta', # Easy translation system
+THIRDPARTY_APPS = (
+    # This list is from the third party software included in e-cidadania
+    'django_wysiwyg', # This is a system-wide application
+    'e_cidadania.apps.rosetta',
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
     #'e_cidadania.apps.swingtime',
+)
 
-    # Modules created for e-cidadania
+ECIDADANIA_MODULES = (
+    # Modules created for e-cidadania and installed by default. You can add
+    # here your own modules.
     'e_cidadania.apps.accounts',
     'e_cidadania.apps.proposals',
     'e_cidadania.apps.news',
@@ -148,6 +157,10 @@ INSTALLED_APPS = (
     'e_cidadania.apps.spaces',
     'e_cidadania.apps.staticpages',
 )
+
+INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
+
+print INSTALLED_APPS
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
