@@ -22,37 +22,59 @@ import sys
 import os
 import subprocess
 
+print "\n>>>> e-cidadania language catalog generator 0.1 <<<<"
 print "\nPlease note that this script must be run from the project root or from \
 the scripts directory. If you run it from somewhere else it won't work."
-
 raw_input('\nPress any key to continue or Ctrl-C to exit...')
 
-cwd = os.getcwd().strip('scripts')
-sys.path.append(cwd)
-print "\n>>>> e-cidadania language catalog generator 0.1 <<<<"
+class Language():
 
-import settings
+    """
+    """
+    def __init__(self):
+        
+        """
+        """
+        # Get current work directory and add it to sys.path so we can import
+        # the project settings.
+        self.cwd = os.getcwd().strip('scripts')
+        sys.path.append(self.cwd)
 
-applications = settings.ECIDADANIA_MODULES
-languages = settings.LANGUAGES
-apps = []
+        # Get the languages configured in settings.py and the installed
+        # e-cidadania modules.
+        import settings
 
-print "\n>> Languages to generate:"
-for lang in languages:
-    print ' - ' + lang[1]
+        self.applications = settings.ECIDADANIA_MODULES
+        self.languages = settings.LANGUAGES
+        self.apps = []
+        
+        # Spit out the information
+        print "\n>> Languages to generate:"
+        for lang in self.languages:
+            print ' - ' + lang[1]
 
-print "\n>> Installed applications:"
-for app in applications:
-    got_it = app.split('.')[2]
-    print ' - ' + got_it
-    apps.append(got_it)
+        print "\n>> Installed applications:"
+        for app in self.applications:
+            self.got_it = app.split('.')[2]
+            print ' - ' + self.got_it
+            self.apps.append(self.got_it)
 
-def generate_catalog():
-    for module in apps:
-        os.chdir(cwd+'/apps/'+module)
-        print '\n>> Generating language catalogs for %s' % (module)
-        for lang in languages:
-            a = subprocess.Popen('django-admin makemessages -l %s' % (lang[0]), shell=True)
-            subprocess.Popen.wait(a)
+    def generate_catalog(self):
+        
+        """
+        """
+        for module in self.apps:
+            os.chdir(self.cwd + '/apps/' + module)
+            print '\n>> Generating language catalogs for %s' % (module)
+            for lang in self.languages:
+                a = subprocess.Popen('django-admin makemessages -l %s' % (lang[0]), shell=True)
+                subprocess.Popen.wait(a)
 
-generate_catalog()
+    def compile_catalog(self):
+    
+        """
+        """
+        pass
+
+a = Language()
+a.generate_catalog()
