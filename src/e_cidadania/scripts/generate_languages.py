@@ -22,35 +22,37 @@ import sys
 import os
 import subprocess
 
+print "\nPlease note that this script must be run from the project root or from \
+the scripts directory. If you run it from somewhere else it won't work."
+
+raw_input('\nPress any key to continue or Ctrl-C to exit...')
+
 cwd = os.getcwd().strip('scripts')
 sys.path.append(cwd)
-print "\n>> e-cidadania language catalog generator 0.1"
-
-# Put your language codes here. You can use the two letter code or the local
-# code (es_ES, es_GL, en_US, en_GB, etc.)
-languages = ['es', 'en', 'gl']
-
-
-print "\n>> Languages to generate:"
-for lang in languages:
-    print lang
+print "\n>>>> e-cidadania language catalog generator 0.1 <<<<"
 
 import settings
 
 applications = settings.ECIDADANIA_MODULES
-
+languages = settings.LANGUAGES
 apps = []
+
+print "\n>> Languages to generate:"
+for lang in languages:
+    print ' - ' + lang[1]
 
 print "\n>> Installed applications:"
 for app in applications:
     got_it = app.split('.')[2]
-    print got_it
+    print ' - ' + got_it
     apps.append(got_it)
-
-for i in apps:
-    print i
 
 def generate_catalog():
     for module in apps:
-        os.chdir(cwd+'apps/'+module)
-        os.Popen('django-admin makemessages', shell=True)
+        os.chdir(cwd+'/apps/'+module)
+        print '\n>> Generating language catalogs for %s' % (module)
+        for lang in languages:
+            a = subprocess.Popen('django-admin makemessages -l %s' % (lang[0]), shell=True)
+            subprocess.Popen.wait(a)
+
+generate_catalog()

@@ -160,8 +160,6 @@ ECIDADANIA_MODULES = (
 
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
 
-print INSTALLED_APPS
-
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
