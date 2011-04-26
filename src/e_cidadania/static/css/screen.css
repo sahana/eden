@@ -247,7 +247,6 @@ input[type="text"], input[type="password"] {
     width: 30%;
     margin: 30px 10px 10px 5px;
     border-left: 1px solid #aaa;
-    background: #FFF;
 }
 
 #widget {
