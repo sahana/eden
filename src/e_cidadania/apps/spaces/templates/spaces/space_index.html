@@ -7,4 +7,115 @@
 {% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
+
+  {% block centercol %}
+    <div class="grid_11">
+    
+      {% if user.is_staff %}
+        <div id="tools">
+          <a href="{{ request.path }}edit/">{% trans "Edit space" %}</a> |
+          <a href="{{ request.path }}delete/">{% trans "Delete space" %}</a> |
+          <a href="{{ request.path }}news/add/"}>{% trans "Add news" %}</a>
+        </div>
+      {% endif %}
+      
+      {% if get_place.mod_news %}
+        {% for news in publication %}
+          <div class="post">
+            {% if user.is_staff %}
+              <div id="tools">
+                <a href="{{ request.path }}news/{{ news.id }}/edit/">Edit</a> |
+                <a href="{{ request.path }}news/{{ news.id }}/delete/">Delete</a>
+              </div>
+            {% endif %}
+            <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
+            <p>{{ news.post_message|safe }}</p>
+            {% get_comment_count for news as comment_count %}
+            <p>
+               {% trans "Written by" %} {{ news.post_author }}
+               {% trans "on" %} {{ news.post_pubdate }} | 
+               <a href="{{ request.path }}news/{{ news.id }}/">{{ comment_count }}
+               {% trans "comments" %}</a>
+            </p>
+          </div>
+        {% empty %}
+          <div class="post">
+            <p>{% trans "Nothing published yet." %}</p>
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+    </div>
+  {% endblock %}
+
+  {% block rightcol %}
+    <div class="grid_5">
+    
+    
+      {% comment %}
+        This is the documents block.
+      {% endcomment %}
+      {% if get_place.mod_docs %}
+        <div id="widget">
+          <h2>{% trans "Documents" %}</h2><br />
+          <ul>
+            {% for doc in documents %}
+              <li>
+                <a href="/{{ MEDIA_URL }}/{{ doc.docfile }}">{{ doc.title }}</a>
+                {% if user.is_staff %}
+                  (<a href="{{ request.path }}docs/{{ doc.id }}/edit/">Edit</a> | 
+                  <a href="{{ request.path }}docs/{{ doc.id }}/delete/">Delete</a>)
+                {% endif %}
+              </li>
+            {% empty %}
+              <p>{% trans "No documents available" %}</p>
+            {% endfor %}
+          </ul>
+          <br /><p><a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
+          {% if user.is_staff %}
+            <p><a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
+          {% endif %}
+        </div>
+      {% endif %}
+      
+    
+      {% if get_place.mod_cal %}
+        <div id="widget">
+          <h2>{% trans "Calendar" %}</h2><br />
+          <p>El calendario está activado</p>
+        </div>
+      {% endif %}
+      
+
+      {% if get_place.mod_proposals %}
+        <div id="widget">
+          <h2>{% trans "Newest proposals" %}</h2><br />
+          <ul>
+          {% for proposal in proposals %}
+            <li>
+              <a href="{{ request.path }}proposal/view/{{ proposal.id }}/">{{ proposal.title }}</a>
+            </li>
+          {% empty %}
+            <p>{% trans "No proposals available" %}</p>
+          {% endfor %}
+          </ul>
+          <br /><p><a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
+          {% if user.is_staff %}
+            <p><a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
+          {% endif %}
+        </div>
+      {% endif %}
+    
+    </div>
+  {% endblock %}
+
+{% endblock %}
+
+{% block footerimg %}
+  <p>{% trans "Associates" %}:</p>
+  {% for e in entities %} {{e.name}} - {% endfor %}
+{% endblock %}
+{% block footer %}
+  <p>{% trans "About" %} | {% trans "API" %} | {% trans "Developers" %} | {% trans "Terms of service" %} | {% trans "Help"%}</p>
+  <p>{% trans "Space created by" %}: {{ user.get_profile.firstname }} {{ user.get_profile.surname }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
 {% endblock %}

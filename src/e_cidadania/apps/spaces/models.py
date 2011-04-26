@@ -66,6 +66,8 @@ class Entity(models.Model):
     for the creation of the space.
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
+    website = models.CharField(_('Website'), max_length=100, null=True, blank=True)
+    logo = models.ImageField(upload_to='spaces/logos', verbose_name=_('Logo'))
     space = models.ForeignKey(Space)
     
     class Meta:
