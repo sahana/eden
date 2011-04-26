@@ -67,7 +67,8 @@ class Entity(models.Model):
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
     website = models.CharField(_('Website'), max_length=100, null=True, blank=True)
-    logo = models.ImageField(upload_to='spaces/logos', verbose_name=_('Logo'))
+    logo = models.ImageField(upload_to='spaces/logos', verbose_name=_('Logo'),
+                             blank = True, null = True)
     space = models.ForeignKey(Space)
     
     class Meta:

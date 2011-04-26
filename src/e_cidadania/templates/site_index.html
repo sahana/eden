@@ -56,7 +56,7 @@
     </div>
 
     <div id="widget">
-      <h4>{% trans "Spaces list" %}</h4><br />
+      <h2>{% trans "Spaces list" %}</h2><br />
         <form method="post" action="/spaces/go/">{% csrf_token %}
           <select name="spaces">
             {% for space in spaces %}
@@ -70,11 +70,11 @@
     </div>
 
     <div id="widget">
-      <h4>{% trans "Recently updated spaces" %}</h4>
+      <h2>{% trans "Recently updated spaces" %}</h2>
     </div>
 
     <div id="widget">
-      <h4>Compartir</h4><br />
+      <h2>Compartir</h2><br />
       <img src="/{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/>
       <a href="http://www.facebook.com/cidadania.coop"><img src="/{{ STATIC_URL }}/assets/logos/facebook_logo.png" alt="Facebook"/></a>
       <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
@@ -85,7 +85,7 @@
     </div>
 
     <div id="widget">
-      <h4>{% trans "e-cidadania development" %}</h4><br />
+      <h2>{% trans "e-cidadania development" %}</h2><br />
       <p>{% trans "Do you want to help?" %} <a href="http://dev.ecidadania.org">{% trans "Access" %}</a></p>
     </div>
   </div>
