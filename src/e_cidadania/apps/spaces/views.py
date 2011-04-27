@@ -52,8 +52,10 @@ def go_to_space(request):
     doesn't show, but just for security we will leave it.
     """
 
+    place = get_object_or_404(Space, name = request.POST['spaces'])
+    
     if request.POST:
-        return redirect('/spaces/' + request.POST['spaces'])
+        return redirect('/spaces/' + place.url)
     
     raise Http404
 

@@ -60,7 +60,7 @@
         <form method="post" action="/spaces/go/">{% csrf_token %}
           <select name="spaces">
             {% for space in spaces %}
-              <option>{{ space.url }}</option>
+              <option>{{ space.name }}</option>
             {% empty %}
               <option>{% trans "No spaces" %}</option>
             {% endfor %}
