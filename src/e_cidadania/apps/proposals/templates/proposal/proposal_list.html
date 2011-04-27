@@ -9,7 +9,7 @@
 {% block content %}
 
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_11">
     {{ proposal.title }}
     {% for p in proposal_list %}
       <div id="proposal-wrapper">
@@ -35,12 +35,14 @@
         {% endcomment %}
         <div style="clear:left;"></div>
       </div>
+    {% empty %}
+      <p>{% trans "There are no proposals for this space." %}</p>
     {% endfor %}
     </div>
-  {% endblock %}
-  
-  {% block rightcol %}
-    Esto es una columna, ¿lo ves?
+    
+    <div class="pagebutton">
+      <a href="../">{% trans "Go back" %}</a>
+    </div>
   {% endblock %}
 
 {% endblock %}
