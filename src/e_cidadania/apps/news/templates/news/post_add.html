@@ -3,17 +3,30 @@
 {% load wysiwyg %}
 
 {% block title %}{% trans "Add new post" %}{% endblock %}
-{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
-{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+{% block logo %}
+  {% if not get_place %}
+    <a href="/"><img src="/{{ STATIC_URL }}/assets/logos/index.png"/></a>
+  {% else %}
+    <img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">
+  {% endif %}
+{% endblock %}
+{% block banner %}
+  {% if not get_place %}
+    <img src="/{{ STATIC_URL }}/assets/banners/index.png"/>
+  {% else %}
+    <img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">
+  {% endif %}
+{% endblock %}
 
 {% block content %}
 
-  <div id="contenttitles">
-  {% trans "Add new post" %}
+  <div class="grid_16">
+    <div id="contenttitles">
+      {% trans "Add new post" %}
+    </div>
   </div>
-  
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_11">
       <form action="" method="post">{% csrf_token %}
       
         {{ form.non_field_errors }}
@@ -59,7 +72,7 @@
 
 
   {% block rightcol %}
-    <div id="rightcol">
+    <div class="grid_5">
       <div id="widget">
         <h2>{% trans "How to add new posts" %}</h2><br/>
         <ul class="instructions">

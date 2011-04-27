@@ -3,13 +3,25 @@
 {% load comments %}
 
 {% block title %}{{ news.post_title }} {% endblock %}
-{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
-{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+{% block logo %}
+  {% if not get_place %}
+    <a href="/"><img src="/{{ STATIC_URL }}/assets/logos/index.png"/></a>
+  {% else %}
+    <img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">
+  {% endif %}
+{% endblock %}
+{% block banner %}
+  {% if not get_place %}
+    <img src="/{{ STATIC_URL }}/assets/banners/index.png"/>
+  {% else %}
+    <img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">
+  {% endif %}
+{% endblock %}
 
 {% block content %}
 
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_11">
       <div class="post">
         {% if user.is_staff %}
           <div id="tools">
@@ -18,7 +30,7 @@
           </div>
         {% endif %}
         <h1>{{ news.post_title }}</h1>
-        <p>{{ news.post_message }}</p>
+        <p>{{ news.post_message|safe }}</p>
         <p>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }}</p>
       </div>
       
@@ -30,6 +42,8 @@
   {% endblock%}
   
   {% block rightcol %}
+    <div class="grid_5">
+    </div>
   {% endblock%}
 
 {% endblock %}
