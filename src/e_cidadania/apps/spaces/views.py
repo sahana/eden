@@ -63,7 +63,7 @@ def view_space_index(request, space_name):
     Show the index page for the requested space. This is a conglomerate of
     various modules.
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
 
     extra_context = {
         'entities': Entity.objects.filter(space=place.id),
@@ -95,7 +95,7 @@ def edit_space(request, space_name):
     Only people registered to that space or site administrators will be able
     to edit spaces.
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
 
     return update_object(request,
                          model = Space,
@@ -111,7 +111,7 @@ def delete_space(request, space_name):
     """
     Delete the selected space and return to the index page.
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
     return delete_object(request,
                          model = Space,
                          object_id = place.id,
@@ -135,7 +135,7 @@ def create_space(request):
         form_uncommited.author = request.user
         if form.is_valid():
             form_uncommited.save()
-            space = form_uncommited.name
+            space = form_uncommited.url
             return redirect('/spaces/' + space)
 
     return render_to_response('spaces/space_add.html',
@@ -158,7 +158,7 @@ def add_doc(request, space_name):
     form = DocForm(request.POST or None, request.FILES or None, instance=doc)
     
     # Get current space
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
     
     if request.POST:
         form_uncommited = form.save(commit=False)
@@ -177,7 +177,7 @@ def edit_doc(request, space_name, doc_id):
     """
     Edit uploaded documents :)
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
     
     return update_object(request,
                          model = Document,
@@ -193,7 +193,7 @@ def delete_doc(request, space_name, doc_id):
     """
     Delete an uploaded document
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
     
     return delete_object(request,
                          model = Document,
@@ -209,11 +209,11 @@ def list_all_docs(request, space_name):
     """
     List all docuemnts stored within a space.
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
     
     return object_list(request,
                        queryset = Document.objects.all().filter(space=place.id).order_by('pub_date'),
                        template_name = 'spaces/document_list.html',
                        template_object_name = 'doc',
-                       extra_context = {'get_place': space})
+                       extra_context = {'get_place': place})
 

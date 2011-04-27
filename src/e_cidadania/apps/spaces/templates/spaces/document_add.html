@@ -8,7 +8,7 @@
 {% block content %}
 
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_11">
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
       
         {{ form.non_field_errors }}
@@ -29,9 +29,12 @@
         {{ form.space.as_hidden }}
         {{ form.author.as_hidden }}
 
-        <p><input type="submit" value="{% trans 'Upload' %}" /></p>
-
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
+        <p>
+          <input type="submit" value="{% trans 'Upload' %}" />
+          <div class="pagebutton">
+            <a href="../../">&laquo; {% trans "Go back" %}</a>
+          </div>
+        </p>
       </form>
     </div>
 
@@ -39,9 +42,13 @@
 
 
   {% block rightcol %}
-    <div id="rightcol">
+    <div class="grid_5">
       <div id="widget">
-        <p>The document upload system is blah blah blah</p>
+        <h2>{% trans "What can I upload?"%}</h2>
+        <ul class="instructions">
+          <li><strong>{% trans "Allowed formats" %}:</strong> {% trans "Mainly all non executable documents (PDF, ODT, DOC). Audio and video are not allowed."%}</li>
+          <li><strong>{% trans "Maximum size" %}:</strong> {% trans "Allowed size is 10MB"%}</li>
+        </ul>
       </div>
     </div>
   {% endblock %}

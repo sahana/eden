@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load comments %}
 
-{% block title %}{{ get_place.name|capfirst }} - {% trans "Index" %}{% endblock %}
+{% block title %}{{ get_place.name }} - {% trans "Index" %}{% endblock %}
 {% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
@@ -71,9 +71,9 @@
               <p>{% trans "No documents available" %}</p>
             {% endfor %}
           </ul>
-          <br /><p><a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
+          <br /><p class="rightlink">&raquo; <a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
           {% if user.is_staff %}
-            <p><a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
+            <p class="rightlink">&raquo; <a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
           {% endif %}
         </div>
       {% endif %}
@@ -99,9 +99,9 @@
             <p>{% trans "No proposals available" %}</p>
           {% endfor %}
           </ul>
-          <br /><p><a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
+          <br /><p class="rightlink">&raquo; <a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
           {% if user.is_staff %}
-            <p><a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
+            <p class="rightlink">&raquo; <a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
           {% endif %}
         </div>
       {% endif %}
@@ -123,8 +123,15 @@
 {% endblock %}
 
 {% block footerimg %}
-  <p>{% trans "Associates" %}:</p>
-  {% for e in entities %} {{e.name}} - {% endfor %}
+  {% for e in entities %}
+    {% if e.logo %}
+      <a href="{{ e.website }}"><img src="/{{ MEDIA_URL }}/{{ e.logo }}" alt="Logo"/></a>
+    {% else %}
+      <a href="{{ e.website }}">{{ e.name }}</a> -
+    {% endif %}
+   
+  {% endfor %}
+  
 {% endblock %}
 {% block footer %}
   <p>{% trans "About" %} | {% trans "API" %} | {% trans "Developers" %} | {% trans "Terms of service" %} | {% trans "Help"%}</p>

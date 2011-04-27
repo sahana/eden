@@ -99,6 +99,7 @@ input[type="text"], input[type="password"] {
     border: 1px solid #666;
     background: #FFF;
     padding: 2px;
+    width: 90%;
 
     /* Fancy round borders for Webkit, Gecko and standard
        implementations */
@@ -149,6 +150,11 @@ input[type="text"], input[type="password"] {
     margin: 10px;
 }
 
+.rightlink {
+    font-size: 0.9em;
+    margin-left: 10px;
+    margin-bottom: 5px;
+}
 /* END COMMON CLASSES */
 
 

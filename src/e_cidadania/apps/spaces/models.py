@@ -29,8 +29,9 @@ class Space(models.Model):
     Spaces model. This model stores a "space" or "place". Every place has
     a minimum set of settings for customization.
     """
-    name = models.CharField(_('Name'), max_length=100, unique=True,
-                            help_text=_('All lowercase. Obligatory.'))
+    name = models.CharField(_('Name'), max_length=100, unique=True)
+    url = models.CharField(_('URL'), max_length=100, unique=True,
+                            help_text=_('All lowercase. Obligatory. Take in mind that this will be the accesible URL'))
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True, verbose_name=_('Author'))

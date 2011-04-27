@@ -39,7 +39,7 @@ def add_proposal(request, space_name):
     """
     Create a new proposal.
     """
-    prop_space = get_object_or_404(Space, name=space_name)
+    prop_space = get_object_or_404(Space, url=space_name)
     
     proposal = Proposal()
     form = ProposalForm(request.POST or None, request.FILES or None, instance=proposal)
@@ -62,7 +62,7 @@ def list_proposals(request, space_name):
     """
     List all the proposals.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
     
     return object_list(request,
                        queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
@@ -77,7 +77,7 @@ def delete_proposal(request, space_name, prop_id):
     """
     Delete a proposal.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
 
     return delete_object(request,
                          model = Proposal,
@@ -97,7 +97,7 @@ def view_proposal(request, space_name, prop_id):
     """
     View a proposal.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
     
     return object_detail(request,
                          queryset = Proposal.objects.all().filter(belongs_to=current_space.id),

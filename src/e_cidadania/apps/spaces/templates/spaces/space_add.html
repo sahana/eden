@@ -19,6 +19,12 @@
           <p id="form_help_text">{{ form.name.help_text }}</p>
         </div>
         <div class="fieldWrapper">
+          {{ form.name.errors }}
+          <label for="id_name">{% trans "Space URL" %}:</label>
+          <p>{{ form.url }}</p>
+          <p id="form_help_text">{{ form.url.help_text }}</p>
+        </div>
+        <div class="fieldWrapper">
           <label for="id_description">{% trans "Description" %}:</label>
           {{ form.description }}
         </div>
