@@ -119,6 +119,8 @@
           <ul class="spaces">
             {% for space in user.get_profile.spaces.all %}
               <li><a href="/spaces/{{ space }}">{{ space }}</a></li>
+            {% empty %}
+              <p>{% trans "You are not signed to any space." %}</p>
             {% endfor %}
           </ul>
 			  </div>
@@ -140,6 +142,8 @@
               {% endcomment %}
             <div style="clear:left;"></div>
             </div>
+          {% empty %}
+            <p>{% trans "You haven't made any proposals."%}</p>
           {% endfor %}
         </div>
       </div>
