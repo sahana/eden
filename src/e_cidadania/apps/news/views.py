@@ -42,7 +42,7 @@ def add_post(request, space_name):
     are allowed to create news. nly site administrators will be able to
     post news in the index page.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
     form = NewsForm(request.POST or None)
 
     if request.POST:
@@ -50,7 +50,7 @@ def add_post(request, space_name):
         form_uncommited.post_author = request.user
 
         # Get space id
-        space = Space.objects.get(name=space_name)
+        space = Space.objects.get(url=space_name)
         form_uncommited.post_space = space
 
         if form.is_valid():
@@ -68,7 +68,7 @@ def delete_post(request, space_name, post_id):
     Delete an existent post. Post deletion is only reserved to spaces
     administrators or site admins.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
 
     return delete_object(request,
                          model = Post,
@@ -84,7 +84,7 @@ def edit_post(request, space_name, post_id):
     """
     Edit an existent post.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
 
     return update_object(request,
                          model = Post,
@@ -99,7 +99,7 @@ def view_news(request, space_name, post_id):
     """
     View a post with comments.
     """
-    current_space = get_object_or_404(Space, name=space_name)
+    current_space = get_object_or_404(Space, url=space_name)
     
     return object_detail(request,
                          queryset = Post.objects.all().filter(post_space=current_space.id),
