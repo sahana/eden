@@ -9,7 +9,7 @@
   {% trans "Create a new space" %}
   </div>
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_11">
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
         {{ form.non_field_errors }}
         <div class="fieldWrapper">
@@ -66,7 +66,7 @@
 
 
   {% block rightcol %}
-    <div id="rightcol">
+    <div class="grid_5">
       <div id="widget">
        <h2>{% trans "How to add new spaces" %}</h2><br/>
         <ul class="instructions">
