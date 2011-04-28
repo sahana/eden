@@ -99,13 +99,19 @@ def edit_space(request, space_name):
     """
     place = get_object_or_404(Space, url=space_name)
 
-    return update_object(request,
-                         model = Space,
-                         object_id = place.id,
-                         login_required = True,
-                         template_name = 'spaces/space_edit.html',
-                         template_object_name = 'get_place',
-                         post_save_redirect = '/')
+    form = SpaceForm(request.POST or None, request.FILES or None, instance=place)
+
+    if request.POST:
+        form_uncommited = form.save(commit=False)
+        form_uncommited.author = request.user
+        if form.is_valid():
+            form_uncommited.save()
+            space = form_uncommited.url
+            return redirect('/spaces/' + space)
+
+    return render_to_response('spaces/space_edit.html',
+                              {'form': form},
+                              context_instance=RequestContext(request))
 
 @permission_required('Space.delete_space')
 def delete_space(request, space_name):
