@@ -52,6 +52,11 @@ def add_post(request, space_name):
         # Get space id
         space = Space.objects.get(url=space_name)
         form_uncommited.post_space = space
+        
+        # This should not be necessay since the editor filters the
+        # script tags
+        #if "<script>" in form_uncommited.post_message:
+        #    return "SCRIPT TAGS ARE NOT ALLOWED"
 
         if form.is_valid():
             form_uncommited.save()
@@ -91,6 +96,7 @@ def edit_post(request, space_name, post_id):
                          object_id = post_id,
                          login_required = True,
                          template_name = 'news/post_edit.html',
+                         post_save_redirect = '../',
                          extra_context = {'get_place': current_space})
 
 
