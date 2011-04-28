@@ -6,6 +6,7 @@
 {% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
+  <div class="grid_11">
     <form action="" method="post">{% csrf_token %}
       {{ form.non_field_errors }}
       
@@ -44,6 +45,7 @@
       {{ form.author.as_hidden }}
       {{ form.support_votes.as_hidden }}
 
-        <p><input type="submit" value="Continue &rarr;" /></p>
+        <p><input type="submit" value="{% trans 'Continue' %} &rarr;" /></p>
     </form>
+  </div>
 {% endblock %}

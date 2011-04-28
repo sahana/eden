@@ -9,7 +9,7 @@
 {% block content %}
 
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_11">
     
       <div id="proposal-wrapper">
         {% if user.is_staff %}
@@ -39,6 +39,8 @@
   {% endblock%}
   
   {% block rightcol %}
+    <div class="grid_5">
+    </div>
   {% endblock%}
 
 {% endblock %}
