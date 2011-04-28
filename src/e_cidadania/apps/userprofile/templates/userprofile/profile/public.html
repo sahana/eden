@@ -29,22 +29,22 @@
 	
 	<div id="contenttitles">{% blocktrans with profile.user as user %}Public profile of {{ user }}{% endblocktrans %}</div>
 
-    <div id="contentinside">
-        <img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
-		<ul>
-			<li>{% trans "Username" %}: {{ profile.user }}</li></br>
-			{% if profile.country %}
-			<li>{% trans "Country" %}: {{ profile.get_country_display }}</li></br>
-			{% endif %}
-			{% if profile.location %}
-			<li>{% trans "Location" %}: {{ profile.location }}</li>
-			{% endif %}
-		</ul>
-	</div>
+    <div class="grid_16">
+      <img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
+		  <ul>
+		  	<li>{% trans "Username" %}: {{ profile.user }}</li></br>
+		  	{% if profile.country %}
+		    	<li>{% trans "Country" %}: {{ profile.get_country_display }}</li></br>
+		  	{% endif %}
+		  	{% if profile.location %}
+		    	<li>{% trans "Location" %}: {{ profile.location }}</li>
+		  	{% endif %}
+		  </ul>
+	  </div>
 	
-	{% if profile.latitude and profile.longitude %}
-	<div class="span-10">
-		<div id="location"></div>
-	</div>
-	{% endif %}
+	  {% if profile.latitude and profile.longitude %}
+	    <div class="span-10">
+		    <div id="location"></div>
+	    </div>
+	  {% endif %}
 {% endblock %}

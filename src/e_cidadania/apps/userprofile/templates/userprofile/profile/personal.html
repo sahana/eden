@@ -5,7 +5,7 @@
 
 {% block content %}
     <div id="contenttitles">{% trans "Edit your personal information" %}</div>
-	    <div id="contentinside">
+	    <div class="grid_11">
 	        <form action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <table id="personal">

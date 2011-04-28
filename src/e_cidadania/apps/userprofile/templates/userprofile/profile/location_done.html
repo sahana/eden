@@ -2,10 +2,10 @@
 {% load i18n %}
 
 {% block title %}{% blocktrans %}{{ user }}'s Dashboard{% endblocktrans %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
-
 
 {% block content %}
-	<h3>{% trans "Your profile information has been updated successfully" %}.</h3>
-	<p><a href="/accounts/">{% trans "Go back to your profile" %}</p>
+  <div class="grid_16">
+	  <h3>{% trans "Your profile information has been updated successfully" %}.</h3>
+	  <p><a href="/accounts/">{% trans "Go back to your profile" %}</p>
+	</div>
 {% endblock %}
