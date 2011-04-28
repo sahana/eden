@@ -3,13 +3,25 @@
 {% load wysiwyg %}
 
 {% block title %}{% trans "Edit news" %}{% endblock %}
-{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
-{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+{% block logo %}
+  {% if not get_place %}
+    <a href="/"><img src="/{{ STATIC_URL }}/assets/logos/index.png"/></a>
+  {% else %}
+    <img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">
+  {% endif %}
+{% endblock %}
+{% block banner %}
+  {% if not get_place %}
+    <img src="/{{ STATIC_URL }}/assets/banners/index.png"/>
+  {% else %}
+    <img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">
+  {% endif %}
+{% endblock %}
 
 {% block content %}
 
   {% block centercol %}
-    <div id="centercol">
+    <div class="grid_16">
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
         {{ form.non_field_errors }}
