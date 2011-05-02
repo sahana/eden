@@ -68,7 +68,7 @@
 
 <body onload="onLoad();" onresize="onResize();">
 
-<div id="keyboard"><img src="assets/keyboard2.png" style="float:left;margin-right: 10px;"/>Esta web se puede navegar con teclado.</div>
+<div id="keyboard"><img src="assets/keyboard2.png" style="float:left;"/><p>Esta web se puede navegar con teclado.</p></div>
 
 <div id="header"><img src="assets/logo.png" style="float:right;"/></div>
 <!-- main navigator -->
