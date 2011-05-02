@@ -123,7 +123,7 @@
 					<div class="item">
 					  <h1>¿Qué es e-cidadania?</h1>
 					  <p>e-cidadania es una herramienta de e-participación para ciudadanos, ciudadanas, asociaciones, cooperativas, administraciones... con una novedosa metodología de debates, sistema de propuestas, votaciones, creación de espacios específicos para cada proceso así como otras muchas funciones.</p>
-					  <p>Es una iniciativa de <a href="http://cidadania.coop">cidadania</a> y <a href="http://algueirada.blogaliza.org">Algueirada</a> para ampliar el alcance de los procesos de participación en los que trabajamos profesionalmente.</p>
+					  <p>Es una iniciativa de <a href="http://cidadania.coop">Cidadania</a> y <a href="http://algueirada.blogaliza.org">Algueirada</a> para ampliar el alcance de los procesos de participación en los que trabajamos profesionalmente.</p>
 					</div>
 					<div class="item">
 					  <h1>Procesos de democracia participativa</h1>
@@ -188,7 +188,12 @@
 					<!-- items on the first page -->
 					<div class="item">
 					  <h1>Funcionalidades de e-cidadania</h1>
-					  <p>e-cidadania cuenta con numerosas funcionalidades aunque enfoncadas desde otro punto de vista.</p>
+					  <p>e-cidadania cuenta con numerosas funcionalidades aunque enfocadas desde un punto de vista innovador.</p>
+					  <ul>
+					    <li>Debates</li>
+					    <li>Propuestas</li>
+					    <li>Otros complementos</li>
+					  </ul>
 					</div>
 					<div class="item">
 						<h1>Debates como nunca los has visto</h1>
@@ -202,8 +207,7 @@
 					</div>
 					<div class="item">
 						<h1>Otros complementos</h1>
-						<p>Además de los módulos principales, e-cidadania cuenta con numerosos complementos para hacer participación más cómoda. Calendarios, repositorios de documentación, foros convencionales, gestión de convocatorias por correo electrónic, notificaciones por SMS y mecanismos de sondeo son algunos de los complementos más destacados de la plataforma.</p>
-						<p>Sistema de votaciones versátil y adaptable a diferentes sistemas y metodologías, funcionales para procesos vinculantes de decisión.</p>
+						<p>Además de los módulos principales, e-cidadania cuenta con numerosos complementos para hacer la participación más cómoda. Calendarios, repositorios de documentación, foros convencionales, gestión de convocatorias por correo electrónico, notificaciones por SMS y mecanismos de sondeo son algunos de los complementos más destacados de la plataforma.</p>
 					</div>
 
 				</div>
@@ -254,8 +258,8 @@
 					<!-- items on the second page -->
 					<div class="item">
 					<h1>e-cidadania es libre</h1>
-					<p>e-cidadania forma parte del movimiento del software libre. Licenciada bajo GPL, permite que cualquier persona se descargue, use, estudie, adapte o haga lo que quiera con el código.</p>
-					<p>Por eso también te pedimos ayuda a tí, si sabes algo de programación, o te interesa colaborar, puedes unirte al proyecto, ¡no te vamos a martirizar con cláusulas de confidencialidad!</p>
+					<p>e-cidadania forma parte del movimiento del software libre. Licenciada bajo GPL, permite que cualquier persona la descargue, use, estudie, adapte o haga lo que quiera con el código.</p>
+					<p>Por eso también te pedimos ayuda a tí. Si sabes algo de programación, o te interesa colaborar, puedes unirte al proyecto, ¡no te vamos a martirizar con cláusulas de confidencialidad!</p>
 					</div>
 					<div class="item">
 					<h1>Repositorio público</h1>
