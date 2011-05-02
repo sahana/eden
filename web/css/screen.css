@@ -1,5 +1,5 @@
 body {
-	padding:20px 80px;
+	padding: 0 80px 20px 80px;
 	font-family:"Lucida Grande","bitstream vera sans","trebuchet ms",sans-serif,verdana;
 	background: #FFF;
 }
@@ -50,7 +50,7 @@ a:active {
 }
 
 #keyboard {
-    position: absolute:
+    position: absolute;
     left: 0;
     top: 0;
     background: #f1f1f1;
