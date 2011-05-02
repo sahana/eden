@@ -259,7 +259,7 @@
 					<div class="item">
 					<h1>e-cidadania es libre</h1>
 					<p>e-cidadania forma parte del movimiento del software libre. Licenciada bajo GPL, permite que cualquier persona la descargue, use, estudie, adapte o haga lo que quiera con el código.</p>
-					<p>Por eso también te pedimos ayuda a tí. Si sabes algo de programación, o te interesa colaborar, puedes unirte al proyecto, ¡no te vamos a martirizar con cláusulas de confidencialidad!</p>
+					<p>Por eso también te pedimos ayuda a tí. Si sabes algo de programación, o te interesa colaborar, ¡puedes unirte al proyecto!</p>
 					</div>
 					<div class="item">
 					<h1>Repositorio público</h1>
@@ -284,6 +284,17 @@
 
 	</div>
 
+</div>
+
+<div id="footer">
+    <div id="footerhighlight">
+        <img src="assets/logo2.png" style="margin-right:10px;"/>
+        <img src="assets/logo1.png" />
+    </div>
+    <p>Entidades colaboradoras:</p>
+    <img src="assets/logo3.png" />
+    <img src="assets/logo4.png" />
+    <img src="assets/logo5.png" />
 </div>
 
 </body>

@@ -23,6 +23,32 @@ a:active {
   -moz-outline-style:none;
 }
 
+#footer {
+    clear: both;
+    width: 810px;
+    height: 100px;
+    background: #DEDEDE;
+    margin: auto;
+    padding: 10px;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+    font-size: 10px;
+}
+
+#footer img {
+    margin-right: 15px;
+}
+
+#footerhighlight {
+    float: left;
+    height: 50px;
+    margin-top: 15px;
+    padding: 10px;
+    margin-right: 15px;
+    border-right: 1px solid #AAA;
+}
+
 #keyboard {
     position: absolute:
     left: 0;
