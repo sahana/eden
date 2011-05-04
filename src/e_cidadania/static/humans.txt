@@ -32,4 +32,4 @@
     Technologies: Python, XML, XHTML, JavaScript, SQL, CSS, ReStructuredText,
                   LaTeX.
     Developed on top of: Django
-    IDE: gEdit, Vim, TextMate.
+    IDE: gEdit, Vim, TextMate, Inkscape, GIMP
