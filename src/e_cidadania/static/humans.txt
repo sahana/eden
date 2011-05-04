@@ -1,17 +1,20 @@
 /* TEAM */
-
-    Project leader and main programmer/designer: Oscar Carballal Prego
+    Unlimited Hours Developer/Designer: Oscar Carballal Prego
     Contact: info [at] oscarcp.com
     Identi.ca / Twitter: @oscarcp / @pizte
     From: Pontevedra, Galicia, Spain
     
-    Developer: Pedro Gracia
+    The Lost Developer: Pedro Gracia
     Contact: pedro.gracia [at] partidopirata.es
     From: Barcelona, Catalonia, Spain
     
-    Sociologist: Ana Lorenzo Vila
+    "I don't like this" sociologist: Ana Lorenzo Vila
     Contact: ana.lorenzo [at] cidadania.coop
     From: Vigo, Galicia, Spain
+    
+    Far Far Away Collaborator: Pedro Silva
+    Contact: pedro [at] blogaliza.org
+    From: We really don't know where he is
 
 
 /* THANKS */
@@ -20,15 +23,28 @@
     Contact: armando.broz [at] cidadania.coop
     From: Santiago de Compostela, Galicia, Spain
     
-    GL Translator: Rosa Muñiz Castro
+    GL Translator: Rosa Munhiz Castro
     Contact: rosa.munhiz [at] cidadania.coop
     From: Santiago de Compostela, Galicia, Spain
 
 
 /* PLATFORM */
 
-    Last updated: ?
+    Last updated: 2011/05/04
     Languages: Castellano / English / Galego
     Technologies: Python, XML, XHTML, JavaScript, SQL, CSS, ReStructuredText,
                   LaTeX.
     Software: django, gEdit, vim, TextMate, Inkscape, GIMP.
+    Source: http://gitorious.org/e-cidadania
+
+
+
+      ________  .====                        
+     [________>< :===           SEE NO EVIL  
+                '====                        
+      ________ ___,,,,,,,                    
+     [________>__________\      HEAR NO EVIL 
+                                             
+      ________   .==.                        
+     [________>c((_  )          SPOON NO EVIL
+                 '=='                        
