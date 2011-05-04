@@ -36,29 +36,28 @@ CLOSE_REASONS = (
     (4, _('Offtopic'))
 )
 
-class CommonData(models.Model):
-    
-    """
-    Abstract Base Model for all the common fields in proposals.
-    """
-    title = models.CharField(_('Title'), max_length=100, unique=True)
-    message = models.TextField(_('Message'), max_length=200)
-    pub_date = models.DateTimeField(auto_now_add=True)
-    mod_date = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        abstract = True
-
-class Proposal(CommonData):
+class Proposal(models.Model):
     
     """
     Proposal model. This will store the user proposal in a similar
-    way that Stackoverflow does.
+    way that Stackoverflow does. Take in mind that this data model is very
+    exhaustive because it covers the administrator and the user.
+    
+     - Automatically filled fields: Space, Author, Pub_date, mod_date.
+     - User filled fields: Title, Description, Tags, Latitude, Longitude.
+     - Admin fields (manual): Code, Closed, Close_reason, Anon_allowed,
+                              Refurbished, Budget.
+                    (auto): Closed_by
     """
-    belongs_to = models.ForeignKey(Space, blank=True, null=True)
+    code = models.CharField(_('Code'), max_length=50, unique=True, blank=True,
+                            null=True)
+    title = models.CharField(_('Title'), max_length=100, unique=True)
+    description = models.TextField(_('Description'), max_length=300)
+    space = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
                                blank=True, null=True)
     #debatelink = models.ForeignKey()
+    # WARNING. Tags model will be removed and replaced by django-categories
     tags = TagField()
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
                                    max_digits=8, decimal_places=6)
@@ -71,6 +70,11 @@ class Proposal(CommonData):
                                             blank=True)
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.IntegerField(blank=True, null=True)
+    refurbished = models.NullBooleanField(default=False, blank=True)
+    budget = models.IntegerField(blank=True, null=True)
+    
+    pub_date = models.DateTimeField(auto_now_add=True)
+    mod_date = models.DateTimeField(auto_now_add=True)
     
     def __unicode__(self):
         return self.title
@@ -85,9 +89,3 @@ class Proposal(CommonData):
         permissions = (
             ('view', 'Can view the object'),
         )
-class Comment(CommonData):
-    proposal = models.ForeignKey(Proposal)
-    author = models.ForeignKey(User)
-    votes = models.IntegerField()
-
-
