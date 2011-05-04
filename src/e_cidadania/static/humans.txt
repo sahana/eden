@@ -1,0 +1,35 @@
+/* TEAM */
+
+    Project leader and main programmer/designer: Oscar Carballal Prego
+    Contact: info [at] oscarcp.com
+    Identi.ca / Twitter: @oscarcp / @pizte
+    From: Pontevedra, Galicia, Spain
+    
+    Developer: Pedro Gracia
+    Contact: pedro.gracia [at] partidopirata.es
+    From: Barcelona, Catalonia, Spain
+    
+    Sociologist: Ana Lorenzo Vila
+    Contact: ana.lorenzo [at] cidadania.coop
+    From: Vigo, Galicia, Spain
+
+
+/* THANKS */
+
+    GL translator: Armando Broz Fidalgo
+    Contact: armando.broz [at] cidadania.coop
+    From: Santiago de Compostela, Galicia, Spain
+    
+    GL Translator: Rosa Muñiz Castro
+    Contact: rosa.munhiz [at] cidadania.coop
+    From: Santiago de Compostela, Galicia, Spain
+
+
+/* PLATFORM */
+
+    Last updated: ?
+    Languages: Castellano / English / Galego
+    Technologies: Python, XML, XHTML, JavaScript, SQL, CSS, ReStructuredText,
+                  LaTeX.
+    Developed on top of: Django
+    IDE: gEdit, Vim, TextMate.
