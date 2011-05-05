@@ -1,36 +1,36 @@
 /* TEAM */
     Unlimited Hours Developer/Designer: Oscar Carballal Prego
-    Contact: info [at] oscarcp.com
+    Contact: info [at] oscarcp [dot] com
     Identi.ca / Twitter: @oscarcp / @pizte
     From: Pontevedra, Galicia, Spain
     
     The Lost Developer: Pedro Gracia
-    Contact: pedro.gracia [at] partidopirata.es
+    Contact: pedro.gracia [at] partidopirata [dot] es
     From: Barcelona, Catalonia, Spain
     
     "I don't like this" sociologist: Ana Lorenzo Vila
-    Contact: ana.lorenzo [at] cidadania.coop
+    Contact: ana.lorenzo [at] cidadania [dot] coop
     From: Vigo, Galicia, Spain
     
     Far Far Away Collaborator: Pedro Silva
-    Contact: pedro [at] blogaliza.org
+    Contact: pedro [at] blogaliza [dot] org
     From: We really don't know where he is
 
 
 /* THANKS */
 
     GL translator: Armando Broz Fidalgo
-    Contact: armando.broz [at] cidadania.coop
+    Contact: armando.broz [at] cidadania [dot] coop
     From: Santiago de Compostela, Galicia, Spain
     
     GL Translator: Rosa Munhiz Castro
-    Contact: rosa.munhiz [at] cidadania.coop
+    Contact: rosa.munhiz [at] cidadania [dot] coop
     From: Santiago de Compostela, Galicia, Spain
 
 
-/* PLATFORM */
+/* SITE */
 
-    Last updated: 2011/05/04
+    Last updated: 2011/05/05
     Languages: Castellano / English / Galego
     Technologies: Python, XML, XHTML, JavaScript, SQL, CSS, ReStructuredText,
                   LaTeX.
@@ -39,12 +39,20 @@
 
 
 
-      ________  .====                        
-     [________>< :===           SEE NO EVIL  
-                '====                        
-      ________ ___,,,,,,,                    
-     [________>__________\      HEAR NO EVIL 
-                                             
-      ________   .==.                        
-     [________>c((_  )          SPOON NO EVIL
-                 '=='                        
+
+    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXXXXXXXXXXXXXXXX XXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXY"'   '"YXXXXXXX    
+    XXXXXXXXXXXXXXXXXXXXY YXXXY YXXXXXXXXXXXXXXXXXXXXXXXXY           YXXXXX    
+    XXXXXXXXXXXXXXXXXXXX   XXX   XXXXXXXXXXXXXXXXXXXXXXXX             XXXXX    
+    XXXXXXXXXX XXXXXXXXY   YXY   YXXXXXXXXXXXXXXXXXXXXXXX             XXXXX    
+    XXXXXXXXXY YXXXXXXX     X     XXXXXXXXXXXXXXXXXXXXXXX             XXXXX    
+    XXXXXXX"X   X"XXXXX     X     XXX XXXXXXXXXXXXXXXXXXXb           dXXXXX    
+    XXXXXXX X   X XXXXX     X     XXX XXXXXXXXXXXXXXXXXXXXXbo.   .odXXXXXXX    
+    XXXXXXX       XXXXX                 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXX       XXXXX                  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXX       XXXXX                  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXX       XXXXX                  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
