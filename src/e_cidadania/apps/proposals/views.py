@@ -46,7 +46,7 @@ def add_proposal(request, space_name):
 
     if request.POST:
         form_uncommited = form.save(commit=False)
-        form_uncommited.belongs_to = prop_space
+        form_uncommited.space = prop_space
         form_uncommited.support_votes = 0
         form_uncommited.author = request.user
         if form.is_valid():
@@ -65,7 +65,7 @@ def list_proposals(request, space_name):
     current_space = get_object_or_404(Space, url=space_name)
     
     return object_list(request,
-                       queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
+                       queryset = Proposal.objects.all().filter(space=current_space.id),
                        paginate_by = 50,
                        template_name = 'proposal/proposal_list.html',
                        template_object_name = 'proposal',
@@ -88,8 +88,29 @@ def delete_proposal(request, space_name, prop_id):
                          post_delete_redirect = '/',
                          extra_context = {'get_place': current_space})
 
-@permission_required('Proposal.edit_proposal')
 def edit_proposal(request, space_name, prop_id):
+
+    """
+    The proposal can be edited by space and global admins, but also by their
+    creator.
+    """
+    current_space = get_object_or_404(Space, url=space_name)
+    current_proposal = get_object_or_404(Proposal, id=prop_id)
+    current_user = request.user.username
+    
+    can_edit = request.user.has_perm('Proposal.edit_proposal')
+    
+    allow_edit = 0
+    
+    if can_edit or current_user == current_proposal.author:
+        return update_object(request,
+                             model = Proposal,
+                             object_id = prop_id,
+                             login_required = True,
+                             template_name = 'proposal/proposal_edit.html',
+                             post_save_redirect = '../',
+                             extra_context = {'get_place': current_space})
+    
     pass
 
 def view_proposal(request, space_name, prop_id):
@@ -100,7 +121,7 @@ def view_proposal(request, space_name, prop_id):
     current_space = get_object_or_404(Space, url=space_name)
     
     return object_detail(request,
-                         queryset = Proposal.objects.all().filter(belongs_to=current_space.id),
+                         queryset = Proposal.objects.all().filter(space=current_space.id),
                          object_id = prop_id,
                          template_name = 'proposal/proposal_detail.html',
                          template_object_name = 'proposal',

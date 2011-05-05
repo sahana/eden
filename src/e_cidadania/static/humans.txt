@@ -1,5 +1,5 @@
 /* TEAM */
-    Unlimited Hours Developer/Designer: Oscar Carballal Prego
+    Unlimited Work Hours Man: Oscar Carballal Prego
     Contact: info [at] oscarcp [dot] com
     Identi.ca / Twitter: @oscarcp / @pizte
     From: Pontevedra, Galicia, Spain
@@ -18,7 +18,6 @@
 
 
 /* THANKS */
-
     GL translator: Armando Broz Fidalgo
     Contact: armando.broz [at] cidadania [dot] coop
     From: Santiago de Compostela, Galicia, Spain
@@ -29,7 +28,6 @@
 
 
 /* SITE */
-
     Last updated: 2011/05/05
     Languages: Castellano / English / Galego
     Technologies: Python, XML, XHTML, JavaScript, SQL, CSS, ReStructuredText,
@@ -50,9 +48,9 @@
     XXXXXXXXXX XXXXXXXXY   YXY   YXXXXXXXXXXXXXXXXXXXXXXX             XXXXX    
     XXXXXXXXXY YXXXXXXX     X     XXXXXXXXXXXXXXXXXXXXXXX             XXXXX    
     XXXXXXX"X   X"XXXXX     X     XXX XXXXXXXXXXXXXXXXXXXb           dXXXXX    
-    XXXXXXX X   X XXXXX     X     XXX XXXXXXXXXXXXXXXXXXXXXbo.   .odXXXXXXX    
-    XXXXXXX       XXXXX                 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
-    XXXXXXX       XXXXX                  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
-    XXXXXXX       XXXXX                  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    
-    XXXXXXX       XXXXX                  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    XXXXXXX X   X XXXXX     X     XXX XXXXXXXXXXXY YXXXXXXXbo.   .odXXXXXXX    
+    XXXXXXX       XXXXX                 XXXXXXXXX   XXXXXXXXXXXXXXXXXXXXXXX    
+    XXXXXXX       XXXXX                  XXXXXXXXX XXXXY YXXXXXXXXXXXXXXXXX    
+    XXXXXXX       XXXXX                  XXXXXXXXX XXXXX XXXXXXXXXXXXXXXXXX    
+    XXXXXXX       XXXXX                  XXXXXXXXY YXXXY YXXXXXXXXXXXXXXXXX
 

@@ -18,9 +18,9 @@
       </div>
       
       <div class="fieldWrapper">
-        {{ form.message.errors }}
-        <label for="id_description">{% trans "Message" %}:</label>
-        {{ form.message }}
+        {{ form.description.errors }}
+        <label for="id_description">{% trans "Description" %}:</label>
+        {{ form.description }}
       </div>
       
       <div class="fieldWrapper">
@@ -48,4 +48,22 @@
         <p><input type="submit" value="{% trans 'Continue' %} &rarr;" /></p>
     </form>
   </div>
+  
+  {% block rightcol %}
+    <div class="grid_5">
+      <div id="widget">
+        {% if user.is_staff %}
+            <h2>{% trans "Admins/moderators read this" %}</h2>
+            <p>{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
+        {% endif %}
+        <h2>{% trans "How to add new proposals" %}</h2><br/>
+        <ul class="instructions">
+          <li><strong>{% trans "Title" %}</strong>: {% trans "Title resuming the proposal, be concise (50 characters)" %}</li>
+          <li><strong>{% trans "Description" %}</strong>: {% trans "Describe here your proposal with detail. You can add images or any other content." %}</li>
+          <li><strong>{% trans "Latitude/Longitude" %}</strong>: {% trans "You'll have to put this if you want to locate the proposal in a map." %}</li>
+          <li><strong>{% trans "Tags" %}</strong>: {% trans "Relevant tags for the proposal, p.e. where the proposal is localted, what is related to it, etc." %}</li>
+        </ul>
+      </div>
+    </div>
+  {% endblock %}
 {% endblock %}
