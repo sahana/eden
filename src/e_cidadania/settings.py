@@ -144,6 +144,7 @@ THIRDPARTY_APPS = (
     'e_cidadania.apps.rosetta',
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
+    #'django_extensions',
     #'e_cidadania.apps.swingtime',
 )
 

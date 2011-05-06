@@ -10,7 +10,7 @@
 		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/layout.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="/{{ STATIC_URL }}/css/nav.css" media="screen" />
 		<link rel="stylesheet" type="text/css" media="screen" href="/{{ STATIC_URL }}/css/screen.css"/>
-		<link rel="author" href="{{ STATIC_URL }}/humans.txt" />
+		<link rel="author" href="/{{ STATIC_URL }}/humans.txt" />
 		<link rel="shortcut icon" href="/{{ STATIC_URL }}/assets/favicon.ico" type="image/ico"/>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 		<meta name="Description" content="Site description"/>
@@ -85,7 +85,7 @@
         </p>
 	    {% endblock %}
         <p>(c) 2010-{% now "Y" %} <a href="http://trac.cidadania.coop">e-cidadania</a> {% trans "created by" %} <a href="http://www.cidadania.coop">Cidadania Sociedade Cooperativa</a></p>
-        <p><a href="{{ STATIC_URL }}/humans.txt"><img src="/{{ STATIC_URL }}/assets/humanstxt.png"/></a></p>
+        <p><a href="/{{ STATIC_URL }}/humans.txt"><img src="/{{ STATIC_URL }}/assets/humanstxt.png"/></a></p>
     </div>
 	  
 	</body>

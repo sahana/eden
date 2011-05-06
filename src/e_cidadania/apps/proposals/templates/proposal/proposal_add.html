@@ -54,7 +54,7 @@
       <div id="widget">
         {% if user.is_staff %}
             <h2>{% trans "Admins/moderators read this" %}</h2>
-            <p>{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
+            <p class="instructions">{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
         {% endif %}
         <h2>{% trans "How to add new proposals" %}</h2><br/>
         <ul class="instructions">
