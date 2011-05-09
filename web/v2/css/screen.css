@@ -1,0 +1,233 @@
+/* --------- */
+/* CSS RESET */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	background: transparent;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+	list-style-type: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+
+:focus {
+	outline: 0;
+}
+
+ins {
+	text-decoration: none;
+}
+del {
+	text-decoration: line-through;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+a {
+	color: #888;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #000;
+}
+
+/* Prevent img border in FF */
+img {
+	border: none;
+}
+
+/* --------- */
+/* END RESET */
+/* --------- */
+
+
+@font-face {
+    font-family: "SansationRegular";
+    src: url('http://www.fontsforweb.com/public/fonts/424/SansationRegular.eot');
+    src: local("Sansation"), url('http://www.fontsforweb.com/public/fonts/424/SansationRegular.ttf') format("truetype");
+}
+
+body {
+    /*font-family: 'Helvetica Neue',Arial,'Liberation Sans',FreeSans,sans-serif;*/
+	font-family: SansationRegular, Cantarell, "Droid Sans", sans-serif;
+	background: #EEEEEC;
+	/*background: #FAFAFA;*/
+}
+
+/* get rid of those system borders being generated for A tags */
+a:active {
+  outline:none;
+}
+
+#top {
+    border-bottom: 1px solid #666666;
+}
+
+.line {
+    height: 10px;
+    background: #444444;
+}
+
+#header {
+    width: 960px;
+    height: 100px;
+    line-height: 100px;
+    margin: auto;
+}
+
+.logo {
+    float: left;
+    height: 100px;
+    margin-top: 5px;
+}
+
+.menu {
+    margin-top: 27px;
+    margin-left: 50px; 
+    line-height: 40px;
+    float: left;
+    height: 40px;
+}
+
+.menu ul {
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    background: #444;
+}
+
+.menu li {
+    display: inline;
+    margin: 0px;
+    padding: 10px 0 10px 0;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.menu li:hover {
+    background: #999;
+}
+
+.menu li a {
+    color: #DDDDDD;
+    font-size: 14px;
+    padding: 10px 20px 10px 20px;
+}
+
+#container {
+    background: rgb(34,109,66);
+    height: 400px;
+    border-bottom: 1px solid #000;
+}
+
+#announcement {
+    width: 960px;
+    height: 400px;
+    margin: auto;
+}
+
+#announcement img {
+    float: left;
+    margin-left: -150px;
+    margin-top: 20px;
+}
+
+#announcement p {
+    padding: 100px 20px 20px 20px;
+    font-size: 25px;
+    color: #FFF;
+    text-align: justify;
+}
+
+#content {
+    clear: both;
+    width: 960px;
+    margin: auto;
+}
+
+.widget {
+    width: 300px;
+    margin: 30px 10px 30px 10px;
+    float: left;
+}
+
+.widget_large {
+    width: 600px;
+    margin: 30px 10px 30px 10px;
+    float: left;Prop
+}
+
+.widget h3, .widget_large h3 {
+    text-transform: uppercase;
+    font-size: 20px;
+    color: #999;
+    text-shadow: 0px 1px 0px #FFF;
+    margin: 10px 10px 10px 0px;
+}
+
+.widget li {
+    font-family: sans-serif;
+    font-size: 12px;
+    margin: 10px 10px 10px 0px;
+    background: #FFF;
+    padding: 10px;
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+}
+
+#footer {
+    clear: both;
+    background: #FAFAFA;
+    border-top: 1px solid #CCC;
+}
+
+#footercontent {
+    width: 960px;
+    margin: auto;
+    color: #CCC;
+    min-height: 100px;
+    line-height: 50px;
+    font-size: 10px;
+}
+
+#footercontent img {
+    margin: 30px;
+}}
+
+.bigbutton {
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+    width: 300px;
+    float: left;
+}
