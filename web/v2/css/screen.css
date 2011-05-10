@@ -183,15 +183,26 @@ a:active {
 .widget_large {
     width: 600px;
     margin: 30px 10px 30px 10px;
-    float: left;Prop
+    float: left;
 }
 
-.widget h3, .widget_large h3 {
+.widget_large_right {
+    width: 840px;
+    margin: 30px 10px 30px 10px;
+    float: right;
+}
+
+.widget h3, .widget_large h3, .widget_large_right h3 {
     text-transform: uppercase;
     font-size: 20px;
     color: #999;
     text-shadow: 0px 1px 0px #FFF;
     margin: 10px 10px 10px 0px;
+}
+
+.widget_img {
+    margin-top: 70px;
+    float: right;
 }
 
 .widget li {
@@ -222,7 +233,7 @@ a:active {
 
 #footercontent img {
     margin: 30px;
-}}
+}
 
 .bigbutton {
     -webkit-border-radius: 7px;
