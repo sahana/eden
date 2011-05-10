@@ -72,7 +72,7 @@
             {% endfor %}
           </ul>
           <br /><p class="rightlink">&raquo; <a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
-          {% if user.is_staff %}
+          {% if perms.spaces.add_document %}
             <p class="rightlink">&raquo; <a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
           {% endif %}
         </div>
@@ -100,7 +100,7 @@
           {% endfor %}
           </ul>
           <br /><p class="rightlink">&raquo; <a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
-          {% if user.is_staff %}
+          {% if perms.proposals.add_proposal %}
             <p class="rightlink">&raquo; <a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
           {% endif %}
         </div>

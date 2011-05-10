@@ -33,7 +33,7 @@ from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.proposals.forms import ProposalForm
 from e_cidadania.apps.spaces.models import Space
 
-@permission_required('Proposal.add_proposal')
+@permission_required('proposals.add_proposal')
 def add_proposal(request, space_name):
 
     """
@@ -71,7 +71,7 @@ def list_proposals(request, space_name):
                        template_object_name = 'proposal',
                        extra_context = {'get_place': current_space})
 
-@permission_required('Proposal.delete_proposal')
+@permission_required('proposals.delete_proposal')
 def delete_proposal(request, space_name, prop_id):
 
     """
@@ -88,6 +88,7 @@ def delete_proposal(request, space_name, prop_id):
                          post_delete_redirect = '/',
                          extra_context = {'get_place': current_space})
 
+@permission_required('proposals.edit_proposal')
 def edit_proposal(request, space_name, prop_id):
 
     """
