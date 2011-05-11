@@ -34,7 +34,7 @@ from e_cidadania.apps.spaces.models import Space
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
 
-@permission_required('Post.add_post')
+@permission_required('news.add_post')
 def add_post(request, space_name):
 
     """
@@ -52,7 +52,7 @@ def add_post(request, space_name):
         # Get space id
         space = Space.objects.get(url=space_name)
         form_uncommited.post_space = space
-        
+
         # This should not be necessay since the editor filters the
         # script tags
         #if "<script>" in form_uncommited.post_message:
@@ -66,7 +66,7 @@ def add_post(request, space_name):
                               {'form': form, 'get_place': current_space},
                               context_instance = RequestContext(request))
 
-@permission_required('Post.delete_post')
+@permission_required('news.delete_post')
 def delete_post(request, space_name, post_id):
 
     """
@@ -83,7 +83,7 @@ def delete_post(request, space_name, post_id):
                          post_delete_redirect = '/spaces/' + space_name,
                          extra_context = {'get_place': current_space})
 
-@permission_required('Post.edit_post')
+@permission_required('news.edit_post')
 def edit_post(request, space_name, post_id):
 
     """
@@ -106,12 +106,11 @@ def view_news(request, space_name, post_id):
     View a post with comments.
     """
     current_space = get_object_or_404(Space, url=space_name)
-    
+
     return object_detail(request,
                          queryset = Post.objects.all().filter(post_space=current_space.id),
                          object_id = post_id,
                          template_name = 'news/post_detail.html',
                          template_object_name = 'news',
                          extra_context = {'get_place': current_space})
-
 
