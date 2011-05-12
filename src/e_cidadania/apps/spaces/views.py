@@ -153,9 +153,11 @@ def create_space(request):
         form_uncommited = form.save(commit=False)
         form_uncommited.author = request.user
         if form.is_valid():
-            form_uncommited.save()
-            space = form_uncommited.url
-            return redirect('/spaces/' + space)
+            form_uncommited.save()            
+            # We add the created spaces to the user allowed spaces
+            space = get_object_or_404(Space, name=form_uncommited.name)
+            request.user.profile.spaces.add(space)
+            return redirect('/spaces/' + space.url)
 
     return render_to_response('spaces/space_add.html',
                               {'form': form},
