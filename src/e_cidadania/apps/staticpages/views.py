@@ -43,3 +43,58 @@ def view_page(request, slug):
                          object_id = page.id,
                          template_name = 'staticpages/staticpages_index.html',
                          template_object_name = 'page')
+
+@permission_required('staticpages.add_staticpage')
+def add_page(request, slug):
+
+    """
+    Thisd function goes into the administration
+    """
+    pass
+#    page = get_object_or_404(StaticPage, uri=slug)
+
+#    form = SpaceForm(request.POST or None, request.FILES or None, instance=space)
+
+#    if request.POST:
+#        form_uncommited = form.save(commit=False)
+#        form_uncommited.author = request.user
+#        if form.is_valid():
+#            form_uncommited.save()
+#            space = form_uncommited.url
+#            return redirect('/spaces/' + space)
+
+#    return render_to_response('spaces/space_add.html',
+#                              {'form': form},
+#                              context_instance=RequestContext(request))
+
+@permission_required('staticpages.edit_staticpage')                         
+def edit_page(request, slug):
+
+    """
+    Edit an static page.
+    """
+    page = get_object_or_404(StaticPage, uri=slug)
+    return update_object(request,
+                         model = StaticPage,
+                         object_id = page.id,
+                         login_required = True,
+                         template_name = 'staicpages/staticpages_edit.html',
+                         template_object_name = 'page',
+                         post_save_redirect = '/',
+                         extra_context = {'get_place': place})
+                         
+@permission_required('staticpages.delete_staticpage')
+def delete_page(request, slug):
+
+    """
+    """
+    page = get_object_or_404(StaticPage, uri=slug)
+    
+    return delete_object(request,
+                         model = StaticPage,
+                         object_id = page.id,
+                         login_required = True,
+                         template_name = 'staticpages/delete_staticpage.html',
+                         template_object_name = 'page',
+                         post_delete_redirect = '/',
+                         extra_context = {'get_place': place})
