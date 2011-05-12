@@ -55,7 +55,7 @@ def index_view(request):
 # The following code violates the DRY principle. Repeating exactly the same
 # code as in apps/news/views.py
 
-@permission_required('Post.add_post')
+@permission_required('news.add_post')
 def add_news(request):
 
     """
@@ -77,7 +77,7 @@ def add_news(request):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-@permission_required('Post.delete_post')
+@permission_required('news.delete_post')
 def delete_post(request, post_id):
 
     """
@@ -91,7 +91,7 @@ def delete_post(request, post_id):
                          template_name = 'news/post_delete.html',
                          post_delete_redirect = '/')
 
-@permission_required('Post.edit_post')
+@permission_required('news.edit_post')
 def edit_post(request, post_id):
 
     """

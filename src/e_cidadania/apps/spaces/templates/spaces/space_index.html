@@ -11,21 +11,27 @@
   {% block centercol %}
     <div class="grid_11">
     
-      {% if user.is_staff %}
+      {% if perm.news.add_post %}
         <div id="tools">
-          <a href="{{ request.path }}edit/">{% trans "Edit space" %}</a> |
-          <a href="{{ request.path }}delete/">{% trans "Delete space" %}</a> |
           <a href="{{ request.path }}news/add/"}>{% trans "Add news" %}</a>
+          {% if perm.spaces.edit_space %}
+            <a href="{{ request.path }}edit/">{% trans "Edit space" %}</a> |
+          {% endif %}
+          {% if perm.spaces.delete_space %}
+            <a href="{{ request.path }}delete/">{% trans "Delete space" %}</a> |
+          {% endif%}
         </div>
       {% endif %}
       
       {% if get_place.mod_news %}
         {% for news in publication %}
           <div class="post">
-            {% if user.is_staff %}
+            {% if perm.news.edit_post %}
               <div id="tools">
                 <a href="{{ request.path }}news/{{ news.id }}/edit/">Edit</a> |
-                <a href="{{ request.path }}news/{{ news.id }}/delete/">Delete</a>
+                {% if perm.news.delete_post %}
+                  <a href="{{ request.path }}news/{{ news.id }}/delete/">Delete</a>
+                {% endif %}
               </div>
             {% endif %}
             <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
@@ -62,9 +68,12 @@
             {% for doc in documents %}
               <li>
                 <a href="/{{ MEDIA_URL }}/{{ doc.docfile }}">{{ doc.title }}</a>
-                {% if user.is_staff %}
+                {% if perm.spaces.edit_document %}
                   (<a href="{{ request.path }}docs/{{ doc.id }}/edit/">Edit</a> | 
-                  <a href="{{ request.path }}docs/{{ doc.id }}/delete/">Delete</a>)
+                {% endif %}
+                {% if perm.spaces.delete_document %}
+                  <a href="{{ request.path }}docs/{{ doc.id }}/delete/">Delete</a>
+                {% endif %})
                 {% endif %}
               </li>
             {% empty %}

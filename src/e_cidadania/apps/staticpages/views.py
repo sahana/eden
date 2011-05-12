@@ -36,6 +36,7 @@ from e_cidadania.apps.staticpages.models import StaticPage
 def view_page(request, slug):
 
     """
+    Get the request page and view it. There are no view restrictions on views.
     """
     page = get_object_or_404(StaticPage, uri=slug)
     return object_detail(request,

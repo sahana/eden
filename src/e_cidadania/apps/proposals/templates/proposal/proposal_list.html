@@ -13,11 +13,15 @@
     {{ proposal.title }}
     {% for p in proposal_list %}
       <div id="proposal-wrapper">
-        {% if user.is_staff %}
+        {% if perm.proposals.add_proposal %}
         <div id="tools">
           <a href="add/">{% trans "Add" %}</a> | 
-          <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
-          <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
+          {% if perm.proposals.edit_proposal %}
+            <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
+          {% endif %}
+          {% if perm.proposals.delete_proposal %}
+            <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
+          {% endif %}
         </div>
         {% endif %}
         <div id="votes">

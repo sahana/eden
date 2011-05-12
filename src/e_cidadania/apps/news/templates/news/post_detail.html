@@ -23,10 +23,12 @@
   {% block centercol %}
     <div class="grid_11">
       <div class="post">
-        {% if user.is_staff %}
+        {% if perm.news.edit_post %}
           <div id="tools">
             <a href="{{ request.path }}/edit/">Edit</a> |
-            <a href="{{ request.path }}/delete/">Delete</a>
+            {% if perm.news.delete_post %}
+              <a href="{{ request.path }}/delete/">Delete</a>
+            {% endif %}
           </div>
         {% endif %}
         <h1>{{ news.post_title }}</h1>
