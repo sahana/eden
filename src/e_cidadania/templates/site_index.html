@@ -15,7 +15,7 @@
       <br /><span style="margin-left: 35%;"><img src="/{{ STATIC_URL }}/assets/sep.png"/></span><br />
     </div>
 
-    {% if user.is_staff %}
+    {% if perms.news.add_post %}
     <div id="tools">
       <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
     </div>
@@ -26,10 +26,12 @@
         <div class="post">
           <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
           <h4>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }} | {% trans "Tags" %}: {{ news.post_tags }}
-            {% if user.is_staff %}
+            {% if perms.news.edit_post %}
               <div id="tools">
                 <a href="{{ request.path }}news/{{ news.id }}/edit/">{% trans "Edit" %}</a> |
-                <a href="{{ request.path }}news/{{ news.id }}/delete/">{% trans "Delete" %}</a>
+                {% if perms.news.delete_post %}
+                    <a href="{{ request.path }}news/{{ news.id }}/delete/">{% trans "Delete" %}</a>
+                {% endif %}
               </div>
             {% endif %}
           </h4>
@@ -75,6 +77,37 @@
 
     <div id="widget">
       <h2>Compartir</h2><br />
+      <script src="http://widgets.twimg.com/j/2/widget.js"></script>
+        <script>
+new TWTR.Widget({
+  version: 2,
+  type: 'profile',
+  rpp: 5,
+  interval: 6000,
+  width: 'auto',
+  height: 300,
+  theme: {
+    shell: {
+      background: '#eaeaea',
+      color: '#666666'
+    },
+    tweets: {
+      background: '#ffffff',
+      color: '#000000',
+      links: '#666666'
+    }
+  },
+  features: {
+    scrollbar: false,
+    loop: false,
+    live: false,
+    hashtags: true,
+    timestamp: true,
+    avatars: false,
+    behavior: 'all'
+  }
+}).render().setUser('ecidadaniafloss').start();
+</script>
       <img src="/{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/>
       <a href="http://www.facebook.com/cidadania.coop"><img src="/{{ STATIC_URL }}/assets/logos/facebook_logo.png" alt="Facebook"/></a>
       <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
