@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Not allowed" %}{% endblock %}
+
+{% block content %}
+	<div id="grid_16">
+		{% trans "You're not allowed to access here." %}<br/><br/><br/>
+		<div>
+		    {% trans "You can go" %} <a href="/"><u>{% trans "back to home" %}</u></a> {% trans "or" %} <a href="/accounts/"><u>{% trans "back to your profile" %}</u></a>
+	  </div>
+	</div>
+{% endblock %}

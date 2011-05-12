@@ -24,5 +24,10 @@ urlpatterns = patterns('e_cidadania.apps.staticpages.views',
 
     (r'^$', 'view_page'),
 
+    (r'^edit/', 'edit_page'),
+    
+    (r'^delete/', 'delete_page'),
+    
+    (r'^add/', 'add_page')
 )
 

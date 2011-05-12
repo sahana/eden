@@ -82,14 +82,24 @@ def view_space_index(request, space_name):
 
         #'user': User.objects.get(username=place.author)
     }
+    
+    # Watch out this. I needed to have this implemented as quick as possible
+    # I know that this is not the best way, the most efficient and probably
+    # not even the first way someone more experienced would do, but here we are.
 
-    return object_detail(request,
-                         queryset = Space.objects.all(),
-                         object_id = place.id,
-                         template_name = 'spaces/space_index.html',
-                         template_object_name = 'get_place',
-                         extra_context = extra_context,
-                        )
+    for i in request.user.profile.spaces.all():
+        if i.url == space_name:
+            return object_detail(request,
+                                 queryset = Space.objects.all(),
+                                 object_id = place.id,
+                                 template_name = 'spaces/space_index.html',
+                                 template_object_name = 'get_place',
+                                 extra_context = extra_context,
+                                )
+
+    return render_to_response('not_allowed.html', {'get_place': place},
+                              context_instance=RequestContext(request))
+   
 
 @permission_required('spaces.edit_space')
 def edit_space(request, space_name):

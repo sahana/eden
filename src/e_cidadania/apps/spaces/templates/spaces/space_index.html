@@ -70,7 +70,6 @@
                 <a href="/{{ MEDIA_URL }}/{{ doc.docfile }}">{{ doc.title }}</a>
                 {% if perm.spaces.edit_document %}
                   (<a href="{{ request.path }}docs/{{ doc.id }}/edit/">Edit</a> | 
-                {% endif %}
                 {% if perm.spaces.delete_document %}
                   <a href="{{ request.path }}docs/{{ doc.id }}/delete/">Delete</a>
                 {% endif %})
