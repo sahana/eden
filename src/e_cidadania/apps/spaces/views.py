@@ -47,16 +47,17 @@ def go_to_space(request):
     """
     This view redirects to the space selected in the dropdown list in the
     index page. It only uses a POST petition.
-    
+
     The 'raise Http404' isn't necessary, since if a space doesn't exist, it
     doesn't show, but just for security we will leave it.
     """
 
     place = get_object_or_404(Space, name = request.POST['spaces'])
-    
+
     if request.POST:
+
         return redirect('/spaces/' + place.url)
-    
+
     raise Http404
 
 def view_space_index(request, space_name):
@@ -161,13 +162,13 @@ def add_doc(request, space_name):
     Upload a new document whithin a space. This view is exactly as the create
     space view.
     """
-    
+
     doc = Document()
     form = DocForm(request.POST or None, request.FILES or None, instance=doc)
-    
+
     # Get current space
     place = get_object_or_404(Space, url=space_name)
-    
+
     if request.POST:
         form_uncommited = form.save(commit=False)
         form_uncommited.space = place
@@ -175,7 +176,7 @@ def add_doc(request, space_name):
         if form.is_valid():
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
-    
+
     return render_to_response('spaces/document_add.html',
                               {'form': form, 'get_place': place},
                               context_instance=RequestContext(request))
@@ -186,7 +187,7 @@ def edit_doc(request, space_name, doc_id):
     Edit uploaded documents :)
     """
     place = get_object_or_404(Space, url=space_name)
-    
+
     return update_object(request,
                          model = Document,
                          object_id = doc_id,
@@ -202,7 +203,7 @@ def delete_doc(request, space_name, doc_id):
     Delete an uploaded document
     """
     place = get_object_or_404(Space, url=space_name)
-    
+
     return delete_object(request,
                          model = Document,
                          object_id = doc_id,
@@ -218,7 +219,7 @@ def list_all_docs(request, space_name):
     List all docuemnts stored within a space.
     """
     place = get_object_or_404(Space, url=space_name)
-    
+
     return object_list(request,
                        queryset = Document.objects.all().filter(space=place.id).order_by('pub_date'),
                        template_name = 'spaces/document_list.html',
