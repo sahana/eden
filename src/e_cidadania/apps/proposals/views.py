@@ -111,8 +111,6 @@ def edit_proposal(request, space_name, prop_id):
                              template_name = 'proposal/proposal_edit.html',
                              post_save_redirect = '../',
                              extra_context = {'get_place': current_space})
-    
-    pass
 
 def view_proposal(request, space_name, prop_id):
 

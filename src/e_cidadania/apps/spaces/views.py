@@ -91,7 +91,7 @@ def view_space_index(request, space_name):
                          extra_context = extra_context,
                         )
 
-@permission_required('Space.edit_space')
+@permission_required('spaces.edit_space')
 def edit_space(request, space_name):
 
     """
@@ -114,7 +114,7 @@ def edit_space(request, space_name):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-@permission_required('Space.delete_space')
+@permission_required('spaces.delete_space')
 def delete_space(request, space_name):
 
     """
@@ -129,7 +129,7 @@ def delete_space(request, space_name):
                          template_object_name = 'get_place',
                          post_delete_redirect = '/')
 
-@permission_required('Space.add_space')
+@permission_required('spaces.add_space')
 def create_space(request):
 
     """
@@ -155,7 +155,7 @@ def create_space(request):
 # DOCUMENTS VIEWS
 #
 
-@permission_required('Document.add_document')
+@permission_required('spaces.add_document')
 def add_doc(request, space_name):
 
     """
@@ -181,6 +181,7 @@ def add_doc(request, space_name):
                               {'form': form, 'get_place': place},
                               context_instance=RequestContext(request))
 
+@permission_required('spaces.edit_document')
 def edit_doc(request, space_name, doc_id):
 
     """
@@ -197,6 +198,7 @@ def edit_doc(request, space_name, doc_id):
                          post_save_redirect = '/',
                          extra_context = {'get_place': place})
 
+@permission_required('spaces.delete_document')
 def delete_doc(request, space_name, doc_id):
 
     """
