@@ -20,6 +20,13 @@
 
 import datetime
 
+from django.views.generic.base import TemplateView, RedirectView
+from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.detail import DetailView
+
+
+
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
@@ -42,23 +49,40 @@ from e_cidadania.apps.proposals.models import Proposal
 # SPACE VIEWS
 #
 
-def go_to_space(request):
+class GoToSpace(RedirectView):
 
     """
-    This view redirects to the space selected in the dropdown list in the
-    index page. It only uses a POST petition.
-
-    The 'raise Http404' isn't necessary, since if a space doesn't exist, it
-    doesn't show, but just for security we will leave it.
+    This class redirects the user to a spaces after getting a POST petition.
+    
+    A 'raise Http404' is not necessary since a the objects the user can access
+    are only the ones that are in the DB.
     """
+    # Apart from the doc comment here is mine. I don't know what the hell this
+    # class is doing. I ended hardcoding the url in the return statement. If
+    # you know how the heck the new redirect class works. PLEASE FIX THIS. I'm
+    # mostly sure that this is wrong, and if not, please delete this comment.    
+    def get_redirect_url(self, **kwargs):
+        self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
+        return '/spaces/{0}'.format(self.place.url)
+    
 
-    place = get_object_or_404(Space, name = request.POST['spaces'])
+#def go_to_space(request):
 
-    if request.POST:
+#    """
+#    This view redirects to the space selected in the dropdown list in the
+#    index page. It only uses a POST petition.
 
-        return redirect('/spaces/' + place.url)
+#    The 'raise Http404' isn't necessary, since if a space doesn't exist, it
+#    doesn't show, but just for security we will leave it.
+#    """
 
-    raise Http404
+#    place = get_object_or_404(Space, name = request.POST['spaces'])
+
+#    if request.POST:
+
+#        return redirect('/spaces/' + place.url)
+
+#    raise Http404
 
 def view_space_index(request, space_name):
 

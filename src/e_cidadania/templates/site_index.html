@@ -59,7 +59,7 @@
 
     <div id="widget">
       <h2>{% trans "Spaces list" %}</h2><br />
-        <form method="post" action="/spaces/go/">{% csrf_token %}
+        <form method="get" action="/spaces/go/">{% csrf_token %}
           <select name="spaces">
             {% for space in spaces %}
               <option>{{ space.name }}</option>
