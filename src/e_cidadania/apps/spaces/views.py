@@ -70,11 +70,21 @@ class GoToSpace(RedirectView):
         return '/spaces/{0}'.format(self.place.url)
 
 
+class ListSpaces(ListView):
+
+    """
+    This class returns the complete list of spaces stored in the platform.
+    """
+    model = Space
+
 class ViewSpaceIndex(DetailView):
 
     """
     Show the index page of a space. Get various extra contexts to get the
     information for that space.
+    
+    The get_object method searches in the user 'spaces' field if the current
+    space is allowed, if not, he is redirected 
     """
     context_object_name = 'get_place'
     template_name = 'spaces/space_index.html'
