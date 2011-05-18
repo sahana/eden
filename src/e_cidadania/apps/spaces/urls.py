@@ -19,7 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from e_cidadania.apps.spaces.views import GoToSpace
+from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex
 
 
 urlpatterns = patterns('e_cidadania.apps.spaces.views',
@@ -51,7 +51,9 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
 #    (r'^go/', 'go_to_space'),
 
-    (r'^(?P<space_name>\w+)/', 'view_space_index'),
+    (r'^(?P<space_name>\w+)/', ViewSpaceIndex.as_view()),
+
+#    (r'^(?P<space_name>\w+)/', 'view_space_index'),
 
     # Debates
     #(r'^debate/', include('e_cidadania.apps.debates.urls')),

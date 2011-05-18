@@ -57,32 +57,32 @@ class GoToSpace(RedirectView):
     A 'raise Http404' is not necessary since a the objects the user can access
     are only the ones that are in the DB.
     """
-    # Apart from the doc comment here is mine. I don't know what the hell this
-    # class is doing. I ended hardcoding the url in the return statement. If
-    # you know how the heck the new redirect class works. PLEASE FIX THIS. I'm
-    # mostly sure that this is wrong, and if not, please delete this comment.    
     def get_redirect_url(self, **kwargs):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
         return '/spaces/{0}'.format(self.place.url)
-    
 
-#def go_to_space(request):
+class ViewSpaceIndex(DetailView):
 
-#    """
-#    This view redirects to the space selected in the dropdown list in the
-#    index page. It only uses a POST petition.
+    """
+    """
+    # Defines the context name in the template
+    context_object_name = 'get_place'
 
-#    The 'raise Http404' isn't necessary, since if a space doesn't exist, it
-#    doesn't show, but just for security we will leave it.
-#    """
+    # Template to render
+    template_name = 'spaces/space_index.html'
 
-#    place = get_object_or_404(Space, name = request.POST['spaces'])
+    def get_object(self):
+        return get_object_or_404(Space, url=self.kwargs['space_name'])
 
-#    if request.POST:
-
-#        return redirect('/spaces/' + place.url)
-
-#    raise Http404
+    # Get extra context data
+    def get_context_data(self, **kwargs):
+        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
+        place = self.get_object()
+        context['entities'] = Entity.objects.filter(space=place.id)
+        context['documents'] = Document.objects.filter(space=place.id)
+        context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
+        context['publication'] = Post.objects.filter(post_space=place.id).order_by('-post_pubdate')
+        return context
 
 def view_space_index(request, space_name):
 
