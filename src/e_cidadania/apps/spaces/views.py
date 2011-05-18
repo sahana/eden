@@ -20,24 +20,32 @@
 
 import datetime
 
+# Generic class-based views
 from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 
+# Decorators. the fiorst is a wrapper to convert function-based decorators
+# to method decorators that can be put in subclass methods.
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required, permission_required
 
-
+# Response types
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, permission_required
+
+# Some extras
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
 
+# Function-based views
 from django.views.generic.list_detail import object_list, object_detail
 from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
+# e-cidadania data models
 from e_cidadania.apps.spaces.models import Space, Entity, Document
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm
@@ -52,7 +60,7 @@ from e_cidadania.apps.proposals.models import Proposal
 class GoToSpace(RedirectView):
 
     """
-    This class redirects the user to a spaces after getting a POST petition.
+    This class redirects the user to a spaces after getting a GET petition.
     
     A 'raise Http404' is not necessary since a the objects the user can access
     are only the ones that are in the DB.
@@ -61,18 +69,25 @@ class GoToSpace(RedirectView):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
         return '/spaces/{0}'.format(self.place.url)
 
+
 class ViewSpaceIndex(DetailView):
 
     """
+    Show the index page of a space. Get various extra contexts to get the
+    information for that space.
     """
-    # Defines the context name in the template
     context_object_name = 'get_place'
-
-    # Template to render
     template_name = 'spaces/space_index.html'
-
+    
     def get_object(self):
-        return get_object_or_404(Space, url=self.kwargs['space_name'])
+        space_name = self.kwargs['space_name']
+        
+        for i in self.request.user.profile.spaces.all():
+            if i.url == space_name:
+                return get_object_or_404(Space, url = space_name)
+
+        self.template_name = 'not_allowed.html'
+        return get_object_or_404(Space, url = space_name)
 
     # Get extra context data
     def get_context_data(self, **kwargs):
@@ -84,46 +99,6 @@ class ViewSpaceIndex(DetailView):
         context['publication'] = Post.objects.filter(post_space=place.id).order_by('-post_pubdate')
         return context
 
-def view_space_index(request, space_name):
-
-    """
-    Show the index page for the requested space. This is a conglomerate of
-    various modules.
-    """
-    place = get_object_or_404(Space, url=space_name)
-
-    extra_context = {
-        'entities': Entity.objects.filter(space=place.id),
-        'documents': Document.objects.filter(space=place.id),
-        'proposals': Proposal.objects.filter(space=place.id).order_by('-pub_date'),
-        'publication': Post.objects.filter(post_space=place.id).order_by('-post_pubdate'),
-
-        # BIG FUCKING SECURITY WARNING
-        # DO NOT TOUCH THIS. PIRATES ARE WATCHING
-        # When activating this line, accesing to a space gives
-        # automatically the permissions of the author (this can be
-        # from a simple moderator to the main admin of the system)
-
-        #'user': User.objects.get(username=place.author)
-    }
-    
-    # Watch out this. I needed to have this implemented as quick as possible
-    # I know that this is not the best way, the most efficient and probably
-    # not even the first way someone more experienced would do, but here we are.
-
-    for i in request.user.profile.spaces.all():
-        if i.url == space_name:
-            return object_detail(request,
-                                 queryset = Space.objects.all(),
-                                 object_id = place.id,
-                                 template_name = 'spaces/space_index.html',
-                                 template_object_name = 'get_place',
-                                 extra_context = extra_context,
-                                )
-
-    return render_to_response('not_allowed.html', {'get_place': place},
-                              context_instance=RequestContext(request))
-   
 
 @permission_required('spaces.edit_space')
 def edit_space(request, space_name):
