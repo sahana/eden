@@ -77,6 +77,7 @@ class ListSpaces(ListView):
     """
     model = Space
 
+
 class ViewSpaceIndex(DetailView):
 
     """
@@ -101,8 +102,8 @@ class ViewSpaceIndex(DetailView):
 
     # Get extra context data
     def get_context_data(self, **kwargs):
-        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
-        place = self.get_object()
+        context = super(ViewSpaceInde, self).get_context_data(**kwargs)
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
@@ -110,6 +111,24 @@ class ViewSpaceIndex(DetailView):
         return context
 
 
+#class EditSpace(UpdateView):
+#
+#    """
+#    Class-based edit space view
+#    """
+#    form_class = SpaceForm
+#    context_object_name = 'form'
+#    
+#    def get_success_url(self):
+#        return '/spaces/' + self.kwargs['space_name']
+#    
+#    def form_valid(self):
+#        form_uncommited.save()
+#        space = form_uncommited.url
+#    
+#    def form_invalid(self):
+#        self.template_name = 'space
+    
 @permission_required('spaces.edit_space')
 def edit_space(request, space_name):
 
@@ -236,16 +255,20 @@ def delete_doc(request, space_name, doc_id):
                          post_delete_redirect = '/',
                          extra_context = {'get_place': place})
 
-def list_all_docs(request, space_name):
+class ListDocs(ListView):
 
     """
-    List all docuemnts stored within a space.
+    List all documents stored whithin a space.
     """
-    place = get_object_or_404(Space, url=space_name)
-
-    return object_list(request,
-                       queryset = Document.objects.all().filter(space=place.id).order_by('pub_date'),
-                       template_name = 'spaces/document_list.html',
-                       template_object_name = 'doc',
-                       extra_context = {'get_place': place})
+    model = Document
+    paginate_by = 25
+    context_object_name = 'doc'
+    
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return Document.objects.all().filter(space=place.id).order_by('pub_date')
+        
+    def get_context_data(self, **kwargs):
+        context = super(ListDocs, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
 

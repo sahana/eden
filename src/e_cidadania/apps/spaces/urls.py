@@ -19,8 +19,9 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces
+from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces, ListDocs
 
+# NOTICE: Don't change the order of urlpatterns or it will probably break.
 
 urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
@@ -30,17 +31,27 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
     # Proposals
     (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
 
-    # Documents
-    # Please note: Documents are integrated in spaces, they share views.
+    # Debates
+    #(r'^debate/', include('e_cidadania.apps.debates.urls')),
+
+)
+
+# Document URLs
+urlpatterns += patterns('e_cidadania.apps.spaces.views',
+
     (r'^(?P<space_name>\w+)/docs/add', 'add_doc'),
 
     (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/', 'edit_doc'),
 
     (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/', 'delete_doc'),
 
-    (r'^(?P<space_name>\w+)/docs/', 'list_all_docs'),
+    (r'^(?P<space_name>\w+)/docs/', ListDocs.as_view()),
 
-    # Spaces
+)
+
+# Spaces URLs
+urlpatterns += patterns('',
+
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
 
     (r'^(?P<space_name>\w+)/delete/', 'delete_space'),
@@ -51,14 +62,8 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     (r'^go/', GoToSpace.as_view()),
 
-#    (r'^go/', 'go_to_space'),
-
     (r'^(?P<space_name>\w+)/', ViewSpaceIndex.as_view()),
 
-#    (r'^(?P<space_name>\w+)/', 'view_space_index'),
-
-    # Debates
-    #(r'^debate/', include('e_cidadania.apps.debates.urls')),
-
 )
+
 

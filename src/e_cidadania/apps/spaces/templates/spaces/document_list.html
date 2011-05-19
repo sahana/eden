@@ -9,7 +9,7 @@
 
   {% block centercol %}
     <div class="grid_16">
-      {% for doc in doc_list %}
+      {% for doc in object_list %}
         <p><a href="{{ doc.docfile }}">{{ doc.title }}</a></p>
         <p>{% trans "Published" %} {{ doc.pub_date }}</p>
       {% empty %}
