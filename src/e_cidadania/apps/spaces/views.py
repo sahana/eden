@@ -256,7 +256,10 @@ class DeleteDocument(DeleteView):
     Delete an uploaded document.
     """
     model = Document
-    queryset = Document.objects.all().filter(id=kwargs['doc_id'])
+    
+    def get_queryset(self):
+        objects = Document.objects.all().filter(id=self.kwargs['doc_id'])
+        return objects
 
 #@permission_required('spaces.delete_document')
 #def delete_doc(request, space_name, doc_id):
@@ -280,15 +283,16 @@ class ListDocs(ListView):
     """
     List all documents stored whithin a space.
     """
-    model = Document
     paginate_by = 25
-    context_object_name = 'doc'
+    context_object_name = 'document_list'
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return Document.objects.all().filter(space=place.id).order_by('pub_date')
+        objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
+        return objects
         
     def get_context_data(self, **kwargs):
         context = super(ListDocs, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
 
