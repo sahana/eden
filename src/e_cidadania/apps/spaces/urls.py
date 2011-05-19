@@ -19,7 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces, ListDocs
+from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces, DeleteSpace, ListDocs
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -54,7 +54,7 @@ urlpatterns += patterns('',
 
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
 
-    (r'^(?P<space_name>\w+)/delete/', 'delete_space'),
+    (r'^(?P<space_name>\w+)/delete/', DeleteSpace.as_view()),
 
     (r'^add/', 'create_space'),
     

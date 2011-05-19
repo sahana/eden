@@ -102,7 +102,7 @@ class ViewSpaceIndex(DetailView):
 
     # Get extra context data
     def get_context_data(self, **kwargs):
-        context = super(ViewSpaceInde, self).get_context_data(**kwargs)
+        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
@@ -152,20 +152,32 @@ def edit_space(request, space_name):
                               {'form': form},
                               context_instance=RequestContext(request))
 
-@permission_required('spaces.delete_space')
-def delete_space(request, space_name):
+class DeleteSpace(DeleteView):
 
     """
     Delete the selected space and return to the index page.
     """
-    place = get_object_or_404(Space, url=space_name)
-    return delete_object(request,
-                         model = Space,
-                         object_id = place.id,
-                         login_required = True,
-                         template_name = 'spaces/space_delete.html',
-                         template_object_name = 'get_place',
-                         post_delete_redirect = '/')
+    context_object_name = 'get_place'
+    success_url = '/'
+    
+    def get_object(self):
+        return get_object_or_404(Space, url = self.kwargs['space_name'])
+
+
+#@permission_required('spaces.delete_space')
+#def delete_space(request, space_name):
+#
+#    """
+#    Delete the selected space and return to the index page.
+#    """
+#    place = get_object_or_404(Space, url=space_name)
+#    return delete_object(request,
+#                         model = Space,
+#                         object_id = place.id,
+#                         login_required = True,
+#                         template_name = 'spaces/space_delete.html',
+#                         template_object_name = 'get_place',
+#                         post_delete_redirect = '/')
 
 @permission_required('spaces.add_space')
 def create_space(request):
@@ -238,22 +250,30 @@ def edit_doc(request, space_name, doc_id):
                          post_save_redirect = '/',
                          extra_context = {'get_place': place})
 
-@permission_required('spaces.delete_document')
-def delete_doc(request, space_name, doc_id):
+class DeleteDocument(DeleteView):
 
     """
-    Delete an uploaded document
+    Delete an uploaded document.
     """
-    place = get_object_or_404(Space, url=space_name)
+    model = Document
+    queryset = Document.objects.all().filter(id=kwargs['doc_id'])
 
-    return delete_object(request,
-                         model = Document,
-                         object_id = doc_id,
-                         login_required = True,
-                         template_name = 'spaces/document_delete.html',
-                         template_object_name = 'doc',
-                         post_delete_redirect = '/',
-                         extra_context = {'get_place': place})
+#@permission_required('spaces.delete_document')
+#def delete_doc(request, space_name, doc_id):
+#
+#    """
+#    Delete an uploaded document
+#    """
+#    place = get_object_or_404(Space, url=space_name)
+#
+#    return delete_object(request,
+#                         model = Document,
+#                         object_id = doc_id,
+#                         login_required = True,
+#                         template_name = 'spaces/document_delete.html',
+#                         template_object_name = 'doc',
+#                         post_delete_redirect = '/',
+#                         extra_context = {'get_place': place})
 
 class ListDocs(ListView):
 

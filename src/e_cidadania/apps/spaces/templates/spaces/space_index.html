@@ -11,14 +11,14 @@
   {% block centercol %}
     <div class="grid_11">
     
-      {% if perm.news.add_post %}
+      {% if perms.news.add_post %}
         <div id="tools">
-          <a href="{{ request.path }}news/add/"}>{% trans "Add news" %}</a>
-          {% if perm.spaces.edit_space %}
+          <a href="{{ request.path }}news/add/"}>{% trans "Add news" %}</a> |
+          {% if perms.spaces.edit_space %}
             <a href="{{ request.path }}edit/">{% trans "Edit space" %}</a> |
           {% endif %}
-          {% if perm.spaces.delete_space %}
-            <a href="{{ request.path }}delete/">{% trans "Delete space" %}</a> |
+          {% if perms.spaces.delete_space %}
+            <a href="{{ request.path }}delete/">{% trans "Delete space" %}</a>
           {% endif%}
         </div>
       {% endif %}
