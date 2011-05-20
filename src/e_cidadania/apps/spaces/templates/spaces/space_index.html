@@ -26,10 +26,10 @@
       {% if get_place.mod_news %}
         {% for news in publication %}
           <div class="post">
-            {% if perm.news.edit_post %}
+            {% if perms.news.edit_post %}
               <div id="tools">
                 <a href="{{ request.path }}news/{{ news.id }}/edit/">Edit</a> |
-                {% if perm.news.delete_post %}
+                {% if perms.news.delete_post %}
                   <a href="{{ request.path }}news/{{ news.id }}/delete/">Delete</a>
                 {% endif %}
               </div>
@@ -68,9 +68,9 @@
             {% for doc in documents %}
               <li>
                 <a href="/{{ MEDIA_URL }}/{{ doc.docfile }}">{{ doc.title }}</a>
-                {% if perm.spaces.edit_document %}
+                {% if perms.spaces.edit_document %}
                   (<a href="{{ request.path }}docs/{{ doc.id }}/edit/">Edit</a> | 
-                {% if perm.spaces.delete_document %}
+                {% if perms.spaces.delete_document %}
                   <a href="{{ request.path }}docs/{{ doc.id }}/delete/">Delete</a>
                 {% endif %})
                 {% endif %}

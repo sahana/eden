@@ -19,25 +19,58 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 # Generic class-based views
-from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 
-from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.template import RequestContext
 
-from django.views.generic.list_detail import object_list
-from django.views.generic.list_detail import object_detail
-from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
-from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.proposals.forms import ProposalForm
 from e_cidadania.apps.spaces.models import Space
+
+
+class ListProposals(ListView):
+
+    """
+    List all proposals stored whithin a space.
+    """
+    paginate_by = 50
+    context_object_name = 'proposal'
+
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        objects = Proposal.objects.all().filter(space=place.id).order_by('pub_date')
+        return objects
+
+    def get_context_data(self, **kwargs):
+        context = super(ListProposals, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
+
+class ViewProposal(DetailView):
+
+    """
+    Detail view of a proposal.
+    """
+    context_object_name = 'proposal'
+    template_name = 'proposals/proposal_detail.html'
+
+    def get_object(self):
+        prop_id = self.kwargs['prop_id']
+        return get_object_or_404(Proposal, pk = prop_id)
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = Space.objects.all().filter(pk = place.id)
+        return context
+
 
 @permission_required('proposals.add_proposal')
 def add_proposal(request, space_name):
@@ -63,54 +96,6 @@ def add_proposal(request, space_name):
                               {'form': form, 'get_place': prop_space},
                               context_instance = RequestContext(request))
 
-class ListProposals(ListView):
-
-    """
-    List all proposals stored whithin a space.
-    """
-    paginate_by = 50
-    context_object_name = 'proposal'
-    
-    def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = Proposal.objects.all().filter(space=place.id).order_by('pub_date')
-        return objects
-        
-    def get_context_data(self, **kwargs):
-        context = super(ListProposals, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return context
-
-#def list_proposals(request, space_name):
-#
-#    """
-#    List all the proposals.
-#    """
-#    current_space = get_object_or_404(Space, url=space_name)
-#    
-#    return object_list(request,
-#                       queryset = Proposal.objects.all().filter(space=current_space.id),
-#                       paginate_by = 50,
-#                       template_name = 'proposal/proposal_list.html',
-#                       template_object_name = 'proposal',
-#                       extra_context = {'get_place': current_space})
-
-@permission_required('proposals.delete_proposal')
-def delete_proposal(request, space_name, prop_id):
-
-    """
-    Delete a proposal.
-    """
-    current_space = get_object_or_404(Space, url=space_name)
-
-    return delete_object(request,
-                         model = Proposal,
-                         object_id = prop_id,
-                         login_required = True,
-                         template_name = 'proposals/proposal_delete.html',
-                         template_object_name = 'proposal',
-                         post_delete_redirect = '/',
-                         extra_context = {'get_place': current_space})
 
 @permission_required('proposals.edit_proposal')
 def edit_proposal(request, space_name, prop_id):
@@ -122,11 +107,11 @@ def edit_proposal(request, space_name, prop_id):
     current_space = get_object_or_404(Space, url=space_name)
     current_proposal = get_object_or_404(Proposal, id=prop_id)
     current_user = request.user.username
-    
+
     can_edit = request.user.has_perm('Proposal.edit_proposal')
-    
+
     allow_edit = 0
-    
+
     if can_edit or current_user == current_proposal.author:
         return update_object(request,
                              model = Proposal,
@@ -136,17 +121,15 @@ def edit_proposal(request, space_name, prop_id):
                              post_save_redirect = '../',
                              extra_context = {'get_place': current_space})
 
-def view_proposal(request, space_name, prop_id):
+
+class DeleteProposal(DeleteView):
 
     """
-    View a proposal.
+    Delete a proposal.
     """
-    current_space = get_object_or_404(Space, url=space_name)
-    
-    return object_detail(request,
-                         queryset = Proposal.objects.all().filter(space=current_space.id),
-                         object_id = prop_id,
-                         template_name = 'proposals/proposal_detail.html',
-                         template_object_name = 'proposal',
-                         extra_context = {'get_place': current_space})
+    def get_object(self):
+        return get_object_or_404(Proposal, pk = self.kwargs['prop_id'])
 
+    def get_success_url(self):
+        current_space = self.kwargs['space_name']
+        return '/spaces/{0}'.format(current_space)

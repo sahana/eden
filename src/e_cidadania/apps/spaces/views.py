@@ -26,7 +26,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 
-# Decorators. the fiorst is a wrapper to convert function-based decorators
+# Decorators. the first is a wrapper to convert function-based decorators
 # to method decorators that can be put in subclass methods.
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
@@ -90,6 +90,7 @@ class ViewSpaceIndex(DetailView):
     context_object_name = 'get_place'
     template_name = 'spaces/space_index.html'
     
+    @method_decorator(login_required)
     def get_object(self):
         space_name = self.kwargs['space_name']
         
@@ -164,21 +165,6 @@ class DeleteSpace(DeleteView):
         return get_object_or_404(Space, url = self.kwargs['space_name'])
 
 
-#@permission_required('spaces.delete_space')
-#def delete_space(request, space_name):
-#
-#    """
-#    Delete the selected space and return to the index page.
-#    """
-#    place = get_object_or_404(Space, url=space_name)
-#    return delete_object(request,
-#                         model = Space,
-#                         object_id = place.id,
-#                         login_required = True,
-#                         template_name = 'spaces/space_delete.html',
-#                         template_object_name = 'get_place',
-#                         post_delete_redirect = '/')
-
 @permission_required('spaces.add_space')
 def create_space(request):
 
@@ -250,33 +236,20 @@ def edit_doc(request, space_name, doc_id):
                          post_save_redirect = '/',
                          extra_context = {'get_place': place})
 
+
 class DeleteDocument(DeleteView):
 
     """
     Delete an uploaded document.
     """
-    model = Document
+        
+    def get_object(self):
+        return get_object_or_404(Document, pk = self.kwargs['doc_id'])
     
-    def get_queryset(self):
-        objects = Document.objects.all().filter(id=self.kwargs['doc_id'])
-        return objects
+    def get_success_url(self):
+        current_space = self.kwargs['space_name']
+        return '/spaces/{0}'.format(current_space)
 
-#@permission_required('spaces.delete_document')
-#def delete_doc(request, space_name, doc_id):
-#
-#    """
-#    Delete an uploaded document
-#    """
-#    place = get_object_or_404(Space, url=space_name)
-#
-#    return delete_object(request,
-#                         model = Document,
-#                         object_id = doc_id,
-#                         login_required = True,
-#                         template_name = 'spaces/document_delete.html',
-#                         template_object_name = 'doc',
-#                         post_delete_redirect = '/',
-#                         extra_context = {'get_place': place})
 
 class ListDocs(ListView):
 
