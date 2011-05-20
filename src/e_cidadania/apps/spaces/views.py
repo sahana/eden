@@ -193,6 +193,25 @@ def create_space(request):
 # DOCUMENTS VIEWS
 #
 
+class ListDocs(ListView):
+
+    """
+    List all documents stored whithin a space.
+    """
+    paginate_by = 25
+    context_object_name = 'document_list'
+
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
+        return objects
+
+    def get_context_data(self, **kwargs):
+        context = super(ListDocs, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
+
 @permission_required('spaces.add_document')
 def add_doc(request, space_name):
 
@@ -249,23 +268,3 @@ class DeleteDocument(DeleteView):
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
-
-
-class ListDocs(ListView):
-
-    """
-    List all documents stored whithin a space.
-    """
-    paginate_by = 25
-    context_object_name = 'document_list'
-    
-    def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
-        return objects
-        
-    def get_context_data(self, **kwargs):
-        context = super(ListDocs, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return context
-
