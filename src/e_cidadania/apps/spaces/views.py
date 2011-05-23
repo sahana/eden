@@ -94,7 +94,7 @@ class ViewSpaceIndex(DetailView):
         space_name = self.kwargs['space_name']
         
         for i in self.request.user.profile.spaces.all():
-            if i.url == space_name:
+            if i.url == space_name or self.request.user.is_staff():
                 return get_object_or_404(Space, url = space_name)
 
         self.template_name = 'not_allowed.html'

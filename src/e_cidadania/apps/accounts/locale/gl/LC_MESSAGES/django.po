@@ -8,23 +8,23 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 11:21+0200\n"
-"PO-Revision-Date: 2011-03-18 18:28\n"
-"Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
+"POT-Creation-Date: 2011-05-23 12:23+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Translated-Using: django-rosetta 0.5.6\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: models.py:33
 msgid "Male"
-msgstr "Home"
+msgstr ""
 
 #: models.py:34
 msgid "Female"
-msgstr "Muller"
+msgstr ""
 
 #: models.py:42
 msgid "Interes"
@@ -32,23 +32,23 @@ msgstr ""
 
 #: models.py:54
 msgid "Name"
-msgstr "Nome"
+msgstr ""
 
 #: models.py:55
 msgid "Surname"
-msgstr "Apelido"
+msgstr ""
 
 #: models.py:56
 msgid "Gender"
-msgstr "Sexo"
+msgstr ""
 
 #: models.py:59
 msgid "Birth date"
-msgstr "Data de nacemento"
+msgstr ""
 
 #: models.py:63
 msgid "Province"
-msgstr "Provincia"
+msgstr ""
 
 #: models.py:64
 msgid "Region"
@@ -60,71 +60,66 @@ msgstr ""
 
 #: models.py:68
 msgid "Address"
-msgstr "Enderezo"
+msgstr ""
 
 #: models.py:69
 msgid "Number"
-msgstr "Número"
+msgstr ""
 
 #: models.py:71
 msgid "Floor"
-msgstr "Piso"
+msgstr ""
 
 #: models.py:72
 msgid "Letter"
-msgstr "Letra"
+msgstr ""
 
 #: models.py:75
 msgid "Phone 1"
-msgstr "Teléfono 1"
+msgstr ""
 
 #: models.py:76 models.py:78
 msgid "9 digits maximum"
-msgstr "Máximo de 9 díxitos"
+msgstr ""
 
 #: models.py:77
 msgid "Phone 2"
-msgstr "Teléfono 2"
+msgstr ""
 
 #: models.py:80
 msgid "Identification document"
-msgstr "Documento de Identificación"
+msgstr ""
 
 #: models.py:83
 msgid "Website"
-msgstr "Páxina web"
+msgstr ""
 
 #: models.py:85
 msgid "The URL will be checked"
-msgstr "A URL será verificada"
+msgstr ""
 
 #: templates/accounts/login.html:4
 msgid "Login"
-msgstr "Entrar"
+msgstr ""
 
 #: templates/accounts/login.html:14
 msgid "Username:"
-msgstr "Nome de usuario/usuaria"
+msgstr ""
 
 #: templates/accounts/login.html:17
 msgid "Password:"
-msgstr "Contrasinal:"
+msgstr ""
 
 #: templates/accounts/logout.html:7
 msgid ""
 "Thanks for using e-cidadania. Now you can continue visting the website or "
 "log in again."
 msgstr ""
-"Grazas por usar o e-cidadanía. Agora podes continuar visitando o sitio web "
-"ou entrar de novo."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"
-msgstr "Entrar de novo"
+msgstr ""
 
 #: templates/accounts/profile.html:5
 msgid "User"
-msgstr "Usuario/usuaria"
-
-#~ msgid "Municipality"
-#~ msgstr "Municipio"
+msgstr ""

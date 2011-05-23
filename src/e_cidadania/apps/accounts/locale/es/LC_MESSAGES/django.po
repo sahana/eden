@@ -2,21 +2,22 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 11:21+0200\n"
-"PO-Revision-Date: 2011-03-25 23:41\n"
-"Last-Translator: <a@a.com>\n"
+"POT-Creation-Date: 2011-05-23 12:23+0200\n"
+"PO-Revision-Date: 2011-05-23 12:58\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Translated-Using: django-rosetta 0.5.6\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: models.py:33
 msgid "Male"
@@ -36,7 +37,7 @@ msgstr "Nombre"
 
 #: models.py:55
 msgid "Surname"
-msgstr "Apellido"
+msgstr "Apellidos"
 
 #: models.py:56
 msgid "Gender"
@@ -52,11 +53,11 @@ msgstr "Provincia"
 
 #: models.py:64
 msgid "Region"
-msgstr "Provincia"
+msgstr "Región"
 
 #: models.py:65
 msgid "Neighborhood"
-msgstr "Municipio"
+msgstr "Barrio"
 
 #: models.py:68
 msgid "Address"
@@ -80,7 +81,7 @@ msgstr "Teléfono 1"
 
 #: models.py:76 models.py:78
 msgid "9 digits maximum"
-msgstr "9 dígitos máximo"
+msgstr "9 dígitos como máximo"
 
 #: models.py:77
 msgid "Phone 2"
@@ -88,19 +89,19 @@ msgstr "Teléfono 2"
 
 #: models.py:80
 msgid "Identification document"
-msgstr "Documento de identificación"
+msgstr "DNI"
 
 #: models.py:83
 msgid "Website"
-msgstr "Sitio web"
+msgstr "Página web"
 
 #: models.py:85
 msgid "The URL will be checked"
-msgstr "La URL se comprobará"
+msgstr "Esta dirección será comprobada"
 
 #: templates/accounts/login.html:4
 msgid "Login"
-msgstr "Iniciar sesión"
+msgstr "Login"
 
 #: templates/accounts/login.html:14
 msgid "Username:"
@@ -112,19 +113,16 @@ msgstr "Contraseña:"
 
 #: templates/accounts/logout.html:7
 msgid ""
-"Thanks for using e-cidadania. Now you can continue visting the website or "
-"log in again."
+"Thanks for using e-cidadania. Now you can continue visting the website "
+"or log in again."
 msgstr ""
-"Gracias por usar e-Ciudadanía. Ahora puedes seguir visitando la página web o "
-"conectarse de nuevo."
+"Gracias por utilizar e-cidadania. Ahora puedes seguir visitando la web"
+" o entrar de nuevo."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"
-msgstr "Ingresar de nuevo"
+msgstr "Entrar de nuevo"
 
 #: templates/accounts/profile.html:5
 msgid "User"
 msgstr "Usuario"
-
-#~ msgid "Municipality"
-#~ msgstr "Municipio"

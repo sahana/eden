@@ -9,7 +9,7 @@
   <div class="grid_11">
     <form action="" method="post">{% csrf_token %}
       {{ form.non_field_errors }}
-      
+
       <div class="fieldWrapper">
         {{ form.title.errors }}
         <label for="id_name">{% trans "Title" %}:</label>
@@ -41,10 +41,9 @@
         {{ form.tags }}
       </div>
 
-      {{ form.belongs_to.as_hidden }}
+      {{ form.space.as_hidden }}
       {{ form.author.as_hidden }}
       {{ form.support_votes.as_hidden }}
-      {{ form.code.as_hidden }}
 
         <p><input type="submit" value="{% trans 'Continue' %} &rarr;" /></p>
     </form>

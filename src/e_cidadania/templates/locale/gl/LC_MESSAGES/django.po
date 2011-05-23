@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-03-25 23:19+0100\n"
+"POT-Creation-Date: 2011-05-23 17:14+0200\n"
 "PO-Revision-Date: 2011-03-18 18:25\n"
 "Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,7 +38,7 @@ msgstr ""
 msgid "Take me out of here!"
 msgstr "¡Sácame de aquí!"
 
-#: 404.html:65 500.html:40 menu.html:4 menu.html.py:39
+#: 404.html:65 500.html:40 menu.html:4 menu.html.py:43
 msgid "Home"
 msgstr "Inicio"
 
@@ -46,11 +46,11 @@ msgstr "Inicio"
 msgid "Development"
 msgstr "Desenvolvemento"
 
-#: 404.html:67 500.html:42 site_index.html:98
+#: 404.html:67 500.html:42 site_index.html:130
 msgid "Help"
 msgstr "Axuda"
 
-#: 404.html:68 500.html:43 site_index.html:98
+#: 404.html:68 500.html:43 site_index.html:130
 msgid "Terms of service"
 msgstr "Termos de servizo"
 
@@ -58,7 +58,7 @@ msgstr "Termos de servizo"
 msgid "Privacy"
 msgstr "Privacidade"
 
-#: 404.html:70 500.html:45 site_index.html:98
+#: 404.html:70 500.html:45 site_index.html:130
 msgid "About"
 msgstr "Acerca de"
 
@@ -66,43 +66,61 @@ msgstr "Acerca de"
 msgid "Now you did it, the server is broken."
 msgstr "Fixechela boa, o servidor está roto."
 
-#: base.html:74
+#: base.html:88
 msgid "created by"
 msgstr "creado por"
 
-#: base.html:75
-msgid ""
-"We guarantee that this program will not become aware and take over the world"
-msgstr ""
-"Garantimos que este programa non vai tomar conciencia e apoderarse do mundo"
-
-#: menu.html:10 menu.html.py:45
+#: menu.html:12 menu.html.py:51
 msgid "Language"
 msgstr "Idioma"
 
-#: menu.html:28
+#: menu.html:32
 msgid "Administration"
 msgstr "Administración"
 
-#: menu.html:29
+#: menu.html:33
 msgid "Translation"
 msgstr "Traducción"
 
-#: menu.html:31
+#: menu.html:35
 msgid "Messages"
 msgstr "Mensaxes"
 
-#: menu.html:32
+#: menu.html:36
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: menu.html:33
+#: menu.html:37
 msgid "Logout"
 msgstr "Saír"
 
-#: menu.html:40
+#: menu.html:45
 msgid "Login"
 msgstr "Entrar"
+
+#: not_allowed.html:4
+msgid "Not allowed"
+msgstr ""
+
+#: not_allowed.html:8
+msgid "You are not allowed to access here."
+msgstr ""
+
+#: not_allowed.html:10
+msgid "You can go"
+msgstr ""
+
+#: not_allowed.html:10
+msgid "back to home"
+msgstr ""
+
+#: not_allowed.html:10
+msgid "or"
+msgstr ""
+
+#: not_allowed.html:10
+msgid "back to your profile"
+msgstr ""
 
 #: site_index.html:4 terms.html:4
 msgid "e-cidadania"
@@ -124,75 +142,87 @@ msgstr ""
 msgid "Add news"
 msgstr "Engadir novas"
 
-#: site_index.html:29
-msgid "Edit"
-msgstr "Editar"
-
-#: site_index.html:30
-msgid "Delete"
-msgstr "Borrar"
-
-#: site_index.html:35
+#: site_index.html:28
 msgid "Written by"
 msgstr "Escrito por"
 
-#: site_index.html:35
+#: site_index.html:28
 msgid "on"
 msgstr "en"
 
-#: site_index.html:40
+#: site_index.html:28
+msgid "Tags"
+msgstr ""
+
+#: site_index.html:31
+msgid "Edit"
+msgstr "Editar"
+
+#: site_index.html:33
+msgid "Delete"
+msgstr "Borrar"
+
+#: site_index.html:43
 msgid "Nothing published yet."
 msgstr "Non hai nada publicado todavía."
 
-#: site_index.html:51
+#: site_index.html:53
 msgid "What can you do with e-cidadania?"
 msgstr "Qué podo facer con e-cidadania?"
 
-#: site_index.html:51
+#: site_index.html:53
 msgid "Discover it here"
 msgstr "Descúbreo aquí"
 
-#: site_index.html:55
+#: site_index.html:57
 msgid "Create your own space"
 msgstr "Crea o teu propio espazo"
 
-#: site_index.html:55
+#: site_index.html:57
 msgid "inside e-cidadania"
 msgstr "dentro de e-cidadanía"
 
-#: site_index.html:59
+#: site_index.html:61
 msgid "Spaces list"
 msgstr "Lista de espazos"
 
-#: site_index.html:65
+#: site_index.html:67
 msgid "No spaces"
 msgstr "Sen espazos"
 
-#: site_index.html:68
+#: site_index.html:70
 msgid "Go"
 msgstr "Ir"
 
-#: site_index.html:73
+#: site_index.html:75
 msgid "Recently updated spaces"
 msgstr "Espazos actualizados recentemente"
 
-#: site_index.html:84
+#: site_index.html:79
+msgid "Share"
+msgstr ""
+
+#: site_index.html:117
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr "A túa rede social favorita non está aquí? ¡Díno-lo!"
 
-#: site_index.html:88
+#: site_index.html:121
 msgid "e-cidadania development"
 msgstr "Desenvolvemento de e-cidadanía"
 
-#: site_index.html:89
+#: site_index.html:122
 msgid "Do you want to help?"
 msgstr "Queres axudar?"
 
-#: site_index.html:89
+#: site_index.html:122
 msgid "Access"
 msgstr "Accesa"
 
-#: site_index.html:98
+#: site_index.html:130
+msgid "API"
+msgstr ""
+
+#: site_index.html:130
 msgid "Developers"
 msgstr "Desenvolvedores"
 
@@ -299,3 +329,10 @@ msgstr ""
 #: comments/preview.html:20
 msgid "or make changes"
 msgstr ""
+
+#~ msgid ""
+#~ "We guarantee that this program will not become aware and take over the "
+#~ "world"
+#~ msgstr ""
+#~ "Garantimos que este programa non vai tomar conciencia e apoderarse do "
+#~ "mundo"

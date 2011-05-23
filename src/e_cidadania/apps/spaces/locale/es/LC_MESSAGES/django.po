@@ -2,20 +2,21 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 11:21+0200\n"
-"PO-Revision-Date: 2011-05-23 10:27\n"
+"POT-Creation-Date: 2011-05-23 12:23+0200\n"
+"PO-Revision-Date: 2011-05-23 12:41\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: admin.py:49
@@ -37,10 +38,11 @@ msgstr "URL"
 
 #: models.py:34
 msgid ""
-"All lowercase. Obligatory. Take in mind that this will be the accesible URL"
+"All lowercase. Obligatory. Take in mind that this will be the accesible"
+" URL"
 msgstr ""
-"Todo en minúsculas. Obligatorio. Recuerda que esta será la dirección a la "
-"que se acceda."
+"Todo en minúsculas. Obligatorio. Ten en cuenta que esta será la "
+"dirección web."
 
 #: models.py:35 templates/spaces/space_add.html:28
 #: templates/spaces/space_add.html.py:74
@@ -58,7 +60,7 @@ msgstr "Logotipo"
 
 #: models.py:41
 msgid "100px width, 75px height"
-msgstr "100px de ancho, altura 75 px"
+msgstr "100px de ancho, 75px de alto"
 
 #: models.py:43 templates/spaces/space_add.html:36
 #: templates/spaces/space_add.html.py:76
@@ -67,7 +69,7 @@ msgstr "Banner"
 
 #: models.py:44
 msgid "75px height"
-msgstr "altura de 75 px"
+msgstr "75px de altura"
 
 #: models.py:46 templates/spaces/space_add.html:77
 msgid "Authorized groups"
@@ -75,7 +77,7 @@ msgstr "Grupos autorizados"
 
 #: models.py:50
 msgid "Debate module"
-msgstr "Módulo de debate"
+msgstr "Módulo de debates"
 
 #: models.py:51
 msgid "Proposals module"
@@ -99,7 +101,7 @@ msgstr "Espacios"
 
 #: models.py:70
 msgid "Website"
-msgstr "Website"
+msgstr "Sitio web"
 
 #: models.py:71
 msgid "Logo"
@@ -115,7 +117,7 @@ msgstr "Título del documento"
 
 #: templates/spaces/document_add.html:4
 msgid "Upload new document"
-msgstr "Subir un documento"
+msgstr "Cargar nuevo documento"
 
 #: templates/spaces/document_add.html:17
 msgid "Title"
@@ -123,7 +125,7 @@ msgstr "Título"
 
 #: templates/spaces/document_add.html:24
 msgid "Select your file"
-msgstr "Selecciona el fichero"
+msgstr "Selecciona el archivo"
 
 #: templates/spaces/document_add.html:33
 msgid "Upload"
@@ -144,15 +146,15 @@ msgstr "¿Qué puedo cargar?"
 
 #: templates/spaces/document_add.html:49
 msgid "Allowed formats"
-msgstr "Formatos permidos"
+msgstr "Formatos permitidos"
 
 #: templates/spaces/document_add.html:49
 msgid ""
-"Mainly all non executable documents (PDF, ODT, DOC). Audio and video are not "
-"allowed."
+"Mainly all non executable documents (PDF, ODT, DOC). Audio and video "
+"are not allowed."
 msgstr ""
-"Principalmente todos los documentos no executables (PDF, ODT, DOC). Audio y "
-"video no están permitidos."
+"Principalmente los documentos no ejecutables (PDF, ODT, DOC). No se "
+"permite audio ni video."
 
 #: templates/spaces/document_add.html:50
 msgid "Maximum size"
@@ -160,7 +162,7 @@ msgstr "Tamaño máximo"
 
 #: templates/spaces/document_add.html:50
 msgid "Allowed size is 10MB"
-msgstr "El tamaño permitido es de 10MB"
+msgstr "El tamaño permitido son 10MB"
 
 #: templates/spaces/document_confirm_delete.html:4
 msgid "Delete document"
@@ -168,15 +170,16 @@ msgstr "Borrar documento"
 
 #: templates/spaces/document_confirm_delete.html:13
 msgid ""
-"Are you sure you want to delete this document? This action cannot be undone."
+"Are you sure you want to delete this document? This action cannot be "
+"undone."
 msgstr ""
-"¿Estás seguro de que quieres borrar este documento? Esta acción no se puede "
-"deshacer."
+"¿Estás seguro de querer borrar este documento? Esta acción no se puede"
+" deshacer."
 
 #: templates/spaces/document_confirm_delete.html:15
 #: templates/spaces/space_confirm_delete.html:15
 msgid "Delete"
-msgstr "Eliminar"
+msgstr "Borrar"
 
 #: templates/spaces/document_edit.html:4
 msgid "Edit document"
@@ -201,11 +204,11 @@ msgstr "No hay documentos en este espacio."
 
 #: templates/spaces/space_add.html:4
 msgid "Create new space"
-msgstr "Crear un nuevo espacio"
+msgstr "Crear un espacio nuevo"
 
 #: templates/spaces/space_add.html:9
 msgid "Create a new space"
-msgstr "Crear un nuevo espacio"
+msgstr "Crear un espacio nuevo"
 
 #: templates/spaces/space_add.html:17 templates/spaces/space_add.html.py:73
 msgid "Space name"
@@ -213,7 +216,7 @@ msgstr "Nombre del espacio"
 
 #: templates/spaces/space_add.html:23
 msgid "Space URL"
-msgstr "Dirección de espacio"
+msgstr "URL del espacio"
 
 #: templates/spaces/space_add.html:40
 msgid "Authorized Groups"
@@ -237,7 +240,7 @@ msgstr "Calendario"
 
 #: templates/spaces/space_add.html:52
 msgid "Documentation"
-msgstr "Documentos"
+msgstr "Documentación"
 
 #: templates/spaces/space_add.html:71
 msgid "How to add new spaces"
@@ -245,50 +248,52 @@ msgstr "Cómo añadir nuevos espacios"
 
 #: templates/spaces/space_add.html:73
 msgid ""
-"The name of the space. Have in mind that this name will be used as the URL "
-"of your space. We recommend to use all lowercase. (100 chars)"
+"The name of the space. Have in mind that this name will be used as the "
+"URL of your space. We recommend to use all lowercase. (100 chars)"
 msgstr ""
-"El nombre del espacio. Ten en cuenta que este nombre va a ser utilizado como "
-"dirección web para tu espacio. Recomendamos utilizar todo minúsculas.(100 "
+"El nombre del espacio. Ten en mente que este nombre será utilizado "
+"como URL de tu espacio. Recomendamos utilizar todo minúsculas (100 "
 "caracteres)"
 
 #: templates/spaces/space_add.html:74
 msgid ""
-"An optional description for your space. It won't be showed to the users, but "
-"to the admins."
+"An optional description for your space. It won't be showed to the "
+"users, but to the admins."
 msgstr ""
-"Una descripción opcional para tu espacio. No será mostrado a los usuarios, "
-"pero sí a los administradores."
+"Una descripción opcional de tu espacio. No será mostrado a los "
+"usuarios, sólo a los administradores."
 
 #: templates/spaces/space_add.html:75
 msgid "An image of 75px height and 100px width."
-msgstr "Una imagen de 70px de alto por 100 de ancho."
+msgstr "Una imagen de 75px de alto t 100px de ancho"
 
 #: templates/spaces/space_add.html:76
 msgid "Another image. 75px height."
-msgstr "Otra imagen. 75px de alto."
+msgstr "Otra imagen. 75px de alto"
 
 #: templates/spaces/space_add.html:77
 msgid "This will set up what users can access to your space."
-msgstr "Esto configurará los usuarios que podrán acceder a tu espacio."
+msgstr "Esto limitará qué usuarios pueden acceder a tu espacio"
 
 #: templates/spaces/space_add.html:78
 msgid ""
-"Select the modules you will use in your space. This can be edited afterwards."
+"Select the modules you will use in your space. This can be edited "
+"afterwards."
 msgstr ""
-"Selecciona los módulos que utilizarás en tu espacio. Esto podrás editarlo "
-"más tarde."
+"Selecciona los módulos que utlizarás en tu espacio. Esto se puede "
+"cambiar más adelante"
 
 #: templates/spaces/space_confirm_delete.html:4
 #: templates/spaces/space_index.html:21
 msgid "Delete space"
-msgstr "Eliminar espacio"
+msgstr "Borrar espacio"
 
 #: templates/spaces/space_confirm_delete.html:13
 msgid ""
-"Are you sure you want to delete this space? This action cannot be undone."
+"Are you sure you want to delete this space? This action cannot be "
+"undone."
 msgstr ""
-"¿Estás seguro de que quieres borrar este espacio? Esta acción no se puede "
+"¿Estás seguro de querer borrar este espacio? Esta acción no se puede "
 "deshacer."
 
 #: templates/spaces/space_edit.html:4 templates/spaces/space_index.html:18
@@ -297,11 +302,11 @@ msgstr "Editar espacio"
 
 #: templates/spaces/space_index.html:5
 msgid "Index"
-msgstr "Índice"
+msgstr "Indice"
 
 #: templates/spaces/space_index.html:16
 msgid "Add news"
-msgstr "Agregar noticias"
+msgstr "Añadir noticias"
 
 #: templates/spaces/space_index.html:41
 msgid "Written by"
@@ -317,7 +322,7 @@ msgstr "comentarios"
 
 #: templates/spaces/space_index.html:49
 msgid "Nothing published yet."
-msgstr "No hay nada publicado todavía"
+msgstr "No se ha publicado nada todavía."
 
 #: templates/spaces/space_index.html:67
 msgid "Documents"
@@ -325,7 +330,7 @@ msgstr "Documentos"
 
 #: templates/spaces/space_index.html:80
 msgid "No documents available"
-msgstr "Sin documentos"
+msgstr "No hay documentos"
 
 #: templates/spaces/space_index.html:83
 msgid "View all documents"
@@ -333,7 +338,7 @@ msgstr "Ver todos los documentos"
 
 #: templates/spaces/space_index.html:85
 msgid "Add documents"
-msgstr "Agregar documentos"
+msgstr "Añadir documento"
 
 #: templates/spaces/space_index.html:101
 msgid "Newest proposals"
@@ -341,7 +346,7 @@ msgstr "Propuestas recientes"
 
 #: templates/spaces/space_index.html:108
 msgid "No proposals available"
-msgstr "Sin propuestas"
+msgstr "No hay propuestas"
 
 #: templates/spaces/space_index.html:111
 msgid "View all proposals"
@@ -369,7 +374,7 @@ msgstr "Desarrolladores"
 
 #: templates/spaces/space_index.html:146
 msgid "Terms of service"
-msgstr "Terminos de servicio"
+msgstr "Términos de servicio"
 
 #: templates/spaces/space_index.html:146
 msgid "Help"
@@ -385,7 +390,4 @@ msgstr "Lista de espacios"
 
 #: templates/spaces/space_list.html:15
 msgid "There are no spaces."
-msgstr "No hay espacios"
-
-#~ msgid "All lowercase. Obligatory."
-#~ msgstr "Todo en minúsculas. Obligatorio."
+msgstr "No hay espacios."

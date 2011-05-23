@@ -59,13 +59,13 @@ class Language():
             print ' - ' + self.got_it
             self.apps.append(self.got_it)
 
-    def _iterator(self, command):
+    def _iterator(self, command, type):
 
         """
         """
         for module in self.apps:
             os.chdir(self.cwd + '/apps/' + module)
-            print '\n>> Generating language catalogs for %s' % (module)
+            print '\n>> %s language catalogs for %s' % (type, module)
             for lang in self.languages:
                 a = subprocess.Popen(command + '%s' % (lang[0]), shell=True)
                 subprocess.Popen.wait(a)
@@ -74,7 +74,7 @@ class Language():
         
         """
         """
-        self._iterator('django-admin.py makemessages -l ')
+        self._iterator('django-admin.py makemessages -l ', 'Generating')
 
     def compile_catalog(self):
 
@@ -87,11 +87,22 @@ class Language():
                                  shell=True)
             subprocess.Popen.wait(a)
 
+    def clean_catalogs(self):
+
+        """
+        """
+        print '\n>> WARNING: This command will remove ALL the language \
+catalogs, having to rebuild and translate them all.'
+        raw_input('\n Continue? (Ctrl-C to quit)')
+        self._iterator('rm -rf locale/', 'Cleaning')
+
 lang = Language()
 
 if sys.argv[1] == 'make':
     lang.generate_catalog()
 elif sys.argv[1] == 'compile':
     lang.compile_catalog()
+elif sys.argv[1] == 'clean':
+    lang.clean_catalogs()
 else:
-    print '\nChoices are: make, compile'
+    print '\nChoices are: make, compile, clean'
