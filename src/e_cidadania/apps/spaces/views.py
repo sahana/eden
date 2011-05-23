@@ -90,7 +90,6 @@ class ViewSpaceIndex(DetailView):
     context_object_name = 'get_place'
     template_name = 'spaces/space_index.html'
     
-    @method_decorator(login_required)
     def get_object(self):
         space_name = self.kwargs['space_name']
         

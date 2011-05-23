@@ -19,7 +19,8 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from e_cidadania.apps.proposals.views import ListProposals
+from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
+    DeleteProposal
 
 urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
@@ -27,9 +28,9 @@ urlpatterns = patterns('e_cidadania.apps.proposals.views',
     
     (r'^edit/(?P<prop_id>\w+)/', 'edit_proposal'),
     
-    (r'^delete/(?P<prop_id>\w+)', 'delete_proposal'),
+    (r'^delete/(?P<prop_id>\w+)', DeleteProposal.as_view()),
 
-    (r'^view/(?P<prop_id>\w+)/', 'view_proposal'),
+    (r'^view/(?P<prop_id>\w+)/', ViewProposal.as_view()),
         
     (r'^$', ListProposals.as_view()),
 )

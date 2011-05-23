@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-04-18 11:40+0200\n"
+"POT-Creation-Date: 2011-05-23 11:21+0200\n"
 "PO-Revision-Date: 2011-03-18 18:26\n"
 "Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,13 +22,13 @@ msgstr ""
 msgid "Other data"
 msgstr "Outros datos"
 
-#: models.py:35 templates/news/post_add.html:22
-#: templates/news/post_add.html.py:66 templates/news/post_edit.html:18
+#: models.py:35 templates/news/post_add.html:35
+#: templates/news/post_add.html.py:79 templates/news/post_edit.html:30
 msgid "Title"
 msgstr "Título"
 
-#: models.py:36 templates/news/post_add.html:29
-#: templates/news/post_add.html.py:67 templates/news/post_edit.html:25
+#: models.py:36 templates/news/post_add.html:42
+#: templates/news/post_add.html.py:80 templates/news/post_edit.html:37
 msgid "Text"
 msgstr "Texto"
 
@@ -40,12 +40,12 @@ msgstr "Data"
 msgid "Last update"
 msgstr "Última actualización"
 
-#: models.py:39 templates/news/post_edit.html:47
+#: models.py:39 templates/news/post_edit.html:59
 msgid "Author"
 msgstr "Autoría"
 
-#: models.py:41 templates/news/post_add.html:44
-#: templates/news/post_edit.html:40
+#: models.py:41 templates/news/post_add.html:57
+#: templates/news/post_edit.html:52
 msgid "Publish in index page"
 msgstr "Publicar na páxina do índice"
 
@@ -57,46 +57,46 @@ msgstr "Publicar en"
 msgid "If you want to post to the index leave this blank"
 msgstr "Se queres publicar no índice déixao en branco"
 
-#: templates/news/post_add.html:5 templates/news/post_add.html.py:12
+#: templates/news/post_add.html:5 templates/news/post_add.html.py:25
 msgid "Add new post"
 msgstr ""
 
-#: templates/news/post_add.html:37 templates/news/post_add.html.py:68
-#: templates/news/post_edit.html:33
+#: templates/news/post_add.html:50 templates/news/post_add.html.py:81
+#: templates/news/post_edit.html:45
 msgid "Tags"
 msgstr ""
 
-#: templates/news/post_add.html:52 templates/news/post_edit.html:61
+#: templates/news/post_add.html:65 templates/news/post_edit.html:73
 msgid "Create"
 msgstr "Crear"
 
-#: templates/news/post_add.html:54 templates/news/post_delete.html:16
-#: templates/news/post_edit.html:62
+#: templates/news/post_add.html:67 templates/news/post_delete.html:28
+#: templates/news/post_edit.html:74
 msgid "Go back"
 msgstr "Volver"
 
-#: templates/news/post_add.html:64
+#: templates/news/post_add.html:77
 msgid "How to add new posts"
 msgstr ""
 
-#: templates/news/post_add.html:66
+#: templates/news/post_add.html:79
 msgid "An spectacular title! (100 characters)"
 msgstr ""
 
-#: templates/news/post_add.html:67
+#: templates/news/post_add.html:80
 msgid "Your story."
 msgstr ""
 
-#: templates/news/post_add.html:68
+#: templates/news/post_add.html:81
 msgid "Please use them carefully, you are limited to 4 tags."
 msgstr ""
 
-#: templates/news/post_add.html:69
+#: templates/news/post_add.html:82
 #, fuzzy
 msgid "Publish in index"
 msgstr "Publicar na páxina do índice"
 
-#: templates/news/post_add.html:69
+#: templates/news/post_add.html:82
 msgid ""
 "If you mark this, the post will appear in the spaces index page AND in the "
 "main index."
@@ -106,22 +106,22 @@ msgstr ""
 msgid "Delete news"
 msgstr "Borrar noticias"
 
-#: templates/news/post_delete.html:13
+#: templates/news/post_delete.html:25
 msgid ""
 "Are you sure you want to delete this post? This action cannot be undone."
 msgstr ""
 "Estás seguro/segura de querer borrar esta mensaxe? Esta acción non se pode "
 "desfacer."
 
-#: templates/news/post_delete.html:15
+#: templates/news/post_delete.html:27
 msgid "Delete"
 msgstr "Borrar"
 
-#: templates/news/post_detail.html:22
+#: templates/news/post_detail.html:36
 msgid "Written by"
 msgstr ""
 
-#: templates/news/post_detail.html:22
+#: templates/news/post_detail.html:36
 msgid "on"
 msgstr ""
 
@@ -129,7 +129,7 @@ msgstr ""
 msgid "Edit news"
 msgstr "Editar noticias"
 
-#: templates/news/post_edit.html:54
+#: templates/news/post_edit.html:66
 #, fuzzy
 msgid "Publish in space"
 msgstr "Publicar en"

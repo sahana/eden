@@ -65,16 +65,18 @@ urlpatterns = patterns('',
     # This urls is for the django comments system
     (r'^comments/', include('django.contrib.comments.urls')),
 
+    url(r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
+
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
     (r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
 )
 
 # Activate rosetta translation engine
-if 'e_cidadania.apps.rosetta' in settings.INSTALLED_APPS:
-    urlpatterns += patterns('',
-        url(r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
-    )
+#if 'e_cidadania.apps.rosetta' in settings.INSTALLED_APPS:
+#    urlpatterns += patterns('',
+#        url(r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
+#    )
 
 # If DEBUG=True in settings.py add static content served by django.
 #if settings.DEBUG:
