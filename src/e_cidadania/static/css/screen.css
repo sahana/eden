@@ -96,10 +96,13 @@ input[type="submit"] {
 }
 
 input[type="text"], input[type="password"] {
-    border: 1px solid #666;
-    background: #FFF;
+    font-size: 2em;
+    border: 1px solid #999;
+    background: url('../assets/inputbg.png') repeat-x;
+    margin: 10px 0px 10px 0px;
     padding: 2px;
     width: 90%;
+    height: 30px;
 
     /* Fancy round borders for Webkit, Gecko and standard
        implementations */
@@ -556,7 +559,6 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 /* LOGIN */
 #loginblock {
     width: 300px;
-    height: 175px;
     margin: 50px auto 50px auto;
     background: #f9f9f9;
     border: 1px solid #ddd;
@@ -571,7 +573,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 }
 
 #loginblock fieldset legend {
-    padding-top: 7px;
+    padding: 7px 0px 20px 0px;
     margin: 25px 10px 10px 10px;
     font-size: 1.6em;
     font-weight: bold;

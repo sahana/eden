@@ -92,9 +92,13 @@ class ViewSpaceIndex(DetailView):
     
     def get_object(self):
         space_name = self.kwargs['space_name']
-        
+
+        if self.request.user.is_anonymous():
+            self.template_name = 'not_allowed.html'
+            return get_object_or_404(Space, url = space_name)
+
         for i in self.request.user.profile.spaces.all():
-            if i.url == space_name or self.request.user.is_staff():
+            if i.url == space_name or self.request.user.is_staff:
                 return get_object_or_404(Space, url = space_name)
 
         self.template_name = 'not_allowed.html'

@@ -52,7 +52,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 )
 
 # Spaces URLs
-urlpatterns += patterns('',
+urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
 
