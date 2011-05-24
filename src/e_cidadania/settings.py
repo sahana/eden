@@ -1,5 +1,14 @@
 # Django settings for e_cidadania project.
 
+__author__ = "Oscar Carballal"
+__copyright__ = "Copyright 2011, Cidadania Sociedade Cooperativa Galega"
+__credits__ = ["Oscar Carballal"]
+__license__ = "GPL3"
+__version__ = "0.4"
+__maintainer__ = "Oscar Carballal"
+__email__ = "oscar.carballal@cidadania.coop"
+__status__ = "Prototype"
+
 # Get the current directory
 import os
 cwd = os.path.dirname(os.path.realpath(__file__))
@@ -45,41 +54,14 @@ LANGUAGES = (
 )
 
 SITE_ID = 1
-
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
 USE_I18N = True
-
-# If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale
 USE_L10N = True
-
-# Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = cwd + '/uploads/'
-
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = 'uploads'
-
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = cwd + '/static/'
-
-# URL prefix for static files.
-# Example: "http://media.lawrence.com/static/"
 STATIC_URL = 'static'
-
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
 ADMIN_MEDIA_PREFIX = '/media/'
 
-# List of finder classes that know how to find static files in
-# various locations.
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
