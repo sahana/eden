@@ -66,7 +66,7 @@ class ViewProposal(DetailView):
         return get_object_or_404(Proposal, pk = prop_id)
 
     def get_context_data(self, **kwargs):
-        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
+        context = super(ViewProposal, self).get_context_data(**kwargs)
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
         context['get_place'] = Space.objects.all().filter(pk = place.id)
         return context
