@@ -14,7 +14,7 @@
       <div id="proposal-wrapper">
         {% if perms.proposals.add_proposal %}
         <div id="tools">
-          <a href="add/">{% trans "Add" %}</a> | 
+          <a href="../add/">{% trans "Add" %}</a> |
           {% if perms.proposals.edit_proposal %}
             <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
           {% endif %}
