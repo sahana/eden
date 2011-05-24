@@ -12,13 +12,13 @@
     <div class="grid_11">
     
       <div id="proposal-wrapper">
-        {% if perm.proposals.add_proposal %}
+        {% if perms.proposals.add_proposal %}
         <div id="tools">
           <a href="add/">{% trans "Add" %}</a> | 
-          {% if perm.proposals.edit_proposal %}
+          {% if perms.proposals.edit_proposal %}
             <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
           {% endif %}
-          {% if perm.proposals.delete_proposal %}
+          {% if perms.proposals.delete_proposal %}
             <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
           {% endif %}
         </div>

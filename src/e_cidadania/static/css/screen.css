@@ -102,7 +102,7 @@ input[type="text"], input[type="password"] {
     margin: 10px 0px 10px 0px;
     padding: 2px;
     width: 90%;
-    height: 30px;
+    height: 25px;
 
     /* Fancy round borders for Webkit, Gecko and standard
        implementations */

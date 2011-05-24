@@ -101,7 +101,7 @@
           <ul>
           {% for proposal in proposals %}
             <li>
-              <a href="{{ request.path }}proposal/view/{{ proposal.id }}/">{{ proposal.title }}</a>
+              <a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a>
             </li>
           {% empty %}
             <p>{% trans "No proposals available" %}</p>

@@ -26,11 +26,11 @@ urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
     (r'^add/', 'add_proposal'),
     
-    (r'^edit/(?P<prop_id>\w+)/', 'edit_proposal'),
+    (r'^(?P<prop_id>\w+)/edit/', 'edit_proposal'),
     
-    (r'^delete/(?P<prop_id>\w+)', DeleteProposal.as_view()),
+    (r'^(?P<prop_id>\w+)/delete/', DeleteProposal.as_view()),
 
-    (r'^view/(?P<prop_id>\w+)/', ViewProposal.as_view()),
+    (r'^(?P<prop_id>\w+)/', ViewProposal.as_view()),
         
     (r'^$', ListProposals.as_view()),
 )
