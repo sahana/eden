@@ -202,7 +202,7 @@ def create_space(request):
             return redirect('/spaces/' + space.url)
 
     return render_to_response('spaces/space_add.html',
-                              {'form': sform, 'entityform1': eforms[0,3]},
+                              {'form': sform, 'entityform': eforms[0]},
                               context_instance=RequestContext(request))
 
 #
