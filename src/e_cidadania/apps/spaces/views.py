@@ -46,9 +46,9 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # e-cidadania data models
-from e_cidadania.apps.spaces.models import Space, Entity, Document
+from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.spaces.forms import SpaceForm, DocForm
+from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm
 from e_cidadania.apps.proposals.models import Proposal
 
 
@@ -271,3 +271,26 @@ class DeleteDocument(DeleteView):
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
+
+#
+# MEETING VIEWS
+#
+
+class ListMettings(ListView):
+
+    """
+    List all the meetings filtered by the current space
+    """
+    paginate_by = 25
+    context_object_name = 'meeting_list'
+
+    def get_queryset(self):
+        place = get_object_or_404(Meeting, url=self.kwargs['space_name'])
+        objects = Meeting.objects.all().filter(space=place.id).order_by\
+            ('meeting_date')
+        return objects
+
+    def get_context_data(self, **kwargs):
+        context = super(ListMeetings, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context

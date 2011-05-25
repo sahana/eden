@@ -21,7 +21,7 @@
 from django.conf.urls.defaults import *
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces, DeleteSpace
 from e_cidadania.apps.spaces.views import ListDocs, DeleteDocument
-
+from e_cidadania.apps.spaces.views import ListMeetings, DeleteMeeting
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -48,6 +48,20 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
     (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/', DeleteDocument.as_view()),
 
     (r'^(?P<space_name>\w+)/docs/', ListDocs.as_view()),
+
+)
+
+# Meeting URLs
+urlpatterns += patterns('e_cidadania.apps.spaces.views',
+
+    (r'^(?P<space_name>\w+)/meeting/add', 'add_doc'),
+
+    (r'^(?P<space_name>\w+)/metting/(?P<id>\d+)/edit/', 'edit_doc'),
+
+    (r'^(?P<space_name>\w+)/meeting/(?P<id>\d+)/delete/',
+     DeleteMeeting.as_view()),
+
+    (r'^(?P<space_name>\w+)/meeting/', ListMeetings.as_view()),
 
 )
 

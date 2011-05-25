@@ -110,3 +110,16 @@ class Meeting(models.Model):
 
     def __unicode__(self):
         return self.title
+
+class MeetingType(models.Model):
+
+    """
+    Meeting type model. This will give enough flexibility to add any type of
+    meeting in any space.
+    """
+    title = models.CharField(_('Name'), max_length=100)
+    meeting = models.ForeignKey(Meeting, verbose_name=_('Belongs to'),
+                                blank=True, null=True)
+
+    def __unicode__(self):
+        return self.title
