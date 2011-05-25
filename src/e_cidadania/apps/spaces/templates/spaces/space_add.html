@@ -56,6 +56,14 @@
 
         <hr />
 
+        <h3>{% trans "Entities participating" %}</h3>
+                  {% comment %}
+            Entity forms
+        {% endcomment %}
+
+
+          {{ entityform.as_p }}
+
         <p><input type="submit" value="{% trans 'Create' %}" /></p>
 
         <p><a href="/">&laquo; {% trans "Go back" %}</a></p>

@@ -20,7 +20,7 @@
 
 from django.forms import ModelForm
 
-from e_cidadania.apps.spaces.models import Space, Document, Meeting
+from e_cidadania.apps.spaces.models import Space, Document, Meeting, Entity
 
 class SpaceForm(ModelForm):
     
@@ -28,6 +28,13 @@ class SpaceForm(ModelForm):
     """
     class Meta:
         model = Space
+
+class EntityForm(ModelForm):
+
+    """
+    """
+    class Meta:
+        model = Entity
         
 class DocForm(ModelForm):
 

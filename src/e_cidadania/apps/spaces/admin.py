@@ -87,7 +87,7 @@ class MeetingAdmin(admin.ModelAdmin):
     Administration model form Meeting data model.
     """
     list_display = ('title', 'space', 'meeting_date')
-    search_fields = ('title')
+    search_fields = ('title',)
 
 # This register line is commented because it collides with
 # admin.autoregister() in the main urls.py file.

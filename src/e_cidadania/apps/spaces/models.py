@@ -98,14 +98,15 @@ class Meeting(models.Model):
 
     """
     Meeting data model. Every space (process) has N meetings. This will
-    keep record of the assistants, metting name, etc.
+    keep record of the assistants, meeting name, etc.
     """
     title = models.CharField(_('Meeting title'), max_length=100)
     space = models.ForeignKey(Space, blank=True, null=True)
     user = models.ManyToManyField(User, verbose_name=_('Users'))
     pub_date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
-                               null=True)
+    meeting_author = models.ForeignKey(User, verbose_name=_('Author'),
+                                     blank=True, null=True,
+                                     related_name='meeting_author')
     meeting_date = models.DateTimeField(verbose_name=_('Meeting Date'))
 
     def __unicode__(self):

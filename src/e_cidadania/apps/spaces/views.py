@@ -48,10 +48,14 @@ from django.views.generic.create_update import delete_object
 # e-cidadania data models
 from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm
+from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
+    EntityForm
 from e_cidadania.apps.proposals.models import Proposal
 
-
+# Some useful methods
+def all(items):
+    import operator
+    return reduce(operator.and_, [bool(item) for item in items])
 
 #
 # SPACE VIEWS
@@ -176,20 +180,29 @@ def create_space(request):
     so we can't use a generic view.
     """
     space = Space()
-    form = SpaceForm(request.POST or None, request.FILES or None, instance=space)
+    entity = Entity()
+
+    sform = SpaceForm(request.POST or None, request.FILES or None,
+                  instance=space)
+    eforms = [EntityForm(request.POST or None, prefix=str(x),
+                        instance=entity) for x in range(0,4)]
 
     if request.POST:
-        form_uncommited = form.save(commit=False)
-        form_uncommited.author = request.user
-        if form.is_valid():
-            form_uncommited.save()            
+        sform_uncommited = sform.save(commit=False)
+        sform_uncommited.author = request.user
+
+        eforms_uncommited = eforms.save(commit=False)
+
+        if sform.is_valid() and all([ef.is_valid() for ef in eforms]):
+            new_space = sform_uncommited.save()
+            eforms_uncommited.space = new_space.id
             # We add the created spaces to the user allowed spaces
-            space = get_object_or_404(Space, name=form_uncommited.name)
+            space = get_object_or_404(Space, name=new_space.name)
             request.user.profile.spaces.add(space)
             return redirect('/spaces/' + space.url)
 
     return render_to_response('spaces/space_add.html',
-                              {'form': form},
+                              {'form': sform, 'entityform1': eforms[0,3]},
                               context_instance=RequestContext(request))
 
 #
@@ -276,7 +289,7 @@ class DeleteDocument(DeleteView):
 # MEETING VIEWS
 #
 
-class ListMettings(ListView):
+class ListMeetings(ListView):
 
     """
     List all the meetings filtered by the current space
@@ -294,3 +307,16 @@ class ListMettings(ListView):
         context = super(ListMeetings, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
+
+class DeleteMeeting(DeleteView):
+
+    """
+    Delete an uploaded document.
+    """
+
+    def get_object(self):
+        return get_object_or_404(Meeting, pk = self.kwargs['id'])
+
+    def get_success_url(self):
+        current_space = self.kwargs['space_name']
+        return '/spaces/{0}'.format(current_space)
