@@ -180,12 +180,11 @@ def create_space(request):
     so we can't use a generic view.
     """
     space = Space()
-    entity = Entity()
-
     space_form = SpaceForm(request.POST or None, request.FILES or None,
                   instance=space)
+    entity = Entity()
     entity_forms = [EntityForm(request.POST or None, prefix=str(x),
-                        instance=entity) for x in range(0,4)]
+                        instance=entity) for x in range(0,3)]
 
     if request.POST:
         space_form_uncommited = space_form.save(commit=False)
@@ -197,10 +196,10 @@ def create_space(request):
 
             for ef in entity_forms:
                 ef_uncommited = ef.save(commit=False)
-                ef_uncommited.space = new_space.id
+                ef_uncommited.space = new_space
                 ef_uncommited.save()
             # We add the created spaces to the user allowed spaces
-            space = get_object_or_404(Space, name=new_space.name)
+            space = get_object_or_404(Space, name=space_form_uncommited.name)
             request.user.profile.spaces.add(space)
             return redirect('/spaces/' + space.url)
 
