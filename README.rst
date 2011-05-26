@@ -1,6 +1,8 @@
 e-cidadania
 ===========
 
+.. warning:: We currently need developers and translators!
+
 What is?
     e-cidadania is an open-source free to use platform for participative democracies. It contains tools to do debates, voting, proposals, meetings, etc.
 
