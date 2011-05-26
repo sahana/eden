@@ -182,27 +182,33 @@ def create_space(request):
     space = Space()
     entity = Entity()
 
-    sform = SpaceForm(request.POST or None, request.FILES or None,
+    space_form = SpaceForm(request.POST or None, request.FILES or None,
                   instance=space)
-    eforms = [EntityForm(request.POST or None, prefix=str(x),
+    entity_forms = [EntityForm(request.POST or None, prefix=str(x),
                         instance=entity) for x in range(0,4)]
 
     if request.POST:
-        sform_uncommited = sform.save(commit=False)
-        sform_uncommited.author = request.user
+        space_form_uncommited = space_form.save(commit=False)
+        space_form_uncommited.author = request.user
 
-        eforms_uncommited = eforms.save(commit=False)
+        if space_form.is_valid() and all([ef.is_valid() for ef in
+                                          entity_forms]):
+            new_space = space_form_uncommited.save()
 
-        if sform.is_valid() and all([ef.is_valid() for ef in eforms]):
-            new_space = sform_uncommited.save()
-            eforms_uncommited.space = new_space.id
+            for ef in entity_forms:
+                ef_uncommited = ef.save(commit=False)
+                ef_uncommited.space = new_space.id
+                ef_uncommited.save()
             # We add the created spaces to the user allowed spaces
             space = get_object_or_404(Space, name=new_space.name)
             request.user.profile.spaces.add(space)
             return redirect('/spaces/' + space.url)
 
     return render_to_response('spaces/space_add.html',
-                              {'form': sform, 'entityform_1': eforms[0]},
+                              {'form': space_form,
+                               'entityform_0': entity_forms[0],
+                               'entityform_1': entity_forms[1],
+                               'entityform_2': entity_forms[2]},
                               context_instance=RequestContext(request))
 
 #

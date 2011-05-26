@@ -70,7 +70,7 @@ class Entity(models.Model):
     website = models.CharField(_('Website'), max_length=100, null=True, blank=True)
     logo = models.ImageField(upload_to='spaces/logos', verbose_name=_('Logo'),
                              blank = True, null = True)
-    space = models.ForeignKey(Space)
+    space = models.ForeignKey(Space, blank=True, null=True)
     
     class Meta:
         ordering = ['name']
