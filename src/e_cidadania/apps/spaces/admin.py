@@ -23,6 +23,13 @@ from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 
+class EntityAdmin(admin.ModelAdmin):
+
+    """
+    """
+    list_display = ('name', 'website', 'space')
+    search_fields = ('name',)
+
 class EntityInline(admin.TabularInline):
 
     """
@@ -95,3 +102,4 @@ class MeetingAdmin(admin.ModelAdmin):
 admin.site.register(Space, SpaceAdmin)
 admin.site.register(Document, DocumentAdmin)
 admin.site.register(Meeting, MeetingAdmin)
+admin.site.register(Entity, EntityAdmin)

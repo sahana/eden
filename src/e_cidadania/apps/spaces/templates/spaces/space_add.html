@@ -57,54 +57,23 @@
         <hr />
 
         <h3>{% trans "Entities participating" %}</h3>
-                  {% comment %}
+
+        {% comment %}
             Entity forms
         {% endcomment %}
 
-        <div class="fieldWrapper">
-          <label for="id_0_name">{% trans "Name" %}:</label>
-          {{ entityform_0.name }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_0_website">{% trans "Website" %}:</label>
-          {{ entityform_0.website }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_0_logo">{% trans "Logotype" %}:</label>
-          {{ entityform_0.logo }}
-        </div>
+        {{ entityformset.management_form }}
 
-        {{ entityform_0.space.as_hidden }}
-
-        <div class="fieldWrapper">
-          <label for="id_1_name">{% trans "Name" %}:</label>
-          {{ entityform_1.name }}
+        {% for entity in entityformset %}
+          {{ form.id }}
+          <div class="fieldWrapper">
+            {{ entity.errors }}
+            {{ entity.label_tag }}: {{ entity.name }}
+            {{ entity.label_tag }}: {{ entity.website }}
+            {{ entity.label_tag }}: {{ entity.logo }}
+            {{ entity.space.as_hidden }}
         </div>
-        <div class="fieldWrapper">
-          <label for="id_1_website">{% trans "Website" %}:</label>
-          {{ entityform_1.website }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_1_logo">{% trans "Logotype" %}:</label>
-          {{ entityform_1.logo }}
-        </div>
-
-        {{ entityform_1.space.as_hidden }}
-
-        <div class="fieldWrapper">
-          <label for="id_2_name">{% trans "Name" %}:</label>
-          {{ entityform_2.name }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_2_website">{% trans "Website" %}:</label>
-          {{ entityform_2.website }}
-        </div>
-        <div class="fieldWrapper">
-          <label for="id_2_logo">{% trans "Logotype" %}:</label>
-          {{ entityform_2.logo }}
-        </div>
-
-        {{ entityform_2.space.as_hidden }}
+        {% endfor %}
           
         <p><input type="submit" value="{% trans 'Create' %}" /></p>
 

@@ -19,6 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.forms import ModelForm
+from django.forms.models import modelformset_factory
 
 from e_cidadania.apps.spaces.models import Space, Document, Meeting, Entity
 
@@ -28,6 +29,9 @@ class SpaceForm(ModelForm):
     """
     class Meta:
         model = Space
+
+
+EntityFormSet = modelformset_factory(Entity, extra=3)
 
 class EntityForm(ModelForm):
 

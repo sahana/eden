@@ -49,13 +49,8 @@ from django.views.generic.create_update import delete_object
 from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
-    EntityForm
+    EntityForm, EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
-
-# Some useful methods
-def all(items):
-    import operator
-    return reduce(operator.and_, [bool(item) for item in items])
 
 #
 # SPACE VIEWS
@@ -179,35 +174,30 @@ def create_space(request):
     Create new spaces. In this view the author field is automatically filled
     so we can't use a generic view.
     """
-    space = Space()
-    space_form = SpaceForm(request.POST or None, request.FILES or None,
-                  instance=space)
-    entity = Entity()
-    entity_forms = [EntityForm(request.POST or None, prefix=str(x),
-                        instance=entity) for x in range(0,3)]
+    space_form = SpaceForm(request.POST or None, request.FILES or None)
+    entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
+                                 queryset=Entity.objects.none())
 
     if request.POST:
         space_form_uncommited = space_form.save(commit=False)
         space_form_uncommited.author = request.user
 
-        if space_form.is_valid() and all([ef.is_valid() for ef in
-                                          entity_forms]):
+        if space_form.is_valid() and entity_forms.is_valid():
             new_space = space_form_uncommited.save()
-
-            for ef in entity_forms:
-                ef_uncommited = ef.save(commit=False)
-                ef_uncommited.space = new_space
-                ef_uncommited.save()
-            # We add the created spaces to the user allowed spaces
             space = get_object_or_404(Space, name=space_form_uncommited.name)
+
+            ef_uncommited = entity_forms.save(commit=False)
+            for ef in ef_uncommited:
+                ef.space = space
+                ef.save()
+            # We add the created spaces to the user allowed spaces
+
             request.user.profile.spaces.add(space)
             return redirect('/spaces/' + space.url)
 
     return render_to_response('spaces/space_add.html',
                               {'form': space_form,
-                               'entityform_0': entity_forms[0],
-                               'entityform_1': entity_forms[1],
-                               'entityform_2': entity_forms[2]},
+                               'entityformset': entity_forms},
                               context_instance=RequestContext(request))
 
 #
