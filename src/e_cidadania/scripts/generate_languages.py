@@ -11,7 +11,7 @@ import subprocess
 __author__ = "Oscar Carballal"
 __copyright__ = "Copyright 2011, Cidadania Sociedade Cooperativa Galega"
 __credits__ = ["Oscar Carballal"]
-__license__ = "GPL3"
+__license__ = "GPLv3"
 __version__ = "0.4"
 __maintainer__ = "Oscar Carballal"
 __email__ = "oscar.carballal@cidadania.coop"
@@ -57,6 +57,8 @@ class Language():
     def _iterator(self, command, type):
 
         """
+        This method iterates over the applications and languages making
+        what the command says.
         """
         for module in self.apps:
             os.chdir(self.cwd + '/apps/' + module)
@@ -65,11 +67,20 @@ class Language():
                 a = subprocess.Popen(command + '%s' % (lang[0]), shell=True)
                 subprocess.Popen.wait(a)
 
+        print '\n>> %s site root language catalogs' % (type)
+        os.chdir(self.cwd)
+        for lang in self.languages:
+            a = subprocess.Popen(command + '%s' % (lang[0]), shell=True)
+            subprocess.Popen.wait(a)
+
+            
     def generate_catalog(self):
         
         """
+        Generate the language catalogs for the application and site root
         """
         self._iterator('django-admin.py makemessages -l ', 'Generating')
+
 
     def compile_catalog(self):
 
@@ -81,6 +92,12 @@ class Language():
             a = subprocess.Popen('django-admin.py compilemessages ',
                                  shell=True)
             subprocess.Popen.wait(a)
+
+        print '\n>> %s site root language catalogs' % (type)
+        os.chdir(self.cwd)
+        a = subprocess.Popen('django-admin.py compilemessages ', shell=True)
+        subprocess.Popen.wait(a)
+
 
     def clean_catalogs(self):
 
