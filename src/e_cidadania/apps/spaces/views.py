@@ -293,7 +293,7 @@ class ListMeetings(ListView):
     context_object_name = 'meeting_list'
 
     def get_queryset(self):
-        place = get_object_or_404(Meeting, url=self.kwargs['space_name'])
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
         objects = Meeting.objects.all().filter(space=place.id).order_by\
             ('meeting_date')
         return objects
@@ -303,6 +303,51 @@ class ListMeetings(ListView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
 
+
+class ViewMeeting(DetailView):
+    
+    """
+    View the meeting description.
+    """
+    context_object_name = 'meeting'
+    template_name = 'spaces/meeting_detail.html'
+
+    def get_object(self):
+        space_name = self.kwargs['space_name']
+
+        if self.request.user.is_anonymous():
+            self.template_name = 'not_allowed.html'
+            return get_object_or_404(Space, url = space_name)
+
+        return get_object_or_404(Meeting, pk = self.kwargs['id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewMeeting, self).get_context_data(**kwargs)
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+        
+def add_meeting(request, space_name):
+    
+    """
+    Create a new meeting. Space and author fields are autmatically filled with
+    the request data.
+    """
+    form = MeetingForm(request.POST or None)
+    place = get_object_or_404(Space, url=space_name)
+    
+    if request.POST:
+        form_uncommited = form.save(commit=False)
+        form_uncommited.meeting_author = request.user
+        form_uncommited.space = place
+        if form.is_valid():
+            form_uncommited.save()
+            return redirect('/spaces/' + space_name)
+    
+    return render_to_response('spaces/meeting_add.html',
+                              {'form': form, 'get_place': place},
+                              context_instance=RequestContext(request))
+    
 class DeleteMeeting(DeleteView):
 
     """

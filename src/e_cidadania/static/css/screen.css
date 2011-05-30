@@ -101,7 +101,7 @@ input[type="text"], input[type="password"] {
     background: url('../assets/inputbg.png') repeat-x;
     margin: 10px 0px 10px 0px;
     padding: 2px;
-    width: 90%;
+    width: 350px;
     height: 25px;
 
     /* Fancy round borders for Webkit, Gecko and standard
@@ -558,7 +558,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 /* LOGIN */
 #loginblock {
-    width: 300px;
+    width: 380px;
     margin: 50px auto 50px auto;
     background: #f9f9f9;
     border: 1px solid #ddd;

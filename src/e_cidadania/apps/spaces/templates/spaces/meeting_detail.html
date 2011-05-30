@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "View meeting" %} {{ proposal.id }} {% endblock %}
+{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div class="grid_11">
+      <p>{% trans "Title" %}</p>
+      <p>{{ meeting.title }}</p>
+      <p>{% trans "Description" %}</p>
+      <p>{{ meeting.description }}</p>
+      <p>{% trans "Date" %}</p>
+      <p>{{ meeting.date }}</p>
+      <p>{% trans "Location" %}</p>
+      <p>{{ meeting.location }}</p>
+    </div>
+  {% endblock%}
+  
+  {% block rightcol %}
+    <div class="grid_5">
+    </div>
+  {% endblock%}
+
+{% endblock %}

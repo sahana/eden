@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Create new meeting" %}{% endblock %}
+{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div class="grid_11">
+      <form enctype="" action="" method="post">{% csrf_token %}
+        
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.title.errors }}
+          <label for="id_title">{% trans "Title" %}:</label>
+          <p>{{ form.title }}</p>
+          <p id="form_help_text">{{ form.title.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.description.errors }}
+          <label for="id_title">{% trans "Description" %}:</label>
+          <p>{{ form.description }}</p>
+          <p id="form_help_text">{{ form.description.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.location.errors }}
+          <label for="id_title">{% trans "Location" %}:</label>
+          <p>{{ form.location }}</p>
+          <p id="form_help_text">{{ form.location.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.meeting_type.errors }}
+          <label for="id_name">{% trans "Meeting type" %}:</label>
+          <p>{{ form.meeting_type }}</p>
+          <p id="form_help_text">{{ form.meeting_type.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.meeting_date.errors }}
+          <label for="id_name">{% trans "Meeting date" %}:</label>
+          <p>{{ form.meeting_date }}</p>
+          <p id="form_help_text">{{ form.meeting_date.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.user.errors }}
+          <label for="id_name">{% trans "Attendants" %}:</label>
+          <p>{{ form.user }}</p>
+          <p id="form_help_text">{{ form.user.help_text }}</p>
+        </div>
+
+        {{ form.space.as_hidden }}
+        {{ form.meeting_author.as_hidden }}
+
+        <p>
+          <input type="submit" value="{% trans 'Upload' %}" />
+          <div class="pagebutton">
+            <a href="../../">&laquo; {% trans "Go back" %}</a>
+          </div>
+        </p>
+      </form>
+    </div>
+
+  {% endblock %}
+
+
+  {% block rightcol %}
+    <div class="grid_5">
+      <div id="widget">
+        <h2>{% trans "How do meetings work?"%}</h2>
+        <ul class="instructions">
+          <li><strong>{% trans "Title" %}:</strong> {% trans "A descriptive title of the meeting. Be concise."%}</li>
+          <li><strong>{% trans "Meeting type" %}:</strong> {% trans "Allowed size is 10MB"%}</li>
+        </ul>
+      </div>
+    </div>
+  {% endblock %}
+
+{% endblock %}
+

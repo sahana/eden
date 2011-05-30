@@ -68,9 +68,9 @@
           {{ form.id }}
           <div class="fieldWrapper">
             {{ entity.errors }}
-            {{ entity.label_tag }}: {{ entity.name }}
-            {{ entity.label_tag }}: {{ entity.website }}
-            {{ entity.label_tag }}: {{ entity.logo }}
+            {% trans "Name" %}: {{ entity.name }}<br />
+            {% trans "Website" %}: {{ entity.website }}<br />
+            {% trans "Logotype" %}: {{ entity.logo }}
             {{ entity.space.as_hidden }}
         </div>
         {% endfor %}

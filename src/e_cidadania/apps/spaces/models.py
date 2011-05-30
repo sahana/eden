@@ -94,6 +94,17 @@ class Document(models.Model):
     class Meta:
         ordering = ['pub_date']
 
+class MeetingType(models.Model):
+
+    """
+    Meeting type model. This will give enough flexibility to add any type of
+    meeting in any space.
+    """
+    title = models.CharField(_('Name'), max_length=100)
+
+    def __unicode__(self):
+        return self.title
+
 class Meeting(models.Model):
 
     """
@@ -107,20 +118,11 @@ class Meeting(models.Model):
     meeting_author = models.ForeignKey(User, verbose_name=_('Author'),
                                      blank=True, null=True,
                                      related_name='meeting_author')
-    meeting_date = models.DateTimeField(verbose_name=_('Meeting Date'))
+    meeting_date = models.DateField(verbose_name=_('Meeting Date'))
+    meeting_type = models.ForeignKey(MeetingType, blank=True, null=True)
+    description = models.TextField(_('Description'), blank=True, null=True)
+    location = models.TextField(_('Location'), blank=True, null=True)
 
     def __unicode__(self):
         return self.title
 
-class MeetingType(models.Model):
-
-    """
-    Meeting type model. This will give enough flexibility to add any type of
-    meeting in any space.
-    """
-    title = models.CharField(_('Name'), max_length=100)
-    meeting = models.ForeignKey(Meeting, verbose_name=_('Belongs to'),
-                                blank=True, null=True)
-
-    def __unicode__(self):
-        return self.title

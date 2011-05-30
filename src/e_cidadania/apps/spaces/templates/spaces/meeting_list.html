@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Document list" %}{% endblock %}
+{% block title %}{% trans "Meeting list" %}{% endblock %}
 {% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
 {% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
@@ -13,7 +13,7 @@
         <p><a href="{{ meeting.id }}">{{ meeting.title }}</a></p>
         <p>{% trans "Published" %} {{ meeting.meeting_date }}</p>
       {% empty %}
-        <p>{% trans "There are no documents in this space." %}</p>
+        <p>{% trans "There are no meetings in this space." %}</p>
       {% endfor %}
       <div class="pagebutton">
         <a href="../">{% trans "Go back" %}</a>
