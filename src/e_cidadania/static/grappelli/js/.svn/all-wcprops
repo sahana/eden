@@ -1,0 +1,131 @@
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/1422/trunk/grappelli/static/grappelli/js
+END
+compress.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/compress.py
+END
+SelectFilter2.js
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/SelectFilter2.js
+END
+getElementsBySelector.js
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/getElementsBySelector.js
+END
+dateparse.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/dateparse.js
+END
+calendar.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/calendar.js
+END
+urlify.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/urlify.js
+END
+jquery.js
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/jquery.js
+END
+jquery.init.js
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/jquery.init.js
+END
+actions.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/actions.min.js
+END
+prepopulate.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/prepopulate.min.js
+END
+inlines.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/inlines.min.js
+END
+collapse.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/collapse.min.js
+END
+SelectBox.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/SelectBox.js
+END
+core.js
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/core.js
+END
+timeparse.js
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/timeparse.js
+END
+json.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/json.min.js
+END
+actions.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/actions.js
+END
+jquery.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/jquery.min.js
+END
+inlines.js
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/inlines.js
+END
+collapse.js
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/collapse.js
+END
+LICENSE-JQUERY.txt
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/1385/trunk/grappelli/static/grappelli/js/LICENSE-JQUERY.txt
+END

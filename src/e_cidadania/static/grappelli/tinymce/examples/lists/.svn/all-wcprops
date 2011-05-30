@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/1437/trunk/grappelli/static/grappelli/tinymce/examples/lists
+END
+template_list.js
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/1437/trunk/grappelli/static/grappelli/tinymce/examples/lists/template_list.js
+END
+link_list.js
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/1437/trunk/grappelli/static/grappelli/tinymce/examples/lists/link_list.js
+END
+media_list.js
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/1437/trunk/grappelli/static/grappelli/tinymce/examples/lists/media_list.js
+END
+image_list.js
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/1437/trunk/grappelli/static/grappelli/tinymce/examples/lists/image_list.js
+END

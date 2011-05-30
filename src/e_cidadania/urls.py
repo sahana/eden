@@ -21,6 +21,7 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic.simple import direct_to_template
 
 admin.autodiscover()
@@ -29,6 +30,8 @@ urlpatterns = patterns('',
 
     # Django administration
     (r'^admin/', include(admin.site.urls)),
+    
+    (r'^grappelli/', include('grappelli.urls')),
 
     # Index
     (r'^$', 'e_cidadania.views.index_view'),
@@ -55,10 +58,6 @@ urlpatterns = patterns('',
     (r'^i18n/', include('django.conf.urls.i18n')),
 
     # Static content #### FOR DEVELOPMENT!! ####
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'static'}),
-
-    # Static content #### FOR DEVELOPMENT!! ####
     (r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'uploads'}),
 
@@ -72,18 +71,5 @@ urlpatterns = patterns('',
     (r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
 )
 
-# Activate rosetta translation engine
-#if 'e_cidadania.apps.rosetta' in settings.INSTALLED_APPS:
-#    urlpatterns += patterns('',
-#        url(r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
-#    )
-
-# If DEBUG=True in settings.py add static content served by django.
-#if settings.DEBUG:
-#    urlpatterns += ('',
-#
-#    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-#        {'document_root': 'static'}),
-#
-#    )
-
+# Serve static files
+urlpatterns += staticfiles_urlpatterns()

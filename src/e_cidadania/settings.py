@@ -57,15 +57,19 @@ SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
 MEDIA_ROOT = cwd + '/uploads/'
-MEDIA_URL = 'uploads'
-STATIC_ROOT = cwd + '/static/'
-STATIC_URL = 'static'
-ADMIN_MEDIA_PREFIX = '/media/'
+MEDIA_URL = '/uploads'
+STATIC_ROOT = cwd + '/static_old/'
+STATIC_URL = '/static'
+ADMIN_MEDIA_PREFIX = STATIC_URL + '/grappelli/'
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+)
+
+STATICFILES_DIRS = (
+    cwd + '/static/',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -101,7 +105,7 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 ROOT_URLCONF = 'e_cidadania.urls'
 
 TEMPLATE_DIRS = (
-    cwd + '/templates'
+    (cwd + '/templates'),
 )
 
 
@@ -114,8 +118,10 @@ DJANGO_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.staticfiles',
     #'django.contrib.sites',
     'django.contrib.messages', 
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.comments',
 )
