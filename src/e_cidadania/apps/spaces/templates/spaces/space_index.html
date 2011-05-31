@@ -135,7 +135,11 @@
     {% if e.logo %}
       <a href="{{ e.website }}"><img src="{{ MEDIA_URL }}/{{ e.logo }}" alt="Logo"/></a>
     {% else %}
-      <a href="{{ e.website }}">{{ e.name }}</a> -
+      {% if e.website %}
+        <a href="{{ e.website }}">{{ e.name }}</a> -
+      {% else %}
+        {{ e.name }} - 
+      {% endif %}
     {% endif %}
    
   {% endfor %}
