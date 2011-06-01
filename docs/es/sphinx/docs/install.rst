@@ -105,13 +105,14 @@ Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
         }
     }
 
-**Debug mode**
+**Modo Debug**
 
-Debug mode comes activated by default, and in order to star using you e-cidadania
+El modo debug viene activado por defectomode comes activated by default, and in order to star using you e-cidadania
 installation in production you'll need to deactivate it in `settings.py`::
 
     DEBUG = False
-    
+
+A    
 **Referencia de settings.py**
 
 **DEBUG** (True, False)
