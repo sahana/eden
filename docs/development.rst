@@ -267,7 +267,7 @@ lista de los idiomas disponibles para traducir.
 
 .. _URL de traducción: http://ecidadania.org/rosetta 
 
-.. image:: ../images/rosetta1.png
+.. image:: images/rosetta1.png
     :align: center
 
 Basta con hacer clic en el componente que se desee traducir y comenzar la
@@ -286,7 +286,7 @@ Es un estándar. Gracias al *middleware* de traducción que trae django de serie
 nuestro trabajao con gettext va a ser mínimo, tan sólo nos limitaremos a editar
 los ficheros .po del códgo fuente.
 
-.. image:: ../images/gettext1.png
+.. image:: images/gettext1.png
     :align: center
     
 En vez de realizar una traducción global, hemos optado por diseñar una traducción
