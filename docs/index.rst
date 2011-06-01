@@ -23,6 +23,8 @@ externas.
 
 .. _django: http://www.djangoproject.com
 
+** Contents **
+
 Documentación
 -------------
 .. toctree::
