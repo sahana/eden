@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'e-cidadania'
-copyright = u'2011, Cidadania Sociedad Cooperativa'
+copyright = u'(cc) 2011, Cidadania S. Coop. Galega'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -104,7 +104,7 @@ html_theme = 'default'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = 'e-cidadania v0.1 alpha'
+html_title = 'e-cidadania v0.1'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -180,7 +180,7 @@ latex_font_size = '10pt'
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'e-cidadania.tex', u'e-cidadania Documentation',
-   u'Cidadania S. Coop.', 'manual'),
+   u'Cidadania S. Coop. Galega \newline Oscar Carballal Prego', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,5 +213,5 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'e-cidadania', u'e-cidadania Documentation',
-     [u'Oscar Carballal Prego'], 1)
+     [u'Cidadania S. Coop. Galega'], 1)
 ]

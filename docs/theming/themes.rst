@@ -1,19 +1,16 @@
-Sistema de plantillas de e-cidadania
-====================================
+Apariencias de e-cidadania
+==========================
 
-Otras plantillas
-----------------
+Otras apariencias
+-----------------
 
-Esta es una lista de otras plantillas para e-cidadania que ha sido desarrolladas
-por la comunidad.
-
+Este es un pequeño índice de apariencias de e-cidadania.
 
 Crea tu propia apariencia para e-cidadania
 ------------------------------------------
 
 Crear una nueva apariencia para e-cidadania puede llegar a ser algo difícil,
 pero no por ello imposible. Aquí te daremos las instrucciones precisas.
-
 
 Referencia
 ----------

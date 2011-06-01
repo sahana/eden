@@ -24,14 +24,27 @@ externas.
 .. _django: http://www.djangoproject.com
 
 
-Documentación
--------------
+**Documentación**
+
 .. toctree::
 
-    docs/install
-    docs/configure
-    docs/adminmanual
+    docs/installation
+    docs/configuration
     docs/usermanual
-    development
-    theming
+    docs/adminmanual
+    
+**Desarrollo**
 
+.. toctree::
+
+    dev/styleguide
+    dev/useraccounts
+    dev/modules
+    dev/documenting
+    dev/i18n
+    
+**Apariencias / Temas**
+
+.. toctree::
+
+    theming/themes
