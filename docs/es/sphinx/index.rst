@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Bienvenido a la documentación de e-cidadania!
-=============================================
+¡Bienvenido/a a la documentación de e-cidadania!
+================================================
 
 **e-cidadania** es una plataforma web destinada a la participación ciudadana.
 Para ello cuenta con una serie de herramientas clave como son el sistema de
