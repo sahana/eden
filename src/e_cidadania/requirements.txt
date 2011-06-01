@@ -1,6 +1,6 @@
-pil (python imaging library)
+python-pil
 django-tagging
 django-wysiwyg
 django-grappelli
 feedparser
-python-dateutil
+python-dateutil==1.5

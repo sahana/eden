@@ -108,6 +108,9 @@ TEMPLATE_DIRS = (
     (cwd + '/templates'),
 )
 
+GRAPPELLI_ADMIN_TITLE = 'e-cidadania 0.1a / Administracion'
+GRAPPELLI_ADMIN_URL = '/admin'
+GRAPPELLI_INDEX_DASHBOARD = 'e_cidadania.dashboard.CustomIndexDashboard'
 
 # We separate the applications so we can manage them through scripts
 # Please do not touch this unless you know very well what you're doing
@@ -120,7 +123,8 @@ DJANGO_APPS = (
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     #'django.contrib.sites',
-    'django.contrib.messages', 
+    'django.contrib.messages',
+    'grappelli.dashboard',
     'grappelli',
     'django.contrib.admin',
     'django.contrib.comments',

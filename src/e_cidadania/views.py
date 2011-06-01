@@ -37,10 +37,7 @@ def index_view(request):
     (it's loaded only once).
     """
     pub = Post.objects.filter(post_pub_index=True).order_by('-post_pubdate')
-    space_list = Space.objects.all()
-
-    proposals = Propiosal.objects.all()
-    
+    space_list = Space.objects.all()    
     
     extra_context = {
         'publication': pub,
