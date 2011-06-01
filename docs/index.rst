@@ -23,43 +23,15 @@ externas.
 
 .. _django: http://www.djangoproject.com
 
-** Contents **
 
 Documentación
 -------------
 .. toctree::
-    :maxdepth: 20
 
     docs/install
     docs/configure
     docs/adminmanual
     docs/usermanual
-
-Desarrollo
-----------
-.. toctree::
-    :maxdepth: 10
-
-    reference/styleguide
-    reference/accounting
-    reference/proposals
-    reference/debates
-    reference/ldap
-    reference/docs_i18n
-
-Plantillas
-----------
-.. toctree::
-   :maxdepth: 10
-
-   theming/reference
-   theming/createyourown
-   theming/othertemplates
-
-Indices y tablas
-----------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    development
+    theming
 
