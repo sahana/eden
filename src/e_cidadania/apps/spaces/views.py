@@ -91,17 +91,21 @@ class ViewSpaceIndex(DetailView):
     
     def get_object(self):
         space_name = self.kwargs['space_name']
+        space_object = get_object_or_404(Space, url = space_name)
+
+        if space_object.public == True or self.request.user.is_staff:
+            return space_object
 
         if self.request.user.is_anonymous():
             self.template_name = 'not_allowed.html'
-            return get_object_or_404(Space, url = space_name)
+            return space_object
 
         for i in self.request.user.profile.spaces.all():
-            if i.url == space_name or self.request.user.is_staff:
-                return get_object_or_404(Space, url = space_name)
+            if i.url == space_name:
+                return space_object
 
         self.template_name = 'not_allowed.html'
-        return get_object_or_404(Space, url = space_name)
+        return space_object
 
     # Get extra context data
     def get_context_data(self, **kwargs):
