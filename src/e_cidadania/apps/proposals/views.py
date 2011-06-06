@@ -83,7 +83,7 @@ def add_proposal(request, space_name):
     proposal = Proposal()
     form = ProposalForm(request.POST or None, request.FILES or None, instance=proposal)
 
-    if request.POST:
+    if request.method == 'POST':
         form_uncommited = form.save(commit=False)
         form_uncommited.space = prop_space
         form_uncommited.support_votes = 0

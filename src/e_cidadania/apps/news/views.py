@@ -45,7 +45,7 @@ def add_post(request, space_name):
     current_space = get_object_or_404(Space, url=space_name)
     form = NewsForm(request.POST or None)
 
-    if request.POST:
+    if request.method == 'POST':
         form_uncommited = form.save(commit=False)
         form_uncommited.post_author = request.user
 

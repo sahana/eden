@@ -31,7 +31,9 @@ class Space(models.Model):
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
     url = models.CharField(_('URL'), max_length=100, unique=True,
-                            help_text=_('All lowercase. Obligatory. Take in mind that this will be the accesible URL'))
+                            help_text=_('All lowercase. Obligatory. \
+                                        Take in mind that this will be the\
+                                        accesible URL'))
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True, verbose_name=_('Author'))
@@ -44,6 +46,7 @@ class Space(models.Model):
                                help_text=_('75px height'))
     authorized_groups = models.ManyToManyField(Group,
                                             verbose_name=_('Authorized groups'))
+    public = models.BooleanField(_('Public space'))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules

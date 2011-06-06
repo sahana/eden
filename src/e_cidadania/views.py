@@ -64,7 +64,7 @@ def add_news(request):
     """
     form = NewsForm(request.POST or None)
 
-    if request.POST:
+    if request.method == 'POST':
         form_uncommited = form.save(commit=False)
         form_uncommited.post_author = request.user
         form_uncommited.post_pub_index = True
