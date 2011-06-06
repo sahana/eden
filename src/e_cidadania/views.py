@@ -37,11 +37,13 @@ def index_view(request):
     (it's loaded only once).
     """
     pub = Post.objects.filter(post_pub_index=True).order_by('-post_pubdate')
-    space_list = Space.objects.all()    
+    space_list = Space.objects.all()
+    recent_spaces = Space.objects.all().order_by('-date')[:5]
     
     extra_context = {
         'publication': pub,
         'spaces': space_list,
+        'recent_spaces': recent_spaces,
     }
 
     return render_to_response('site_index.html',

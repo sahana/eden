@@ -72,7 +72,12 @@
     </div>
 
     <div id="widget">
-      <h2>{% trans "Recently updated spaces" %}</h2>
+      <h2>{% trans "Recently added spaces" %}</h2>
+      {% for recent in recent_spaces %}
+        <a href="/spaces/{{ recent.url }}">{{ recent.name }}</a><br/>
+      {% empty %}
+        {% trans "No spaces have been added recently." %}
+      {% endfor %}
     </div>
 
     <div id="widget">
