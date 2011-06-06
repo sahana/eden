@@ -25,9 +25,7 @@ e-cidadania installation is quite easy, just follow this steps:
 
  * Download the tarball or clone the git repository.
  * Run::
- 
- # pip install -r src/e_cidadania/requirements.txt
- 
- * Configure your web server to serve the static files. **Currently this isn't needed, depending on your server e-cidadania will serve the static files on it's own.**
- 
+   # pip install -r src/e_cidadania/requirements.txt
+ * Configure your web server to serve the static files. **Currently this isn't needed,
+   depending on your server e-cidadania will serve the static files on it's own.**
  * Run your web server and *voilá*.
