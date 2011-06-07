@@ -1,15 +1,16 @@
 Manual de usuario
 =================
 
-Etiqueta
---------
-
 Cómo registrarse
 ----------------
 
-El registro de usuarios se realiza de forma presencial en los lugares donde se
-anote para los procesos participativos. De momento el registro automático de
-usuarios no está permitido por motivos de seguridad.
+El sistema de registro de usuarios dependerá de lo que el administrador quiera.
+Por defecto, e-cidadania permite el registro de usuarios para poder realizar
+algunas tareas básicas, y visitar los espacios públicos, pero sin poder participar.
+
+Para registrarte debes hacer clic en "Entrar" y el la parte inferior del
+formulario de entrada te aparecerá la opción de registro. Basta con tu nombre,
+correo electrónico y clave.
 
 Cómo enviar una propuesta
 -------------------------
@@ -18,8 +19,27 @@ Enviar una propuesta es de lo más sencillo. Basta con acceder al espacio de
 participación correspondiente y hacer clic en "Añadir una propuesta" en la
 columna de la derecha.
 
-Cómo participar en un debates
------------------------------
+Aparecerá un formulario sencillo que tiene varios campos:
+
+Título
+    El título de la propuesta. Debe ser una síntesis concisa de la propuesta.
+    
+Descripción
+    Una descripción más extensa de la propuesta. Se pueden vincular elementos
+    externos como páginas web, imágenes, vídeos, etc.
+
+Latitud/Longitud
+    Ahora mismo e-cidadania cuenta con un sistema básico de geoposicionamiento.
+    Si quieres situar tu propuesta en un mapa tendrás que poner las coordenadas.
+
+Etiquetas
+    Las etiquetas identifican de forma sencilla tu propuesta, por ejemplo::
+
+        Titulo: La acera de Cobián Roffignac está rota
+        Etiquetas: acera, cobian roffignac, pontevedra, roto
+
+Cómo participar en un debate
+----------------------------
 
 El sistema de debates es nuevo, así que procura prestar atención para no
 perderte, esto no es un foro de internet.
