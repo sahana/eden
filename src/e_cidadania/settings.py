@@ -58,7 +58,7 @@ USE_I18N = True
 USE_L10N = True
 MEDIA_ROOT = cwd + '/uploads/'
 MEDIA_URL = '/uploads'
-STATIC_ROOT = cwd + '/static_old/'
+STATIC_ROOT = cwd + '/static/'
 STATIC_URL = '/static'
 ADMIN_MEDIA_PREFIX = STATIC_URL + '/grappelli/'
 
@@ -69,7 +69,7 @@ STATICFILES_FINDERS = (
 )
 
 STATICFILES_DIRS = (
-    cwd + '/static/',
+    cwd + '/static_files/',
 )
 
 # Make this unique, and don't share it with anybody.
