@@ -34,7 +34,16 @@ class SpaceForm(ModelForm):
 # Create a formset for entities. This formset will be displayed with
 # the SpaceForm
 EntityFormSet = modelformset_factory(Entity, extra=3)
-        
+
+class EntityForm(ModelForm):
+
+    """
+    Entity form for django admin.
+    """
+    class Meta:
+        model = Entity
+
+
 class DocForm(ModelForm):
 
     """

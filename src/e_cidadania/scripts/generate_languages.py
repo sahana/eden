@@ -25,10 +25,12 @@ raw_input('\nPress any key to continue or Ctrl-C to exit...')
 class Language():
 
     """
+    Language class.
     """
     def __init__(self):
         
         """
+        Store all the applications and languages installed in the platfom
         """
         # Get current work directory and add it to sys.path so we can import
         # the project settings.
@@ -36,8 +38,12 @@ class Language():
         sys.path.append(self.cwd)
 
         # Get the languages configured in settings.py and the installed
-        # e-cidadania modules.
-        import settings
+        # e-cidadania modules. If we can't get the settings module, abort execution.
+        try:
+            import settings
+        except:
+            sys.exit("\nCould not import the settings module. Aborting execution.\n\
+            Probable cause: the script is not being executed from poject root.\n")
 
         self.applications = settings.ECIDADANIA_MODULES
         self.languages = settings.LANGUAGES
@@ -70,7 +76,7 @@ class Language():
         print '\n>> %s site root language catalogs' % (type)
         os.chdir(self.cwd)
         for lang in self.languages:
-            a = subprocess.Popen(command + '%s' % (lang[0]), shell=True)
+            a = subprocess.Popen("django-admin.py makemessages -i 'apps/*' -l %s" % (lang[0]), shell=True)
             subprocess.Popen.wait(a)
 
             
@@ -102,11 +108,25 @@ class Language():
     def clean_catalogs(self):
 
         """
+        Removes the language installed catalogs in the platform, leaving the
+        locale directories clean for new catalogs.
         """
         print '\n>> WARNING: This command will remove ALL the language \
 catalogs, having to rebuild and translate them all.'
         raw_input('\n Continue? (Ctrl-C to quit)')
-        self._iterator('rm -rf locale/', 'Cleaning')
+        for module in self.apps:
+            os.chdir(self.cwd + '/apps/' + module)
+            print '\n>> %s language catalogs for %s' % (type, module)
+            for lang in self.languages:
+                a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
+                subprocess.Popen.wait(a)
+
+        print '\n>> Cleaning site root language catalogs' % (type)
+        os.chdir(self.cwd)
+        for lang in self.languages:
+            a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
+            subprocess.Popen.wait(a)
+        self._iterator('rm -rf locale/*', 'Cleaning')
 
 lang = Language()
 

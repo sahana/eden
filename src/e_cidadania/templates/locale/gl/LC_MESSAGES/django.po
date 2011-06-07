@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 17:14+0200\n"
+"POT-Creation-Date: 2011-06-07 13:46+0200\n"
 "PO-Revision-Date: 2011-03-18 18:25\n"
 "Last-Translator: Cidadania S. Coop. <cidadania@cidadania.coop>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,3229 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Translated-Using: django-rosetta 0.5.6\n"
 
-#: 404.html:60
+#: dashboard.py:51 apps/spaces/models.py:129
+msgid "Users"
+msgstr ""
+
+#: dashboard.py:60
+msgid "Applications"
+msgstr ""
+
+#: dashboard.py:69
+msgid "Media Management"
+msgstr ""
+
+#: dashboard.py:73
+msgid "FileBrowser"
+msgstr ""
+
+#: dashboard.py:82
+msgid "Support"
+msgstr ""
+
+#: dashboard.py:86
+#, fuzzy
+msgid "e-cidadania Documentation"
+msgstr "Desenvolvemento de e-cidadanía"
+
+#: dashboard.py:91
+#, fuzzy
+msgid "e-cidadania source code"
+msgstr "Desenvolvemento de e-cidadanía"
+
+#: dashboard.py:99
+msgid "Thirdparty Support"
+msgstr ""
+
+#: dashboard.py:103
+msgid "Django Documentation"
+msgstr ""
+
+#: dashboard.py:108
+msgid "Grappelli Documentation"
+msgstr ""
+
+#: dashboard.py:113
+msgid "python-dateutil Documentation"
+msgstr ""
+
+#: dashboard.py:122
+msgid "Latest News"
+msgstr ""
+
+#: dashboard.py:130
+msgid "Recent Actions"
+msgstr ""
+
+#: apps/accounts/models.py:33
+msgid "Male"
+msgstr ""
+
+#: apps/accounts/models.py:34
+msgid "Female"
+msgstr ""
+
+#: apps/accounts/models.py:42
+msgid "Interes"
+msgstr ""
+
+#: apps/accounts/models.py:54 apps/spaces/models.py:32
+#: apps/spaces/models.py:74 apps/spaces/models.py:112
+#: apps/spaces/templates/spaces/space_add.html:72
+msgid "Name"
+msgstr ""
+
+#: apps/accounts/models.py:55
+msgid "Surname"
+msgstr ""
+
+#: apps/accounts/models.py:56
+msgid "Gender"
+msgstr ""
+
+#: apps/accounts/models.py:59
+msgid "Birth date"
+msgstr ""
+
+#: apps/accounts/models.py:63
+msgid "Province"
+msgstr ""
+
+#: apps/accounts/models.py:64
+msgid "Region"
+msgstr ""
+
+#: apps/accounts/models.py:65
+msgid "Neighborhood"
+msgstr ""
+
+#: apps/accounts/models.py:68
+msgid "Address"
+msgstr ""
+
+#: apps/accounts/models.py:69
+msgid "Number"
+msgstr ""
+
+#: apps/accounts/models.py:71
+msgid "Floor"
+msgstr ""
+
+#: apps/accounts/models.py:72
+msgid "Letter"
+msgstr ""
+
+#: apps/accounts/models.py:75
+msgid "Phone 1"
+msgstr ""
+
+#: apps/accounts/models.py:76 apps/accounts/models.py:78
+msgid "9 digits maximum"
+msgstr ""
+
+#: apps/accounts/models.py:77
+msgid "Phone 2"
+msgstr ""
+
+#: apps/accounts/models.py:80
+msgid "Identification document"
+msgstr ""
+
+#: apps/accounts/models.py:83 apps/spaces/models.py:75
+#: apps/spaces/templates/spaces/space_add.html:73
+msgid "Website"
+msgstr ""
+
+#: apps/accounts/models.py:85
+msgid "The URL will be checked"
+msgstr ""
+
+#: apps/accounts/templates/accounts/login.html:4
+#: apps/userprofile/templates/userprofile/account/login.html:38
+#: templates/menu.html:45
+msgid "Login"
+msgstr "Entrar"
+
+#: apps/accounts/templates/accounts/login.html:14
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:18
+msgid "Username:"
+msgstr ""
+
+#: apps/accounts/templates/accounts/login.html:17
+msgid "Password:"
+msgstr ""
+
+#: apps/accounts/templates/accounts/logout.html:7
+msgid ""
+"Thanks for using e-cidadania. Now you can continue visting the website or "
+"log in again."
+msgstr ""
+
+#: apps/accounts/templates/accounts/logout.html:9
+#, fuzzy
+msgid "Login again"
+msgstr "Entrar"
+
+#: apps/accounts/templates/accounts/profile.html:5
+msgid "User"
+msgstr ""
+
+#: apps/debate/models.py:33 apps/debate/models.py:48 apps/news/models.py:35
+#: apps/news/templates/news/post_add.html:35
+#: apps/news/templates/news/post_add.html:79
+#: apps/news/templates/news/post_edit.html:30 apps/proposals/models.py:54
+#: apps/proposals/templates/proposals/proposal_add.html:15
+#: apps/proposals/templates/proposals/proposal_add.html:61
+#: apps/spaces/templates/spaces/document_add.html:17
+#: apps/spaces/templates/spaces/meeting_add.html:17
+#: apps/spaces/templates/spaces/meeting_add.html:77
+#: apps/spaces/templates/spaces/meeting_detail.html:12
+msgid "Title"
+msgstr ""
+
+#: apps/debate/models.py:34
+msgid "Objectives"
+msgstr ""
+
+#: apps/debate/models.py:35 apps/debate/models.py:49
+#: apps/proposals/models.py:55
+#: apps/proposals/templates/proposals/proposal_add.html:22
+#: apps/proposals/templates/proposals/proposal_add.html:62
+#: apps/spaces/models.py:37 apps/spaces/models.py:136
+#: apps/spaces/templates/spaces/meeting_add.html:24
+#: apps/spaces/templates/spaces/meeting_detail.html:14
+#: apps/spaces/templates/spaces/space_add.html:28
+#: apps/spaces/templates/spaces/space_add.html:94 apps/staticpages/admin.py:37
+msgid "Description"
+msgstr ""
+
+#: apps/debate/models.py:62
+#, fuzzy
+msgid "Message"
+msgstr "Mensaxes"
+
+#: apps/debate/models.py:63
+#, fuzzy
+msgid "Explanation"
+msgstr "Traducción"
+
+#: apps/news/admin.py:39
+msgid "Other data"
+msgstr ""
+
+#: apps/news/models.py:36 apps/news/templates/news/post_add.html:42
+#: apps/news/templates/news/post_add.html:80
+#: apps/news/templates/news/post_edit.html:37
+msgid "Text"
+msgstr ""
+
+#: apps/news/models.py:37 apps/spaces/templates/spaces/meeting_detail.html:16
+#: apps/swingtime/forms.py:207
+msgid "Date"
+msgstr ""
+
+#: apps/news/models.py:38
+msgid "Last update"
+msgstr ""
+
+#: apps/news/models.py:39 apps/news/templates/news/post_edit.html:59
+#: apps/spaces/models.py:39 apps/spaces/models.py:97 apps/spaces/models.py:131
+#: apps/staticpages/models.py:34
+msgid "Author"
+msgstr ""
+
+#: apps/news/models.py:41 apps/news/templates/news/post_add.html:57
+#: apps/news/templates/news/post_edit.html:52
+msgid "Publish in index page"
+msgstr ""
+
+#: apps/news/models.py:42
+msgid "Publish in"
+msgstr ""
+
+#: apps/news/models.py:44
+msgid "If you want to post to the index leave this blank"
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:5
+#: apps/news/templates/news/post_add.html:25
+#, fuzzy
+msgid "Add new post"
+msgstr "Engadir novas"
+
+#: apps/news/templates/news/post_add.html:50
+#: apps/news/templates/news/post_add.html:81
+#: apps/news/templates/news/post_edit.html:45
+#: apps/proposals/templates/proposals/proposal_add.html:40
+#: apps/proposals/templates/proposals/proposal_add.html:64
+#: templates/site_index.html:28
+msgid "Tags"
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:65
+#: apps/news/templates/news/post_edit.html:73
+#: apps/proposals/templates/proposals/proposal_edit.html:14
+#: apps/spaces/templates/spaces/document_edit.html:18
+#: apps/spaces/templates/spaces/meeting_edit.html:14
+#: apps/spaces/templates/spaces/space_add.html:79
+#: apps/spaces/templates/spaces/space_edit.html:18
+#, fuzzy
+msgid "Create"
+msgstr "creado por"
+
+#: apps/news/templates/news/post_add.html:67
+#: apps/news/templates/news/post_delete.html:28
+#: apps/news/templates/news/post_edit.html:74
+#: apps/proposals/templates/proposals/proposal_confirm_delete.html:16
+#: apps/proposals/templates/proposals/proposal_edit.html:15
+#: apps/proposals/templates/proposals/proposal_list.html:48
+#: apps/spaces/templates/spaces/document_add.html:35
+#: apps/spaces/templates/spaces/document_confirm_delete.html:16
+#: apps/spaces/templates/spaces/document_edit.html:19
+#: apps/spaces/templates/spaces/document_list.html:19
+#: apps/spaces/templates/spaces/meeting_add.html:63
+#: apps/spaces/templates/spaces/meeting_confirm_delete.html:16
+#: apps/spaces/templates/spaces/meeting_edit.html:15
+#: apps/spaces/templates/spaces/meeting_list.html:19
+#: apps/spaces/templates/spaces/space_add.html:81
+#: apps/spaces/templates/spaces/space_confirm_delete.html:16
+#: apps/spaces/templates/spaces/space_edit.html:19
+#: apps/spaces/templates/spaces/space_list.html:18
+#: apps/staticpages/templates/staticpages/staticpages_index.html:11
+msgid "Go back"
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:77
+msgid "How to add new posts"
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:79
+msgid "An spectacular title! (100 characters)"
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:80
+msgid "Your story."
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:81
+msgid "Please use them carefully, you are limited to 4 tags."
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:82
+msgid "Publish in index"
+msgstr ""
+
+#: apps/news/templates/news/post_add.html:82
+msgid ""
+"If you mark this, the post will appear in the spaces index page AND in the "
+"main index."
+msgstr ""
+
+#: apps/news/templates/news/post_delete.html:4
+#, fuzzy
+msgid "Delete news"
+msgstr "Borrar"
+
+#: apps/news/templates/news/post_delete.html:25
+msgid ""
+"Are you sure you want to delete this post? This action cannot be undone."
+msgstr ""
+
+#: apps/news/templates/news/post_delete.html:27
+#: apps/proposals/templates/proposals/proposal_confirm_delete.html:15
+#: apps/proposals/templates/proposals/proposal_detail.html:22
+#: apps/proposals/templates/proposals/proposal_list.html:22
+#: apps/spaces/templates/spaces/document_confirm_delete.html:15
+#: apps/spaces/templates/spaces/meeting_confirm_delete.html:15
+#: apps/spaces/templates/spaces/space_confirm_delete.html:15
+#: apps/userprofile/templates/userprofile/avatar/choose.html:36
+#: templates/site_index.html:33
+msgid "Delete"
+msgstr "Borrar"
+
+#: apps/news/templates/news/post_detail.html:36
+#: apps/spaces/templates/spaces/space_index.html:41
+#: templates/site_index.html:28
+msgid "Written by"
+msgstr "Escrito por"
+
+#: apps/news/templates/news/post_detail.html:36
+#: apps/spaces/templates/spaces/space_index.html:42
+#: apps/spaces/templates/spaces/space_index.html:151
+#: templates/site_index.html:28
+msgid "on"
+msgstr "en"
+
+#: apps/news/templates/news/post_edit.html:5
+#, fuzzy
+msgid "Edit news"
+msgstr "Engadir novas"
+
+#: apps/news/templates/news/post_edit.html:66
+msgid "Publish in space"
+msgstr ""
+
+#: apps/proposals/models.py:33
+msgid "Economically not viable"
+msgstr ""
+
+#: apps/proposals/models.py:34
+msgid "Legally not viable"
+msgstr ""
+
+#: apps/proposals/models.py:35
+msgid "Technically not viable"
+msgstr ""
+
+#: apps/proposals/models.py:36
+msgid "Offtopic"
+msgstr ""
+
+#: apps/proposals/models.py:52
+msgid "Code"
+msgstr ""
+
+#: apps/proposals/models.py:62
+#: apps/proposals/templates/proposals/proposal_add.html:28
+msgid "Latitude"
+msgstr ""
+
+#: apps/proposals/models.py:64
+#: apps/proposals/templates/proposals/proposal_add.html:34
+msgid "Longitude"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:4
+#: apps/proposals/templates/proposals/proposal_edit.html:4
+#: apps/spaces/templates/spaces/meeting_edit.html:4
+#: apps/spaces/templates/spaces/space_index.html:113
+msgid "Add proposal"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:28
+#: apps/proposals/templates/proposals/proposal_add.html:34
+#: apps/proposals/templates/proposals/proposal_add.html:40
+msgid "(optional)"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:48
+msgid "Continue"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:56
+msgid "Admins/moderators read this"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:57
+msgid ""
+"There are a lot more options in the proposals but they will appear only when "
+"you edit the proposal."
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:59
+msgid "How to add new proposals"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:61
+msgid "Title resuming the proposal, be concise (50 characters)"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:62
+msgid ""
+"Describe here your proposal with detail. You can add images or any other "
+"content."
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:63
+msgid "Latitude/Longitude"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:63
+msgid "You'll have to put this if you want to locate the proposal in a map."
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_add.html:64
+msgid ""
+"Relevant tags for the proposal, p.e. where the proposal is localted, what is "
+"related to it, etc."
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_confirm_delete.html:4
+#: apps/spaces/templates/spaces/meeting_confirm_delete.html:4
+msgid "Delete proposal"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_confirm_delete.html:13
+msgid ""
+"Are you sure you want to delete this proposal? This action cannot be undone."
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_detail.html:5
+msgid "View proposal"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_detail.html:17
+#: apps/proposals/templates/proposals/proposal_list.html:17
+msgid "Add"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_detail.html:19
+#: apps/proposals/templates/proposals/proposal_list.html:19
+#: templates/site_index.html:31
+msgid "Edit"
+msgstr "Editar"
+
+#: apps/proposals/templates/proposals/proposal_detail.html:33
+#: apps/proposals/templates/proposals/proposal_list.html:34
+msgid "proposed by "
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_detail.html:33
+#: apps/proposals/templates/proposals/proposal_list.html:34
+msgid " at "
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_list.html:5
+msgid "View proposals"
+msgstr ""
+
+#: apps/proposals/templates/proposals/proposal_list.html:34
+#: apps/spaces/templates/spaces/space_index.html:44
+#, fuzzy
+msgid "comments"
+msgstr "Desenvolvemento"
+
+#: apps/proposals/templates/proposals/proposal_list.html:43
+msgid "There are no proposals for this space."
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:4
+#: apps/rosetta/templates/rosetta/languages.html:6
+#, fuzzy
+msgid "Language selection"
+msgstr "Idioma"
+
+#: apps/rosetta/templates/rosetta/languages.html:6
+#: apps/rosetta/templates/rosetta/pofile.html:18 templates/404.html:65
+#: templates/500.html:40 templates/menu.html:4 templates/menu.html.py:43
+msgid "Home"
+msgstr "Inicio"
+
+#: apps/rosetta/templates/rosetta/languages.html:11
+msgid "Filter"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:12
+msgid "Project"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:13
+msgid "Third party"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:15
+#: apps/rosetta/templates/rosetta/pofile.html:35
+msgid "All"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:28
+msgid "Application"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:29
+msgid "Progress"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:30 templates/menu.html:35
+msgid "Messages"
+msgstr "Mensaxes"
+
+#: apps/rosetta/templates/rosetta/languages.html:31
+#, fuzzy
+msgid "Translated"
+msgstr "Traducción"
+
+#: apps/rosetta/templates/rosetta/languages.html:32
+#: apps/rosetta/templates/rosetta/pofile.html:57
+msgid "Fuzzy"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:33
+msgid "Obsolete"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:34
+msgid "File"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:55
+msgid "Nothing to translate!"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:56
+msgid ""
+"You haven't specified any languages in your settings file, or haven't yet "
+"generated a batch of translation catalogs."
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/languages.html:57
+#, python-format
+msgid ""
+"Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N documentation</"
+"a> for a guide on how to set up internationalization for your project."
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:8
+msgid "Pick another file"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:9
+msgid "Download this catalog"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:21
+#, python-format
+msgid "Progress: %(percent_translated)s%%"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:23
+msgid "File is read-only: download the file when done editing!"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:24
+msgid ""
+"Some items in your last translation block couldn't be saved: this usually "
+"happens when the catalog file changes on disk after you last loaded it."
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:28
+#, python-format
+msgid "Translate into %(rosetta_i18n_lang_name)s"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:31
+msgid "Display:"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:32
+#, fuzzy
+msgid "Untranslated only"
+msgstr "Traducción"
+
+#: apps/rosetta/templates/rosetta/pofile.html:33
+#, fuzzy
+msgid "Translated only"
+msgstr "Traducción"
+
+#: apps/rosetta/templates/rosetta/pofile.html:34
+msgid "Fuzzy only"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:42
+#: apps/userprofile/templates/userprofile/avatar/search.html:32
+msgid "Search"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:44 templates/site_index.html:70
+msgid "Go"
+msgstr "Ir"
+
+#: apps/rosetta/templates/rosetta/pofile.html:54
+msgid "Original"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:58
+msgid "Occurrences(s)"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:72
+#: apps/rosetta/templates/rosetta/pofile.html:75
+#: apps/rosetta/templates/rosetta/pofile.html:93
+msgid "Context hint"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:90
+msgid "Contextual hint"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:100
+msgid "suggest"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:111
+#, python-format
+msgid "%(more_count)s more"
+msgid_plural "%(more_count)s more"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:123
+msgid "Save and translate next block"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:127
+msgid "Skip to page:"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:140
+msgid "Displaying:"
+msgstr ""
+
+#: apps/rosetta/templates/rosetta/pofile.html:144
+#, python-format
+msgid "%(hits)s/%(message_number)s message"
+msgid_plural "%(hits)s/%(message_number)s messages"
+msgstr[0] ""
+msgstr[1] ""
+
+#: apps/spaces/admin.py:57
+msgid "Appearance"
+msgstr ""
+
+#: apps/spaces/admin.py:60 apps/spaces/templates/spaces/space_add.html:45
+#: apps/spaces/templates/spaces/space_add.html:98
+msgid "Modules"
+msgstr ""
+
+#: apps/spaces/models.py:33 apps/staticpages/models.py:32
+msgid "URL"
+msgstr ""
+
+#: apps/spaces/models.py:34
+msgid ""
+"All lowercase. Obligatory.                                         Take in "
+"mind that this will be the                                        accesible "
+"URL"
+msgstr ""
+
+#: apps/spaces/models.py:42 apps/spaces/templates/spaces/space_add.html:32
+#: apps/spaces/templates/spaces/space_add.html:74
+#: apps/spaces/templates/spaces/space_add.html:95
+#, fuzzy
+msgid "Logotype"
+msgstr "Saír"
+
+#: apps/spaces/models.py:43
+msgid "100px width, 75px height"
+msgstr ""
+
+#: apps/spaces/models.py:45 apps/spaces/templates/spaces/space_add.html:36
+#: apps/spaces/templates/spaces/space_add.html:96
+msgid "Banner"
+msgstr ""
+
+#: apps/spaces/models.py:46
+msgid "75px height"
+msgstr ""
+
+#: apps/spaces/models.py:48 apps/spaces/templates/spaces/space_add.html:97
+msgid "Authorized groups"
+msgstr ""
+
+#: apps/spaces/models.py:49
+msgid "Public space"
+msgstr ""
+
+#: apps/spaces/models.py:53
+msgid "Debate module"
+msgstr ""
+
+#: apps/spaces/models.py:54
+msgid "Proposals module"
+msgstr ""
+
+#: apps/spaces/models.py:55
+msgid "News module"
+msgstr ""
+
+#: apps/spaces/models.py:56
+msgid "Calendar module"
+msgstr ""
+
+#: apps/spaces/models.py:57
+msgid "Documents module"
+msgstr ""
+
+#: apps/spaces/models.py:61
+#, fuzzy
+msgid "Space"
+msgstr "Lista de espazos"
+
+#: apps/spaces/models.py:62
+#, fuzzy
+msgid "Spaces"
+msgstr "Lista de espazos"
+
+#: apps/spaces/models.py:76
+#, fuzzy
+msgid "Logo"
+msgstr "Saír"
+
+#: apps/spaces/models.py:82
+msgid "Entity"
+msgstr ""
+
+#: apps/spaces/models.py:83
+msgid "Entities"
+msgstr ""
+
+#: apps/spaces/models.py:93
+msgid "Document title"
+msgstr ""
+
+#: apps/spaces/models.py:102
+#, fuzzy
+msgid "Document"
+msgstr "Desenvolvemento"
+
+#: apps/spaces/models.py:103 apps/spaces/templates/spaces/space_index.html:67
+#, fuzzy
+msgid "Documents"
+msgstr "Desenvolvemento"
+
+#: apps/spaces/models.py:115
+msgid "Meeting Type"
+msgstr ""
+
+#: apps/spaces/models.py:116
+msgid "Meeting Types"
+msgstr ""
+
+#: apps/spaces/models.py:127
+msgid "Meeting title"
+msgstr ""
+
+#: apps/spaces/models.py:134
+msgid "Meeting Date"
+msgstr ""
+
+#: apps/spaces/models.py:137 apps/spaces/templates/spaces/meeting_add.html:31
+#: apps/spaces/templates/spaces/meeting_detail.html:18
+#: apps/userprofile/templates/userprofile/menu.html:8
+#: apps/userprofile/templates/userprofile/profile/location.html:18
+#: apps/userprofile/templates/userprofile/profile/overview.html:96
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:37
+#: apps/userprofile/templates/userprofile/profile/public.html:40
+msgid "Location"
+msgstr ""
+
+#: apps/spaces/models.py:141
+msgid "Meeting"
+msgstr ""
+
+#: apps/spaces/models.py:142
+msgid "Meetings"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:4
+msgid "Upload new document"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:24
+msgid "Select your file"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:33
+#: apps/spaces/templates/spaces/meeting_add.html:61
+msgid "Upload"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:47
+msgid "What can I upload?"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:49
+msgid "Allowed formats"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:49
+msgid ""
+"Mainly all non executable documents (PDF, ODT, DOC). Audio and video are not "
+"allowed."
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:50
+msgid "Maximum size"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_add.html:50
+#: apps/spaces/templates/spaces/meeting_add.html:78
+msgid "Allowed size is 10MB"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_confirm_delete.html:4
+#, fuzzy
+msgid "Delete document"
+msgstr "Desenvolvemento"
+
+#: apps/spaces/templates/spaces/document_confirm_delete.html:13
+msgid ""
+"Are you sure you want to delete this document? This action cannot be undone."
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_edit.html:4
+msgid "Edit document"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_list.html:4
+msgid "Document list"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_list.html:14
+#: apps/spaces/templates/spaces/meeting_list.html:14
+msgid "Published"
+msgstr ""
+
+#: apps/spaces/templates/spaces/document_list.html:16
+msgid "There are no documents in this space."
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_add.html:4
+msgid "Create new meeting"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_add.html:38
+#: apps/spaces/templates/spaces/meeting_add.html:78
+msgid "Meeting type"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_add.html:45
+msgid "Meeting date"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_add.html:52
+msgid "Attendants"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_add.html:75
+msgid "How do meetings work?"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_add.html:77
+msgid "A descriptive title of the meeting. Be concise."
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_confirm_delete.html:13
+msgid ""
+"Are you sure you want to delete this meeting? This action cannot be undone."
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_detail.html:4
+msgid "View meeting"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_list.html:4
+msgid "Meeting list"
+msgstr ""
+
+#: apps/spaces/templates/spaces/meeting_list.html:16
+msgid "There are no meetings in this space."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:4
+#, fuzzy
+msgid "Create new space"
+msgstr "Crea o teu propio espazo"
+
+#: apps/spaces/templates/spaces/space_add.html:9
+#, fuzzy
+msgid "Create a new space"
+msgstr "Crea o teu propio espazo"
+
+#: apps/spaces/templates/spaces/space_add.html:17
+#: apps/spaces/templates/spaces/space_add.html:93
+msgid "Space name"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:23
+#, fuzzy
+msgid "Space URL"
+msgstr "Lista de espazos"
+
+#: apps/spaces/templates/spaces/space_add.html:40
+msgid "Authorized Groups"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:48
+msgid "Debate"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:49
+msgid "Proposals"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:50
+msgid "News"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:51
+#: apps/spaces/templates/spaces/space_index.html:93
+msgid "Calendar"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:52
+msgid "Documentation"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:59
+msgid "Entities participating"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:91
+msgid "How to add new spaces"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:93
+msgid ""
+"The name of the space. Have in mind that this name will be used as the URL "
+"of your space. We recommend to use all lowercase. (100 chars)"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:94
+msgid ""
+"An optional description for your space. It won't be showed to the users, but "
+"to the admins."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:95
+msgid "An image of 75px height and 100px width."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:96
+msgid "Another image. 75px height."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:97
+msgid "This will set up what users can access to your space."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_add.html:98
+msgid ""
+"Select the modules you will use in your space. This can be edited afterwards."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_confirm_delete.html:4
+#: apps/spaces/templates/spaces/space_index.html:21
+#, fuzzy
+msgid "Delete space"
+msgstr "Borrar"
+
+#: apps/spaces/templates/spaces/space_confirm_delete.html:13
+msgid ""
+"Are you sure you want to delete this space? This action cannot be undone."
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_edit.html:4
+#: apps/spaces/templates/spaces/space_index.html:18
+#, fuzzy
+msgid "Edit space"
+msgstr "Editar perfil"
+
+#: apps/spaces/templates/spaces/space_index.html:5
+msgid "Index"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:16
+#: templates/site_index.html:20
+msgid "Add news"
+msgstr "Engadir novas"
+
+#: apps/spaces/templates/spaces/space_index.html:49
+#: templates/site_index.html:43
+msgid "Nothing published yet."
+msgstr "Non hai nada publicado todavía."
+
+#: apps/spaces/templates/spaces/space_index.html:80
+msgid "No documents available"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:83
+msgid "View all documents"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:85
+msgid "Add documents"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:101
+msgid "Newest proposals"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:108
+msgid "No proposals available"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:111
+msgid "View all proposals"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:126
+#: templates/site_index.html:122
+msgid "Your favourite social site isn't here? Tell us!"
+msgstr "A túa rede social favorita non está aquí? ¡Díno-lo!"
+
+#: apps/spaces/templates/spaces/space_index.html:150 templates/404.html:70
+#: templates/500.html:45 templates/site_index.html:135
+msgid "About"
+msgstr "Acerca de"
+
+#: apps/spaces/templates/spaces/space_index.html:150
+#: templates/site_index.html:135
+msgid "API"
+msgstr ""
+
+#: apps/spaces/templates/spaces/space_index.html:150
+#: templates/site_index.html:135
+msgid "Developers"
+msgstr "Desenvolvedores"
+
+#: apps/spaces/templates/spaces/space_index.html:150 templates/404.html:68
+#: templates/500.html:43 templates/site_index.html:135
+msgid "Terms of service"
+msgstr "Termos de servizo"
+
+#: apps/spaces/templates/spaces/space_index.html:150 templates/404.html:67
+#: templates/500.html:42 templates/site_index.html:135
+msgid "Help"
+msgstr "Axuda"
+
+#: apps/spaces/templates/spaces/space_index.html:151
+#, fuzzy
+msgid "Space created by"
+msgstr "creado por"
+
+#: apps/spaces/templates/spaces/space_list.html:4 templates/site_index.html:61
+msgid "Spaces list"
+msgstr "Lista de espazos"
+
+#: apps/spaces/templates/spaces/space_list.html:15
+msgid "There are no spaces."
+msgstr ""
+
+#: apps/staticpages/models.py:31
+msgid "Page Title"
+msgstr ""
+
+#: apps/staticpages/models.py:33
+msgid "Content"
+msgstr ""
+
+#: apps/staticpages/models.py:39
+msgid "Static Pages"
+msgstr ""
+
+#: apps/staticpages/templates/staticpages/staticpages_index.html:14
+#: apps/swingtime/models.py:28
+#, fuzzy
+msgid "created"
+msgstr "creado por"
+
+#: apps/staticpages/templates/staticpages/staticpages_index.html:14
+msgid "by"
+msgstr ""
+
+#: apps/swingtime/forms.py:17
+msgid "Sun"
+msgstr ""
+
+#: apps/swingtime/forms.py:18
+#, fuzzy
+msgid "Mon"
+msgstr "en"
+
+#: apps/swingtime/forms.py:19
+msgid "Tue"
+msgstr ""
+
+#: apps/swingtime/forms.py:20
+msgid "Wed"
+msgstr ""
+
+#: apps/swingtime/forms.py:21
+msgid "Thu"
+msgstr ""
+
+#: apps/swingtime/forms.py:22
+msgid "Fri"
+msgstr ""
+
+#: apps/swingtime/forms.py:23
+msgid "Sat"
+msgstr ""
+
+#: apps/swingtime/forms.py:27
+msgid "Sunday"
+msgstr ""
+
+#: apps/swingtime/forms.py:28
+msgid "Monday"
+msgstr ""
+
+#: apps/swingtime/forms.py:29
+msgid "Tuesday"
+msgstr ""
+
+#: apps/swingtime/forms.py:30
+msgid "Wednesday"
+msgstr ""
+
+#: apps/swingtime/forms.py:31
+msgid "Thursday"
+msgstr ""
+
+#: apps/swingtime/forms.py:32
+msgid "Friday"
+msgstr ""
+
+#: apps/swingtime/forms.py:33
+msgid "Saturday"
+msgstr ""
+
+#: apps/swingtime/forms.py:37
+msgid "January"
+msgstr ""
+
+#: apps/swingtime/forms.py:38
+msgid "February"
+msgstr ""
+
+#: apps/swingtime/forms.py:39
+msgid "March"
+msgstr ""
+
+#: apps/swingtime/forms.py:40
+msgid "April"
+msgstr ""
+
+#: apps/swingtime/forms.py:41 apps/swingtime/forms.py:56
+msgid "May"
+msgstr ""
+
+#: apps/swingtime/forms.py:42
+msgid "June"
+msgstr ""
+
+#: apps/swingtime/forms.py:43
+msgid "July"
+msgstr ""
+
+#: apps/swingtime/forms.py:44
+msgid "August"
+msgstr ""
+
+#: apps/swingtime/forms.py:45
+msgid "September"
+msgstr ""
+
+#: apps/swingtime/forms.py:46
+msgid "October"
+msgstr ""
+
+#: apps/swingtime/forms.py:47
+msgid "November"
+msgstr ""
+
+#: apps/swingtime/forms.py:48
+msgid "December"
+msgstr ""
+
+#: apps/swingtime/forms.py:52
+msgid "Jan"
+msgstr ""
+
+#: apps/swingtime/forms.py:53
+msgid "Feb"
+msgstr ""
+
+#: apps/swingtime/forms.py:54
+msgid "Mar"
+msgstr ""
+
+#: apps/swingtime/forms.py:55
+msgid "Apr"
+msgstr ""
+
+#: apps/swingtime/forms.py:57
+msgid "Jun"
+msgstr ""
+
+#: apps/swingtime/forms.py:58
+msgid "Jul"
+msgstr ""
+
+#: apps/swingtime/forms.py:59
+msgid "Aug"
+msgstr ""
+
+#: apps/swingtime/forms.py:60
+msgid "Sep"
+msgstr ""
+
+#: apps/swingtime/forms.py:61
+msgid "Oct"
+msgstr ""
+
+#: apps/swingtime/forms.py:62
+msgid "Nov"
+msgstr ""
+
+#: apps/swingtime/forms.py:63
+msgid "Dec"
+msgstr ""
+
+#: apps/swingtime/forms.py:68
+msgid "first"
+msgstr ""
+
+#: apps/swingtime/forms.py:69
+msgid "second"
+msgstr ""
+
+#: apps/swingtime/forms.py:70
+msgid "third"
+msgstr ""
+
+#: apps/swingtime/forms.py:71
+msgid "fourth"
+msgstr ""
+
+#: apps/swingtime/forms.py:72
+msgid "last"
+msgstr ""
+
+#: apps/swingtime/forms.py:76
+msgid "Day(s)"
+msgstr ""
+
+#: apps/swingtime/forms.py:77
+msgid "Week(s)"
+msgstr ""
+
+#: apps/swingtime/forms.py:78
+msgid "Month(s)"
+msgstr ""
+
+#: apps/swingtime/forms.py:79
+msgid "Year(s)"
+msgstr ""
+
+#: apps/swingtime/forms.py:83
+msgid "By count"
+msgstr ""
+
+#: apps/swingtime/forms.py:84
+msgid "Until date"
+msgstr ""
+
+#: apps/swingtime/forms.py:213
+msgid "Start time"
+msgstr ""
+
+#: apps/swingtime/forms.py:218
+msgid "End time"
+msgstr ""
+
+#: apps/swingtime/forms.py:226
+msgid "Occurrences"
+msgstr ""
+
+#: apps/swingtime/forms.py:231
+msgid "Total Occurrences"
+msgstr ""
+
+#: apps/swingtime/forms.py:244
+msgid "Frequency"
+msgstr ""
+
+#: apps/swingtime/forms.py:258
+msgid "Weekly options"
+msgstr ""
+
+#: apps/swingtime/forms.py:264
+msgid "On the"
+msgstr ""
+
+#: apps/swingtime/forms.py:264
+msgid "Each:"
+msgstr ""
+
+#: apps/swingtime/forms.py:267
+msgid "Monthly options"
+msgstr ""
+
+#: apps/swingtime/forms.py:280
+msgid "Yearly options"
+msgstr ""
+
+#: apps/swingtime/forms.py:377
+#, python-format
+msgid "Unknown interval rule %s"
+msgstr ""
+
+#: apps/swingtime/models.py:27 apps/swingtime/models.py:36
+msgid "note"
+msgstr ""
+
+#: apps/swingtime/models.py:30 apps/tagging/models.py:477
+msgid "content type"
+msgstr ""
+
+#: apps/swingtime/models.py:31 apps/tagging/models.py:478
+msgid "object id"
+msgstr ""
+
+#: apps/swingtime/models.py:37 apps/swingtime/models.py:71
+#: apps/swingtime/models.py:185
+msgid "notes"
+msgstr ""
+
+#: apps/swingtime/models.py:50
+msgid "abbreviation"
+msgstr ""
+
+#: apps/swingtime/models.py:51
+msgid "label"
+msgstr ""
+
+#: apps/swingtime/models.py:55 apps/swingtime/models.py:70
+msgid "event type"
+msgstr ""
+
+#: apps/swingtime/models.py:56
+msgid "event types"
+msgstr ""
+
+#: apps/swingtime/models.py:68
+msgid "title"
+msgstr ""
+
+#: apps/swingtime/models.py:69
+msgid "description"
+msgstr ""
+
+#: apps/swingtime/models.py:75 apps/swingtime/models.py:184
+msgid "event"
+msgstr ""
+
+#: apps/swingtime/models.py:76
+msgid "events"
+msgstr ""
+
+#: apps/swingtime/models.py:182
+msgid "start time"
+msgstr ""
+
+#: apps/swingtime/models.py:183
+msgid "end time"
+msgstr ""
+
+#: apps/swingtime/models.py:191
+msgid "occurrence"
+msgstr ""
+
+#: apps/swingtime/models.py:192
+msgid "occurrences"
+msgstr ""
+
+#: apps/tagging/fields.py:69
+#, python-format
+msgid "%s can only be set on instances."
+msgstr ""
+
+#: apps/tagging/forms.py:19
+msgid "Multiple tags were given."
+msgstr ""
+
+#: apps/tagging/forms.py:22
+#, python-format
+msgid "A tag may be no more than %s characters long."
+msgstr ""
+
+#: apps/tagging/forms.py:38
+#, python-format
+msgid "Each tag may be no more than %s characters long."
+msgstr ""
+
+#: apps/tagging/models.py:58
+#, python-format
+msgid "No tags were given: \"%s\"."
+msgstr ""
+
+#: apps/tagging/models.py:60
+#, python-format
+msgid "Multiple tags were given: \"%s\"."
+msgstr ""
+
+#: apps/tagging/models.py:460
+msgid "name"
+msgstr ""
+
+#: apps/tagging/models.py:466 apps/tagging/models.py:476
+msgid "tag"
+msgstr ""
+
+#: apps/tagging/models.py:467
+msgid "tags"
+msgstr ""
+
+#: apps/tagging/models.py:486
+msgid "tagged item"
+msgstr ""
+
+#: apps/tagging/models.py:487
+msgid "tagged items"
+msgstr ""
+
+#: apps/tagging/utils.py:189
+msgid ""
+"If a list or tuple of tags is provided, they must all be tag names, Tag "
+"objects or Tag ids."
+msgstr ""
+
+#: apps/tagging/utils.py:191
+msgid "The tag input given was invalid."
+msgstr ""
+
+#: apps/tagging/utils.py:236
+#, python-format
+msgid "Invalid distribution algorithm specified: %s."
+msgstr ""
+
+#: apps/tagging/views.py:33
+msgid "tagged_object_list must be called with a queryset or a model."
+msgstr ""
+
+#: apps/tagging/views.py:39
+msgid "tagged_object_list must be called with a tag."
+msgstr ""
+
+#: apps/tagging/views.py:43
+#, python-format
+msgid "No Tag found matching \"%s\"."
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:19
+#, python-format
+msgid "tags_for_model tag was given an invalid model: %s"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:32
+#, python-format
+msgid "tag_cloud_for_model tag was given an invalid model: %s"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:56
+#, python-format
+msgid "tagged_objects tag was given an invalid model: %s"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:89
+#, python-format
+msgid "%s tag requires either three or five arguments"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:91
+#: apps/tagging/templatetags/tagging_tags.py:143
+#: apps/tagging/templatetags/tagging_tags.py:198
+#, python-format
+msgid "second argument to %s tag must be 'as'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:94
+#: apps/tagging/templatetags/tagging_tags.py:147
+#, python-format
+msgid "if given, fourth argument to %s tag must be 'with'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:96
+#, python-format
+msgid "if given, fifth argument to %s tag must be 'counts'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:141
+#, python-format
+msgid "%s tag requires either three or between five and seven arguments"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:155
+#, python-format
+msgid "%(tag)s tag's '%(option)s' option was not a valid integer: '%(value)s'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:164
+#, python-format
+msgid "%(tag)s tag's '%(option)s' option was not a valid choice: '%(value)s'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:170
+#, python-format
+msgid "%(tag)s tag was given an invalid option: '%(option)s'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:175
+#, python-format
+msgid "%(tag)s tag was given a badly formatted option: '%(option)s'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:196
+#, python-format
+msgid "%s tag requires exactly three arguments"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:221
+#, python-format
+msgid "%s tag requires exactly five arguments"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:223
+#, python-format
+msgid "second argument to %s tag must be 'in'"
+msgstr ""
+
+#: apps/tagging/templatetags/tagging_tags.py:225
+#, python-format
+msgid "fourth argument to %s tag must be 'as'"
+msgstr ""
+
+#: apps/userprofile/countries.py:10
+msgid "Andorra"
+msgstr ""
+
+#: apps/userprofile/countries.py:11
+msgid "United Arab Emirates"
+msgstr ""
+
+#: apps/userprofile/countries.py:12
+msgid "Afghanistan"
+msgstr ""
+
+#: apps/userprofile/countries.py:13
+msgid "Antigua & Barbuda"
+msgstr ""
+
+#: apps/userprofile/countries.py:14
+msgid "Anguilla"
+msgstr ""
+
+#: apps/userprofile/countries.py:15
+msgid "Albania"
+msgstr ""
+
+#: apps/userprofile/countries.py:16
+msgid "Armenia"
+msgstr ""
+
+#: apps/userprofile/countries.py:17
+msgid "Netherlands Antilles"
+msgstr ""
+
+#: apps/userprofile/countries.py:18
+msgid "Angola"
+msgstr ""
+
+#: apps/userprofile/countries.py:19
+msgid "Antarctica"
+msgstr ""
+
+#: apps/userprofile/countries.py:20
+msgid "Argentina"
+msgstr ""
+
+#: apps/userprofile/countries.py:21
+msgid "American Samoa"
+msgstr ""
+
+#: apps/userprofile/countries.py:22
+msgid "Austria"
+msgstr ""
+
+#: apps/userprofile/countries.py:23
+msgid "Australia"
+msgstr ""
+
+#: apps/userprofile/countries.py:24
+msgid "Aruba"
+msgstr ""
+
+#: apps/userprofile/countries.py:25
+msgid "Azerbaijan"
+msgstr ""
+
+#: apps/userprofile/countries.py:26
+msgid "Bosnia and Herzegovina"
+msgstr ""
+
+#: apps/userprofile/countries.py:27
+msgid "Barbados"
+msgstr ""
+
+#: apps/userprofile/countries.py:28
+msgid "Bangladesh"
+msgstr ""
+
+#: apps/userprofile/countries.py:29
+msgid "Belgium"
+msgstr ""
+
+#: apps/userprofile/countries.py:30
+msgid "Burkina Faso"
+msgstr ""
+
+#: apps/userprofile/countries.py:31
+msgid "Bulgaria"
+msgstr ""
+
+#: apps/userprofile/countries.py:32
+msgid "Bahrain"
+msgstr ""
+
+#: apps/userprofile/countries.py:33
+msgid "Burundi"
+msgstr ""
+
+#: apps/userprofile/countries.py:34
+msgid "Benin"
+msgstr ""
+
+#: apps/userprofile/countries.py:35
+msgid "Bermuda"
+msgstr ""
+
+#: apps/userprofile/countries.py:36
+msgid "Brunei Darussalam"
+msgstr ""
+
+#: apps/userprofile/countries.py:37
+msgid "Bolivia"
+msgstr ""
+
+#: apps/userprofile/countries.py:38
+msgid "Brazil"
+msgstr ""
+
+#: apps/userprofile/countries.py:39
+msgid "Bahama"
+msgstr ""
+
+#: apps/userprofile/countries.py:40
+msgid "Bhutan"
+msgstr ""
+
+#: apps/userprofile/countries.py:41
+msgid "Bouvet Island"
+msgstr ""
+
+#: apps/userprofile/countries.py:42
+msgid "Botswana"
+msgstr ""
+
+#: apps/userprofile/countries.py:43
+msgid "Belarus"
+msgstr ""
+
+#: apps/userprofile/countries.py:44
+msgid "Belize"
+msgstr ""
+
+#: apps/userprofile/countries.py:45
+msgid "Canada"
+msgstr ""
+
+#: apps/userprofile/countries.py:46
+msgid "Cocos (Keeling) Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:47
+msgid "Central African Republic"
+msgstr ""
+
+#: apps/userprofile/countries.py:48
+msgid "Congo"
+msgstr ""
+
+#: apps/userprofile/countries.py:49
+msgid "Switzerland"
+msgstr ""
+
+#: apps/userprofile/countries.py:50
+msgid "Ivory Coast"
+msgstr ""
+
+#: apps/userprofile/countries.py:51
+msgid "Cook Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:52
+msgid "Chile"
+msgstr ""
+
+#: apps/userprofile/countries.py:53
+msgid "Cameroon"
+msgstr ""
+
+#: apps/userprofile/countries.py:54
+msgid "China"
+msgstr ""
+
+#: apps/userprofile/countries.py:55
+msgid "Colombia"
+msgstr ""
+
+#: apps/userprofile/countries.py:56
+msgid "Costa Rica"
+msgstr ""
+
+#: apps/userprofile/countries.py:57
+msgid "Cuba"
+msgstr ""
+
+#: apps/userprofile/countries.py:58
+msgid "Cape Verde"
+msgstr ""
+
+#: apps/userprofile/countries.py:59
+msgid "Christmas Island"
+msgstr ""
+
+#: apps/userprofile/countries.py:60
+msgid "Cyprus"
+msgstr ""
+
+#: apps/userprofile/countries.py:61
+msgid "Czech Republic"
+msgstr ""
+
+#: apps/userprofile/countries.py:62
+msgid "Germany"
+msgstr ""
+
+#: apps/userprofile/countries.py:63
+#, fuzzy
+msgid "Djibouti"
+msgstr "Acerca de"
+
+#: apps/userprofile/countries.py:64
+msgid "Denmark"
+msgstr ""
+
+#: apps/userprofile/countries.py:65
+msgid "Dominica"
+msgstr ""
+
+#: apps/userprofile/countries.py:66
+msgid "Dominican Republic"
+msgstr ""
+
+#: apps/userprofile/countries.py:67
+msgid "Algeria"
+msgstr ""
+
+#: apps/userprofile/countries.py:68
+msgid "Ecuador"
+msgstr ""
+
+#: apps/userprofile/countries.py:69
+msgid "Estonia"
+msgstr ""
+
+#: apps/userprofile/countries.py:70
+msgid "Egypt"
+msgstr ""
+
+#: apps/userprofile/countries.py:71
+msgid "Western Sahara"
+msgstr ""
+
+#: apps/userprofile/countries.py:72
+msgid "Eritrea"
+msgstr ""
+
+#: apps/userprofile/countries.py:73
+msgid "Spain"
+msgstr ""
+
+#: apps/userprofile/countries.py:74
+msgid "Ethiopia"
+msgstr ""
+
+#: apps/userprofile/countries.py:75
+msgid "Finland"
+msgstr ""
+
+#: apps/userprofile/countries.py:76
+msgid "Fiji"
+msgstr ""
+
+#: apps/userprofile/countries.py:77
+msgid "Falkland Islands (Malvinas)"
+msgstr ""
+
+#: apps/userprofile/countries.py:78
+msgid "Micronesia"
+msgstr ""
+
+#: apps/userprofile/countries.py:79
+msgid "Faroe Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:80
+msgid "France"
+msgstr ""
+
+#: apps/userprofile/countries.py:81
+msgid "France, Metropolitan"
+msgstr ""
+
+#: apps/userprofile/countries.py:82
+msgid "Gabon"
+msgstr ""
+
+#: apps/userprofile/countries.py:83
+msgid "United Kingdom (Great Britain)"
+msgstr ""
+
+#: apps/userprofile/countries.py:84
+msgid "Grenada"
+msgstr ""
+
+#: apps/userprofile/countries.py:85
+msgid "Georgia"
+msgstr ""
+
+#: apps/userprofile/countries.py:86
+msgid "French Guiana"
+msgstr ""
+
+#: apps/userprofile/countries.py:87
+msgid "Ghana"
+msgstr ""
+
+#: apps/userprofile/countries.py:88
+msgid "Gibraltar"
+msgstr ""
+
+#: apps/userprofile/countries.py:89
+msgid "Greenland"
+msgstr ""
+
+#: apps/userprofile/countries.py:90
+msgid "Gambia"
+msgstr ""
+
+#: apps/userprofile/countries.py:91
+msgid "Guinea"
+msgstr ""
+
+#: apps/userprofile/countries.py:92
+msgid "Guadeloupe"
+msgstr ""
+
+#: apps/userprofile/countries.py:93
+msgid "Equatorial Guinea"
+msgstr ""
+
+#: apps/userprofile/countries.py:94
+msgid "Greece"
+msgstr ""
+
+#: apps/userprofile/countries.py:95
+msgid "South Georgia and the South Sandwich Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:96
+msgid "Guatemala"
+msgstr ""
+
+#: apps/userprofile/countries.py:97
+msgid "Guam"
+msgstr ""
+
+#: apps/userprofile/countries.py:98
+msgid "Guinea-Bissau"
+msgstr ""
+
+#: apps/userprofile/countries.py:99
+msgid "Guyana"
+msgstr ""
+
+#: apps/userprofile/countries.py:100
+msgid "Hong Kong"
+msgstr ""
+
+#: apps/userprofile/countries.py:101
+msgid "Heard & McDonald Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:102
+msgid "Honduras"
+msgstr ""
+
+#: apps/userprofile/countries.py:103
+msgid "Croatia"
+msgstr ""
+
+#: apps/userprofile/countries.py:104
+msgid "Haiti"
+msgstr ""
+
+#: apps/userprofile/countries.py:105
+msgid "Hungary"
+msgstr ""
+
+#: apps/userprofile/countries.py:106
+msgid "Indonesia"
+msgstr ""
+
+#: apps/userprofile/countries.py:107
+msgid "Ireland"
+msgstr ""
+
+#: apps/userprofile/countries.py:108
+msgid "Israel"
+msgstr ""
+
+#: apps/userprofile/countries.py:109
+msgid "India"
+msgstr ""
+
+#: apps/userprofile/countries.py:110
+msgid "British Indian Ocean Territory"
+msgstr ""
+
+#: apps/userprofile/countries.py:111
+msgid "Iraq"
+msgstr ""
+
+#: apps/userprofile/countries.py:112
+msgid "Islamic Republic of Iran"
+msgstr ""
+
+#: apps/userprofile/countries.py:113
+msgid "Iceland"
+msgstr ""
+
+#: apps/userprofile/countries.py:114
+msgid "Italy"
+msgstr ""
+
+#: apps/userprofile/countries.py:115
+msgid "Jamaica"
+msgstr ""
+
+#: apps/userprofile/countries.py:116
+msgid "Jordan"
+msgstr ""
+
+#: apps/userprofile/countries.py:117
+msgid "Japan"
+msgstr ""
+
+#: apps/userprofile/countries.py:118
+msgid "Kenya"
+msgstr ""
+
+#: apps/userprofile/countries.py:119
+msgid "Kyrgyzstan"
+msgstr ""
+
+#: apps/userprofile/countries.py:120
+msgid "Cambodia"
+msgstr ""
+
+#: apps/userprofile/countries.py:121
+msgid "Kiribati"
+msgstr ""
+
+#: apps/userprofile/countries.py:122
+msgid "Comoros"
+msgstr ""
+
+#: apps/userprofile/countries.py:123
+msgid "St. Kitts and Nevis"
+msgstr ""
+
+#: apps/userprofile/countries.py:124
+msgid "Korea, Democratic People's Republic of"
+msgstr ""
+
+#: apps/userprofile/countries.py:125
+msgid "Korea, Republic of"
+msgstr ""
+
+#: apps/userprofile/countries.py:126
+msgid "Kuwait"
+msgstr ""
+
+#: apps/userprofile/countries.py:127
+msgid "Cayman Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:128
+msgid "Kazakhstan"
+msgstr ""
+
+#: apps/userprofile/countries.py:129
+msgid "Lao People's Democratic Republic"
+msgstr ""
+
+#: apps/userprofile/countries.py:130
+msgid "Lebanon"
+msgstr ""
+
+#: apps/userprofile/countries.py:131
+msgid "Saint Lucia"
+msgstr ""
+
+#: apps/userprofile/countries.py:132
+msgid "Liechtenstein"
+msgstr ""
+
+#: apps/userprofile/countries.py:133
+msgid "Sri Lanka"
+msgstr ""
+
+#: apps/userprofile/countries.py:134
+msgid "Liberia"
+msgstr ""
+
+#: apps/userprofile/countries.py:135
+msgid "Lesotho"
+msgstr ""
+
+#: apps/userprofile/countries.py:136
+msgid "Lithuania"
+msgstr ""
+
+#: apps/userprofile/countries.py:137
+msgid "Luxembourg"
+msgstr ""
+
+#: apps/userprofile/countries.py:138
+msgid "Latvia"
+msgstr ""
+
+#: apps/userprofile/countries.py:139
+msgid "Libyan Arab Jamahiriya"
+msgstr ""
+
+#: apps/userprofile/countries.py:140
+msgid "Morocco"
+msgstr ""
+
+#: apps/userprofile/countries.py:141
+msgid "Monaco"
+msgstr ""
+
+#: apps/userprofile/countries.py:142
+msgid "Moldova, Republic of"
+msgstr ""
+
+#: apps/userprofile/countries.py:143
+msgid "Madagascar"
+msgstr ""
+
+#: apps/userprofile/countries.py:144
+msgid "Marshall Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:145
+msgid "Mali"
+msgstr ""
+
+#: apps/userprofile/countries.py:146
+msgid "Mongolia"
+msgstr ""
+
+#: apps/userprofile/countries.py:147
+msgid "Myanmar"
+msgstr ""
+
+#: apps/userprofile/countries.py:148
+msgid "Macau"
+msgstr ""
+
+#: apps/userprofile/countries.py:149
+msgid "Northern Mariana Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:150
+msgid "Martinique"
+msgstr ""
+
+#: apps/userprofile/countries.py:151
+msgid "Mauritania"
+msgstr ""
+
+#: apps/userprofile/countries.py:152
+msgid "Monserrat"
+msgstr ""
+
+#: apps/userprofile/countries.py:153
+msgid "Malta"
+msgstr ""
+
+#: apps/userprofile/countries.py:154
+msgid "Mauritius"
+msgstr ""
+
+#: apps/userprofile/countries.py:155
+msgid "Maldives"
+msgstr ""
+
+#: apps/userprofile/countries.py:156
+msgid "Malawi"
+msgstr ""
+
+#: apps/userprofile/countries.py:157
+msgid "Mexico"
+msgstr ""
+
+#: apps/userprofile/countries.py:158
+msgid "Malaysia"
+msgstr ""
+
+#: apps/userprofile/countries.py:159
+msgid "Mozambique"
+msgstr ""
+
+#: apps/userprofile/countries.py:160
+msgid "Namibia"
+msgstr ""
+
+#: apps/userprofile/countries.py:161
+msgid "New Caledonia"
+msgstr ""
+
+#: apps/userprofile/countries.py:162
+msgid "Niger"
+msgstr ""
+
+#: apps/userprofile/countries.py:163
+msgid "Norfolk Island"
+msgstr ""
+
+#: apps/userprofile/countries.py:164
+msgid "Nigeria"
+msgstr ""
+
+#: apps/userprofile/countries.py:165
+msgid "Nicaragua"
+msgstr ""
+
+#: apps/userprofile/countries.py:166
+msgid "Netherlands"
+msgstr ""
+
+#: apps/userprofile/countries.py:167
+msgid "Norway"
+msgstr ""
+
+#: apps/userprofile/countries.py:168
+msgid "Nepal"
+msgstr ""
+
+#: apps/userprofile/countries.py:169
+msgid "Nauru"
+msgstr ""
+
+#: apps/userprofile/countries.py:170
+msgid "Niue"
+msgstr ""
+
+#: apps/userprofile/countries.py:171
+msgid "New Zealand"
+msgstr ""
+
+#: apps/userprofile/countries.py:172
+msgid "Oman"
+msgstr ""
+
+#: apps/userprofile/countries.py:173
+msgid "Panama"
+msgstr ""
+
+#: apps/userprofile/countries.py:174
+msgid "Peru"
+msgstr ""
+
+#: apps/userprofile/countries.py:175
+msgid "French Polynesia"
+msgstr ""
+
+#: apps/userprofile/countries.py:176
+msgid "Papua New Guinea"
+msgstr ""
+
+#: apps/userprofile/countries.py:177
+msgid "Philippines"
+msgstr ""
+
+#: apps/userprofile/countries.py:178
+msgid "Pakistan"
+msgstr ""
+
+#: apps/userprofile/countries.py:179
+msgid "Poland"
+msgstr ""
+
+#: apps/userprofile/countries.py:180
+msgid "St. Pierre & Miquelon"
+msgstr ""
+
+#: apps/userprofile/countries.py:181
+msgid "Pitcairn"
+msgstr ""
+
+#: apps/userprofile/countries.py:182
+msgid "Puerto Rico"
+msgstr ""
+
+#: apps/userprofile/countries.py:183
+msgid "Portugal"
+msgstr ""
+
+#: apps/userprofile/countries.py:184
+msgid "Palau"
+msgstr ""
+
+#: apps/userprofile/countries.py:185
+msgid "Paraguay"
+msgstr ""
+
+#: apps/userprofile/countries.py:186
+msgid "Qatar"
+msgstr ""
+
+#: apps/userprofile/countries.py:187
+msgid "Reunion"
+msgstr ""
+
+#: apps/userprofile/countries.py:188
+msgid "Romania"
+msgstr ""
+
+#: apps/userprofile/countries.py:189
+msgid "Russian Federation"
+msgstr ""
+
+#: apps/userprofile/countries.py:190
+msgid "Rwanda"
+msgstr ""
+
+#: apps/userprofile/countries.py:191
+msgid "Saudi Arabia"
+msgstr ""
+
+#: apps/userprofile/countries.py:192
+msgid "Solomon Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:193
+msgid "Seychelles"
+msgstr ""
+
+#: apps/userprofile/countries.py:194
+msgid "Sudan"
+msgstr ""
+
+#: apps/userprofile/countries.py:195
+msgid "Sweden"
+msgstr ""
+
+#: apps/userprofile/countries.py:196
+msgid "Singapore"
+msgstr ""
+
+#: apps/userprofile/countries.py:197
+msgid "St. Helena"
+msgstr ""
+
+#: apps/userprofile/countries.py:198
+msgid "Slovenia"
+msgstr ""
+
+#: apps/userprofile/countries.py:199
+msgid "Svalbard & Jan Mayen Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:200
+msgid "Slovakia"
+msgstr ""
+
+#: apps/userprofile/countries.py:201
+msgid "Sierra Leone"
+msgstr ""
+
+#: apps/userprofile/countries.py:202
+msgid "San Marino"
+msgstr ""
+
+#: apps/userprofile/countries.py:203
+msgid "Senegal"
+msgstr ""
+
+#: apps/userprofile/countries.py:204
+msgid "Somalia"
+msgstr ""
+
+#: apps/userprofile/countries.py:205
+msgid "Suriname"
+msgstr ""
+
+#: apps/userprofile/countries.py:206
+msgid "Sao Tome & Principe"
+msgstr ""
+
+#: apps/userprofile/countries.py:207
+msgid "El Salvador"
+msgstr ""
+
+#: apps/userprofile/countries.py:208
+msgid "Syrian Arab Republic"
+msgstr ""
+
+#: apps/userprofile/countries.py:209
+msgid "Swaziland"
+msgstr ""
+
+#: apps/userprofile/countries.py:210
+msgid "Turks & Caicos Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:211
+msgid "Chad"
+msgstr ""
+
+#: apps/userprofile/countries.py:212
+msgid "French Southern Territories"
+msgstr ""
+
+#: apps/userprofile/countries.py:213
+msgid "Togo"
+msgstr ""
+
+#: apps/userprofile/countries.py:214
+msgid "Thailand"
+msgstr ""
+
+#: apps/userprofile/countries.py:215
+msgid "Tajikistan"
+msgstr ""
+
+#: apps/userprofile/countries.py:216
+msgid "Tokelau"
+msgstr ""
+
+#: apps/userprofile/countries.py:217
+msgid "Turkmenistan"
+msgstr ""
+
+#: apps/userprofile/countries.py:218
+msgid "Tunisia"
+msgstr ""
+
+#: apps/userprofile/countries.py:219
+msgid "Tonga"
+msgstr ""
+
+#: apps/userprofile/countries.py:220
+msgid "East Timor"
+msgstr ""
+
+#: apps/userprofile/countries.py:221
+msgid "Turkey"
+msgstr ""
+
+#: apps/userprofile/countries.py:222
+msgid "Trinidad & Tobago"
+msgstr ""
+
+#: apps/userprofile/countries.py:223
+msgid "Tuvalu"
+msgstr ""
+
+#: apps/userprofile/countries.py:224
+msgid "Taiwan, Province of China"
+msgstr ""
+
+#: apps/userprofile/countries.py:225
+msgid "Tanzania, United Republic of"
+msgstr ""
+
+#: apps/userprofile/countries.py:226
+msgid "Ukraine"
+msgstr ""
+
+#: apps/userprofile/countries.py:227
+msgid "Uganda"
+msgstr ""
+
+#: apps/userprofile/countries.py:228
+msgid "United States Minor Outlying Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:229
+msgid "United States of America"
+msgstr ""
+
+#: apps/userprofile/countries.py:230
+msgid "Uruguay"
+msgstr ""
+
+#: apps/userprofile/countries.py:231
+msgid "Uzbekistan"
+msgstr ""
+
+#: apps/userprofile/countries.py:232
+msgid "Vatican City State (Holy See)"
+msgstr ""
+
+#: apps/userprofile/countries.py:233
+msgid "St. Vincent & the Grenadines"
+msgstr ""
+
+#: apps/userprofile/countries.py:234
+msgid "Venezuela"
+msgstr ""
+
+#: apps/userprofile/countries.py:235
+msgid "British Virgin Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:236
+msgid "United States Virgin Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:237
+msgid "Viet Nam"
+msgstr ""
+
+#: apps/userprofile/countries.py:238
+msgid "Vanuatu"
+msgstr ""
+
+#: apps/userprofile/countries.py:239
+msgid "Wallis & Futuna Islands"
+msgstr ""
+
+#: apps/userprofile/countries.py:240
+msgid "Samoa"
+msgstr ""
+
+#: apps/userprofile/countries.py:241
+msgid "Yemen"
+msgstr ""
+
+#: apps/userprofile/countries.py:242
+msgid "Mayotte"
+msgstr ""
+
+#: apps/userprofile/countries.py:243
+msgid "Yugoslavia"
+msgstr ""
+
+#: apps/userprofile/countries.py:244
+msgid "South Africa"
+msgstr ""
+
+#: apps/userprofile/countries.py:245
+msgid "Zambia"
+msgstr ""
+
+#: apps/userprofile/countries.py:246
+msgid "Zaire"
+msgstr ""
+
+#: apps/userprofile/countries.py:247
+msgid "Zimbabwe"
+msgstr ""
+
+#: apps/userprofile/countries.py:248
+msgid "Unknown or unspecified country"
+msgstr ""
+
+#: apps/userprofile/countries.py:253
+msgid "This value must be in COUNTRIES setting in localflavor.generic package."
+msgstr ""
+
+#: apps/userprofile/forms.py:58
+#, python-format
+msgid "The file type is invalid: %s"
+msgstr ""
+
+#: apps/userprofile/forms.py:63
+msgid "You must enter one of the options"
+msgstr ""
+
+#: apps/userprofile/forms.py:77
+msgid "You must select a portion of the image with a minimum of 96x96 pixels."
+msgstr ""
+
+#: apps/userprofile/forms.py:83
+#: apps/userprofile/templates/userprofile/account/login.html:20
+#: apps/userprofile/templates/userprofile/account/registration.html:12
+#: apps/userprofile/templates/userprofile/profile/overview.html:61
+#: apps/userprofile/templates/userprofile/profile/public.html:35
+#: apps/userprofile/templates/userprofile/profile/usercard.html:11
+msgid "Username"
+msgstr ""
+
+#: apps/userprofile/forms.py:84
+#: apps/userprofile/templates/userprofile/account/password_reset.html:21
+msgid "E-mail address"
+msgstr ""
+
+#: apps/userprofile/forms.py:85
+#: apps/userprofile/templates/userprofile/account/login.html:27
+#: apps/userprofile/templates/userprofile/account/registration.html:24
+msgid "Password"
+msgstr ""
+
+#: apps/userprofile/forms.py:86
+#: apps/userprofile/templates/userprofile/account/registration.html:30
+msgid "Password (again)"
+msgstr ""
+
+#: apps/userprofile/forms.py:94
+msgid ""
+"That username has invalid characters. The valid values are letters, numbers "
+"and underscore."
+msgstr ""
+
+#: apps/userprofile/forms.py:99
+msgid "The username is already registered."
+msgstr ""
+
+#: apps/userprofile/forms.py:108
+msgid "The passwords inserted are different."
+msgstr ""
+
+#: apps/userprofile/forms.py:120 apps/userprofile/forms.py:139
+msgid "That e-mail is already used."
+msgstr ""
+
+#: apps/userprofile/forms.py:124
+msgid "That e-mail is already being confirmed."
+msgstr ""
+
+#: apps/userprofile/models.py:39
+#, fuzzy, python-format
+msgid "%s's profile"
+msgstr "Editar perfil"
+
+#: apps/userprofile/models.py:58
+#, python-format
+msgid "%s's Avatar"
+msgstr ""
+
+#: apps/userprofile/models.py:142
+#, python-format
+msgid "Email validation process for %(user)s"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/menu.html:5
+msgid "Overview"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/menu.html:6
+msgid "Personal information"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/menu.html:7
+msgid "Avatar"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/menu.html:9
+#: apps/userprofile/templates/userprofile/profile/delete.html:8
+#, fuzzy
+msgid "Remove profile"
+msgstr "Editar perfil"
+
+#: apps/userprofile/templates/userprofile/account/email_validation.html:4
+#: apps/userprofile/templates/userprofile/account/email_validation.html:23
+msgid "E-mail change"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation.html:4
+#: apps/userprofile/templates/userprofile/account/email_validation.html:23
+#: apps/userprofile/templates/userprofile/account/email_validation.html:40
+#: apps/userprofile/templates/userprofile/account/email_validation_processed.html:20
+msgid "Add e-mail"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation.html:24
+msgid "New e-mail address"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation.html:34
+msgid "Send confirmation"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation.html:41
+#: apps/userprofile/templates/userprofile/account/email_validation_processed.html:21
+msgid ""
+"Insert the new e-mail address. An e-mail will be send to it for testing and "
+"confirmation"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:4
+msgid "E-mail validation successful"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:4
+msgid "E-mail change unsuccessful"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:14
+msgid "E-mail address validated successfully"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:16
+msgid ""
+"The key you received via e-mail is no longer valid. Please try the e-mail "
+"validation process again"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:23
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:22
+msgid "E-mail validation process"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:24
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:23
+msgid "You can manage the e-mail validation process from the"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_done.html:24
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:23
+msgid "overview page"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_processed.html:4
+#: apps/userprofile/templates/userprofile/account/email_validation_processed.html:13
+msgid "E-mail change processed"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_processed.html:14
+msgid ""
+"An e-mail has been sent to the new e-mail address to verify and activate it. "
+"Please access to your e-mail and complete this process following the "
+"instructions specified in the e-mail body"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:4
+msgid "Validation e-mail sent"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:4
+msgid "Your user account was already active"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:14
+msgid "We've e-mailed you the e-mail validation link"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/email_validation_reset_response.html:16
+msgid "Your e-mail was already validated"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/login.html:4
+#: apps/userprofile/templates/userprofile/account/login.html:19
+msgid "User login"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/login.html:39
+msgid "Lost your password?"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/login.html:40
+msgid "Sign up!"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/logout.html:4
+#: apps/userprofile/templates/userprofile/account/logout.html:9
+msgid "Logged out"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/logout.html:10
+msgid "You've been logged out"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/logout.html:10
+msgid "Log in again"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:4
+#: apps/userprofile/templates/userprofile/account/password_change.html:23
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:4
+msgid "Password change for"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:24
+msgid "Old password"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:30
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:26
+msgid "New password"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:36
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:32
+msgid "Confirm password"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:46
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:42
+msgid "Change"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:52
+#: apps/userprofile/templates/userprofile/account/password_change_done.html:19
+msgid "Password change"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change.html:53
+#: apps/userprofile/templates/userprofile/account/password_change_done.html:20
+msgid ""
+"Password change utility page. Please enter your new password twice so we can "
+"verify you typed it in correctly"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change_done.html:4
+#: apps/userprofile/templates/userprofile/account/password_reset_complete.html:4
+msgid "Password change successful"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_change_done.html:13
+msgid "The password has been changed successfully"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_expired.html:4
+msgid "Password key expired"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_expired.html:9
+msgid ""
+"The password key you're trying to use is expired. Please, request a new one"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset.html:4
+#: apps/userprofile/templates/userprofile/account/password_reset.html:20
+#: apps/userprofile/templates/userprofile/account/password_reset_complete.html:19
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:55
+msgid "Password reset"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset.html:31
+msgid "Reset my password"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset.html:37
+#: apps/userprofile/templates/userprofile/account/password_reset_done.html:16
+msgid "Password reset form"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset.html:38
+#: apps/userprofile/templates/userprofile/account/password_reset_done.html:17
+msgid ""
+"Forgotten your password? Enter your e-mail address, and we'll reset your "
+"password and e-mail the new one to you"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset_complete.html:13
+msgid "Your password has been set.  You may go ahead and log in now."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset_complete.html:20
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:56
+msgid ""
+"Password reset utility page. Please enter your new password twice so we can "
+"verify you typed it in correctly"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:47
+msgid "Password reset unsuccessful"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset_confirm.html:48
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please request a new password reset."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset_done.html:4
+#: apps/userprofile/templates/userprofile/account/password_reset_done.html:9
+msgid "Password reset successful"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/password_reset_done.html:10
+msgid ""
+"We've e-mailed you the instructions to obtain a new password. You should be "
+"receiving it shortly"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration.html:4
+#: apps/userprofile/templates/userprofile/account/registration.html:11
+msgid "User registration"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration.html:18
+msgid "E-mail (optional)"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration.html:40
+msgid "Register"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration.html:46
+#: apps/userprofile/templates/userprofile/account/registration_done.html:14
+msgid "Register a new account"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration.html:47
+#: apps/userprofile/templates/userprofile/account/registration_done.html:15
+msgid ""
+"Joining this community is quick and easy. You only need to fill the form to "
+"get access to all the private content"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration_done.html:4
+msgid "Registration complete"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration_done.html:9
+msgid "You have successfully registered a new account. Go to the"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration_done.html:9
+msgid "login page"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/account/registration_done.html:9
+msgid "to authenticate and start using this site"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:4
+#: apps/userprofile/templates/userprofile/avatar/choose.html:41
+msgid "Choose the location of your avatar"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:44
+msgid "Select an image from disk"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:46
+#: apps/userprofile/templates/userprofile/avatar/choose.html:52
+#: apps/userprofile/templates/userprofile/avatar/crop.html:47
+msgid "Done"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:50
+msgid ""
+"Select an image from a remote URL. Put the URL on the input below and we'll "
+"retrieve the image for you"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:57
+#: apps/userprofile/templates/userprofile/avatar/search.html:4
+#: apps/userprofile/templates/userprofile/avatar/search.html:28
+msgid "Search for an image on Picasa Web"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:67
+#: apps/userprofile/templates/userprofile/avatar/crop.html:53
+#: apps/userprofile/templates/userprofile/avatar/done.html:19
+#: apps/userprofile/templates/userprofile/avatar/search.html:50
+msgid "Avatar selection page"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/choose.html:68
+#: apps/userprofile/templates/userprofile/avatar/crop.html:54
+#: apps/userprofile/templates/userprofile/avatar/done.html:20
+#: apps/userprofile/templates/userprofile/avatar/search.html:51
+msgid ""
+"You have several options to select the image you want as avatar on your "
+"profile"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/crop.html:4
+#: apps/userprofile/templates/userprofile/avatar/crop.html:31
+msgid "Crop &amp; resize the area you want"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/done.html:4
+msgid "Avatar selection finished"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/done.html:13
+msgid "Your new avatar has been saved successfully"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/avatar/search.html:29
+msgid "Search on Picasa Web"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete.html:4
+msgid "Delete personal information"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete.html:10
+msgid ""
+"It erases all your private data except your username. You can refill the "
+"information later if you want to."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete.html:15
+msgid "Delete your personal information"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete.html:16
+msgid "Are you sure?"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete.html:17
+msgid "Yes"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete_done.html:4
+msgid "Profile removed"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete_done.html:8
+msgid "Personal data removed"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete_done.html:9
+msgid "Your profile information has been removed successfully."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete_done.html:11
+msgid "Back to home page"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/delete_done.html:12
+msgid "Back to your profile"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location.html:4
+#: apps/userprofile/templates/userprofile/profile/location_done.html:4
+#: apps/userprofile/templates/userprofile/profile/personal_done.html:4
+#, python-format
+msgid "%(user)s's Dashboard"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location.html:12
+msgid "Define your location"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location.html:14
+#: apps/userprofile/templates/userprofile/profile/overview.html:78
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:28
+#: apps/userprofile/templates/userprofile/profile/public.html:37
+msgid "Country"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location.html:20
+msgid "Position"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location.html:26
+#: apps/userprofile/templates/userprofile/profile/personal.html:15
+msgid "Save"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location_done.html:8
+msgid "Your profile information has been updated successfully"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/location_done.html:9
+msgid "Go back to your profile"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:5
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:5
+msgid "Overview of your profile"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:33
+#, python-format
+msgid ""
+"\n"
+"            %(username)s profile\n"
+"          "
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:39
+#, fuzzy
+msgid "Edit personal data"
+msgstr "Editar perfil"
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:40
+msgid "Edit location"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:41
+#, fuzzy
+msgid "Delete profile"
+msgstr "Editar perfil"
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:42
+#, fuzzy
+msgid "Public profile"
+msgstr "Editar perfil"
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:56
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:14
+msgid "Change avatar"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:56
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:14
+msgid "Add avatar"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:62
+msgid "Real name"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:63
+msgid "Age"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:63
+msgid "years"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:64
+msgid "Member since"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:65
+msgid "E-mail"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:68
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:21
+#, fuzzy
+msgid "Not set yet"
+msgstr "Non hai nada publicado todavía."
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:72
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:23
+msgid " (Not validated)"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:82
+#: apps/userprofile/templates/userprofile/profile/overview.html:100
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:32
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:41
+msgid "Not set"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:87
+msgid "City"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:117
+#, fuzzy
+msgid "Your spaces"
+msgstr "Sen espazos"
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:122
+msgid "You are not signed to any space."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:128
+msgid "Your proposals"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview.html:146
+msgid "You haven't made any proposals."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:19
+msgid "E-mail:"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:80
+msgid "Management:"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:81
+msgid "Change password"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:83
+msgid "Change your e-mail address"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:83
+msgid "Add your e-mail address"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:84
+msgid "Resend validation e-mail"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:88
+msgid "Add location"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/overview_old.html:90
+#, fuzzy
+msgid "Change location"
+msgstr "Traducción"
+
+#: apps/userprofile/templates/userprofile/profile/personal.html:4
+#: apps/userprofile/templates/userprofile/profile/personal.html:7
+msgid "Edit your personal information"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/personal_done.html:9
+msgid "Your profile information has been updated successfully."
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/personal_done.html:11
+#: templates/not_allowed.html:10
+msgid "You can go"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/personal_done.html:11
+#: templates/not_allowed.html:10
+msgid "back to home"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/personal_done.html:11
+#: templates/not_allowed.html:10
+msgid "or"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/personal_done.html:11
+#: templates/not_allowed.html:10
+msgid "back to your profile"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/public.html:30
+#, python-format
+msgid "Public profile of %(user)s"
+msgstr ""
+
+#: apps/userprofile/templates/userprofile/profile/usercard.html:12
+msgid "Public profile information"
+msgstr ""
+
+#: apps/userprofile/templatetags/avatars.py:68
+msgid ""
+"You have to provide only the size as             an integer (both sides will "
+"be equal) and optionally, the             username."
+msgstr ""
+
+#: templates/404.html:60
 msgid "Not Found!"
 msgstr "¡Non atopado!"
 
-#: 404.html:63
+#: templates/404.html:63
 msgid ""
 "A meiga stole this page. You better get out of here now that you can, before "
 "she gives you the evil eye. Meanwhile, we are going to get the torchs and "
@@ -34,99 +3252,59 @@ msgstr ""
 "e ghinchas e imos na súa busca. Non te preocupes por nós, xa nos apañaremos "
 "como poidamos."
 
-#: 404.html:64 500.html:39
+#: templates/404.html:64 templates/500.html:39
 msgid "Take me out of here!"
 msgstr "¡Sácame de aquí!"
 
-#: 404.html:65 500.html:40 menu.html:4 menu.html.py:43
-msgid "Home"
-msgstr "Inicio"
-
-#: 404.html:66 500.html:41
+#: templates/404.html:66 templates/500.html:41
 msgid "Development"
 msgstr "Desenvolvemento"
 
-#: 404.html:67 500.html:42 site_index.html:130
-msgid "Help"
-msgstr "Axuda"
-
-#: 404.html:68 500.html:43 site_index.html:130
-msgid "Terms of service"
-msgstr "Termos de servizo"
-
-#: 404.html:69 500.html:44
+#: templates/404.html:69 templates/500.html:44
 msgid "Privacy"
 msgstr "Privacidade"
 
-#: 404.html:70 500.html:45 site_index.html:130
-msgid "About"
-msgstr "Acerca de"
-
-#: 500.html:37
+#: templates/500.html:37
 msgid "Now you did it, the server is broken."
 msgstr "Fixechela boa, o servidor está roto."
 
-#: base.html:88
+#: templates/base.html:88
 msgid "created by"
 msgstr "creado por"
 
-#: menu.html:12 menu.html.py:51
+#: templates/menu.html:12 templates/menu.html.py:51
 msgid "Language"
 msgstr "Idioma"
 
-#: menu.html:32
+#: templates/menu.html:32
 msgid "Administration"
 msgstr "Administración"
 
-#: menu.html:33
+#: templates/menu.html:33
 msgid "Translation"
 msgstr "Traducción"
 
-#: menu.html:35
-msgid "Messages"
-msgstr "Mensaxes"
-
-#: menu.html:36
+#: templates/menu.html:36
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: menu.html:37
+#: templates/menu.html:37
 msgid "Logout"
 msgstr "Saír"
 
-#: menu.html:45
-msgid "Login"
-msgstr "Entrar"
-
-#: not_allowed.html:4
+#: templates/not_allowed.html:4
 msgid "Not allowed"
 msgstr ""
 
-#: not_allowed.html:8
+#: templates/not_allowed.html:8
 msgid "You are not allowed to access here."
 msgstr ""
 
-#: not_allowed.html:10
-msgid "You can go"
-msgstr ""
-
-#: not_allowed.html:10
-msgid "back to home"
-msgstr ""
-
-#: not_allowed.html:10
-msgid "or"
-msgstr ""
-
-#: not_allowed.html:10
-msgid "back to your profile"
-msgstr ""
-
-#: site_index.html:4 terms.html:4
+#: templates/site_index.html:4 templates/terms.html:4
 msgid "e-cidadania"
 msgstr "e-cidadania"
 
-#: site_index.html:13
+#: templates/site_index.html:13
 msgid ""
 "e-cidadania is a participative democracy tool for citizens. It has an "
 "advanced debate system, proposals, document versioning, and you can create "
@@ -138,195 +3316,153 @@ msgstr ""
 "espazos independentes para cada proceso e moitas funcións máis, pero será "
 "mellor que o probes tí mesmo/mesma."
 
-#: site_index.html:20
-msgid "Add news"
-msgstr "Engadir novas"
-
-#: site_index.html:28
-msgid "Written by"
-msgstr "Escrito por"
-
-#: site_index.html:28
-msgid "on"
-msgstr "en"
-
-#: site_index.html:28
-msgid "Tags"
-msgstr ""
-
-#: site_index.html:31
-msgid "Edit"
-msgstr "Editar"
-
-#: site_index.html:33
-msgid "Delete"
-msgstr "Borrar"
-
-#: site_index.html:43
-msgid "Nothing published yet."
-msgstr "Non hai nada publicado todavía."
-
-#: site_index.html:53
+#: templates/site_index.html:53
 msgid "What can you do with e-cidadania?"
 msgstr "Qué podo facer con e-cidadania?"
 
-#: site_index.html:53
+#: templates/site_index.html:53
 msgid "Discover it here"
 msgstr "Descúbreo aquí"
 
-#: site_index.html:57
+#: templates/site_index.html:57
 msgid "Create your own space"
 msgstr "Crea o teu propio espazo"
 
-#: site_index.html:57
+#: templates/site_index.html:57
 msgid "inside e-cidadania"
 msgstr "dentro de e-cidadanía"
 
-#: site_index.html:61
-msgid "Spaces list"
-msgstr "Lista de espazos"
-
-#: site_index.html:67
+#: templates/site_index.html:67
 msgid "No spaces"
 msgstr "Sen espazos"
 
-#: site_index.html:70
-msgid "Go"
-msgstr "Ir"
-
-#: site_index.html:75
-msgid "Recently updated spaces"
+#: templates/site_index.html:75
+#, fuzzy
+msgid "Recently added spaces"
 msgstr "Espazos actualizados recentemente"
 
-#: site_index.html:79
+#: templates/site_index.html:79
+msgid "No spaces have been added recently."
+msgstr ""
+
+#: templates/site_index.html:84
 msgid "Share"
 msgstr ""
 
-#: site_index.html:117
-msgid "Your favourite social site isn't here? Tell us!"
-msgstr "A túa rede social favorita non está aquí? ¡Díno-lo!"
-
-#: site_index.html:121
+#: templates/site_index.html:126
 msgid "e-cidadania development"
 msgstr "Desenvolvemento de e-cidadanía"
 
-#: site_index.html:122
+#: templates/site_index.html:127
 msgid "Do you want to help?"
 msgstr "Queres axudar?"
 
-#: site_index.html:122
+#: templates/site_index.html:127
 msgid "Access"
 msgstr "Accesa"
 
-#: site_index.html:130
-msgid "API"
-msgstr ""
-
-#: site_index.html:130
-msgid "Developers"
-msgstr "Desenvolvedores"
-
-#: comments/approve.html:4
+#: templates/comments/approve.html:4
 msgid "Approve a comment"
 msgstr ""
 
-#: comments/approve.html:7
+#: templates/comments/approve.html:7
 msgid "Really make this comment public?"
 msgstr ""
 
-#: comments/approve.html:12
+#: templates/comments/approve.html:12
 msgid "Approve"
 msgstr ""
 
-#: comments/approved.html:4
+#: templates/comments/approved.html:4
 msgid "Thanks for approving"
 msgstr ""
 
-#: comments/approved.html:7 comments/deleted.html:7 comments/flagged.html:7
+#: templates/comments/approved.html:7 templates/comments/deleted.html:7
+#: templates/comments/flagged.html:7
 msgid ""
 "Thanks for taking the time to improve the quality of discussion on our site"
 msgstr ""
 
-#: comments/delete.html:4
+#: templates/comments/delete.html:4
 msgid "Remove a comment"
 msgstr ""
 
-#: comments/delete.html:7
+#: templates/comments/delete.html:7
 msgid "Really remove this comment?"
 msgstr ""
 
-#: comments/delete.html:12
+#: templates/comments/delete.html:12
 msgid "Remove"
 msgstr ""
 
-#: comments/deleted.html:4
+#: templates/comments/deleted.html:4
 msgid "Thanks for removing"
 msgstr ""
 
-#: comments/flag.html:4
+#: templates/comments/flag.html:4
 msgid "Flag this comment"
 msgstr ""
 
-#: comments/flag.html:7
+#: templates/comments/flag.html:7
 msgid "Really flag this comment?"
 msgstr ""
 
-#: comments/flag.html:12
+#: templates/comments/flag.html:12
 msgid "Flag"
 msgstr ""
 
-#: comments/flagged.html:4
+#: templates/comments/flagged.html:4
 msgid "Thanks for flagging"
 msgstr ""
 
-#: comments/form.html:2
+#: templates/comments/form.html:2
 #, fuzzy
 msgid "Leave a comment"
 msgstr "Desenvolvemento"
 
-#: comments/form.html:18 comments/preview.html:36
+#: templates/comments/form.html:18 templates/comments/preview.html:36
 msgid "Post"
 msgstr ""
 
-#: comments/form.html:19 comments/preview.html:37
+#: templates/comments/form.html:19 templates/comments/preview.html:37
 msgid "Preview"
 msgstr ""
 
-#: comments/list.html:3
+#: templates/comments/list.html:3
 msgid "Comments"
 msgstr ""
 
-#: comments/list.html:8
+#: templates/comments/list.html:8
 msgid "said"
 msgstr ""
 
-#: comments/posted.html:4
+#: templates/comments/posted.html:4
 msgid "Thanks for commenting"
 msgstr ""
 
-#: comments/posted.html:7
+#: templates/comments/posted.html:7
 msgid "Thank you for your comment"
 msgstr ""
 
-#: comments/preview.html:4 comments/preview.html.py:17
+#: templates/comments/preview.html:4 templates/comments/preview.html.py:17
 msgid "Preview your comment"
 msgstr ""
 
-#: comments/preview.html:15
+#: templates/comments/preview.html:15
 msgid "Please correct the error below"
 msgid_plural "Please correct the errors below"
 msgstr[0] ""
 msgstr[1] ""
 
-#: comments/preview.html:20
+#: templates/comments/preview.html:20
 msgid "and"
 msgstr ""
 
-#: comments/preview.html:20
+#: templates/comments/preview.html:20
 msgid "Post your comment"
 msgstr ""
 
-#: comments/preview.html:20
+#: templates/comments/preview.html:20
 msgid "or make changes"
 msgstr ""
 
