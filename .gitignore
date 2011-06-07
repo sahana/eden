@@ -10,5 +10,5 @@
 *.aux
 _build*
 *~
-src/e_cidadania/static/spaces/*
 src/e_cidadania/uploads/*
+src/e_cidadania/static/*

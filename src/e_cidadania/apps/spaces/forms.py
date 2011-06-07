@@ -26,23 +26,19 @@ from e_cidadania.apps.spaces.models import Space, Document, Meeting, Entity
 class SpaceForm(ModelForm):
     
     """
+    Space model form.
     """
     class Meta:
         model = Space
 
-
+# Create a formset for entities. This formset will be displayed with
+# the SpaceForm
 EntityFormSet = modelformset_factory(Entity, extra=3)
-
-class EntityForm(ModelForm):
-
-    """
-    """
-    class Meta:
-        model = Entity
         
 class DocForm(ModelForm):
 
     """
+    Document model form.
     """
     class Meta:
         model = Document
@@ -51,6 +47,7 @@ class DocForm(ModelForm):
 class MeetingForm(ModelForm):
 
     """
+    Meeting model form.
     """
     class Meta:
         model = Meeting

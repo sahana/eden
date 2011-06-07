@@ -26,6 +26,7 @@ from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 class EntityAdmin(admin.ModelAdmin):
 
     """
+    Administration model for Entities.
     """
     list_display = ('name', 'website', 'space')
     search_fields = ('name',)
@@ -33,7 +34,7 @@ class EntityAdmin(admin.ModelAdmin):
 class EntityInline(admin.TabularInline):
 
     """
-    Inline view for entities.
+    Admin Inline view for entities.
     """
     model = Entity
 
@@ -74,6 +75,9 @@ class SpaceAdmin(admin.ModelAdmin):
 class DocumentAdmin(admin.ModelAdmin):
 
     """
+    Administration view to upload/modify documents.
+    
+    save() method is overriden to store the author automatically.
     """
     list_display = ('title', 'space', 'docfile', 'author', 'pub_date')
     search_fields = ('title', 'space', 'author', 'pub_date')

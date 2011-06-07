@@ -58,7 +58,9 @@ class Space(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = _('Space')
         verbose_name_plural = _('Spaces')
+        get_latest_by = 'date'
 
     def __unicode__(self):
         return self.name
@@ -77,6 +79,7 @@ class Entity(models.Model):
     
     class Meta:
         ordering = ['name']
+        verbose_name = _('Entity')
         verbose_name_plural = _('Entities')
 
     def __unicode__(self):
@@ -96,6 +99,9 @@ class Document(models.Model):
     
     class Meta:
         ordering = ['pub_date']
+        verbose_name = _('Document')
+        verbose_name_plural = _('Documents')
+        get_latest_by = 'pub_date'
 
 class MeetingType(models.Model):
 
@@ -104,6 +110,10 @@ class MeetingType(models.Model):
     meeting in any space.
     """
     title = models.CharField(_('Name'), max_length=100)
+
+    class Meta:
+        verbose_name = _('Meeting Type')
+        verbose_name_plural = _('Meeting Types')
 
     def __unicode__(self):
         return self.title
@@ -125,6 +135,12 @@ class Meeting(models.Model):
     meeting_type = models.ForeignKey(MeetingType, blank=True, null=True)
     description = models.TextField(_('Description'), blank=True, null=True)
     location = models.TextField(_('Location'), blank=True, null=True)
+    
+    class Meta:
+        ordering = ['meeting_date']
+        verbose_name = _('Meeting')
+        verbose_name_plural = _('Meetings')
+        get_latest_by = 'meeting_date'
 
     def __unicode__(self):
         return self.title
