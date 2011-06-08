@@ -36,6 +36,24 @@ CLOSE_REASONS = (
     (4, _('Offtopic'))
 )
 
+class BaseClass(models.Model):
+
+    """
+    Abstract base class for titles and descriptions (dummy models)
+    """
+    title = models.CharField(_('Title'), max_length=200)
+
+    class Meta:
+        abstract = True
+
+
+class Category(BaseClass):
+
+    """
+    Dummy class for proposal categories
+    """
+    pass
+
 class Proposal(models.Model):
     
     """
