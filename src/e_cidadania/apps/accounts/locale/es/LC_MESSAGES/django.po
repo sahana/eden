@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 12:23+0200\n"
-"PO-Revision-Date: 2011-05-23 12:58\n"
+"POT-Creation-Date: 2011-06-07 17:13+0200\n"
+"PO-Revision-Date: 2011-06-08 11:40\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -53,7 +53,7 @@ msgstr "Provincia"
 
 #: models.py:64
 msgid "Region"
-msgstr "Región"
+msgstr "Region"
 
 #: models.py:65
 msgid "Neighborhood"
@@ -81,7 +81,7 @@ msgstr "Teléfono 1"
 
 #: models.py:76 models.py:78
 msgid "9 digits maximum"
-msgstr "9 dígitos como máximo"
+msgstr "9 dígitos máximo"
 
 #: models.py:77
 msgid "Phone 2"
@@ -97,15 +97,15 @@ msgstr "Página web"
 
 #: models.py:85
 msgid "The URL will be checked"
-msgstr "Esta dirección será comprobada"
+msgstr "La URL será comprobada"
 
 #: templates/accounts/login.html:4
 msgid "Login"
-msgstr "Login"
+msgstr "Entrar"
 
 #: templates/accounts/login.html:14
 msgid "Username:"
-msgstr "Nombre de usuario:"
+msgstr "Usuario:"
 
 #: templates/accounts/login.html:17
 msgid "Password:"
@@ -116,12 +116,12 @@ msgid ""
 "Thanks for using e-cidadania. Now you can continue visting the website "
 "or log in again."
 msgstr ""
-"Gracias por utilizar e-cidadania. Ahora puedes seguir visitando la web"
-" o entrar de nuevo."
+"Gracias por utilizar e-cidadania. Ahora puedes continuar visitando la "
+"web, o volver a entrar."
 
 #: templates/accounts/logout.html:9
 msgid "Login again"
-msgstr "Entrar de nuevo"
+msgstr "Volver a entrar"
 
 #: templates/accounts/profile.html:5
 msgid "User"

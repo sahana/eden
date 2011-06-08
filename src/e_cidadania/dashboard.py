@@ -64,7 +64,15 @@ class CustomIndexDashboard(Dashboard):
                      'e_cidadania.apps.accounts.*',),
         ))
         
-        # append another link list module for "support".
+        # append a feed module
+        self.children.append(modules.Feed(
+            _('Latest News'),
+            column=2,
+            feed_url='http://www.djangoproject.com/rss/weblog/',
+            limit=5
+        ))
+        
+        # append another link list module for "media".
         self.children.append(modules.LinkList(
             _('Media Management'),
             column=2,
@@ -79,17 +87,17 @@ class CustomIndexDashboard(Dashboard):
         
         # append another link list module for "support".
         self.children.append(modules.LinkList(
-            _('Support'),
+            _('e-cidadania Support'),
             column=2,
             children=[
                 {
-                    'title': _('e-cidadania Documentation'),
+                    'title': _('Documentation'),
                     'url': 'http://docs.ecidadania.org',
                     'external': True,
                 },
                 {
-                    'title': _('e-cidadania source code'),
-                    'url': 'http://gitorious.org/e-cidadania/',
+                    'title': _('Wiki'),
+                    'url': 'http://dev.ecidadania.org',
                     'external': True,
                 },
             ]
@@ -117,12 +125,27 @@ class CustomIndexDashboard(Dashboard):
             ]
         ))
         
-        # append a feed module
-        self.children.append(modules.Feed(
-            _('Latest News'),
+        # append another link list module for "support".
+        self.children.append(modules.LinkList(
+            _('e-cidadania source code'),
             column=2,
-            feed_url='http://www.djangoproject.com/rss/weblog/',
-            limit=5
+            children=[
+                {
+                    'title': _('GitHub'),
+                    'url': 'http://github.com/oscarcp/e-cidadania',
+                    'external': True,
+                },
+                {
+                    'title': _('Gitorious'),
+                    'url': 'http://gitorious.org/e-cidadania',
+                    'external': True,
+                },
+                {
+                    'title': _('Repo.or.vz (Mirror)'),
+                    'url': 'http://repo.or.cz/w/e_cidadania.git',
+                    'external': True,
+                },
+            ]
         ))
         
         # append a recent actions module

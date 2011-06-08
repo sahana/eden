@@ -69,7 +69,8 @@ STATICFILES_FINDERS = (
 )
 
 STATICFILES_DIRS = (
-    cwd + '/static_files/',
+    (cwd + '/static_files/'),
+    (cwd + '/apps/grappellifit/static/'),
 )
 
 # Make this unique, and don't share it with anybody.
@@ -106,9 +107,10 @@ ROOT_URLCONF = 'e_cidadania.urls'
 
 TEMPLATE_DIRS = (
     (cwd + '/templates'),
+    (cwd + '/apps/grappellifit/templates'),
 )
 
-GRAPPELLI_ADMIN_TITLE = 'e-cidadania 0.1a / Administracion'
+GRAPPELLI_ADMIN_TITLE = 'e-cidadania 0.1 / Administracion'
 GRAPPELLI_ADMIN_URL = '/admin'
 GRAPPELLI_INDEX_DASHBOARD = 'e_cidadania.dashboard.CustomIndexDashboard'
 
@@ -124,8 +126,16 @@ DJANGO_APPS = (
     'django.contrib.staticfiles',
     #'django.contrib.sites',
     'django.contrib.messages',
+    
+    # 2011/06/08
+    # NOTICE: Grappelli and grappelli-fit are third-party apps but for import
+    # reasons they had to be put here, in the django apps, before importing
+    # the django admin. Currently this isn't an issue, since this apps don't
+    # provide any translations or other things that had to be overriden.
     'grappelli.dashboard',
     'grappelli',
+    'e_cidadania.apps.grappellifit',
+    
     'django.contrib.admin',
     'django.contrib.comments',
 )

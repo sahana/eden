@@ -1,0 +1,252 @@
+{% extends "rosetta/base.html" %}
+{% load rosetta i18n %}
+
+{% block title %}{{block.super}} - {{MESSAGES_SOURCE_LANGUAGE_NAME}} - {{rosetta_i18n_lang_name}} ({{ rosetta_i18n_pofile.percent_translated|floatformat:0 }}%){% endblock %}
+
+{% block content_subtitle %} / {{MESSAGES_SOURCE_LANGUAGE_NAME}} {% blocktrans  %}to {{rosetta_i18n_lang_name}}{% endblocktrans %}{% endblock %}
+
+{% block extrahead %}
+<script type="text/javascript" charset="utf-8">
+    (function($) {
+        $(document).ready(function() {
+            grappelli.initSearchbar();
+            grappelli.initFilter();
+        });
+    })(django.jQuery);
+</script>
+{% endblock %}
+
+{% block extrastyle %}
+{# Dirty hack because rosetta uses messages for the object list instead of object_list ... argh. #}
+<style>
+.messagelist { display: none; }
+</style>
+{% endblock %}
+
+{% block breadcumbs %}
+<div>
+    <a href="{% url rosetta-pick-file %}">{% trans "Home" %}</a> &rsaquo; 
+    {{ rosetta_i18n_lang_name }} &rsaquo; 
+    {{ rosetta_i18n_app|title }} &rsaquo; 
+    {% blocktrans with rosetta_i18n_pofile.percent_translated|floatformat:2 as percent_translated  %}Progress: {{ percent_translated }}%{% endblocktrans %}
+</div>
+{% if not rosetta_i18n_write %}<p class="errornote read-only">{% trans "File is read-only: download the file when done editing!" %}</p>{% endif %}
+{% if rosetta_last_save_error %}<p class="errornote save-conflict">{% trans "Some items in your last translation block couldn't be saved: this usually happens when the catalog file changes on disk after you last loaded it." %}</p>{% endif %}
+{% endblock %}
+{% block content-class %}change-list content-flexible{% endblock %}
+
+{% block main %}
+<ul class="tools">
+    <li>
+        <li><a href="{% url rosetta-pick-file %}" class="focus">{% trans "Pick another file" %}</a></li> 
+        <li><a href="{% url rosetta-download-file %}">{% trans "Download this catalog" %}</a></li>
+    </li>
+</ul>
+
+<div class="module changelist-filters">
+    <!-- PAGINATION TOP -->
+    <div class="module pagination">
+        {% with paginator.object_list|length as hits %}
+        <ul class="pagination">
+            <li class="results">
+                <span>
+                    {% blocktrans count counter=hits %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %}
+                </span>
+            </li>
+            {% if not needs_pagination %}
+            <li class="results">
+                <a href="?" class="total">
+                    {% blocktrans with counter=rosetta_i18n_pofile|length %}{{ counter }} total{% endblocktrans %}
+                </a>
+            </li>
+            {% else %}
+            {% for i in page_range %}
+                {% ifequal i '...' %}
+                    <li><span class="space">{{ i }}</span></li>
+                {% else %}
+                    {% ifequal i page %}
+                        <li><span class="this-page">{{i}}</span></li>
+                    {% else %}    
+                        <li><a href="?page={{i}}{% if query %}&amp;query={{query}}{% endif %}">{{i}}</a><li>
+                    {% endifequal %}
+                {% endifequal %}
+            {% endfor %}
+            <li class="results">
+                <a href="?" class="total">
+                    {% trans "Show all" %}
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        {% endwith %}
+        <br clear="all">
+    </div>
+            
+    <!-- FILTERS -->
+    <div class="module filter span-6" id="filters">
+        <div class="pulldown-container">
+            <a class="button toggle-filters" href="javascript://">{% trans "Filter" %}</a>
+            <div class="filter-pulldown">
+                <div class="filter">
+                    <label>{% trans "status" %}</label>
+                    <select class="filter_choice">
+                        <option value="?filter=untranslated" {% ifequal rosetta_i18n_filter 'untranslated' %}selected="selected"{% endifequal %}>{% trans "Untranslated only" %}</option>
+                        <option value="?filter=translated" {% ifequal rosetta_i18n_filter 'translated' %}selected="selected"{% endifequal %}>{% trans "Translated only" %}</option>
+                        <option value="?filter=fuzzy" {% ifequal rosetta_i18n_filter 'fuzzy' %}selected="selected"{% endifequal %}>{% trans "Fuzzy only" %}</option>
+                        <option value="?filter=all" {% ifequal rosetta_i18n_filter 'all' %}selected="selected"{% endifequal %}>{% trans "All" %}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- SEARCH -->
+    <div class="module search span-6" id="search">
+        <!-- Search Form -->
+        <form method="post" action="" id="changelist-search">
+            {% rosetta_csrf_token %}
+            <input type="text" value="{% if query %}{{query}}{% endif %}" id="searchbar" name="query">
+            <button class="search" value="" type="submit">&nbsp;</button>
+        </form>
+    </div>
+    <br clear="all">
+</div>
+
+
+<form method="post" action="" id="changelist-form">
+    <div style="display: none;">{% rosetta_csrf_token %}</div>
+    <div class="container-full" id="changelist">
+        {% if messages %}
+        <div class="module changelist-results{% if rosetta_i18n_lang_bidi %} rtl{% endif %}">
+            <table cellspacing="0">
+                <thead>
+                    <tr>
+                        <th class=" sorted ascending sortable">
+                            {% trans "Original" %}
+                        </th>
+                        {% if main_language %}
+                        <th>{{ main_language }}</th>
+                        {% endif %}
+                        <th>{{ rosetta_i18n_lang_name }}</th>
+                        <th class="c">{% trans "Fuzzy" %}</th>
+                        <th>{% trans "Occurrences(s)" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message in messages %}
+                    <tr class="{% cycle row1,row2%}">
+                        {% if message.msgid_plural %}
+                        <td class="original plural">
+                            <div class="plural-container">
+                                <span class="part">{{message.msgid|format_message|linebreaksbr}}</span>
+                                <span class="part">{{message.msgid_plural|format_message|linebreaksbr}}</span>
+                            </div>
+                            {% if message.msgctxt %}
+                                <span class="context">{% trans "Context hint" %}: {{message.msgctxt}}</span>
+                            {% else %}
+                                {% if message.comment %}
+                                <span class="context">{% trans "Context hint" %}: {{message.comment}}</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="translation">
+                            {% for k, msgstr in message.msgstr_plural.items|dictsort:"0"  %}
+                                <label for="m_{{message.md5hash}}_{{k}}">{{k}}:</label>
+                                <textarea rows="{{message.msgid|format_message|lines_count}}" cols="40" id="m_{{message.md5hash}}_{{k}}" name="m_{{message.md5hash}}_{{k}}" tabindex="{% increment tab_idx %}">{{msgstr}}</textarea>
+                            {% endfor %}
+                        </td>
+                    {% else %}
+                        <td class="original">
+                            <span class="message">{{ message.msgid|format_message|linebreaksbr }}</span>
+                        {% if message.msgctxt %}
+                            <span class="context">{% trans "Contextual hint" %}: "{{message.msgctxt}}"</span>
+                            {% else %}
+                            {% if message.comment %}
+                            <span class="context">{% trans "Context hint" %}: {{message.comment}}</span>
+                            {% endif %}                        
+                        {% endif %}
+                        </td>
+                        {% if main_language %}<td class="original">{{ message.main_lang|format_message|linebreaksbr }}</td>{% endif %}
+                        <td class="translation">
+                            <textarea rows="{{message.msgid|format_message|lines_count}}" cols="40" name="m_{{message.md5hash}}" tabindex="{% increment tab_idx %}">{{message.msgstr}}</textarea>
+                            {% if ENABLE_TRANSLATION_SUGGESTIONS %}<a href="#" class="suggest">{% trans "suggest" %}</a>{% endif %}
+                        </td>
+                    {% endif %}
+                        <td class="c">
+                            <input type="checkbox" name="f_{{message.md5hash}}" value="1" {% if message|is_fuzzy %}checked="checked"{% endif %} />
+                        </td>
+                        <td class="location">
+                            {% for fn,lineno in message.occurrences %}
+                                <code{% if forloop.counter|gt:"3" %} class="hide"{% endif %}>{{ fn }}:{{lineno}}</code> 
+                            {% endfor %}
+                            {% if message.occurrences|length|gt:"3" %}
+                                <a href="#">&hellip; ({% blocktrans count message.occurrences|length|minus:"3" as more_count %}{{more_count}} more{% plural %}{{more_count}} more{% endblocktrans %})</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- PAGINATION BOTTOM -->
+        <div class="module pagination">
+            {% if query %}<input type="hidden" name="query" value="{{query}}" />{% endif %}
+            {% with paginator.object_list|length as hits %}
+            <ul class="pagination">
+                <li class="results">
+                    <span>
+                        {% blocktrans count counter=hits %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %}
+                    </span>
+                </li>
+                {% if not needs_pagination %}
+                <li class="results">
+                    <a href="?" class="total">
+                        {% blocktrans with counter=rosetta_i18n_pofile|length %}{{ counter }} total{% endblocktrans %}
+                    </a>
+                </li>
+                {% else %}
+                {% for i in page_range %}
+                    {% ifequal i '...' %}
+                        <li><span class="space">{{ i }}</span></li>
+                    {% else %}
+                        {% ifequal i page %}
+                            <li><span class="this-page">{{i}}</span></li>
+                        {% else %}    
+                            <li><a href="?page={{i}}{% if query %}&amp;query={{query}}{% endif %}">{{i}}</a><li>
+                        {% endifequal %}
+                    {% endifequal %}
+                {% endfor %}
+                <li class="results">
+                    <a href="?" class="total">
+                        {% trans "Show all" %}
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            {% endwith %}
+            <br clear="all">
+        </div>
+    </div>
+    <br clear="all">
+
+    <!-- SUBMIT ROW -->
+    <div class="module footer" id="submit">
+        <div class="changelist-actions">
+            <input type="hidden" name="select_across" value="0" class="select-across">
+            <ul>
+                <li class="action-counter">
+                    <span class="action-counter">
+                        {{ rosetta_i18n_pofile.percent_translated|floatformat:0 }}% {% trans "translated" %}
+                    </span>
+                </li>
+            </ul>
+        </div>
+        <ul class="submit-row">
+            <li class="submit-button-container">
+                <input type="submit" class="default" name="_next" value="{% trans "Save and translate next block" %}" tabindex="{% increment tab_idx %}"/>
+            </li>
+        </ul>        
+    </div>
+</form>
+{% endblock %}

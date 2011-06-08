@@ -99,7 +99,7 @@ class Language():
                                  shell=True)
             subprocess.Popen.wait(a)
 
-        print '\n>> %s site root language catalogs' % (type)
+        print '\n>> Compiling site root language catalogs'
         os.chdir(self.cwd)
         a = subprocess.Popen('django-admin.py compilemessages ', shell=True)
         subprocess.Popen.wait(a)
@@ -116,17 +116,16 @@ catalogs, having to rebuild and translate them all.'
         raw_input('\n Continue? (Ctrl-C to quit)')
         for module in self.apps:
             os.chdir(self.cwd + '/apps/' + module)
-            print '\n>> %s language catalogs for %s' % (type, module)
+            print '\n>> Cleaning language catalogs for %s' % (module)
             for lang in self.languages:
                 a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
                 subprocess.Popen.wait(a)
 
-        print '\n>> Cleaning site root language catalogs' % (type)
+        print '\n>> Cleaning site root language catalogs'
         os.chdir(self.cwd)
         for lang in self.languages:
             a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
             subprocess.Popen.wait(a)
-        self._iterator('rm -rf locale/*', 'Cleaning')
 
 lang = Language()
 

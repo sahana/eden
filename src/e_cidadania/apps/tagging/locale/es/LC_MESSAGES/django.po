@@ -9,15 +9,15 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-03-25 23:17+0100\n"
-"PO-Revision-Date: 2011-03-28 12:02\n"
-"Last-Translator: <a@a.com>\n"
+"PO-Revision-Date: 2011-06-08 11:49\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
-"X-Translated-Using: django-rosetta 0.5.6\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: fields.py:69
 #, python-format
@@ -77,8 +77,12 @@ msgid "tagged items"
 msgstr "items etiquetados"
 
 #: utils.py:189
-msgid "If a list or tuple of tags is provided, they must all be tag names, Tag objects or Tag ids."
-msgstr "Si una lista o tupla de etiquetas es siempre, todos ellos deben ser nombres de etiquetas, objetos de etiqueta o IDs de etiqueta."
+msgid ""
+"If a list or tuple of tags is provided, they must all be tag names, Tag"
+" objects or Tag ids."
+msgstr ""
+"Si una lista o tupla de etiquetas es siempre, todos ellos deben ser "
+"nombres de etiquetas, objetos de etiqueta o IDs de etiqueta."
 
 #: utils.py:191
 msgid "The tag input given was invalid."
@@ -91,7 +95,9 @@ msgstr "Algoritmo de distribución especificado no válido: %s."
 
 #: views.py:33
 msgid "tagged_object_list must be called with a queryset or a model."
-msgstr "tagged_object_list tiene que ser llamado mediante un queryset o un modelo."
+msgstr ""
+"tagged_object_list tiene que ser llamado mediante un queryset o un "
+"modelo."
 
 #: views.py:39
 msgid "tagged_object_list must be called with a tag."
@@ -110,75 +116,81 @@ msgstr "Se ha dado un modelo inválido para tags_for: %s"
 #: templatetags/tagging_tags.py:32
 #, python-format
 msgid "tag_cloud_for_model tag was given an invalid model: %s"
-msgstr ""
+msgstr "tag_cloud_for_model recibió un modelo inválido: %s"
 
 #: templatetags/tagging_tags.py:56
 #, python-format
 msgid "tagged_objects tag was given an invalid model: %s"
-msgstr ""
+msgstr "La etiqueta tagged_objects recibión un modelo inválido: %s"
 
 #: templatetags/tagging_tags.py:89
 #, python-format
 msgid "%s tag requires either three or five arguments"
-msgstr ""
+msgstr "La etiqueta %s requiere tres o cinco argumentos"
 
 #: templatetags/tagging_tags.py:91 templatetags/tagging_tags.py:143
 #: templatetags/tagging_tags.py:198
 #, python-format
 msgid "second argument to %s tag must be 'as'"
-msgstr ""
+msgstr "el segundo argumento de la etiqueta %s debe ser 'as'"
 
 #: templatetags/tagging_tags.py:94 templatetags/tagging_tags.py:147
 #, python-format
 msgid "if given, fourth argument to %s tag must be 'with'"
-msgstr ""
+msgstr "si se facilita, el cuarto argumento de la etiqueta %s debe ser 'with'"
 
 #: templatetags/tagging_tags.py:96
 #, python-format
 msgid "if given, fifth argument to %s tag must be 'counts'"
 msgstr ""
+"si se facilita, el quinto argumento de la etiqueta %s debe ser "
+"'counts'"
 
 #: templatetags/tagging_tags.py:141
 #, python-format
 msgid "%s tag requires either three or between five and seven arguments"
-msgstr ""
+msgstr "La etiqueta %s requiere o tres o entre cinco y siete argumentos"
 
 #: templatetags/tagging_tags.py:155
 #, python-format
 msgid "%(tag)s tag's '%(option)s' option was not a valid integer: '%(value)s'"
-msgstr ""
+msgstr "La opción '%(option)s' de %(tag)s no es un entero válido: '%(value)s'"
 
 #: templatetags/tagging_tags.py:164
 #, python-format
 msgid "%(tag)s tag's '%(option)s' option was not a valid choice: '%(value)s'"
-msgstr ""
+msgstr "La opción '%(option)s' de %(tag)s no es una opción válida: '%(value)s'"
 
 #: templatetags/tagging_tags.py:170
 #, python-format
 msgid "%(tag)s tag was given an invalid option: '%(option)s'"
 msgstr ""
+"Se le ha pasado una opción incorrecta a la etiqueta %(tag)s : "
+"'%(option)s'"
 
 #: templatetags/tagging_tags.py:175
 #, python-format
 msgid "%(tag)s tag was given a badly formatted option: '%(option)s'"
 msgstr ""
+"Se le ha pasado una opción mal formateada a la etiqueta %(tag)s : "
+"'%(option)s'"
 
 #: templatetags/tagging_tags.py:196
 #, python-format
 msgid "%s tag requires exactly three arguments"
-msgstr ""
+msgstr "La etiqueta %s requiere exactamente tres argumentos"
 
 #: templatetags/tagging_tags.py:221
 #, python-format
 msgid "%s tag requires exactly five arguments"
-msgstr ""
+msgstr "La etiqueta %s requiere exactamente cinco argumentos"
 
 #: templatetags/tagging_tags.py:223
 #, python-format
 msgid "second argument to %s tag must be 'in'"
-msgstr ""
+msgstr "El segundo argumento de la etiqueta %s debe ser 'in'"
 
 #: templatetags/tagging_tags.py:225
 #, python-format
 msgid "fourth argument to %s tag must be 'as'"
-msgstr ""
+msgstr "El cuarto argumento de la etiqueta %s debe ser 'as'"

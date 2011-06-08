@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 12:24+0200\n"
-"PO-Revision-Date: 2011-05-23 12:46\n"
+"POT-Creation-Date: 2011-06-07 17:13+0200\n"
+"PO-Revision-Date: 2011-06-08 11:29\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -25,7 +25,7 @@ msgstr "Descripción"
 
 #: models.py:31
 msgid "Page Title"
-msgstr "Título de la página"
+msgstr "Título de página"
 
 #: models.py:32
 msgid "URL"

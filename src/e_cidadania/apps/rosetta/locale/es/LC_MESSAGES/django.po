@@ -2,19 +2,19 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-04 13:42+0200\n"
-"PO-Revision-Date: 2008-11-30 12:12\n"
-"Last-Translator: <antonio.mele@django.es>\n"
+"PO-Revision-Date: 2011-06-08 10:37\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Translated-Using: django-rosetta 0.4.RC2\n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: templates/rosetta/languages.html:4 templates/rosetta/languages.html.py:6
 msgid "Language selection"
@@ -26,7 +26,7 @@ msgstr "Inicio"
 
 #: templates/rosetta/languages.html:17
 msgid "Application"
-msgstr ""
+msgstr "Aplicación"
 
 #: templates/rosetta/languages.html:18
 msgid "Progress"
@@ -58,8 +58,8 @@ msgstr "¡Nada que traducir!"
 
 #: templates/rosetta/languages.html:45
 msgid ""
-"You haven't specified any languages in your settings file, or haven't yet "
-"generated a batch of translation catalogs."
+"You haven't specified any languages in your settings file, or haven't "
+"yet generated a batch of translation catalogs."
 msgstr ""
 "No has especificado ningún idioma en tu archivo de settings o no has "
 "generado todavía un batch para traducción de catálogos."
@@ -67,12 +67,13 @@ msgstr ""
 #: templates/rosetta/languages.html:46
 #, python-format
 msgid ""
-"Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N documentation</"
-"a> for a guide on how to set up internationalization for your project."
+"Please refer to <a href=\"%(i18n_doc_link)s\">Django's I18N "
+"documentation</a> for a guide on how to set up internationalization for"
+" your project."
 msgstr ""
-"Por favor visita la <a href=\"%(i18n_doc_link)s\">Documentación de Django "
-"sobre I18N</a> para obtener una guía sobre cómo añadir internacionalización "
-"a tu proyecto."
+"Por favor visita la <a href=\"%(i18n_doc_link)s\">Documentación de "
+"Django sobre I18N</a> para obtener una guía sobre cómo añadir "
+"internacionalización a tu proyecto."
 
 #: templates/rosetta/pofile.html:8
 msgid "Pick another file"
@@ -89,14 +90,18 @@ msgstr "Progreso: %(percent_translated)s%"
 #: templates/rosetta/pofile.html:23
 msgid "File is read-only: download the file when done editing!"
 msgstr ""
-"El archivo está en modo lectura: ¡Descarga el archivo cuando termines de "
-"editarlo!"
+"El archivo está en modo lectura: ¡Descarga el archivo cuando termines "
+"de editarlo!"
 
 #: templates/rosetta/pofile.html:24
 msgid ""
-"Some items in your last translation block couldn't be saved: this usually "
-"happens when the catalog file changes on disk after you last loaded it."
+"Some items in your last translation block couldn't be saved: this "
+"usually happens when the catalog file changes on disk after you last "
+"loaded it."
 msgstr ""
+"Algunos elementos en tu bloque de traducción no se han podido guardar:"
+" esto normalmente ocurre cuando el archivo del catálogo se modifica en"
+" disco desde la última vez que lo cargaste."
 
 #: templates/rosetta/pofile.html:28
 #, python-format
@@ -121,7 +126,7 @@ msgstr "Vellosos sólo"
 
 #: templates/rosetta/pofile.html:35
 msgid "All"
-msgstr ""
+msgstr "Todos"
 
 #: templates/rosetta/pofile.html:42
 msgid "Search"
@@ -133,7 +138,7 @@ msgstr "Ir"
 
 #: templates/rosetta/pofile.html:54
 msgid "Original"
-msgstr ""
+msgstr "Original"
 
 #: templates/rosetta/pofile.html:58
 msgid "Occurrences(s)"

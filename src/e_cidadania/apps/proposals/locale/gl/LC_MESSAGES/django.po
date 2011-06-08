@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-23 12:23+0200\n"
+"POT-Creation-Date: 2011-06-07 17:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,12 +39,12 @@ msgid "Code"
 msgstr ""
 
 #: models.py:54 templates/proposals/proposal_add.html:15
-#: templates/proposals/proposal_add.html:62
+#: templates/proposals/proposal_add.html:61
 msgid "Title"
 msgstr ""
 
 #: models.py:55 templates/proposals/proposal_add.html:22
-#: templates/proposals/proposal_add.html:63
+#: templates/proposals/proposal_add.html:62
 msgid "Description"
 msgstr ""
 
@@ -68,68 +68,68 @@ msgid "(optional)"
 msgstr ""
 
 #: templates/proposals/proposal_add.html:40
-#: templates/proposals/proposal_add.html:65
+#: templates/proposals/proposal_add.html:64
 msgid "Tags"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:49
+#: templates/proposals/proposal_add.html:48
 msgid "Continue"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:57
+#: templates/proposals/proposal_add.html:56
 msgid "Admins/moderators read this"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:58
+#: templates/proposals/proposal_add.html:57
 msgid ""
 "There are a lot more options in the proposals but they will appear only when "
 "you edit the proposal."
 msgstr ""
 
-#: templates/proposals/proposal_add.html:60
+#: templates/proposals/proposal_add.html:59
 msgid "How to add new proposals"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:62
+#: templates/proposals/proposal_add.html:61
 msgid "Title resuming the proposal, be concise (50 characters)"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:63
+#: templates/proposals/proposal_add.html:62
 msgid ""
 "Describe here your proposal with detail. You can add images or any other "
 "content."
 msgstr ""
 
-#: templates/proposals/proposal_add.html:64
+#: templates/proposals/proposal_add.html:63
 msgid "Latitude/Longitude"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:64
+#: templates/proposals/proposal_add.html:63
 msgid "You'll have to put this if you want to locate the proposal in a map."
 msgstr ""
 
-#: templates/proposals/proposal_add.html:65
+#: templates/proposals/proposal_add.html:64
 msgid ""
 "Relevant tags for the proposal, p.e. where the proposal is localted, what is "
 "related to it, etc."
 msgstr ""
 
-#: templates/proposals/proposal_delete.html:4
+#: templates/proposals/proposal_confirm_delete.html:4
 msgid "Delete proposal"
 msgstr ""
 
-#: templates/proposals/proposal_delete.html:13
+#: templates/proposals/proposal_confirm_delete.html:13
 msgid ""
 "Are you sure you want to delete this proposal? This action cannot be undone."
 msgstr ""
 
-#: templates/proposals/proposal_delete.html:15
+#: templates/proposals/proposal_confirm_delete.html:15
 #: templates/proposals/proposal_detail.html:22
 #: templates/proposals/proposal_list.html:22
 msgid "Delete"
 msgstr ""
 
-#: templates/proposals/proposal_delete.html:16
+#: templates/proposals/proposal_confirm_delete.html:16
 #: templates/proposals/proposal_edit.html:15
 #: templates/proposals/proposal_list.html:48
 msgid "Go back"
