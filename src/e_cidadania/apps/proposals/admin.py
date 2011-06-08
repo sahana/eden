@@ -19,6 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.proposals.models import Proposal
 
@@ -29,5 +30,24 @@ class ProposalAdmin(admin.ModelAdmin):
     user and the website.
     """
     list_display = ('title', 'author', 'tags')
+    
+    fieldsets = [
+        (None, {'fields':
+            ['code', 'title', 'description', 'tags', 'support_votes']}),
+        
+        (_('Location'), {'fields':
+            ['latitude', 'longitude']}),
+
+        (_('Relations'), {'fields':
+            [('space', 'author')]}),
+        
+        (_('Other'), {'fields':
+            ['budget', 'closed', 'close_reason', 'closed_by']}),
+        
+        (_('Options'), {'fields':
+            ['anon_allowed', 'refurbished']}),
+
+    ]
+    
     
 admin.site.register(Proposal, ProposalAdmin)

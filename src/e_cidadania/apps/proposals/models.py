@@ -57,7 +57,6 @@ class Proposal(models.Model):
     author = models.ForeignKey(User, related_name='proposal_authors',
                                blank=True, null=True)
     #debatelink = models.ForeignKey()
-    # WARNING. Tags model will be removed and replaced by django-categories
     tags = TagField()
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
                                    max_digits=8, decimal_places=6)
@@ -86,6 +85,9 @@ class Proposal(models.Model):
         return Tag.objects.get_for_object(self)
 
     class Meta:
+        verbose_name = _('Proposal')
+        verbose_name_plural = _('Proposals')
+        get_latest_by = 'pub_date'
         permissions = (
             ('view', 'Can view the object'),
         )
