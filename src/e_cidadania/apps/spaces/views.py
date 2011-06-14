@@ -119,20 +119,33 @@ class ViewSpaceIndex(DetailView):
 
 
 #class EditSpace(UpdateView):
-#
+
 #    """
 #    Class-based edit space view
 #    """
 #    form_class = SpaceForm
 #    context_object_name = 'form'
+#    template_name = 'spaces/space_edit.html'
+#    
+##    def get(self, request, **kwargs):
+##        form_class = self.get_form_class()
+##        form = self.get_form(form_class)
+##        context = self.get_context_data(object=self.object, form=form)
+##        return self.render_to_response(context)
+#    
+#    def get_object(self):
+#        obj = get_object_or_404(Space, url = self.kwargs['space_name'])
+#        return obj
 #    
 #    def get_success_url(self):
 #        return '/spaces/' + self.kwargs['space_name']
 #    
-#    def form_valid(self):
+#    def form_valid(self, form):
+#        form_uncommited = form.save(commit = False)
+#        form_uncommited.author = request.user
 #        form_uncommited.save()
 #        space = form_uncommited.url
-#    
+    
 #    def form_invalid(self):
 #        self.template_name = 'space
     

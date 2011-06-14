@@ -22,17 +22,44 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 
+# Generic class-based views
+from django.views.generic.base import TemplateView, RedirectView
+from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.detail import DetailView
+
 from django.template import RequestContext
-from django.views.generic.list_detail import object_list
-from django.views.generic.list_detail import object_detail
 from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
-from django.views.generic.create_update import delete_object
 
 from django.contrib.auth.models import User
 from e_cidadania.apps.spaces.models import Space
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
+
+class ViewPost(DetailView):
+
+    """
+    View a specific post.
+    """
+    context_object_name = 'news'
+    template_name = 'news/post_detail.html'
+    
+    def get_object(self):
+    
+        """
+        """
+        space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return get_object_or_404(Post, post_space = space)
+        
+    def get_context_data(self):
+    
+        """
+        Get extra context data for the ViewPost view.
+        """
+        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+
 
 @permission_required('news.add_post')
 def add_post(request, space_name):
@@ -66,22 +93,6 @@ def add_post(request, space_name):
                               {'form': form, 'get_place': current_space},
                               context_instance = RequestContext(request))
 
-@permission_required('news.delete_post')
-def delete_post(request, space_name, post_id):
-
-    """
-    Delete an existent post. Post deletion is only reserved to spaces
-    administrators or site admins.
-    """
-    current_space = get_object_or_404(Space, url=space_name)
-
-    return delete_object(request,
-                         model = Post,
-                         object_id = post_id,
-                         login_required=True,
-                         template_name = 'news/post_delete.html',
-                         post_delete_redirect = '/spaces/' + space_name,
-                         extra_context = {'get_place': current_space})
 
 @permission_required('news.edit_post')
 def edit_post(request, space_name, post_id):
@@ -100,17 +111,20 @@ def edit_post(request, space_name, post_id):
                          extra_context = {'get_place': current_space})
 
 
-def view_news(request, space_name, post_id):
+class DeletePost(DeleteView):
 
     """
-    View a post with comments.
+    Delete an existent post. Post deletion is only reserved to spaces
+    administrators or site admins.
     """
-    current_space = get_object_or_404(Space, url=space_name)
-
-    return object_detail(request,
-                         queryset = Post.objects.all().filter(post_space=current_space.id),
-                         object_id = post_id,
-                         template_name = 'news/post_detail.html',
-                         template_object_name = 'news',
-                         extra_context = {'get_place': current_space})
+    context_object_name = "get_place"
+    
+    def get_success_url(self):
+        space = self.kwargs['space_name']
+        return '/spaces/{0}'.format(space)
+        
+    def get_object(self):
+        return get_object_or_404(Post, pk=self.kwargs['post_id'])
+        
+#@permission_required('news.delete_post')
 

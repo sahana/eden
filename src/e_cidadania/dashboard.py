@@ -100,6 +100,11 @@ class CustomIndexDashboard(Dashboard):
                     'url': 'http://dev.ecidadania.org',
                     'external': True,
                 },
+                {
+                    'title': _('Translations'),
+                    'url': '../rosetta',
+                    'external': True,
+                },
             ]
         ))
         

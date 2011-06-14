@@ -19,7 +19,9 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls.defaults import *
-from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces, DeleteSpace
+from django.contrib.auth.decorators import login_required, permission_required
+
+from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces, DeleteSpace, EditSpace
 from e_cidadania.apps.spaces.views import ListDocs, DeleteDocument
 from e_cidadania.apps.spaces.views import ListMeetings, DeleteMeeting, ViewMeeting
 
@@ -45,7 +47,8 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
     (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/', 'edit_doc'),
 
-    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/', DeleteDocument.as_view()),
+    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/',
+     DeleteDocument.as_view()),
 
     (r'^(?P<space_name>\w+)/docs/', ListDocs.as_view()),
 
@@ -70,7 +73,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 # Spaces URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
+    (r'^(?P<space_name>\w+)/edit/', EditSpace.as_view()),
 
     (r'^(?P<space_name>\w+)/delete/', DeleteSpace.as_view()),
 
