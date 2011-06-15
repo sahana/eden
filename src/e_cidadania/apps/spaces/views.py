@@ -179,7 +179,11 @@ class DeleteSpace(DeleteView):
     """
     context_object_name = 'get_place'
     success_url = '/'
-    
+
+    method_decorator(permission_required('spaces.delete_space'))
+    def dispatch(self, *args, **kwargs):
+        return super(DeleteSpace, self).dispatch(*args, **kwargs)
+
     def get_object(self):
         return get_object_or_404(Space, url = self.kwargs['space_name'])
 
