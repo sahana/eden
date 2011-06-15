@@ -53,7 +53,8 @@ class CustomIndexDashboard(Dashboard):
             collapsible=False,
             models=('django.contrib.auth.models.User',
                     'e_cidadania.apps.accounts.models.UserProfile',
-                    'django.contrib.auth.models.Group',)
+                    'django.contrib.auth.models.Group',
+                    'django.contrib.sites.*',)
         ))
         
         self.children.append(modules.AppList(

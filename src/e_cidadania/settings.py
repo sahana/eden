@@ -124,7 +124,7 @@ DJANGO_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    #'django.contrib.sites',
+    'django.contrib.sites', # Needed for django-register
     'django.contrib.messages',
     
     # 2011/06/08

@@ -168,9 +168,13 @@ def edit_space(request, space_name):
             space = form_uncommited.url
             return redirect('/spaces/' + space)
 
-    return render_to_response('spaces/space_edit.html',
+    for i in self.request.user.profile.spaces.all():
+        if i.url == space_name:
+            return render_to_response('spaces/space_edit.html',
                               {'form': form},
                               context_instance=RequestContext(request))
+            
+    return render_to_response('not_allowed.html', context_instance=RequestContext(request))
 
 class DeleteSpace(DeleteView):
 
