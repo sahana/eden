@@ -2,8 +2,8 @@
 {% load i18n %}
 
 {% block title %}{% trans "Edit document" %}{% endblock %}
-{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
-{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+{% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
 

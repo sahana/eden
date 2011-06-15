@@ -133,3 +133,9 @@ class DeleteProposal(DeleteView):
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
+    
+    def get_context_data(self, **kwargs):
+        context = super(DeleteProposal, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+

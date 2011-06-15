@@ -58,12 +58,12 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
     (r'^(?P<space_name>\w+)/meeting/add', 'add_meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/(?P<id>\d+)/edit/', 'edit_doc'),
+    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/edit/', 'edit_meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/(?P<id>\d+)/delete/',
+    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/delete/',
      DeleteMeeting.as_view()),
     
-    (r'^(?P<space_name>\w+)/meeting/(?P<id>\d+)/', ViewMeeting.as_view()),
+    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/', ViewMeeting.as_view()),
 
     (r'^(?P<space_name>\w+)/meeting/', ListMeetings.as_view()),
 

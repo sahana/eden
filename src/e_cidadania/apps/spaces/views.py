@@ -75,7 +75,7 @@ class ListSpaces(ListView):
     This class returns the complete list of spaces stored in the platform.
     """
     model = Space
-
+    
 
 class ViewSpaceIndex(DetailView):
 
@@ -127,15 +127,7 @@ class ViewSpaceIndex(DetailView):
 #    context_object_name = 'form'
 #    template_name = 'spaces/space_edit.html'
 #    
-##    def get(self, request, **kwargs):
-##        form_class = self.get_form_class()
-##        form = self.get_form(form_class)
-##        context = self.get_context_data(object=self.object, form=form)
-##        return self.render_to_response(context)
-#    
-#    def get_object(self):
-#        obj = get_object_or_404(Space, url = self.kwargs['space_name'])
-#        return obj
+
 #    
 #    def get_success_url(self):
 #        return '/spaces/' + self.kwargs['space_name']
@@ -184,7 +176,7 @@ class DeleteSpace(DeleteView):
     context_object_name = 'get_place'
     success_url = '/'
 
-    method_decorator(permission_required('spaces.delete_space'))
+    @method_decorator(permission_required('spaces.delete_space'))
     def dispatch(self, *args, **kwargs):
         return super(DeleteSpace, self).dispatch(*args, **kwargs)
 
@@ -304,6 +296,11 @@ class DeleteDocument(DeleteView):
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
+        
+    def get_context_data(self, **kwargs):
+        context = super(DeleteDocument, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
 
 #
 # MEETING VIEWS
@@ -344,11 +341,10 @@ class ViewMeeting(DetailView):
             self.template_name = 'not_allowed.html'
             return get_object_or_404(Space, url = space_name)
 
-        return get_object_or_404(Meeting, pk = self.kwargs['id'])
+        return get_object_or_404(Meeting, pk = self.kwargs['meeting_id'])
 
     def get_context_data(self, **kwargs):
         context = super(ViewMeeting, self).get_context_data(**kwargs)
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
         
@@ -372,7 +368,23 @@ def add_meeting(request, space_name):
     return render_to_response('spaces/meeting_add.html',
                               {'form': form, 'get_place': place},
                               context_instance=RequestContext(request))
-    
+
+def edit_meeting(request, space_name, meeting_id):
+
+    """
+    """
+    place = get_object_or_404(Space, url=space_name)
+
+    return update_object(request,
+                         model = Meeting,
+                         object_id = meeting_id,
+                         login_required = True,
+                         template_name = 'spaces/meeting_edit.html',
+                         template_object_name = 'meeting',
+                         post_save_redirect = '/',
+                         extra_context = {'get_place': place})
+
+
 class DeleteMeeting(DeleteView):
 
     """
@@ -385,3 +397,8 @@ class DeleteMeeting(DeleteView):
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
+   
+    def get_context_data(self, **kwargs):
+        context = super(DeleteMeeting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context

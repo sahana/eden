@@ -3,8 +3,8 @@
 {% load comments %}
 
 {% block title %}{% trans "View proposal" %} {{ proposal.id }} {% endblock %}
-{% block logo %}<img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
-{% block banner %}<img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+{% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
 
