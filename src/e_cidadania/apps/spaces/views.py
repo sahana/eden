@@ -414,3 +414,19 @@ class DeleteMeeting(DeleteView):
         context = super(DeleteMeeting, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
+        
+class ListPosts(ListView):
+
+    """
+    Lists all the news posts within a space. This function can be global for
+    the news module because we can't know in which space we are to filter it.
+    """
+    paginate_by = 25
+    context_object_name = 'post_list'
+    template_name = 'spaces/news_list.html'
+    
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return Post.objects.all().filter(post_space=place)
+    
+    

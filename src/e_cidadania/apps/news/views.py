@@ -57,10 +57,11 @@ class ViewPost(DetailView):
         """
         Get extra context data for the ViewPost view.
         """
-        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
+        context = super(ViewPost, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
 
-
+    
 @permission_required('news.add_post')
 def add_post(request, space_name):
 

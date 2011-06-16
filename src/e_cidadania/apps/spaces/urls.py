@@ -21,9 +21,9 @@
 from django.conf.urls.defaults import *
 
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
-                                          DeleteSpace
-from e_cidadania.apps.spaces.views import ListDocs, DeleteDocument
-from e_cidadania.apps.spaces.views import ListMeetings, DeleteMeeting, ViewMeeting
+                                          DeleteSpace, ListDocs, DeleteDocument, \
+                                          ListMeetings, DeleteMeeting, ViewMeeting, \
+                                          ListPosts
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -75,7 +75,9 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
     (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
 
     (r'^(?P<space_name>\w+)/delete/', DeleteSpace.as_view()),
-
+    
+    (r'^(?P<space_name>\w+)/news/', ListPosts.as_view()),
+        
     (r'^add/', 'create_space'),
     
     (r'^$', ListSpaces.as_view()),
