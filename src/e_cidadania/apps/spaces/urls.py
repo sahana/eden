@@ -78,7 +78,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
     (r'^add/', 'create_space'),
     
-    (r'^all/', ListSpaces.as_view()),
+    (r'^$', ListSpaces.as_view()),
 
     (r'^go/', GoToSpace.as_view()),
 

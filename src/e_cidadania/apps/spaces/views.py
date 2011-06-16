@@ -160,7 +160,7 @@ def edit_space(request, space_name):
             space = form_uncommited.url
             return redirect('/spaces/' + space)
 
-    for i in self.request.user.profile.spaces.all():
+    for i in request.user.profile.spaces.all():
         if i.url == space_name:
             return render_to_response('spaces/space_edit.html',
                               {'form': form},
@@ -232,7 +232,19 @@ class ListDocs(ListView):
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
         objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
-        return objects
+        
+        if self.request.user.is_staff:
+            return objects
+        
+        if self.request.user.is_anonymous():
+            self.template_name = 'not_allowed.html'
+            return objects
+        
+        for i in self.request.user.profile.spaces.all():
+            if i.url == place:
+                return objects
+        
+        self.template_name = 'not_allowed.html'
 
     def get_context_data(self, **kwargs):
         context = super(ListDocs, self).get_context_data(**kwargs)
