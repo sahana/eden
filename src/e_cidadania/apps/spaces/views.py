@@ -194,28 +194,32 @@ def create_space(request):
     space_form = SpaceForm(request.POST or None, request.FILES or None)
     entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
                                  queryset=Entity.objects.none())
-
-    if request.method == 'POST':
-        space_form_uncommited = space_form.save(commit=False)
-        space_form_uncommited.author = request.user
-
-        if space_form.is_valid() and entity_forms.is_valid():
-            new_space = space_form_uncommited.save()
-            space = get_object_or_404(Space, name=space_form_uncommited.name)
-
-            ef_uncommited = entity_forms.save(commit=False)
-            for ef in ef_uncommited:
-                ef.space = space
-                ef.save()
-            # We add the created spaces to the user allowed spaces
-
-            request.user.profile.spaces.add(space)
-            return redirect('/spaces/' + space.url)
-
-    return render_to_response('spaces/space_add.html',
+    
+    if request.user.is_staff:    
+        if request.method == 'POST':
+            space_form_uncommited = space_form.save(commit=False)
+            space_form_uncommited.author = request.user
+    
+            if space_form.is_valid() and entity_forms.is_valid():
+                new_space = space_form_uncommited.save()
+                space = get_object_or_404(Space, name=space_form_uncommited.name)
+    
+                ef_uncommited = entity_forms.save(commit=False)
+                for ef in ef_uncommited:
+                    ef.space = space
+                    ef.save()
+                # We add the created spaces to the user allowed spaces
+    
+                request.user.profile.spaces.add(space)
+                return redirect('/spaces/' + space.url)
+    
+        return render_to_response('spaces/space_add.html',
                               {'form': space_form,
                                'entityformset': entity_forms},
                               context_instance=RequestContext(request))
+    else:
+        return render_to_response('not_allowed.html',
+                                  context_instance=RequestContext(request))
 
 #
 # DOCUMENTS VIEWS

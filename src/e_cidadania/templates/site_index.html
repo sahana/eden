@@ -24,17 +24,20 @@
     {% for news in publication %}
       {% if news.post_pub_index %}
         <div class="post">
+          {% if perms.news.edit_post %}
+            <div id="tools">
+              <a href="{{ request.path }}news/{{ news.id }}/edit/">
+                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+              </a> 
+              {% if perms.news.delete_post %}
+                <a href="{{ request.path }}news/{{ news.id }}/delete/">
+                  <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
           <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
-          <h4>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }} | {% trans "Tags" %}: {{ news.post_tags }}
-            {% if perms.news.edit_post %}
-              <div id="tools">
-                <a href="{{ request.path }}news/{{ news.id }}/edit/">{% trans "Edit" %}</a> |
-                {% if perms.news.delete_post %}
-                    <a href="{{ request.path }}news/{{ news.id }}/delete/">{% trans "Delete" %}</a>
-                {% endif %}
-              </div>
-            {% endif %}
-          </h4>
+          <h4>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }} | {% trans "Tags" %}: {{ news.post_tags }}</h4>
           <p>{{ news.post_message|safe }}</p>
         </div>
       {% endif %}
