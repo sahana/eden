@@ -249,6 +249,7 @@ class ListDocs(ListView):
                 return objects
         
         self.template_name = 'not_allowed.html'
+        return objects
 
     def get_context_data(self, **kwargs):
         context = super(ListDocs, self).get_context_data(**kwargs)

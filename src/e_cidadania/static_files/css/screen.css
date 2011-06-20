@@ -283,6 +283,11 @@ input[type="text"], input[type="password"] {
     text-align: right;
 }
 
+.general {
+    border: 1px solid #FEFFB2;
+    background: #FEFFCC;
+}
+
 .header {
     border-bottom: 3px solid #000;
     margin-bottom: 20px;

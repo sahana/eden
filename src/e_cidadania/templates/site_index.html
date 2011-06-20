@@ -17,7 +17,9 @@
 
     {% if perms.news.add_post %}
     <div id="tools">
-      <a href="{{ request.path}}news/add/">{% trans "Add news" %}</a>
+      <a href="{{ request.path}}news/add/">
+        <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add news' %}" title="{% trans 'Add news' %}"/>
+      </a>
     </div>
     {% endif %}
 
