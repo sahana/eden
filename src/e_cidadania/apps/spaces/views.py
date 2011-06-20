@@ -161,9 +161,9 @@ def edit_space(request, space_name):
             return redirect('/spaces/' + space)
 
     for i in request.user.profile.spaces.all():
-        if i.url == space_name:
+        if i.url == space_name or request.user.is_staff:
             return render_to_response('spaces/space_edit.html',
-                              {'form': form},
+                              {'form': form, 'get_place': place},
                               context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html', context_instance=RequestContext(request))
