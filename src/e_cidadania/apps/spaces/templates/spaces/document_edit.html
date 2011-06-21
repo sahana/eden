@@ -9,14 +9,38 @@
 
   {% block centercol %}
     <div class="grid_16">
+    
+      <div id="contenttitles">
+        {% trans "Edit document" %}
+      </div>
+      
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
-        {{ form.as_p }}
-
+        <p>{% trans "URL" %}: <a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ MEDIA_URL }}{{ doc.docfile.url }}</a></p>
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.title.errors }}
+          <label for="id_title">{% trans "Title" %}:</label>
+          <p>{{ form.title }}</p>
+          <p id="form_help_text">{{ form.title.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.docfile.errors }}
+          <label for="id_name">{% trans "Select your file" %}:</label>
+          <p>{{ form.docfile }}</p>
+          <p id="form_help_text">{{ form.docfile.help_text }}</p>
+        </div>
+        
+        {{ form.space.as_hidden }}
+        {{ form.author.as_hidden }}
+        
         <hr />
-
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
+        <p class="buttons">
+          <input type="submit" value="{% trans 'Save' %}" />
+          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
+        </p>
+        
       </form>
     </div>
   {% endblock %}

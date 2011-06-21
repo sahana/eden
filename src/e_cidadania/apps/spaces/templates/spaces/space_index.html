@@ -77,7 +77,7 @@
           <ul>
             {% for doc in documents %}
               <li>
-                <a href="{{ MEDIA_URL }}/{{ doc.docfile }}">{{ doc.title }}</a>
+                <p><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }}</a>
                 {% if perms.spaces.edit_document %}
                   <a href="{{ request.path }}docs/{{ doc.id }}/edit/">
                     <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
@@ -87,7 +87,7 @@
                     <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
                   </a>
                 {% endif %}
-                {% endif %}
+                {% endif %}</p>
               </li>
             {% empty %}
               <p>{% trans "No documents available" %}</p>
@@ -115,7 +115,7 @@
           <ul>
           {% for proposal in proposals %}
             <li>
-              <a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a>
+              <p><a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a></p>
             </li>
           {% empty %}
             <p>{% trans "No proposals available" %}</p>

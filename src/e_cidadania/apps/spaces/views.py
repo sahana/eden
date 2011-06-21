@@ -105,7 +105,7 @@ class ViewSpaceIndex(DetailView):
                 return space_object
 
         self.template_name = 'not_allowed.html'
-        return space_object
+        return space_object.none()
 
     # Get extra context data
     def get_context_data(self, **kwargs):
@@ -267,20 +267,23 @@ def add_doc(request, space_name):
 
     doc = Document()
     form = DocForm(request.POST or None, request.FILES or None, instance=doc)
-
-    # Get current space
     place = get_object_or_404(Space, url=space_name)
-
-    if request.method == 'POST':
-        form_uncommited = form.save(commit=False)
-        form_uncommited.space = place
-        form_uncommited.author = request.user
-        if form.is_valid():
-            form_uncommited.save()
-            return redirect('/spaces/' + space_name)
-
-    return render_to_response('spaces/document_add.html',
-                              {'form': form, 'get_place': place},
+    
+    for i in request.user.profile.spaces.all():
+        if i.url == space_name or request.user.is_staff:
+    
+            if request.method == 'POST':
+                form_uncommited = form.save(commit=False)
+                form_uncommited.space = place
+                form_uncommited.author = request.user
+                if form.is_valid():
+                    form_uncommited.save()
+                    return redirect('/spaces/' + space_name)
+        
+            return render_to_response('spaces/document_add.html',
+                                      {'form': form, 'get_place': place},
+                                      context_instance=RequestContext(request))
+    return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
 
 @permission_required('spaces.edit_document')
@@ -298,8 +301,9 @@ def edit_doc(request, space_name, doc_id):
                          template_name = 'spaces/document_edit.html',
                          template_object_name = 'doc',
                          post_save_redirect = '/',
-                         extra_context = {'get_place': place})
-
+                         extra_context = {'get_place': place,
+                                          'doc': get_object_or_404(Document, pk=doc_id)}
+                        )
 
 class DeleteDocument(DeleteView):
 
@@ -409,7 +413,7 @@ class DeleteMeeting(DeleteView):
     """
 
     def get_object(self):
-        return get_object_or_404(Meeting, pk = self.kwargs['id'])
+        return get_object_or_404(Meeting, pk = self.kwargs['meeting_id'])
 
     def get_success_url(self):
         current_space = self.kwargs['space_name']

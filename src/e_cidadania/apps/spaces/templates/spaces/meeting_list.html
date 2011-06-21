@@ -9,15 +9,21 @@
 
   {% block centercol %}
     <div class="grid_16">
+    
+      <div id="contenttitles">
+        {% trans "Meeting list" %}
+      </div>
+      
       {% for meeting in meeting_list %}
         <p><a href="{{ meeting.id }}">{{ meeting.title }}</a></p>
         <p>{% trans "Published" %} {{ meeting.meeting_date }}</p>
       {% empty %}
         <p>{% trans "There are no meetings in this space." %}</p>
       {% endfor %}
-      <div class="pagebutton">
-        <a href="../">{% trans "Go back" %}</a>
-      </div>
+      <hr />
+      <p>
+        <a href="../" class="pagebutton">{% trans "Go back" %}</a>
+      </p>
     </div>
   {% endblock %}
 

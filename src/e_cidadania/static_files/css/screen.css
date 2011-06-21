@@ -90,9 +90,10 @@ img {
 
 /* CUSTOMIZATIONS */
 input[type="submit"] {
-    border: 1px solid #AAA;
-    background: #CCC;
-    color: #333;
+    border: 1px solid #AACCAA; /*#AAA;*/
+    background: #DDFFDD; /*#98FB98; /*#DDD;*/
+    color: #666;
+    padding: 5px 10px;
 }
 
 input[type="text"], input[type="password"] {
@@ -732,6 +733,9 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 /* END NEWS */
 
 /* PAGES */
+.buttons {
+    margin-top: -10px;
+}
 .pageinfo {
     font-size: 9px;
     float: right;
@@ -743,12 +747,12 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 
 .pagebutton {
     font-size: 1em;
-    float: right;
-    padding: 5px;
+    padding: 6px 10px;
     margin: 10px;
-    background: #999;
-    color: #FFF;
-    -webkit-border-radius: 5px;
+    background: #DDD;
+    border: 1px solid #AAA;
+    color: #444;
+    /*-webkit-border-radius: 5px;
     -moz-border-radius: 5px;
-    border-radius: 5px;
+    border-radius: 5px;*/
 }

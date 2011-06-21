@@ -9,6 +9,11 @@
 
   {% block centercol %}
     <div class="grid_11">
+    
+      <div id="contenttitles">
+        {% trans "Create new meeting" %}
+      </div>
+      
       <form enctype="" action="" method="post">{% csrf_token %}
         
         {{ form.non_field_errors }}
@@ -57,12 +62,12 @@
         {{ form.space.as_hidden }}
         {{ form.meeting_author.as_hidden }}
 
-        <p>
-          <input type="submit" value="{% trans 'Upload' %}" />
-          <div class="pagebutton">
-            <a href="../../">&laquo; {% trans "Go back" %}</a>
-          </div>
+        <hr />
+        <p class="buttons">
+          <input type="submit" value="{% trans 'Create' %}" />
+          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
         </p>
+
       </form>
     </div>
 
@@ -75,7 +80,10 @@
         <h2>{% trans "How do meetings work?"%}</h2>
         <ul class="instructions">
           <li><strong>{% trans "Title" %}:</strong> {% trans "A descriptive title of the meeting. Be concise."%}</li>
-          <li><strong>{% trans "Meeting type" %}:</strong> {% trans "Allowed size is 10MB"%}</li>
+          <li><strong>{% trans "Description" %}:</strong> {% trans "A short resume of the points treated in the meeting." %}</li>
+          <li><strong>{% trans "Location" %}:</strong> {% trans "Where does the meeting took place." %}</li>
+          <li><strong>{% trans "Meeting type" %}:</strong> {% trans "Type of meeting."%}</li>
+          <li><strong>{% trans "Meeting date" %}:</strong> {% trans "Date when the meeting took place."%}</li>
         </ul>
       </div>
     </div>

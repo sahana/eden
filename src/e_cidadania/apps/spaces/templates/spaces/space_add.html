@@ -5,11 +5,13 @@
 
 {% block content %}
 
-  <div id="contenttitles">
-  {% trans "Create a new space" %}
-  </div>
   {% block centercol %}
     <div class="grid_11">
+    
+      <div id="contenttitles">
+        {% trans "Create a new space" %}
+      </div>
+      
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
         {{ form.non_field_errors }}
         <div class="fieldWrapper">
@@ -41,7 +43,7 @@
           {{ form.authorized_groups }}
         </div>
 
-        <hr/>
+        <hr />
         <h3>{% trans "Modules" %}</h3>
 
         <div class="fieldWrapper">
@@ -74,10 +76,13 @@
             {{ entity.space.as_hidden }}
         </div>
         {% endfor %}
-          
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
+        
+        <hr />  
+        <p class="buttons">
+          <input type="submit" value="{% trans 'Create' %}" />
+          <a href="/" class="pagebutton">{% trans "Cancel" %}</a>
+        </p>
 
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
       </form>
     </div>
 
