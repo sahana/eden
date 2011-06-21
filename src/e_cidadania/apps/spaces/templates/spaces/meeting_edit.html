@@ -7,12 +7,64 @@
 
 {% block content %}
   <div class="grid_11">
+  
+    <div id="contenttitles">
+      {% trans "Edit meeting" %}
+    </div>
+      
     <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
-        {{ form.as_p }}
-        <hr />
+        
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.title.errors }}
+          <label for="id_title">{% trans "Title" %}:</label>
+          <p>{{ form.title }}</p>
+          <p id="form_help_text">{{ form.title.help_text }}</p>
+        </div>
 
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
+        <div class="fieldWrapper">
+          {{ form.description.errors }}
+          <label for="id_description">{% trans "Description" %}:</label>
+          <p>{{ form.description }}</p>
+          <p id="form_help_text">{{ form.description.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.location.errors }}
+          <label for="id_location">{% trans "Location" %}:</label>
+          <p>{{ form.location }}</p>
+          <p id="form_help_text">{{ form.location.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.meeting_type.errors }}
+          <label for="id_meeting_type">{% trans "Meeting type" %}:</label>
+          <p>{{ form.meeting_type }}</p>
+          <p id="form_help_text">{{ form.meeting_type.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.meeting_date.errors }}
+          <label for="id_meeting_date">{% trans "Meeting date" %}:</label>
+          <p>{{ form.meeting_date }}</p>
+          <p id="form_help_text">{{ form.meeting_date.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.user.errors }}
+          <label for="id_user">{% trans "Attendants" %}:</label>
+          <p>{{ form.user }}</p>
+          <p id="form_help_text">{{ form.user.help_text }}</p>
+        </div>
+        
+        {{ form.space.as_hidden }}
+        {{ form.meeting_author.as_hidden }}
+        
+        <hr />
+        <p class="buttons">
+          <input type="submit" value="{% trans 'Save' %}" />
+          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
+        </p>
     </form>
   </div>
 {% endblock %}

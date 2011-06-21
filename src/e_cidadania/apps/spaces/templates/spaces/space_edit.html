@@ -9,14 +9,72 @@
 
   {% block centercol %}
     <div class="grid_16">
+    
+      <div id="contenttitles">
+        {% trans "Edit space" %}
+      </div>
+      
       <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
-        {{ form.as_p }}
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.name.errors }}
+          <label for="id_name">{% trans "Space name" %}:</label>
+          <p>{{ form.name }}</p>
+          <p id="form_help_text">{{ form.name.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.url.errors }}
+          <label for="id_url">{% trans "URL" %}:</label>
+          <p>{{ form.url }}</p>
+          <p id="form_help_text">{{ form.url.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.description.errors }}
+          <label for="id_description">{% trans "Description" %}:</label>
+          <p>{{ form.description }}</p>
+          <p id="form_help_text">{{ form.description.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.logo.errors }}
+          <label for="id_logo">{% trans "Logotype" %}:</label>
+          <p>{{ form.logo }}</p>
+          <p id="form_help_text">{{ form.logo.help_text }}</p>
+        </div>
+
+        <div class="fieldWrapper">
+          {{ form.banner.errors }}
+          <label for="id_banner">{% trans "Banner" %}:</label>
+          <p>{{ form.banner }}</p>
+          <p id="form_help_text">{{ form.banner.help_text }}</p>
+        </div>
+        
+        <div class="fieldWrapper">
+          {{ form.authorized_groups.errors }}
+          <label for="id_authorized_groups">{% trans "Authorized Groups" %}:</label>
+          <p>{{ form.authorized_groups }}</p>
+        </div>
 
         <hr />
+        <h3>{% trans "Modules" %}</h3>
 
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
+        <div class="fieldWrapper">
+          <p>{{ form.mod_debate }} {% trans "Debate" %}</p>
+          <p>{{ form.mod_proposals }} {% trans "Proposals" %}</p>
+          <p>{{ form.mod_news }} {% trans "News" %}</p>
+          <p>{{ form.mod_cal }} {% trans "Calendar" %}</p>
+          <p>{{ form.mod_docs }} {% trans "Documentation" %}</p>
+        </div>
+        {{ form.author.as_hidden }}
+        
+        <hr />
+        <p class="buttons">
+          <input type="submit" value="{% trans 'Save' %}" />
+          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
+        </p>
       </form>
     </div>
 

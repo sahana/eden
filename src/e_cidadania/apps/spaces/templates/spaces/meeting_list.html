@@ -15,7 +15,7 @@
       </div>
       
       {% for meeting in meeting_list %}
-        <p><a href="{{ meeting.id }}">{{ meeting.title }}</a></p>
+        <p><a href="{{ meeting.id }}/">{{ meeting.title }}</a></p>
         <p>{% trans "Published" %} {{ meeting.meeting_date }}</p>
       {% empty %}
         <p>{% trans "There are no meetings in this space." %}</p>

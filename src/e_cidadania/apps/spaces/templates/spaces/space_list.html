@@ -7,14 +7,19 @@
 
   {% block centercol %}
     <div class="grid_16">
+    
+      <div id="contenttitles">
+        {% trans "Spaces list" %}
+      </div>
       {% for space in object_list %}
         <p><a href="/spaces/{{ space.url }}">{{ space.name }}</a></p>
       {% empty %}
         <p>{% trans "There are no spaces." %}</p>
       {% endfor %}
-      <div class="pagebutton">
-        <a href="../">{% trans "Go back" %}</a>
-      </div>
+      <hr />
+      <p>
+        <a href="../" class="pagebutton">{% trans "Go back" %}</a>
+      </p>
     </div>
   {% endblock %}
 
