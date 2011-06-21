@@ -604,7 +604,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     border: none;
     background: none;
     margin: 10px;
-    border: 1px solid #000;
+    border: 1px solid #DDD;
     /* Fancy round borders for Webkit, Gecko and standard
        implementations */
     border-bottom-left-radius: 7px;

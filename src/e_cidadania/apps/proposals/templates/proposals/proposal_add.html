@@ -7,6 +7,11 @@
 
 {% block content %}
   <div class="grid_11">
+  
+    <div id="contenttitles">
+      {% trans "Add proposal" %}
+    </div>
+  
     <form action="" method="post">{% csrf_token %}
       {{ form.non_field_errors }}
 
@@ -45,7 +50,11 @@
       {{ form.author.as_hidden }}
       {{ form.support_votes.as_hidden }}
 
-        <p><input type="submit" value="{% trans 'Continue' %} &rarr;" /></p>
+      <hr />
+      <p class="buttons">
+        <input type="submit" value="{% trans 'Create' %}" />
+        <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
+      </p>
     </form>
   </div>
   

@@ -10,16 +10,16 @@
 
   {% block centercol %}
     <div class="grid_11">
-    
+
       <div id="proposal-wrapper">
         {% if perms.proposals.add_proposal %}
         <div id="tools">
-          <a href="../add/">{% trans "Add" %}</a> |
+          <a href="../add/"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
           {% if perms.proposals.edit_proposal %}
-            <a href="edit/{{ p.id }}">{% trans "Edit" %}</a> |
+            <a href="edit/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
           {% endif %}
           {% if perms.proposals.delete_proposal %}
-            <a href="delete/{{ p.id }}">{% trans "Delete" %}</a>
+            <a href="delete/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
           {% endif %}
         </div>
         {% endif %}
