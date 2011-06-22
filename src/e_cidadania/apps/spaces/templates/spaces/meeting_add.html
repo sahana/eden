@@ -5,6 +5,7 @@
 {% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
+
 {% block content %}
 
   {% block centercol %}
@@ -40,21 +41,22 @@
 
         <div class="fieldWrapper">
           {{ form.meeting_type.errors }}
-          <label for="id_name">{% trans "Meeting type" %}:</label>
+          <label for="id_meeting_type">{% trans "Meeting type" %}:</label>
           <p>{{ form.meeting_type }}</p>
           <p id="form_help_text">{{ form.meeting_type.help_text }}</p>
         </div>
 
         <div class="fieldWrapper">
           {{ form.meeting_date.errors }}
-          <label for="id_name">{% trans "Meeting date" %}:</label>
-          <p>{{ form.meeting_date }}</p>
+          <label for="id_meeting_date">{% trans "Meeting date" %}:</label>
+          <p><input type="text" name="meeting_date" id="datepicker"></p>
+          <!--<p>{{ form.meeting_date }}</p>-->
           <p id="form_help_text">{{ form.meeting_date.help_text }}</p>
         </div>
 
         <div class="fieldWrapper">
           {{ form.user.errors }}
-          <label for="id_name">{% trans "Attendants" %}:</label>
+          <label for="id_user">{% trans "Attendants" %}:</label>
           <p>{{ form.user }}</p>
           <p id="form_help_text">{{ form.user.help_text }}</p>
         </div>

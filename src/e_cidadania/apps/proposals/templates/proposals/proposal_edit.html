@@ -9,10 +9,12 @@
   <div class="grid_11">
     <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
         {{ form.as_p }}
-        <hr />
 
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
+        <hr />
+        <p class="buttons">
+          <input type="submit" value="{% trans 'Save' %}" />
+          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
+        </p>
     </form>
   </div>
 {% endblock %}

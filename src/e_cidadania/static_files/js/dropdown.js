@@ -1,4 +1,11 @@
 $(document).ready(function(){
+
+    // This function activates the datepicker sitewide
+    $(function() {
+	    $( "#datepicker" ).datepicker();
+    });
+    
+    // The followg code is for the dropdown menu
 	$("ul.subnav").parent().append("<span></span>"); //Only shows drop down trigger when js is enabled (Adds empty span tag after ul.subnav*)
 
 	$("ul.topnav li span").click(function() { //When trigger is clicked...
