@@ -22,7 +22,7 @@
 The following source code is based on the work of Eivind Uggedal <eivind@uggedal.com>
 """
 
-from calendar import LocaleHTMLCalendar
+from calendar import HTMLCalendar
 from datetime import date
 from itertools import groupby
 
@@ -31,7 +31,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import get_language
 #from django.db import models
 
-class EventCalendar(LocaleHTMLCalendar):
+class EventCalendar(HTMLCalendar):
 
     """
     Event calendar is a basic calendar made with HTMLCalendar module.
