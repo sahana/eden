@@ -34,6 +34,9 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     # Proposals
     (r'^(?P<space_name>\w+)/proposal/', include('e_cidadania.apps.proposals.urls')),
+    
+    # Proposals
+    (r'^(?P<space_name>\w+)/calendar/', include('e_cidadania.apps.cal.urls')),
 
     # Debates
     #(r'^debate/', include('e_cidadania.apps.debates.urls')),

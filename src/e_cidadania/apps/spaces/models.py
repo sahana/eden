@@ -144,4 +144,6 @@ class Meeting(models.Model):
 
     def __unicode__(self):
         return self.title
-
+    
+    def get_absolute_url(self):
+        return '/spaces/%s/meeting/%s/' % (self.space.url, self.id)

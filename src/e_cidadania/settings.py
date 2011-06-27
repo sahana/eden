@@ -159,6 +159,7 @@ ECIDADANIA_MODULES = (
     'e_cidadania.apps.debate',
     'e_cidadania.apps.spaces',
     'e_cidadania.apps.staticpages',
+    'e_cidadania.apps.cal',
 )
 
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
