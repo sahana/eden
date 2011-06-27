@@ -713,28 +713,46 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 }
 
 /* CALENDAR */
-table .month {
-    background: #FFF;
-    border: 2px solid #FFF;400px
-    width: 400px;
-}
-
 tbody td {
     background: #EEE;
-    height: 50px;
     text-align: right;
     width: 50px;
     border: 2px solid #FFF;
     padding: 5px;
 }
 
+tbody tr .month {
+    font-size: 1.6em;
+    font-weight: normal;
+    background: #999;
+    font-family: "SansationRegular";
+    color: #FFF;
+    padding: 10px;
+}
+
 th.mon, th.tue, th.wed, th.thu, th.fri, th.sat, th.sun {
     height: 50px;
     width: 50px;
     line-height: 50px;
-    background: #EEE;
+    background: #CCC;
     text-align: left;
-    font-size: 1.4em;
+    font-size: 1.2em;
+    padding-left: 15px;
+    border: 2px solid #FFF;
+}
+
+td.mon, td.tue, td.wed, td.thu, td.fri, td.sat, td.sun {
+    font-size: 1.3em;
+    padding: 15px;
+}
+
+td.filled ul li {
+    text-align: left;
+}
+
+td.filled ul li a {
+    color: #00F;
+    text-decoration: underline;
 }
 
 .noday {
@@ -742,6 +760,11 @@ th.mon, th.tue, th.wed, th.thu, th.fri, th.sat, th.sun {
 }
 
 .filled {
-    background: #FFFFEE;
+    background: #DDF;
+}
+
+.today {
+    background: #FFA;
+    border: 3px solid #DD0;
 }
 /* END CALENDAR */

@@ -22,14 +22,16 @@
 The following source code is based on the work of Eivind Uggedal <eivind@uggedal.com>
 """
 
-from calendar import HTMLCalendar
+from calendar import LocaleHTMLCalendar
 from datetime import date
 from itertools import groupby
 
 from django.utils.html import conditional_escape as esc
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import get_language
 #from django.db import models
 
-class EventCalendar(HTMLCalendar):
+class EventCalendar(LocaleHTMLCalendar):
 
     """
     Event calendar is a basic calendar made with HTMLCalendar module.
