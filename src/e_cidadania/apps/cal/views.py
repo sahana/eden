@@ -21,20 +21,39 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.safestring import mark_safe
 from django.template import RequestContext
+from django.utils import translation
 
 from e_cidadania.apps.spaces.models import Meeting, Space
 from e_cidadania.apps.cal.models import EventCalendar
+from e_cidadania import settings
 
 def calendar(request, space_name, year, month):
+    
+    # Avoid people writing wrong numbers or any program errors.
+    if int(month) not in range(1, 13):
+        return render_to_response('cal/error.html',
+                                  context_instance=RequestContext(request))
 
     place = get_object_or_404(Space, url=space_name)
-    
+    next_month = int(month) + 1
+    prev_month = int(month) - 1
+                              
     meetings = Meeting.objects.order_by('meeting_date') \
                               .filter(space = place,
                                       meeting_date__year = year,
                                       meeting_date__month = month)
     
-    cal = EventCalendar(meetings).formatmonth(int(year), int(month))
-    return render_to_response('cal/calendar.html', {'calendar': mark_safe(cal),
-                                                    'get_place': place},
-                              context_instance = RequestContext(request))
+    cur_lang = translation.get_language()
+    print 'LANG: %s' % cur_lang
+    cur_locale = translation.to_locale(cur_lang)+'.UTF-8' #default encoding with django
+    print 'LOCALE: %s' % cur_locale
+    cal = EventCalendar(meetings, settings.FIRST_WEEK_DAY, cur_locale).formatmonth(int(year), int(month))
+#    cur_lang = translation.get_language()
+#    print cur_lang
+#    cal = EventCalendar(meetings, 0, cur_lang).formatmonth(int(year), int(month))
+    return render_to_response('cal/calendar.html',
+                              {'calendar': mark_safe(cal),
+                               'nextmonth': '%02d' % next_month,
+                               'prevmonth': '%02d' % prev_month,
+                               'get_place': place},
+                               context_instance = RequestContext(request))

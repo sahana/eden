@@ -746,13 +746,19 @@ td.mon, td.tue, td.wed, td.thu, td.fri, td.sat, td.sun {
     padding: 15px;
 }
 
+td.mon:hover, td.tue:hover, td.wed:hover, td.thu:hover, td.fri:hover, td.sat:hover, td.sun:hover {
+    background: #FFF;
+}
+
 td.filled ul li {
     text-align: left;
+    margin-bottom: 10px;
 }
 
 td.filled ul li a {
-    color: #00F;
+    color: #666;
     text-decoration: underline;
+    font-size: 0.8em;
 }
 
 .noday {

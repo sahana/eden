@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Calendar error" %}{% endblock %}
+
+{% block content %}
+	<div id="grid_16">
+		{% trans "You entered and incorrect month or year. Please correct it." %}<br/><br/><br/>
+		<div>
+		    {% trans "You can go" %} <a href="/"><u>{% trans "back to home" %}</u></a> {% trans "or" %} <a href="/accounts/"><u>{% trans "back to your profile" %}</u></a>
+	  </div>
+	</div>
+{% endblock %}

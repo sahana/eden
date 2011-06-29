@@ -27,6 +27,8 @@ GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHx
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'accounts@cidadania.coop'
 
+# Calendar
+FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
 
 ADMINS = (
     ('Oscar Carballal', 'oscar@cidadania.coop'),
@@ -46,11 +48,11 @@ DATABASES = {
 }
 
 TIME_ZONE = 'Europe/Madrid'
-LANGUAGE_CODE = 'es-ES'
+LANGUAGE_CODE = 'es-es'
 LANGUAGES = (
-    ('es', 'Espanol'),
-    ('en', 'English'),
-    ('gl', 'Galego'),
+    ('es_ES', 'Espanol'),
+    ('en_GB', 'English'),
+    ('gl_ES', 'Galego'),
 )
 
 SITE_ID = 1

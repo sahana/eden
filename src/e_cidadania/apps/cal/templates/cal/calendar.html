@@ -16,6 +16,13 @@
 
       {{ calendar }}
       
+      <hr />
+      <p class="buttons">
+        <a href="../{{ prevmonth }}/" class="pagebutton">{% trans 'Previous month' %}</a>
+        <a href="../{{ nextmonth }}/" class="pagebutton">{% trans 'Next month' %}</a>
+        <a href="../../" class="pagebutton">{% trans "Go back" %}</a>
+      </p>
+        
     </div>
   {% endblock %}
 

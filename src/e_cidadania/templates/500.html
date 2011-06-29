@@ -10,7 +10,7 @@
 		
 		<style type="text/css">
 		  body {
-		    background: #000;
+		    background: #FFF;
 		    font-family: arial;
 		    color: #5d5d5d;
 		  }
@@ -23,27 +23,27 @@
 		  a:visited {
 		    color: #333;
 		  }
+		  
 		  #message {
+		    height: 400px;
+		    width: 700px;
+		    position: absolute;
+		    top: 50%;
+		    left: 50%;
+		    margin-left: -350px;
+		    margin-top: -200px;
 		    background: #000;
-		    font-size: 50px;
-
-		    margin: auto;
+		    font-size: 20px;
 		  }
 		  
 		</style>
 	</head>
 	<body>
-	  <p style="font-size: 30px;">500 Server error</p>
-	  <div id="message">{% trans "Now you did it, the server is broken." %}</div>
-	  	  <p>We must send the spaguetti squad to repair this.</p><br /><br />
-	      <strong>{% trans "Take me out of here!" %}</strong><br /><br />
-	      <a href="http://ecidadania.org">{% trans "Home" %}</a> | 
-	      <a href="http://dev.ecidadania.org">{% trans "Development" %}</a> |
-	      <a href="#">{% trans "Help" %}</a> |
-	      <a href="#">{% trans "Terms of service" %}</a> |
-	      <a href="#">{% trans "Privacy" %}</a> |
-	      <a href="#">{% trans "About" %}</a>
-	    </p>
-	  </div>
+	    <div id="message">
+	        <img src="{{ STATIC_URL }}/500.png" style="float:left;"/>
+	        <h3>{% trans "Ooops!" %}</h3>
+	        <p>{% trans "The server had an unexpected error." %}</p>
+	        <p>{% trans "Please go back to the" %} <a href="/">{% trans "home page" %}</a> {% trans "while we call the spaguetti squad to repair this." %}</p>
+	    </div>
   </body>
 </html>
