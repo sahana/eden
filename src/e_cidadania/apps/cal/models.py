@@ -22,29 +22,26 @@
 The following source code is based on the work of Eivind Uggedal <eivind@uggedal.com>
 """
 
-import calendar
-#from calendar import HTMLCalendar
+from calendar import HTMLCalendar
 from datetime import date
 from itertools import groupby
 
 from django.utils.html import conditional_escape as esc
-from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import get_language
-#from django.db import models
 
-class EventCalendar(calendar.LocaleHTMLCalendar):
+class EventCalendar(HTMLCalendar):
 
     """
     Event calendar is a basic calendar made with HTMLCalendar module.
     """
-    def __init__(self, events, *args, **kwargs):
-        self.events = self.group_by_day(events)
-        super(EventCalendar, self).__init__(*args, **kwargs)
-        
-#    def __init__(self, *args):
-#        events = args[0]
-#        super(EventCalendar, self).__init__()
+# This init is needed for multilanguage, see ticket #86
+
+#    def __init__(self, events, *args, **kwargs):
 #        self.events = self.group_by_day(events)
+#        super(EventCalendar, self).__init__(*args, **kwargs)
+        
+    def __init__(self, events):
+        super(EventCalendar, self).__init__()
+        self.events = self.group_by_day(events)
     
     def formatday(self, day, weekday):
         if day != 0:
