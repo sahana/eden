@@ -21,11 +21,11 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.safestring import mark_safe
 from django.template import RequestContext
-#from django.utils import translation
+from django.utils import translation
 
 from e_cidadania.apps.spaces.models import Meeting, Space
 from e_cidadania.apps.cal.models import EventCalendar
-#from e_cidadania import settings
+from e_cidadania import settings
 
 def calendar(request, space_name, year, month):
     
@@ -46,13 +46,11 @@ def calendar(request, space_name, year, month):
 # The following commented code allows multilanguage support on calendar
 # but it can't be activated until ticket #86 is fixed.
 
-#    cur_lang = translation.get_language()
-#    print 'LANG: %s' % cur_lang
-#    cur_locale = translation.to_locale(cur_lang)+'.UTF-8' #default encoding with django
-#    print 'LOCALE: %s' % cur_locale
-#    cal = EventCalendar(meetings, settings.FIRST_WEEK_DAY, cur_locale).formatmonth(int(year), int(month))
+    cur_lang = translation.get_language()
+    cur_locale = translation.to_locale(cur_lang)+'.UTF-8' #default encoding with django
+    cal = EventCalendar(meetings, settings.FIRST_WEEK_DAY, cur_locale).formatmonth(int(year), int(month))
 
-    cal = EventCalendar(meetings).formatmonth(int(year), int(month))
+#    cal = EventCalendar(meetings).formatmonth(int(year), int(month))
 
     return render_to_response('cal/calendar.html',
                               {'calendar': mark_safe(cal),
