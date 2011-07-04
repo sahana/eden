@@ -18,6 +18,12 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+    URLs for spaces module
+    
+    This file contains all the URLs that e_cidadania will inherit when the user
+    access to '/spaces/'.
+"""
 from django.conf.urls.defaults import *
 
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\

@@ -18,6 +18,13 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+    Spaces views
+    ===========
+    
+    These are the views that control the spaces, meetings and documents.
+"""
+
 import datetime
 
 # Generic class-based views
@@ -59,10 +66,9 @@ from e_cidadania.apps.proposals.models import Proposal
 class GoToSpace(RedirectView):
 
     """
-    This class redirects the user to a spaces after getting a GET petition.
+    *Inherits from* RedirectView
     
-    A 'raise Http404' is not necessary since a the objects the user can access
-    are only the ones that are in the DB.
+    Sends the user to the selected space. This class only accepts GET petitions.  
     """
     def get_redirect_url(self, **kwargs):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
@@ -72,7 +78,11 @@ class GoToSpace(RedirectView):
 class ListSpaces(ListView):
 
     """
-    This class returns the complete list of spaces stored in the platform.
+    *Inherits from* ListView
+    
+    Return a spaces list in the system (except private ones) using a generic view.
+    The users associated to a private spaces will see it, but not the other private
+    spaces.
     """
     model = Space
     
@@ -80,11 +90,10 @@ class ListSpaces(ListView):
 class ViewSpaceIndex(DetailView):
 
     """
-    Show the index page of a space. Get various extra contexts to get the
-    information for that space.
-    
-    The get_object method searches in the user 'spaces' field if the current
-    space is allowed, if not, he is redirected 
+    Returns the index page for a space. This function has multiple extra
+    contexts to get all the hardcoded modules information (meetings and documents).
+        
+    The access to spaces is restricted and filtered in the get_object method. 
     """
     context_object_name = 'get_place'
     template_name = 'spaces/space_index.html'
@@ -145,8 +154,24 @@ class ViewSpaceIndex(DetailView):
 def edit_space(request, space_name):
 
     """
-    Only people registered to that space or site administrators will be able
-    to edit spaces.
+    Returns a forms filled with the current space data to edit it. Access to
+    this view is restricted only to site and space administrators.
+    
+    The filter for space administrators is given by the edit_space permission
+    and their belonging to that space.
+    
+    Parameters
+    ----------
+    
+        - space_name: The url name of the space.
+        
+    Variables
+    ---------
+        
+        - place: get the space object through the space_name (which is unique)
+        - form: SpaceForm instance containing the data related to the current space.
+        - form_uncommited: The form instance before saving, so we caqn modify its
+                           contents.
     """
     place = get_object_or_404(Space, url=space_name)
 
@@ -171,7 +196,9 @@ def edit_space(request, space_name):
 class DeleteSpace(DeleteView):
 
     """
-    Delete the selected space and return to the index page.
+    Returns a confirmation page before deleting the space object completely.
+    This delete function does not delete the space related content. Only the
+    site administrators can delete a space.
     """
     context_object_name = 'get_place'
     success_url = '/'
@@ -188,8 +215,8 @@ class DeleteSpace(DeleteView):
 def create_space(request):
 
     """
-    Create new spaces. In this view the author field is automatically filled
-    so we can't use a generic view.
+        Returns a SpaceForm form to fill with data to create a new space. There
+        is an attached EntityFormset to save the entities related to the space.
     """
     space_form = SpaceForm(request.POST or None, request.FILES or None)
     entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
@@ -228,7 +255,8 @@ def create_space(request):
 class ListDocs(ListView):
 
     """
-    List all documents stored whithin a space.
+    ListDocs(ListView)
+        Returns a list with all the documents related to that space.
     """
     paginate_by = 25
     context_object_name = 'document_list'

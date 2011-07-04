@@ -19,10 +19,12 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
-    forms.py: Spaces module forms
+    Spaces forms
+    ============
     
     This module contains all the space related forms, including the forms for
-    documents, meetings and entities.
+    documents, meetings and entities. Most of the forms are directly generated
+    from the data models.
 """
 
 from django.forms import ModelForm
@@ -33,9 +35,8 @@ from e_cidadania.apps.spaces.models import Space, Document, Meeting, Entity
 class SpaceForm(ModelForm):
     
     """
-    SpaceForm(ModelForm)
-        Returns a form to create or edit a space, directly based on the data
-        model.
+    Returns a form to create or edit a space. SpaceForm inherits all the fields
+    from the :class:`spaces.Space` data model.
     """
     class Meta:
         model = Space
@@ -47,9 +48,8 @@ EntityFormSet = modelformset_factory(Entity, extra=3)
 class EntityForm(ModelForm):
 
     """
-    EntityForm(ModelForm)
-        Returns a form to create or edit an entity, directly based on the data
-        model.
+    Returns a form to create or edit an entity, based on the spaces.Entity data
+    model.
     """
     class Meta:
         model = Entity
@@ -58,8 +58,8 @@ class EntityForm(ModelForm):
 class DocForm(ModelForm):
 
     """
-    DocForm(ModelForm)
-        Returns a form to create or edit a space related document.
+    Returns a form to create or edit a space related document, based on the
+    spaces.Document data model.
     """
     class Meta:
         model = Document
@@ -68,8 +68,8 @@ class DocForm(ModelForm):
 class MeetingForm(ModelForm):
 
     """
-    MeetingForm(ModelForm)
-        Returns a form to create or edit a space related meeting.
+    Returns a form to create or edit a space related meeting, based on the
+    spaces.Meeting data model.
     """
     class Meta:
         model = Meeting
