@@ -36,7 +36,13 @@ class SpaceForm(ModelForm):
     
     """
     Returns a form to create or edit a space. SpaceForm inherits all the fields
-    from the :class:`spaces.Space` data model.
+    from the :class:`Space` data model.
+    
+    :param request: request data
+    :param space_name: current space
+    :rtype: HTML Form
+    
+    .. versionadded:: 0.1
     """
     class Meta:
         model = Space

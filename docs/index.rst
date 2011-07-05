@@ -30,7 +30,7 @@ externas.
     docs/configuration
     docs/usermanual
     docs/adminmanual
-    
+
 **Desarrollo**
 
 .. toctree::
@@ -46,8 +46,10 @@ externas.
 .. toctree::
 
     theming/themes
-    
 
+.. toctree::
+
+    reference/spaces_views
 
 
 Finale
@@ -60,9 +62,9 @@ Dónde conseguir ayuda
 - Prueba a mirar en el `FAQ <http://app.ecidadania.org/faq>`_.
 - Listas de correo de e-cidadania
 
-  * ecidadania-users@freelists.org 
-  * ecidadania-dev@freelists.org   
-  * ecidadania-es@freelists.org 
+  * ecidadania-users@freelists.org
+  * ecidadania-dev@freelists.org
+  * ecidadania-es@freelists.org
 
 - Informar de errores en el `bug tracker <http://dev.ecidadania.org>`_ de e-cidadania.
 
@@ -76,7 +78,7 @@ Acerca de este documento
 :Traducción ao galego:
 
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
-    
+
     Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
 
 

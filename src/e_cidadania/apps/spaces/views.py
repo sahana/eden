@@ -19,10 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
-    Spaces views
-    ===========
-    
-    These are the views that control the spaces, meetings and documents.
+These are the views that control the spaces, meetings and documents.
 """
 
 import datetime
@@ -65,10 +62,12 @@ from e_cidadania.apps.proposals.models import Proposal
 
 class GoToSpace(RedirectView):
 
-    """
-    *Inherits from* RedirectView
+    """    
+    Sends the user to the selected space. This view only accepts GET petitions.
+    GoToSpace is a django generic :class:`RedirectView`.
     
-    Sends the user to the selected space. This class only accepts GET petitions.  
+    :Attributes: **self.place** - Selected space object
+    :rtype: Redirect
     """
     def get_redirect_url(self, **kwargs):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
@@ -78,11 +77,12 @@ class GoToSpace(RedirectView):
 class ListSpaces(ListView):
 
     """
-    *Inherits from* ListView
-    
-    Return a spaces list in the system (except private ones) using a generic view.
+    Return a list of spaces in the system (except private ones) using a generic view.
     The users associated to a private spaces will see it, but not the other private
-    spaces.
+    spaces. ListSpaces is a django generic :class:`ListView`.
+    
+    :rtype: Object list
+    :contexts: object_list
     """
     model = Space
     
@@ -90,10 +90,13 @@ class ListSpaces(ListView):
 class ViewSpaceIndex(DetailView):
 
     """
-    Returns the index page for a space. This function has multiple extra
-    contexts to get all the hardcoded modules information (meetings and documents).
-        
-    The access to spaces is restricted and filtered in the get_object method. 
+    Returns the index page for a space. The access to spaces is restricted and
+    filtered in the get_object method. This view gathers information from all
+    the configured modules in the space.
+    
+    :attributes: space_object, place
+    :rtype: Object
+    :context: get_place, entities, documents, proposals, publication
     """
     context_object_name = 'get_place'
     template_name = 'spaces/space_index.html'
@@ -154,24 +157,18 @@ class ViewSpaceIndex(DetailView):
 def edit_space(request, space_name):
 
     """
-    Returns a forms filled with the current space data to edit it. Access to
-    this view is restricted only to site and space administrators.
+    Returns a form filled with the current space data to edit. Access to
+    this view is restricted only to site and space administrators. The filter
+    for space administrators is given by the edit_space permission and their
+    belonging to that space.
     
-    The filter for space administrators is given by the edit_space permission
-    and their belonging to that space.
-    
-    Parameters
-    ----------
-    
-        - space_name: The url name of the space.
-        
-    Variables
-    ---------
-        
-        - place: get the space object through the space_name (which is unique)
-        - form: SpaceForm instance containing the data related to the current space.
-        - form_uncommited: The form instance before saving, so we caqn modify its
-                           contents.
+    :attributes: - place: current space intance.
+                 - form: SpaceForm instance.
+                 - form_uncommited: form instance before commiting to the DB,
+                   so we can modify the data.
+    :param space_name: Space URL
+    :rtype: HTML Form
+    :context: form, get_place
     """
     place = get_object_or_404(Space, url=space_name)
 
@@ -197,8 +194,10 @@ class DeleteSpace(DeleteView):
 
     """
     Returns a confirmation page before deleting the space object completely.
-    This delete function does not delete the space related content. Only the
-    site administrators can delete a space.
+    This does not delete the space related content. Only the site administrators
+    can delete a space.
+    
+    :rtype: Confirmation
     """
     context_object_name = 'get_place'
     success_url = '/'
@@ -215,8 +214,14 @@ class DeleteSpace(DeleteView):
 def create_space(request):
 
     """
-        Returns a SpaceForm form to fill with data to create a new space. There
-        is an attached EntityFormset to save the entities related to the space.
+    Returns a SpaceForm form to fill with data to create a new space. There
+    is an attached EntityFormset to save the entities related to the space. Only
+    site administrators are allowed to create spaces.
+    
+    :attributes: - space_form: empty SpaceForm instance
+                 - entity_forms: empty EntityFormSet
+    :rtype: Space object, multiple entity objects.
+    :context: form, entityformset
     """
     space_form = SpaceForm(request.POST or None, request.FILES or None)
     entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
@@ -255,8 +260,10 @@ def create_space(request):
 class ListDocs(ListView):
 
     """
-    ListDocs(ListView)
-        Returns a list with all the documents related to that space.
+    Returns a list of documents attached to the current space.
+    
+    :rtype: Object list
+    :context: object_list, get_place
     """
     paginate_by = 25
     context_object_name = 'document_list'
@@ -289,8 +296,10 @@ class ListDocs(ListView):
 def add_doc(request, space_name):
 
     """
-    Upload a new document whithin a space. This view is exactly as the create
-    space view.
+    Upload a new document and attach it to the current space.
+    
+    :rtype: Object
+    :context: form, get_place
     """
 
     doc = Document()
@@ -318,7 +327,10 @@ def add_doc(request, space_name):
 def edit_doc(request, space_name, doc_id):
 
     """
-    Edit uploaded documents :)
+    Returns a DocForm filled with the current document data.
+    
+    :rtype: HTML Form
+    :context: doc, get_place
     """
     place = get_object_or_404(Space, url=space_name)
 
@@ -336,7 +348,10 @@ def edit_doc(request, space_name, doc_id):
 class DeleteDocument(DeleteView):
 
     """
-    Delete an uploaded document.
+    Returns a confirmation page before deleting the current document.
+    
+    :rtype: Confirmation
+    :context: get_place
     """
         
     def get_object(self):
@@ -358,7 +373,10 @@ class DeleteDocument(DeleteView):
 class ListMeetings(ListView):
 
     """
-    List all the meetings filtered by the current space
+    List all the meetings attached to a space.
+    
+    :rtype: Object list
+    :context: meeting_list, get_place
     """
     paginate_by = 25
     context_object_name = 'meeting_list'
@@ -378,7 +396,10 @@ class ListMeetings(ListView):
 class ViewMeeting(DetailView):
     
     """
-    View the meeting description.
+    View the content of a Meeting.
+    
+    :rtype: Object
+    :context: meeting, get_place
     """
     context_object_name = 'meeting'
     template_name = 'spaces/meeting_detail.html'
@@ -400,8 +421,11 @@ class ViewMeeting(DetailView):
 def add_meeting(request, space_name):
     
     """
-    Create a new meeting. Space and author fields are autmatically filled with
-    the request data.
+    Returns an empty MeetingForm to create a new Meeting. Space and author fields
+    are automatically filled with the request data.
+    
+    :rtype: HTML Form
+    :context: form, get_place
     """
     form = MeetingForm(request.POST or None)
     place = get_object_or_404(Space, url=space_name)
@@ -421,6 +445,10 @@ def add_meeting(request, space_name):
 def edit_meeting(request, space_name, meeting_id):
 
     """
+    Returns a MeetingForm filled with the current Meeting data to be edited.
+    
+    :rtype: HTML Form
+    :context: meeting, get_place
     """
     place = get_object_or_404(Space, url=space_name)
 
@@ -437,7 +465,10 @@ def edit_meeting(request, space_name, meeting_id):
 class DeleteMeeting(DeleteView):
 
     """
-    Delete an uploaded document.
+    Returns a confirmation page before deleting the Meeting object.
+   
+    :rtype: Confirmation
+    :context: get_place
     """
 
     def get_object(self):
@@ -455,8 +486,11 @@ class DeleteMeeting(DeleteView):
 class ListPosts(ListView):
 
     """
-    Lists all the news posts within a space. This function can be global for
-    the news module because we can't know in which space we are to filter it.
+    Returns a list with all the posts attached to that space. It's similar to
+    an archive, but without classification or filtering.
+    
+    :rtype: Object list
+    :context: post_list
     """
     paginate_by = 25
     context_object_name = 'post_list'
