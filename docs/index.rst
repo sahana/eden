@@ -46,6 +46,8 @@ externas.
 .. toctree::
 
     theming/themes
+    
+**Module reference**
 
 .. toctree::
 
