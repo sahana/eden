@@ -14,8 +14,10 @@ con geolocalización y mensajería.
 Este programa está basado en el framework `django <http://www.djangoproject.com>`_ y en varias librerías
 externas.
 
-.. image:: images/models.png
-    :align: center
+|Models|_
+
+.. |Models| image:: images/models.png
+.. _Models: http://i134.photobucket.com/albums/q119/pizte/models-big.png
 
 .. warning:: e-cidadania está en una fase de desarrollo muy temprana y por ello
              algunas partes del programa así como los modelos de datos pueden
