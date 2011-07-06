@@ -1,8 +1,8 @@
 /*
- * flasky.css_t
- * ~~~~~~~~~~~~
+ * cidadania-black.css_t
+ * ~~~~~~~~~~~~~~~~~~~~~
  *
- * Sphinx stylesheet -- flasky theme based on nature theme.
+ * Sphinx stylesheet -- cidadania-black theme based on kr-small theme.
  *
  * :copyright: Copyright 2007-2010 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
@@ -286,6 +286,20 @@ a:hover tt {
     background: #EEE;
 }
 
+/* Added styles for cidadania-black */
+.topsidebar {
+    position: fixed;
+    color: #000;
+    top: 0;
+    left: 0;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 13px;
+    text-decoration: none;
+    font-family: arial;
+    text-transform: uppercase;
+}
+
 #endpage {
     clear: both;
     width: 100%;
@@ -321,4 +335,8 @@ a:hover tt {
 .widget ul li {
     border-bottom: 1px dotted #FFF;
     padding: 5px;
+}
+
+.widget ul li a {
+    text-decoration: none;
 }
