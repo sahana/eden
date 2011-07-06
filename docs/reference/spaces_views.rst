@@ -1,8 +1,8 @@
 :mod:`spaces.views` --- Space-related views
 ===========================================
 
-.. automodule:: e_cidadania.apps.spaces.views
-
+.. automodule:: e_cidadania.apps.spaces.views    
+ 
 General spaces views
 --------------------
 

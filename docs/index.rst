@@ -48,17 +48,15 @@ externas.
 .. toctree::
 
     theming/themes
-    
+
 **Module reference**
 
-.. toctree::
-
-    reference/spaces_views
-
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 Finale
 ======
-
 
 Dónde conseguir ayuda
 ---------------------

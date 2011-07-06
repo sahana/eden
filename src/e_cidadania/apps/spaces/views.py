@@ -62,7 +62,7 @@ from e_cidadania.apps.proposals.models import Proposal
 
 class GoToSpace(RedirectView):
 
-    """    
+    """
     Sends the user to the selected space. This view only accepts GET petitions.
     GoToSpace is a django generic :class:`RedirectView`.
     
