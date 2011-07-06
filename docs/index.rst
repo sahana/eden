@@ -17,7 +17,7 @@ externas.
 |Models|_
 
 .. |Models| image:: images/models.png
-.. _Models: http://i134.photobucket.com/albums/q119/pizte/models-big.png
+.. _Models: http://postimage.org/image/z7b8s72c/full/
 
 .. warning:: e-cidadania está en una fase de desarrollo muy temprana y por ello
              algunas partes del programa así como los modelos de datos pueden
