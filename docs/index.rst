@@ -65,6 +65,10 @@ Reference
     reference/spaces_forms
     reference/spaces_models
     reference/spaces_views
+    reference/proposals_admin
+    reference/proposals_forms
+    reference/proposals_models
+    reference/proposals_views
 
 Finale
 ======

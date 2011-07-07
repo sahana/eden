@@ -4,7 +4,7 @@ e-cidadania
 **We currently need developers! Join sending an email to oscar.carballal AT cidadania DOT coop**
 
 What is e-cidadania?
-    e-cidadania is an open-source free to use platform for participative democracies. It contains tools to do debates, voting, proposals, meetings, etc. It is beign done habing in mind the two sides, the public administration and the private view from companies and associations.
+    e-cidadania is an open-source free to use platform for participative democracies. It contains tools to do debates, voting, proposals, meetings, etc. It is being done having in mind the two sides, the public administration and the private view from companies and associations.
 
 Languages
     e-cidadania is developed in three languages by default: galician, english and spanish.
