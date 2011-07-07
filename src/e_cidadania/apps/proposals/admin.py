@@ -19,6 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
+The proposal administration allows to edit every proposal made in the system.
 """
 
 from django.contrib import admin
@@ -29,8 +30,11 @@ from e_cidadania.apps.proposals.models import Proposal
 class ProposalAdmin(admin.ModelAdmin):
 
     """
-    This is a minimal view for Django administration interface. It shows the
-    user and the website.
+    Basic proposal administration interface since most of the work is done
+    in the website.
+    
+    :list display: title, author, tags
+    :search: none:
     """
     list_display = ('title', 'author', 'tags')
     
