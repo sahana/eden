@@ -11,8 +11,8 @@ Para ello cuenta con una serie de herramientas clave como son el sistema de
 propuestas, un revolucionario sistema de debate o un perfil avanzado de usuario
 con geolocalización y mensajería.
 
-Este programa está basado en el framework `django <http://www.djangoproject.com>`_ y en varias librerías
-externas.
+Este programa está basado en el framework `django <http://www.djangoproject.com>`_
+y en varias librerías externas.
 
 |Models|_
 
@@ -24,7 +24,8 @@ externas.
              sufrir grandes cambios hasta dentro de algunas versiones.
 
 
-**Documentación**
+Documentacion
+-------------
 
 .. toctree::
 
@@ -33,7 +34,8 @@ externas.
     docs/usermanual
     docs/adminmanual
 
-**Desarrollo**
+Desarrollo
+----------
 
 .. toctree::
 
@@ -43,17 +45,17 @@ externas.
     dev/documenting
     dev/i18n
 
-**Apariencias / Temas**
+Apariencias / Temas
+-------------------
 
 .. toctree::
 
     theming/themes
 
-**Module reference**
+Reference
+---------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+:doc:`/reference/index`
 
 Finale
 ======
