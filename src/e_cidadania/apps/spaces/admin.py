@@ -18,6 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+e-cidadania administration models for django-admin. This administration models
+will make their respective data models available for management.
+"""
+
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
@@ -26,7 +31,10 @@ from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 class EntityAdmin(admin.ModelAdmin):
 
     """
-    Administration model for Entities.
+    Entities administration model.
+    
+    :list fields: name, website, space
+    :search fields: name 
     """
     list_display = ('name', 'website', 'space')
     search_fields = ('name',)
@@ -34,7 +42,7 @@ class EntityAdmin(admin.ModelAdmin):
 class EntityInline(admin.TabularInline):
 
     """
-    Admin Inline view for entities.
+    TabularInline view for entities.
     """
     model = Entity
 
@@ -42,10 +50,12 @@ class EntityInline(admin.TabularInline):
 class SpaceAdmin(admin.ModelAdmin):
 
     """
-    Administration view for django admin to create spaces.
-    
-    The save() method is overriden to store automatically the author
+    Administration view for django admin to create spaces. The save() method
+    is overriden to store automatically the author
     of the space.
+    
+    :list fields: name, description, date
+    :search fields: name
     """
     list_display = ('name', 'description', 'date')
     search_fields = ('name',)
@@ -75,9 +85,11 @@ class SpaceAdmin(admin.ModelAdmin):
 class DocumentAdmin(admin.ModelAdmin):
 
     """
-    Administration view to upload/modify documents.
+    Administration view to upload/modify documents. The save() method is
+    overriden to store the author automatically.
     
-    save() method is overriden to store the author automatically.
+    :list fields: title, space, docfile, author, pub_date
+    :search fields: title, space, author, pub_date
     """
     list_display = ('title', 'space', 'docfile', 'author', 'pub_date')
     search_fields = ('title', 'space', 'author', 'pub_date')
@@ -95,7 +107,10 @@ class DocumentAdmin(admin.ModelAdmin):
 class MeetingAdmin(admin.ModelAdmin):
 
     """
-    Administration model form Meeting data model.
+    Meetings administration model.
+    
+    :list fields: title, space, meeting_date
+    :search fields: title
     """
     list_display = ('title', 'space', 'meeting_date')
     search_fields = ('title',)
