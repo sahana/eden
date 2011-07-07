@@ -28,6 +28,7 @@ Documentacion
 -------------
 
 .. toctree::
+    :maxdepth: 2
 
     docs/installation
     docs/configuration
@@ -38,6 +39,7 @@ Desarrollo
 ----------
 
 .. toctree::
+    :maxdepth: 2
 
     dev/styleguide
     dev/useraccounts
@@ -49,13 +51,20 @@ Apariencias / Temas
 -------------------
 
 .. toctree::
+    :maxdepth: 2
 
     theming/themes
 
 Reference
 ---------
 
-:doc:`/reference/index`
+.. toctree::
+    :maxdepth: 1
+    
+    reference/spaces_admin
+    reference/spaces_forms
+    reference/spaces_models
+    reference/spaces_views
 
 Finale
 ======
