@@ -28,7 +28,7 @@
   {% block centercol %}
     <div class="grid_11">
       <form action="" method="post">{% csrf_token %}
-      
+
         {{ form.non_field_errors }}
         <div class="fieldWrapper">
           {{ form.post_title.errors }}
@@ -36,7 +36,7 @@
           <p>{{ form.post_title }}</p>
           <p id="form_help_text">{{ form.post_title.help_text }}</p>
         </div>
-        
+
         <div class="fieldWrapper">
           {{ form.post_message.errors }}
           <label for="id_name">{% trans "Text" %}:</label>
@@ -44,21 +44,21 @@
           {% wysiwyg_editor "id_post_message" %}
           <p id="form_help_text">{{ form.post_message.help_text }}</p>
         </div>
-        
+
         <div class="fieldWrapper">
           {{ form.post_tags.errors }}
           <label for="id_post_tags">{% trans "Tags" %}:</label>
           <p>{{ form.post_tags }}</p>
           <p id="form_help_text">{{ form.post_tags.help_text }}</p>
         </div>
-        
+
         <div class="fieldWrapper">
           {{ form.post_pub_index.errors }}
           <label for="id_name">{% trans "Publish in index page" %}:</label>
           <p>{{ form.post_pub_index }}</p>
           <p id="form_help_text">{{ form.post_pub_index.help_text }}</p>
         </div>
-        
+
         {{ form.post_author.as_hidden }}
         {{ form.post_space.as_hidden }}
 

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load wysiwyg %}
 
 {% block title %}{% trans "Add proposal" %}{% endblock %}
 {% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
@@ -7,11 +8,11 @@
 
 {% block content %}
   <div class="grid_11">
-  
+
     <div id="contenttitles">
       {% trans "Add proposal" %}
     </div>
-  
+
     <form action="" method="post">{% csrf_token %}
       {{ form.non_field_errors }}
 
@@ -21,25 +22,26 @@
         <p>{{ form.title }}</p>
         <p id="form_help_text">{{ form.title.help_text }}</p>
       </div>
-      
+
       <div class="fieldWrapper">
         {{ form.description.errors }}
         <label for="id_description">{% trans "Description" %}:</label>
-        {{ form.description }}
+        <p>{{ form.description }}</p>
+        {% wysiwyg_editor "id_description" %}
       </div>
-      
+
       <div class="fieldWrapper">
         {{ form.latitude.errors }}
         <label for="id_logo">{% trans "Latitude" %} {% trans "(optional)" %}:</label>
         {{ form.latitude }}
       </div>
-      
+
       <div class="fieldWrapper">
         {{ form.longitude.errors }}
         <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
         {{ form.longitude }}
       </div>
-      
+
       <div class="fieldWrapper">
         {{ form.tags.errors }}
         <label for="id_banner">{% trans "Tags" %} {% trans "(optional)" %}:</label>
@@ -57,7 +59,7 @@
       </p>
     </form>
   </div>
-  
+
   {% block rightcol %}
     <div class="grid_5">
       <div id="widget">
@@ -76,3 +78,4 @@
     </div>
   {% endblock %}
 {% endblock %}
+
