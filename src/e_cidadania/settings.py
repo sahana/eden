@@ -23,6 +23,11 @@ ACCOUNT_ACTIVATION_DAYS = 2
 LOGIN_REDIRECT_URL = '/accounts'
 GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHxRSapJw6ROu7OKaPDPIwetftitHBcw'
 
+# Stablish WYSIWYG editor for HTML forms. By default, we set CKEditor, but if
+# you want to use YUI editor just leave DJANGO_WYSIWYG_FLAVOR empty.
+# Values: ckeditor, empty
+DJANGO_WYSIWYG_FLAVOR = "ckeditor"
+DJANGO_WYSIWYG_MEDIA_URL = "/static/ckeditor/"
 # Registration mail settings
 EMAIL_HOST = 'localhost'
 DEFAULT_FROM_EMAIL = 'accounts@cidadania.coop'
@@ -128,7 +133,7 @@ DJANGO_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sites', # Needed for django-register
     'django.contrib.messages',
-    
+
     # 2011/06/08
     # NOTICE: Grappelli and grappelli-fit are third-party apps but for import
     # reasons they had to be put here, in the django apps, before importing
@@ -137,7 +142,7 @@ DJANGO_APPS = (
     'grappelli.dashboard',
     'grappelli',
     'e_cidadania.apps.grappellifit',
-    
+
     'django.contrib.admin',
     'django.contrib.comments',
 )
@@ -188,3 +193,4 @@ LOGGING = {
         },
     }
 }
+
