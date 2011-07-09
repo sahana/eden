@@ -18,6 +18,10 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Proposal data models are the ones to store the data inside the DB.
+"""
+
 import datetime
 
 from django.db import models
@@ -50,22 +54,27 @@ class BaseClass(models.Model):
 class Category(BaseClass):
 
     """
-    Dummy class for proposal categories
+    Dummy class for proposal categories. Inherits directly from :class:`BaseClass`
+    without adding any fields.
     """
     pass
 
 class Proposal(models.Model):
-    
+
     """
-    Proposal model. This will store the user proposal in a similar
+    Proposal data model. This will store the user proposal in a similar
     way that Stackoverflow does. Take in mind that this data model is very
     exhaustive because it covers the administrator and the user.
-    
-     - Automatically filled fields: Space, Author, Pub_date, mod_date.
-     - User filled fields: Title, Description, Tags, Latitude, Longitude.
-     - Admin fields (manual): Code, Closed, Close_reason, Anon_allowed,
-                              Refurbished, Budget.
-                    (auto): Closed_by
+
+    :automatically filled fields: Space, Author, Pub_date, mod_date.
+    :user filled fields: Title, Description, Tags, Latitude, Longitude.
+    :admin fields (manual): Code, Closed, Close_reason, Anon_allowed,
+                            Refurbished, Budget.
+    :admin fields (auto): Closed_by
+    :extra permissions: proposal_view
+
+    :const:`CLOSE_REASONS` for :class:Proposal data model is hardcoded with four
+    values, which will fit most of the requirements.
     """
     code = models.CharField(_('Code'), max_length=50, unique=True, blank=True,
                             null=True)
@@ -89,10 +98,10 @@ class Proposal(models.Model):
     support_votes = models.IntegerField(blank=True, null=True)
     refurbished = models.NullBooleanField(default=False, blank=True)
     budget = models.IntegerField(blank=True, null=True)
-    
+
     pub_date = models.DateTimeField(auto_now_add=True)
     mod_date = models.DateTimeField(auto_now_add=True)
-    
+
     def __unicode__(self):
         return self.title
 
@@ -109,3 +118,4 @@ class Proposal(models.Model):
         permissions = (
             ('view', 'Can view the object'),
         )
+

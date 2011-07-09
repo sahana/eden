@@ -18,6 +18,10 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Proposal module views.
+"""
+
 # Generic class-based views
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -37,7 +41,11 @@ from e_cidadania.apps.spaces.models import Space
 class ListProposals(ListView):
 
     """
-    List all proposals stored whithin a space.
+    List all proposals stored whithin a space. Inherits from django :class:`ListView`
+    generic view.
+
+    :rtype: Object list
+    :context: proposal
     """
     paginate_by = 50
     context_object_name = 'proposal'
@@ -56,7 +64,11 @@ class ListProposals(ListView):
 class ViewProposal(DetailView):
 
     """
-    Detail view of a proposal.
+    Detail view of a proposal. Inherits from django :class:`DetailView` generic
+    view.
+
+    :rtype: object
+    :context: proposal
     """
     context_object_name = 'proposal'
     template_name = 'proposals/proposal_detail.html'
@@ -77,9 +89,12 @@ def add_proposal(request, space_name):
 
     """
     Create a new proposal.
+
+    :rtype: HTML Form
+    :context: form, get_place
     """
     prop_space = get_object_or_404(Space, url=space_name)
-    
+
     proposal = Proposal()
     form = ProposalForm(request.POST or None, request.FILES or None, instance=proposal)
 
@@ -103,6 +118,9 @@ def edit_proposal(request, space_name, prop_id):
     """
     The proposal can be edited by space and global admins, but also by their
     creator.
+
+    :rtype: HTML Form
+    :context: get_place
     """
     current_space = get_object_or_404(Space, url=space_name)
     current_proposal = get_object_or_404(Proposal, id=prop_id)
@@ -126,6 +144,9 @@ class DeleteProposal(DeleteView):
 
     """
     Delete a proposal.
+
+    :rtype: Confirmation
+    :context: get_place
     """
     def get_object(self):
         return get_object_or_404(Proposal, pk = self.kwargs['prop_id'])
@@ -133,7 +154,7 @@ class DeleteProposal(DeleteView):
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
-    
+
     def get_context_data(self, **kwargs):
         context = super(DeleteProposal, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])

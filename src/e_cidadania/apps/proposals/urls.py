@@ -18,6 +18,10 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Proposal module URLs.
+"""
+
 from django.conf.urls.defaults import *
 from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
     DeleteProposal
@@ -25,12 +29,13 @@ from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
 urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
     (r'^add/', 'add_proposal'),
-    
+
     (r'^(?P<prop_id>\w+)/edit/', 'edit_proposal'),
-    
+
     (r'^(?P<prop_id>\w+)/delete/', DeleteProposal.as_view()),
 
     (r'^(?P<prop_id>\w+)/', ViewProposal.as_view()),
-        
+
     (r'^$', ListProposals.as_view()),
 )
+
