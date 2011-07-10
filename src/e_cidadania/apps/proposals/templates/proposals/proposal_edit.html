@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load wysiwyg %}
 
 {% block title %}{% trans "Add proposal" %}{% endblock %}
 {% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
@@ -7,14 +8,63 @@
 
 {% block content %}
   <div class="grid_11">
-    <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+
+    <div id="contenttitles">
+      {% trans "Add proposal" %}
+    </div>
+
+    <form action="" method="post">{% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% if user.is_staff %}
+
         {{ form.as_p }}
 
-        <hr />
-        <p class="buttons">
-          <input type="submit" value="{% trans 'Save' %}" />
-          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
-        </p>
+      {% else %}
+
+      <div class="fieldWrapper">
+        {{ form.title.errors }}
+        <label for="id_name">{% trans "Title" %}:</label>
+        <p>{{ form.title }}</p>
+        <p id="form_help_text">{{ form.title.help_text }}</p>
+      </div>
+
+      <div class="fieldWrapper">
+        {{ form.description.errors }}
+        <label for="id_description">{% trans "Description" %}:</label>
+        <p>{{ form.description }}</p>
+        {% wysiwyg_editor "id_description" %}
+      </div>
+
+      <div class="fieldWrapper">
+        {{ form.latitude.errors }}
+        <label for="id_logo">{% trans "Latitude" %} {% trans "(optional)" %}:</label>
+        {{ form.latitude }}
+      </div>
+
+      <div class="fieldWrapper">
+        {{ form.longitude.errors }}
+        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
+        {{ form.longitude }}
+      </div>
+
+      <div class="fieldWrapper">
+        {{ form.tags.errors }}
+        <label for="id_banner">{% trans "Tags" %} {% trans "(optional)" %}:</label>
+        {{ form.tags }}
+      </div>
+
+        {{ form.space.as_hidden }}
+        {{ form.author.as_hidden }}
+        {{ form.support_votes.as_hidden }}
+
+      {% endif %}
+      <hr />
+      <p class="buttons">
+        <input type="submit" value="{% trans 'Create' %}" />
+        <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
+      </p>
     </form>
   </div>
 {% endblock %}
+

@@ -24,7 +24,7 @@ LOGIN_REDIRECT_URL = '/accounts'
 GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHxRSapJw6ROu7OKaPDPIwetftitHBcw'
 
 # Stablish WYSIWYG editor for HTML forms. By default, we set CKEditor, but if
-# you want to use YUI editor just leave DJANGO_WYSIWYG_FLAVOR empty.
+# you want to use YUI editor just comment DJANGO_WYSIWYG_FLAVOR.
 # Values: ckeditor, empty
 DJANGO_WYSIWYG_FLAVOR = "ckeditor"
 DJANGO_WYSIWYG_MEDIA_URL = "/static/ckeditor/"
