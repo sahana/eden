@@ -1,19 +1,20 @@
-Generando documentación
-=======================
+Generating the documentation
+============================
 
-La documentación de e-cidadania se genera mediante Sphinx (1.0.7) en tres
-idiomas por defecto, que son:
+e-cidadania documentation is generated through sphinx (1.0.7) in three languages
+by default, which are:
 
-- Inglés
-- Español
-- Gallego
+- English
+- Spanish
+- Galician
 
-Normas linguísticas
--------------------
+Linguistic rules
+----------------
 
-Estas son las normas linguisticas de la documentación de e-cidadania
+This are the linguistic rules for e-cidadania documentation.
 
-Palabras confusas
------------------
+Fuzzy words
+-----------
 
-Diccionario de palabras confusas
+Fuzzy words dictionary.
+

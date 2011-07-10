@@ -1,7 +1,9 @@
-Guía de estilo
-==============
+Style guide
+===========
 
-La guía de estilo establece una serie de parámetros a seguir a la hora de programar código para e-cidadania. Estas normas son inquebrantables. La guía de estilo sigue bastante fielmente el `PEP8`_, con algunas excepciones que vienen de la guía de estilo interna de `Pocoo`_.
+The style guide stablish a series of rules to follow when coding in e-cidadania.
+This rules are unbreakable. The style guide follows closely the `PEP8`_ document,
+with some exceptions provided from the internal style guide at `Pocoo`_.
 
 .. _PEP8: http://www.python.org/dev/peps/pep-0008
 .. _Pocoo: http://www.pocoo.org//internal/styleguide/
@@ -10,7 +12,9 @@ Python
 ------
 
 **Imports**
-    Todos los imports deben estar situados en la cabecera del fichero, por debajo de la cabecera de comentarios. Los imports de módulos de sistema o de python deben preceder a los demás, y los de las librerías externas deben preceder a los de la aplicación.
+    Every import must be situated in the file header, below to the comment header.
+    The python imports must precede any others, and the external librearies or
+    third party modules must precede the application ones.
 
     *Ejemplo*::
 
@@ -21,19 +25,20 @@ Python
 
         from myapp.module import function
 
-**Ancho de línea**
-    El código debe de ser de 80 columnas de ancho como máximo salvo en los casos de las plantillas.
+**Line width (columns)**
+    The code must be always 80 columns wide except on templates.
 
-**Declacariones largas**
-    Si una línea de código no cabe en 80 columnas, intenta reducirla declarando variables previamente. Si aún así no se puede se deben dividir de las siguientes formas:
+**Long declarations**
+    If a code line does not fit in 80 columns, try to reduce it declaring variables
+    previously. If it still can not fit, you can divide the lines this way:
 
-    *Parentesis*::
+    *Parentheses*::
 
         website = models.URLField(_('Website'), verify_exists=True,
                                   max_length=200, null=True, blank=True,
                                   help_text=_('The URL will be checked'))
 
-    *Declaraciones*::
+    *Declararations*::
 
         this_is_a_very_long(function_call, 'with many parameters') \
             .that_returns_an_object_with_an_attribute
@@ -42,7 +47,7 @@ Python
                      .order_by(MyModel.name.desc()) \
                      .limit(10)
 
-    *Listas, tuplas y diccionarios*::
+    *Lists, tuples and dictionariess*::
 
         items = [
             'this is the first', 'set of items', 'with more items',
@@ -55,35 +60,37 @@ Python
             ('another': thing),
         }
 
-**Indentación**
-    La indentación debe ser de 4 espacios por nivel, sin excepciones. No se pueden utilizar tabulaciones para marcar los niveles de indentación.
+**Indentation**
+    Indentation must be *always* 4 spaces per level, no exceptions. You can not
+    use tabs for indentig.
 
-**Líneas en blanco**
-    Todas las funciones y clases deben estar separadas por dos líneas en blanco. El código dentro de una clase o método por una línea en blanco.
+**Blank lines**
+    Every function and classes must be separated by two blank lines. The code
+    inside a class or method by one blank line.
 
-    *Ejemplo*::
+    *Example*::
 
         class ListDocs(ListView):
-
+            ----blank line----
             """
             List all documents stored whithin a space.
             """
             paginate_by = 25
             context_object_name = 'document_list'
-
+            ----blank line----
             def get_queryset(self):
                 place = get_object_or_404(Space, url=self.kwargs['space_name'])
                 objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
                 return objects
-
+            ----blank line----
             def get_context_data(self, **kwargs):
                 context = super(ListDocs, self).get_context_data(**kwargs)
                 context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
                 return context
-
-
+        ----blank line----
+        ----blank line----
         def whatever(args):
-
+            ----blank line----
             """
             A comment.
             """
@@ -93,19 +100,21 @@ Python
 HTML
 ----
 
-**Columnas**
-    El código HTML no tiene límite de columnas, pero debe estar indentado de forma que se pueda localizar rápidamente cualquier elemento del documento. La disposición indentada en el desarrollo prevalece sobre el resultado renderizado de la aplicación.
+**Columns**
+    HTML code does not have a column limit, but it must be indented in a way we
+    can locate easily every element inside the document. The indentation preceeds
+    rendered results in application.
 
-**Indentación**
-    El código X/HTML debe estar indentado con 2 espacios, sin excepción.
+**Indentation**
+    The X/HTML code must be indented with two spaces, no exception.
 
 CSS
 ---
 
-**Indentación**
-    La indentación será de 4 espacios, siempre, igual que el código Python.
+**Indentation**
+    Indentation will be 4 spaces, always, like Python code.
 
-    *Ejemplo*::
+    *Example*::
 
         body {
             background: #FAFAFA;
@@ -117,14 +126,16 @@ CSS
 	    cursor: default;
         }
 
-**Colores**
-    Los colores siempre deberán estar escritos en su código hexadecimal. Se permiten las abreviaturas de tres dígitos.
+**Colors**
+    Colors must be always wrote in hexadecimal. You are allowed to use three digits
+    abbreviations.
 
-**Tamaños de letra**
-    Los tamaños de letra deben ser declarados siempre en **em's** y salvo una excepción muy casual no se deben declarar en píxels.
+**Font size**
+    Font size must be declared in **em's** except a presentation requirement.
 
 
 JavaScript
 ----------
 
 Estilo de código JavaScript.
+

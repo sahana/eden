@@ -1,16 +1,16 @@
-Instalación
-===========
+Installation
+============
 
-La instalación de e-cidadania es muy sencilla y se cumple exactamente igual que
-cualquier otra plataforma Django.
+e-cidadnaia installation is very simple and is the same as any other django
+platform.
 
-Requisitos
-----------
+Requirements
+------------
 
-- Apache, nginx, o cualquier otro servidor web que soporte CGI
-- FastCGI, CGI, Passenger u otro intérprete CGI
+- Apache, nginx, or any other web server with CGI suppport
+- FastCGI, CGI, Passenger or other CGI.
 
-**Dependencias**
+**Dependencies**
 
 - django 1.3
 - PIL *(Python Imaging Library)*
@@ -19,54 +19,58 @@ Requisitos
 - django-wysiwyg
 - django-grappelli (para la administración)
 
-Puedes instalar todas las dependiencias de forma automática mediante el siguiente comando:
+You can install all the required dependencies automatically with this command:
 
 ::
 
     # pip install -r requirements.txt
 
-Descargar la plataforma
------------------------
+Downloading platform
+--------------------
 
-Hay diversas formas de descargar e-cidadania. La más sencilla de ellas es
-acceder a la página de `Descargas <http://ecidadania.org/downloads>`_ de la web y bajarte la última versión
-estable, o la de desarrollo, ya empaquetadas y listas para usar.
+The are several ways to download e-cidadania. The most simple of them is going to
+the `downloads <http://ecidadania.org/downloads>`_ page in the website and download
+the latest stable versions, or development, ready to use.
 
-Versión estable
+Stable version
 ...............
 
-Podrás encontrar la últiva versión estable en la página de descargas de ecidadania.org::
+You can find the latest stable version in the download page in ecidadania.org::
 
     http://ecidadania.org/downloads
 
 
-Versión de desarrollo
-.....................
+Development version
+...................
 
-La versión de desarrollo está disponible desde diversos lugares. Utilizamos `GIT <http://git-scm.com/>`_ como sistema de control de versiones, así que necesitarás tenerlo instalado en tu ordenador.
+Development version is available through various places. We use `GIT <http://git-scm.com/>`_
+as control version system, so you will have to install it in your computer.
 
-    **Gitorious:** *(repositorio oficial)*::
-    
+    **Gitorious:** *(official repository)*::
+
         git clone git://gitorious.org/e-cidadania/mainline.git
 
-    **GitHub** *(repositorio secundario)*::
-    
+    **GitHub** *(secondary repository)*::
+
         git clone git://github.com/oscarcp/e-cidadania.git
-    
-    **Repo.or.cz** *(mirror oficial)*::
-    
+
+    **Repo.or.cz** *(official mirror)*::
+
         git clone git://repo.or.cz/e_cidadania.git
 
-Instalación con Apache 2
+Installing with Apache 2
 ------------------------
 
 Esta sección está en desarrollo.
 
-Instalación con nginx + FastCGI
+Installing with nginx + FastCGI
 -------------------------------
 
-.. note:: La instalación mediante FastCGI debería servir para otros servidores web ya que FastCGI es el que se encarga de e-cidadania, y el servidor sólo del contenido estático.
+.. note:: The installtion through FastCGI should work for other web servers since
+          FastCGI is the one who handles e-cidadania, and the server only serves
+          the static content.
 
-La instalación con nginx y FastCGI...
+The installation with nginx and FastCGI...
 
-Esta sección está en desarrollo.
+This section is in development.
+

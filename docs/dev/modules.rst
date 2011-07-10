@@ -1,13 +1,13 @@
-Creando módulos
-===============
+Creating modules
+================
 
-e-cidadania es extensible de forma sencilla a través de módulos, aunque la
-automatización de su instalación todavía no esté en funcionamiento.
+e-cidadania is extensible through modules, even if the installation procesdures
+are not working yet.
 
-Estructura
-----------
+Structure
+---------
 
-Un módulo es básicamente una aplicación de django que integraremos en e-cidadania.
-En principio abogamos por la estructura por defecto de django tanto en la
-distribución de los ficheros como en sus nombres.
+A module is basically a django application which we integrate in e-cidadania. At
+this time we advocate for the django default structure in the distribution and file
+names.
 

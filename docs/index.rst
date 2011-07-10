@@ -3,28 +3,26 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Documentación de e-cidadania
-============================
+e-cidadania documentation
+=========================
 
-**e-cidadania** es una plataforma web destinada a la participación ciudadana.
-Para ello cuenta con una serie de herramientas clave como son el sistema de
-propuestas, un revolucionario sistema de debate o un perfil avanzado de usuario
-con geolocalización y mensajería.
+**e-cidadania** is an open-source e-democracy web platform for citizen participation.
+It has some key features like a proposal system, a revolutionary ordered debate system or
+advanced user profiles with geolocation and messaging.
 
-Este programa está basado en el framework `django <http://www.djangoproject.com>`_
-y en varias librerías externas.
+This software is based on the `django <http://www.djangoproject.com>`_ framework
+and some external libraries.
 
 |Models|_
 
 .. |Models| image:: images/models.png
 .. _Models: http://postimage.org/image/z7b8s72c/full/
 
-.. warning:: e-cidadania está en una fase de desarrollo muy temprana y por ello
-             algunas partes del programa así como los modelos de datos pueden
-             sufrir grandes cambios hasta dentro de algunas versiones.
+.. warning:: e-cidadania is in heavy development, and because of that, some parts
+             of it may suffer changes, especially the data models until some releases.
 
 
-Documentacion
+Documentation
 -------------
 
 .. toctree::
@@ -35,8 +33,8 @@ Documentacion
     docs/usermanual
     docs/adminmanual
 
-Desarrollo
-----------
+Development
+-----------
 
 .. toctree::
     :maxdepth: 2
@@ -47,7 +45,7 @@ Desarrollo
     dev/documenting
     dev/i18n
 
-Apariencias / Temas
+Appearance / Themes
 -------------------
 
 .. toctree::
@@ -60,7 +58,7 @@ Reference
 
 .. toctree::
     :maxdepth: 1
-    
+
     reference/spaces_admin
     reference/spaces_forms
     reference/spaces_models
@@ -73,26 +71,26 @@ Reference
 Finale
 ======
 
-Dónde conseguir ayuda
----------------------
+Getting help
+------------
 
-- Prueba a mirar en el `FAQ <http://app.ecidadania.org/faq>`_.
-- Listas de correo de e-cidadania
+- Try looking the `FAQ <http://app.ecidadania.org/faq>`_.
+- e-cidadania mailing lists
 
   * ecidadania-users@freelists.org
   * ecidadania-dev@freelists.org
   * ecidadania-es@freelists.org
 
-- Informar de errores en el `bug tracker <http://dev.ecidadania.org>`_ de e-cidadania.
+- Bug reporting in the e-cidadania `bug tracker <http://dev.ecidadania.org>`_.
 
-Acerca de este documento
-------------------------
+About this document
+-------------------
 
-:Autores:
+:Authors:
 
     Oscar Carballal <oscar.carballal@cidadania.coop> <info@oscarcp.com>
 
-:Traducción ao galego:
+:Galician translation:
 
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
 
@@ -103,8 +101,8 @@ Acerca de este documento
 
     Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
 
-Agradecimientos
----------------
+Thanks
+------
 
 - Algueirada
 - Xunta de Galicia
