@@ -18,21 +18,29 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This file contains all the data models for the debate module.
+"""
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.tagging.fields import TagField
 from e_cidadania.apps.tagging.models import Tag
+from e_cidadania.apps.spaces.models import Space
 
 class Debate(models.Model):
 
     """
-    Very basic outline of a debate, or group of sections.
+    Debate object. In every space there can be unlimited debates, each one of
+    them holds all the related notes. Debates are filtered by space.
+    
+    .. versionadded:: 0.1b
     """
     title = models.CharField(_('Title'), max_length=200)
     objectives = models.CharField(_('Objectives'), max_length=100)
     description = models.TextField(_('Description'))
+    space = models.ForeignKey(Space)
     
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
@@ -44,6 +52,8 @@ class Phases(models.Model):
 
     """
     Basic outline of sections, or phases of the debate.
+    
+    .. versionadded:: 0.1a
     """
     title = models.CharField(_('Title'), max_length=200)
     description = models.TextField(_('Description'))
@@ -54,16 +64,20 @@ class Phases(models.Model):
     def __unicode__(self):
         return self.debate.name + ' / ' + self.title
 
-class Message(models.Model):
+class Note(models.Model):
 
     """
-    The important unit, the message.
+    The most important object in every debate, the message. It has a coordinates
+    value to determine the position of the note in its debate.
+    
+    .. versionadded:: 0.1b
     """
+    debate = models.ForeignKey(Debate)
     message = models.CharField(_('Message'), max_length=100)
     explanation = models.CharField(_('Explanation'), max_length=100,
                                    null=True, blank=True)
+    coords = models.CharField(_('Coordinates'), max_length=100)
 
-    section = models.ForeignKey(Phases)
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
     

@@ -17,3 +17,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+"""  
+This file contains all the URLs that e_cidadania will inherit when the user
+access to '/spaces/'.
+"""
+from django.conf.urls.defaults import *
+
+urlpatterns = patterns('e_cidadania.apps.debate.views',
+
+    # News
+    (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
+
+)
