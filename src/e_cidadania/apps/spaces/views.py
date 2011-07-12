@@ -84,8 +84,12 @@ class ListSpaces(ListView):
     :rtype: Object list
     :contexts: object_list
     """
-    model = Space
-    
+    def get_queryset(self):
+        public_spaces = Space.objects.all().filter(public=True)
+        user_spaces = self.request.user.profile.spaces.all()
+        
+        # It seems that the pipe operator allows concatenating querysets
+        return public_spaces | user_spaces
 
 class ViewSpaceIndex(DetailView):
 

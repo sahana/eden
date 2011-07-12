@@ -20,7 +20,7 @@
 
 from django.contrib import admin
 
-from e_cidadania.apps.debate.models import Debate, Phases, Message
+from e_cidadania.apps.debate.models import Debate, Phases, Note
 
 class PhasesInline(admin.StackedInline):
     model = Phases
@@ -33,9 +33,9 @@ class DebateAdmin(admin.ModelAdmin):
 class PhasesAdmin(admin.ModelAdmin):
     list_display = ('title', 'debate')
     
-class MessageAdmin(admin.ModelAdmin):
+class NoteAdmin(admin.ModelAdmin):
     list_display = ('message', 'explanation', 'pub_date', 'pub_author')
 
 admin.site.register(Debate, DebateAdmin)
 admin.site.register(Phases, PhasesAdmin)
-admin.site.register(Message, MessageAdmin)
+admin.site.register(Note, NoteAdmin)
