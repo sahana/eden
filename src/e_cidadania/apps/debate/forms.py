@@ -17,3 +17,40 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+"""
+This file contains all the forms for the debate modules.
+"""
+
+from django.forms import ModelForm
+from django.forms.models import modelformset_factory
+
+from e_cidadania.apps.debate.models import Debate, Phase, Note
+
+class DebateForm(ModelForm):
+
+    """
+    Returns a form created from the Debate data model.
+    
+    :rtype: HTML Form
+    
+    .. versionadded:: 0.1b
+    """
+    class Meta:
+        model = Debate
+
+# Create a FormSet with the Phase model
+PhaseFormSet = modelformset_factory(Phase, extra=1)
+
+class NoteForm(ModelForm):
+
+    """
+    Returns an HTML Form to create or edit a new 'note' or 'proposal' like it's
+    called on the sociologists argot.
+    
+    :rtype: HTML Form
+    
+    .. versionadded:: 0.1b
+    """
+    class Meta:
+        model = Note

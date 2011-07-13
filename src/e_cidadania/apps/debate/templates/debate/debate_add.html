@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Create new space" %}{% endblock %}
+
+{% block content %}
+
+  {% block centercol %}
+    <div class="grid_11">
+    
+      <div id="contenttitles">
+        {% trans "Create a new space" %}
+      </div>
+      
+
+
+      <div id="debate">
+
+      <form enctype="" action="" method="post">{% csrf_token %}
+        
+        {{ form.as_hidden }}
+        
+        {% comment %}
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+          {{ form.name.errors }}
+          <label for="id_name">{% trans "Space name" %}:</label>
+          <p>{{ form.name }}</p>
+          <p id="form_help_text">{{ form.name.help_text }}</p>
+        </div>
+        {% endcomment %}
+        
+        <hr />
+        <p class="buttons">
+          <img src="{{ STATIC_URL }}/debate/img/add.png"
+               title="{% trans 'Add new phase' %}" alt="{% trans 'Add new phase' %}" />
+          <a href="../../" class="addphase">{% trans "Phase" %}</a>
+          <input type="submit" value="{% trans 'Finish' %}" />
+        </p>
+
+      </form>
+        
+      </div>
+
+
+
+    </div>
+
+  {% endblock %}
+
+
+  {% block rightcol %}
+    <div class="grid_5">
+      <div id="widget">
+       <h2>{% trans "How to add new debates" %}</h2><br/>
+        <ul class="instructions">
+          <li><strong>{% trans "Modules" %}</strong>: {% trans "Select the
+              modules you will use in your space. This can be edited afterwards." %}</li>
+        </ul>
+      </div>
+    </div>
+  {% endblock %}
+
+{% endblock %}

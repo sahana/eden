@@ -37,9 +37,9 @@ class Debate(models.Model):
     
     .. versionadded:: 0.1b
     """
-    title = models.CharField(_('Title'), max_length=200)
-    objectives = models.CharField(_('Objectives'), max_length=100)
-    description = models.TextField(_('Description'))
+    title = models.CharField(_('Title'), max_length=200, unique=True)
+    objectives = models.CharField(_('Objectives'), max_length=100, blank=True, null=True)
+    description = models.TextField(_('Description'), blank=True, null=True)
     space = models.ForeignKey(Space)
     
     pub_date = models.DateTimeField(auto_now_add=True)
@@ -48,21 +48,28 @@ class Debate(models.Model):
     def __unicode__(self):
         return self.title
     
-class Phases(models.Model):
+class Phase(models.Model):
 
     """
     Basic outline of sections, or phases of the debate.
     
-    .. versionadded:: 0.1a
+    .. versionadded:: 0.1b
     """
-    title = models.CharField(_('Title'), max_length=200)
-    description = models.TextField(_('Description'))
+    phase_number = models.IntegerField(_('Phase number'), max_length=2)
     tags = TagField()
+    scale_x = models.CharField(_('X Scale'), default='Column 1, Column 2, Column 3',
+              max_length = 200)
+    scale_y = models.CharField(_('Y Scale'), default='Row 1, Row 2, Row 3',
+              max_length = 200)
 
     debate = models.ForeignKey(Debate)
     
+    pub_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateField(_('Start'))
+    end_date = models.DateField(_('End'))
+    
     def __unicode__(self):
-        return self.debate.name + ' / ' + self.title
+        return self.debate.name + ' / ' + _('Phase ') + str(self.id)
 
 class Note(models.Model):
 
@@ -76,7 +83,7 @@ class Note(models.Model):
     message = models.CharField(_('Message'), max_length=100)
     explanation = models.CharField(_('Explanation'), max_length=100,
                                    null=True, blank=True)
-    coords = models.CharField(_('Coordinates'), max_length=100)
+    coords = models.CharField(_('Coordinates'), default='0,0,300,100', max_length=100)
 
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
