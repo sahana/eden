@@ -23,6 +23,7 @@ These are the views that control the spaces, meetings and documents.
 """
 
 import datetime
+import itertools
 
 # Generic class-based views
 from django.views.generic.base import TemplateView, RedirectView
@@ -43,6 +44,8 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
+from django.contrib.syndication.views import Feed, FeedDoesNotExist
+from django.utils.translation import ugettext_lazy as _
 
 # Function-based views
 from django.views.generic.list_detail import object_list, object_detail
@@ -55,6 +58,53 @@ from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
     EntityForm, EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
+
+
+#
+# RSS FEED
+#
+
+class SpaceFeed(Feed):
+
+    """
+    Returns a space feed with the content of various applciations. In the future
+    this function must detect applications and returns their own feeds.
+    """
+
+    def get_object(self, request, space_name):
+        current_space = get_object_or_404(Space, url=space_name)
+        return current_space
+
+    def title(self, obj):
+        return "Your space feed: %s" % obj.name
+
+    def link(self, obj):
+        return obj.get_absolute_url()
+    
+    def description(self, obj):
+        return "Recent news on space "
+
+    def items(self, obj):
+        results = itertools.chain(
+            #Post.objects.all().filter(post_space=obj).order_by('-post_pubdate')[:10],
+            Proposal.objects.all().filter(space=obj).order_by('-pub_date')[:10],
+            Meeting.objects.all().filter(space=obj).order_by('-pub_date')[:10],
+        ) 
+        
+        return sorted(results, key=lambda x: x.pub_date, reverse=True)
+        
+        
+#    def get_objects(self, request, space_name):
+#        return Post.objects.all().filter(space=space_name).order_by('-post_pubdate')[:10]
+#    
+#    def title(self, obj):
+#        return "Your space feed: %s" % obj.space.name
+
+#    def link(self, obj):
+#        return obj.get_absolute_url()
+#    
+#    def description(self, obj):
+#        return "Recent news on space "
 
 #
 # SPACE VIEWS

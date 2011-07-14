@@ -119,3 +119,5 @@ class Proposal(models.Model):
             ('view', 'Can view the object'),
         )
 
+    def get_absolute_url(self):
+        return '/spaces/%s/proposal/%s' % (self.space, self.id)

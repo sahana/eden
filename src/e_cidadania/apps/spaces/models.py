@@ -64,6 +64,9 @@ class Space(models.Model):
 
     def __unicode__(self):
         return self.name
+    
+    def get_absolute_url(self):
+        return '/spaces/%s' % self.url
 
 class Entity(models.Model):
 

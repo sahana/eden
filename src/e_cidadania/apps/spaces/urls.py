@@ -27,12 +27,15 @@ from django.conf.urls.defaults import *
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
                                           DeleteSpace, ListDocs, DeleteDocument, \
                                           ListMeetings, DeleteMeeting, ViewMeeting, \
-                                          ListPosts
+                                          ListPosts, SpaceFeed
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
 urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
+    # RSS Feed
+    (r'^(?P<space_name>\w+)/rss/', SpaceFeed()),
+    
     # News
     (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
 
