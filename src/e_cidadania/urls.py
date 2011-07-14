@@ -24,6 +24,8 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic.simple import direct_to_template
 
+from e_cidadania.views import IndexEntriesFeed, ListNews
+
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -43,16 +45,18 @@ urlpatterns = patterns('',
     (r'^spaces/', include('e_cidadania.apps.spaces.urls')),
 
     # News (this view of news is only for the index)
+    (r'^news/$', ListNews.as_view()),
+    
     (r'^news/add', 'e_cidadania.views.add_news'),
 
     (r'^news/(?P<post_id>\w+)/delete/', 'e_cidadania.views.delete_post'),
 
     (r'^news/(?P<post_id>\w+)/edit/', 'e_cidadania.views.edit_post'),
 
-    (r'^news/(?P<post_id>\w+)', 'e_cidadania.views.view_post'),
-
-    # Calendar
-    (r'^calendar/', include('e_cidadania.apps.swingtime.urls')),
+    (r'^news/(?P<post_id>\w+)/', 'e_cidadania.views.view_post'),
+    
+    # RSS Feed for the index news ONLY
+    (r'^rss/', IndexEntriesFeed()),
 
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),

@@ -57,4 +57,7 @@ class Post(models.Model):
 
     def get_tags(self, tags):
         return Tag.objects.get_for_object(self)
+        
+    def get_absolute_url(self):
+        return '/news/%s' % self.id
 

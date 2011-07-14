@@ -24,6 +24,9 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.views.generic.create_update import update_object
 from django.views.generic.create_update import delete_object
 from django.views.generic.list_detail import object_detail
+from django.contrib.syndication.views import Feed
+from django.utils.translation import ugettext_lazy as _
+from django.views.generic.list import ListView
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -49,6 +52,29 @@ def index_view(request):
     return render_to_response('site_index.html',
                               extra_context,
                               context_instance=RequestContext(request))
+
+class IndexEntriesFeed(Feed):
+
+    """
+    Creates an RSS feed out of the news posts in the index page.
+    
+    :rtype: RSS Feed
+    :context: None
+    
+    .. versionadded:: 0.1b
+    """
+    title = _('e-cidadania news')
+    link = '/news/'
+    description = _('Updates on the main e-cidadania site.')
+    
+    def items(self):
+        return Post.objects.all().order_by('-post_pubdate')[:10]
+        
+    def item_title(self, item):
+        return item.post_title
+   
+    def item_description(self, item):
+        return item.post_message 
 
 ###############
 # BIG WARNING #
@@ -119,3 +145,12 @@ def view_post(request, post_id):
                          template_name = 'news/post_detail.html',
                          template_object_name = 'news')
 
+class ListNews(ListView):
+
+    """
+    List all the news within a space.
+    """
+    def get_queryset(self):
+        news = Post.objects.all().filter(post_pub_index = True)
+        
+        return news
