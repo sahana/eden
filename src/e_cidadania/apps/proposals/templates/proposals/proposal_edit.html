@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load wysiwyg %}
 
-{% block title %}{% trans "Add proposal" %}{% endblock %}
+{% block title %}{% trans "Edit proposal" %}{% endblock %}
 {% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
@@ -10,7 +10,7 @@
   <div class="grid_11">
 
     <div id="contenttitles">
-      {% trans "Add proposal" %}
+      {% trans "Edit proposal" %}
     </div>
 
     <form action="" method="post">{% csrf_token %}

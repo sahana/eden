@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load wysiwyg %}
 
 {% block title %}{% trans "Create new meeting" %}{% endblock %}
 {% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
@@ -29,6 +30,7 @@
           {{ form.description.errors }}
           <label for="id_title">{% trans "Description" %}:</label>
           <p>{{ form.description }}</p>
+          {% wysiwyg_editor "id_description" %}
           <p id="form_help_text">{{ form.description.help_text }}</p>
         </div>
 
