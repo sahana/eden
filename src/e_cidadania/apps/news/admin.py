@@ -28,21 +28,20 @@ class PostAdmin(admin.ModelAdmin):
     """
     Administration view for news.
     """
-    list_display = ('post_title', 'post_pubdate', 'post_lastup', 'post_author',
-                    'post_space', 'post_pub_index')
-    search_fields = ('post_title', 'post_author', 'post_space',
-                     'post_pub_index')
+    list_display = ('post_title', 'pub_date', 'post_lastup', 'author',
+                    'space', 'pub_index')
+    search_fields = ('post_title', 'author', 'space', 'pub_index')
 
     fieldsets = [
         (None, {'fields':
             ['post_title', 'post_message']}),
         (_('Other data'), {'fields':
-            ['post_space', 'post_pub_index']})
+            ['space', 'pub_index']})
     ]
 
     def save_model(self, request, obj, form, change):
         if not change:
-            obj.post_author = request.user
+            obj.author = request.user
         obj.save()
 
 admin.site.register(Post, PostAdmin)

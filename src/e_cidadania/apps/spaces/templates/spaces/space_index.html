@@ -48,8 +48,8 @@
             <p>{{ news.post_message|safe }}</p>
             {% get_comment_count for news as comment_count %}
             <p>
-               {% trans "Written by" %} {{ news.post_author }}
-               {% trans "on" %} {{ news.post_pubdate }} | 
+               {% trans "Written by" %} {{ news.author }}
+               {% trans "on" %} {{ news.pub_date }} | 
                <a href="{{ request.path }}news/{{ news.id }}/">{{ comment_count }}
                {% trans "comments" %}</a>
             </p>
@@ -130,7 +130,7 @@
       
       <div id="widget">
         <h2>Compartir</h2><br />
-        <img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/>
+        <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/></a>
         <a href="http://www.facebook.com/cidadania.coop"><img src="{{ STATIC_URL }}/assets/logos/facebook_logo.png" alt="Facebook"/></a>
         <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
         <a href="http://tuenti.com"><img src="{{ STATIC_URL }}/assets/logos/tuenti_logo.png" alt="Compartir en Tuenti"/></a>

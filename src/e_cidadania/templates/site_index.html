@@ -24,7 +24,7 @@
     {% endif %}
 
     {% for news in publication %}
-      {% if news.post_pub_index %}
+      {% if news.pub_index %}
         <div class="post">
           {% if perms.news.edit_post %}
             <div id="tools">
@@ -39,7 +39,7 @@
             </div>
           {% endif %}
           <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
-          <h4>{% trans "Written by" %} {{ news.post_author }} {% trans "on" %} {{ news.post_pubdate }} | {% trans "Tags" %}: {{ news.post_tags }}</h4>
+          <h4>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | {% trans "Tags" %}: {{ news.post_tags }}</h4>
           <p>{{ news.post_message|safe }}</p>
         </div>
       {% endif %}

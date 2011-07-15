@@ -49,8 +49,8 @@ class ViewPost(DetailView):
     
         """
         """
-        space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return get_object_or_404(Post, post_space = space)
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return get_object_or_404(Post, space = place)
         
     def get_context_data(self):
     
@@ -78,8 +78,8 @@ def add_post(request, space_name):
         form_uncommited.post_author = request.user
 
         # Get space id
-        space = Space.objects.get(url=space_name)
-        form_uncommited.post_space = space
+        place = Space.objects.get(url=space_name)
+        form_uncommited.space = place
 
         # This should not be necessay since the editor filters the
         # script tags

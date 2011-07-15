@@ -39,7 +39,7 @@ def index_view(request):
     because using directo_to_template in urls.py doesn't refresh the content
     (it's loaded only once).
     """
-    pub = Post.objects.filter(post_pub_index=True).order_by('-post_pubdate')
+    pub = Post.objects.filter(pub_index=True).order_by('-pub_date')
     space_list = Space.objects.all()
     recent_spaces = Space.objects.all().order_by('-date')[:5]
     
@@ -94,8 +94,8 @@ def add_news(request):
 
     if request.method == 'POST':
         form_uncommited = form.save(commit=False)
-        form_uncommited.post_author = request.user
-        form_uncommited.post_pub_index = True
+        form_uncommited.author = request.user
+        form_uncommited.pub_index = True
 
         if form.is_valid():
             form_uncommited.save()
@@ -151,6 +151,6 @@ class ListNews(ListView):
     List all the news within a space.
     """
     def get_queryset(self):
-        news = Post.objects.all().filter(post_pub_index = True)
+        news = Post.objects.all().filter(pub_index = True)
         
         return news

@@ -76,17 +76,17 @@ class SpaceFeed(Feed):
         return current_space
 
     def title(self, obj):
-        return "Your space feed: %s" % obj.name
+        return _("%s feed") % obj.name
 
     def link(self, obj):
         return obj.get_absolute_url()
     
     def description(self, obj):
-        return "Recent news on space "
+        return _("All the recent events in %s including news, proposals, documents, etc. ") % obj.name
 
     def items(self, obj):
         results = itertools.chain(
-            #Post.objects.all().filter(post_space=obj).order_by('-post_pubdate')[:10],
+            Post.objects.all().filter(space=obj).order_by('-pub_date')[:10],
             Proposal.objects.all().filter(space=obj).order_by('-pub_date')[:10],
             Meeting.objects.all().filter(space=obj).order_by('-pub_date')[:10],
         ) 
@@ -180,7 +180,7 @@ class ViewSpaceIndex(DetailView):
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
-        context['publication'] = Post.objects.filter(post_space=place.id).order_by('-post_pubdate')
+        context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')
         return context
 
 
