@@ -31,8 +31,10 @@ class StaticPage(models.Model):
     name = models.CharField(_('Page Title'), max_length = 100)
     uri = models.CharField(_('URL'), max_length = 50)
     content = models.TextField(_('Content'))
+    show_footer = models.BooleanField(_('Show in footer'))
     author = models.ForeignKey(User, blank=True, null=True, verbose_name=_('Author'))
-    date = models.DateTimeField(auto_now_add=True)
+    pub_date = models.DateTimeField(auto_now_add=True)
+    order = models.IntegerField(_('Order'))
 
     class Meta:
         ordering = ['name']

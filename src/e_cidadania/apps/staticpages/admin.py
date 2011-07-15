@@ -27,7 +27,7 @@ class PageAdmin(admin.ModelAdmin):
 
     """
     """
-    list_display = ('name', 'uri', 'date', 'author')
+    list_display = ('name', 'uri', 'pub_date', 'author')
     search_fields = ('name', 'uri', 'author')
     
     change_form_template = 'staticpages/change_form.html'
@@ -38,6 +38,9 @@ class PageAdmin(admin.ModelAdmin):
 
         (_('Description'), {'fields':
             [('content')]}),
+        
+        (_('Options'), {'fields':
+            [('show_footer', 'order')]})
     ]
     
     def save_model(self, request, obj, form, change):

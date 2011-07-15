@@ -160,6 +160,9 @@
   
 {% endblock %}
 {% block footer %}
-  <p>{% trans "About" %} | {% trans "API" %} | {% trans "Developers" %} | {% trans "Terms of service" %} | {% trans "Help"%}</p>
+  <p>{% for p in page %}
+      <a href="/{{ p.uri }}">{{ p.name }}</a> |
+     {% endfor %}
+  </p>
   <p>{% trans "Space created by" %}: {{ user.get_profile.firstname }} {{ user.get_profile.surname }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
 {% endblock %}

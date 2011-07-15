@@ -58,6 +58,7 @@ from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
     EntityForm, EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
+from e_cidadania.apps.staticpages.models import StaticPage
 
 
 #
@@ -181,6 +182,7 @@ class ViewSpaceIndex(DetailView):
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
         context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')
+        context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
         return context
 
 
