@@ -105,6 +105,15 @@
         <div id="widget">
           <h2>{% trans "Calendar" %}</h2><br />
           <div id="datepicker"></div>
+          <script type="text/javascript">
+            $('#datepicker').datepicker({
+                onSelect: function(dateText) {
+                    var month = dateText.split("/")[0]
+                    var year = dateText.split("/")[2]
+                    window.location = "calendar/" + year + "/" + month + "/"
+                }
+            });
+          </script>
         </div>
       {% endif %}
       

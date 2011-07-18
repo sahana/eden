@@ -704,6 +704,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 .posttitle {
     font-size: 2em;
     color: #000;
+    padding: 9px 10px 10px 110px;
 }
 
 

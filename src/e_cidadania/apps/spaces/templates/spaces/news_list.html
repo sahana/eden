@@ -7,13 +7,20 @@
 
 {% block content %}
 
+  <div class="grid_16">
+    <div id="contenttitles">
+      {% trans "News archive" %}
+    </div>
+  </div>
+  
   {% block centercol %}
     <div class="grid_16">
       {% for post in post_list %}
         <div class="listitem">
             {% ifchanged post.pub_date|date:"F" %}
-                <div class="postdate">{{ post.pub_date|date:"F d" }}</div>
+                <h1 style="font-size: 2em;text-transform: uppercase;">{{ post.pub_date|date:"F Y" }}</h1>
             {% endifchanged %}
+            <div class="postdate">{{ post.pub_date|date:"l d" }}</div>
             <div class="posttitle"><a href="{{ post.id }}">{{ post.post_title }}</a></div>
         </div>
         <div class="clear"></div>
