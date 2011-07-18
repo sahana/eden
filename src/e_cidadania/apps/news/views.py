@@ -75,7 +75,7 @@ def add_post(request, space_name):
 
     if request.method == 'POST':
         form_uncommited = form.save(commit=False)
-        form_uncommited.post_author = request.user
+        form_uncommited.author = request.user
 
         # Get space id
         place = Space.objects.get(url=space_name)

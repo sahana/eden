@@ -135,6 +135,8 @@ class ListSpaces(ListView):
     :rtype: Object list
     :contexts: object_list
     """
+    paginate_by = 10
+    
     def get_queryset(self):
         public_spaces = Space.objects.all().filter(public=True)
         user_spaces = self.request.user.profile.spaces.all()
@@ -548,12 +550,17 @@ class ListPosts(ListView):
     :rtype: Object list
     :context: post_list
     """
-    paginate_by = 25
+    paginate_by = 10
     context_object_name = 'post_list'
     template_name = 'spaces/news_list.html'
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return Post.objects.all().filter(post_space=place)
+        return Post.objects.all().filter(space=place)
+    
+    def get_context_data(self, **kwargs):
+        context = super(ListPosts, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
     
     

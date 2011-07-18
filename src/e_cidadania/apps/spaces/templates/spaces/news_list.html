@@ -11,7 +11,7 @@
     <div class="grid_16">
       {% for post in post_list %}
         <p><a href="{{ post.id }}">{{ post.post_title }}</a></p>
-        <p>{% trans "Published" %} {{ post.pubdate }}</p>
+        <p>{% trans "Published" %} {{ post.pub_date }}</p>
       {% empty %}
         <p>{% trans "There are no posts in this space." %}</p>
       {% endfor %}
@@ -19,6 +19,22 @@
         <a href="../">{% trans "Go back" %}</a>
       </div>
     </div>
+    
+    {% if is_paginated %}
+    <div class="pagination">
+      <span class="page-links">
+      {% if page_obj.has_previous %}
+        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.previous_page_number }}">previous</a>
+      {% endif %}
+      <span class="page-current">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+      {% if page_obj.has_next %}
+        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.next_page_number }}">next</a>
+      {% endif %}
+      </span>
+    </div>
+    {% endif %}
   {% endblock %}
 
 {% endblock %}
