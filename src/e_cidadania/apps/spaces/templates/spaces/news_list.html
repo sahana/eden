@@ -10,8 +10,13 @@
   {% block centercol %}
     <div class="grid_16">
       {% for post in post_list %}
-        <p><a href="{{ post.id }}">{{ post.post_title }}</a></p>
-        <p>{% trans "Published" %} {{ post.pub_date }}</p>
+        <div class="listitem">
+            {% ifchanged post.pub_date|date:"F" %}
+                <div class="postdate">{{ post.pub_date|date:"F d" }}</div>
+            {% endifchanged %}
+            <div class="posttitle"><a href="{{ post.id }}">{{ post.post_title }}</a></div>
+        </div>
+        <div class="clear"></div>
       {% empty %}
         <p>{% trans "There are no posts in this space." %}</p>
       {% endfor %}

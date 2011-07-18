@@ -49,10 +49,9 @@ class ViewPost(DetailView):
     
         """
         """
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return get_object_or_404(Post, space = place)
+        return Post.objects.get(pk=self.kwargs['post_id'])
         
-    def get_context_data(self):
+    def get_context_data(self, **kwargs):
     
         """
         Get extra context data for the ViewPost view.

@@ -183,7 +183,7 @@ class ViewSpaceIndex(DetailView):
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
-        context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')
+        context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')[:10]
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
         return context
 

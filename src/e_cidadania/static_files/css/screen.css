@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2010 Cidadanía Coop.
+    Copyright (c) 2010-2011 Cidadanía Coop.
     Written by: Oscar Carballal Prego <info@oscarcp.com>
 
     This file is part of the e-cidadania.
@@ -634,8 +634,8 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     background: #CCC;
     padding: 5px;
 }
-/* NEWS */
 
+/* NEWS */
 .post {
     width: 100%;
     /* border-bottom: 5px solid #aaa;*/
@@ -685,6 +685,28 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
 .post img {
     margin: 10px;
 }
+
+/* POST LIST */
+.listitem {
+    width: 100%;
+    color: #000;
+    border: 0;
+    margin: 30px 0 30px 0;
+}
+.postdate {
+    font-size: 1.5em;
+    color: #000;
+    float:left;
+    padding: 10px;
+    border-right: 1px dashed #000;
+}
+
+.posttitle {
+    font-size: 2em;
+    color: #000;
+}
+
+
 /* END NEWS */
 
 /* PAGES */
