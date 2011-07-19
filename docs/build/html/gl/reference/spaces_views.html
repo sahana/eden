@@ -1,0 +1,402 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>spaces.views — Space-related views &mdash; e-cidadania v0.1</title>
+    <link rel="stylesheet" href="../_static/cidadania_black.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="e-cidadania v0.1" href="../index.html" />
+    <link rel="next" title="proposals.admin — Proposal administration models" href="proposals_admin.html" />
+    <link rel="prev" title="spaces.models — Spaces data models" href="spaces_models.html" /> 
+  </head>
+  <body>
+  
+  
+
+    <a href="../index.html" class="topsidebar">Go to index</a>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-e_cidadania.apps.spaces.views">
+<span id="spaces-views-space-related-views"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">spaces.views</span></tt> &#8212; Space-related views<a class="headerlink" href="#module-e_cidadania.apps.spaces.views" title="Permalink to this headline">¶</a></h1>
+<p>These are the views that control the spaces, meetings and documents.</p>
+<div class="section" id="general-spaces-views">
+<h2>General spaces views<a class="headerlink" href="#general-spaces-views" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.ListPosts">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">ListPosts</tt><big>(</big><em>ListView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.ListPosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with all the posts attached to that space. It&#8217;s similar to
+an archive, but without classification or filtering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object list</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">post_list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="spaces-views">
+<h2>Spaces views<a class="headerlink" href="#spaces-views" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.GoToSpace">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">GoToSpace</tt><big>(</big><em>RedirectView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.GoToSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends the user to the selected space. This view only accepts GET petitions.
+GoToSpace is a django generic <tt class="xref py py-class docutils literal"><span class="pre">RedirectView</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Attributes :</th><td class="field-body"><strong>self.place</strong> - Selected space object</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Redirect</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.ListSpaces">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">ListSpaces</tt><big>(</big><em>ListView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.ListSpaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of spaces in the system (except private ones) using a generic view.
+The users associated to a private spaces will see it, but not the other private
+spaces. ListSpaces is a django generic <tt class="xref py py-class docutils literal"><span class="pre">ListView</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object list</td>
+</tr>
+<tr class="field"><th class="field-name">Contexts :</th><td class="field-body">object_list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.ViewSpaceIndex">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">ViewSpaceIndex</tt><big>(</big><em>DetailView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.ViewSpaceIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index page for a space. The access to spaces is restricted and
+filtered in the get_object method. This view gathers information from all
+the configured modules in the space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Attributes :</th><td class="field-body">space_object, place</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">get_place, entities, documents, proposals, publication</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.DeleteSpace">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">DeleteSpace</tt><big>(</big><em>DeleteView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.DeleteSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a confirmation page before deleting the space object completely.
+This does not delete the space related content. Only the site administrators
+can delete a space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Confirmation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="e_cidadania.apps.spaces.views.edit_space">
+<tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">edit_space</tt><big>(</big><em>request</em>, <em>space_name</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.edit_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a form filled with the current space data to edit. Access to
+this view is restricted only to site and space administrators. The filter
+for space administrators is given by the edit_space permission and their
+belonging to that space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Attributes :</th><td class="field-body"><ul class="first simple">
+<li>place: current space intance.</li>
+<li>form: SpaceForm instance.</li>
+<li>form_uncommited: form instance before commiting to the DB,
+so we can modify the data.</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>space_name</strong> &#8211; Space URL</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">HTML Form</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body"><p class="first last">form, get_place</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="e_cidadania.apps.spaces.views.create_space">
+<tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">create_space</tt><big>(</big><em>request</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.create_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a SpaceForm form to fill with data to create a new space. There
+is an attached EntityFormset to save the entities related to the space. Only
+site administrators are allowed to create spaces.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Attributes :</th><td class="field-body"><ul class="first simple">
+<li>space_form: empty SpaceForm instance</li>
+<li>entity_forms: empty EntityFormSet</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">Space object, multiple entity objects.</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body"><p class="first last">form, entityformset</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="document-views">
+<h2>Document views<a class="headerlink" href="#document-views" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.ListDocs">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">ListDocs</tt><big>(</big><em>ListView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.ListDocs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of documents attached to the current space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object list</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">object_list, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.DeleteDocument">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">DeleteDocument</tt><big>(</big><em>DeleteView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.DeleteDocument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a confirmation page before deleting the current document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Confirmation</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="e_cidadania.apps.spaces.views.add_doc">
+<tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">add_doc</tt><big>(</big><em>request</em>, <em>space_name</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.add_doc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload a new document and attach it to the current space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">form, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="e_cidadania.apps.spaces.views.edit_doc">
+<tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">edit_doc</tt><big>(</big><em>request</em>, <em>space_name</em>, <em>doc_id</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.edit_doc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a DocForm filled with the current document data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">HTML Form</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">doc, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="meeting-views">
+<h2>Meeting views<a class="headerlink" href="#meeting-views" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.ListMeetings">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">ListMeetings</tt><big>(</big><em>ListView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.ListMeetings" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all the meetings attached to a space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object list</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">meeting_list, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.ViewMeeting">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">ViewMeeting</tt><big>(</big><em>DetailView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.ViewMeeting" title="Permalink to this definition">¶</a></dt>
+<dd><p>View the content of a Meeting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Object</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">meeting, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.views.DeleteMeeting">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">DeleteMeeting</tt><big>(</big><em>DeleteView</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.DeleteMeeting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a confirmation page before deleting the Meeting object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Confirmation</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="e_cidadania.apps.spaces.views.add_meeting">
+<tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">add_meeting</tt><big>(</big><em>request</em>, <em>space_name</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.add_meeting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an empty MeetingForm to create a new Meeting. Space and author fields
+are automatically filled with the request data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">HTML Form</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">form, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="e_cidadania.apps.spaces.views.edit_meeting">
+<tt class="descclassname">e_cidadania.apps.spaces.views.</tt><tt class="descname">edit_meeting</tt><big>(</big><em>request</em>, <em>space_name</em>, <em>meeting_id</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.views.edit_meeting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a MeetingForm filled with the current Meeting data to be edited.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">HTML Form</td>
+</tr>
+<tr class="field"><th class="field-name">Context :</th><td class="field-body">meeting, get_place</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  
+    <a href="http://github.com/oscarcp/e-cidadania"><img style="position: fixed; top: 0; right: 0; border: 0;"
+    src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  
+
+    <div id="endpage">
+      <div id="endpagecontainer">
+        
+        
+        <div class="widget">
+            <h3>Previous topic</h3>
+            <p class="topless">
+              <a href="spaces_models.html" title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">spaces.models</span></tt> &#8212; Spaces data models</a>
+            </p>
+            <h3>Next topic</h3>
+            <p class="topless">
+              <a href="proposals_admin.html" title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">proposals.admin</span></tt> &#8212; Proposal administration models</a>
+            </p>
+          
+        </div>
+        
+        
+          <div class="widget"><h3>Project links</h3>
+<ul>
+    <li><a href="http://github.com/oscarcp/e-cidadania">Source code (GitHub)</a></li>
+    <li><a href="http://gitorious.org/e-cidadania">Source code (Gitorious)</a></li>
+    <li><a href="http://dev.ecidadania.org">Bugtracker</a></li>
+    <li><a href="http://dev.ecidadania.org">Wiki</a></li>
+    <li><a href="http://ecidadania.org#">Project webpage</a></li>
+    <li><a href="http://www.facebook.com/pages/e-cidadania/220162834676928">Facebook</a></li>
+    <li><a href="http://twitter.com/#!/ecidadaniafloss">Twitter</a></li>
+    <li><a href="http://identi.ca/ecidadania">Identi.ca</a></li>
+</ul>
+          </div>
+        
+        
+        
+          <div class="info"><h3>About</h3>
+<p>2011, Cidadania S. Coop. Galega</p>
+<p><a href="../authors.html">Authors</a></p>
+<p><a href="http://www.gnu.org/licenses/fdl.html">FDL License</a></p>
+            <p>Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7</p>
+          </div>
+        
+      </div>
+    </div>
+  
+  </body>
+</html>

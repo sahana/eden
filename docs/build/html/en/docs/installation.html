@@ -1,0 +1,169 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; e-cidadania v0.1</title>
+    <link rel="stylesheet" href="../_static/cidadania_black.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="e-cidadania v0.1" href="../index.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="e-cidadania documentation" href="../index.html" /> 
+  </head>
+  <body>
+  
+  
+
+    <a href="../index.html" class="topsidebar">Go to index</a>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>e-cidadania installation is very simple and is done the same as any other django
+platforms.</p>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Apache, nginx, or any other web server with CGI suppport</li>
+<li>FastCGI, CGI, Passenger or other CGI.</li>
+</ul>
+<p><strong>Dependencies</strong></p>
+<ul class="simple">
+<li>django 1.3</li>
+<li>PIL <em>(Python Imaging Library)</em></li>
+<li>python-datetime <em>(versión 1.5)</em></li>
+<li>django-tagging</li>
+<li>django-wysiwyg</li>
+<li>django-grappelli (para la administración)</li>
+<li>feedparser</li>
+</ul>
+<p>You can install all the required dependencies automatically with this command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># pip install -r requirements.txt</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="downloading-platform">
+<h2>Downloading platform<a class="headerlink" href="#downloading-platform" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The download section in the official website is not available yet.</p>
+</div>
+<p>The are several ways to download e-cidadania. The most simple of them is going to
+the <a class="reference external" href="http://ecidadania.org/downloads">downloads</a> page in the website and download
+the latest stable or development versions, ready to use.</p>
+<div class="section" id="stable-version">
+<h3>Stable version<a class="headerlink" href="#stable-version" title="Permalink to this headline">¶</a></h3>
+<p>You can find the latest stable version in the download page in ecidadania.org:</p>
+<div class="highlight-python"><pre>http://ecidadania.org/downloads</pre>
+</div>
+</div>
+<div class="section" id="development-version">
+<h3>Development version<a class="headerlink" href="#development-version" title="Permalink to this headline">¶</a></h3>
+<p>Development version is available through various places. We use <a class="reference external" href="http://git-scm.com/">GIT</a>
+as control version system, so you will have to install it in your computer.</p>
+<blockquote>
+<div><p><strong>Gitorious:</strong> <em>(official repository)</em>:</p>
+<div class="highlight-python"><pre>git clone git://gitorious.org/e-cidadania/mainline.git</pre>
+</div>
+<p><strong>GitHub</strong> <em>(secondary repository)</em>:</p>
+<div class="highlight-python"><pre>git clone git://github.com/oscarcp/e-cidadania.git</pre>
+</div>
+<p><strong>Repo.or.cz</strong> <em>(official mirror)</em>:</p>
+<div class="highlight-python"><pre>git clone git://repo.or.cz/e_cidadania.git</pre>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="installing-with-apache-2">
+<h2>Installing with Apache 2<a class="headerlink" href="#installing-with-apache-2" title="Permalink to this headline">¶</a></h2>
+<p>This section is in developent.</p>
+</div>
+<div class="section" id="installing-with-nginx-fastcgi">
+<h2>Installing with nginx + FastCGI<a class="headerlink" href="#installing-with-nginx-fastcgi" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The installtion through FastCGI should work for other web servers since
+FastCGI is the one who handles e-cidadania, and the server only serves
+the static content.</p>
+</div>
+<p>The installation with nginx and FastCGI...</p>
+<p>This section is in development.</p>
+<p>Now you can continue to &#8220;Configuration&#8221;.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  
+    <a href="http://github.com/oscarcp/e-cidadania"><img style="position: fixed; top: 0; right: 0; border: 0;"
+    src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  
+
+    <div id="endpage">
+      <div id="endpagecontainer">
+        
+        
+        <div class="widget">
+            <h3>Previous topic</h3>
+            <p class="topless">
+              <a href="../index.html" title="previous chapter">e-cidadania documentation</a>
+            </p>
+            <h3>Next topic</h3>
+            <p class="topless">
+              <a href="configuration.html" title="next chapter">Configuration</a>
+            </p>
+          
+        </div>
+        
+        
+          <div class="widget"><h3>Project links</h3>
+<ul>
+    <li><a href="http://github.com/oscarcp/e-cidadania">Source code (GitHub)</a></li>
+    <li><a href="http://gitorious.org/e-cidadania">Source code (Gitorious)</a></li>
+    <li><a href="http://dev.ecidadania.org">Bugtracker</a></li>
+    <li><a href="http://dev.ecidadania.org">Wiki</a></li>
+    <li><a href="http://ecidadania.org#">Project webpage</a></li>
+    <li><a href="http://www.facebook.com/pages/e-cidadania/220162834676928">Facebook</a></li>
+    <li><a href="http://twitter.com/#!/ecidadaniafloss">Twitter</a></li>
+    <li><a href="http://identi.ca/ecidadania">Identi.ca</a></li>
+</ul>
+          </div>
+        
+        
+        
+          <div class="info"><h3>About</h3>
+<p>2011, Cidadania S. Coop. Galega</p>
+<p><a href="../authors.html">Authors</a></p>
+<p><a href="http://www.gnu.org/licenses/fdl.html">FDL License</a></p>
+            <p>Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7</p>
+          </div>
+        
+      </div>
+    </div>
+  
+  </body>
+</html>

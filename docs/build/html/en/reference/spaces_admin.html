@@ -1,0 +1,173 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>spaces.admin — Spaces administration models &mdash; e-cidadania v0.1</title>
+    <link rel="stylesheet" href="../_static/cidadania_black.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="e-cidadania v0.1" href="../index.html" />
+    <link rel="next" title="spaces.forms — Space-related forms" href="spaces_forms.html" />
+    <link rel="prev" title="Apariencias de e-cidadania" href="../theming/themes.html" /> 
+  </head>
+  <body>
+  
+  
+
+    <a href="../index.html" class="topsidebar">Go to index</a>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-e_cidadania.apps.spaces.admin">
+<span id="spaces-admin-spaces-administration-models"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">spaces.admin</span></tt> &#8212; Spaces administration models<a class="headerlink" href="#module-e_cidadania.apps.spaces.admin" title="Permalink to this headline">¶</a></h1>
+<p>e-cidadania administration models for django-admin. This administration models
+will make their respective data models available for management.</p>
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.admin.EntityAdmin">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.admin.</tt><tt class="descname">EntityAdmin</tt><big>(</big><em>admin.ModelAdmin</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.admin.EntityAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entities administration model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">List fields:</th><td class="field-body">name, website, space</td>
+</tr>
+<tr class="field"><th class="field-name">Search fields:</th><td class="field-body">name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.admin.EntityInline">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.admin.</tt><tt class="descname">EntityInline</tt><big>(</big><em>admin.TabularInline</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.admin.EntityInline" title="Permalink to this definition">¶</a></dt>
+<dd><p>TabularInline view for entities.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.admin.SpaceAdmin">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.admin.</tt><tt class="descname">SpaceAdmin</tt><big>(</big><em>admin.ModelAdmin</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.admin.SpaceAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Administration view for django admin to create spaces. The save() method
+is overriden to store automatically the author
+of the space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">List fields:</th><td class="field-body">name, description, date</td>
+</tr>
+<tr class="field"><th class="field-name">Search fields:</th><td class="field-body">name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.admin.DocumentAdmin">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.admin.</tt><tt class="descname">DocumentAdmin</tt><big>(</big><em>admin.ModelAdmin</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.admin.DocumentAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Administration view to upload/modify documents. The save() method is
+overriden to store the author automatically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">List fields:</th><td class="field-body">title, space, docfile, author, pub_date</td>
+</tr>
+<tr class="field"><th class="field-name">Search fields:</th><td class="field-body">title, space, author, pub_date</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="e_cidadania.apps.spaces.admin.MeetingAdmin">
+<em class="property">class </em><tt class="descclassname">e_cidadania.apps.spaces.admin.</tt><tt class="descname">MeetingAdmin</tt><big>(</big><em>admin.ModelAdmin</em><big>)</big><a class="headerlink" href="#e_cidadania.apps.spaces.admin.MeetingAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Meetings administration model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">List fields:</th><td class="field-body">title, space, meeting_date</td>
+</tr>
+<tr class="field"><th class="field-name">Search fields:</th><td class="field-body">title</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  
+    <a href="http://github.com/oscarcp/e-cidadania"><img style="position: fixed; top: 0; right: 0; border: 0;"
+    src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  
+
+    <div id="endpage">
+      <div id="endpagecontainer">
+        
+        
+        <div class="widget">
+            <h3>Previous topic</h3>
+            <p class="topless">
+              <a href="../theming/themes.html" title="previous chapter">Apariencias de e-cidadania</a>
+            </p>
+            <h3>Next topic</h3>
+            <p class="topless">
+              <a href="spaces_forms.html" title="next chapter"><tt class="docutils literal"><span class="pre">spaces.forms</span></tt> &#8212; Space-related forms</a>
+            </p>
+          
+        </div>
+        
+        
+          <div class="widget"><h3>Project links</h3>
+<ul>
+    <li><a href="http://github.com/oscarcp/e-cidadania">Source code (GitHub)</a></li>
+    <li><a href="http://gitorious.org/e-cidadania">Source code (Gitorious)</a></li>
+    <li><a href="http://dev.ecidadania.org">Bugtracker</a></li>
+    <li><a href="http://dev.ecidadania.org">Wiki</a></li>
+    <li><a href="http://ecidadania.org#">Project webpage</a></li>
+    <li><a href="http://www.facebook.com/pages/e-cidadania/220162834676928">Facebook</a></li>
+    <li><a href="http://twitter.com/#!/ecidadaniafloss">Twitter</a></li>
+    <li><a href="http://identi.ca/ecidadania">Identi.ca</a></li>
+</ul>
+          </div>
+        
+        
+        
+          <div class="info"><h3>About</h3>
+<p>2011, Cidadania S. Coop. Galega</p>
+<p><a href="../authors.html">Authors</a></p>
+<p><a href="http://www.gnu.org/licenses/fdl.html">FDL License</a></p>
+            <p>Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7</p>
+          </div>
+        
+      </div>
+    </div>
+  
+  </body>
+</html>
