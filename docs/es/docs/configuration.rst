@@ -21,10 +21,12 @@ Database
     }
     
 First of all will be to set up the database. By default e-cidadania is set up to
-use a local SQLite3 database, which will be useful if you need to do some testing,
-but it mustn't be used in production under any concept.
+use a local SQLite3 database, which will be useful if Lo primero de todo será configurar la base de datos. Por defecto, e-cidadania
+viene configurado para utilizar una base de datos local SQLite3, que puede
+servirte para hacer pruebas si lo necesitas pero no se debe utilizar bajo ningún
+concepto en producción.
 
-An example of a database on a shared DreamHost hosting::
+Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
 
     DATABASES = {
         'default': {
@@ -37,32 +39,36 @@ An example of a database on a shared DreamHost hosting::
         }
     }
 
-Debug mode
+Modo Debug
 ----------
 
-Debug mode comes activated by default an we encourage to deactivate it to start
-using e-cidadania in production. To deactivate it you must edit the `settings.py`
-file an set it to **False**::
+El modo debug viene activado por defecto y se recomienda encarecidamente
+desactivarlo para comenzar a utilizar e-cidadania en producción. Para ello
+hay que desactivarlo en el fichero `settings.py`::
 
     DEBUG = False
 
-User profiles
--------------
+Perfiles de usuario
+-------------------
 
-:function:ACCOUNT_ACTIVATION_DAYS(number)
-    This variale sets the number of days the user has to activate his account since
-    the confirmation mail was sent.
+*ACCOUNT_ACTIVATION_DAYS* (número)
 
-:function:GOOGLE_MAPS_API_KEY(hash)
-    Google API key to use the maps interface. You must create one since the one
-    that e-cidadania has preconfigured only works on localhost domain.
+    Esta variable especifica cuándos días tiene el usuario para activar su
+    cuenta desde que recibe el correo de confirmación.
 
-E-Mail
-------
+*GOOGLE_MAPS_API_KEY* (hash)
 
-:function:ADMINS(list)
-    Administrator accounts and e-mails for erro notifiaction. It only works with
-    DEBUG deactivated.
+    Llave de la API de Google para poder utilizar la interfaz de mapas. Debes
+    crearte una propia a pesar de que e-cidadania venga con una configurada,
+    ya que sólo funcionará en el dominio que hayas especificado.
+
+Correo electrónico
+------------------
+
+*ADMINS* (lista)
+
+    Lista de adminsitradores y cuentas de correo para la notificación
+    de errores del servidor. Sólo funciona si DEBUG = False
     
 *EMAIL_HOST* (servidor)
 
