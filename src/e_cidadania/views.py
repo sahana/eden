@@ -150,6 +150,9 @@ class ListNews(ListView):
     """
     List all the news within a space.
     """
+    paginate_by = 10
+    template_name = 'news/news_list.html'
+    
     def get_queryset(self):
         news = Post.objects.all().filter(pub_index = True)
         

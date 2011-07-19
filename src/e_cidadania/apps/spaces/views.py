@@ -562,7 +562,7 @@ class ListPosts(ListView):
     """
     paginate_by = 10
     context_object_name = 'post_list'
-    template_name = 'spaces/news_list.html'
+    template_name = 'news/news_list.html'
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
