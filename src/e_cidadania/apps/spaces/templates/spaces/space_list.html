@@ -12,7 +12,10 @@
         {% trans "Spaces list" %}
       </div>
       {% for space in object_list %}
-        <p><a href="/spaces/{{ space.url }}">{{ space.name }}</a></p>
+        <div id="spaceitem">
+          <p class="spacetitle"><a href="/spaces/{{ space.url }}">{{ space.name }}</a></p>
+          <p class="spacedesc">{{ space.description|removetags:"p"|safe }}</p>
+        </div>
       {% empty %}
         <p>{% trans "There are no spaces." %}</p>
       {% endfor %}
