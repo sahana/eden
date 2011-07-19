@@ -68,6 +68,7 @@ class Space(models.Model):
     def get_absolute_url(self):
         return '/spaces/%s' % self.url
 
+
 class Entity(models.Model):
 
     """
@@ -87,6 +88,7 @@ class Entity(models.Model):
 
     def __unicode__(self):
         return self.name
+
         
 class Document(models.Model):
 
@@ -105,6 +107,10 @@ class Document(models.Model):
         verbose_name = _('Document')
         verbose_name_plural = _('Documents')
         get_latest_by = 'pub_date'
+        
+    def get_absolute_url(self):
+        return '/%s/docs/%s' % (self.space.url, self.id)
+
 
 class MeetingType(models.Model):
 
@@ -120,6 +126,7 @@ class MeetingType(models.Model):
 
     def __unicode__(self):
         return self.title
+
 
 class Meeting(models.Model):
 
