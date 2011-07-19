@@ -231,19 +231,29 @@ def edit_space(request, space_name):
     place = get_object_or_404(Space, url=space_name)
 
     form = SpaceForm(request.POST or None, request.FILES or None, instance=place)
+    entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
+                                 queryset=Entity.objects.all().filter(space=place))
 
     if request.method == 'POST':
         form_uncommited = form.save(commit=False)
         form_uncommited.author = request.user
-        if form.is_valid():
-            form_uncommited.save()
+        
+        if form.is_valid() and entity_forms.is_valid():
+            new_space = form_uncommited.save()
             space = form_uncommited.url
+            
+            ef_uncommited = entity_forms.save(commit=False)
+            for ef in ef_uncommited:
+                ef.space = space
+                ef.save()
+            
             return redirect('/spaces/' + space)
 
     for i in request.user.profile.spaces.all():
         if i.url == space_name or request.user.is_staff:
             return render_to_response('spaces/space_edit.html',
-                              {'form': form, 'get_place': place},
+                              {'form': form, 'get_place': place,
+                              'entityformset': entity_forms},
                               context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html', context_instance=RequestContext(request))
