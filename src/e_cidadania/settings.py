@@ -99,6 +99,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.messages.context_processors.messages",
     "django.core.context_processors.request",
 )
+
+# Setting for debug_toolbar
+INTERNAL_IPS = ('127.0.0.1',)
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -106,9 +109,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
-
-MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 ROOT_URLCONF = 'e_cidadania.urls'
 
@@ -147,6 +149,9 @@ DJANGO_APPS = (
     'django.contrib.comments',
 )
 
+# Stablish message storage
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
+
 THIRDPARTY_APPS = (
     # This list is from the third party software included in e-cidadania
     'django_wysiwyg', # This is a system-wide application
@@ -167,6 +172,7 @@ ECIDADANIA_MODULES = (
     'e_cidadania.apps.spaces',
     'e_cidadania.apps.staticpages',
     'e_cidadania.apps.cal',
+    'debug_toolbar',
 )
 
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES

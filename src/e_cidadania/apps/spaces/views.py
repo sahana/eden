@@ -46,6 +46,7 @@ from django.contrib import messages
 from django.template import RequestContext
 from django.contrib.syndication.views import Feed, FeedDoesNotExist
 from django.utils.translation import ugettext_lazy as _
+from django.db import connection
 
 # Function-based views
 from django.views.generic.list_detail import object_list, object_detail
@@ -59,7 +60,7 @@ from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
     EntityForm, EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.staticpages.models import StaticPage
-
+from django.conf import settings
 
 #
 # RSS FEED
@@ -93,19 +94,6 @@ class SpaceFeed(Feed):
         ) 
         
         return sorted(results, key=lambda x: x.pub_date, reverse=True)
-        
-        
-#    def get_objects(self, request, space_name):
-#        return Post.objects.all().filter(space=space_name).order_by('-post_pubdate')[:10]
-#    
-#    def title(self, obj):
-#        return "Your space feed: %s" % obj.space.name
-
-#    def link(self, obj):
-#        return obj.get_absolute_url()
-#    
-#    def description(self, obj):
-#        return "Recent news on space "
 
 #
 # SPACE VIEWS
@@ -122,6 +110,8 @@ class GoToSpace(RedirectView):
     """
     def get_redirect_url(self, **kwargs):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
+        if settings.DEBUG:
+            messages.debug(self.request, 'Successfully redirected from index page to %s' % self.place.name)
         return '/spaces/{0}'.format(self.place.url)
 
 
@@ -141,8 +131,16 @@ class ListSpaces(ListView):
         public_spaces = Space.objects.all().filter(public=True)
         user_spaces = self.request.user.profile.spaces.all()
         
+        if settings.DEBUG:
+            messages.debug(self.request, "Succesful query")
         # It seems that the pipe operator allows concatenating querysets
         return public_spaces | user_spaces
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['messages'] = messages.get_messages(self.request)
+        return context
 
 class ViewSpaceIndex(DetailView):
 
@@ -166,13 +164,19 @@ class ViewSpaceIndex(DetailView):
             return space_object
 
         if self.request.user.is_anonymous():
+            messages.info(self.request, _("You're an anonymous user. \
+                          You must <a href=\"/accounts/register\">register</a> \
+                          or <a href=\"/accounts/login\">login</a> to access here."))
             self.template_name = 'not_allowed.html'
             return space_object
 
         for i in self.request.user.profile.spaces.all():
             if i.url == space_name:
                 return space_object
-
+        
+        messages.info(self.request, _("You're an anonymous user. \
+                          You must <a href=\"/accounts/register\">register</a> \
+                          or <a href=\"/accounts/login\">login</a> to access here."))
         self.template_name = 'not_allowed.html'
         return space_object.none()
 
@@ -185,6 +189,7 @@ class ViewSpaceIndex(DetailView):
         context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
         context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')[:10]
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
+        context['messages'] = messages.get_messages(self.request)
         return context
 
 
@@ -311,6 +316,7 @@ def create_space(request):
                 # We add the created spaces to the user allowed spaces
     
                 request.user.profile.spaces.add(space)
+                messages.info(request, 'Space %s created successfully.' % space.name)
                 return redirect('/spaces/' + space.url)
     
         return render_to_response('spaces/space_add.html',
@@ -566,11 +572,17 @@ class ListPosts(ListView):
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        
+        if settings.DEBUG:
+            messages.set_level(self.request, messages.DEBUG)
+            messages.debug(self.request, "Succesful query.")
+       
         return Post.objects.all().filter(space=place)
     
     def get_context_data(self, **kwargs):
         context = super(ListPosts, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['messages'] = messages.get_messages(self.request)
         return context
     
     

@@ -26,7 +26,15 @@
 		{% wysiwyg_setup %}
 	</head>
 	<body>
-
+    
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message|safe }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    
     <div class="topbar">
       <div id="version">
 	      v0.1 alpha

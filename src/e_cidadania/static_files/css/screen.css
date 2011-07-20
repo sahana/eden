@@ -159,6 +159,33 @@ input[type="text"], input[type="password"] {
     margin-left: 10px;
     margin-bottom: 5px;
 }
+
+.messages {
+    position: absolute;
+    margin: 0;
+    width: 100%;
+    border-bottom: 1px solid #dddd00;
+    font-size: 1.3em;
+    color: #666;
+    opacity: 0.99;
+    z-index: 99;
+}
+
+.messages li a {
+    text-decoration: underline;
+}
+.messages li {
+    padding: 10px;
+}
+
+.messages li.info {
+    background: #ffc40c;
+}
+
+.messages li.debug {
+    background: #000;
+    color: #FFF;
+}
 /* END COMMON CLASSES */
 
 
