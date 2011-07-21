@@ -316,7 +316,7 @@ def create_space(request):
                 # We add the created spaces to the user allowed spaces
     
                 request.user.profile.spaces.add(space)
-                messages.info(request, 'Space %s created successfully.' % space.name)
+                messages.sucess(request, 'Space %s created successfully.' % space.name)
                 return redirect('/spaces/' + space.url)
     
         return render_to_response('spaces/space_add.html',

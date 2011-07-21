@@ -101,7 +101,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 # Setting for debug_toolbar
-INTERNAL_IPS = ('127.0.0.1',)
+#INTERNAL_IPS = ('127.0.0.1',)
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -109,7 +109,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 ROOT_URLCONF = 'e_cidadania.urls'
@@ -172,7 +172,7 @@ ECIDADANIA_MODULES = (
     'e_cidadania.apps.spaces',
     'e_cidadania.apps.staticpages',
     'e_cidadania.apps.cal',
-    'debug_toolbar',
+    #'debug_toolbar',
 )
 
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES

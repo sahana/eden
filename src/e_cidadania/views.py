@@ -27,6 +27,7 @@ from django.views.generic.list_detail import object_detail
 from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.list import ListView
+from django.contrib import messages
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -49,6 +50,10 @@ def index_view(request):
         'recent_spaces': recent_spaces,
     }
 
+    if request.user.is_anonymous():
+        messages.info(request, _("Hi! It seems that it's your first time here. \
+                                 Maybe you want to <a href=\"/accounts/register\">register</a> \
+                                 or <a href=\"/accounts/login\">login</a> if you have an account."))
     return render_to_response('site_index.html',
                               extra_context,
                               context_instance=RequestContext(request))

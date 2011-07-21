@@ -164,7 +164,6 @@ input[type="text"], input[type="password"] {
     position: absolute;
     margin: 0;
     width: 100%;
-    border-bottom: 1px solid #dddd00;
     font-size: 1.3em;
     color: #666;
     opacity: 0.99;
@@ -175,7 +174,7 @@ input[type="text"], input[type="password"] {
     text-decoration: underline;
 }
 .messages li {
-    padding: 10px;
+    padding: 5px 10px;
 }
 
 .messages li.info {
@@ -186,6 +185,26 @@ input[type="text"], input[type="password"] {
     background: #000;
     color: #FFF;
 }
+
+.messages li.warning {
+    background: #FF666666;
+    color: #FFF;
+}
+
+.messages li.success {
+    background: #66FF66;
+}
+
+.closemsg {
+    float: right;
+    font-size: 0.7em;
+    background: #FF6666;
+    color: #FFF;
+    margin: 5px;
+    padding: 3px 3px;
+    font-weight: bold;
+}
+
 /* END COMMON CLASSES */
 
 
