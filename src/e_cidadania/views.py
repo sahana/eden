@@ -106,6 +106,7 @@ def add_news(request):
             form_uncommited.save()
             return redirect('/')
 
+    messages.success(request, _('Post added successfully'))
     return render_to_response('news/post_add.html',
                               {'form': form},
                               context_instance=RequestContext(request))
@@ -117,6 +118,7 @@ def delete_post(request, post_id):
     Delete an existent post. Post deletion is only reserved to spaces
     administrators or site admins.
     """
+    messages.success(request, _('Post deleted successfully.'))
     return delete_object(request,
                          model = Post,
                          object_id = post_id,
@@ -130,6 +132,7 @@ def edit_post(request, post_id):
     """
     Edit an existent post.
     """
+    messages.success(request, _('Post edited successfully.'))
 
     return update_object(request,
                          model = Post,
