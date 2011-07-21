@@ -110,8 +110,6 @@ class GoToSpace(RedirectView):
     """
     def get_redirect_url(self, **kwargs):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
-        if settings.DEBUG:
-            messages.debug(self.request, 'Successfully redirected from index page to %s' % self.place.name)
         return '/spaces/{0}'.format(self.place.url)
 
 
@@ -131,8 +129,6 @@ class ListSpaces(ListView):
         public_spaces = Space.objects.all().filter(public=True)
         user_spaces = self.request.user.profile.spaces.all()
         
-        if settings.DEBUG:
-            messages.debug(self.request, "Succesful query")
         # It seems that the pipe operator allows concatenating querysets
         return public_spaces | user_spaces
 
@@ -161,6 +157,11 @@ class ViewSpaceIndex(DetailView):
         space_object = get_object_or_404(Space, url = space_name)
 
         if space_object.public == True or self.request.user.is_staff:
+            if self.request.user.is_anonymous():
+                messages.info(self.request, _("Hello anonymous user. Please take in mind \
+                                              that this spaces is public to view, but \
+                                              you must <a href=\"/accounts/register\">register</a> \
+                                              to participate."))
             return space_object
 
         if self.request.user.is_anonymous():
@@ -174,9 +175,7 @@ class ViewSpaceIndex(DetailView):
             if i.url == space_name:
                 return space_object
         
-        messages.info(self.request, _("You're an anonymous user. \
-                          You must <a href=\"/accounts/register\">register</a> \
-                          or <a href=\"/accounts/login\">login</a> to access here."))
+        messages.warning(self.request, _("You're not registered to this space."))
         self.template_name = 'not_allowed.html'
         return space_object.none()
 
@@ -252,6 +251,7 @@ def edit_space(request, space_name):
                 ef.space = space
                 ef.save()
             
+            messages.success(self.request, _('Space edited successfully'))
             return redirect('/spaces/' + space)
 
     for i in request.user.profile.spaces.all():
@@ -316,7 +316,7 @@ def create_space(request):
                 # We add the created spaces to the user allowed spaces
     
                 request.user.profile.spaces.add(space)
-                messages.sucess(request, 'Space %s created successfully.' % space.name)
+                messages.success(self.request, 'Space %s created successfully.' % space.name)
                 return redirect('/spaces/' + space.url)
     
         return render_to_response('spaces/space_add.html',
@@ -389,6 +389,7 @@ def add_doc(request, space_name):
                 form_uncommited.author = request.user
                 if form.is_valid():
                     form_uncommited.save()
+                    messages.success(self.request, _('The document has been added successfully.'))
                     return redirect('/spaces/' + space_name)
         
             return render_to_response('spaces/document_add.html',

@@ -187,7 +187,7 @@ input[type="text"], input[type="password"] {
 }
 
 .messages li.warning {
-    background: #FF666666;
+    background: #FF6666;
     color: #FFF;
 }
 
