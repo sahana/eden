@@ -10,7 +10,7 @@
 
 function msg() {
     // Show the messages slowly so the user can notice it.
-    $("ul.messages").toggle(2000);
+    $("ul.messages").slideDown(2000);
     
     // On click "X" hide everything
     $(".closemsg").click(function (event) {
