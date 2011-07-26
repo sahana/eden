@@ -127,16 +127,13 @@ class ListSpaces(ListView):
     
     def get_queryset(self):
         public_spaces = Space.objects.all().filter(public=True)
-        user_spaces = self.request.user.profile.spaces.all()
         
-        # It seems that the pipe operator allows concatenating querysets
-        return public_spaces | user_spaces
+        if not self.request.user.is_anonymous():
+            user_spaces = self.request.user.profile.spaces.all()
+            return public_spaces | user_spaces
+            
+        return public_spaces
 
-    def get_context_data(self, **kwargs):
-        context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        context['messages'] = messages.get_messages(self.request)
-        return context
 
 class ViewSpaceIndex(DetailView):
 
