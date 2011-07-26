@@ -316,7 +316,7 @@ def create_space(request):
                 # We add the created spaces to the user allowed spaces
     
                 request.user.profile.spaces.add(space)
-                messages.success(self.request, 'Space %s created successfully.' % space.name)
+                messages.success(self.request, _('Space %s created successfully.') % space.name)
                 return redirect('/spaces/' + space.url)
     
         return render_to_response('spaces/space_add.html',
@@ -389,7 +389,7 @@ def add_doc(request, space_name):
                 form_uncommited.author = request.user
                 if form.is_valid():
                     form_uncommited.save()
-                    messages.success(self.request, _('The document has been added successfully.'))
+                    messages.success(request, _('The document has been added successfully.'))
                     return redirect('/spaces/' + space_name)
         
             return render_to_response('spaces/document_add.html',
@@ -408,6 +408,7 @@ def edit_doc(request, space_name, doc_id):
     :context: doc, get_place
     """
     place = get_object_or_404(Space, url=space_name)
+    messages.success(request, _('Document edited successfully.'))
 
     return update_object(request,
                          model = Document,
@@ -511,6 +512,7 @@ def add_meeting(request, space_name):
         form_uncommited.space = place
         if form.is_valid():
             form_uncommited.save()
+            messages.success(request, _('Meeting added successfully.'))
             return redirect('/spaces/' + space_name)
     
     return render_to_response('spaces/meeting_add.html',
