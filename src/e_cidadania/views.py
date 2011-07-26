@@ -104,9 +104,9 @@ def add_news(request):
 
         if form.is_valid():
             form_uncommited.save()
+            messages.success(request, _('Post added successfully'))
             return redirect('/')
 
-    messages.success(request, _('Post added successfully'))
     return render_to_response('news/post_add.html',
                               {'form': form},
                               context_instance=RequestContext(request))
@@ -118,13 +118,14 @@ def delete_post(request, post_id):
     Delete an existent post. Post deletion is only reserved to spaces
     administrators or site admins.
     """
-    messages.success(request, _('Post deleted successfully.'))
+    
     return delete_object(request,
                          model = Post,
                          object_id = post_id,
                          login_required=True,
                          template_name = 'news/post_delete.html',
-                         post_delete_redirect = '/')
+                         post_delete_redirect = '/',
+                         extra_context = {'messages': messages.success(request, _('Post deleted successfully.'))})
 
 @permission_required('news.edit_post')
 def edit_post(request, post_id):
@@ -132,14 +133,14 @@ def edit_post(request, post_id):
     """
     Edit an existent post.
     """
-    messages.success(request, _('Post edited successfully.'))
 
     return update_object(request,
                          model = Post,
                          object_id = post_id,
                          login_required = True,
                          post_save_redirect = '/',
-                         template_name = 'news/post_edit.html')
+                         template_name = 'news/post_edit.html',
+                         extra_context = {'messages': messages.success(request, _('Post edited successfully.'))})
 
 def view_post(request, post_id):
 

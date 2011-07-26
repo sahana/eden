@@ -47,16 +47,16 @@ urlpatterns = patterns('',
     # News (this view of news is only for the index)
     (r'^news/$', ListNews.as_view()),
     
-    (r'^news/add', 'e_cidadania.views.add_news'),
+    (r'^news/add/$', 'e_cidadania.views.add_news'),
 
-    (r'^news/(?P<post_id>\w+)/delete/', 'e_cidadania.views.delete_post'),
+    (r'^news/(?P<post_id>\w+)/delete/$', 'e_cidadania.views.delete_post'),
 
-    (r'^news/(?P<post_id>\w+)/edit/', 'e_cidadania.views.edit_post'),
+    (r'^news/(?P<post_id>\w+)/edit/$', 'e_cidadania.views.edit_post'),
 
-    (r'^news/(?P<post_id>\w+)/', 'e_cidadania.views.view_post'),
+    (r'^news/(?P<post_id>\w+)/$', 'e_cidadania.views.view_post'),
     
     # RSS Feed for the index news ONLY
-    (r'^rss/', IndexEntriesFeed()),
+    (r'^rss/$', IndexEntriesFeed()),
 
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
