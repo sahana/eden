@@ -328,6 +328,7 @@ input[type="text"], input[type="password"] {
 }
 #tools {
     text-align: right;
+    float: right;
 }
 
 .general {
@@ -703,6 +704,7 @@ html ul.topnav li ul.subnav li a:hover { /*--Hover effect for subnav links--*/
     font-size: 2em;
     font-family: 'SansationRegular';
     border-bottom: 3px solid #999;
+    margin-top: 5px;
 }
 
 .post h4 {
