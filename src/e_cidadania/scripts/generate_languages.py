@@ -68,12 +68,12 @@ class Language():
         """
         for module in self.apps:
             os.chdir(self.cwd + '/apps/' + module)
-            print '\n>> %s language catalogs for %s' % (type, module)
+            print '\n>> %s language catalog: %s' % (type, module)
             for lang in self.languages:
                 a = subprocess.Popen(command + '%s' % (lang[0]), shell=True)
                 subprocess.Popen.wait(a)
 
-        print '\n>> %s site root language catalogs' % (type)
+        print '\n>> %s site root language catalog.' % (type)
         os.chdir(self.cwd)
         for lang in self.languages:
             a = subprocess.Popen("django-admin.py makemessages -i 'apps/*' -l %s" % (lang[0]), shell=True)

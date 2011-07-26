@@ -1,0 +1,124 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: models.py:33
+msgid "Male"
+msgstr ""
+
+#: models.py:34
+msgid "Female"
+msgstr ""
+
+#: models.py:42
+msgid "Interes"
+msgstr ""
+
+#: models.py:54
+msgid "Name"
+msgstr ""
+
+#: models.py:55
+msgid "Surname"
+msgstr ""
+
+#: models.py:56
+msgid "Gender"
+msgstr ""
+
+#: models.py:59
+msgid "Birth date"
+msgstr ""
+
+#: models.py:63
+msgid "Province"
+msgstr ""
+
+#: models.py:64
+msgid "Region"
+msgstr ""
+
+#: models.py:65
+msgid "Neighborhood"
+msgstr ""
+
+#: models.py:68
+msgid "Address"
+msgstr ""
+
+#: models.py:69
+msgid "Number"
+msgstr ""
+
+#: models.py:71
+msgid "Floor"
+msgstr ""
+
+#: models.py:72
+msgid "Letter"
+msgstr ""
+
+#: models.py:75
+msgid "Phone 1"
+msgstr ""
+
+#: models.py:76 models.py:78
+msgid "9 digits maximum"
+msgstr ""
+
+#: models.py:77
+msgid "Phone 2"
+msgstr ""
+
+#: models.py:80
+msgid "Identification document"
+msgstr ""
+
+#: models.py:83
+msgid "Website"
+msgstr ""
+
+#: models.py:85
+msgid "The URL will be checked"
+msgstr ""
+
+#: templates/accounts/login.html:4
+msgid "Login"
+msgstr ""
+
+#: templates/accounts/login.html:14
+msgid "Username:"
+msgstr ""
+
+#: templates/accounts/login.html:17
+msgid "Password:"
+msgstr ""
+
+#: templates/accounts/logout.html:7
+msgid ""
+"Thanks for using e-cidadania. Now you can continue visting the website or "
+"log in again."
+msgstr ""
+
+#: templates/accounts/logout.html:9
+msgid "Login again"
+msgstr ""
+
+#: templates/accounts/profile.html:5
+msgid "User"
+msgstr ""
