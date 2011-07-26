@@ -2,19 +2,16 @@
 {% load i18n %}
 {% load comments %}
 
-{% block title %}{{ news.post_title }} {% endblock %}
+{% block title %}{{ news.post_title }}{% endblock %}
 {% block logo %}
-  {% if not get_place %}
-    <a href="/"><img src="/{{ STATIC_URL }}/assets/logos/index.png"/></a>
-  {% else %}
-    <img src="/{{ MEDIA_URL }}/{{ get_place.logo }}">
+  {% if get_place %}
+    <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
   {% endif %}
 {% endblock %}
+  
 {% block banner %}
-  {% if not get_place %}
-    <img src="/{{ STATIC_URL }}/assets/banners/index.png"/>
-  {% else %}
-    <img src="/{{ MEDIA_URL }}/{{ get_place.banner }}">
+  {% if get_place %}
+    <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
   {% endif %}
 {% endblock %}
 
