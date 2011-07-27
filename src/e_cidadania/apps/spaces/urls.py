@@ -34,7 +34,7 @@ from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,
 urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     # RSS Feed
-    (r'^(?P<space_name>\w+)/rss/', SpaceFeed()),
+    (r'^(?P<space_name>\w+)/rss/$', SpaceFeed()),
     
     # News
     (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
@@ -53,48 +53,48 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 # Document URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/docs/add', 'add_doc'),
+    (r'^(?P<space_name>\w+)/docs/add/$', 'add_doc'),
 
-    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/', 'edit_doc'),
+    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/$', 'edit_doc'),
 
-    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/', DeleteDocument.as_view()),
+    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/$', DeleteDocument.as_view()),
 
-    (r'^(?P<space_name>\w+)/docs/', ListDocs.as_view()),
+    (r'^(?P<space_name>\w+)/docs/$', ListDocs.as_view()),
 
 )
 
 # Meeting URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/meeting/add', 'add_meeting'),
+    (r'^(?P<space_name>\w+)/meeting/add/$', 'add_meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/edit/', 'edit_meeting'),
+    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/edit/$', 'edit_meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/delete/',
+    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/delete/$',
      DeleteMeeting.as_view()),
     
-    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/', ViewMeeting.as_view()),
+    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/$', ViewMeeting.as_view()),
 
-    (r'^(?P<space_name>\w+)/meeting/', ListMeetings.as_view()),
+    (r'^(?P<space_name>\w+)/meeting/$', ListMeetings.as_view()),
 
 )
 
 # Spaces URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/edit/', 'edit_space'),
+    (r'^(?P<space_name>\w+)/edit/$', 'edit_space'),
 
-    (r'^(?P<space_name>\w+)/delete/', DeleteSpace.as_view()),
+    (r'^(?P<space_name>\w+)/delete/$', DeleteSpace.as_view()),
     
     (r'^(?P<space_name>\w+)/news/', ListPosts.as_view()),
         
-    (r'^add/', 'create_space'),
+    (r'^add/$', 'create_space'),
     
     (r'^$', ListSpaces.as_view()),
 
     (r'^go/', GoToSpace.as_view()),
 
-    (r'^(?P<space_name>\w+)/', ViewSpaceIndex.as_view()),
+    (r'^(?P<space_name>\w+)/$', ViewSpaceIndex.as_view()),
 
 )
 
