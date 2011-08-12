@@ -1,5 +1,4 @@
 PIL
-django-tagging
 django-wysiwyg
 django-grappelli
 feedparser

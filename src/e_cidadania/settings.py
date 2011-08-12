@@ -133,7 +133,7 @@ DJANGO_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'django.contrib.sites', # Needed for django-register
+    'django.contrib.sites',
     'django.contrib.messages',
 
     # 2011/06/08
@@ -153,13 +153,13 @@ DJANGO_APPS = (
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 THIRDPARTY_APPS = (
-    # This list is from the third party software included in e-cidadania
-    'django_wysiwyg', # This is a system-wide application
+    # This list is from the third party software included in e-cidadania or
+    # system-wide dependencies.
+    'django_wysiwyg',
     'e_cidadania.apps.rosetta',
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
-    'django_extensions',
-    #'e_cidadania.apps.swingtime',
+    #'django_extensions',
 )
 
 ECIDADANIA_MODULES = (
