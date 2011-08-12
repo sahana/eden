@@ -2,453 +2,470 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-08-12 12:06\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: dashboard.py:51
 msgid "Users"
-msgstr ""
+msgstr "Usuarios"
 
 #: dashboard.py:61
 msgid "Applications"
-msgstr ""
+msgstr "Aplicacións"
 
 #: dashboard.py:70
 msgid "Latest News"
-msgstr ""
+msgstr "Últimas novas"
 
 #: dashboard.py:78
 msgid "Media Management"
-msgstr ""
+msgstr "Xestión de medios"
 
 #: dashboard.py:82
 msgid "FileBrowser"
-msgstr ""
+msgstr "Navegador de arquivos"
 
 #: dashboard.py:91
 msgid "e-cidadania Support"
-msgstr ""
+msgstr "Soporte e-cidadania"
 
 #: dashboard.py:95
 msgid "Documentation"
-msgstr ""
+msgstr "Documentación"
 
 #: dashboard.py:100
 msgid "Wiki"
-msgstr ""
+msgstr "Wiki"
 
 #: dashboard.py:105
 msgid "Translations"
-msgstr ""
+msgstr "Traduccións"
 
 #: dashboard.py:113
 msgid "Thirdparty Support"
-msgstr ""
+msgstr "Soporte terceiras partes"
 
 #: dashboard.py:117
 msgid "Django Documentation"
-msgstr ""
+msgstr "Documentación Django"
 
 #: dashboard.py:122
 msgid "Grappelli Documentation"
-msgstr ""
+msgstr "Documentación Grappelli"
 
 #: dashboard.py:127
 msgid "python-dateutil Documentation"
-msgstr ""
+msgstr "Documentación python-dateutil"
 
 #: dashboard.py:136
 msgid "e-cidadania source code"
-msgstr ""
+msgstr "Código fonte e-cidadania"
 
 #: dashboard.py:140
 msgid "GitHub"
-msgstr ""
+msgstr "GitHub"
 
 #: dashboard.py:145
 msgid "Gitorious"
-msgstr ""
+msgstr "Gitorious"
 
 #: dashboard.py:150
 msgid "Repo.or.vz (Mirror)"
-msgstr ""
+msgstr "Repo.or.cz (espello)"
 
 #: dashboard.py:159
 msgid "Recent Actions"
-msgstr ""
+msgstr "Accións recentes"
 
 #: views.py:54
 msgid ""
-"Hi! It seems that it's your first time "
-"here.                                  Maybe you want to <a href=\"/accounts/"
-"register\">register</a>                                  or <a href=\"/"
-"accounts/login\">login</a> if you have an account."
+"Hi! It seems that it's your first time here."
+"                                  Maybe you want to <a "
+"href=\"/accounts/register\">register</a>"
+"                                  or <a "
+"href=\"/accounts/login\">login</a> if you have an account."
 msgstr ""
+"Ola! Parece que é a túa primeira vez aquí. Quizá queiras <a "
+"href=\"/accounts/register\">rexistrarte</a> ou <a "
+"href=\"/accounts/login\">entrar</a> se xa tes conta."
 
 #: views.py:71
 msgid "e-cidadania news"
-msgstr ""
+msgstr "Novas de e-cidadania"
 
 #: views.py:73
 msgid "Updates on the main e-cidadania site."
-msgstr ""
+msgstr "Actualizacións da web de e-cidadania"
 
 #: views.py:107
 msgid "Post added successfully"
-msgstr ""
+msgstr "Entrada engadida correctamente"
 
 #: views.py:128
 msgid "Post deleted successfully."
-msgstr ""
+msgstr "Entrada eliminada correctamente."
 
 #: views.py:143
 msgid "Post edited successfully."
-msgstr ""
+msgstr "Entrada editada correctamente."
 
 #: templates/404.html:60
 msgid "Not Found!"
-msgstr ""
+msgstr "Non atopado!"
 
 #: templates/404.html:63
 msgid ""
-"A meiga stole this page. You better get out of here now that you can, before "
-"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
-"pitchforks and go in search of her. Don't worry about us, we will manage "
-"somehow."
+"A meiga stole this page. You better get out of here now that you can, "
+"before she gives you the evil eye. Meanwhile, we are going to get the "
+"torchs and pitchforks and go in search of her. Don't worry about us, we"
+" will manage somehow."
 msgstr ""
+"Unha maiga roubou esta páxina. Será mellor que te vaias agora que "
+"podes, antes de que te bote mal de ollo. Mentres tanto, nos imos a "
+"coller as antorchas e ghinchas e ir tras dela. Non te preocupes por "
+"nos, nos apañaremos dalguha forma."
 
 #: templates/404.html:64
 msgid "Take me out of here!"
-msgstr ""
+msgstr "Sácame de aquí!"
 
 #: templates/404.html:65 templates/menu.html:4 templates/menu.html.py:43
 msgid "Home"
-msgstr ""
+msgstr "Inicio"
 
 #: templates/404.html:66
 msgid "Development"
-msgstr ""
+msgstr "Desenvolvemento"
 
 #: templates/404.html:67 templates/site_index.html:140
 msgid "Help"
-msgstr ""
+msgstr "Axuda"
 
 #: templates/404.html:68 templates/site_index.html:140
 msgid "Terms of service"
-msgstr ""
+msgstr "Termos de servizo"
 
 #: templates/404.html:69
 msgid "Privacy"
-msgstr ""
+msgstr "Privacidade"
 
 #: templates/404.html:70 templates/site_index.html:140
 msgid "About"
-msgstr ""
+msgstr "Acerca de"
 
 #: templates/500.html:44
 msgid "Ooops!"
-msgstr ""
+msgstr "Ooops!"
 
 #: templates/500.html:45
 msgid "The server had an unexpected error."
-msgstr ""
+msgstr "O servidor tivo un erro inesperado."
 
 #: templates/500.html:46
 msgid "Please go back to the"
-msgstr ""
+msgstr "Por favor volve a"
 
 #: templates/500.html:46
 msgid "home page"
-msgstr ""
+msgstr "páxina de inicio"
 
 #: templates/500.html:46
 msgid "while we call the spaguetti squad to repair this."
-msgstr ""
+msgstr "mentres nos chamamos ao escuadrón espaguetti para reparar isto."
 
 #: templates/base.html:99
 msgid "created by"
-msgstr ""
+msgstr "creado por"
 
 #: templates/menu.html:12 templates/menu.html.py:51
 msgid "Language"
-msgstr ""
+msgstr "Idioma"
 
 #: templates/menu.html:32
 msgid "Administration"
-msgstr ""
+msgstr "Administración"
 
 #: templates/menu.html:33
 msgid "Translation"
-msgstr ""
+msgstr "Traducción"
 
 #: templates/menu.html:35
 msgid "Messages"
-msgstr ""
+msgstr "Mensaxes"
 
 #: templates/menu.html:36
 msgid "Edit profile"
-msgstr ""
+msgstr "Editar perfil"
 
 #: templates/menu.html:37
 msgid "Logout"
-msgstr ""
+msgstr "Sair"
 
 #: templates/menu.html:45
 msgid "Login"
-msgstr ""
+msgstr "Entrar"
 
 #: templates/not_allowed.html:4
 msgid "Not allowed"
-msgstr ""
+msgstr "Non permitido"
 
 #: templates/not_allowed.html:9
 msgid "You are not allowed to access here."
-msgstr ""
+msgstr "Non podes acceder aquí."
 
 #: templates/not_allowed.html:11
 msgid "You can go"
-msgstr ""
+msgstr "Podes ir"
 
 #: templates/not_allowed.html:11
 msgid "back to home"
-msgstr ""
+msgstr "de volta ao inicio"
 
 #: templates/not_allowed.html:11
 msgid "or"
-msgstr ""
+msgstr "ou"
 
 #: templates/not_allowed.html:11
 msgid "back to your profile"
-msgstr ""
+msgstr "de volta ao teu perfil"
 
 #: templates/site_index.html:4 templates/terms.html:4
 msgid "e-cidadania"
-msgstr ""
+msgstr "e-cidadania"
 
 #: templates/site_index.html:13
 msgid ""
 "e-cidadania is a participative democracy tool for citizens. It has an "
-"advanced debate system, proposals, document versioning, and you can create "
-"specific spaces for every process, it has a lot of functions more but it's "
-"better that you try it by yourself."
+"advanced debate system, proposals, document versioning, and you can "
+"create specific spaces for every process, it has a lot of functions "
+"more but it's better that you try it by yourself."
 msgstr ""
+"e-cidadania é unha ferramenta de democracia participativa para "
+"cidadáns. Ten un avanzado sistema de debate, propostas, versionado de "
+"documentos, e podes crear espazos específicos para cada proceso. Ten "
+"un montón de funcións mais, pero será mellor que as probes por tí "
+"mesmo."
 
 #: templates/site_index.html:21
 msgid "Add news"
-msgstr ""
+msgstr "Engadir novas"
 
 #: templates/site_index.html:32
 msgid "Edit"
-msgstr ""
+msgstr "Editar"
 
 #: templates/site_index.html:36
 msgid "Delete"
-msgstr ""
+msgstr "Eliminar"
 
 #: templates/site_index.html:42
 msgid "Written by"
-msgstr ""
+msgstr "Escrito por"
 
 #: templates/site_index.html:42
 msgid "on"
-msgstr ""
+msgstr "o"
 
 #: templates/site_index.html:42
 msgid "Tags"
-msgstr ""
+msgstr "Etiquetas"
 
 #: templates/site_index.html:48
 msgid "Nothing published yet."
-msgstr ""
+msgstr "Non hai nada publicado todavía."
 
 #: templates/site_index.html:58
 msgid "What can you do with e-cidadania?"
-msgstr ""
+msgstr "Qúe podes facer con e-cidadania?"
 
 #: templates/site_index.html:58
 msgid "Discover it here"
-msgstr ""
+msgstr "Descúbreo aquí"
 
 #: templates/site_index.html:62
 msgid "Create your own space"
-msgstr ""
+msgstr "Crea o teu propio espazo"
 
 #: templates/site_index.html:62
 msgid "inside e-cidadania"
-msgstr ""
+msgstr "dentro de e-cidadania"
 
 #: templates/site_index.html:66
 msgid "Spaces list"
-msgstr ""
+msgstr "Lista de espazos"
 
 #: templates/site_index.html:72
 msgid "No spaces"
-msgstr ""
+msgstr "Sen espazos"
 
 #: templates/site_index.html:75
 msgid "Go"
-msgstr ""
+msgstr "Ir"
 
 #: templates/site_index.html:80
 msgid "Recently added spaces"
-msgstr ""
+msgstr "Espazos engadidos recentemente"
 
 #: templates/site_index.html:84
 msgid "No spaces have been added recently."
-msgstr ""
+msgstr "Non se engadiron espazos recentemente."
 
 #: templates/site_index.html:89
 msgid "Share"
-msgstr ""
+msgstr "Compartir"
 
 #: templates/site_index.html:127
 msgid "Your favourite social site isn't here? Tell us!"
-msgstr ""
+msgstr "A túa rede social favorita non está aqui? Dínolo!"
 
 #: templates/site_index.html:131
 msgid "e-cidadania development"
-msgstr ""
+msgstr "Desenvolvemento de e-cidadania"
 
 #: templates/site_index.html:132
 msgid "Do you want to help?"
-msgstr ""
+msgstr "Queres axudar?"
 
 #: templates/site_index.html:132
 msgid "Access"
-msgstr ""
+msgstr "Acceder"
 
 #: templates/site_index.html:140
 msgid "API"
-msgstr ""
+msgstr "API"
 
 #: templates/site_index.html:140
 msgid "Developers"
-msgstr ""
+msgstr "Desenvolvedores"
 
 #: templates/comments/approve.html:4
 msgid "Approve a comment"
-msgstr ""
+msgstr "Aprobar comentario"
 
 #: templates/comments/approve.html:7
 msgid "Really make this comment public?"
-msgstr ""
+msgstr "Facer este comentario público?"
 
 #: templates/comments/approve.html:12
 msgid "Approve"
-msgstr ""
+msgstr "Aprobar"
 
 #: templates/comments/approved.html:4
 msgid "Thanks for approving"
-msgstr ""
+msgstr "Grazas por aprobar"
 
 #: templates/comments/approved.html:7 templates/comments/deleted.html:7
 #: templates/comments/flagged.html:7
 msgid ""
-"Thanks for taking the time to improve the quality of discussion on our site"
+"Thanks for taking the time to improve the quality of discussion on our "
+"site"
 msgstr ""
+"Grazar por tomar o tempo para mellorar a calidade das discusións da "
+"nosa web"
 
 #: templates/comments/delete.html:4
 msgid "Remove a comment"
-msgstr ""
+msgstr "Eliminar comentario"
 
 #: templates/comments/delete.html:7
 msgid "Really remove this comment?"
-msgstr ""
+msgstr "De verdad quere eliminar este comentario?"
 
 #: templates/comments/delete.html:12
 msgid "Remove"
-msgstr ""
+msgstr "Eliminar"
 
 #: templates/comments/deleted.html:4
 msgid "Thanks for removing"
-msgstr ""
+msgstr "Grazas por eliminar"
 
 #: templates/comments/flag.html:4
 msgid "Flag this comment"
-msgstr ""
+msgstr "Marcar este comentario"
 
 #: templates/comments/flag.html:7
 msgid "Really flag this comment?"
-msgstr ""
+msgstr "Marcar realmente este comentario?"
 
 #: templates/comments/flag.html:12
 msgid "Flag"
-msgstr ""
+msgstr "Marcar"
 
 #: templates/comments/flagged.html:4
 msgid "Thanks for flagging"
-msgstr ""
+msgstr "Grazas por marcar"
 
 #: templates/comments/form.html:2
 msgid "Leave a comment"
-msgstr ""
+msgstr "Deixar un comentario"
 
 #: templates/comments/form.html:18 templates/comments/preview.html:36
 msgid "Post"
-msgstr ""
+msgstr "Entrada"
 
 #: templates/comments/form.html:19 templates/comments/preview.html:37
 msgid "Preview"
-msgstr ""
+msgstr "Previsualizar"
 
 #: templates/comments/list.html:3
 msgid "Comments"
-msgstr ""
+msgstr "Comentarios"
 
 #: templates/comments/list.html:8
 msgid "said"
-msgstr ""
+msgstr "dixo"
 
 #: templates/comments/posted.html:4
 msgid "Thanks for commenting"
-msgstr ""
+msgstr "Grazas por comentar"
 
 #: templates/comments/posted.html:7
 msgid "Thank you for your comment"
-msgstr ""
+msgstr "Grazas polo teu comentario"
 
 #: templates/comments/preview.html:4 templates/comments/preview.html.py:17
 msgid "Preview your comment"
-msgstr ""
+msgstr "Previsualizar comentario"
 
 #: templates/comments/preview.html:15
 msgid "Please correct the error below"
 msgid_plural "Please correct the errors below"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Por favor corrixa os erros mais abaixo"
+msgstr[1] "Por favor corrixa o erro mais abaixo"
 
 #: templates/comments/preview.html:20
 msgid "and"
-msgstr ""
+msgstr "e"
 
 #: templates/comments/preview.html:20
 msgid "Post your comment"
-msgstr ""
+msgstr "Enviar comentario"
 
 #: templates/comments/preview.html:20
 msgid "or make changes"
-msgstr ""
+msgstr "ou facer cambios"
 
 #: templates/news/post_list.html:4 templates/news/post_list.html.py:12
 msgid "News list"
-msgstr ""
+msgstr "Lista de novas"
 
 #: templates/news/post_list.html:17
 msgid "There are no post."
-msgstr ""
+msgstr "Non hai entradas."
 
 #: templates/news/post_list.html:21
 msgid "Go back"
-msgstr ""
+msgstr "Volver"

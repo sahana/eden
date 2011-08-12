@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-07-27 12:48\n"
+"PO-Revision-Date: 2011-08-12 11:46\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -418,176 +418,184 @@ msgstr "Lista de reunións"
 
 #: templates/spaces/meeting_list.html:19
 msgid "Published"
-msgstr ""
+msgstr "Publicado"
 
 #: templates/spaces/meeting_list.html:21
 msgid "There are no meetings in this space."
-msgstr ""
+msgstr "Non hai reunións neste espazo."
 
 #: templates/spaces/space_add.html:5
 msgid "Create new space"
-msgstr ""
+msgstr "Crear novo espazo"
 
 #: templates/spaces/space_add.html:13
 msgid "Create a new space"
-msgstr ""
+msgstr "Crear un novo espazo"
 
 #: templates/spaces/space_add.html:20 templates/spaces/space_add.html:100
 #: templates/spaces/space_edit.html:23
 msgid "Space name"
-msgstr ""
+msgstr "Nome do espazo"
 
 #: templates/spaces/space_add.html:26
 msgid "Space URL"
-msgstr ""
+msgstr "URL do espazo"
 
 #: templates/spaces/space_add.html:44 templates/spaces/space_edit.html:59
 msgid "Authorized Groups"
-msgstr ""
+msgstr "Grupos autorizados"
 
 #: templates/spaces/space_add.html:52 templates/spaces/space_edit.html:67
 msgid "Debate"
-msgstr ""
+msgstr "Debate"
 
 #: templates/spaces/space_add.html:53 templates/spaces/space_edit.html:68
 msgid "Proposals"
-msgstr ""
+msgstr "Propostas"
 
 #: templates/spaces/space_add.html:54 templates/spaces/space_edit.html:69
 msgid "News"
-msgstr ""
+msgstr "Novas"
 
 #: templates/spaces/space_add.html:55 templates/spaces/space_edit.html:70
 #: templates/spaces/space_index.html:107
 msgid "Calendar"
-msgstr ""
+msgstr "Calendario"
 
 #: templates/spaces/space_add.html:56 templates/spaces/space_edit.html:71
 msgid "Documentation"
-msgstr ""
+msgstr "Documentación"
 
 #: templates/spaces/space_add.html:63
 msgid "Entities participating"
-msgstr ""
+msgstr "Entidades que participan"
 
 #: templates/spaces/space_add.html:98
 msgid "How to add new spaces"
-msgstr ""
+msgstr "Cómo engadir novos espazos"
 
 #: templates/spaces/space_add.html:100
 msgid ""
 "The name of the space. Have in mind that this name will be used as the "
 "URL of your space. We recommend to use all lowercase. (100 chars)"
 msgstr ""
+"O nome do espazo. Ten en conta que este nome se usará como URL do "
+"espazo. Recomendamos que uses todo en minúsculas. (100 caracteres)"
 
 #: templates/spaces/space_add.html:101
 msgid ""
 "An optional description for your space. It won't be showed to the "
 "users, but to the admins."
 msgstr ""
+"Unha descrición opcional para o teu espazo. Non se mostrará aos "
+"usuarios, sólo aos admins."
 
 #: templates/spaces/space_add.html:102
 msgid "An image of 75px height and 100px width."
-msgstr ""
+msgstr "Unha imaxe de 75px de alto por 100px de ancho."
 
 #: templates/spaces/space_add.html:103
 msgid "Another image. 75px height."
-msgstr ""
+msgstr "Outra imaxe. 75px de alto."
 
 #: templates/spaces/space_add.html:104
 msgid "This will set up what users can access to your space."
-msgstr ""
+msgstr "Esto configurará que usuarios poden acceder ao teu espazo."
 
 #: templates/spaces/space_add.html:105
 msgid ""
 "Select the modules you will use in your space. This can be edited "
 "afterwards."
 msgstr ""
+"Selecciona os módulos que usarás no teu espazo. Esto pode editarse "
+"mais tarde."
 
 #: templates/spaces/space_confirm_delete.html:4
 #: templates/spaces/space_index.html:26
 msgid "Delete space"
-msgstr ""
+msgstr "Eliminar espazo"
 
 #: templates/spaces/space_confirm_delete.html:13
 msgid ""
 "Are you sure you want to delete this space? This action cannot be "
 "undone."
 msgstr ""
+"Estás seguro de querer eliminar este espazo? Esta acción non se pode "
+"desfacer."
 
 #: templates/spaces/space_edit.html:5 templates/spaces/space_edit.html:15
 #: templates/spaces/space_index.html:21
 msgid "Edit space"
-msgstr ""
+msgstr "Editar espazo"
 
 #: templates/spaces/space_index.html:5
 msgid "Index"
-msgstr ""
+msgstr "Indice"
 
 #: templates/spaces/space_index.html:17
 msgid "Add new post"
-msgstr ""
+msgstr "Engadir unha nova"
 
 #: templates/spaces/space_index.html:38 templates/spaces/space_index.html:84
 msgid "Edit"
-msgstr ""
+msgstr "Editar"
 
 #: templates/spaces/space_index.html:51
 msgid "Written by"
-msgstr ""
+msgstr "Escrito por"
 
 #: templates/spaces/space_index.html:52 templates/spaces/space_index.html:177
 msgid "on"
-msgstr ""
+msgstr "o"
 
 #: templates/spaces/space_index.html:54
 msgid "comments"
-msgstr ""
+msgstr "comentarios"
 
 #: templates/spaces/space_index.html:59
 msgid "Nothing published yet."
-msgstr ""
+msgstr "Non hai nada publicado todavía."
 
 #: templates/spaces/space_index.html:94
 msgid "No documents available"
-msgstr ""
+msgstr "Non hai documentos"
 
 #: templates/spaces/space_index.html:97
 msgid "View all documents"
-msgstr ""
+msgstr "Ver tódolos documentos"
 
 #: templates/spaces/space_index.html:99
 msgid "Add documents"
-msgstr ""
+msgstr "Engadir documentos"
 
 #: templates/spaces/space_index.html:124
 msgid "Newest proposals"
-msgstr ""
+msgstr "Propostas recentes"
 
 #: templates/spaces/space_index.html:131
 msgid "No proposals available"
-msgstr ""
+msgstr "Non hai propostas"
 
 #: templates/spaces/space_index.html:134
 msgid "View all proposals"
-msgstr ""
+msgstr "Ver tódalas propostas"
 
 #: templates/spaces/space_index.html:136
 msgid "Add proposal"
-msgstr ""
+msgstr "Engadir proposta"
 
 #: templates/spaces/space_index.html:149
 msgid "Your favourite social site isn't here? Tell us!"
-msgstr ""
+msgstr "A túa rede social favorita non está aquí? Dínolo!"
 
 #: templates/spaces/space_index.html:177
 msgid "Space created by"
-msgstr ""
+msgstr "Espazo creado por"
 
 #: templates/spaces/space_list.html:4 templates/spaces/space_list.html:12
 msgid "Spaces list"
-msgstr ""
+msgstr "Lista de espazos"
 
 #: templates/spaces/space_list.html:20
 msgid "There are no public spaces or spaces you are registered to."
-msgstr ""
+msgstr "Non hai espazos públicos ou nos que estés rexistrado."

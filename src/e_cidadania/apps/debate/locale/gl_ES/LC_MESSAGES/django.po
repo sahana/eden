@@ -2,93 +2,94 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-08-12 20:27\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: models.py:40
 msgid "Title"
-msgstr ""
+msgstr "Titulo"
 
 #: models.py:41
 msgid "Objectives"
-msgstr ""
+msgstr "Obxectivos"
 
 #: models.py:42
 msgid "Description"
-msgstr ""
+msgstr "Descrición"
 
 #: models.py:58
 msgid "Phase number"
-msgstr ""
+msgstr "Número de fase"
 
 #: models.py:60
 msgid "X Scale"
-msgstr ""
+msgstr "Escala X"
 
 #: models.py:62
 msgid "Y Scale"
-msgstr ""
+msgstr "Escala Y"
 
 #: models.py:68
 msgid "Start"
-msgstr ""
+msgstr "Data inicio"
 
 #: models.py:69
 msgid "End"
-msgstr ""
+msgstr "Data fin"
 
 #: models.py:72
 msgid "Phase "
-msgstr ""
+msgstr "Fase"
 
 #: models.py:83
 msgid "Message"
-msgstr ""
+msgstr "Mensaxe"
 
 #: models.py:84
 msgid "Explanation"
-msgstr ""
+msgstr "Explicación"
 
 #: models.py:86
 msgid "Coordinates"
-msgstr ""
+msgstr "Coordenadas"
 
 #: templates/debate/debate_add.html:4
 msgid "Create new space"
-msgstr ""
+msgstr "Crear novo espazo"
 
 #: templates/debate/debate_add.html:12
 msgid "Create a new space"
-msgstr ""
+msgstr "Crear un novo espazo"
 
 #: templates/debate/debate_add.html:37
 msgid "Add new phase"
-msgstr ""
+msgstr "Engadir nova fase"
 
 #: templates/debate/debate_add.html:38
 msgid "Phase"
-msgstr ""
+msgstr "Fase"
 
 #: templates/debate/debate_add.html:39
 msgid "Finish"
-msgstr ""
+msgstr "Finalizar"
 
 #: templates/debate/debate_add.html:56
 msgid "How to add new debates"
-msgstr ""
+msgstr "Cómo engadir novos debates"
 
 #: templates/debate/debate_add.html:58
 msgid "Modules"
-msgstr ""
+msgstr "Módulos"
