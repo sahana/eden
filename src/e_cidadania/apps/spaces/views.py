@@ -110,7 +110,7 @@ class GoToSpace(RedirectView):
     """
     def get_redirect_url(self, **kwargs):
         self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
-        return '/spaces/{0}'.format(self.place.url)
+        return '/spaces/%s' % self.place.url
 
 
 class ListSpaces(ListView):

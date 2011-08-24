@@ -17,7 +17,7 @@ function msg() {
 		// Prevent hyperlink to open the link with the default behaviour
 		event.preventDefault();
 		// Hide
-		$("ul.messages").fadeOut('slow');
+		$("ul.messages").slideUp('slow');
 	});
 }
 
