@@ -50,8 +50,9 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # Application models
-from e_cidadania.apps.models import Debate
-from e_cidadania.apps.forms import DebateForm, PhaseFormSet, NoteForm
+from e_cidadania.apps.debate.models import Debate, Phase
+from e_cidadania.apps.debate.forms import DebateForm, PhaseFormSet, NoteForm
+from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
 
@@ -59,11 +60,15 @@ def add_new_debate(request, space_name):
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
     """
-    place = get_object_or_404(Space, name=space_name)
+    place = get_object_or_404(Space, url=space_name)
     debate_form = DebateForm(request.POST or None)
     phase_forms = PhaseFormSet(request.POST or None, queryset=Phase.objects.none())
+    try:
+        current_debate_id = Debate.objects.latest('id')
+    except:
+        current_debate_id = 1
     
-    if request.user.has_perm('debate_add'):
+    if request.user.has_perm('debate_add') or request.user.is_staff:
         if request.method == 'POST':
             debate_form_uncommited = debate_form.save(commit=False)
             debate_form_uncommited.space = place
@@ -80,6 +85,11 @@ def add_new_debate(request, space_name):
                 
                 # Get a new job, did you really did this?
                 return redirect('/spaces/' + space_name + '/debate/' + saved_debate.id)
+                
+        return render_to_response('debate/debate_add.html',
+                                  {'form': debate_form,
+                                   'phaseform': phase_forms},
+                                  context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))

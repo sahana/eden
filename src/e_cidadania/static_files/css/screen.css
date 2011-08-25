@@ -861,3 +861,36 @@ td.filled ul li a {
     font-size: 1em;
 }
 /* END SPACES */
+
+/* DEBATE */
+tbody td {
+    width: 0;
+}
+tbody td.criteria-title, tbody th.criteria-title {
+    width: 160px;
+}
+
+.note, .note-alpha {
+    background: url('../note.png');
+    width: 90px;
+    height: 90px;
+    float: left;
+    margin: 5px;
+    padding: 5px;
+    /*-webkit-box-shadow: 0 2px 12px rgba(0,0,0,.5);
+    -moz-box-shadow: 0 2px 12px rgba(0,0,0,.5);
+    box-shadow: 0 1px 2px #000;*/
+    -webkit-transform: rotate(-2deg);
+    -moz-transform: rotate(-2deg);
+    -o-transform: rotate(-2deg);
+}
+
+.note-alpha {
+    opacity: 0.5;
+}
+/* END DEBATE */
+
+
+
+
+

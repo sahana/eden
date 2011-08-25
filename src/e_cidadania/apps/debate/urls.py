@@ -27,13 +27,13 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('e_cidadania.apps.debate.views',
 
     
-    (r'^add/)', 'add_debate'),
+    (r'^add/', 'add_new_debate'),
     
-    (r'^(?P<debate_id>\d+)', 'view_debate'),
+    #(r'^(?P<debate_id>\d+)', 'view_debate'),
     
     # Editing debates is not allowed at this time
     #(r'^(?P<debate_id>\d+)', 'edit_debate'),
     
-    (r'^(?P<debate_id>\d+)', 'delete_debate'),
+    #(r'^(?P<debate_id>\d+)', 'delete_debate'),
 
 )

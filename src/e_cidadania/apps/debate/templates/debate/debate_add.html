@@ -1,15 +1,62 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Create new space" %}{% endblock %}
+{% block title %}{% trans "Create new debate" %}{% endblock %}
 
 {% block content %}
 
   {% block centercol %}
-    <div class="grid_11">
+    <div class="grid_16">
+
+    <script language="JavaScript">
+    	function makeSortable() {
+    		$("ul[id^=sortable]").sortable({
+    			connectWith: ".connectedSortable",
+    			cursor: "move",
+    			placeholder: "note-alpha",
+    			start: function (e,ui){        // new lines to
+                    $(ui.placeholder).hide("slow"); // remove popping
+                },                             // effect on start
+                change: function (e,ui){
+                    $(ui.placeholder).hide().show("normal");
+                }
+    		}).disableSelection();
+    	}
+
+        function addTableRow(jQtable){
+            jQtable.each(function(){
+                var $table = $(this);
+                // Number of td's in the last table row
+                //var n = $('tr:last').prev().$("td", this).length;
+                //var n = prevtr.$("td"), this).length;
+                var n = $("tr:last td", this).length;
+                var tds = '<tr>';
+                for(var i = 0; i < n; i++){
+                    tds += '<td>&nbsp;</td>';
+                }
+                tds += '</tr>';
+                if($('tbody', this).length > 0){
+                    $('tbody', this).append(tds);
+                }else {
+                    $(this).append(tds);
+                }
+            });
+        }
+        
+        function addTableColumn() {
+            var uls = $('#debate ul').length;
+            $('#debate tr:first ').append("<th id='foo'>foo title</th>");    
+            $('#debate tr:not(:first)').append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'><li class='note'>Can be dropped..</li></ul></td>");
+            makeSortable();
+        }
+        
+        $(document).ready(function() {
+            makeSortable();
+        });
+    </script>
     
       <div id="contenttitles">
-        {% trans "Create a new space" %}
+        {% trans "Create a new debate" %}
       </div>
       
 
@@ -20,22 +67,102 @@
         
         {{ form.as_hidden }}
         
-        {% comment %}
         {{ form.non_field_errors }}
-        <div class="fieldWrapper">
-          {{ form.name.errors }}
-          <label for="id_name">{% trans "Space name" %}:</label>
-          <p>{{ form.name }}</p>
-          <p id="form_help_text">{{ form.name.help_text }}</p>
-        </div>
-        {% endcomment %}
         
+        <table id="debate" cellspacing="0">
+            <tbody id="debate-body">
+                <tr id="debate-headers">
+                    <th id="debate"></th>
+                    <th id="example"><span>Example</span></th>
+                    <th id="example1"><span>Example1</span></th>
+                    <th id="example1"><span>Example2</span></th>
+                </tr>
+                <tr id="debate-row-1">
+                    <td id="debate-1-title" class="criteria-title">sdfgsdfg</td>
+                    <td id="debate-1-example">
+                        <ul id="sortable1" class='connectedSortable'>
+	                        <li class="note">Can be dropped..</li>
+                        	<li class="note">..on an empty list</li>
+	                        <li class="note">Item 3</li>
+	                        <li class="note">Item 4</li>
+                        	<li class="note">Item 5</li>
+                        </ul>
+                    </td>
+                    <td id="debate-1-example1">
+                        <ul id="sortable2" class='connectedSortable'>
+	                        <li class="note">Can be dropped..</li>
+                        	<li class="note">..on an empty list</li>
+	                        <li class="note">Item 3</li>
+	                        <li class="note">Item 4</li>
+                        	<li class="note">Item 5</li>
+                        </ul>
+                    </td>
+                    <td id="debate-1-example2">
+                        <ul id="sortable2" class='connectedSortable'>
+	                        <li class="note">Can be dropped..</li>
+                        	<li class="note">..on an empty list</li>
+	                        <li class="note">Item 3</li>
+	                        <li class="note">Item 4</li>
+                        	<li class="note">Item 5</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr id="debate-row-2">
+                    <td id="debate-2-title" class="criteria-title">sdfgsdfgs</td>
+                    <td id="debate-2-example">
+                        <ul id="sortable3" class='connectedSortable'>
+	                        <li class="note">Can be dropped..</li>
+                        	<li class="note">..on an empty list</li>
+	                        <li class="note">Item 3</li>
+	                        <li class="note">Item 4</li>
+                        	<li class="note">Item 5</li>
+                        </ul>
+                    </td>
+                    <td id="debate-2-example1">
+                        <ul id="sortable4" class='connectedSortable'>
+	                        <li class="note">Can be dropped..</li>
+                        	<li class="note">..on an empty list</li>
+	                        <li class="note">Item 3</li>
+	                        <li class="note">Item 4</li>
+                        	<li class="note">Item 5</li>
+                        </ul>
+                    </td>
+                    <td id="debate-2-example2">
+                        <ul id="sortable4" class='connectedSortable'>
+	                        <li class="note">Can be dropped..</li>
+                        	<li class="note">..on an empty list</li>
+	                        <li class="note">Item 3</li>
+	                        <li class="note">Item 4</li>
+                        	<li class="note">Item 5</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <a href="javascript:addTableColumn()" id="new-column" class="new-column">Create new column</a>
+        <a href="javascript:addTableRow($('#debate'))" id="new-row-criteria">Create new row</a>        
+
         <hr />
         <p class="buttons">
           <img src="{{ STATIC_URL }}/debate/img/add.png"
                title="{% trans 'Add new phase' %}" alt="{% trans 'Add new phase' %}" />
           <a href="../../" class="addphase">{% trans "Phase" %}</a>
           <input type="submit" value="{% trans 'Finish' %}" />
+          
+          <div class="fieldWrapper">
+            {{ form.start_date.errors }}
+            <label for="id_start_date">{% trans "Start date" %}:</label>
+            <p>{{ form.start_date }}</p>
+            <p id="form_help_text">{{ form.start_date.help_text }}</p>
+          </div>
+          
+          <div class="fieldWrapper">
+            {{ form.end_date.errors }}
+            <label for="id_end_date">{% trans "End date" %}:</label>
+            <p>{{ form.end_date }}</p>
+            <p id="form_help_text">{{ form.end_date.help_text }}</p>
+          </div>
         </p>
 
       </form>
@@ -48,7 +175,7 @@
 
   {% endblock %}
 
-
+  {% comment %}
   {% block rightcol %}
     <div class="grid_5">
       <div id="widget">
@@ -60,5 +187,5 @@
       </div>
     </div>
   {% endblock %}
-
+  {% endcomment %}
 {% endblock %}
