@@ -7,7 +7,7 @@
 
   {% block centercol %}
     <div class="grid_16">
-
+    
     <script language="JavaScript">
     	function makeSortable() {
     		$("ul[id^=sortable]").sortable({
@@ -27,26 +27,34 @@
             jQtable.each(function(){
                 var $table = $(this);
                 // Number of td's in the last table row
-                //var n = $('tr:last').prev().$("td", this).length;
-                //var n = prevtr.$("td"), this).length;
                 var n = $("tr:last td", this).length;
                 var tds = '<tr>';
+                var uls = $('#debate ul').length;
                 for(var i = 0; i < n; i++){
-                    tds += '<td>&nbsp;</td>';
+                    if (i == 0) {
+                        // The first TD must be empty, only with a form for the
+                        // title.
+                        tds += "<td></td>";
+                        // Remove the first TD from the tds count.
+                        n -= 1;
+                    }
+                    tds += "<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>";
                 }
                 tds += '</tr>';
                 if($('tbody', this).length > 0){
-                    $('tbody', this).append(tds);
+                    $('tbody', this).append(tds).children(':last').hide().fadeIn("slow");
                 }else {
-                    $(this).append(tds);
+                    $(this).append(tds).children(':last').hide().fadeIn("slow");
                 }
+                // Refresh sortable ULs to include the new ones
+                makeSortable();
             });
         }
         
         function addTableColumn() {
             var uls = $('#debate ul').length;
             $('#debate tr:first ').append("<th id='foo'>foo title</th>");    
-            $('#debate tr:not(:first)').append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'><li class='note'>Can be dropped..</li></ul></td>");
+            $("#debate tbody tr").append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>").fadeIn("slow");
             makeSortable();
         }
         
@@ -70,40 +78,33 @@
         {{ form.non_field_errors }}
         
         <table id="debate" cellspacing="0">
-            <tbody id="debate-body">
+            <thead>
                 <tr id="debate-headers">
                     <th id="debate"></th>
                     <th id="example"><span>Example</span></th>
                     <th id="example1"><span>Example1</span></th>
                     <th id="example1"><span>Example2</span></th>
                 </tr>
+            </thead>
+            <tbody id="debate-body">
                 <tr id="debate-row-1">
                     <td id="debate-1-title" class="criteria-title">sdfgsdfg</td>
                     <td id="debate-1-example">
                         <ul id="sortable1" class='connectedSortable'>
 	                        <li class="note">Can be dropped..</li>
                         	<li class="note">..on an empty list</li>
-	                        <li class="note">Item 3</li>
-	                        <li class="note">Item 4</li>
-                        	<li class="note">Item 5</li>
                         </ul>
                     </td>
                     <td id="debate-1-example1">
                         <ul id="sortable2" class='connectedSortable'>
 	                        <li class="note">Can be dropped..</li>
                         	<li class="note">..on an empty list</li>
-	                        <li class="note">Item 3</li>
-	                        <li class="note">Item 4</li>
-                        	<li class="note">Item 5</li>
                         </ul>
                     </td>
                     <td id="debate-1-example2">
                         <ul id="sortable2" class='connectedSortable'>
 	                        <li class="note">Can be dropped..</li>
                         	<li class="note">..on an empty list</li>
-	                        <li class="note">Item 3</li>
-	                        <li class="note">Item 4</li>
-                        	<li class="note">Item 5</li>
                         </ul>
                     </td>
                 </tr>
@@ -113,27 +114,18 @@
                         <ul id="sortable3" class='connectedSortable'>
 	                        <li class="note">Can be dropped..</li>
                         	<li class="note">..on an empty list</li>
-	                        <li class="note">Item 3</li>
-	                        <li class="note">Item 4</li>
-                        	<li class="note">Item 5</li>
                         </ul>
                     </td>
                     <td id="debate-2-example1">
                         <ul id="sortable4" class='connectedSortable'>
 	                        <li class="note">Can be dropped..</li>
                         	<li class="note">..on an empty list</li>
-	                        <li class="note">Item 3</li>
-	                        <li class="note">Item 4</li>
-                        	<li class="note">Item 5</li>
                         </ul>
                     </td>
                     <td id="debate-2-example2">
                         <ul id="sortable4" class='connectedSortable'>
 	                        <li class="note">Can be dropped..</li>
                         	<li class="note">..on an empty list</li>
-	                        <li class="note">Item 3</li>
-	                        <li class="note">Item 4</li>
-                        	<li class="note">Item 5</li>
                         </ul>
                     </td>
                 </tr>

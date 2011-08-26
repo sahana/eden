@@ -888,6 +888,12 @@ tbody td.criteria-title, tbody th.criteria-title {
 .note-alpha {
     opacity: 0.5;
 }
+
+tbody * ul {
+    width: 100%;
+    min-height: 50px;
+    min-width: 50px;
+}
 /* END DEBATE */
 
 
