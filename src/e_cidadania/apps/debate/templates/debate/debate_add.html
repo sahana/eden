@@ -8,60 +8,7 @@
   {% block centercol %}
     <div class="grid_16">
     
-    <script language="JavaScript">
-    	function makeSortable() {
-    		$("ul[id^=sortable]").sortable({
-    			connectWith: ".connectedSortable",
-    			cursor: "move",
-    			placeholder: "note-alpha",
-    			start: function (e,ui){        // new lines to
-                    $(ui.placeholder).hide("slow"); // remove popping
-                },                             // effect on start
-                change: function (e,ui){
-                    $(ui.placeholder).hide().show("normal");
-                }
-    		}).disableSelection();
-    	}
-
-        function addTableRow(jQtable){
-            jQtable.each(function(){
-                var $table = $(this);
-                // Number of td's in the last table row
-                var n = $("tr:last td", this).length;
-                var tds = '<tr>';
-                var uls = $('#debate ul').length;
-                for(var i = 0; i < n; i++){
-                    if (i == 0) {
-                        // The first TD must be empty, only with a form for the
-                        // title.
-                        tds += "<td></td>";
-                        // Remove the first TD from the tds count.
-                        n -= 1;
-                    }
-                    tds += "<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>";
-                }
-                tds += '</tr>';
-                if($('tbody', this).length > 0){
-                    $('tbody', this).append(tds).children(':last').hide().fadeIn("slow");
-                }else {
-                    $(this).append(tds).children(':last').hide().fadeIn("slow");
-                }
-                // Refresh sortable ULs to include the new ones
-                makeSortable();
-            });
-        }
-        
-        function addTableColumn() {
-            var uls = $('#debate ul').length;
-            $('#debate tr:first ').append("<th id='foo'>foo title</th>");    
-            $("#debate tbody tr").append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>").fadeIn("slow");
-            makeSortable();
-        }
-        
-        $(document).ready(function() {
-            makeSortable();
-        });
-    </script>
+    <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
     
       <div id="contenttitles">
         {% trans "Create a new debate" %}
@@ -82,8 +29,6 @@
                 <tr id="debate-headers">
                     <th id="debate"></th>
                     <th id="example"><span>Example</span></th>
-                    <th id="example1"><span>Example1</span></th>
-                    <th id="example1"><span>Example2</span></th>
                 </tr>
             </thead>
             <tbody id="debate-body">
@@ -95,52 +40,20 @@
                         	<li class="note">..on an empty list</li>
                         </ul>
                     </td>
-                    <td id="debate-1-example1">
-                        <ul id="sortable2" class='connectedSortable'>
-	                        <li class="note">Can be dropped..</li>
-                        	<li class="note">..on an empty list</li>
-                        </ul>
-                    </td>
-                    <td id="debate-1-example2">
-                        <ul id="sortable2" class='connectedSortable'>
-	                        <li class="note">Can be dropped..</li>
-                        	<li class="note">..on an empty list</li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr id="debate-row-2">
-                    <td id="debate-2-title" class="criteria-title">sdfgsdfgs</td>
-                    <td id="debate-2-example">
-                        <ul id="sortable3" class='connectedSortable'>
-	                        <li class="note">Can be dropped..</li>
-                        	<li class="note">..on an empty list</li>
-                        </ul>
-                    </td>
-                    <td id="debate-2-example1">
-                        <ul id="sortable4" class='connectedSortable'>
-	                        <li class="note">Can be dropped..</li>
-                        	<li class="note">..on an empty list</li>
-                        </ul>
-                    </td>
-                    <td id="debate-2-example2">
-                        <ul id="sortable4" class='connectedSortable'>
-	                        <li class="note">Can be dropped..</li>
-                        	<li class="note">..on an empty list</li>
-                        </ul>
-                    </td>
                 </tr>
             </tbody>
         </table>
         
         <a href="javascript:addTableColumn()" id="new-column" class="new-column">Create new column</a>
+        <a href="javascript:removeTableColumn()">Remove last column</a>
         <a href="javascript:addTableRow($('#debate'))" id="new-row-criteria">Create new row</a>        
 
         <hr />
         <p class="buttons">
-          <img src="{{ STATIC_URL }}/debate/img/add.png"
+          <img src="{{ STATIC_URL }}/assets/icons/add24.png"
                title="{% trans 'Add new phase' %}" alt="{% trans 'Add new phase' %}" />
           <a href="../../" class="addphase">{% trans "Phase" %}</a>
-          <input type="submit" value="{% trans 'Finish' %}" />
+          <input class="btn primary" type="submit" value="{% trans 'Finish' %}" />
           
           <div class="fieldWrapper">
             {{ form.start_date.errors }}
