@@ -79,7 +79,12 @@ function removeTableRow() {
     if (trs > 1) {
         $('#debate tr:last').fadeOut("slow").remove();
     } else {
-        alert("You can't delete the last row");
+        $('#jsnotify').notify();
+        $('#jsnotify').notify("create", {
+            title: "Can't delete row",
+            text: "There must be at least one row in the table.",
+            icon: "alert.png"
+        });
     }
 
 }

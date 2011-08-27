@@ -9,6 +9,7 @@
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/grid.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/layout.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/nav.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/ui.notify.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/smoothness/jquery-ui-1.8.13.custom.css" media="screen" />
 		<link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}/css/screen.css"/>
 		<link rel="author" href="{{ STATIC_URL }}/humans.txt" />
@@ -20,6 +21,7 @@
 		<script src="{{ STATIC_URL }}/js/jquery-ui.js" type="text/javascript"></script>
 		<script src="{{ STATIC_URL }}/js/dropdown.js" type="text/javascript"></script>
     	<script src="{{ STATIC_URL }}/js/site.js" type="text/javascript"></script>
+    	<script src="{{ STATIC_URL }}/js/jquery.notify.min.js" type="text/javascript"></script>
 		
 		{% comment %}
 		  This will load the wysiwyg system for all pages that iherit from base.html
@@ -36,7 +38,7 @@
         {% endfor %}
       </ul>
     {% endif %}
-    
+        
     <div class="topbar">
       <div id="version">
 	      v0.1 alpha
@@ -46,6 +48,15 @@
 	    </div>
 	  </div>
 
+      <div id="jsnotify">
+        <div id="basic-template">
+          <!-- <a class="ui-notify-cross ui-notify-close" href="#">x</a> -->
+          <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}/assets/icons/#{icon}" alt="warning" /></div>
+          <h1>#{title}</h1>
+          <p>#{text}</p>
+        </div>
+      </div>
+      
 	  <div class="container_16">
 
       <div class="grid_16">
