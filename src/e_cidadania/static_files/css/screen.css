@@ -899,6 +899,15 @@ tbody * ul {
     vertical-align: middle;
     text-align: center;
 }
+
+#new-column-btn, #new-row-btn, #del-column-btn, #del-row-btn {
+    padding: 5px;
+    margin: 5px;
+}
+
+#new-column-btn, #del-column-btn {
+    float: right;
+}
 /* END DEBATE */
 
 

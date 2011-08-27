@@ -68,10 +68,20 @@ function addTableRow(jQtable){
         if($('tbody', this).length > 0){
             $('tbody', this).append(tds).children(':last').hide().fadeIn("slow");
         } else {
-            $(this).append(tds).children(':last').hide().fadeIn("slow");
+            $(this).append(tds).children(':last').hide().slideDown("slow");
         }
         makeSortable();
     });
+}
+
+function removeTableRow() {
+    var trs = $('#debate tbody tr').length;
+    if (trs > 1) {
+        $('#debate tr:last').fadeOut("slow").remove();
+    } else {
+        alert("You can't delete the last row");
+    }
+
 }
         
 function addTableColumn() {

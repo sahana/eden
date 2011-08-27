@@ -24,6 +24,10 @@
         
         {{ form.non_field_errors }}
         
+        <a href="javascript:removeTableColumn()" id="del-column-btn" class="btn danger small">Remove column</a>
+               
+        <a href="javascript:addTableColumn()" id="new-column-btn" class="btn primary small">Add column</a>
+        
         <table id="debate" cellspacing="0">
             <thead>
                 <tr id="debate-headers">
@@ -44,9 +48,9 @@
             </tbody>
         </table>
         
-        <a href="javascript:addTableColumn()" id="new-column" class="new-column">Create new column</a>
-        <a href="javascript:removeTableColumn()">Remove last column</a>
-        <a href="javascript:addTableRow($('#debate'))" id="new-row-criteria">Create new row</a>        
+        <a href="javascript:removeTableRow()" id="del-row-btn" class="btn danger small">Remove row</a>
+               
+        <a href="javascript:addTableRow($('#debate'))" id="new-row-btn" class="btn primary small">Add row</a>
 
         <hr />
         <p class="buttons">
