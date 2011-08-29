@@ -31,17 +31,17 @@
         <table id="debate" cellspacing="0">
             <thead>
                 <tr id="debate-headers">
-                    <th id="debate"></th>
-                    <th id="example"><span>Example</span></th>
+                    <th id="debate-vcriteria" class="criteria-title"></th>
+                    <th id="debate-vcriteria"><input id="debate1-criteria2" value="Column title"></td></th>
                 </tr>
             </thead>
             <tbody id="debate-body">
                 <tr id="debate-row-1">
-                    <td id="debate-1-title" class="criteria-title">sdfgsdfg</td>
+                    <td id="debate-hcriteria" class="criteria-title"><input id="debate1-criteria1" value="Test criteria"></td>
                     <td id="debate-1-example">
                         <ul id="sortable1" class='connectedSortable'>
-	                        <li class="note">Can be dropped..</li>
-                        	<li class="note">..on an empty list</li>
+	                        <li class="note"><textarea>Can be dropped..</textarea></li>
+                        	<li class="note"><textarea>..on an empty list</textarea></li>
                         </ul>
                     </td>
                 </tr>
@@ -52,6 +52,13 @@
                
         <a href="javascript:addTableRow($('#debate'))" id="new-row-btn" class="btn primary small">Add row</a>
 
+        <br />
+        
+        <a href="javascript:createNote()" id="new-note" class="btn small primary">Add new note</a>
+        <div id="dispatcher">
+            <ul id="sortable-dispatcher" class="connectedSortable"></ul>
+        </div>
+        
         <hr />
         <p class="buttons">
           <img src="{{ STATIC_URL }}/assets/icons/add24.png"

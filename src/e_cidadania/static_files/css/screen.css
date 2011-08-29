@@ -912,6 +912,18 @@ tbody * ul {
 #new-column-btn, #del-column-btn {
     float: right;
 }
+
+.note textarea {
+    width: 80px;
+    height: 70px;
+    background: transparent;
+    border: none;
+    color: #000;
+}
+
+table .criteria-title {
+    width: 100px;
+}
 /* END DEBATE */
 
 

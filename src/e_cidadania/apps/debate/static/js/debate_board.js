@@ -55,10 +55,11 @@ function addTableRow(jQtable){
         var n = $("tr:last td", this).length;
         var tds = '<tr>';
         var uls = $('#debate ul').length;
+        var inputs = $('#debate input').length;
         for(var i = 0; i < n; i++){
             if (i == 0) {
                 // The first TD must be empty, only with a form for the title.
-                tds += "<td></td>";
+                tds += "<td><input id='debate1-criteria" + (inputs+1) + "' value='Test criteria'></td>";
                 // Remove the first TD from the tds count.
                 n -= 1;
             }
@@ -99,7 +100,8 @@ function addTableColumn() {
         all the rows.
     */
     var uls = $('#debate ul').length;
-    $('#debate tr:first ').append("<th id='foo'>foo title</th>");    
+    var inputs = $('#debate input').length;
+    $('#debate tr:first ').append("<th id='foo'><input id='debate1-criteria" + (inputs+1) + "' value='Test criteria'></td></th>");    
     $("#debate tbody tr").append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>").fadeIn("slow");
     makeSortable();
 }
@@ -145,7 +147,9 @@ function deletePhase() {}
 /*
     NOTE FUNCTIONS
 */
-function createNewNote() {}
+function createNote() {
+    $('#sortable-dispatcher').append("<li class='note'><textarea>Write here</textarea></li>").hide().show("slow");
+}
 function saveNote() {}
 function deleteNote() {}
 
