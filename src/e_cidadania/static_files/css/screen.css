@@ -290,6 +290,10 @@ input[type="text"], input[type="password"] {
     color: #EDEDED;
 }
 
+#language {
+    width: 100px;
+}
+
 #centercol {
     float: left;
     padding: 15px;

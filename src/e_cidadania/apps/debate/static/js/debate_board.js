@@ -75,6 +75,10 @@ function addTableRow(jQtable){
 }
 
 function removeTableRow() {
+    /*
+        removeTableRow() - Remove the last table row in the table. It removes
+        also the TDs and the notes.
+    */
     var trs = $('#debate tbody tr').length;
     if (trs > 1) {
         $('#debate tr:last').fadeOut("slow").remove();
@@ -90,6 +94,10 @@ function removeTableRow() {
 }
         
 function addTableColumn() {
+    /*
+        addTableColumn() - Create a new column ny creating a new sortable TD in
+        all the rows.
+    */
     var uls = $('#debate ul').length;
     $('#debate tr:first ').append("<th id='foo'>foo title</th>");    
     $("#debate tbody tr").append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>").fadeIn("slow");
@@ -97,10 +105,15 @@ function addTableColumn() {
 }
 
 function removeTableColumn() {
-    $('#debate thead tr th:last').remove();
+    /*
+        removeTableColumn() - Deletes the last column (all the last TDs).
+    */
+    $("#debate th:last-child, #debate td:last-child").remove();
+/*    $('#debate thead tr th:last').remove();
     $('#debate tbody tr').each(function() {
-        $(this).remove('td:last');
-    });
+          $(this).children('td, th').slice(-1).remove();
+/*        $(this).remove('td:last');
+    });*/
 }
 
 function editDebate() {}
@@ -133,7 +146,6 @@ function deletePhase() {}
     NOTE FUNCTIONS
 */
 function createNewNote() {}
-function moveNote() {}
 function saveNote() {}
 function deleteNote() {}
 
