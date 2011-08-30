@@ -867,6 +867,17 @@ td.filled ul li a {
 /* END SPACES */
 
 /* DEBATE */
+#debate, #debate td, #debate th {
+    border-style: none;
+}
+
+#debate td, th {
+  	border-width: 1px;
+	border-spacing: 0px;
+	border-style: inset;
+	border-color: #CCC;
+	border-collapse: collapse;
+}
 tbody td {
     width: 0;
 }
@@ -899,7 +910,7 @@ tbody * ul {
     min-width: 50px;
 }
 
-#debate td {
+#debate td, #debate th {
     vertical-align: middle;
     text-align: center;
 }
@@ -925,14 +936,41 @@ table .criteria-title {
     width: 100px;
 }
 
-tbody .ttitle {
-    -webkit-border-top-left-radius: 20px;
-    -webkit-border-bottom-left-radius: 20px;
-    -moz-border-radius-topleft: 20px;
-    -moz-border-radius-bottomleft: 20px;
-    border-top-left-radius: 20px;
-    border-bottom-left-radius: 20px;
-    background: blue;
+#debate td:first-child {
+    background: transparent;
+    border-style: none;
+}
+
+#debate-ttitle {
+    margin: 0px;
+    border-top: 1px solid #CCC;
+    border-bottom: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    padding: 40px 10px;
+    width: 150px;
+    background: #EEE;
+    -webkit-border-top-left-radius: 10px;
+    -webkit-border-bottom-left-radius: 10px;
+    -moz-border-radius-topleft: 10px;
+    -moz-border-radius-bottomleft: 10px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+.criteria-title {
+    padding: 5px 0px 5px 0px;
+}
+
+#debate thead th {
+    padding: 5px 5px 5px 5px;
+    background: #EEE;
+    border-top: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+}
+
+#debate thead th:first-child {
+    background: transparent;
+    border: none;
 }
 /* END DEBATE */
 

@@ -56,7 +56,7 @@ function addTableRow(jQtable){
         for(var i = 0; i < n; i++){
             if (i == 0) {
                 // The first TD must be empty, only with a form for the title.
-                tds += "<td><input id='debate1-criteria" + (inputs+1) + "' value='Test criteria'></td>";
+                tds += "<td id='debate-hcriteria' class='criteria-title'><div id='debate-ttitle'><input class='small' id='debate1-criteria" + (inputs+1) + "' type='text' value='Test criteria'></div></td>";
                 // Remove the first TD from the tds count.
                 n -= 1;
             }
@@ -79,7 +79,9 @@ function removeTableRow() {
     */
     var trs = $('#debate tbody tr').length;
     if (trs > 1) {
-        $('#debate tr:last').fadeOut("slow").remove();
+        $('#debate tr:last').fadeOut("fast", function() {
+            $(this).remove();
+        });
     } else {
         $('#jsnotify').notify("create", {
             title: "Can't delete row",
@@ -97,7 +99,7 @@ function addTableColumn() {
     */
     var uls = $('#debate ul').length;
     var inputs = $('#debate input').length;
-    $('#debate tr:first ').append("<th id='foo'><input id='debate1-criteria" + (inputs+1) + "' value='Test criteria'></td></th>");    
+    $('#debate tr:first ').append("<th id='foo'><input id='debate1-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></td></th>");    
     $("#debate tbody tr").append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>").fadeIn("slow");
     makeSortable();
 }
@@ -107,8 +109,10 @@ function removeTableColumn() {
         removeTableColumn() - Deletes the last column (all the last TDs).
     */
     var columns = $('#debate tr:last td').length;
-    if (columns > 1) {
-        $("#debate th:last-child, #debate td:last-child").remove();
+    if (columns > 2) {
+        $("#debate th:last-child, #debate td:last-child").fadeOut("fast", function() {
+            $(this).remove();
+        });
     } else {
         $('#jsnotify').notify("create", {
             title: "Can't delete column",
