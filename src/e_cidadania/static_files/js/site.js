@@ -26,8 +26,6 @@ function sitestart() {
 }
 
 $(document).ready(function(){
-    // Hide the jsnotify div
-    $('#jsnotify').hide();
     sitestart();
 });
 

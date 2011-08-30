@@ -16,9 +16,6 @@ function createNewDebate(space) {
         createNewDebate(space) - Creates a new debate on the current space. The debate
         will always fit to the maximum screen size.
     */
-    
-    
-    
 }
 
 function makeSortable() {
@@ -84,7 +81,6 @@ function removeTableRow() {
     if (trs > 1) {
         $('#debate tr:last').fadeOut("slow").remove();
     } else {
-        $('#jsnotify').notify();
         $('#jsnotify').notify("create", {
             title: "Can't delete row",
             text: "There must be at least one row in the table.",
@@ -110,12 +106,21 @@ function removeTableColumn() {
     /*
         removeTableColumn() - Deletes the last column (all the last TDs).
     */
-    $("#debate th:last-child, #debate td:last-child").remove();
-/*    $('#debate thead tr th:last').remove();
-    $('#debate tbody tr').each(function() {
-          $(this).children('td, th').slice(-1).remove();
-/*        $(this).remove('td:last');
-    });*/
+    var columns = $('#debate tr:last td').length;
+    if (columns > 1) {
+        $("#debate th:last-child, #debate td:last-child").remove();
+    } else {
+        $('#jsnotify').notify("create", {
+            title: "Can't delete column",
+            text: "There must be at least one column in the table.",
+            icon: "alert.png"
+        });
+    }
+}
+
+function changeColor() {
+    $('#debate td:first-child').css('background-color', 'red');
+    
 }
 
 function editDebate() {}
@@ -132,16 +137,6 @@ function saveDebate() {}
 */
 function createNewPhase() {}
 
-function newScaleItem() {
-    /*
-        When creating a new scale item, we populate the dictionary.
-    */
-    
-    var scale_x = ''
-    var scale_y = ''
-}
-
-function deleteScaleItem() {}
 function deletePhase() {}
 
 /*
@@ -159,6 +154,9 @@ function deleteNote() {}
 ********************/
 
 $(document).ready(function() {
+    // Activate javascript notifications.
+    $('#jsnotify').notify();
+    // Activate sortables
     makeSortable();
 });
 

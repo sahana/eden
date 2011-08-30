@@ -924,6 +924,16 @@ tbody * ul {
 table .criteria-title {
     width: 100px;
 }
+
+tbody .ttitle {
+    -webkit-border-top-left-radius: 20px;
+    -webkit-border-bottom-left-radius: 20px;
+    -moz-border-radius-topleft: 20px;
+    -moz-border-radius-bottomleft: 20px;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    background: blue;
+}
 /* END DEBATE */
 
 
