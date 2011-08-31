@@ -31,8 +31,8 @@
         <table id="debate" cellspacing="0">
             <thead>
                 <tr id="debate-headers">
-                    <th id="debate-vcriteria" class="corner-criteria"></th>
-                    <th id="debate-vcriteria"><input id="debate1-criteria2" class="small" type="text" value="Column title"></td></th>
+                    <th id="corner" class="corner-criteria"></th>
+                    <th id="debate-vcriteria"><input id="debate1-criteria2" class="small" type="text" value="Column title"></th>
                 </tr>
             </thead>
             <tbody id="debate-body">
@@ -42,11 +42,11 @@
                             <input class="small" id="debate1-criteria1" type="text" value="Test criteria">
                         </div>
                     </td>
-                    <td id="debate-1-example">
-                        <ul id="sortable1" class='connectedSortable'>
-	                        <li class="note"><textarea>Can be dropped..</textarea></li>
-                        	<li class="note"><textarea>..on an empty list</textarea></li>
-                        </ul>
+                    <td id="sortable-debate1" class="connectedSortable">
+	                    <div class="note"><textarea rows="4" cols="10">Can be
+                            dropped..</textarea></div>
+                        <div class="note"><textarea rows="4" cols="10">..on
+                            an empty list</textarea></div>
                     </td>
                 </tr>
             </tbody>
@@ -54,12 +54,11 @@
         
         <a href="javascript:removeTableRow()" id="del-row-btn" class="btn danger small">Remove row</a>
                
-        <a href="javascript:addTableRow($('#debate'))" id="new-row-btn" class="btn primary small">Add row</a>
+        <a href="javascript:addTableRow()" id="new-row-btn" class="btn primary small">Add row</a>
 
         <br />
         
-        <a href="javascript:createNote()" id="new-note" class="btn small primary">Add new note</a>
-        <a href="javascript:changeColor()" class="btn small primary">Change color</a>
+        <a href="javascript:createNote()" id="new-note" class="btn primary small">Add new note</a>
         <div id="dispatcher">
             <ul id="sortable-dispatcher" class="connectedSortable"></ul>
         </div>

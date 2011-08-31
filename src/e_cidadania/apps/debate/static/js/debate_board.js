@@ -27,7 +27,7 @@ function makeSortable() {
     */
     
     // Get all the UL elements starting by sortable
-    $("ul[id^=sortable]").sortable({
+    $('#[id^=sortable]').sortable({
         connectWith: ".connectedSortable",
     	cursor: "move",
     	placeholder: "note-alpha",
@@ -40,13 +40,13 @@ function makeSortable() {
     }).disableSelection();
 }
 
-function addTableRow(jQtable){
+function addTableRow() {
     /*
         addTableRow() - This function adds new rows to an existent table numbering
         the sortables according to the debate number and current ULs.
     */
 
-    jQtable.each(function(){
+    $("#debate").each(function(){
         var $table = $(this);
         // Number of td's in the last table row
         var n = $("tr:last td", this).length;
@@ -120,11 +120,6 @@ function removeTableColumn() {
             icon: "alert.png"
         });
     }
-}
-
-function changeColor() {
-    $('#debate td:first-child').css('background-color', 'red');
-    
 }
 
 function editDebate() {}

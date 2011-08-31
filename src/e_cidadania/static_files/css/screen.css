@@ -89,18 +89,18 @@ img {
 
 
 /* CUSTOMIZATIONS */
-input[type="submit"] {
+/*input[type="submit"] {
 /*    border: 1px solid #AACCAA; /*#AAA;*/
 /*    background: #DDFFDD; /*#98FB98; /*#DDD;*/*/
 /*    color: #666;*/
 /*    padding: 5px 10px;*/
-}
+/*}*/
 
 input[type="text"], input[type="password"] {
     font-size: 2em;
     border: 1px solid #999;
     background: url('../assets/inputbg.png') repeat-x;
-    margin: 10px 0px 10px 0px;
+    margin: 10px 0 10px 0;
     padding: 2px;
     width: 350px;
     height: 25px;
@@ -292,6 +292,10 @@ input[type="text"], input[type="password"] {
 
 #language {
     width: 100px;
+}
+
+#language option {
+    background: #222;
 }
 
 #centercol {
