@@ -26,7 +26,7 @@ function makeSortable() {
         column or row) to make the new elements sortable.
     */
     
-    // Get all the UL elements starting by sortable
+    // Get all the div elements starting by sortable
     $('#[id^=sortable]').sortable({
         connectWith: ".connectedSortable",
     	cursor: "move",
@@ -46,21 +46,22 @@ function addTableRow() {
         the sortables according to the debate number and current ULs.
     */
 
-    $("#debate").each(function(){
+    var tableID = $('table').attr('id');
+    $('#' + tableID).each(function(){
         var $table = $(this);
         // Number of td's in the last table row
         var n = $("tr:last td", this).length;
         var tds = '<tr>';
-        var uls = $('#debate ul').length;
-        var inputs = $('#debate input').length;
+        var inputs = $('#' + tableID + ' input').length;
         for(var i = 0; i < n; i++){
+            var tdlength = $('#' + tableID + ' td').length;
             if (i == 0) {
                 // The first TD must be empty, only with a form for the title.
                 tds += "<td id='debate-hcriteria' class='criteria-title'><div id='debate-ttitle'><input class='small' id='debate1-criteria" + (inputs+1) + "' type='text' value='Test criteria'></div></td>";
                 // Remove the first TD from the tds count.
                 n -= 1;
             }
-            tds += "<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>";
+            tds += "<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>";
         }
         tds += '</tr>';
         if($('tbody', this).length > 0){
@@ -77,9 +78,10 @@ function removeTableRow() {
         removeTableRow() - Remove the last table row in the table. It removes
         also the TDs and the notes.
     */
-    var trs = $('#debate tbody tr').length;
+    var tableID = $('table').attr('id');
+    var trs = $('#' + tableID + ' tbody tr').length;
     if (trs > 1) {
-        $('#debate tr:last').fadeOut("fast", function() {
+        $('#' + tableID + ' tr:last').fadeOut("fast", function() {
             $(this).remove();
         });
     } else {
@@ -97,10 +99,11 @@ function addTableColumn() {
         addTableColumn() - Create a new column ny creating a new sortable TD in
         all the rows.
     */
-    var uls = $('#debate ul').length;
-    var inputs = $('#debate input').length;
-    $('#debate tr:first ').append("<th id='foo'><input id='debate1-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></td></th>");    
-    $("#debate tbody tr").append("<td><ul id='sortable" + (uls+1) + "' class='connectedSortable'></ul></td>").fadeIn("slow");
+    var tableID = $('table').attr('id');
+    var inputs = $('#' + tableID + ' input').length;
+    var tdlength = $('#' + tableID + ' td').length;
+    $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
+    $('#' + tableID + ' tbody tr').append("<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
     makeSortable();
 }
 
@@ -108,9 +111,10 @@ function removeTableColumn() {
     /*
         removeTableColumn() - Deletes the last column (all the last TDs).
     */
-    var columns = $('#debate tr:last td').length;
+    var tableID = $('table').attr('id');
+    var columns = $('#' + tableID+ ' tr:last td').length;
     if (columns > 2) {
-        $("#debate th:last-child, #debate td:last-child").fadeOut("fast", function() {
+        $('#' + tableID + ' th:last-child, #' + tableID + ' td:last-child').fadeOut("fast", function() {
             $(this).remove();
         });
     } else {
@@ -142,7 +146,7 @@ function deletePhase() {}
     NOTE FUNCTIONS
 */
 function createNote() {
-    $('#sortable-dispatcher').append("<li class='note'><textarea>Write here</textarea></li>").hide().show("slow");
+    $('#sortable-dispatcher').append("<div class='note'><textarea>Write here</textarea></div>").hide().show("slow");
 }
 function saveNote() {}
 function deleteNote() {}

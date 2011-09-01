@@ -8,6 +8,14 @@
 
 /* MESSAGES */
 
+function checkBrowser() {
+    // Detect IE 6-8
+    if ( jQuery.support.leadingWhitespace == false ) {
+        alert('Su navegador no dispone de las últimas tecnologías web.' +
+            'Le recomendamos que se descargue Firefox, Google Chrome u Opera.')
+    }
+}
+
 function msg() {
     // Show the messages slowly so the user can notice it.
     $("ul.messages").slideDown(2000);
@@ -26,6 +34,7 @@ function sitestart() {
 }
 
 $(document).ready(function(){
+    checkBrowser();
     sitestart();
 });
 

@@ -28,9 +28,9 @@
                
         <a href="javascript:addTableColumn()" id="new-column-btn" class="btn primary small">Add column</a>
         
-        <table id="debate" cellspacing="0">
+        <table id="debate1" cellspacing="0">
             <thead>
-                <tr id="debate-headers">
+                <tr id="debate1-headers">
                     <th id="corner" class="corner-criteria"></th>
                     <th id="debate-vcriteria"><input id="debate1-criteria2" class="small" type="text" value="Column title"></th>
                 </tr>
@@ -43,10 +43,8 @@
                         </div>
                     </td>
                     <td id="sortable-debate1" class="connectedSortable">
-	                    <div class="note"><textarea rows="4" cols="10">Can be
-                            dropped..</textarea></div>
-                        <div class="note"><textarea rows="4" cols="10">..on
-                            an empty list</textarea></div>
+	                    <div class="note"><textarea>Can be dropped..</textarea></div>
+                        <div class="note"><textarea>..on an empty list</textarea></div>
                     </td>
                 </tr>
             </tbody>
@@ -59,9 +57,7 @@
         <br />
         
         <a href="javascript:createNote()" id="new-note" class="btn primary small">Add new note</a>
-        <div id="dispatcher">
-            <ul id="sortable-dispatcher" class="connectedSortable"></ul>
-        </div>
+        <div id="sortable-dispatcher"></div>
         
         <hr />
         <p class="buttons">
