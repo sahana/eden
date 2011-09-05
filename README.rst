@@ -15,21 +15,21 @@ Development
 
 **We need developers! If you want to join us, send an email to oscar.carballal AT cidadania DOT coop**
 
-Development and bugtracking is done through `dev.ecidadania.org http://dev.ecidadania.org`_
+Development and bugtracking is done through `dev.ecidadania.org <http://dev.ecidadania.org>`_
 
 Getting help
 ------------
 
- * `Documentation http://trac.cidadania.coop/wiki/Documentation`_ e-cidadania documentation.
- * `Mailing lists http://trac.cidadania.coop/wiki/MailingLists`_ mailing lists, global and local.
- * `Social networks http://trac.cidadania.coop/wiki/SocialNetworks`_ social networks where e-cidadania is.
- * `Website http://ecidadania.org`_ e-cidadania official website.
+ * `Documentation <http://trac.cidadania.coop/wiki/Documentation>`_ e-cidadania documentation.
+ * `Mailing lists <http://trac.cidadania.coop/wiki/MailingLists>`_ mailing lists, global and local.
+ * `Social networks <http://trac.cidadania.coop/wiki/SocialNetworks>`_ social networks where e-cidadania is.
+ * `Website <http://ecidadania.org>`_ e-cidadania official website.
 
 Useful information
 ------------------
 
- * `Design concepts http://trac.cidadania.coop/wiki/DesignConcepts`_ design concepts, this are the guides to follow when developing.
- * `RoadMap http://trac.cidadania.coop/wiki/RoadMap`_ version roadmap. This is where we stablish the features, release dates and other things of every version.
+ * `Design concepts <http://trac.cidadania.coop/wiki/DesignConcepts>`_ design concepts, this are the guides to follow when developing.
+ * `RoadMap <http://trac.cidadania.coop/wiki/RoadMap>`_ version roadmap. This is where we stablish the features, release dates and other things of every version.
 
 Collaborate
 -----------
