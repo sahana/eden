@@ -5,103 +5,120 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_16">
-    
-    <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
-    
-      <div id="contenttitles">
-        {% trans "Create a new debate" %}
-      </div>
-      
-
-
-      <div id="debate">
-
-      <form enctype="" action="" method="post">{% csrf_token %}
+    {% block centercol %}
+        <div class="grid_16">
         
-        {{ form.as_hidden }}
+        <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
         
-        {{ form.non_field_errors }}
-        
-        <a href="javascript:removeTableColumn()" id="del-column-btn" class="btn danger small">Remove column</a>
-               
-        <a href="javascript:addTableColumn()" id="new-column-btn" class="btn primary small">Add column</a>
-        
-        <table id="debate1" cellspacing="0">
-            <thead>
-                <tr id="debate1-headers">
-                    <th id="corner" class="corner-criteria"></th>
-                    <th id="debate-vcriteria"><input id="debate1-criteria2" class="small" type="text" value="Column title"></th>
-                </tr>
-            </thead>
-            <tbody id="debate-body">
-                <tr id="debate-row-1">
-                    <td id="debate-hcriteria" class="criteria-title">
-                        <div id="debate-ttitle">
-                            <input class="small" id="debate1-criteria1" type="text" value="Test criteria">
-                        </div>
-                    </td>
-                    <td id="sortable-debate1" class="connectedSortable">
-	                    <div class="note"><textarea>Can be dropped..</textarea></div>
-                        <div class="note"><textarea>..on an empty list</textarea></div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <a href="javascript:removeTableRow()" id="del-row-btn" class="btn danger small">Remove row</a>
-               
-        <a href="javascript:addTableRow()" id="new-row-btn" class="btn primary small">Add row</a>
-
-        <br />
-        
-        <a href="javascript:createNote()" id="new-note" class="btn primary small">Add new note</a>
-        <div id="sortable-dispatcher"></div>
-        
-        <hr />
-        <p class="buttons">
-          <img src="{{ STATIC_URL }}/assets/icons/add24.png"
-               title="{% trans 'Add new phase' %}" alt="{% trans 'Add new phase' %}" />
-          <a href="../../" class="addphase">{% trans "Phase" %}</a>
-          <input class="btn primary" type="submit" value="{% trans 'Finish' %}" />
-          
-          <div class="fieldWrapper">
-            {{ form.start_date.errors }}
-            <label for="id_start_date">{% trans "Start date" %}:</label>
-            <p>{{ form.start_date }}</p>
-            <p id="form_help_text">{{ form.start_date.help_text }}</p>
-          </div>
-          
-          <div class="fieldWrapper">
-            {{ form.end_date.errors }}
-            <label for="id_end_date">{% trans "End date" %}:</label>
-            <p>{{ form.end_date }}</p>
-            <p id="form_help_text">{{ form.end_date.help_text }}</p>
-          </div>
-        </p>
-
-      </form>
-        
-      </div>
+            <div id="contenttitles">
+                {% trans "Create a new debate" %}
+            </div>
+            
 
 
+            <div id="debate">
 
-    </div>
+            <form enctype="" action="" method="post">{% csrf_token %}
+                
+                <a href="javascript:removeTableColumn()" id="del-column-btn" class="btn danger small">Remove column</a>
+                <a href="javascript:addTableColumn()" id="new-column-btn" class="btn primary small">Add column</a>
+                
+                <table id="debate1" cellspacing="0">
+                    <thead>
+                        <tr id="debate1-headers">
+                            <th id="corner" class="corner-criteria"></th>
+                            <th id="debate-vcriteria"><input id="debate1-criteria2" class="small" type="text" value="Column title"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="debate-body">
+                        <tr id="debate-row-1">
+                            <td id="debate-hcriteria" class="criteria-title">
+                                <div id="debate-ttitle">
+                                    <input class="small" id="debate1-criteria1" type="text" value="Test criteria">
+                                </div>
+                            </td>
+                            <td id="sortable-debate1" class="connectedSortable">
+	                            <div class="note"><textarea>Can be dropped..</textarea></div>
+                                <div class="note"><textarea>..on an empty list</textarea></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <a href="javascript:removeTableRow()" id="del-row-btn" class="btn danger small">Remove row</a>         
+                <a href="javascript:addTableRow()" id="new-row-btn" class="btn primary small">Add row</a>
 
-  {% endblock %}
+                <br />
+                
+                <a href="javascript:createNote()" id="new-note" class="btn primary small">Add new note</a>
+                <div id="sortable-dispatcher"></div>
+                
+                <hr />
+                
+                {{ form.non_field_errors }}
+                
+                <div class="clearfix"> 
+                    <label for="prependedInput">{{ form.title.label }}</label> 
+                    <div class="input"> 
+                        {{ form.title }} 
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    <label for="prependedInput">{{ form.description.label }}</label> 
+                    <div class="input"> 
+                        {{ form.description }} 
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    <label for="prependedInput">{{ form.scope.label }}</label> 
+                    <div class="input"> 
+                        {{ form.scope }} 
+                    </div> 
+                </div>
+                
+                <hr />
+                <p class="buttons">
+                    <img src="{{ STATIC_URL }}/assets/icons/add24.png" title="{% trans 'Add new phase' %}" alt="{% trans 'Add new phase' %}" />
+                    <a href="../../" class="addphase">{% trans "Phase" %}</a>
+                    <input class="btn primary" type="submit" value="{% trans 'Save' %}" />
+                
+                    {{ phaseform.management_form }}
+                    <div class="clearfix"> 
+                        <label for="prependedInput">{{ phaseform.start_date.label }}</label> 
+                        <div class="input"> 
+                            {{ phaseform.start_date }} 
+                        </div> 
+                    </div>
+                    
+                    <div class="clearfix"> 
+                        <label for="prependedInput">{{ phaseform.end_date.label }}</label> 
+                        <div class="input"> 
+                            {{ phaseform.end_date }} 
+                        </div> 
+                    </div>
+                </p>
 
-  {% comment %}
-  {% block rightcol %}
-    <div class="grid_5">
-      <div id="widget">
-       <h2>{% trans "How to add new debates" %}</h2><br/>
-        <ul class="instructions">
-          <li><strong>{% trans "Modules" %}</strong>: {% trans "Select the
-              modules you will use in your space. This can be edited afterwards." %}</li>
-        </ul>
-      </div>
-    </div>
-  {% endblock %}
-  {% endcomment %}
+            </form>
+                
+            </div>
+
+        </div>
+
+    {% endblock %}
+
+    {% comment %}
+    {% block rightcol %}
+        <div class="grid_5">
+            <div id="widget">
+             <h2>{% trans "How to add new debates" %}</h2><br/>
+                <ul class="instructions">
+                    <li><strong>{% trans "Modules" %}</strong>: {% trans "Select the
+                            modules you will use in your space. This can be edited afterwards." %}</li>
+                </ul>
+            </div>
+        </div>
+    {% endblock %}
+    {% endcomment %}
 {% endblock %}

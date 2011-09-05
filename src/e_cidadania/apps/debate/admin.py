@@ -34,7 +34,7 @@ class PhaseAdmin(admin.ModelAdmin):
     list_display = ('debate',)
     
 class NoteAdmin(admin.ModelAdmin):
-    list_display = ('message', 'explanation', 'pub_date', 'pub_author')
+    list_display = ('message', 'pub_date', 'pub_author')
 
 admin.site.register(Debate, DebateAdmin)
 admin.site.register(Phase, PhaseAdmin)

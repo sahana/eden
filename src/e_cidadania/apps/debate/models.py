@@ -33,13 +33,14 @@ class Debate(models.Model):
 
     """
     Debate object. In every space there can be unlimited debates, each one of
-    them holds all the related notes. Debates are filtered by space.
+    them holds all the related notes. Debates are filtered by space. Start/End
+    dates are gathered adding the phases dates.
     
     .. versionadded:: 0.1b
     """
     title = models.CharField(_('Title'), max_length=200, unique=True)
-    objectives = models.CharField(_('Objectives'), max_length=100, blank=True, null=True)
     description = models.TextField(_('Description'), blank=True, null=True)
+    scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
     space = models.ForeignKey(Space)
     
     pub_date = models.DateTimeField(auto_now_add=True)
@@ -51,7 +52,8 @@ class Debate(models.Model):
 class Phase(models.Model):
 
     """
-    Basic outline of sections, or phases of the debate.
+    Basic outline of sections, or phases of the debate. Every phase is like a new
+    debate, but holding the previous notes. 
     
     .. versionadded:: 0.1b
     """
@@ -69,7 +71,7 @@ class Phase(models.Model):
     end_date = models.DateField(_('End'))
     
     def __unicode__(self):
-        return self.debate.name + ' / ' + _('Phase ') + str(self.id)
+        return self.debate.id + ' / ' + _('Phase ') + str(self.id)
 
 class Note(models.Model):
 
@@ -79,11 +81,10 @@ class Note(models.Model):
     
     .. versionadded:: 0.1b
     """
-    debate = models.ForeignKey(Debate)
-    message = models.CharField(_('Message'), max_length=100)
-    explanation = models.CharField(_('Explanation'), max_length=100,
-                                   null=True, blank=True)
-    coords = models.CharField(_('Coordinates'), default='0,0,300,100', max_length=100)
+    phase = models.ForeignKey(Phase)
+    title = models.CharField(_('Title'), max_length=60)
+    message = models.CharField(_('Message'), max_length=100, null=True, blank=True)
+    parent = models.CharField(_('Parent TD or DIV'), max_length=200)
 
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)

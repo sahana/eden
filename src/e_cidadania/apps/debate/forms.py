@@ -22,7 +22,7 @@
 This file contains all the forms for the debate modules.
 """
 
-from django.forms import ModelForm
+from django.forms import ModelForm, Textarea, TextInput
 from django.forms.models import modelformset_factory
 
 from e_cidadania.apps.debate.models import Debate, Phase, Note
@@ -38,6 +38,9 @@ class DebateForm(ModelForm):
     """
     class Meta:
         model = Debate
+        widgets = {
+            'title': TextInput(attrs={'class': 'medium'}),
+        }
 
 # Create a FormSet with the Phase model
 PhaseFormSet = modelformset_factory(Phase, extra=1)

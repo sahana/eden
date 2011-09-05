@@ -69,7 +69,7 @@
         {{ entityformset.management_form }}
 
         {% for entity in entityformset %}
-          {{ form.id }}
+          {{ entity.id }}
           <div class="fieldWrapper">
             {{ entity.errors }}
             {% trans "Name" %}: {{ entity.name }}<br />
