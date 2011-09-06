@@ -7,37 +7,53 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
-/*
-    Internal functions
-*/
+
 
 /*
-    DEBATE FUNCTIONS
+    NOTE FUNCTIONS
 */
-function createNewDebate(space) {
+
+function createNote() {
     /*
-        createNewDebate(space) - Creates a new debate on the current space. The debate
-        will always fit to the maximum screen size.
+        createNote() - Appends a new note within the sortable dispatcher.
     */
+    $('#sortable-dispatcher').append("<div class='note'><textarea>Write here</textarea></div>").hide().show("slow");
 }
 
-var tableID = $('table').attr('id');
-var trs = $('#' + tableID + ' tbody tr').length;
+function saveNote(noteObj) {
+    /*
+        saveNote(noteObj) - Saves the notes making an AJAX call to django. This
+        function is meant to be used with a Sortable 'stop' event.
+        Arguments: noteObj, note object.
+    */
+    var noteID = noteObj.attr('id');
     
-function saveNote(noteID) {
     $.post("../save_note/", {
+        noteid: noteID,
+        td: $('#' + noteID).parent('td').attr('id'),
         title: $('#' + noteID + ' textarea').val(),
-        text: "Blablablabalblablalblalbla",
-        noteparent: "este sería el padre"
+        text: "Blablbla",
     });
 }
 
+function deleteNote() {
+    /*
+        deleteNote() - Delete a note.
+    */
+}
+
+
+
+/*
+    TABLE FUNCTIONS
+*/
+
 function makeSortable() {
     /*
-        makeSortable() - Makes every note object in the page sortable through
-        the connectedSortable class lists. It uses jQuery Sortable. This function
-        has to be called whenever a new element is on the page (note, table
-        column or row) to make the new elements sortable.
+        makeSortable() - Makes every element with id starting by 'sortable'
+        sortable through the connectedSortable class lists. It uses jQuery
+        Sortable. This function has to be called whenever a new element is on
+        the page (note, table column or row) to make the new elements sortable.
     */
     
     // Get all the div elements starting by sortable
@@ -45,17 +61,15 @@ function makeSortable() {
         connectWith: ".connectedSortable",
     	cursor: "move",
     	placeholder: "note-alpha",
-    	start: function (e,ui){ 
+    	start: function(e,ui) { 
             $(ui.placeholder).hide("slow"); // Remove popping
         },
-        change: function (e,ui){
+        change: function(e,ui) {
             $(ui.placeholder).hide().show("normal");
         },
-        stop: function (e, ui) {
-            var noteID = $(this).attr('id');
-            saveNote(noteID);
+        stop: function(e,ui) {
+            saveNote(ui.item);
         }
-        
     }).disableSelection();
 }
 
@@ -66,6 +80,7 @@ function addTableRow() {
     */
 
     var tableID = $('table').attr('id');
+    
     $('#' + tableID).each(function(){
         var $table = $(this);
         // Number of td's in the last table row
@@ -94,11 +109,12 @@ function addTableRow() {
 
 function removeTableRow() {
     /*
-        removeTableRow() - Remove the last table row in the table. It removes
+        removeTableRow() - Remove the last row in the table. It removes
         also the TDs and the notes.
     */
     var tableID = $('table').attr('id');
     var trs = $('#' + tableID + ' tbody tr').length;
+    
     if (trs > 1) {
         $('#' + tableID + ' tr:last').fadeOut("fast", function() {
             $(this).remove();
@@ -110,7 +126,6 @@ function removeTableRow() {
             icon: "alert.png"
         });
     }
-
 }
         
 function addTableColumn() {
@@ -144,32 +159,6 @@ function removeTableColumn() {
         });
     }
 }
-
-function editDebate() {}
-
-function saveDebate() {}
-    /* 
-        function deleteDebate() {} - This function is not available yet. The task of
-        deleting debates will probably be for the site admin or space admin.
-    */
-
-
-/*
-    PHASE FUNCTIONS
-*/
-function createNewPhase() {}
-
-function deletePhase() {}
-
-/*
-    NOTE FUNCTIONS
-*/
-function createNote() {
-    $('#sortable-dispatcher').append("<div class='note'><textarea>Write here</textarea></div>").hide().show("slow");
-}
-
-
-function deleteNote() {}
 
 
 /*******************
