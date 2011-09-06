@@ -101,3 +101,21 @@ def get_debates(request):
     """
     data = [debate.title for debate in Debate.objects.all().order_by('title')]
     return render_to_response(json.dumps(data), content_type='application/json')
+
+def save_note(request, space_name):
+
+    """
+    Saves the note content and position within the table. This function is
+    meant to be called as AJAX.
+    """
+    place = get_object_or_404(Space, url=space_name)
+    
+    if request.method == "GET":
+        message = "GET petitions are not allowed for this view."
+        
+    if request.method == "POST" and request.is_ajax:
+        message = "The operation has been received correctly."
+        
+        print request.POST
+    
+    return HttpResponse(message)

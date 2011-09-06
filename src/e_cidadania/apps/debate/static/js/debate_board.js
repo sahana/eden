@@ -7,6 +7,9 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
+/*
+    Internal functions
+*/
 
 /*
     DEBATE FUNCTIONS
@@ -16,6 +19,17 @@ function createNewDebate(space) {
         createNewDebate(space) - Creates a new debate on the current space. The debate
         will always fit to the maximum screen size.
     */
+}
+
+var tableID = $('table').attr('id');
+var trs = $('#' + tableID + ' tbody tr').length;
+    
+function saveNote(noteID) {
+    $.post("../save_note/", {
+        title: $('#' + noteID + ' textarea').val(),
+        text: "Blablablabalblablalblalbla",
+        noteparent: "este sería el padre"
+    });
 }
 
 function makeSortable() {
@@ -36,7 +50,12 @@ function makeSortable() {
         },
         change: function (e,ui){
             $(ui.placeholder).hide().show("normal");
+        },
+        stop: function (e, ui) {
+            var noteID = $(this).attr('id');
+            saveNote(noteID);
         }
+        
     }).disableSelection();
 }
 
@@ -148,7 +167,8 @@ function deletePhase() {}
 function createNote() {
     $('#sortable-dispatcher').append("<div class='note'><textarea>Write here</textarea></div>").hide().show("slow");
 }
-function saveNote() {}
+
+
 function deleteNote() {}
 
 
