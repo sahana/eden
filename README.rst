@@ -5,6 +5,30 @@ e-cidadania is a project to develop an open source application for citizen parti
 
 The e-cidadania objective is to maintain the platform as easy as possible while improving in the user interface to be easier to use as possible.
 
+Installation
+------------
+
+To install e-cidadania follow this steps:
+
+* Download the source code from git, or from the official webpage.
+* Copy the directory **src/e_cidadania** into your web root.
+* You need to install the requirements for e-cidadania, you can do it with pip::
+
+    sudo pip install -r requirements.txt
+
+* Configure setting.py to you desire.
+* Generate the database with::
+
+    python manage.py syncdb
+
+* Copy all the static files::
+
+    python manage.py collectstatic
+
+* Run the development server
+
+    python manage.py runserver
+
 Demonstration
 -------------
 

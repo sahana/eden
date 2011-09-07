@@ -63,6 +63,7 @@ def add_new_debate(request, space_name):
     place = get_object_or_404(Space, url=space_name)
     debate_form = DebateForm(request.POST or None)
     phase_forms = PhaseFormSet(request.POST or None, queryset=Phase.objects.none())
+
     try:
         current_debate_id = Debate.objects.latest('id')
     except:
@@ -73,6 +74,9 @@ def add_new_debate(request, space_name):
             debate_form_uncommited = debate_form.save(commit=False)
             debate_form_uncommited.space = place
             debate_form_uncommited.author = request.user
+            
+            phase_forms_uncommited = phase_forms.save(commit=False)
+            #phase_forms_uncommited.scale_x = 
             
             if debate_form.is_valid() and phase_forms.is_valid():
                 saved_debate = debate_form_uncommited.save()
@@ -109,13 +113,21 @@ def save_note(request, space_name):
     meant to be called as AJAX.
     """
     place = get_object_or_404(Space, url=space_name)
-    
-    if request.method == "GET":
-        message = "GET petitions are not allowed for this view."
+    note_form = NoteForm(request.POST or None)
         
     if request.method == "POST" and request.is_ajax:
-        message = "The operation has been received correctly."
+        msg = "The operation has been received correctly."
+        
+        if note_form.is_valid():
+            note.id = note_form.cleaned_data['noteid']
+            note_form.cleaned_data['phase']
+            note_form.cleaned_data['parent']
+            note_form.cleaned_data['title']
+            note_form.cleaned_data['message']
         
         print request.POST
-    
-    return HttpResponse(message)
+
+    else:
+        msg = "GET petitions are not allowed for this view."
+        
+    return HttpResponse(msg)

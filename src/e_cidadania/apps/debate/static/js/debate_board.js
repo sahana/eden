@@ -30,9 +30,10 @@ function saveNote(noteObj) {
     
     $.post("../save_note/", {
         noteid: noteID,
-        td: $('#' + noteID).parent('td').attr('id'),
+        phase: "Example phase",
+        parent: $('#' + noteID).parent('td').attr('id'),
         title: $('#' + noteID + ' textarea').val(),
-        text: "Blablbla",
+        message: "Blablbla",
     });
 }
 

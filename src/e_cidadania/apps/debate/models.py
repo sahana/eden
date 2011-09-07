@@ -58,7 +58,6 @@ class Phase(models.Model):
     .. versionadded:: 0.1b
     """
     phase_number = models.IntegerField(_('Phase number'), max_length=2)
-    tags = TagField()
     scale_x = models.CharField(_('X Scale'), default='Column 1, Column 2, Column 3',
               max_length = 200)
     scale_y = models.CharField(_('Y Scale'), default='Row 1, Row 2, Row 3',
@@ -81,6 +80,7 @@ class Note(models.Model):
     
     .. versionadded:: 0.1b
     """
+    noteid = models.IntegerField(_('Note div ID'))
     phase = models.ForeignKey(Phase)
     title = models.CharField(_('Title'), max_length=60)
     message = models.CharField(_('Message'), max_length=100, null=True, blank=True)

@@ -6,6 +6,13 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
+function checkBrowser() {
+    // Detect IE 6-8
+    if ( $.support.leadingWhitespace == false ) {
+        alert('Su navegador no dispone de las últimas tecnologías web.')
+    }
+}
+
 /* Cookie Reader (jQuery Cookie Plugin) */
 $(document).ajaxSend(function(event, xhr, settings) {
     function getCookie(name) {
@@ -46,17 +53,9 @@ $(document).ajaxSend(function(event, xhr, settings) {
 
 /* MESSAGES */
 
-function checkBrowser() {
-    // Detect IE 6-8
-    if ( jQuery.support.leadingWhitespace == false ) {
-        alert('Su navegador no dispone de las últimas tecnologías web.' +
-            'Le recomendamos que se descargue Firefox, Google Chrome u Opera.')
-    }
-}
-
 function msg() {
     // Show the messages slowly so the user can notice it.
-    $("ul.messages").slideDown(2000);
+    $("ul.messsage").slideDown(2000);
     
     // On click "X" hide everything
     $(".closemsg").click(function (event) {
@@ -67,8 +66,36 @@ function msg() {
 	});
 }
 
+function dropdown() {
+    // The followg code is for the dropdown menu
+	$("ul.subnav").parent().append("<span></span>"); //Only shows drop down trigger when js is enabled (Adds empty span tag after ul.subnav*)
+
+	$("ul.topnav li span").click(function() { //When trigger is clicked...
+
+		//Following events are applied to the subnav itself (moving subnav up and down)
+		$(this).parent().find("ul.subnav").slideDown('fast').show(); //Drop down the subnav on click
+
+		$(this).parent().hover(function() {
+		}, function(){
+			$(this).parent().find("ul.subnav").slideUp('slow'); //When the mouse hovers out of the subnav, move it back up
+		});
+
+		//Following events are applied to the trigger (Hover events for the trigger)
+		}).hover(function() {
+			$(this).addClass("subhover"); //On hover over, add class "subhover"
+		}, function(){	//On Hover Out
+			$(this).removeClass("subhover"); //On hover out, remove class "subhover"
+	});
+
+}
+
 function sitestart() {
     msg();
+    // This function activates the datepicker sitewide
+    $(function() {
+	    $( "#datepicker" ).datepicker();
+    });
+    dropdown();
 }
 
 $(document).ready(function(){

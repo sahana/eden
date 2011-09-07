@@ -16,7 +16,7 @@
 
             <div id="debate">
 
-            <form enctype="" action="" method="post">{% csrf_token %}
+            <form id="ajaxform" enctype="" action="" method="post">{% csrf_token %}
                 
                 <a href="javascript:removeTableColumn()" id="del-column-btn" class="btn danger small">{% trans "Remove column" %}</a>
                 <a href="javascript:addTableColumn()" id="new-column-btn" class="btn primary small">{% trans "Add column" %}</a>
