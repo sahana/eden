@@ -116,15 +116,7 @@ def save_note(request, space_name):
     note_form = NoteForm(request.POST or None)
         
     if request.method == "POST" and request.is_ajax:
-        msg = "The operation has been received correctly."
-        
-        if note_form.is_valid():
-            note.id = note_form.cleaned_data['noteid']
-            note_form.cleaned_data['phase']
-            note_form.cleaned_data['parent']
-            note_form.cleaned_data['title']
-            note_form.cleaned_data['message']
-        
+        msg = "The operation has been received correctly."       
         print request.POST
 
     else:
