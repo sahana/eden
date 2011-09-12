@@ -108,13 +108,16 @@ def save_note(request, space_name):
         note_form_uncommited.title = request.POST["title"]
         note_form_uncommited.message = request.POST["message"]
 
+        print request.POST
+        print ".----------------------------"
+        print note_form_uncommited
+        
         note_form_uncommited.author = request.user
         
         if note_form_uncommited.is_valid():
             saved_note = note_form_uncommited.save()
 
         msg = "The operation has been received correctly."       
-        print request.POST
 
     else:
         msg = "GET petitions are not allowed for this view."

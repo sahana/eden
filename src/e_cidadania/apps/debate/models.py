@@ -42,8 +42,8 @@ class Debate(models.Model):
     description = models.TextField(_('Description'), blank=True, null=True)
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
     space = models.ForeignKey(Space)
-    xvalues = models.CharField(_('X Values'), blank=True, null=True)
-    yvalues = models.CharField(_('Y Values'), blank=True, null=True)
+    xvalues = models.CharField(_('X Values'), max_length=300, blank=True, null=True)
+    yvalues = models.CharField(_('Y Values'), max_length=300, blank=True, null=True)
     
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
@@ -59,10 +59,10 @@ class Note(models.Model):
     
     .. versionadded:: 0.1b
     """
-    noteid = models.IntegerField(_('Note div ID'))
-    title = models.CharField(_('Title'), max_length=60)
+    noteid = models.CharField(_('Note div ID'), max_length=100, blank=True, null=True)
+    title = models.CharField(_('Title'), max_length=60, blank=True, null=True)
     message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
-    parent = models.CharField(_('Parent TD or DIV'), max_length=200)
+    parent = models.CharField(_('Parent TD or DIV'), max_length=200, blank=True, null=True)
 
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)

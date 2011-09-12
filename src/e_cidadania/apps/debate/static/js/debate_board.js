@@ -160,6 +160,16 @@ function removeTableColumn() {
     }
 }
 
+function saveTable() {
+    /*
+        saveTable() - Saves the table data. Instead of using a standard form,
+        we submite the data trough ajax post, and treat it as a form in the
+        django view.
+    */
+    $('#ajaxform').ajaxForm();
+    
+    
+}
 
 /*******************
     MAIN LOOP
