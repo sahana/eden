@@ -50,8 +50,8 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # Application models
-from e_cidadania.apps.debate.models import Debate, Phase
-from e_cidadania.apps.debate.forms import DebateForm, PhaseFormSet, NoteForm
+from e_cidadania.apps.debate.models import Debate
+from e_cidadania.apps.debate.forms import DebateForm, NoteForm
 from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
@@ -62,7 +62,6 @@ def add_new_debate(request, space_name):
     """
     place = get_object_or_404(Space, url=space_name)
     debate_form = DebateForm(request.POST or None)
-    phase_forms = PhaseFormSet(request.POST or None, queryset=Phase.objects.none())
 
     try:
         current_debate_id = Debate.objects.latest('id')
@@ -74,25 +73,12 @@ def add_new_debate(request, space_name):
             debate_form_uncommited = debate_form.save(commit=False)
             debate_form_uncommited.space = place
             debate_form_uncommited.author = request.user
+            saved_debate = debate_form_uncommited.save()
             
-            phase_forms_uncommited = phase_forms.save(commit=False)
-            #phase_forms_uncommited.scale_x = 
-            
-            if debate_form.is_valid() and phase_forms.is_valid():
-                saved_debate = debate_form_uncommited.save()
-                get_debate = get_object_or_404(Debate, pk=saved_debate.id)
-                
-                phase_forms_uncommited = phase_forms.save(commit=False)
-                for pf in phase_forms_uncommited:
-                    pf.debate = get_debate
-                    pf.save()
-                
-                # Get a new job, did you really did this?
-                return redirect('/spaces/' + space_name + '/debate/' + saved_debate.id)
+            return redirect('/spaces/' + space_name + '/debate/' + saved_debate.id)
                 
         return render_to_response('debate/debate_add.html',
-                                  {'form': debate_form,
-                                   'phaseform': phase_forms},
+                                  {'form': debate_form},
                                   context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html',
