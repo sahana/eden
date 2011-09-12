@@ -42,6 +42,8 @@ class Debate(models.Model):
     description = models.TextField(_('Description'), blank=True, null=True)
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
     space = models.ForeignKey(Space)
+    xvalues = models.CharField(_('X Values'), blank=True, null=True)
+    yvalues = models.CharField(_('Y Values'), blank=True, null=True)
     
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User)
@@ -59,7 +61,7 @@ class Note(models.Model):
     """
     noteid = models.IntegerField(_('Note div ID'))
     title = models.CharField(_('Title'), max_length=60)
-    message = models.CharField(_('Message'), max_length=100, null=True, blank=True)
+    message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
     parent = models.CharField(_('Parent TD or DIV'), max_length=200)
 
     pub_date = models.DateTimeField(auto_now_add=True)

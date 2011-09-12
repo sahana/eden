@@ -100,6 +100,14 @@
         </div>
       {% endif %}
       
+      {% if get_place.mod_debate %}
+        <div id="widget">
+            <h2>{% trans "Debates" %}</h2>
+            <br /><p class="rightlink">&raquo; <a href="{{ request.path }}debate/">{% trans "View all debates" %}</a></p>          {% if perms.debate.add_debate %}
+                <p class="rightlink">&raquo; <a href="{{ request.path }}debate/add/">{% trans "Add debate" %}</a></p>
+            {% endif %}
+        </div>
+      {% endif %}
     
       {% if get_place.mod_cal %}
         <div id="widget">

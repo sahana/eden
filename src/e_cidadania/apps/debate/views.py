@@ -106,8 +106,9 @@ def save_note(request, space_name):
         note_form_uncommited.noteid = request.POST["noteid"]
         note_form_uncommited.parent = request.POST["parent"]
         note_form_uncommited.title = request.POST["title"]
-        note_form_uncommited.phase = request.POST["phase"]
         note_form_uncommited.message = request.POST["message"]
+
+        note_form_uncommited.author = request.user
         
         if note_form_uncommited.is_valid():
             saved_note = note_form_uncommited.save()
