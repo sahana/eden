@@ -42,9 +42,6 @@ class DebateForm(ModelForm):
             'title': TextInput(attrs={'class': 'medium'}),
         }
 
-# Create a FormSet with the Phase model
-PhaseFormSet = modelformset_factory(Phase, extra=1)
-
 class NoteForm(ModelForm):
 
     """

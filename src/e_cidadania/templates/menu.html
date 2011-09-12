@@ -29,15 +29,15 @@
 	      </a>
 	      <ul class="subnav">
           {% if user.is_staff %}
-	          <li><a href="/admin">{% trans "Administration" %}</a></li>
-	          <li><a href="/rosetta">{% trans "Translation" %}</a></li>
-	        {% endif %}
-	          <li><a href="/accounts/messages">{% trans "Messages" %}</a></li>
-	          <li><a href="/accounts/edit/personal">{% trans "Edit profile" %}</a></li>
-	          <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
+	        <li><a href="/admin">{% trans "Administration" %}</a></li>
+	        <li><a href="/rosetta">{% trans "Translation" %}</a></li>
+	      {% endif %}
+	        <li><a href="/accounts/messages">{% trans "Messages" %}</a></li>
+	        <li><a href="/accounts/edit/personal">{% trans "Edit profile" %}</a></li>
+	        <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
 	      </ul>
-	    </li>
-	  </ul>
+	  </li>
+	</ul>
   {% else %}
     <ul class="topnav">
       <li><a href="/">{% trans "Home" %}</a></li>

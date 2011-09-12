@@ -20,22 +20,14 @@
 
 from django.contrib import admin
 
-from e_cidadania.apps.debate.models import Debate, Phase, Note
+from e_cidadania.apps.debate.models import Debate, Note
 
-class PhaseInline(admin.StackedInline):
-    model = Phase
-    extra = 2
 
 class DebateAdmin(admin.ModelAdmin):
     list_display = ('title', 'pub_date')
-    inlines = [PhaseInline]
-    
-class PhaseAdmin(admin.ModelAdmin):
-    list_display = ('debate',)
     
 class NoteAdmin(admin.ModelAdmin):
     list_display = ('message', 'pub_date', 'pub_author')
 
 admin.site.register(Debate, DebateAdmin)
-admin.site.register(Phase, PhaseAdmin)
 admin.site.register(Note, NoteAdmin)
