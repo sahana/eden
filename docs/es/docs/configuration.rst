@@ -1,13 +1,13 @@
-Configuration
+Configuración
 =============
 
-The e-cidadania platform is almost ready-to-use adter unpacking, but you will have
-to edit the `settings.py` file.
+La plataforma e-cidadania viene casi lista para funcionar tan pronto la
+descargues, pero aún te queda editar el archivo `settings.py`.
 
-Database
---------
+Base de datos (BDD)
+-------------------
 
-**Configuring the database**::
+**Configurando la base de datos**::
 
     DATABASES = {
         'default': {
@@ -20,11 +20,10 @@ Database
         }
     }
     
-First of all will be to set up the database. By default e-cidadania is set up to
-use a local SQLite3 database, which will be useful if Lo primero de todo será configurar la base de datos. Por defecto, e-cidadania
-viene configurado para utilizar una base de datos local SQLite3, que puede
-servirte para hacer pruebas si lo necesitas pero no se debe utilizar bajo ningún
-concepto en producción.
+Lo primero de todo es configurar la base de datos. Por defecto e-cidadania viene
+configurado para utilizar una base de datos local de tipo SQLite 3, que te puede
+resultar útil para realizar pruebas antes de poner la plataforma en producción,
+pero que deberás cambiar tan pronto como termines las pruebas.
 
 Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
 
