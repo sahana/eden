@@ -226,6 +226,11 @@ input[type="text"], input[type="password"] {
     min-height: 500px;
 }
 
+#close  {
+    float: right;
+    background: url(../assets/icons/delete16.png) no-repeat;
+}
+
 .topbar {
     width: 100%;
     height: 25px;
