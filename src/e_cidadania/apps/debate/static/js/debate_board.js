@@ -17,10 +17,22 @@ function createNote() {
     /*
         createNote() - Appends a new note within the sortable dispatcher.
     */
-    $('#sortable-dispatcher').append("<div class='note'><textarea>Write here</textarea></div>").hide().show("slow");
+    var noteLength = $('.note').length;
+    var debateID = $('table').attr('id');
+    
+    $('#sortable-dispatcher').append("<div id='" + debateID + "-note" + (noteLength+1) + "' class='note'><textarea>Write here</textarea></div>").hide().show("slow");
+    
+    var noteID = debateID + "-note" + (noteLength+1);
+    
+    $.post("../create_note/", {
+        noteid: noteID,
+        parent: $('#' + noteID).parent('td').attr('id'),
+        title: $('#' + noteID + ' textarea').val(),
+        message: "Blablbla",
+    });
 }
 
-function saveNote(noteObj) {
+function updateNote(noteObj) {
     /*
         saveNote(noteObj) - Saves the notes making an AJAX call to django. This
         function is meant to be used with a Sortable 'stop' event.
@@ -68,7 +80,7 @@ function makeSortable() {
             $(ui.placeholder).hide().show("normal");
         },
         stop: function(e,ui) {
-            saveNote(ui.item);
+            updateNote(ui.item);
         }
     }).disableSelection();
 }

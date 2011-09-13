@@ -50,7 +50,7 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # Application models
-from e_cidadania.apps.debate.models import Debate
+from e_cidadania.apps.debate.models import Debate, Note
 from e_cidadania.apps.debate.forms import DebateForm, NoteForm
 from e_cidadania.apps.spaces.models import Space
 
@@ -92,20 +92,12 @@ def get_debates(request):
     data = [debate.title for debate in Debate.objects.all().order_by('title')]
     return render_to_response(json.dumps(data), content_type='application/json')
 
-def save_note(request, space_name):
+def create_note(request, space_name):
 
     """
     Saves the note content and position within the table. This function is
     meant to be called as AJAX.
     """
-    pass
-    
-def update_note(request, space_name):
-
-    """
-    Create a new note with default data.
-    """
-    place = get_object_or_404(Space, url=space_name)
     note_form = NoteForm(request.POST or None)
         
     if request.method == "POST" and request.is_ajax:
@@ -114,7 +106,29 @@ def update_note(request, space_name):
         
         if note_form.is_valid():
             saved_note = note_form_uncommited.save()
-            msg = "The note has been saved."       
+            msg = "The note has been created."       
+            
+    else:
+        msg = "There was some error in the petition."
+        
+    return HttpResponse(msg)
+    
+def update_note(request, space_name):
+
+    """
+    Create a new note with default data.
+    """
+    place = get_object_or_404(Space, url=space_name)
+    note = get_object_or_404(Note, noteid=request.POST['noteid'])
+    note_form = NoteForm(request.POST or None, instance=note)
+        
+    if request.method == "POST" and request.is_ajax:
+        note_form_uncommited = note_form.save(commit=False)
+        note_form_uncommited.author = request.user
+        
+        if note_form.is_valid():
+            saved_note = note_form_uncommited.save()
+            msg = "The note has been updated."       
             
     else:
         msg = "There was some error in the petition."
