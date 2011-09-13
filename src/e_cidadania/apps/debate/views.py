@@ -98,28 +98,33 @@ def save_note(request, space_name):
     Saves the note content and position within the table. This function is
     meant to be called as AJAX.
     """
+    pass
+    
+def update_note(request, space_name):
+
+    """
+    Create a new note with default data.
+    """
     place = get_object_or_404(Space, url=space_name)
     note_form = NoteForm(request.POST or None)
         
     if request.method == "POST" and request.is_ajax:
         note_form_uncommited = note_form.save(commit=False)
-        note_form_uncommited.noteid = request.POST["noteid"]
-        note_form_uncommited.parent = request.POST["parent"]
-        note_form_uncommited.title = request.POST["title"]
-        note_form_uncommited.message = request.POST["message"]
-
-        print request.POST
-        print ".----------------------------"
-        print note_form_uncommited
-        
         note_form_uncommited.author = request.user
         
-        if note_form_uncommited.is_valid():
+        if note_form.is_valid():
             saved_note = note_form_uncommited.save()
-
-        msg = "The operation has been received correctly."       
-
+            msg = "The note has been saved."       
+            
     else:
-        msg = "GET petitions are not allowed for this view."
+        msg = "There was some error in the petition."
         
     return HttpResponse(msg)
+    
+
+def delete_note(request, space_name):
+
+    """
+    Deletes a note object.
+    """
+    pass

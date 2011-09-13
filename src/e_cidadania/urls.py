@@ -60,6 +60,8 @@ urlpatterns = patterns('',
 
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
+    
+    (r'^api/', include('e_cidadania.apps.api.urls')),
 
     # Static content #### FOR DEVELOPMENT!! ####
     (r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
