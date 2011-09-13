@@ -28,7 +28,7 @@ function saveNote(noteObj) {
     */
     var noteID = noteObj.attr('id');
     
-    $.post("../save_note/", {
+    $.post("../update_note/", {
         noteid: noteID,
         parent: $('#' + noteID).parent('td').attr('id'),
         title: $('#' + noteID + ' textarea').val(),

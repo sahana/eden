@@ -29,7 +29,7 @@ urlpatterns = patterns('e_cidadania.apps.debate.views',
     
     (r'^add/', 'add_new_debate'),
     
-    (r'^save_note/', 'save_note'),
+    (r'^update_note/', 'update_note'),
     
     #(r'^(?P<debate_id>\d+)', 'view_debate'),
     
