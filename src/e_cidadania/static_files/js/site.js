@@ -55,7 +55,7 @@ $(document).ajaxSend(function(event, xhr, settings) {
 
 function msg() {
     // Show the messages slowly so the user can notice it.
-    $("ul.messsage").slideDown(2000);
+    $("ul.messages").slideDown(2000);
     
     // On click "X" hide everything
     $(".closemsg").click(function (event) {
@@ -90,16 +90,16 @@ function dropdown() {
 }
 
 function sitestart() {
+    dropdown();
     msg();
     // This function activates the datepicker sitewide
     $(function() {
 	    $( "#datepicker" ).datepicker();
     });
-    dropdown();
 }
 
 $(document).ready(function(){
-    checkBrowser();
+    //checkBrowser();
     sitestart();
 });
 
