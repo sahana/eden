@@ -25,7 +25,9 @@
                     <thead>
                         <tr id="debate1-headers">
                             <th id="corner" class="corner-criteria"></th>
-                            <th id="debate-vcriteria"><input id="debate1-criteria2" class="small" type="text" value="Column title"></th>
+                            <th id="debate-vcriteria">
+                                <input id="debate1-criteria2" class="small" type="text" value="Column title">
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="debate-body">
@@ -36,8 +38,14 @@
                                 </div>
                             </td>
                             <td id="sortable-debate1" class="connectedSortable">
-	                            <div id="debate1-note1" class="note"><textarea>Can be dropped..</textarea></div>
-                                <div id="debate1-note2" class="note"><a href="#" id="close"></a><textarea>..on an empty list</textarea></div>
+	                            <div id="debate1-note1" class="note">
+	                                <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
+	                                <textarea>Can be dropped..</textarea>
+	                            </div>
+                                <div id="debate1-note2" class="note">
+                                    <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
+                                    <textarea>..on an empty list</textarea>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

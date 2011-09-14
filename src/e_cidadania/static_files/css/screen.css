@@ -226,9 +226,13 @@ input[type="text"], input[type="password"] {
     min-height: 500px;
 }
 
-#close  {
+#deletenote {
     float: right;
     background: url(../assets/icons/delete16.png) no-repeat;
+    margin-right: -8px;
+    margin-top: -8px;
+    width: 16px;
+    height: 16px;
 }
 
 .topbar {

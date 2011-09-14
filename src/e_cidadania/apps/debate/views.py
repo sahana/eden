@@ -124,7 +124,7 @@ def update_note(request, space_name):
         
     if request.method == "POST" and request.is_ajax:
         note_form_uncommited = note_form.save(commit=False)
-        note_form_uncommited.author = request.user
+        note_form_uncommited.pub_author = request.user
         
         if note_form.is_valid():
             saved_note = note_form_uncommited.save()
@@ -141,4 +141,11 @@ def delete_note(request, space_name):
     """
     Deletes a note object.
     """
-    pass
+    note = get_object_or_404(Note, noteid=request.POST['noteid'])
+    
+    if note.pub_author == request.user:
+        note.delete()
+        return HttpResponse("The note has been deleted.")
+    
+    else:
+        return HttpResponse("You're not the author of the note. Can't delete")

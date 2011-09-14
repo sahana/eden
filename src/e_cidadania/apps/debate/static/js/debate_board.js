@@ -20,7 +20,7 @@ function createNote() {
     var noteLength = $('.note').length;
     var debateID = $('table').attr('id');
     
-    $('#sortable-dispatcher').append("<div id='" + debateID + "-note" + (noteLength+1) + "' class='note'><textarea>Write here</textarea></div>").hide().show("slow");
+    $('#sortable-dispatcher').append("<div id='" + debateID + "-note" + (noteLength+1) + "' class='note'><a href='javascript:getClickedNote()' id='deletenote' class='hidden'></a><textarea>Write here</textarea></div>").hide().show("slow");
     
     var noteID = debateID + "-note" + (noteLength+1);
     
@@ -48,13 +48,27 @@ function updateNote(noteObj) {
     });
 }
 
-function deleteNote() {
+function deleteNote(noteObj) {
     /*
-        deleteNote() - Delete a note.
+        deleteNote() - Delete a note making an AJAX call. This function is called
+        through getClickedNote(). We locate the note ID, and post it to django,
+        after that we remove the note from the board.
     */
+    var noteID = noteObj.attr('id');
+    
+    $.post('../delete_note/', {
+        noteid: noteID,
+    });
+    
+    $('#' + noteID).remove();
 }
 
-
+function getClickedNote() {
+    $('.note a').click(function (){
+        var noteObj = $(this).parent();
+        deleteNote(noteObj);
+    });
+}
 
 /*
     TABLE FUNCTIONS
@@ -192,5 +206,11 @@ $(document).ready(function() {
     $('#jsnotify').notify();
     // Activate sortables
     makeSortable();
+    $('.note').hover(
+        function () {
+            var getID = $(this).attr('id');
+            $('#' + getID + ' a#deletenote').toggle();
+        }
+    );
 });
 

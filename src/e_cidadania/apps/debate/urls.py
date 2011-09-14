@@ -33,6 +33,8 @@ urlpatterns = patterns('e_cidadania.apps.debate.views',
     
     (r'^create_note/', 'create_note'),
     
+    (r'^delete_note/', 'delete_note'),
+    
     # Editing debates is not allowed at this time
     #(r'^(?P<debate_id>\d+)', 'edit_debate'),
     
