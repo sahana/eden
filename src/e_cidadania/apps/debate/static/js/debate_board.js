@@ -13,6 +13,18 @@
     NOTE FUNCTIONS
 */
 
+function showDelete() {
+    /*
+        showDelete() - Show/hide the delete button when hovering a note.
+    */
+    $('.note').hover(
+        function () {
+            var getID = $(this).attr('id');
+            $('#' + getID + ' a#deletenote').toggle();
+        }
+    );
+}
+
 function createNote() {
     /*
         createNote() - Appends a new note within the sortable dispatcher.
@@ -22,6 +34,8 @@ function createNote() {
     
     $('#sortable-dispatcher').append("<div id='" + debateID + "-note" + (noteLength+1) + "' class='note'><a href='javascript:getClickedNote()' id='deletenote' class='hidden'></a><textarea>Write here</textarea></div>").hide().show("slow");
     
+    showDelete();
+    saveOnChangeNote();
     var noteID = debateID + "-note" + (noteLength+1);
     
     $.post("../create_note/", {
@@ -45,6 +59,17 @@ function updateNote(noteObj) {
         parent: $('#' + noteID).parent('td').attr('id'),
         title: $('#' + noteID + ' textarea').val(),
         message: "Blablbla",
+    });
+}
+
+function saveOnChangeNote() {
+    /*
+        saveOnChangeNote() - Call the updateNote() function every time a note
+        is modified but not moved. This works for changes in textareas, inputs
+        and selects.
+    */
+    $('.note').change( function() {
+        updateNote($(this));
     });
 }
 
@@ -206,11 +231,8 @@ $(document).ready(function() {
     $('#jsnotify').notify();
     // Activate sortables
     makeSortable();
-    $('.note').hover(
-        function () {
-            var getID = $(this).attr('id');
-            $('#' + getID + ' a#deletenote').toggle();
-        }
-    );
+    // Run some functions on every debate, just in case
+    showDelete();
+    saveOnChangeNote();    
 });
 
