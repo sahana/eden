@@ -217,9 +217,27 @@ function saveTable() {
         we submite the data trough ajax post, and treat it as a form in the
         django view.
     */
-    $('#ajaxform').ajaxForm();
-    
-    
+    $('#ajaxform').submit( function() {
+        var xvalues = {};
+        var yvalues = {};
+        
+        var yfields = $('#debate-hcriteria input');
+        var xfields = $('#debate-vcriteria input');
+        
+        $.each(yfields, function(i, field){
+            yvalues[field.id] = field.value;
+            //alert(yvalues[field.id]);
+        });
+        var yvalues = yvalues.get().join(',');
+        alert(yvalues);
+        
+        $.each(xfields, function(i, field){
+            xvalues[field.id] = field.value;
+            alert(xvalues[field.id]);
+        });
+        
+        alert(yvalues);
+    });
 }
 
 /*******************
@@ -234,5 +252,6 @@ $(document).ready(function() {
     // Run some functions on every debate, just in case
     showDelete();
     saveOnChangeNote();    
+    saveTable();
 });
 
