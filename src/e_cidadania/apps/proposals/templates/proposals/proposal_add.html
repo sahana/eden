@@ -7,75 +7,91 @@
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
-  <div class="grid_11">
-
-    <div id="contenttitles">
-      {% trans "Add proposal" %}
+    <div class="grid_16">
+        <div id="contenttitles">
+            {% trans "Add new proposal" %}
+        </div>
     </div>
+  
+    {% block centercol %}
+        <div class="grid_11">
+            <form action="" method="post">{% csrf_token %}
 
-    <form action="" method="post">{% csrf_token %}
-      {{ form.non_field_errors }}
+                {{ form.non_field_errors }}
 
-      <div class="fieldWrapper">
-        {{ form.title.errors }}
-        <label for="id_name">{% trans "Title" %}:</label>
-        <p>{{ form.title }}</p>
-        <p id="form_help_text">{{ form.title.help_text }}</p>
-      </div>
+                <div class="clearfix"> 
+                    {{ form.title.errors }}
+                    <label for="prependedInput">{{ form.title.label }}</label> 
+                    <div class="input"> 
+                        {{ form.title }}
+                        <span class="help-inline">{{ form.title.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    {{ form.description.errors }}
+                    <label for="prependedInput">{{ form.description.label }}</label> 
+                    <div class="input"> 
+                        {{ form.description }}
+                        {% wysiwyg_editor "id_description" %}
+                        <span class="help-inline">{{ form.description.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    {{ form.latitude.errors }}
+                    <label for="prependedInput">{{ form.latitude.label }}</label> 
+                    <div class="input"> 
+                        {{ form.latitude }}
+                        <span class="help-inline">{{ form.latitude.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    {{ form.longitude.errors }}
+                    <label for="prependedInput">{{ form.longitude.label }}</label> 
+                    <div class="input"> 
+                        {{ form.longitude }}
+                        <span class="help-inline">{{ form.longitude.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    {{ form.tags.errors }}
+                    <label for="prependedInput">{{ form.tags.label }}</label> 
+                    <div class="input"> 
+                        {{ form.tags }}
+                        <span class="help-inline">{{ form.tags.help_text }}</span>
+                    </div> 
+                </div>
 
-      <div class="fieldWrapper">
-        {{ form.description.errors }}
-        <label for="id_description">{% trans "Description" %}:</label>
-        <p>{{ form.description }}</p>
-        {% wysiwyg_editor "id_description" %}
-      </div>
+                {{ form.space.as_hidden }}
+                {{ form.author.as_hidden }}
+                {{ form.support_votes.as_hidden }}
 
-      <div class="fieldWrapper">
-        {{ form.latitude.errors }}
-        <label for="id_logo">{% trans "Latitude" %} {% trans "(optional)" %}:</label>
-        {{ form.latitude }}
-      </div>
+                <hr />
+                <a href="../../" class="btn danger small">&laquo; {% trans "Go back" %}</a>
+                <input class="btn small primary " type="submit" value="{% trans 'Publish' %}" />
+            </form>
+        </div>
+    {% endblock %}
 
-      <div class="fieldWrapper">
-        {{ form.longitude.errors }}
-        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
-        {{ form.longitude }}
-      </div>
+    {% block rightcol %}
+        <div class="grid_5">
+            <div id="widget">
+                {% if user.is_staff %}
+                    <h2>{% trans "Admins/moderators read this" %}</h2>
+                    <p class="instructions">{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
+                {% endif %}
+                <h2>{% trans "How to add new proposals" %}</h2><br/>
+                <ul class="instructions">
+                    <li><strong>{% trans "Title" %}</strong>: {% trans "Title resuming the proposal, be concise (50 characters)" %}</li>
+                    <li><strong>{% trans "Description" %}</strong>: {% trans "Describe here your proposal with detail. You can add images or any other content." %}</li>
+                    <li><strong>{% trans "Latitude/Longitude" %}</strong>: {% trans "You'll have to put this if you want to locate the proposal in a map." %}</li>
+                    <li><strong>{% trans "Tags" %}</strong>: {% trans "Relevant tags for the proposal, p.e. where the proposal is localted, what is related to it, etc." %}</li>
+                </ul>
+            </div>
+        </div>
+    {% endblock %}
 
-      <div class="fieldWrapper">
-        {{ form.tags.errors }}
-        <label for="id_banner">{% trans "Tags" %} {% trans "(optional)" %}:</label>
-        {{ form.tags }}
-      </div>
-
-      {{ form.space.as_hidden }}
-      {{ form.author.as_hidden }}
-      {{ form.support_votes.as_hidden }}
-
-      <hr />
-      <p class="buttons">
-        <input type="submit" value="{% trans 'Create' %}" />
-        <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
-      </p>
-    </form>
-  </div>
-
-  {% block rightcol %}
-    <div class="grid_5">
-      <div id="widget">
-        {% if user.is_staff %}
-            <h2>{% trans "Admins/moderators read this" %}</h2>
-            <p class="instructions">{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
-        {% endif %}
-        <h2>{% trans "How to add new proposals" %}</h2><br/>
-        <ul class="instructions">
-          <li><strong>{% trans "Title" %}</strong>: {% trans "Title resuming the proposal, be concise (50 characters)" %}</li>
-          <li><strong>{% trans "Description" %}</strong>: {% trans "Describe here your proposal with detail. You can add images or any other content." %}</li>
-          <li><strong>{% trans "Latitude/Longitude" %}</strong>: {% trans "You'll have to put this if you want to locate the proposal in a map." %}</li>
-          <li><strong>{% trans "Tags" %}</strong>: {% trans "Relevant tags for the proposal, p.e. where the proposal is localted, what is related to it, etc." %}</li>
-        </ul>
-      </div>
-    </div>
-  {% endblock %}
 {% endblock %}
-
