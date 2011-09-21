@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-08-12 12:06\n"
+"PO-Revision-Date: 2011-09-21 13:57\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -52,7 +52,7 @@ msgstr "Wiki"
 
 #: dashboard.py:105
 msgid "Translations"
-msgstr "Traduccións"
+msgstr "Traducións"
 
 #: dashboard.py:113
 msgid "Thirdparty Support"
@@ -98,7 +98,7 @@ msgid ""
 "                                  or <a "
 "href=\"/accounts/login\">login</a> if you have an account."
 msgstr ""
-"Ola! Parece que é a túa primeira vez aquí. Quizá queiras <a "
+"Ola! Parece que é a túa primeira vez aquí. Quizais queiras <a "
 "href=\"/accounts/register\">rexistrarte</a> ou <a "
 "href=\"/accounts/login\">entrar</a> se xa tes conta."
 
@@ -133,10 +133,10 @@ msgid ""
 "torchs and pitchforks and go in search of her. Don't worry about us, we"
 " will manage somehow."
 msgstr ""
-"Unha maiga roubou esta páxina. Será mellor que te vaias agora que "
-"podes, antes de que te bote mal de ollo. Mentres tanto, nos imos a "
-"coller as antorchas e ghinchas e ir tras dela. Non te preocupes por "
-"nos, nos apañaremos dalguha forma."
+"Unha meiga roubou esta páxina. Será mellor que te vaias agora que "
+"podes, antes de que te bote mal de ollo. Mentres tanto, nós imos "
+"coller as antorchas e forcas e ir tras dela. Non te preocupes por nós,"
+" apañarémonos dalguha forma."
 
 #: templates/404.html:64
 msgid "Take me out of here!"
@@ -184,7 +184,7 @@ msgstr "páxina de inicio"
 
 #: templates/500.html:46
 msgid "while we call the spaguetti squad to repair this."
-msgstr "mentres nos chamamos ao escuadrón espaguetti para reparar isto."
+msgstr "mentres nós chamamos ao escuadrón espaguetti para reparar isto."
 
 #: templates/base.html:99
 msgid "created by"
@@ -200,7 +200,7 @@ msgstr "Administración"
 
 #: templates/menu.html:33
 msgid "Translation"
-msgstr "Traducción"
+msgstr "Tradución"
 
 #: templates/menu.html:35
 msgid "Messages"
@@ -212,7 +212,7 @@ msgstr "Editar perfil"
 
 #: templates/menu.html:37
 msgid "Logout"
-msgstr "Sair"
+msgstr "Saír"
 
 #: templates/menu.html:45
 msgid "Login"

@@ -8,43 +8,43 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_11">
+    {% block centercol %}
+        <div class="grid_11">
 
-      <div id="proposal-wrapper">
-        {% if perms.proposals.add_proposal %}
-        <div id="tools">
-          <a href="../add/"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
-          {% if perms.proposals.edit_proposal %}
-            <a href="edit/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
-          {% endif %}
-          {% if perms.proposals.delete_proposal %}
-            <a href="delete/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
-          {% endif %}
-        </div>
-        {% endif %}
-        <div id="votes">
-          <span style="font-size:30px;text-align:center;">{{ proposal.support_votes }}</span><br/>apoyos
-        </div>
-        <!-- Here goes the voting button -->
-        <div id="proposal">
-          <div class="title">{{ proposal.title }}</div>
-          <div class="message">{{ proposal.message }}</div>
-          <div class="creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
-        </div>
-        <div style="clear:left;"></div>
-      </div>
+            <div id="proposal-wrapper">
+                {% if perms.proposals.add_proposal %}
+                <div id="tools">
+                    <a href="../add/"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
+                    {% if perms.proposals.edit_proposal %}
+                        <a href="edit/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
+                    {% endif %}
+                    {% if perms.proposals.delete_proposal %}
+                        <a href="delete/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div id="votes">
+                    <span style="font-size:30px;text-align:center;">{{ proposal.support_votes }}</span><br/>apoyos
+                </div>
+                <!-- Here goes the voting button -->
+                <div id="proposal">
+                    <div class="title">{{ proposal.title }}</div>
+                    <div class="message">{{ proposal.message }}</div>
+                    <div class="creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
+                </div>
+                <div style="clear:left;"></div>
+            </div>
       
-      <p>{% render_comment_list for proposal %}</p>
+            <p>{% render_comment_list for proposal %}</p>
       
-      <p>{% render_comment_form for proposal%}</p>
+            <p>{% render_comment_form for proposal%}</p>
       
-    </div>
-  {% endblock%}
+        </div>
+    {% endblock%}
   
-  {% block rightcol %}
-    <div class="grid_5">
-    </div>
-  {% endblock%}
+    {% block rightcol %}
+        <div class="grid_5">
+        </div>
+    {% endblock%}
 
 {% endblock %}

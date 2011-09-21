@@ -7,64 +7,85 @@
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
-  <div class="grid_11">
+    <div class="grid_11">
 
-    <div id="contenttitles">
-      {% trans "Edit proposal" %}
+        <div id="contenttitles">
+            {% trans "Edit proposal" %}
+        </div>
+
+        <form action="" method="post">{% csrf_token %}
+      
+            {{ form.non_field_errors }}
+
+            {% if user.is_staff %}
+                {% for field in form %}
+                    <div class="clearfix"> 
+                        {{ field.errors }}
+                        <label for="prependedInput">{{ field.label }}</label> 
+                        <div class="input"> 
+                            {{ field }}
+                            <span class="help-inline">{{ field.help_text }}</span>
+                        </div> 
+                    </div>
+                {% endfor %}
+            {% else %}
+      
+            <div class="clearfix"> 
+                {{ form.title.errors }}
+                <label for="prependedInput">{{ form.title.label }}</label> 
+                <div class="input"> 
+                    {{ form.title }}
+                    <span class="help-inline">{{ form.title.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.description.errors }}
+                <label for="prependedInput">{{ form.description.label }}</label> 
+                <div class="input"> 
+                    {{ form.description }}
+                    <span class="help-inline">{{ form.description.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.latitude.errors }}
+                <label for="prependedInput">{{ form.latitude.label }}</label> 
+                <div class="input"> 
+                    {{ form.latitude }}
+                    <span class="help-inline">{{ form.latitude.help_text }}</span>
+                </div> 
+            </div>
+
+            <div class="clearfix"> 
+                {{ form.longitude.errors }}
+                <label for="prependedInput">{{ form.longitude.label }}</label> 
+                <div class="input"> 
+                    {{ form.longitude }}
+                    <span class="help-inline">{{ form.longitude.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.tags.errors }}
+                <label for="prependedInput">{{ form.tags.label }}</label> 
+                <div class="input"> 
+                    {{ form.tags }}
+                    <span class="help-inline">{{ form.tags.help_text }}</span>
+                </div> 
+            </div>
+
+            {{ form.space.as_hidden }}
+            {{ form.author.as_hidden }}
+            {{ form.support_votes.as_hidden }}
+
+            {% endif %}
+            
+            <hr />
+            <a href="/" class="btn danger small">&laquo; {% trans "Go back" %}</a>
+            <input class="btn small primary " type="submit" value="{% trans 'Publish' %}" />
+
+        </form>
     </div>
-
-    <form action="" method="post">{% csrf_token %}
-      {{ form.non_field_errors }}
-
-      {% if user.is_staff %}
-
-        {{ form.as_p }}
-
-      {% else %}
-
-      <div class="fieldWrapper">
-        {{ form.title.errors }}
-        <label for="id_name">{% trans "Title" %}:</label>
-        <p>{{ form.title }}</p>
-        <p id="form_help_text">{{ form.title.help_text }}</p>
-      </div>
-
-      <div class="fieldWrapper">
-        {{ form.description.errors }}
-        <label for="id_description">{% trans "Description" %}:</label>
-        <p>{{ form.description }}</p>
-        {% wysiwyg_editor "id_description" %}
-      </div>
-
-      <div class="fieldWrapper">
-        {{ form.latitude.errors }}
-        <label for="id_logo">{% trans "Latitude" %} {% trans "(optional)" %}:</label>
-        {{ form.latitude }}
-      </div>
-
-      <div class="fieldWrapper">
-        {{ form.longitude.errors }}
-        <label for="id_banner">{% trans "Longitude" %} {% trans "(optional)" %}:</label>
-        {{ form.longitude }}
-      </div>
-
-      <div class="fieldWrapper">
-        {{ form.tags.errors }}
-        <label for="id_banner">{% trans "Tags" %} {% trans "(optional)" %}:</label>
-        {{ form.tags }}
-      </div>
-
-        {{ form.space.as_hidden }}
-        {{ form.author.as_hidden }}
-        {{ form.support_votes.as_hidden }}
-
-      {% endif %}
-      <hr />
-      <p class="buttons">
-        <input type="submit" value="{% trans 'Create' %}" />
-        <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
-      </p>
-    </form>
-  </div>
 {% endblock %}
 
