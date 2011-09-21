@@ -7,47 +7,46 @@
 
 {% block content %}
 
-  <div class="grid_16">
-    <div id="contenttitles">
-      {% trans "News archive" %}
-    </div>
-  </div>
-  
-  {% block centercol %}
     <div class="grid_16">
-      {% for post in post_list %}
-        <div class="listitem">
-            {% ifchanged post.pub_date|date:"F" %}
-                <h1 style="font-size: 2em;text-transform: uppercase;">{{ post.pub_date|date:"F Y" }}</h1>
-            {% endifchanged %}
-            <div class="postdate">{{ post.pub_date|date:"l d" }}</div>
-            <div class="posttitle"><a href="{{ post.id }}">{{ post.post_title }}</a></div>
+        <div id="contenttitles">
+            {% trans "News archive" %}
         </div>
-        <div class="clear"></div>
-      {% empty %}
-        <p>{% trans "There are no posts in this space." %}</p>
-      {% endfor %}
-      <div class="pagebutton">
-        <a href="../">{% trans "Go back" %}</a>
-      </div>
     </div>
+  
+    {% block centercol %}
+        <div class="grid_16">
+            {% for post in post_list %}
+                <div class="listitem">
+                    {% ifchanged post.pub_date|date:"F" %}
+                        <h1 style="font-size: 2em;text-transform: uppercase;">{{ post.pub_date|date:"F Y" }}</h1>
+                    {% endifchanged %}
+                    <div class="postdate">{{ post.pub_date|date:"l d" }}</div>
+                    <div class="posttitle"><a href="{{ post.id }}">{{ post.post_title }}</a></div>
+                </div>
+                <div class="clear"></div>
+            {% empty %}
+                <p>{% trans "There are no posts in this space." %}</p>
+            {% endfor %}
+            <hr />
+            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+        </div>
     
-    {% if is_paginated %}
-    <div class="pagination">
-      <span class="page-links">
-      {% if page_obj.has_previous %}
-        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.previous_page_number }}">previous</a>
-      {% endif %}
-      <span class="page-current">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-      </span>
-      {% if page_obj.has_next %}
-        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.next_page_number }}">next</a>
-      {% endif %}
-      </span>
-    </div>
-    {% endif %}
-  {% endblock %}
+        {% if is_paginated %}
+            <div class="pagination">
+                <span class="page-links">
+                    {% if page_obj.has_previous %}
+                        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
+                    {% endif %}
+                    <span class="page-current">
+                        {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+    {% endblock %}
 
 {% endblock %}
 
