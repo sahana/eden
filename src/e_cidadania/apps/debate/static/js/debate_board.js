@@ -188,7 +188,10 @@ function addTableColumn() {
     var inputs = $('#' + tableID + ' input').length;
     var tdlength = $('#' + tableID + ' td').length;
     $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
-    $('#' + tableID + ' tbody tr').append("<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
+    $('#' + tableID + ' tbody tr').each(function(){
+        var tdlength = $('#' + tableID + ' td').length;
+        $(this).append("<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
+    });
     makeSortable();
 }
 
@@ -237,6 +240,12 @@ function saveTable() {
         });
         
         alert(yvalues);
+        
+        return xvalues, yvalues
+        
+//        $.post("../save_table/", {
+//            xvalues
+//        });
     });
 }
 
