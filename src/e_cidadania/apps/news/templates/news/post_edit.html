@@ -4,74 +4,93 @@
 
 {% block title %}{% trans "Edit news" %}{% endblock %}
 {% block logo %}
-  {% if get_place %}
-    <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
-  {% endif %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+    {% endif %}
 {% endblock %}
   
 {% block banner %}
-  {% if get_place %}
-    <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
-  {% endif %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+    {% endif %}
 {% endblock %}
 
 {% block content %}
 
-  {% block centercol %}
     <div class="grid_16">
-      <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
-
-        {{ form.non_field_errors }}
-        <div class="fieldWrapper">
-          {{ form.post_title.errors }}
-          <label for="id_post_title">{% trans "Title" %}:</label>
-          <p>{{ form.post_title }}</p>
-          <p id="form_help_text">{{ form.post_title.help_text }}</p>
+        <div id="contenttitles">
+            {% trans "Edit post" %}
         </div>
-        
-        <div class="fieldWrapper">
-          {{ form.post_message.errors }}
-          <label for="id_name">{% trans "Text" %}:</label>
-          <p>{{ form.post_message|safe }}</p>
-          {% wysiwyg_editor "id_post_message" %}
-          <p id="form_help_text">{{ form.post_message.help_text }}</p>
-        </div>
-        
-        <div class="fieldWrapper">
-          {{ form.post_tags.errors }}
-          <label for="id_post_tags">{% trans "Tags" %}:</label>
-          <p>{{ form.post_tags }}</p>
-          <p id="form_help_text">{{ form.post_tags.help_text }}</p>
-        </div>
-        
-        <div class="fieldWrapper">
-          {{ form.pub_index.errors }}
-          <label for="id_name">{% trans "Publish in index page" %}:</label>
-          <p>{{ form.pub_index }}</p>
-          <p id="form_help_text">{{ form.pub_index.help_text }}</p>
-        </div>
-        
-        <div class="fieldWrapper">
-          {{ form.author.errors }}
-          <label for="id_name">{% trans "Author" %}:</label>
-          <p>{{ form.author }}</p>
-          <p id="form_help_text">{{ form.author.help_text }}</p>
-        </div>
-        
-        <div class="fieldWrapper">
-          {{ form.space.errors }}
-          <label for="id_name">{% trans "Publish in space" %}:</label>
-          <p>{{ form.space }}</p>
-          <p id="form_help_text">{{ form.space.help_text }}</p>
-        </div>
-
-        <hr />
-
-        <p><input type="submit" value="{% trans 'Create' %}" /></p>
-        <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
-      </form>
     </div>
-  {% endblock %}
+  
+    {% block centercol %}
+        <div class="grid_11">
+            <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+
+            {{ form.non_field_errors }}
+            
+            <div class="clearfix"> 
+                {{ form.post_title.errors }}
+                <label for="prependedInput">{{ form.post_title.label }}</label> 
+                <div class="input"> 
+                    {{ form.post_title }}
+                    <span class="help-inline">{{ form.post_title.help_text }}</span>
+                </div> 
+            </div>
+        
+            <div class="clearfix"> 
+                {{ form.post_message.errors }}
+                <label for="prependedInput">{{ form.post_message.label }}</label> 
+                <div class="input">
+                    {{ form.post_message|safe }}
+                    {% wysiwyg_editor "id_post_message" %}
+                    <span class="help-inline">{{ form.post_message.help_text }}</span>
+                </div> 
+            </div>
+        
+            <div class="clearfix"> 
+                {{ form.post_tags.errors }}
+                <label for="prependedInput">{{ form.post_tags.label }}</label> 
+                <div class="input"> 
+                    {{ form.post_tags }}
+                    <span class="help-inline">{{ form.post_tags.help_text }}</span>
+                </div> 
+            </div>
+
+            <div class="clearfix"> 
+                {{ form.pub_index.errors }}
+                <label for="prependedInput">{{ form.pub_index.label }}</label> 
+                <div class="input"> 
+                    {{ form.pub_index }}
+                    <span class="help-inline">{{ form.pub_index.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.author.errors }}
+                <label for="prependedInput">{{ form.author.label }}</label> 
+                <div class="input"> 
+                    {{ form.author }}
+                    <span class="help-inline">{{ form.author.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.space.errors }}
+                <label for="prependedInput">{{ form.space.label }}</label> 
+                <div class="input"> 
+                    {{ form.space }}
+                    <span class="help-inline">{{ form.space.help_text }}</span>
+                </div> 
+            </div>
+ 
+            <hr />
+            <a href="/" class="btn danger small">&laquo; {% trans "Go back" %}</a>
+            <input class="btn small primary " type="submit" value="{% trans 'Publish' %}" />
+            
+            </form>
+        </div>
+    {% endblock %}
 
 {% endblock %}
 
