@@ -4,45 +4,43 @@
 
 {% block title %}{{ news.post_title }}{% endblock %}
 {% block logo %}
-  {% if get_place %}
-    <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
-  {% endif %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+    {% endif %}
 {% endblock %}
   
 {% block banner %}
-  {% if get_place %}
-    <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
-  {% endif %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+    {% endif %}
 {% endblock %}
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_11">
-      <div class="post">
-        {% if perm.news.edit_post %}
-          <div id="tools">
-            <a href="{{ request.path }}/edit/">Edit</a> |
-            {% if perm.news.delete_post %}
-              <a href="{{ request.path }}/delete/">Delete</a>
-            {% endif %}
-          </div>
-        {% endif %}
-        <h1>{{ news.post_title }}</h1>
-        <p>{{ news.post_message|safe }}</p>
-        <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }}</p>
-      </div>
+    {% block centercol %}
+        <div class="grid_11">
+            <div class="post">
+                {% if perm.news.edit_post %}
+                    <div id="tools">
+                        <a href="{{ request.path }}/edit/">Edit</a> |
+                        {% if perm.news.delete_post %}
+                            <a href="{{ request.path }}/delete/">Delete</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <h1>{{ news.post_title }}</h1>
+                <p>{{ news.post_message|safe }}</p>
+                <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }}</p>
+            </div>
       
-      <p>{% render_comment_list for news %}</p>
-      
-      <p>{% render_comment_form for news %}</p>
-      
-    </div>
-  {% endblock%}
+            <p>{% render_comment_list for news %}</p>
+            <p>{% render_comment_form for news %}</p>  
+        </div>
+    {% endblock%}
   
-  {% block rightcol %}
-    <div class="grid_5">
-    </div>
-  {% endblock%}
+    {% block rightcol %}
+        <div class="grid_5">
+        </div>
+    {% endblock%}
 
 {% endblock %}
