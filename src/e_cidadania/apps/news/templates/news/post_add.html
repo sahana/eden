@@ -5,93 +5,94 @@
 {% block title %}{% trans "Add new post" %}{% endblock %}
 
 {% block logo %}
-  {% if get_place %}
-    <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
-  {% endif %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+    {% endif %}
 {% endblock %}
   
 {% block banner %}
-  {% if get_place %}
-    <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
-  {% endif %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+    {% endif %}
 {% endblock %}
 
 {% block content %}
 
-  <div class="grid_16">
-    <div id="contenttitles">
-      {% trans "Add new post" %}
+    <div class="grid_16">
+        <div id="contenttitles">
+            {% trans "Add new post" %}
+        </div>
     </div>
-  </div>
-  {% block centercol %}
-    <div class="grid_11">
-      <form action="" method="post">{% csrf_token %}
+  
+    {% block centercol %}
+        <div class="grid_11">
+            <form action="" method="post">{% csrf_token %}
 
-        {{ form.non_field_errors }}
+                {{ form.non_field_errors }}
 
-        <div class="clearfix"> 
-            {{ form.post_title.errors }}
-            <label for="prependedInput">{{ form.post_title.label }}</label> 
-            <div class="input"> 
-                {{ form.post_title }}
-                <span class="help-inline">{{ form.post_title.help_text }}</span>
-            </div> 
-        </div>
+                <div class="clearfix"> 
+                    {{ form.post_title.errors }}
+                    <label for="prependedInput">{{ form.post_title.label }}</label> 
+                    <div class="input"> 
+                        {{ form.post_title }}
+                        <span class="help-inline">{{ form.post_title.help_text }}</span>
+                    </div> 
+                </div>
         
-        <div class="clearfix"> 
-            {{ form.post_message.errors }}
-            <label for="prependedInput">{{ form.post_message.label }}</label> 
-            <div class="input"> 
-                {{ form.post_message }}
-                {% wysiwyg_editor "id_post_message" %}
-                <span class="help-inline">{{ form.post_message.help_text }}</span>
-            </div> 
-        </div>
+                <div class="clearfix"> 
+                    {{ form.post_message.errors }}
+                    <label for="prependedInput">{{ form.post_message.label }}</label> 
+                    <div class="input"> 
+                        {{ form.post_message }}
+                        {% wysiwyg_editor "id_post_message" %}
+                        <span class="help-inline">{{ form.post_message.help_text }}</span>
+                    </div> 
+                </div>
         
-        <div class="clearfix"> 
-            {{ form.post_tags.errors }}
-            <label for="prependedInput">{{ form.post_tags.label }}</label> 
-            <div class="input"> 
-                {{ form.post_tags }}
-                <span class="help-inline">{{ form.post_tags.help_text }}</span>
-            </div> 
-        </div>
+                <div class="clearfix"> 
+                    {{ form.post_tags.errors }}
+                    <label for="prependedInput">{{ form.post_tags.label }}</label> 
+                    <div class="input"> 
+                        {{ form.post_tags }}
+                        <span class="help-inline">{{ form.post_tags.help_text }}</span>
+                    </div> 
+                </div>
 
-        <div class="clearfix"> 
-            {{ form.pub_index.errors }}
-            <label for="prependedInput">{{ form.pub_index.label }}</label> 
-            <div class="input"> 
-                {{ form.pub_index }}
-                <span class="help-inline">{{ form.pub_index.help_text }}</span>
-            </div> 
-        </div>
+                <div class="clearfix"> 
+                    {{ form.pub_index.errors }}
+                    <label for="prependedInput">{{ form.pub_index.label }}</label> 
+                    <div class="input"> 
+                        {{ form.pub_index }}
+                        <span class="help-inline">{{ form.pub_index.help_text }}</span>
+                    </div> 
+                </div>
         
-        {{ form.author.as_hidden }}
-        {{ form.space.as_hidden }}
+                {{ form.author.as_hidden }}
+                {{ form.space.as_hidden }}
 
-        <hr />
+                <hr />
+                <a href="/" class="btn danger small">&laquo; {% trans "Go back" %}</a>
+                <input class="btn small primary " type="submit" value="{% trans 'Publish' %}" />
+        
+            </form>
+        </div>
 
-        <a href="/" class="btn danger small">&laquo; {% trans "Go back" %}</a>
-        <input class="btn small primary " type="submit" value="{% trans 'Publish' %}" />
-      </form>
-    </div>
-
-  {% endblock %}
+    {% endblock %}
 
 
-  {% block rightcol %}
-    <div class="grid_5">
-      <div id="widget">
-        <h2>{% trans "How to add new posts" %}</h2><br/>
-        <ul class="instructions">
-          <li><strong>{% trans "Title" %}</strong>: {% trans "An spectacular title! (100 characters)" %}</li>
-          <li><strong>{% trans "Text" %}</strong>: {% trans "Your story." %}</li>
-          <li><strong>{% trans "Tags" %}</strong>: {% trans "Please use them carefully, you are limited to 4 tags." %}</li>
-          <li><strong>{% trans "Publish in index" %}</strong>: {% trans "If you mark this, the post will appear in the spaces index page AND in the main index." %}</li>
-        </ul>
-      </div>
-    </div>
-  {% endblock %}
+    {% block rightcol %}
+        <div class="grid_5">
+            <div id="widget">
+                <h2>{% trans "How to add new posts" %}</h2><br/>
+                <ul class="instructions">
+                    <li><strong>{% trans "Title" %}</strong>: {% trans "An spectacular title! (100 characters)" %}</li>
+                    <li><strong>{% trans "Text" %}</strong>: {% trans "Your story." %}</li>
+                    <li><strong>{% trans "Tags" %}</strong>: {% trans "Please use them carefully, you are limited to 4 tags." %}</li>
+                    <li><strong>{% trans "Publish in index" %}</strong>: {% trans "If you mark this, the post will appear in the spaces index page AND in the main index." %}</li>
+                </ul>
+            </div>
+        </div>
+    {% endblock %}
 
 {% endblock %}
 
