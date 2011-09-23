@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-09-21 13:57\n"
+"PO-Revision-Date: 2011-09-22 11:00\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -253,11 +253,10 @@ msgid ""
 "create specific spaces for every process, it has a lot of functions "
 "more but it's better that you try it by yourself."
 msgstr ""
-"e-cidadania é unha ferramenta de democracia participativa para "
-"cidadáns. Ten un avanzado sistema de debate, propostas, versionado de "
-"documentos, e podes crear espazos específicos para cada proceso. Ten "
-"un montón de funcións mais, pero será mellor que as probes por tí "
-"mesmo."
+"e-cidadania é unha ferramenta de democracia participativa para a "
+"cidadanía. Ten un avanzado sistema de debate, propostas, versionado de"
+" documentos, e podes crear espazos específicos para cada proceso. Ten "
+"un montón de funcións máis, pero será mellor que ti as probes."
 
 #: templates/site_index.html:21
 msgid "Add news"
@@ -285,11 +284,11 @@ msgstr "Etiquetas"
 
 #: templates/site_index.html:48
 msgid "Nothing published yet."
-msgstr "Non hai nada publicado todavía."
+msgstr "Aínda non hai nada publicado."
 
 #: templates/site_index.html:58
 msgid "What can you do with e-cidadania?"
-msgstr "Qúe podes facer con e-cidadania?"
+msgstr "Que podes facer con e-cidadania?"
 
 #: templates/site_index.html:58
 msgid "Discover it here"
@@ -329,7 +328,7 @@ msgstr "Compartir"
 
 #: templates/site_index.html:127
 msgid "Your favourite social site isn't here? Tell us!"
-msgstr "A túa rede social favorita non está aqui? Dínolo!"
+msgstr "A túa rede social favorita non está aquí? Dínolo!"
 
 #: templates/site_index.html:131
 msgid "e-cidadania development"
@@ -373,7 +372,7 @@ msgid ""
 "Thanks for taking the time to improve the quality of discussion on our "
 "site"
 msgstr ""
-"Grazar por tomar o tempo para mellorar a calidade das discusións da "
+"Grazas polo tempo prestado para mellorar a calidade das discusións da "
 "nosa web"
 
 #: templates/comments/delete.html:4
@@ -382,7 +381,7 @@ msgstr "Eliminar comentario"
 
 #: templates/comments/delete.html:7
 msgid "Really remove this comment?"
-msgstr "De verdad quere eliminar este comentario?"
+msgstr "De verdade quere eliminar este comentario?"
 
 #: templates/comments/delete.html:12
 msgid "Remove"
@@ -443,8 +442,8 @@ msgstr "Previsualizar comentario"
 #: templates/comments/preview.html:15
 msgid "Please correct the error below"
 msgid_plural "Please correct the errors below"
-msgstr[0] "Por favor corrixa os erros mais abaixo"
-msgstr[1] "Por favor corrixa o erro mais abaixo"
+msgstr[0] "Por favor corrixa os erros máis abaixo"
+msgstr[1] "Por favor corrixa o erro máis abaixo"
 
 #: templates/comments/preview.html:20
 msgid "and"

@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-08-12 12:08\n"
+"PO-Revision-Date: 2011-09-22 11:17\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -36,11 +36,11 @@ msgstr "Volver"
 
 #: templates/cal/error.html:4
 msgid "Calendar error"
-msgstr "Error do calendario"
+msgstr "Erro do calendario"
 
 #: templates/cal/error.html:8
 msgid "You entered and incorrect month or year. Please correct it."
-msgstr "Introduciu un ano ou mes incorrectos. Por favor corríxao."
+msgstr "Introduciches un ano ou mes incorrectos. Por favor corríxeo."
 
 #: templates/cal/error.html:10
 msgid "You can go"

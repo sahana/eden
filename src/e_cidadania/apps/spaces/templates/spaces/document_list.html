@@ -7,40 +7,40 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_16">
+    {% block centercol %}
+        <div class="grid_16">
     
-      <div id="contenttitles">
-        {% trans "Document list" %}
-      </div>
+            <div id="contenttitles">
+                {% trans "Document list" %}
+            </div>
       
-      {% for doc in document_list %}
-        <p><a href="{{ MEDIA_URL}}{{ doc.docfile.url }}"><strong>{{ doc.title }}</strong></a> <em>{% trans "published" %} {{ doc.pub_date }}</em></p>
-      {% empty %}
-        <p>{% trans "There are no documents in this space." %}</p>
-      {% endfor %}
-      <hr />
-      <p>
-        <a href="../" class="pagebutton">{% trans "Go back" %}</a>
-      </p>
-    </div>
+            {% for doc in document_list %}
+                <p><a href="{{ MEDIA_URL}}{{ doc.docfile.url }}"><strong>{{ doc.title }}</strong></a> <em>{% trans "published" %} {{ doc.pub_date }}</em></p>
+            {% empty %}
+                <p>{% trans "There are no documents in this space." %}</p>
+            {% endfor %}
+      
+            <hr />
+            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+
+        </div>
     
-    {% if is_paginated %}
-    <div class="pagination">
-      <span class="page-links">
-      {% if page_obj.has_previous %}
-        <a href="/spaces/?page={{ page_obj.previous_page_number }}">previous</a>
-      {% endif %}
-      <span class="page-current">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-      </span>
-      {% if page_obj.has_next %}
-        <a href="/spaces/?page={{ page_obj.next_page_number }}">next</a>
-      {% endif %}
-      </span>
-    </div>
-    {% endif %}
-  {% endblock %}
+        {% if is_paginated %}
+            <div class="pagination">
+                <span class="page-links">
+                    {% if page_obj.has_previous %}
+                        <a href="/spaces/?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
+                    {% endif %}
+                    <span class="page-current">
+                        {% trans "Page" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}.
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="/spaces/?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+    {% endblock %}
 
 {% endblock %}
 

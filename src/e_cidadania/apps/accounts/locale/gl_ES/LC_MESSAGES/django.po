@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-08-12 20:26\n"
+"PO-Revision-Date: 2011-09-22 12:36\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +28,7 @@ msgstr "Muller"
 
 #: models.py:42
 msgid "Interes"
-msgstr "Interes"
+msgstr "Interese"
 
 #: models.py:54
 msgid "Name"
@@ -96,7 +96,7 @@ msgstr "Páxina web"
 
 #: models.py:85
 msgid "The URL will be checked"
-msgstr "A dirección se comprobará"
+msgstr "A dirección comprobarase"
 
 #: templates/accounts/login.html:4
 msgid "Login"

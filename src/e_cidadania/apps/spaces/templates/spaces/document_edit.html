@@ -7,43 +7,52 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_16">
+    {% block centercol %}
+        <div class="grid_16">
     
-      <div id="contenttitles">
-        {% trans "Edit document" %}
-      </div>
+            <div id="contenttitles">
+                {% trans "Edit document" %}
+            </div>
       
-      <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+            <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
-        <p>{% trans "URL" %}: <a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ MEDIA_URL }}{{ doc.docfile.url }}</a></p>
-        {{ form.non_field_errors }}
-        <div class="fieldWrapper">
-          {{ form.title.errors }}
-          <label for="id_title">{% trans "Title" %}:</label>
-          <p>{{ form.title }}</p>
-          <p id="form_help_text">{{ form.title.help_text }}</p>
+                <div class="clearfix"> 
+                    <label for="disabledInput">{% trans "URL" %}</label> 
+                    <div class="input">
+                        <span class="help-block"><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ MEDIA_URL }}{{ doc.docfile.url }}</a></span>
+                    </div> 
+                </div>
+
+                {{ form.non_field_errors }}
+        
+                <div class="clearfix"> 
+                    {{ form.title.errors }}
+                    <label for="prependedInput">{{ form.title.label }}</label> 
+                    <div class="input"> 
+                        {{ form.title }}
+                        <span class="help-inline">{{ form.title.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix"> 
+                    {{ form.docfile.errors }}
+                    <label for="prependedInput">{{ form.docfile.label }}</label> 
+                    <div class="input"> 
+                        {{ form.docfile }}
+                        <span class="help-inline">{{ form.docfile.help_text }}</span>
+                    </div> 
+                </div>
+        
+                {{ form.space.as_hidden }}
+                {{ form.author.as_hidden }}
+        
+                <hr />
+                <a href="../../../" class="btn small danger">&laquo; {% trans "Go back" %}</a>
+                <input class="btn small primary" type="submit" value="{% trans 'Save' %}" />
+                
+            </form>
         </div>
-        
-        <div class="fieldWrapper">
-          {{ form.docfile.errors }}
-          <label for="id_name">{% trans "Select your file" %}:</label>
-          <p>{{ form.docfile }}</p>
-          <p id="form_help_text">{{ form.docfile.help_text }}</p>
-        </div>
-        
-        {{ form.space.as_hidden }}
-        {{ form.author.as_hidden }}
-        
-        <hr />
-        <p class="buttons">
-          <input type="submit" value="{% trans 'Save' %}" />
-          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
-        </p>
-        
-      </form>
-    </div>
-  {% endblock %}
+    {% endblock %}
 
 {% endblock %}
 

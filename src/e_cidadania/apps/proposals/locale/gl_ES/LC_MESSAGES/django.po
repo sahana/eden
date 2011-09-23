@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-08-12 20:18\n"
+"PO-Revision-Date: 2011-09-22 12:35\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr "Lugar"
 
 #: admin.py:48
 msgid "Relations"
-msgstr "Relacions"
+msgstr "Relacións"
 
 #: admin.py:51
 msgid "Other"
@@ -32,7 +32,7 @@ msgstr "Outros"
 
 #: admin.py:54
 msgid "Options"
-msgstr "Opcions"
+msgstr "Opcións"
 
 #: models.py:37
 msgid "Economically not viable"
@@ -44,11 +44,11 @@ msgstr "Legalmente non viable"
 
 #: models.py:39
 msgid "Technically not viable"
-msgstr "Técnicamente non viable"
+msgstr "Tecnicamente non viable"
 
 #: models.py:40
 msgid "Offtopic"
-msgstr "Fora de tópico"
+msgstr "Fóra de tópico"
 
 #: models.py:48 models.py:81 templates/proposals/proposal_add.html:21
 #: templates/proposals/proposal_add.html:72
@@ -119,14 +119,14 @@ msgstr "Cancelar"
 
 #: templates/proposals/proposal_add.html:67
 msgid "Admins/moderators read this"
-msgstr "Admins/moderadores leede isto"
+msgstr "Admins/moderadores lede isto"
 
 #: templates/proposals/proposal_add.html:68
 msgid ""
 "There are a lot more options in the proposals but they will appear only"
 " when you edit the proposal."
 msgstr ""
-"Hai moitas mais opcións nas propostas das que se mostran, pero "
+"Hai moitas máis opcións nas propostas das que se mostran, pero "
 "aparecerán sólo cando se edite a proposta."
 
 #: templates/proposals/proposal_add.html:70
@@ -135,7 +135,7 @@ msgstr "Cómo engadir propostas"
 
 #: templates/proposals/proposal_add.html:72
 msgid "Title resuming the proposal, be concise (50 characters)"
-msgstr "Título resumindo a proposta, sexa conciso (50 caracteres)"
+msgstr "Título resumindo a proposta, sé conciso (50 caracteres)"
 
 #: templates/proposals/proposal_add.html:73
 msgid ""

@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-08-12 20:22\n"
+"PO-Revision-Date: 2011-09-22 11:15\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -25,7 +25,7 @@ msgstr "Outros datos"
 #: models.py:35 templates/news/post_add.html:33
 #: templates/news/post_add.html.py:77 templates/news/post_edit.html:27
 msgid "Title"
-msgstr "Tituo"
+msgstr "Titulo"
 
 #: models.py:36 templates/news/post_add.html:40
 #: templates/news/post_add.html.py:78 templates/news/post_edit.html:34
@@ -55,7 +55,7 @@ msgstr "Publicar en"
 
 #: models.py:44
 msgid "If you want to post to the index leave this blank"
-msgstr "Si queres publicar a entrada no indice deixa esta casilla baleira"
+msgstr "Se queres publicar a entrada no índice deixa esta cela baleira"
 
 #: templates/news/news_list.html:4
 msgid "News list"
@@ -112,7 +112,7 @@ msgid ""
 "If you mark this, the post will appear in the spaces index page AND in "
 "the main index."
 msgstr ""
-"Se marcas isto, a entrada aparecerá no indice do espazo E no indice "
+"Se marcas isto, a entrada aparecerá no índice do espazo E no índice "
 "global."
 
 #: templates/news/post_confirm_delete.html:4
