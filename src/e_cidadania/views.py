@@ -32,6 +32,7 @@ from django.contrib import messages
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
 from e_cidadania.apps.spaces.models import Space
+from e_cidadania.apps.staticpages.models import StaticPage
 
 def index_view(request):
 
@@ -43,11 +44,13 @@ def index_view(request):
     pub = Post.objects.filter(pub_index=True).order_by('-pub_date')
     space_list = Space.objects.all()
     recent_spaces = Space.objects.all().order_by('-date')[:5]
+    page_list = StaticPage.objects.filter(show_footer=True).order_by('-order')
     
     extra_context = {
         'publication': pub,
         'spaces': space_list,
         'recent_spaces': recent_spaces,
+        'page': page_list,
     }
 
     if request.user.is_anonymous():

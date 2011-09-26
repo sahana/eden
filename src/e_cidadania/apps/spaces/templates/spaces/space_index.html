@@ -8,178 +8,171 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_11">
+    {% block centercol %}
+        <div class="grid_11">
     
-      {% if perms.news.add_post %}
-        <div id="tools">
-          <a href="{{ request.path }}news/add/"}>
-            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>
-          </a> 
-          {% if perms.spaces.edit_space %}
-            <a href="{{ request.path }}edit/">
-              <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>
-            </a> 
-          {% endif %}
-          {% if perms.spaces.delete_space %}
-            <a href="{{ request.path }}delete/">
-              <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>
-            </a>
-          {% endif%}
-        </div>
-      {% endif %}
-      
-      {% if get_place.mod_news %}
-        {% for news in publication %}
-          <div class="post">
-            {% if perms.news.edit_post %}
-              <div id="tools">
-                <a href="{{ request.path }}news/{{ news.id }}/edit/">
-                  <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
-                </a> 
-                {% if perms.news.delete_post %}
-                  <a href="{{ request.path }}news/{{ news.id }}/delete/">
-                    <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
-                  </a>
-                {% endif %}
-              </div>
+            {% if perms.news.add_post %}
+                <div id="tools">
+                    <a href="{{ request.path }}news/add/"}>
+                        <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>
+                    </a> 
+                    {% if perms.spaces.edit_space %}
+                        <a href="{{ request.path }}edit/">
+                            <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>
+                        </a> 
+                    {% endif %}
+                    {% if perms.spaces.delete_space %}
+                        <a href="{{ request.path }}delete/">
+                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>
+                        </a>
+                    {% endif%}
+                </div>
             {% endif %}
-            <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
-            <p>{{ news.post_message|safe }}</p>
-            {% get_comment_count for news as comment_count %}
-            <p>
-               {% trans "Written by" %} {{ news.author }}
-               {% trans "on" %} {{ news.pub_date }} | 
-               <a href="{{ request.path }}news/{{ news.id }}/">{{ comment_count }}
-               {% trans "comments" %}</a>
-            </p>
-          </div>
-        {% empty %}
-          <div class="post">
-            <p>{% trans "Nothing published yet." %}</p>
-          </div>
-        {% endfor %}
-      {% endif %}
       
-    </div>
-  {% endblock %}
-
-  {% block rightcol %}
-    <div class="grid_5">
-    
-    
-      {% comment %}
-        This is the documents block.
-      {% endcomment %}
-      {% if get_place.mod_docs %}
-        <div id="widget">
-          <h2>{% trans "Documents" %}</h2><br />
-          <ul>
-            {% for doc in documents %}
-              <li>
-                <p><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }}</a>
-                {% if perms.spaces.edit_document %}
-                  <a href="{{ request.path }}docs/{{ doc.id }}/edit/">
-                    <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
-                  </a> 
-                {% if perms.spaces.delete_document %}
-                  <a href="{{ request.path }}docs/{{ doc.id }}/delete/">
-                    <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
-                  </a>
-                {% endif %}
-                {% endif %}</p>
-              </li>
-            {% empty %}
-              <p>{% trans "No documents available" %}</p>
-            {% endfor %}
-          </ul>
-          <br /><p class="rightlink">&raquo; <a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
-          {% if perms.spaces.add_document %}
-            <p class="rightlink">&raquo; <a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
-          {% endif %}
-        </div>
-      {% endif %}
-      
-      {% if get_place.mod_debate %}
-        <div id="widget">
-            <h2>{% trans "Debates" %}</h2>
-            <br /><p class="rightlink">&raquo; <a href="{{ request.path }}debate/">{% trans "View all debates" %}</a></p>          {% if perms.debate.add_debate %}
-                <p class="rightlink">&raquo; <a href="{{ request.path }}debate/add/">{% trans "Add debate" %}</a></p>
+            {% if get_place.mod_news %}
+                {% for news in publication %}
+                    <div class="post">
+                        {% if perms.news.edit_post %}
+                            <div id="tools">
+                                <a href="{{ request.path }}news/{{ news.id }}/edit/">
+                                    <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                </a> 
+                                {% if perms.news.delete_post %}
+                                    <a href="{{ request.path }}news/{{ news.id }}/delete/">
+                                        <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
+                        <p>{{ news.post_message|safe }}</p>
+                        {% get_comment_count for news as comment_count %}
+                        <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ request.path }}news/{{ news.id }}/">{{ comment_count }} {% trans "comments" %}</a></p>
+                    </div>
+                {% empty %}
+                    <div class="post">
+                        <p>{% trans "Nothing published yet." %}</p>
+                    </div>
+                {% endfor %}
             {% endif %}
         </div>
-      {% endif %}
+    {% endblock %}
+
+    {% block rightcol %}
+        <div class="grid_5">
+            {% comment %}
+                This is the documents block.
+            {% endcomment %}
+            
+            {% if get_place.mod_docs %}
+                <div id="widget">
+                    <h2>{% trans "Documents" %}</h2><br />
+                    <ul>
+                        {% for doc in documents %}
+                            <li>
+                                <p><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }}</a>
+                                {% if perms.spaces.edit_document %}
+                                    <a href="{{ request.path }}docs/{{ doc.id }}/edit/">
+                                        <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                    </a> 
+                                    {% if perms.spaces.delete_document %}
+                                        <a href="{{ request.path }}docs/{{ doc.id }}/delete/">
+                                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}</p>
+                            </li>
+                        {% empty %}
+                            <p>{% trans "No documents available" %}</p>
+                        {% endfor %}
+                    </ul>
+                    <br /><p class="rightlink">&raquo; <a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
+                    {% if perms.spaces.add_document %}
+                        <p class="rightlink">&raquo; <a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
+                    {% endif %}
+                </div>
+            {% endif %}
+      
+            {% if get_place.mod_debate %}
+                <div id="widget">
+                    <h2>{% trans "Debates" %}</h2>
+                    <br /><p class="rightlink">&raquo; <a href="{{ request.path }}debate/">{% trans "View all debates" %}</a></p>
+                    {% if perms.debate.add_debate %}
+                        <p class="rightlink">&raquo; <a href="{{ request.path }}debate/add/">{% trans "Add debate" %}</a></p>
+                    {% endif %}
+                </div>
+            {% endif %}
     
-      {% if get_place.mod_cal %}
-        <div id="widget">
-          <h2>{% trans "Calendar" %}</h2><br />
-          <div id="datepicker"></div>
-          <script type="text/javascript">
-            $('#datepicker').datepicker({
-                onSelect: function(dateText) {
-                    var month = dateText.split("/")[0]
-                    var year = dateText.split("/")[2]
-                    window.location = "calendar/" + year + "/" + month + "/"
-                }
-            });
-          </script>
-        </div>
-      {% endif %}
+            {% if get_place.mod_cal %}
+                <div id="widget">
+                    <h2>{% trans "Calendar" %}</h2><br />
+                    <div id="datepicker"></div>
+                        <script type="text/javascript">
+                            $('#datepicker').datepicker({
+                                onSelect: function(dateText) {
+                                    var month = dateText.split("/")[0]
+                                    var year = dateText.split("/")[2]
+                                    window.location = "calendar/" + year + "/" + month + "/"
+                                }
+                            });
+                        </script>
+                    </div>
+            {% endif %}
       
 
-      {% if get_place.mod_proposals %}
-        <div id="widget">
-          <h2>{% trans "Newest proposals" %}</h2><br />
-          <ul>
-          {% for proposal in proposals %}
-            <li>
-              <p><a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a></p>
-            </li>
-          {% empty %}
-            <p>{% trans "No proposals available" %}</p>
-          {% endfor %}
-          </ul>
-          <br /><p class="rightlink">&raquo; <a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
-          {% if perms.proposals.add_proposal %}
-            <p class="rightlink">&raquo; <a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
-          {% endif %}
-        </div>
-      {% endif %}
+            {% if get_place.mod_proposals %}
+                <div id="widget">
+                    <h2>{% trans "Newest proposals" %}</h2><br />
+                    <ul>
+                        {% for proposal in proposals %}
+                            <li>
+                                <p><a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a></p>
+                            </li>
+                        {% empty %}
+                            <p>{% trans "No proposals available" %}</p>
+                        {% endfor %}
+                    </ul>
+                    <br /><p class="rightlink">&raquo; <a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
+                    {% if perms.proposals.add_proposal %}
+                        <p class="rightlink">&raquo; <a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
+                    {% endif %}
+                </div>
+            {% endif %}
       
-      <div id="widget">
-        <h2>Compartir</h2><br />
-        <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/></a>
-        <a href="http://www.facebook.com/cidadania.coop"><img src="{{ STATIC_URL }}/assets/logos/facebook_logo.png" alt="Facebook"/></a>
-        <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
-        <a href="http://tuenti.com"><img src="{{ STATIC_URL }}/assets/logos/tuenti_logo.png" alt="Compartir en Tuenti"/></a>
-        <a href="http://linkedin.com"><img src="{{ STATIC_URL }}/assets/logos/linkedin_logo.png" alt="Compartir en LinkedIn"/></a>
-        <a href="http://identi.ca/ecidadania"><img src="{{ STATIC_URL }}/assets/logos/identica_logo.png" alt="Compartir en Identi.ca"/></a>
-        <p><br />{% trans "Your favourite social site isn't here? Tell us!" %}</p>
-      </div>
-
-    </div>
-  {% endblock %}
+            <div id="widget">
+                <h2>Compartir</h2><br />
+                <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/></a>
+                <a href="http://www.facebook.com/cidadania.coop"><img src="{{ STATIC_URL }}/assets/logos/facebook_logo.png" alt="Facebook"/></a>
+                <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
+                <a href="http://tuenti.com"><img src="{{ STATIC_URL }}/assets/logos/tuenti_logo.png" alt="Compartir en Tuenti"/></a>
+                <a href="http://linkedin.com"><img src="{{ STATIC_URL }}/assets/logos/linkedin_logo.png" alt="Compartir en LinkedIn"/></a>
+                <a href="http://identi.ca/ecidadania"><img src="{{ STATIC_URL }}/assets/logos/identica_logo.png" alt="Compartir en Identi.ca"/></a>
+                <p><br />{% trans "Your favourite social site isn't here? Tell us!" %}</p>
+            </div>
+        </div>
+    {% endblock %}
 
 {% endblock %}
 
 {% block footerimg %}
-  {% for e in entities %}
-    {% if e.logo %}
-      <a href="{{ e.website }}"><img src="{{ MEDIA_URL }}/{{ e.logo }}" alt="Logo"/></a>
-    {% else %}
-      {% if e.website %}
-        <a href="{{ e.website }}">{{ e.name }}</a> -
-      {% else %}
-        {{ e.name }} - 
-      {% endif %}
-    {% endif %}
-   
-  {% endfor %}
-  
+    {% for e in entities %}
+        {% if e.logo %}
+            <a href="{{ e.website }}"><img src="{{ MEDIA_URL }}/{{ e.logo }}" alt="Logo"/></a>
+            {% else %}
+                {% if e.website %}
+                    <a href="{{ e.website }}">{{ e.name }}</a> -
+                {% else %}
+                    {{ e.name }} - 
+                {% endif %}
+        {% endif %}
+    {% endfor %}
 {% endblock %}
+
 {% block footer %}
-  <p>{% for p in page %}
-      <a href="/{{ p.uri }}">{{ p.name }}</a> |
-     {% endfor %}
-  </p>
-  <p>{% trans "Space created by" %}: {{ user.get_profile.firstname }} {{ user.get_profile.surname }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
+    <p>
+    {% for p in page %}
+        <a href="/{{ p.uri }}">{{ p.name }}</a> |
+    {% endfor %}
+    </p>
+    <p>{% trans "Space created by" %}: {{ user.get_profile.firstname }} {{ user.get_profile.surname }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
 {% endblock %}
