@@ -12,6 +12,19 @@ Para registrarte debes hacer clic en "Entrar" y el la parte inferior del
 formulario de entrada te aparecerá la opción de registro. Basta con tu nombre,
 correo electrónico y clave.
 
+Cómo participar en un espacio
+-----------------------------
+
+Por defecto los usuarios nuevos que se hayan registrado automáticamente no
+tienen acceso a ningún espacio de la plataforma salvo los públicos, que podrán
+ver pero no participar en ellos.
+
+Para poder participar en un espacio es necesario solicitar el acceso. Eso se
+puede realizar o bien enviando un correo electrónico al administrador
+responsable de ese espacio, o entrando en el espacio y haciendo clic en el botón
+"Quiero participar", tras lo cual será enviada una notificación al administrador
+del espacio para que evalúe tu participación en el espacio.
+ 
 Cómo enviar una propuesta
 -------------------------
 

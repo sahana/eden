@@ -1,21 +1,20 @@
-Manual de usuario
-=================
+User manual
+===========
 
-Cómo registrarse
-----------------
+How to register
+---------------
 
-El sistema de registro de usuarios dependerá de lo que el administrador quiera.
-Por defecto, e-cidadania permite el registro de usuarios para poder realizar
-algunas tareas básicas, y visitar los espacios públicos, pero sin poder participar.
+The registry system will depend on what the administrator wants. By default
+e-cidadania allows user registration to perform some basic tasks and visit the
+public spaces, without participating.
 
-Para registrarte debes hacer clic en "Entrar" y el la parte inferior del
-formulario de entrada te aparecerá la opción de registro. Basta con tu nombre,
-correo electrónico y clave.
+To register in e-cidadania you must click "Login" and in the bottom you can find
+the registration link. It will ask your name, e-mail and password.
 
-Cómo enviar una propuesta
--------------------------
+How to send a proposal
+----------------------
 
-Enviar una propuesta es de lo más sencillo. Basta con acceder al espacio de
+Sending proposals is very easy. Enviar una propuesta es de lo más sencillo. Basta con acceder al espacio de
 participación correspondiente y hacer clic en "Añadir una propuesta" en la
 columna de la derecha.
 
