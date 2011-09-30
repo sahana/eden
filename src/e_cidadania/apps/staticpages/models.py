@@ -34,6 +34,7 @@ class StaticPage(models.Model):
     show_footer = models.BooleanField(_('Show in footer'))
     author = models.ForeignKey(User, blank=True, null=True, verbose_name=_('Author'))
     pub_date = models.DateTimeField(auto_now_add=True)
+    last_update = models.DateTimeField(_('Last update'), auto_now=True)
     order = models.IntegerField(_('Order'))
 
     class Meta:
