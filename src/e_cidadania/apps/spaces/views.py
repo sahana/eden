@@ -60,6 +60,7 @@ from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
     EntityForm, EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.staticpages.models import StaticPage
+from e_cidadania.apps.debate.models import Debate
 from django.conf import settings
 
 #
@@ -186,6 +187,7 @@ class ViewSpaceIndex(DetailView):
         context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')[:10]
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
         context['messages'] = messages.get_messages(self.request)
+        context['debates'] = Debate.objects.filter(space=place.id)
         return context
 
 
@@ -313,7 +315,7 @@ def create_space(request):
                 # We add the created spaces to the user allowed spaces
     
                 request.user.profile.spaces.add(space)
-                messages.success(request, _('Space %s created successfully.') % space.name)
+                #messages.success(request, _('Space %s created successfully.') % space.name)
                 return redirect('/spaces/' + space.url)
     
         return render_to_response('spaces/space_add.html',

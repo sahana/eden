@@ -51,7 +51,7 @@
                     </div>
                 {% empty %}
                     <div class="post">
-                        <p>{% trans "Nothing published yet." %}</p>
+                        <p>{% trans "Nothing published yet" %}.</p>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -63,6 +63,22 @@
             {% comment %}
                 This is the documents block.
             {% endcomment %}
+            
+            {% if get_place.mod_cal %}
+                <div id="widget">
+                    <h2>{% trans "Calendar" %}</h2><br />
+                    <div id="datepicker"></div>
+                        <script type="text/javascript">
+                            $('#datepicker').datepicker({
+                                onSelect: function(dateText) {
+                                    var month = dateText.split("/")[0]
+                                    var year = dateText.split("/")[2]
+                                    window.location = "calendar/" + year + "/" + month + "/"
+                                }
+                            });
+                        </script>
+                    </div>
+            {% endif %}
             
             {% if get_place.mod_docs %}
                 <div id="widget">
@@ -83,7 +99,7 @@
                                 {% endif %}</p>
                             </li>
                         {% empty %}
-                            <p>{% trans "No documents available" %}</p>
+                            <p>{% trans "No documents available" %}.</p>
                         {% endfor %}
                     </ul>
                     <br /><p class="rightlink">&raquo; <a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
@@ -95,30 +111,32 @@
       
             {% if get_place.mod_debate %}
                 <div id="widget">
-                    <h2>{% trans "Debates" %}</h2>
+                    <h2>{% trans "Debates" %}</h2><br />
+                    <ul>
+                        {% for debate in debates %}
+                            <li>
+                                <p><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ debate.title }}</a>
+                                {% if perms.debate.edit_debate %}
+                                    <a href="{{ request.path }}docs/{{ doc.id }}/edit/">
+                                        <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                    </a> 
+                                    {% if perms.debate.delete_debate %}
+                                        <a href="{{ request.path }}docs/{{ doc.id }}/delete/">
+                                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}</p>
+                            </li>
+                        {% empty %}
+                            <p>{% trans "No debates started" %}.</p>
+                        {% endfor %}
+                    </ul>
                     <br /><p class="rightlink">&raquo; <a href="{{ request.path }}debate/">{% trans "View all debates" %}</a></p>
                     {% if perms.debate.add_debate %}
                         <p class="rightlink">&raquo; <a href="{{ request.path }}debate/add/">{% trans "Add debate" %}</a></p>
                     {% endif %}
                 </div>
             {% endif %}
-    
-            {% if get_place.mod_cal %}
-                <div id="widget">
-                    <h2>{% trans "Calendar" %}</h2><br />
-                    <div id="datepicker"></div>
-                        <script type="text/javascript">
-                            $('#datepicker').datepicker({
-                                onSelect: function(dateText) {
-                                    var month = dateText.split("/")[0]
-                                    var year = dateText.split("/")[2]
-                                    window.location = "calendar/" + year + "/" + month + "/"
-                                }
-                            });
-                        </script>
-                    </div>
-            {% endif %}
-      
 
             {% if get_place.mod_proposals %}
                 <div id="widget">
@@ -129,7 +147,7 @@
                                 <p><a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a></p>
                             </li>
                         {% empty %}
-                            <p>{% trans "No proposals available" %}</p>
+                            <p>{% trans "No proposals available" %}.</p>
                         {% endfor %}
                     </ul>
                     <br /><p class="rightlink">&raquo; <a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
@@ -140,14 +158,14 @@
             {% endif %}
       
             <div id="widget">
-                <h2>Compartir</h2><br />
-                <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/></a>
-                <a href="http://www.facebook.com/cidadania.coop"><img src="{{ STATIC_URL }}/assets/logos/facebook_logo.png" alt="Facebook"/></a>
-                <a href="http://www.twitter.com/ecidadaniafloss"><img src="http://twitter-badges.s3.amazonaws.com/t_logo-b.png" alt="Seguir a ecidadaniafloss en Twitter"/></a>
-                <a href="http://tuenti.com"><img src="{{ STATIC_URL }}/assets/logos/tuenti_logo.png" alt="Compartir en Tuenti"/></a>
-                <a href="http://linkedin.com"><img src="{{ STATIC_URL }}/assets/logos/linkedin_logo.png" alt="Compartir en LinkedIn"/></a>
-                <a href="http://identi.ca/ecidadania"><img src="{{ STATIC_URL }}/assets/logos/identica_logo.png" alt="Compartir en Identi.ca"/></a>
-                <p><br />{% trans "Your favourite social site isn't here? Tell us!" %}</p>
+                <h2>{% trans "Share" %}</h2><br />
+                <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script><g:plusone></g:plusone><br /><br />
+                
+                <iframe src="http://www.facebook.com/plugins/like.php?href=http://ecidadania.org" scrolling="no" frameborder="0" style="border:none; width:450px; height:35px"></iframe>
+                
+                <iframe lang="es" allowtransparency="true" frameborder="0" scrolling="no" src="//platform.twitter.com/widgets/follow_button.html?screen_name=ecidadaniafloss&lang=es" style="width:300px; height:20px;"></iframe><br /><br />
+                
+                <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/>RSS Feed</a>
             </div>
         </div>
     {% endblock %}
