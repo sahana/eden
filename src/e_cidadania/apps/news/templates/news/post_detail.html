@@ -6,12 +6,16 @@
 {% block logo %}
     {% if get_place %}
         <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+    {% else %}
+        <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
     {% endif %}
 {% endblock %}
-  
+
 {% block banner %}
     {% if get_place %}
         <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+    {% else %}
+        <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
     {% endif %}
 {% endblock %}
 
@@ -32,15 +36,16 @@
                 <p>{{ news.post_message|safe }}</p>
                 <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }}</p>
             </div>
-      
+
             <p>{% render_comment_list for news %}</p>
-            <p>{% render_comment_form for news %}</p>  
+            <p>{% render_comment_form for news %}</p>
         </div>
     {% endblock%}
-  
+
     {% block rightcol %}
         <div class="grid_5">
         </div>
     {% endblock%}
 
 {% endblock %}
+

@@ -6,12 +6,16 @@
 {% block logo %}
     {% if get_place %}
         <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+    {% else %}
+        <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
     {% endif %}
 {% endblock %}
-  
+
 {% block banner %}
     {% if get_place %}
         <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+    {% else %}
+        <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
     {% endif %}
 {% endblock %}
 
@@ -22,7 +26,7 @@
             <div id="contenttitles">
                 {% trans "Delete post" %}
             </div>
-            
+
             <form action="" method="post">{% csrf_token %}
                 <p>{% trans "Are you sure you want to delete this post? This action cannot be undone." %}</p>
 
@@ -39,3 +43,4 @@
   {% endblock %}
 
 {% endblock %}
+

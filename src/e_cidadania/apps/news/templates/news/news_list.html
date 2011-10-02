@@ -2,8 +2,21 @@
 {% load i18n %}
 
 {% block title %}{% trans "News list" %}{% endblock %}
-{% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
-{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
+{% block logo %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+    {% else %}
+        <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
+    {% endif %}
+{% endblock %}
+
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+    {% else %}
+        <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 
@@ -12,7 +25,7 @@
             {% trans "News archive" %}
         </div>
     </div>
-  
+
     {% block centercol %}
         <div class="grid_16">
             {% for post in post_list %}
@@ -30,7 +43,7 @@
             <hr />
             <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
         </div>
-    
+
         {% if is_paginated %}
             <div class="pagination">
                 <span class="page-links">

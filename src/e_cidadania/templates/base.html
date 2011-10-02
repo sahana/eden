@@ -18,21 +18,21 @@
 		<meta name="Description" content="Site description"/>
 		<meta name="Robots" content="all"/>
 		<script src="http://www.google.com/jsapi?key=ABQIAAAATqrYeRgzMa92HeAJ337iJhRWlTAuTwYT79cviOHriikXgTyaXRSApoqdJPf4dwJKYRnFn_s4iABNkg" type="text/javascript"></script>
-		<script type="text/javascript"> 
+		<script type="text/javascript">
 			google.load("jquery", "1.6.3", {uncompressed:false});
 			google.load("jqueryui", "1.8.16", {uncompressed:false});
-		</script> 
+		</script>
     	<script src="{{ STATIC_URL }}/js/site.js" type="text/javascript"></script>
     	<script src="{{ STATIC_URL }}/js/jquery.notify.min.js" type="text/javascript"></script>
     	<!-- <script src="{{ STATIC_URL }}/js/jquery.form.js" type="text/javascript"></script> -->
-		
+
 		{% comment %}
 		  This will load the wysiwyg system for all pages that iherit from base.html
 		{% endcomment %}
 		{% wysiwyg_setup %}
 	</head>
 	<body>
-    
+
     {% if messages %}
       <ul class="messages hidden">
         <div class="closemsg">X</div>
@@ -41,7 +41,7 @@
         {% endfor %}
       </ul>
     {% endif %}
-        
+
     <div class="topbar">
       <div id="version">
 	      v0.1 beta
@@ -59,7 +59,7 @@
           <p>#{text}</p>
         </div>
       </div>
-      
+
 	  <div class="container_16">
 
       <div class="grid_16">
@@ -69,22 +69,22 @@
 	            <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
 	          {% endblock %}
 	        </div>
-  
+
  	        <div id="banner">
 	          {% block banner %}
-		    <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
+		          <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
  	          {% endblock %}
 	        </div>
 	      {% endblock %}
       </div>
 
       <div class="clear"></div>
-       
+
       <div id="grid">
       {% block content %}
           {% block centercol %}
           {% endblock %}
-          
+
           {% block rightcol %}
           {% endblock %}
       {% endblock %}
@@ -112,7 +112,7 @@
         <p>(c) 2010-{% now "Y" %} <a href="http://trac.cidadania.coop">e-cidadania</a> {% trans "created by" %} <a href="http://www.cidadania.coop">Cidadania Sociedade Cooperativa</a></p>
         <p><a href="{{ STATIC_URL }}/humans.txt"><img src="{{ STATIC_URL }}/assets/humanstxt.png"/></a></p>
     </div>
-	  
+
 	</body>
 </html>
 

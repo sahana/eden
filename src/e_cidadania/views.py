@@ -45,7 +45,7 @@ def index_view(request):
     space_list = Space.objects.all()
     recent_spaces = Space.objects.all().order_by('-date')[:5]
     page_list = StaticPage.objects.filter(show_footer=True).order_by('-order')
-    
+
     extra_context = {
         'publication': pub,
         'spaces': space_list,
@@ -65,24 +65,24 @@ class IndexEntriesFeed(Feed):
 
     """
     Creates an RSS feed out of the news posts in the index page.
-    
+
     :rtype: RSS Feed
     :context: None
-    
+
     .. versionadded:: 0.1b
     """
     title = _('e-cidadania news')
     link = '/news/'
     description = _('Updates on the main e-cidadania site.')
-    
+
     def items(self):
         return Post.objects.all().order_by('-post_pubdate')[:10]
-        
+
     def item_title(self, item):
         return item.post_title
-   
+
     def item_description(self, item):
-        return item.post_message 
+        return item.post_message
 
 ###############
 # BIG WARNING #
@@ -121,12 +121,12 @@ def delete_post(request, post_id):
     Delete an existent post. Post deletion is only reserved to spaces
     administrators or site admins.
     """
-    
+
     return delete_object(request,
                          model = Post,
                          object_id = post_id,
                          login_required=True,
-                         template_name = 'news/post_delete.html',
+                         template_name = 'news/post_confirm_delete.html',
                          post_delete_redirect = '/',
                          extra_context = {'messages': messages.success(request, _('Post deleted successfully.'))})
 
@@ -164,8 +164,9 @@ class ListNews(ListView):
     """
     paginate_by = 10
     template_name = 'news/news_list.html'
-    
+
     def get_queryset(self):
         news = Post.objects.all().filter(pub_index = True)
-        
+
         return news
+

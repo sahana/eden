@@ -44,15 +44,15 @@ class ViewPost(DetailView):
     """
     context_object_name = 'news'
     template_name = 'news/post_detail.html'
-    
+
     def get_object(self):
-    
+
         """
         """
         return Post.objects.get(pk=self.kwargs['post_id'])
-        
+
     def get_context_data(self, **kwargs):
-    
+
         """
         Get extra context data for the ViewPost view.
         """
@@ -60,7 +60,7 @@ class ViewPost(DetailView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
 
-    
+
 @permission_required('news.add_post')
 def add_post(request, space_name):
 
@@ -118,13 +118,22 @@ class DeletePost(DeleteView):
     administrators or site admins.
     """
     context_object_name = "get_place"
-    
+
     def get_success_url(self):
         space = self.kwargs['space_name']
-        return '/spaces/{0}'.format(space)
-        
+        return '/spaces/%s' % (space)
+
     def get_object(self):
         return get_object_or_404(Post, pk=self.kwargs['post_id'])
-        
+
+    def get_context_data(self, **kwargs):
+
+        """
+        Get extra context data for the ViewPost view.
+        """
+        context = super(DeletePost, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
 #@permission_required('news.delete_post')
 
