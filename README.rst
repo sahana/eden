@@ -53,7 +53,7 @@ Useful information
 ------------------
 
  * `Design concepts <http://trac.cidadania.coop/wiki/DesignConcepts>`_ design concepts, this are the guides to follow when developing.
- * `RoadMap <http://trac.cidadania.coop/wiki/RoadMap>`_ version roadmap. This is where we stablish the features, release dates and other things of every version.
+ * `Releases <http://trac.cidadania.coop/wiki/Releases>`_ version roadmap. This is where we stablish the features, release dates and other things of every version.
 
 Collaborate
 -----------
