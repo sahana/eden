@@ -118,14 +118,14 @@ class MeetingType(models.Model):
     Meeting type model. This will give enough flexibility to add any type of
     meeting in any space.
     """
-    title = models.CharField(_('Name'), max_length=100)
+    typetitle = models.CharField(_('Name'), max_length=100)
 
     class Meta:
         verbose_name = _('Meeting Type')
         verbose_name_plural = _('Meeting Types')
 
     def __unicode__(self):
-        return self.title
+        return self.typetitle
 
 
 class Meeting(models.Model):

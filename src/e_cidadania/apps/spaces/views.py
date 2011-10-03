@@ -188,6 +188,7 @@ class ViewSpaceIndex(DetailView):
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
         context['messages'] = messages.get_messages(self.request)
         context['debates'] = Debate.objects.filter(space=place.id)
+        context['meeting'] = Meeting.objects.filter(space=place.id)
         return context
 
 

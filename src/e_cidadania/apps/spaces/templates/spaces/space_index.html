@@ -80,6 +80,17 @@
                     </div>
             {% endif %}
 
+            {% if meeting %}
+                <div id="widget">
+                    <h2>{% trans "Meetings" %}</h2>
+                    <ul>
+                        {% for m in meeting %}
+                            <li><p>{{ m.title }}</p></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
             {% if publication %}
                 <div id="widget">
                     <h2>{% trans "Latest news" %}</h2><br />
