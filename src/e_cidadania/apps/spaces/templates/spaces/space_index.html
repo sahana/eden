@@ -159,8 +159,7 @@
 
             <div id="widget">
                 <h2>{% trans "Share" %}</h2><br />
-                <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script><g:plusone></g:plusone><br /><br />
-
+                <!-- Facebook -->
                 <div id="fb-root"></div>
                 <script>(function(d, s, id) {
                     var js, fjs = d.getElementsByTagName(s)[0];
@@ -170,13 +169,42 @@
                         fjs.parentNode.insertBefore(js, fjs);
                         }(document, 'script', 'facebook-jssdk'));
                 </script>
+                <div style="float:left;" class="fb-like" data-href="http://ecidadania.org" data-send="false" data-layout="box_count" data-width="85" data-show-faces="false"></div>
+                <!-- End Facebook -->                
+                
+                <!-- Google Plus -->
+                <g:plusone size="tall" href="http://ecidadania.org"></g:plusone>
+                <script type="text/javascript">
+                    window.___gcfg = {lang: 'es'};
 
-                <div class="fb-like" data-href="http://ecidadania.org" data-send="false" data-width="450" data-show-faces="false" data-font="arial"></div><br /><br />
+                    (function() {
+                        var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+                        po.src = 'https://apis.google.com/js/plusone.js';
+                        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+                    })();
+                </script>
+                <!-- End Google Plus -->
+                
+                <!-- LinkedIn -->
+                <script src="http://platform.linkedin.com/in.js" type="text/javascript"></script>
+                <script type="IN/Share" data-url="http://ecidadania.org" data-counter="top"></script>
+                <!-- End LinkedIn -->
+                
+                <!-- Identi.ca -->
+                <div id="identishare" style="vertical-align: bottom;"></div>
+                <script type="text/javascript" src="http://www.tildehash.com/identishare.php?style2&title='e-cidadania open source e-democracy platform'" defer="defer"></script>
+                <!-- End Identi.ca -->
 
-                <a href="https://twitter.com/ecidadaniafloss" class="twitter-follow-button" data-lang="es">{% trans "Follow" %} @ecidadaniafloss</a>
-
+                <!-- Twitter -->
+                <a href="https://twitter.com/ecidadaniafloss" class="twitter-share-button" date-url="http://ecidadania.org" data-counturl="http://ecidadania.org" data-count="vertical" data-lang="es">{% trans "Tweet" %}</a>
                 <script src="//platform.twitter.com/widgets.js" type="text/javascript"></script><br /><br />
-
+                <!-- End Twitter -->
+                
+                <!-- Tuenti -->
+                <script type="text/javascript" src="http://widgets.tuenti.com/widgets.js"></script>
+                <a href="http://www.tuenti.com/share" class="tuenti-share-button" icon-style="light" share-url="http://ecidadania.org"></a><br /><br />
+                <!-- End Tuenti -->
+                
                 <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/>RSS Feed</a>
             </div>
         </div>
