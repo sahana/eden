@@ -80,6 +80,18 @@
                     </div>
             {% endif %}
 
+            {% if publication %}
+                <div id="widget">
+                    <h2>{% trans "Latest news" %}</h2><br />
+                    <ul>
+                        {% for news in publication %}
+                            <li><p>{{ news.post_title }}</li></p>
+                        {% endfor %}
+                    </ul><br />
+                    <p class="rightlink">&raquo; <a href="{{ request.path }}news/">{% trans "News archive"%}</a></p>
+                </div>
+            {% endif %}
+
             {% if get_place.mod_docs %}
                 <div id="widget">
                     <h2>{% trans "Documents" %}</h2><br />
