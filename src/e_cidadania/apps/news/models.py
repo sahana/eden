@@ -43,11 +43,6 @@ class Post(models.Model):
                                    blank=True, null=True,
         help_text=_('If you want to post to the index leave this blank'))
     post_tags = TagField()
-    
-    # Gives this error:
-    # "User object has no attribute username"
-    #def save(self, *args, **kwargs):
-    #    self.post_author = User.username
 
     def __unicode__(self):
         return self.post_title
@@ -57,7 +52,10 @@ class Post(models.Model):
 
     def get_tags(self, tags):
         return Tag.objects.get_for_object(self)
-        
+    
+    @models.permalink
     def get_absolute_url(self):
-        return '/news/%s' % self.id
+        return ('view-post', (), {
+            'space_name': self.space.url,
+            'post_id': str(self.id)})
 

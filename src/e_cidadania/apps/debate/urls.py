@@ -24,16 +24,22 @@ access to '/spaces/'.
 """
 from django.conf.urls.defaults import *
 
+from e_cidadania.apps.debate.views import ListDebates
+
 urlpatterns = patterns('e_cidadania.apps.debate.views',
 
     
-    (r'^add/', 'add_new_debate'),
+    url(r'^$', ListDebates.as_view(), name='list-debates'),
+
+    url(r'^(?P<debate_id>\d+)/', 'view_debate', name='view-debate'),
     
-    (r'^update_note/', 'update_note'),
+    url(r'^add/', 'add_new_debate', name='add-debate'),
     
-    (r'^create_note/', 'create_note'),
+    url(r'^update_note/', 'update_note', name='update-note'),
     
-    (r'^delete_note/', 'delete_note'),
+    url(r'^create_note/', 'create_note', name='create-note'),
+    
+    url(r'^delete_note/', 'delete_note', name='delete-note'),
     
     # Editing debates is not allowed at this time
     #(r'^(?P<debate_id>\d+)', 'edit_debate'),

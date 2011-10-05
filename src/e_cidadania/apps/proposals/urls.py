@@ -28,14 +28,14 @@ from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
 
 urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
-    (r'^add/$', 'add_proposal'),
+    url(r'^add/$', 'add_proposal', name='add-proposal'),
 
-    (r'^(?P<prop_id>\w+)/edit/$', 'edit_proposal'),
+    url(r'^(?P<prop_id>\w+)/edit/$', 'edit_proposal', name='edit-proposal'),
 
-    (r'^(?P<prop_id>\w+)/delete/$', DeleteProposal.as_view()),
+    url(r'^(?P<prop_id>\w+)/delete/$', DeleteProposal.as_view(), name='delete-proposal'),
 
-    (r'^(?P<prop_id>\w+)/', ViewProposal.as_view()),
+    url(r'^(?P<prop_id>\w+)/', ViewProposal.as_view(), name='view-proposal'),
 
-    (r'^$', ListProposals.as_view()),
+    url(r'^$', ListProposals.as_view(), name='list-proposals'),
 )
 

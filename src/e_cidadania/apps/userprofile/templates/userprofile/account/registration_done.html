@@ -6,7 +6,7 @@
 
 {% block content %}
 	<div class="success">
-		<p>{% trans "You have successfully registered a new account. Go to the" %} <a href="{% url profile_overview %}">{% trans "login page" %}</a> {% trans "to authenticate and start using this site" %}.</p>
+		<p>{% trans "You have successfully registered a new account. Go to the" %} <a href="{% url 'profile_overview' %}">{% trans "login page" %}</a> {% trans "to authenticate and start using this site" %}.</p>
 	</div>
 {% endblock %}
 {% block content-related %}

@@ -8,9 +8,19 @@
 	    <div class="grid_11">
 	        <form action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                <table id="personal">
-                {{ form.as_table }}
-                </table>
+                
+                {{ form.non_field_errors }}
+        
+                {% for field in form %}
+                <div class="clearfix"> 
+                    {{ field.errors }}
+                    <label for="prependedInput">{{ field.label }}</label> 
+                    <div class="input"> 
+                        {{ field }}
+                        <span class="help-inline">{{ field.help_text }}</span>
+                    </div> 
+                </div>
+                {% endfor %}
 	            
 	            <input type="submit" value="{% trans 'Save' %}" />
 	        </form>

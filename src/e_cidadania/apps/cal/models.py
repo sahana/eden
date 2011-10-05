@@ -33,7 +33,7 @@ class EventCalendar(LocaleHTMLCalendar):
     """
     Event calendar is a basic calendar made with HTMLCalendar module.
     """
-# This init is needed for multilanguage, see ticket #86
+    # This init is needed for multilanguage, see ticket #86
 
     def __init__(self, events, *args, **kwargs):
         self.events = self.group_by_day(events)

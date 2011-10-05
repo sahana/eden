@@ -47,7 +47,7 @@
                 {{ form.author.as_hidden }}
         
                 <hr />
-                <a href="../../../" class="btn small danger">&laquo; {% trans "Go back" %}</a>
+                <a href="{{ get_place.get_absolute_url }}" class="btn small danger">&laquo; {% trans "Go back" %}</a>
                 <input class="btn small primary" type="submit" value="{% trans 'Save' %}" />
                 
             </form>

@@ -149,3 +149,9 @@ def delete_note(request, space_name):
     
     else:
         return HttpResponse("You're not the author of the note. Can't delete")
+        
+def view_debate(request, space_name):
+    pass
+    
+class ListDebates(ListView):
+    pass

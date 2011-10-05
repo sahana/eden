@@ -7,27 +7,27 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_11">
+    {% block centercol %}
+        <div class="grid_11">
     
-      <div id="contenttitles">
-        {% trans "View meeting" %}
-      </div>
+            <div id="contenttitles">
+                {% trans "View meeting" %}
+            </div>
       
-      <p>{% trans "Title" %}</p>
-      <p>{{ meeting.title }}</p>
-      <p>{% trans "Description" %}</p>
-      <p>{{ meeting.description }}</p>
-      <p>{% trans "Date" %}</p>
-      <p>{{ meeting.date }}</p>
-      <p>{% trans "Location" %}</p>
-      <p>{{ meeting.location }}</p>
-    </div>
-  {% endblock%}
+            <p>{% trans "Title" %}</p>
+            <p>{{ meeting.title }}</p>
+            <p>{% trans "Description" %}</p>
+            <p>{{ meeting.description }}</p>
+            <p>{% trans "Date" %}</p>
+            <p>{{ meeting.date }}</p>
+            <p>{% trans "Location" %}</p>
+            <p>{{ meeting.location }}</p>
+        </div>
+    {% endblock%}
   
-  {% block rightcol %}
-    <div class="grid_5">
-    </div>
-  {% endblock%}
+    {% block rightcol %}
+        <div class="grid_5">
+        </div>
+    {% endblock%}
 
 {% endblock %}

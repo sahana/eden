@@ -21,7 +21,7 @@
             {% endfor %}
       
             <hr />
-            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+            <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
 
         </div>
     
@@ -29,13 +29,13 @@
             <div class="pagination">
                 <span class="page-links">
                     {% if page_obj.has_previous %}
-                        <a href="/spaces/?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
+                        <a href="{% url 'list-documents' get_place.url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
                     {% endif %}
                     <span class="page-current">
-                        {% trans "Page" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}.
+                        {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
                     </span>
                     {% if page_obj.has_next %}
-                        <a href="/spaces/?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
+                        <a href="{% url 'list-documents' get_place.url %}?page={{ page_obj.next_page_number }}"> | {% trans "next" %} &raquo;</a>
                     {% endif %}
                 </span>
             </div>

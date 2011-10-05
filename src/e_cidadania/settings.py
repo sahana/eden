@@ -202,3 +202,11 @@ LOGGING = {
     }
 }
 
+
+# WARNING. THIS SECTION WILL HAVE VOLATILE CODE, PROBABLY FOR
+# COMPATIBILITY WITH OLDER OR NEWER VERSIONS OF DJANGO
+
+# Activate the new url syntax in django 1.3 which will be
+# compatible till 1.5
+import django.template
+django.template.add_to_builtins('django.templatetags.future')

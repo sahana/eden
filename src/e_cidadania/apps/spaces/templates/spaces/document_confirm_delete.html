@@ -18,7 +18,7 @@
                 <p>{% trans "Are you sure you want to delete this document? This action cannot be undone." %}</p><br/>
 
                 <hr />
-                <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+                <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
                 <input class="btn small danger" type="submit" value="{% trans 'Delete' %}" />
 
             </form>

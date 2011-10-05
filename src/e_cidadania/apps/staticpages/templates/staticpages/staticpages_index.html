@@ -8,7 +8,7 @@
         {{ page.content|safe }}
       
         <hr />
-        <a href="../../" class="btn small">&laquo; {% trans "Go back" %}</a>
+        <a href="{% url 'site-index' %}" class="btn small">&laquo; {% trans "Go back" %}</a>
 
         <div class="pageinfo">
             {% trans "last updated" %} {{ page.last_update }}

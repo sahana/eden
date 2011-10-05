@@ -5,42 +5,42 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_16">
+    {% block centercol %}
+        <div class="grid_16">
     
-      <div id="contenttitles">
-        {% trans "Spaces list" %}
-      </div>
-      {% for space in object_list %}
-        <div id="spaceitem">
-          <p class="spacetitle"><a href="/spaces/{{ space.url }}">{{ space.name }}</a></p>
-          <p class="spacedesc">{{ space.description|removetags:"p"|safe }}</p>
+            <div id="contenttitles">
+                {% trans "Spaces list" %}
+            </div>
+      
+            {% for space in object_list %}
+                <div id="spaceitem">
+                    <p class="spacetitle"><a href="{{ space.get_absolute_url }}">{{ space.name }}</a></p>
+                    <p class="spacedesc">{{ space.description|removetags:"p"|safe }}</p>
+                </div>
+            {% empty %}
+                <p>{% trans "There are no public spaces or spaces you are registered to." %}</p>
+            {% endfor %}
+            
+            <hr />
+            <a href="{% url 'site-index' %}" class="btn small">&laquo; {% trans "Go back" %}</a>
         </div>
-      {% empty %}
-        <p>{% trans "There are no public spaces or spaces you are registered to." %}</p>
-      {% endfor %}
-      <hr />
-      <p>
-        <a href="../" class="pagebutton">{% trans "Go back" %}</a>
-      </p>
-    </div>
     
-    {% if is_paginated %}
-    <div class="pagination">
-      <span class="page-links">
-      {% if page_obj.has_previous %}
-        <a href="/spaces/?page={{ page_obj.previous_page_number }}">previous</a>
-      {% endif %}
-      <span class="page-current">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-      </span>
-      {% if page_obj.has_next %}
-        <a href="/spaces/?page={{ page_obj.next_page_number }}">next</a>
-      {% endif %}
-      </span>
-    </div>
-    {% endif %}
-  {% endblock %}
+        {% if is_paginated %}
+            <div class="pagination">
+                <span class="page-links">
+                    {% if page_obj.has_previous %}
+                        <a href="{% url 'list-spaces' %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
+                    {% endif %}
+                    <span class="page-current">
+                        {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="{% url 'list-spaces' get_place.url %}?page={{ page_obj.next_page_number }}"> | {% trans "next" %} &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+    {% endblock %}
 
 {% endblock %}
 

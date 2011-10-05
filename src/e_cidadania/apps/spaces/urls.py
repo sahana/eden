@@ -34,7 +34,7 @@ from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,
 urlpatterns = patterns('e_cidadania.apps.spaces.views',
 
     # RSS Feed
-    (r'^(?P<space_name>\w+)/rss/$', SpaceFeed()),
+    url(r'^(?P<space_name>\w+)/rss/$', SpaceFeed(), name='space-feed'),
     
     # News
     (r'^(?P<space_name>\w+)/news/', include('e_cidadania.apps.news.urls')),
@@ -53,48 +53,47 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 # Document URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/docs/add/$', 'add_doc'),
+    url(r'^(?P<space_name>\w+)/docs/add/$', 'add_doc', name='add-document'),
 
-    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/$', 'edit_doc'),
+    url(r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/$', 'edit_doc', name='edit-document'),
 
-    (r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/$', DeleteDocument.as_view()),
+    url(r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/$', DeleteDocument.as_view(), name='delete-document'),
 
-    (r'^(?P<space_name>\w+)/docs/$', ListDocs.as_view()),
+    url(r'^(?P<space_name>\w+)/docs/$', ListDocs.as_view(), name='list-documents'),
 
 )
 
 # Meeting URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/meeting/add/$', 'add_meeting'),
+    url(r'^(?P<space_name>\w+)/meeting/add/$', 'add_meeting', name='add-meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/edit/$', 'edit_meeting'),
+    url(r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/edit/$', 'edit_meeting', name='edit-meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/delete/$',
-     DeleteMeeting.as_view()),
+    url(r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/delete/$', DeleteMeeting.as_view(), name='delete-meeting'),
     
-    (r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/$', ViewMeeting.as_view()),
+    url(r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/$', ViewMeeting.as_view(), name='view-meeting'),
 
-    (r'^(?P<space_name>\w+)/meeting/$', ListMeetings.as_view()),
+    url(r'^(?P<space_name>\w+)/meeting/$', ListMeetings.as_view(), name='list-meetings'),
 
 )
 
 # Spaces URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    (r'^(?P<space_name>\w+)/edit/$', 'edit_space'),
+    url(r'^(?P<space_name>\w+)/edit/$', 'edit_space', name='edit-space'),
 
-    (r'^(?P<space_name>\w+)/delete/$', DeleteSpace.as_view()),
+    url(r'^(?P<space_name>\w+)/delete/$', DeleteSpace.as_view(), name='delete-space'),
     
-    (r'^(?P<space_name>\w+)/news/', ListPosts.as_view()),
+    url(r'^(?P<space_name>\w+)/news/', ListPosts.as_view(), name='list-space-news'),
         
-    (r'^add/$', 'create_space'),
+    url(r'^add/$', 'create_space', name='create-space'),
     
-    (r'^$', ListSpaces.as_view()),
+    url(r'^$', ListSpaces.as_view(), name='list-spaces'),
 
-    (r'^go/', GoToSpace.as_view()),
+    url(r'^go/', GoToSpace.as_view(), name='goto-space'),
 
-    (r'^(?P<space_name>\w+)/$', ViewSpaceIndex.as_view()),
+    url(r'^(?P<space_name>\w+)/$', ViewSpaceIndex.as_view(), name='space-index'),
 
 )
 

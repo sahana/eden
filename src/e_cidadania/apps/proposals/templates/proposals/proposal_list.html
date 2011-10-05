@@ -14,12 +14,12 @@
                 <div id="proposal-wrapper">
                     {% if perms.proposals.add_proposal %}
                         <div id="tools">
-                            <a href="../add/"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
+                            <a href="{% url 'add-proposal' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
                             {% if perms.proposals.edit_proposal %}
-                                <a href="edit/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
+                                <a href="{% url 'edit-proposal' get_place.url p.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
                             {% endif %}
                             {% if perms.proposals.delete_proposal %}
-                                <a href="delete/{{ p.id }}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
+                                <a href="{% url 'delete-proposal' get_place.url p.id %}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
                             {% endif %}
                         </div>
                     {% endif %}
@@ -28,10 +28,10 @@
                     </div>
                     <!-- Here goes the voting button -->
                     <div id="proposal">
-                        <div class="title"><a href="{{ request.path }}{{ p.id }}/">{{ p.title }}</a></div>
+                        <div class="title"><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></div>
                         <div class="message">{{ p.message|truncatewords:12 }}</div>
                         {% get_comment_count for p as comment_count %}
-                        <div class="creator">{% trans "proposed by " %} <a href="/accounts/{{ p.author }}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} | <a href="{{ request.path }}view/{{ p.id }}/">{{ comment_count }} {% trans "comments" %}</a></div>
+                        <div class="creator">{% trans "proposed by " %} <a href="{% url 'profile_public' p.author %}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} | <a href="{{ p.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></div>
                     </div>
                     {% comment %}
                         The following div is to make the wrapper to wrap everything.
@@ -50,13 +50,13 @@
             <div class="pagination">
                 <span class="page-links">
                     {% if page_obj.has_previous %}
-                        <a href="/spaces/?page={{ page_obj.previous_page_number }}">previous</a>
+                        <a href="{% url 'list-proposals' get_place.url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
                     {% endif %}
                     <span class="page-current">
-                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                        {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
                     </span>
                     {% if page_obj.has_next %}
-                        <a href="/spaces/?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="{% url 'list-proposals' get_place.url %}?page={{ page_obj.next_page_number }}">| {% trans "next" %} &raquo;</a>
                     {% endif %}
                 </span>
             </div>

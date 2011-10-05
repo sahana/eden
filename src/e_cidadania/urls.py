@@ -36,7 +36,7 @@ urlpatterns = patterns('',
     (r'^grappelli/', include('grappelli.urls')),
 
     # Index
-    (r'^$', 'e_cidadania.views.index_view'),
+    url(r'^$', 'e_cidadania.views.index_view', name='site-index'),
 
     # User accounts
     (r'^accounts/', include('e_cidadania.apps.userprofile.urls')),
@@ -45,18 +45,18 @@ urlpatterns = patterns('',
     (r'^spaces/', include('e_cidadania.apps.spaces.urls')),
 
     # News (this view of news is only for the index)
-    (r'^news/$', ListNews.as_view()),
+    url(r'^news/$', ListNews.as_view(), name='list-site-news'),
     
-    (r'^news/add/$', 'e_cidadania.views.add_news'),
+    url(r'^news/add/$', 'e_cidadania.views.add_news', name='add-site-post'),
 
-    (r'^news/(?P<post_id>\w+)/delete/$', 'e_cidadania.views.delete_post'),
+    url(r'^news/(?P<post_id>\w+)/delete/$', 'e_cidadania.views.delete_post', name='delete-site-post'),
 
-    (r'^news/(?P<post_id>\w+)/edit/$', 'e_cidadania.views.edit_post'),
+    url(r'^news/(?P<post_id>\w+)/edit/$', 'e_cidadania.views.edit_post', name='edit-site-post'),
 
-    (r'^news/(?P<post_id>\w+)/$', 'e_cidadania.views.view_post'),
+    url(r'^news/(?P<post_id>\w+)/$', 'e_cidadania.views.view_post', name='view-site-post'),
     
     # RSS Feed for the index news ONLY
-    (r'^rss/$', IndexEntriesFeed()),
+    url(r'^rss/$', IndexEntriesFeed(), name='site-feed'),
 
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
@@ -70,7 +70,7 @@ urlpatterns = patterns('',
     # This urls is for the django comments system
     (r'^comments/', include('django.contrib.comments.urls')),
 
-    url(r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
+    (r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
 
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view

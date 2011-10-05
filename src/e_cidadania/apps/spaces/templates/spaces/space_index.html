@@ -13,16 +13,16 @@
 
             {% if perms.news.add_post %}
                 <div id="tools">
-                    <a href="{{ request.path }}news/add/"}>
+                    <a href="{% url 'add-post' get_place.url %}">
                         <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>
                     </a>
                     {% if perms.spaces.edit_space %}
-                        <a href="{{ request.path }}edit/">
+                        <a href="{% url 'edit-space' get_place.url %}">
                             <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>
                         </a>
                     {% endif %}
                     {% if perms.spaces.delete_space %}
-                        <a href="{{ request.path }}delete/">
+                        <a href="{% url 'delete-space' get_place.url %}">
                             <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>
                         </a>
                     {% endif%}
@@ -34,20 +34,20 @@
                     <div class="post">
                         {% if perms.news.edit_post %}
                             <div id="tools">
-                                <a href="{{ request.path }}news/{{ news.id }}/edit/">
+                                <a href="{% url 'edit-post' get_place.url news.id %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                 </a>
                                 {% if perms.news.delete_post %}
-                                    <a href="{{ request.path }}news/{{ news.id }}/delete/">
+                                    <a href="{% url 'delete-post' get_place.url news.id %}">
                                         <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
                                     </a>
                                 {% endif %}
                             </div>
                         {% endif %}
-                        <h1><a href="{{ request.path }}news/{{ news.id }}">{{ news.post_title }}</a></h1>
+                        <h1><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a></h1>
                         <p>{{ news.post_message|safe }}</p>
                         {% get_comment_count for news as comment_count %}
-                        <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ request.path }}news/{{ news.id }}/">{{ comment_count }} {% trans "comments" %}</a></p>
+                        <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
                     </div>
                 {% empty %}
                     <div class="post">
@@ -82,12 +82,16 @@
 
             {% if meeting %}
                 <div id="widget">
-                    <h2>{% trans "Meetings" %}</h2>
+                    <h2>{% trans "Meetings" %}</h2><br />
                     <ul>
                         {% for m in meeting %}
-                            <li><p>{{ m.title }}</p></li>
+                            <li><p><a href="{{ m.get_absolute_url }}">{{ m.title }}</a></p></li>
                         {% endfor %}
                     </ul>
+                    <br /><p class="rightlink">&raquo; <a href="{% url 'list-meetings' get_place.url %}">{% trans "View all meetings" %}</a></p>
+                    {% if perms.spaces.add_meeting %}
+                        <p class="rightlink">&raquo; <a href="{% url 'add-meeting' get_place.url %}">{% trans "Add meeting"%}</a></p>
+                    {% endif %}
                 </div>
             {% endif %}
 
@@ -96,10 +100,10 @@
                     <h2>{% trans "Latest news" %}</h2><br />
                     <ul>
                         {% for news in publication %}
-                            <li><p>{{ news.post_title }}</li></p>
+                            <li><p><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a></li></p>
                         {% endfor %}
                     </ul><br />
-                    <p class="rightlink">&raquo; <a href="{{ request.path }}news/">{% trans "News archive"%}</a></p>
+                    <p class="rightlink">&raquo; <a href="{% url 'list-space-news' get_place.url %}">{% trans "News archive"%}</a></p>
                 </div>
             {% endif %}
 
@@ -109,13 +113,17 @@
                     <ul>
                         {% for doc in documents %}
                             <li>
+                                {% comment %}
+                                    Remember that document files are accesed through the url method of the
+                                    FileField, instead of having their own detail view.
+                                {% endcomment %}
                                 <p><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }}</a>
                                 {% if perms.spaces.edit_document %}
-                                    <a href="{{ request.path }}docs/{{ doc.id }}/edit/">
+                                    <a href="{% url 'edit-document' get_place.url doc.id %}">
                                         <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                     </a>
                                     {% if perms.spaces.delete_document %}
-                                        <a href="{{ request.path }}docs/{{ doc.id }}/delete/">
+                                        <a href="{% url 'delete-document' get_place.url doc.id %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
                                         </a>
                                     {% endif %}
@@ -125,9 +133,9 @@
                             <p>{% trans "No documents available" %}.</p>
                         {% endfor %}
                     </ul>
-                    <br /><p class="rightlink">&raquo; <a href="{{ request.path }}docs/">{% trans "View all documents" %}</a></p>
+                    <br /><p class="rightlink">&raquo; <a href="{% url 'list-documents' get_place.url %}">{% trans "View all documents" %}</a></p>
                     {% if perms.spaces.add_document %}
-                        <p class="rightlink">&raquo; <a href="{{ request.path }}docs/add/">{% trans "Add documents"%}</a></p>
+                        <p class="rightlink">&raquo; <a href="{% url 'add-document' get_place.url %}">{% trans "Add documents"%}</a></p>
                     {% endif %}
                 </div>
             {% endif %}
@@ -138,13 +146,13 @@
                     <ul>
                         {% for debate in debates %}
                             <li>
-                                <p><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ debate.title }}</a>
+                                <p><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a>
                                 {% if perms.debate.edit_debate %}
-                                    <a href="{{ request.path }}docs/{{ doc.id }}/edit/">
+                                    <a href="{% url 'edit-debate' get_place.url %}">
                                         <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                     </a>
                                     {% if perms.debate.delete_debate %}
-                                        <a href="{{ request.path }}docs/{{ doc.id }}/delete/">
+                                        <a href="{% url 'delete-debate' get_place.url %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
                                         </a>
                                     {% endif %}
@@ -154,9 +162,9 @@
                             <p>{% trans "No debates started" %}.</p>
                         {% endfor %}
                     </ul>
-                    <br /><p class="rightlink">&raquo; <a href="{{ request.path }}debate/">{% trans "View all debates" %}</a></p>
+                    <br /><p class="rightlink">&raquo; <a href="{% url 'list-debates' get_place.url %}">{% trans "View all debates" %}</a></p>
                     {% if perms.debate.add_debate %}
-                        <p class="rightlink">&raquo; <a href="{{ request.path }}debate/add/">{% trans "Add debate" %}</a></p>
+                        <p class="rightlink">&raquo; <a href="{% url 'add-debate' get_place.url %}">{% trans "Add debate" %}</a></p>
                     {% endif %}
                 </div>
             {% endif %}
@@ -167,15 +175,15 @@
                     <ul>
                         {% for proposal in proposals %}
                             <li>
-                                <p><a href="{{ request.path }}proposal/{{ proposal.id }}/">{{ proposal.title }}</a></p>
+                                <p><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a></p>
                             </li>
                         {% empty %}
                             <p>{% trans "No proposals available" %}.</p>
                         {% endfor %}
                     </ul>
-                    <br /><p class="rightlink">&raquo; <a href="{{ request.path }}proposal/">{% trans "View all proposals" %}</a></p>
+                    <br /><p class="rightlink">&raquo; <a href="{% url 'list-proposals' get_place.url %}">{% trans "View all proposals" %}</a></p>
                     {% if perms.proposals.add_proposal %}
-                        <p class="rightlink">&raquo; <a href="{{ request.path }}proposal/add/">{% trans "Add proposal" %}</a></p>
+                        <p class="rightlink">&raquo; <a href="{% url 'add-proposal' get_place.url %}">{% trans "Add proposal" %}</a></p>
                     {% endif %}
                 </div>
             {% endif %}

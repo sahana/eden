@@ -119,5 +119,8 @@ class Proposal(models.Model):
             ('view', 'Can view the object'),
         )
 
+    @models.permalink
     def get_absolute_url(self):
-        return '/spaces/%s/proposal/%s' % (self.space, self.id)
+        return ('view-proposal', (), {
+            'space_name': self.space.url,
+            'prop_id': str(self.id)})

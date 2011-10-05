@@ -64,9 +64,11 @@ class Space(models.Model):
 
     def __unicode__(self):
         return self.name
-    
+
+    @models.permalink
     def get_absolute_url(self):
-        return '/spaces/%s' % self.url
+        return ('space-index', (), {
+            'space_name': self.url})
 
 
 class Entity(models.Model):
@@ -107,9 +109,12 @@ class Document(models.Model):
         verbose_name = _('Document')
         verbose_name_plural = _('Documents')
         get_latest_by = 'pub_date'
-        
+    
+    # There is no 'view-document' view, so I'll leave the get_absolute_url
+    # method without permalink. Remember that the document files are accesed
+    # through the url() method in templates.
     def get_absolute_url(self):
-        return '/%s/docs/%s' % (self.space.url, self.id)
+        return '/spaces/%s/docs/%s' % (self.space.url, self.id)
 
 
 class MeetingType(models.Model):
@@ -155,5 +160,8 @@ class Meeting(models.Model):
     def __unicode__(self):
         return self.title
     
+    @models.permalink
     def get_absolute_url(self):
-        return '/spaces/%s/meeting/%s/' % (self.space.url, self.id)
+        return ('view-meeting', (), {
+            'space_name': self.space.url,
+            'meeting_id': str(self.id)})

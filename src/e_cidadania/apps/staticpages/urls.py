@@ -22,12 +22,12 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('e_cidadania.apps.staticpages.views',
 
-    (r'^$', 'view_page'),
+    url(r'^$', 'view_page', name='view-page'),
 
-    (r'^edit/', 'edit_page'),
+    url(r'^edit/', 'edit_page', name='edit-page'),
     
-    (r'^delete/', 'delete_page'),
+    url(r'^delete/', 'delete_page', name='delete-page'),
     
-    (r'^add/', 'add_page')
+    url(r'^add/', 'add_page', name='add-page')
 )
 

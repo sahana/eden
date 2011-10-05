@@ -25,7 +25,7 @@
 
 {% block breadcumbs %}
 <div>
-    <a href="{% url rosetta-pick-file %}">{% trans "Home" %}</a> &rsaquo; 
+    <a href="{% url 'rosetta-pick-file' %}">{% trans "Home" %}</a> &rsaquo; 
     {{ rosetta_i18n_lang_name }} &rsaquo; 
     {{ rosetta_i18n_app|title }} &rsaquo; 
     {% blocktrans with rosetta_i18n_pofile.percent_translated|floatformat:2 as percent_translated  %}Progress: {{ percent_translated }}%{% endblocktrans %}
@@ -38,8 +38,8 @@
 {% block main %}
 <ul class="tools">
     <li>
-        <li><a href="{% url rosetta-pick-file %}" class="focus">{% trans "Pick another file" %}</a></li> 
-        <li><a href="{% url rosetta-download-file %}">{% trans "Download this catalog" %}</a></li>
+        <li><a href="{% url 'rosetta-pick-file' %}" class="focus">{% trans "Pick another file" %}</a></li> 
+        <li><a href="{% url 'rosetta-download-file' %}">{% trans "Download this catalog" %}</a></li>
     </li>
 </ul>
 

@@ -40,25 +40,27 @@
             {% empty %}
                 <p>{% trans "There are no posts in this space." %}</p>
             {% endfor %}
+            
+            {% if is_paginated %}
+                <div class="pagination">
+                    <span class="page-links">
+                        {% if page_obj.has_previous %}
+                            <a href="{% url 'list-space-news' get_place.url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
+                        {% endif %}
+                        <span class="page-current">
+                            {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                        </span>
+                        {% if page_obj.has_next %}
+                            <a href="{% url 'list-space-news' get_place.url %}?page={{ page_obj.next_page_number }}"> | {% trans "next" %} &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            {% endif %}
+           
             <hr />
-            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+            <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
         </div>
 
-        {% if is_paginated %}
-            <div class="pagination">
-                <span class="page-links">
-                    {% if page_obj.has_previous %}
-                        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
-                    {% endif %}
-                    <span class="page-current">
-                        {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
-                    </span>
-                    {% if page_obj.has_next %}
-                        <a href="/spaces/{{ get_place.url }}/news/?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
-                    {% endif %}
-                </span>
-            </div>
-        {% endif %}
     {% endblock %}
 
 {% endblock %}

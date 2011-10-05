@@ -8,100 +8,141 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_16">
+    {% block centercol %}
+        <div class="grid_16">
     
-      <div id="contenttitles">
-        {% trans "Edit space" %}
-      </div>
+            <div id="contenttitles">
+                {% trans "Edit space" %}
+            </div>
       
-      <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+            <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
-        {{ form.non_field_errors }}
-        <div class="fieldWrapper">
-          {{ form.name.errors }}
-          <label for="id_name">{% trans "Space name" %}:</label>
-          <p>{{ form.name }}</p>
-          <p id="form_help_text">{{ form.name.help_text }}</p>
-        </div>
+            {{ form.non_field_errors }}
+
+            <div class="clearfix"> 
+                {{ form.name.errors }}
+                <label for="prependedInput">{{ form.name.label }}</label> 
+                <div class="input"> 
+                    {{ form.name }}
+                    <span class="help-inline">{{ form.name.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.url.errors }}
+                <label for="prependedInput">{{ form.url.label }}</label> 
+                <div class="input"> 
+                    {{ form.url }}
+                    <span class="help-inline">{{ form.url.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.description.errors }}
+                <label for="prependedInput">{{ form.description.label }}</label> 
+                <div class="input"> 
+                    {{ form.description }}
+                    {% wysiwyg_editor "id_description" %}
+                    <span class="help-inline">{{ form.description.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.logo.errors }}
+                <label for="prependedInput">{{ form.logo.label }}</label> 
+                <div class="input"> 
+                    {{ form.logo }}
+                    <span class="help-inline">{{ form.logo.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.banner.errors }}
+                <label for="prependedInput">{{ form.banner.label }}</label> 
+                <div class="input"> 
+                    {{ form.banner }}
+                    <span class="help-inline">{{ form.banner.help_text }}</span>
+                </div> 
+            </div>
+            
+            <div class="clearfix"> 
+                {{ form.authorized_groups.errors }}
+                <label for="prependedInput">{{ form.authorized_groups.label }}</label> 
+                <div class="input"> 
+                    {{ form.authorized_groups }}
+                    <span class="help-inline">{{ form.authorized_groups.help_text }}</span>
+                </div> 
+            </div>
+            
+            <hr />
+            <h3>{% trans "Modules" %}</h3>
+
+            <div class="fieldWrapper">
+                <p>{{ form.mod_debate }} {% trans "Debate" %}</p>
+                <p>{{ form.mod_proposals }} {% trans "Proposals" %}</p>
+                <p>{{ form.mod_news }} {% trans "News" %}</p>
+                <p>{{ form.mod_cal }} {% trans "Calendar" %}</p>
+                <p>{{ form.mod_docs }} {% trans "Documentation" %}</p>
+            </div>
         
-        <div class="fieldWrapper">
-          {{ form.url.errors }}
-          <label for="id_url">{% trans "URL" %}:</label>
-          <p>{{ form.url }}</p>
-          <p id="form_help_text">{{ form.url.help_text }}</p>
-        </div>
+            {{ form.author.as_hidden }}
 
-        <div class="fieldWrapper">
-          {{ form.description.errors }}
-          <label for="id_description">{% trans "Description" %}:</label>
-          <p>{{ form.description }}</p>
-          {% wysiwyg_editor "id_description" %}
-          <p id="form_help_text">{{ form.description.help_text }}</p>
-        </div>
+            <hr />
 
-        <div class="fieldWrapper">
-          {{ form.logo.errors }}
-          <label for="id_logo">{% trans "Logotype" %}:</label>
-          <p>{{ form.logo }}</p>
-          <p id="form_help_text">{{ form.logo.help_text }}</p>
-        </div>
+            <h3>{% trans "Entities participating" %}</h3><br /><br />
+            
+            {% comment %}
+                Entity forms
+            {% endcomment %}
 
-        <div class="fieldWrapper">
-          {{ form.banner.errors }}
-          <label for="id_banner">{% trans "Banner" %}:</label>
-          <p>{{ form.banner }}</p>
-          <p id="form_help_text">{{ form.banner.help_text }}</p>
-        </div>
+            {{ entityformset.management_form }}
+
+            {% for entity in entityformset %}
+                {{ entity.id }}
+                <div class="clearfix"> 
+                    {{ entity.errors }}
+                    <label for="prependedInput">{{ entity.name.label }}</label> 
+                    <div class="input"> 
+                        {{ entity.name }}
+                        <span class="help-inline">{{ entity.name.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix">
+                    {{ entity.errors }}
+                    <label for="prependedInput">{{ entity.website.label }}</label> 
+                    <div class="input"> 
+                        {{ entity.website }}
+                        <span class="help-inline">{{ entity.website.help_text }}</span>
+                    </div> 
+                </div>
+
+                <div class="clearfix"> 
+                    {{ entity.errors }}
+                    <label for="prependedInput">{{ entity.logo.label }}</label> 
+                    <div class="input"> 
+                        {{ entity.logo }}
+                        <span class="help-inline">{{ entity.logo.help_text }}</span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix">
+                    <label for="prependedInput"><hr /></label>
+                </div>           
+            
+            {% endfor %}
         
-        <div class="fieldWrapper">
-          {{ form.authorized_groups.errors }}
-          <label for="id_authorized_groups">{% trans "Authorized Groups" %}:</label>
-          <p>{{ form.authorized_groups }}</p>
+            <hr />
+            <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Cancel" %}</a>
+            <input class="btn small primary " type="submit" value="{% trans 'Save' %}" />
+            </form>
         </div>
 
-        <hr />
-        <h3>{% trans "Modules" %}</h3>
-
-        <div class="fieldWrapper">
-          <p>{{ form.mod_debate }} {% trans "Debate" %}</p>
-          <p>{{ form.mod_proposals }} {% trans "Proposals" %}</p>
-          <p>{{ form.mod_news }} {% trans "News" %}</p>
-          <p>{{ form.mod_cal }} {% trans "Calendar" %}</p>
-          <p>{{ form.mod_docs }} {% trans "Documentation" %}</p>
-        </div>
-        {{ form.author.as_hidden }}
-        
-        {% comment %}
-            Entity forms
-        {% endcomment %}
-
-        {{ entityformset.management_form }}
-
-        {% for entity in entityformset %}
-          {{ form.id }}
-          <div class="fieldWrapper">
-            {{ entity.errors }}
-            {% trans "Name" %}: {{ entity.name }}<br />
-            {% trans "Website" %}: {{ entity.website }}<br />
-            {% trans "Logotype" %}: {{ entity.logo }}
-            {{ entity.space.as_hidden }}
-        </div>
-        {% endfor %}
-        
-        <hr />
-        <p class="buttons">
-          <input type="submit" value="{% trans 'Save' %}" />
-          <a href="../../" class="pagebutton">{% trans "Cancel" %}</a>
-        </p>
-      </form>
-    </div>
-
-  {% endblock %}
+    {% endblock %}
 
 
-  {% block rightcol %}
-  {% endblock %}
+    {% block rightcol %}
+    {% endblock %}
 
 {% endblock %}
 

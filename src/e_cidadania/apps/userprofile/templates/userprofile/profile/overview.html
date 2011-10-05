@@ -36,10 +36,10 @@
         </div>
         
         <div id="useropts">
-	        <a href="{{ request.path.info }}edit/personal">{% trans "Edit personal data" %}</a> |
-	        <a href="{{ request.path.info }}edit/location/">{% trans "Edit location" %}</a> |
-	        <a href="{{ request.path.info }}delete/">{% trans "Delete profile" %}</a> |
-	        <a href="{{ request.path.info }}{{ user.username }}">{% trans "Public profile" %}</a>
+	        <a href="{% url 'profile_edit_personal' %}">{% trans "Edit personal data" %}</a> |
+	        <a href="{% url 'profile_edit_location' %}">{% trans "Edit location" %}</a> |
+	        <a href="{% url 'profile_delete' %}">{% trans "Delete profile" %}</a> |
+	        <a href="{% url 'profile_public' request.user %}">{% trans "Public profile" %}</a>
 	      </div>
       </div>
       
@@ -49,11 +49,11 @@
       
       <div class="grid_8 userinfo">
         <div id="avatar" class="span-3 center">
-        	<a href="{% url profile_edit_avatar %}">
+        	<a href="{% url 'profile_edit_avatar' %}">
          		<img class="border" src="/static/generic.96.jpg" />
 	      	</a>
          	<p>
-         	  <a href="{{ request.path_info }}edit/avatar/">{% if user.get_profile.has_avatar %}{% trans "Change avatar" %}{% else %}{% trans "Add avatar" %}{% endif %}</a>
+         	  <a href="{% url 'profile_edit_avatar' %}">{% if user.get_profile.has_avatar %}{% trans "Change avatar" %}{% else %}{% trans "Add avatar" %}{% endif %}</a>
          	</p>
 	      </div>
 
@@ -117,7 +117,7 @@
           <h1>{% trans "Your spaces" %}</h1>
           <ul class="spaces">
             {% for space in user.get_profile.spaces.all %}
-              <li><a href="/spaces/{{ space.url }}">{{ space.name }}</a></li>
+              <li><a href="{{ space.get_absolute_url }}">{{ space.name }}</a></li>
             {% empty %}
               <p>{% trans "You are not signed to any space." %}</p>
             {% endfor %}

@@ -26,9 +26,9 @@
             <div class="post">
                 {% if perm.news.edit_post %}
                     <div id="tools">
-                        <a href="{{ request.path }}/edit/">Edit</a> |
+                        <a href="{% url 'edit-post' get_place.url news.id %}">Edit</a> |
                         {% if perm.news.delete_post %}
-                            <a href="{{ request.path }}/delete/">Delete</a>
+                            <a href="{% url 'delete-post' get_place.url news.id %}">Delete</a>
                         {% endif %}
                     </div>
                 {% endif %}

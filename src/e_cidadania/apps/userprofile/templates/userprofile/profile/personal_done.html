@@ -8,7 +8,7 @@
 	<div id="grid_16">
 		{% trans "Your profile information has been updated successfully." %}<br/><br/><br/>
 		<div>
-		    {% trans "You can go" %} <a href="/"><u>{% trans "back to home" %}</u></a> {% trans "or" %} <a href="/accounts/"><u>{% trans "back to your profile" %}</u></a>
+		    {% trans "You can go" %} <a href="/"><u>{% trans "back to home" %}</u></a> {% trans "or" %} <a href="{% url 'profile-overview' %}"><u>{% trans "back to your profile" %}</u></a>
 	  </div>
 	</div>
 {% endblock %}

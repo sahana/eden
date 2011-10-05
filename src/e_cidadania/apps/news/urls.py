@@ -25,12 +25,12 @@ from e_cidadania.apps.news.views import DeletePost, ViewPost
 
 urlpatterns = patterns('e_cidadania.apps.news.views',
     
-    (r'^add/$', 'add_post'),
+    url(r'^add/$', 'add_post', name='add-post'),
     
-    (r'^(?P<post_id>\d+)/delete/$', DeletePost.as_view()),
+    url(r'^(?P<post_id>\d+)/delete/$', DeletePost.as_view(), name='delete-post'),
     
-    (r'^(?P<post_id>\d+)/edit/$', 'edit_post'),
+    url(r'^(?P<post_id>\d+)/edit/$', 'edit_post', name='edit-post'),
     
-    (r'^(?P<post_id>\d+)', ViewPost.as_view())
+    url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name='view-post')
 
 )

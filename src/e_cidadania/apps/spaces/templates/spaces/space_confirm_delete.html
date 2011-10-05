@@ -7,20 +7,21 @@
 
 {% block content %}
 
-  {% block centercol %}
-    <div class="grid_16">
-        <form action="" method="post">{% csrf_token %}
-          <p>{% trans "Are you sure you want to delete this space? This action cannot be undone." %}</p>
+    {% block centercol %}
+        <div class="grid_16">
+            <form action="" method="post">{% csrf_token %}
+                <p>{% trans "Are you sure you want to delete this space? This action cannot be undone." %}</p>
 
-          <p><input type="submit" value="{% trans 'Delete' %}" /></p>
-          <p><a href="/">&laquo; {% trans "Go back" %}</a></p>
-        </form>
-    </div>
+                <hr />
+                <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
+                <input class="btn small danger" type="submit" value="{% trans 'Delete' %}" />
+            </form>
+        </div>
 
-  {% endblock %}
+    {% endblock %}
 
 
-  {% block rightcol %}
-  {% endblock %}
+    {% block rightcol %}
+    {% endblock %}
 
 {% endblock %}
