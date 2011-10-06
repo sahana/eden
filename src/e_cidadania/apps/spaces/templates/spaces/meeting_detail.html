@@ -13,15 +13,33 @@
             <div id="contenttitles">
                 {% trans "View meeting" %}
             </div>
+            
+            {% if perms.spaces.edit_meeting %}
+                <div id="tools">
+                    <a href="{% url 'edit-meeting' get_place.url meeting.id %}">Edit</a> |
+                    {% if perms.spaces.delete_meeting %}
+                        <a href="{% url 'delete-meeting' get_place.url meeting.id %}">Delete</a>
+                    {% endif %}
+                </div>
+            {% endif %}
       
-            <p>{% trans "Title" %}</p>
-            <p>{{ meeting.title }}</p>
-            <p>{% trans "Description" %}</p>
-            <p>{{ meeting.description }}</p>
-            <p>{% trans "Date" %}</p>
-            <p>{{ meeting.date }}</p>
-            <p>{% trans "Location" %}</p>
-            <p>{{ meeting.location }}</p>
+            <h1>{{ meeting.title }}</h1><br />
+            <p>{{ meeting.location }}, {{ meeting.meeting_date }} - {{ meeting.meeting_type}}</p><br /><br />
+
+            <p>{{ meeting.description|safe }}</p><br /><br />
+            
+            <p>{% trans "Attendees" %}:
+                {% for attendant in meeting.user.all %}
+                    <a href="{% url 'profile_public' attendant.username %}">
+                        {% if attendant.get_profile.name %}
+                            {{ attendant.get_profile.name }}
+                        {% else %}
+                            {{ attendant.username }}
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </p>
+
         </div>
     {% endblock%}
   
