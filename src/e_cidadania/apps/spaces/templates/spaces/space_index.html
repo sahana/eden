@@ -68,7 +68,9 @@
                 <div id="widget">
                     <h2>{% trans "Calendar" %}</h2><br />
                     <div id="datepicker"></div>
+                        <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
                         <script type="text/javascript">
+                            $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);
                             $('#datepicker').datepicker({
                                 onSelect: function(dateText) {
                                     var month = dateText.split("/")[0]
