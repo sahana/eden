@@ -6,7 +6,7 @@
 
 {% block logo %}
     {% if get_place %}
-        <img src="{{ MEDIA_URL }}/{{ get_place.logo }}">
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}"></a>
     {% endif %}
 {% endblock %}
   

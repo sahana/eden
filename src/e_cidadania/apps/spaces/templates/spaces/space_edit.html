@@ -3,7 +3,7 @@
 {% load wysiwyg %}
 
 {% block title %}{% trans "Edit space" %}{% endblock %}
-{% block logo %}<img src="{{ MEDIA_URL }}/{{ get_place.logo }}">{% endblock %}
+{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}"></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}">{% endblock %}
 
 {% block content %}
