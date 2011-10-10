@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-07-27 11:25\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
+"PO-Revision-Date: 2011-10-10 10:11\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -90,7 +90,7 @@ msgstr "Repo.or.cz (Espejo)"
 msgid "Recent Actions"
 msgstr "Acciones recientes"
 
-#: views.py:54
+#: views.py:57
 msgid ""
 "Hi! It seems that it's your first time here."
 "                                  Maybe you want to <a "
@@ -102,23 +102,23 @@ msgstr ""
 "href=\"/accounts/register\">registrarte</a> o <a "
 "href=\"/accounts/login\">entrar</a> si ya tienes una cuenta."
 
-#: views.py:71
+#: views.py:74
 msgid "e-cidadania news"
 msgstr "Noticias de e-cidadania"
 
-#: views.py:73
+#: views.py:76
 msgid "Updates on the main e-cidadania site."
 msgstr "Actualizaciones en la página principal de e-cidadania"
 
-#: views.py:107
+#: views.py:110
 msgid "Post added successfully"
 msgstr "Entrada añadida satisfactoriamente."
 
-#: views.py:128
+#: views.py:131
 msgid "Post deleted successfully."
 msgstr "Entrada eliminada satisfactoriamente."
 
-#: views.py:143
+#: views.py:146
 msgid "Post edited successfully."
 msgstr "Entrada editada satisfactoriamente."
 
@@ -150,11 +150,11 @@ msgstr "Inicio"
 msgid "Development"
 msgstr "Desarrollo"
 
-#: templates/404.html:67 templates/site_index.html:140
+#: templates/404.html:67
 msgid "Help"
 msgstr "Ayuda"
 
-#: templates/404.html:68 templates/site_index.html:140
+#: templates/404.html:68
 msgid "Terms of service"
 msgstr "Términos de servicio"
 
@@ -162,7 +162,7 @@ msgstr "Términos de servicio"
 msgid "Privacy"
 msgstr "Privacidad"
 
-#: templates/404.html:70 templates/site_index.html:140
+#: templates/404.html:70
 msgid "About"
 msgstr "Acerca de"
 
@@ -186,7 +186,7 @@ msgstr "página principal"
 msgid "while we call the spaguetti squad to repair this."
 msgstr "mientras nosotros llamamos al comando espaguetti para arreglar esto."
 
-#: templates/base.html:99
+#: templates/base.html:113
 msgid "created by"
 msgstr "creado por"
 
@@ -246,7 +246,7 @@ msgstr "a tu perfil"
 msgid "e-cidadania"
 msgstr "e-cidadania"
 
-#: templates/site_index.html:13
+#: templates/site_index.html:14
 msgid ""
 "e-cidadania is a participative democracy tool for citizens. It has an "
 "advanced debate system, proposals, document versioning, and you can "
@@ -259,97 +259,93 @@ msgstr ""
 "específicos para cada proceso. Tiene muchas más funciones pero es "
 "mejor que las descubras por tu cuenta."
 
-#: templates/site_index.html:21
+#: templates/site_index.html:24
 msgid "Add news"
 msgstr "Añadir noticia"
 
-#: templates/site_index.html:32
+#: templates/site_index.html:35
 msgid "Edit"
 msgstr "Editar"
 
-#: templates/site_index.html:36
+#: templates/site_index.html:39
 msgid "Delete"
 msgstr "Eliminar"
 
-#: templates/site_index.html:42
+#: templates/site_index.html:45
 msgid "Written by"
 msgstr "Escrito por"
 
-#: templates/site_index.html:42
+#: templates/site_index.html:45
 msgid "on"
 msgstr "el"
 
-#: templates/site_index.html:42
+#: templates/site_index.html:45
 msgid "Tags"
 msgstr "Etiquetas"
 
-#: templates/site_index.html:48
+#: templates/site_index.html:51
 msgid "Nothing published yet."
 msgstr "No hay nada publicado todavía."
 
-#: templates/site_index.html:58
+#: templates/site_index.html:62
 msgid "What can you do with e-cidadania?"
 msgstr "¿Qué puedes hacer con e-cidadania?"
 
-#: templates/site_index.html:58
+#: templates/site_index.html:62
 msgid "Discover it here"
 msgstr "Descúbrelo aquí"
 
-#: templates/site_index.html:62
+#: templates/site_index.html:66
 msgid "Create your own space"
 msgstr "Crea tu propio espacio"
 
-#: templates/site_index.html:62
+#: templates/site_index.html:66
 msgid "inside e-cidadania"
 msgstr "dentro de e-cidadania"
 
-#: templates/site_index.html:66
+#: templates/site_index.html:70
 msgid "Spaces list"
 msgstr "Lista de espacios"
 
-#: templates/site_index.html:72
+#: templates/site_index.html:76
 msgid "No spaces"
 msgstr "No hay espacios."
 
-#: templates/site_index.html:75
+#: templates/site_index.html:79
 msgid "Go"
 msgstr "Ir"
 
-#: templates/site_index.html:80
+#: templates/site_index.html:84
 msgid "Recently added spaces"
 msgstr "Espacios añadidos recientemente"
 
-#: templates/site_index.html:84
+#: templates/site_index.html:88
 msgid "No spaces have been added recently."
 msgstr "No se han añadido espacios recientemente."
 
-#: templates/site_index.html:89
+#: templates/site_index.html:93
 msgid "Share"
 msgstr "Compartir"
 
-#: templates/site_index.html:127
+#: templates/site_index.html:164
+msgid "Tweet"
+msgstr "Twittear"
+
+#: templates/site_index.html:174
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr "¿Tu red social favorita no está aquí? ¡Dínoslo!"
 
-#: templates/site_index.html:131
+#: templates/site_index.html:178
 msgid "e-cidadania development"
 msgstr "Desarrollo de e-cidadania"
 
-#: templates/site_index.html:132
+#: templates/site_index.html:179
 msgid "Do you want to help?"
 msgstr "¿Quieres contribuir?"
 
-#: templates/site_index.html:132
+#: templates/site_index.html:179
 msgid "Access"
 msgstr "Accede"
-
-#: templates/site_index.html:140
-msgid "API"
-msgstr "API"
-
-#: templates/site_index.html:140
-msgid "Developers"
-msgstr "Desarrolladores"
 
 #: templates/comments/approve.html:4
 msgid "Approve a comment"
@@ -462,10 +458,16 @@ msgstr "o hacer cambios"
 msgid "News list"
 msgstr "Archivo de noticias"
 
-#: templates/news/post_list.html:17
+#: templates/news/post_list.html:18
 msgid "There are no post."
 msgstr "No existen entradas."
 
-#: templates/news/post_list.html:21
+#: templates/news/post_list.html:22
 msgid "Go back"
 msgstr "Volver"
+
+#~ msgid "API"
+#~ msgstr "API"
+
+#~ msgid "Developers"
+#~ msgstr "Desarrolladores"

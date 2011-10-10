@@ -2,20 +2,20 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: 2011-09-22 12:36\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: models.py:33
@@ -98,30 +98,24 @@ msgstr "Páxina web"
 msgid "The URL will be checked"
 msgstr "A dirección comprobarase"
 
-#: templates/accounts/login.html:4
-msgid "Login"
-msgstr "Entrar"
+#~ msgid "Login"
+#~ msgstr "Entrar"
 
-#: templates/accounts/login.html:14
-msgid "Username:"
-msgstr "Nome de usuario:"
+#~ msgid "Username:"
+#~ msgstr "Nome de usuario:"
 
-#: templates/accounts/login.html:17
-msgid "Password:"
-msgstr "Contrasinal:"
+#~ msgid "Password:"
+#~ msgstr "Contrasinal:"
 
-#: templates/accounts/logout.html:7
-msgid ""
-"Thanks for using e-cidadania. Now you can continue visting the website "
-"or log in again."
-msgstr ""
-"Grazas por usar e-cidadania. Agora podes continuar visitando a web ou "
-"volver a entrar."
+#~ msgid ""
+#~ "Thanks for using e-cidadania. Now you can continue visting the website or "
+#~ "log in again."
+#~ msgstr ""
+#~ "Grazas por usar e-cidadania. Agora podes continuar visitando a web ou "
+#~ "volver a entrar."
 
-#: templates/accounts/logout.html:9
-msgid "Login again"
-msgstr "Volver a entrar"
+#~ msgid "Login again"
+#~ msgstr "Volver a entrar"
 
-#: templates/accounts/profile.html:5
-msgid "User"
-msgstr "Usuario"
+#~ msgid "User"
+#~ msgstr "Usuario"

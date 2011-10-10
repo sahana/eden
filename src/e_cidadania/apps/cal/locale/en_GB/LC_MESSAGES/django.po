@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,15 +22,15 @@ msgstr ""
 msgid "Calendar"
 msgstr ""
 
-#: templates/cal/calendar.html:21
+#: templates/cal/calendar.html:20
 msgid "Previous month"
 msgstr ""
 
-#: templates/cal/calendar.html:22
+#: templates/cal/calendar.html:21
 msgid "Next month"
 msgstr ""
 
-#: templates/cal/calendar.html:23
+#: templates/cal/calendar.html:22
 msgid "Go back"
 msgstr ""
 

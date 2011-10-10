@@ -6,12 +6,12 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: e-cidadania 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
-"PO-Revision-Date: 2011-07-27 11:41\n"
-"Last-Translator:   <a@a.com>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
+"PO-Revision-Date: 2011-10-10 10:16\n"
+"Last-Translator: <oscar.carballal@cidadania.coop>\n"
+"Language-Team: Spanish Team <ecidadania-es@freelists.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -50,9 +50,7 @@ msgstr "Técnicamente no viable"
 msgid "Offtopic"
 msgstr "Fuera de tópico"
 
-#: models.py:48 models.py:81 templates/proposals/proposal_add.html:21
-#: templates/proposals/proposal_add.html:72
-#: templates/proposals/proposal_edit.html:27
+#: models.py:48 models.py:81 templates/proposals/proposal_add.html:88
 msgid "Title"
 msgstr "Título"
 
@@ -60,19 +58,15 @@ msgstr "Título"
 msgid "Code"
 msgstr "Código"
 
-#: models.py:82 templates/proposals/proposal_add.html:28
-#: templates/proposals/proposal_add.html:73
-#: templates/proposals/proposal_edit.html:34
+#: models.py:82 templates/proposals/proposal_add.html:89
 msgid "Description"
 msgstr "Descripción"
 
-#: models.py:88 templates/proposals/proposal_add.html:35
-#: templates/proposals/proposal_edit.html:41
+#: models.py:88
 msgid "Latitude"
 msgstr "Latitud"
 
-#: models.py:90 templates/proposals/proposal_add.html:41
-#: templates/proposals/proposal_edit.html:47
+#: models.py:90
 msgid "Longitude"
 msgstr "Longitud"
 
@@ -85,43 +79,32 @@ msgid "Proposals"
 msgstr "Propuestas"
 
 #: templates/proposals/proposal_add.html:5
-#: templates/proposals/proposal_add.html:13
 #: templates/proposals/proposal_detail.html:17
 #: templates/proposals/proposal_list.html:17
 msgid "Add proposal"
 msgstr "Añadir propuesta"
 
-#: templates/proposals/proposal_add.html:35
-#: templates/proposals/proposal_add.html:41
-#: templates/proposals/proposal_add.html:47
-#: templates/proposals/proposal_edit.html:41
-#: templates/proposals/proposal_edit.html:47
-#: templates/proposals/proposal_edit.html:53
-msgid "(optional)"
-msgstr "(opcional)"
+#: templates/proposals/proposal_add.html:12
+msgid "Add new proposal"
+msgstr "Añadir propuesta"
 
-#: templates/proposals/proposal_add.html:47
-#: templates/proposals/proposal_add.html:75
-#: templates/proposals/proposal_edit.html:53
-msgid "Tags"
-msgstr "Etiquetas"
+#: templates/proposals/proposal_add.html:73
+#: templates/proposals/proposal_confirm_delete.html:21
+#: templates/proposals/proposal_edit.html:86
+#: templates/proposals/proposal_list.html:48
+msgid "Go back"
+msgstr "Volver"
 
-#: templates/proposals/proposal_add.html:57
-#: templates/proposals/proposal_edit.html:64
-msgid "Create"
-msgstr "Crear"
+#: templates/proposals/proposal_add.html:74
+#: templates/proposals/proposal_edit.html:87
+msgid "Publish"
+msgstr "Publicar"
 
-#: templates/proposals/proposal_add.html:58
-#: templates/proposals/proposal_confirm_delete.html:23
-#: templates/proposals/proposal_edit.html:65
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: templates/proposals/proposal_add.html:67
+#: templates/proposals/proposal_add.html:83
 msgid "Admins/moderators read this"
 msgstr "Administradores/Moderadores leed esto"
 
-#: templates/proposals/proposal_add.html:68
+#: templates/proposals/proposal_add.html:84
 msgid ""
 "There are a lot more options in the proposals but they will appear only"
 " when you edit the proposal."
@@ -129,15 +112,15 @@ msgstr ""
 "Existen numerosas opciones más para la propuestas pero sólo se verán "
 "cuando se edite."
 
-#: templates/proposals/proposal_add.html:70
+#: templates/proposals/proposal_add.html:86
 msgid "How to add new proposals"
 msgstr "Cómo añadir nuevas propuestas"
 
-#: templates/proposals/proposal_add.html:72
+#: templates/proposals/proposal_add.html:88
 msgid "Title resuming the proposal, be concise (50 characters)"
 msgstr "Título resumiendo la propuesta (50 caracteres)"
 
-#: templates/proposals/proposal_add.html:73
+#: templates/proposals/proposal_add.html:89
 msgid ""
 "Describe here your proposal with detail. You can add images or any "
 "other content."
@@ -145,17 +128,21 @@ msgstr ""
 "Describe aquí tu propuesta con detalle. Puedes utilizar imágenes o "
 "cualquier otro contenido."
 
-#: templates/proposals/proposal_add.html:74
+#: templates/proposals/proposal_add.html:90
 msgid "Latitude/Longitude"
 msgstr "Latitud/Longitud"
 
-#: templates/proposals/proposal_add.html:74
+#: templates/proposals/proposal_add.html:90
 msgid "You'll have to put this if you want to locate the proposal in a map."
 msgstr ""
 "Tendrás de dar estos datos si quieres geoposicionar la propuesta en un"
 " mapa."
 
-#: templates/proposals/proposal_add.html:75
+#: templates/proposals/proposal_add.html:91
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: templates/proposals/proposal_add.html:91
 msgid ""
 "Relevant tags for the proposal, p.e. where the proposal is localted, "
 "what is related to it, etc."
@@ -218,6 +205,14 @@ msgstr "comentarios"
 msgid "There are no proposals for this space."
 msgstr "No existen propuestas para este espacio."
 
-#: templates/proposals/proposal_list.html:49
-msgid "Go back"
-msgstr "Volver"
+#: templates/proposals/proposal_list.html:54
+msgid "previous"
+msgstr "anterior"
+
+#: templates/proposals/proposal_list.html:57
+msgid "of"
+msgstr "de"
+
+#: templates/proposals/proposal_list.html:60
+msgid "next"
+msgstr "siguiente"

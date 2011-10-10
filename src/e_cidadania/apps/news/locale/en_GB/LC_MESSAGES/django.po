@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,13 +22,11 @@ msgstr ""
 msgid "Other data"
 msgstr ""
 
-#: models.py:35 templates/news/post_add.html:33
-#: templates/news/post_add.html.py:77 templates/news/post_edit.html:27
+#: models.py:35 templates/news/post_add.html:88
 msgid "Title"
 msgstr ""
 
-#: models.py:36 templates/news/post_add.html:40
-#: templates/news/post_add.html.py:78 templates/news/post_edit.html:34
+#: models.py:36 templates/news/post_add.html:89
 msgid "Text"
 msgstr ""
 
@@ -40,12 +38,11 @@ msgstr ""
 msgid "Last update"
 msgstr ""
 
-#: models.py:39 templates/news/post_edit.html:56
+#: models.py:39
 msgid "Author"
 msgstr ""
 
-#: models.py:41 templates/news/post_add.html:55
-#: templates/news/post_edit.html:49
+#: models.py:41
 msgid "Publish in index page"
 msgstr ""
 
@@ -61,16 +58,28 @@ msgstr ""
 msgid "News list"
 msgstr ""
 
-#: templates/news/news_list.html:12
+#: templates/news/news_list.html:25
 msgid "News archive"
 msgstr ""
 
-#: templates/news/news_list.html:28
+#: templates/news/news_list.html:41
 msgid "There are no posts in this space."
 msgstr ""
 
-#: templates/news/news_list.html:31 templates/news/post_add.html:65
-#: templates/news/post_confirm_delete.html:25 templates/news/post_edit.html:71
+#: templates/news/news_list.html:48
+msgid "previous"
+msgstr ""
+
+#: templates/news/news_list.html:51
+msgid "of"
+msgstr ""
+
+#: templates/news/news_list.html:54
+msgid "next"
+msgstr ""
+
+#: templates/news/news_list.html:61 templates/news/post_add.html:74
+#: templates/news/post_confirm_delete.html:34 templates/news/post_edit.html:88
 msgid "Go back"
 msgstr ""
 
@@ -78,36 +87,35 @@ msgstr ""
 msgid "Add new post"
 msgstr ""
 
-#: templates/news/post_add.html:48 templates/news/post_add.html.py:79
-#: templates/news/post_edit.html:42
-msgid "Tags"
+#: templates/news/post_add.html:75 templates/news/post_edit.html:89
+msgid "Publish"
 msgstr ""
 
-#: templates/news/post_add.html:63 templates/news/post_edit.html:70
-msgid "Create"
-msgstr ""
-
-#: templates/news/post_add.html:75
+#: templates/news/post_add.html:86
 msgid "How to add new posts"
 msgstr ""
 
-#: templates/news/post_add.html:77
+#: templates/news/post_add.html:88
 msgid "An spectacular title! (100 characters)"
 msgstr ""
 
-#: templates/news/post_add.html:78
+#: templates/news/post_add.html:89
 msgid "Your story."
 msgstr ""
 
-#: templates/news/post_add.html:79
+#: templates/news/post_add.html:90
+msgid "Tags"
+msgstr ""
+
+#: templates/news/post_add.html:90
 msgid "Please use them carefully, you are limited to 4 tags."
 msgstr ""
 
-#: templates/news/post_add.html:80
+#: templates/news/post_add.html:91
 msgid "Publish in index"
 msgstr ""
 
-#: templates/news/post_add.html:80
+#: templates/news/post_add.html:91
 msgid ""
 "If you mark this, the post will appear in the spaces index page AND in the "
 "main index."
@@ -117,20 +125,24 @@ msgstr ""
 msgid "Delete news"
 msgstr ""
 
-#: templates/news/post_confirm_delete.html:22
+#: templates/news/post_confirm_delete.html:27
+msgid "Delete post"
+msgstr ""
+
+#: templates/news/post_confirm_delete.html:31
 msgid ""
 "Are you sure you want to delete this post? This action cannot be undone."
 msgstr ""
 
-#: templates/news/post_confirm_delete.html:24
+#: templates/news/post_confirm_delete.html:35
 msgid "Delete"
 msgstr ""
 
-#: templates/news/post_detail.html:33
+#: templates/news/post_detail.html:37
 msgid "Written by"
 msgstr ""
 
-#: templates/news/post_detail.html:33
+#: templates/news/post_detail.html:37
 msgid "on"
 msgstr ""
 
@@ -138,6 +150,6 @@ msgstr ""
 msgid "Edit news"
 msgstr ""
 
-#: templates/news/post_edit.html:63
-msgid "Publish in space"
+#: templates/news/post_edit.html:22
+msgid "Edit post"
 msgstr ""

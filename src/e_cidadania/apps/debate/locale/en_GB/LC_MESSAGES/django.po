@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,78 +18,78 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: models.py:40
+#: models.py:41 models.py:69
 msgid "Title"
-msgstr ""
-
-#: models.py:41
-msgid "Objectives"
 msgstr ""
 
 #: models.py:42
 msgid "Description"
 msgstr ""
 
-#: models.py:58
-msgid "Phase number"
+#: models.py:43
+msgid "Scope"
 msgstr ""
 
-#: models.py:60
-msgid "X Scale"
+#: models.py:45
+msgid "X Values"
 msgstr ""
 
-#: models.py:62
-msgid "Y Scale"
+#: models.py:46
+msgid "Y Values"
 msgstr ""
 
 #: models.py:68
-msgid "Start"
+msgid "Note div ID"
 msgstr ""
 
-#: models.py:69
-msgid "End"
-msgstr ""
-
-#: models.py:72
-msgid "Phase "
-msgstr ""
-
-#: models.py:83
+#: models.py:70
 msgid "Message"
 msgstr ""
 
-#: models.py:84
-msgid "Explanation"
+#: models.py:71
+msgid "Parent TD or DIV"
 msgstr ""
 
-#: models.py:86
-msgid "Coordinates"
+#: templates/debate/debate_add.html:4 templates/debate/debate_board.html:4
+msgid "Create new debate"
 msgstr ""
 
-#: templates/debate/debate_add.html:4
-msgid "Create new space"
+#: templates/debate/debate_add.html:16 templates/debate/debate_board.html:16
+msgid "Create a new debate"
 msgstr ""
 
-#: templates/debate/debate_add.html:12
-msgid "Create a new space"
+#: templates/debate/debate_add.html:23 templates/debate/debate_board.html:23
+msgid "Remove column"
 msgstr ""
 
-#: templates/debate/debate_add.html:37
-msgid "Add new phase"
+#: templates/debate/debate_add.html:24 templates/debate/debate_board.html:24
+msgid "Add column"
 msgstr ""
 
-#: templates/debate/debate_add.html:38
-msgid "Phase"
+#: templates/debate/debate_add.html:48 templates/debate/debate_board.html:56
+msgid "Remove row"
 msgstr ""
 
-#: templates/debate/debate_add.html:39
-msgid "Finish"
+#: templates/debate/debate_add.html:49 templates/debate/debate_board.html:57
+msgid "Add row"
 msgstr ""
 
-#: templates/debate/debate_add.html:56
-msgid "How to add new debates"
+#: templates/debate/debate_add.html:52 templates/debate/debate_board.html:66
+msgid "Other debate data"
 msgstr ""
 
-#: templates/debate/debate_add.html:58
-msgid "Modules"
+#: templates/debate/debate_add.html:95 templates/debate/debate_board.html:109
+msgid "Save"
+msgstr ""
+
+#: templates/debate/debate_add.html:96 templates/debate/debate_board.html:110
+msgid "Cancel"
+msgstr ""
+
+#: templates/debate/debate_board.html:61
+msgid "Add new note"
+msgstr ""
+
+#: templates/debate/debate_board.html:62
+msgid "Add phase"
 msgstr ""

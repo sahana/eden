@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,10 +47,14 @@ msgid "Author"
 msgstr ""
 
 #: models.py:37
+msgid "Last update"
+msgstr ""
+
+#: models.py:38
 msgid "Order"
 msgstr ""
 
-#: models.py:41
+#: models.py:42
 msgid "Static Pages"
 msgstr ""
 
@@ -59,9 +63,5 @@ msgid "Go back"
 msgstr ""
 
 #: templates/staticpages/staticpages_index.html:14
-msgid "created"
-msgstr ""
-
-#: templates/staticpages/staticpages_index.html:14
-msgid "by"
+msgid "last updated"
 msgstr ""

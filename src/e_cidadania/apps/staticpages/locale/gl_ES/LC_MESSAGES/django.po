@@ -2,20 +2,20 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: 2011-09-22 11:01\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: admin.py:39
@@ -47,10 +47,14 @@ msgid "Author"
 msgstr "Autor"
 
 #: models.py:37
+msgid "Last update"
+msgstr ""
+
+#: models.py:38
 msgid "Order"
 msgstr "Orde"
 
-#: models.py:41
+#: models.py:42
 msgid "Static Pages"
 msgstr "Páxinas estáticas"
 
@@ -59,9 +63,11 @@ msgid "Go back"
 msgstr "Volver"
 
 #: templates/staticpages/staticpages_index.html:14
-msgid "created"
-msgstr "creado"
+msgid "last updated"
+msgstr ""
 
-#: templates/staticpages/staticpages_index.html:14
-msgid "by"
-msgstr "por"
+#~ msgid "created"
+#~ msgstr "creado"
+
+#~ msgid "by"
+#~ msgstr "por"

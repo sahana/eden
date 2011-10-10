@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,7 +90,7 @@ msgstr ""
 msgid "Recent Actions"
 msgstr ""
 
-#: views.py:54
+#: views.py:57
 msgid ""
 "Hi! It seems that it's your first time "
 "here.                                  Maybe you want to <a href=\"/accounts/"
@@ -98,23 +98,23 @@ msgid ""
 "accounts/login\">login</a> if you have an account."
 msgstr ""
 
-#: views.py:71
+#: views.py:74
 msgid "e-cidadania news"
 msgstr ""
 
-#: views.py:73
+#: views.py:76
 msgid "Updates on the main e-cidadania site."
 msgstr ""
 
-#: views.py:107
+#: views.py:110
 msgid "Post added successfully"
 msgstr ""
 
-#: views.py:128
+#: views.py:131
 msgid "Post deleted successfully."
 msgstr ""
 
-#: views.py:143
+#: views.py:146
 msgid "Post edited successfully."
 msgstr ""
 
@@ -142,11 +142,11 @@ msgstr ""
 msgid "Development"
 msgstr ""
 
-#: templates/404.html:67 templates/site_index.html:140
+#: templates/404.html:67
 msgid "Help"
 msgstr ""
 
-#: templates/404.html:68 templates/site_index.html:140
+#: templates/404.html:68
 msgid "Terms of service"
 msgstr ""
 
@@ -154,7 +154,7 @@ msgstr ""
 msgid "Privacy"
 msgstr ""
 
-#: templates/404.html:70 templates/site_index.html:140
+#: templates/404.html:70
 msgid "About"
 msgstr ""
 
@@ -178,7 +178,7 @@ msgstr ""
 msgid "while we call the spaguetti squad to repair this."
 msgstr ""
 
-#: templates/base.html:99
+#: templates/base.html:113
 msgid "created by"
 msgstr ""
 
@@ -238,7 +238,7 @@ msgstr ""
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:13
+#: templates/site_index.html:14
 msgid ""
 "e-cidadania is a participative democracy tool for citizens. It has an "
 "advanced debate system, proposals, document versioning, and you can create "
@@ -246,96 +246,92 @@ msgid ""
 "better that you try it by yourself."
 msgstr ""
 
-#: templates/site_index.html:21
+#: templates/site_index.html:24
 msgid "Add news"
 msgstr ""
 
-#: templates/site_index.html:32
+#: templates/site_index.html:35
 msgid "Edit"
 msgstr ""
 
-#: templates/site_index.html:36
+#: templates/site_index.html:39
 msgid "Delete"
 msgstr ""
 
-#: templates/site_index.html:42
+#: templates/site_index.html:45
 msgid "Written by"
 msgstr ""
 
-#: templates/site_index.html:42
+#: templates/site_index.html:45
 msgid "on"
 msgstr ""
 
-#: templates/site_index.html:42
+#: templates/site_index.html:45
 msgid "Tags"
 msgstr ""
 
-#: templates/site_index.html:48
+#: templates/site_index.html:51
 msgid "Nothing published yet."
 msgstr ""
 
-#: templates/site_index.html:58
+#: templates/site_index.html:62
 msgid "What can you do with e-cidadania?"
 msgstr ""
 
-#: templates/site_index.html:58
+#: templates/site_index.html:62
 msgid "Discover it here"
 msgstr ""
 
-#: templates/site_index.html:62
+#: templates/site_index.html:66
 msgid "Create your own space"
 msgstr ""
 
-#: templates/site_index.html:62
+#: templates/site_index.html:66
 msgid "inside e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:66
+#: templates/site_index.html:70
 msgid "Spaces list"
 msgstr ""
 
-#: templates/site_index.html:72
+#: templates/site_index.html:76
 msgid "No spaces"
 msgstr ""
 
-#: templates/site_index.html:75
+#: templates/site_index.html:79
 msgid "Go"
 msgstr ""
 
-#: templates/site_index.html:80
+#: templates/site_index.html:84
 msgid "Recently added spaces"
 msgstr ""
 
-#: templates/site_index.html:84
+#: templates/site_index.html:88
 msgid "No spaces have been added recently."
 msgstr ""
 
-#: templates/site_index.html:89
+#: templates/site_index.html:93
 msgid "Share"
 msgstr ""
 
-#: templates/site_index.html:127
+#: templates/site_index.html:164
+msgid "Tweet"
+msgstr ""
+
+#: templates/site_index.html:174
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr ""
 
-#: templates/site_index.html:131
+#: templates/site_index.html:178
 msgid "e-cidadania development"
 msgstr ""
 
-#: templates/site_index.html:132
+#: templates/site_index.html:179
 msgid "Do you want to help?"
 msgstr ""
 
-#: templates/site_index.html:132
+#: templates/site_index.html:179
 msgid "Access"
-msgstr ""
-
-#: templates/site_index.html:140
-msgid "API"
-msgstr ""
-
-#: templates/site_index.html:140
-msgid "Developers"
 msgstr ""
 
 #: templates/comments/approve.html:4
@@ -446,10 +442,10 @@ msgstr ""
 msgid "News list"
 msgstr ""
 
-#: templates/news/post_list.html:17
+#: templates/news/post_list.html:18
 msgid "There are no post."
 msgstr ""
 
-#: templates/news/post_list.html:21
+#: templates/news/post_list.html:22
 msgid "Go back"
 msgstr ""

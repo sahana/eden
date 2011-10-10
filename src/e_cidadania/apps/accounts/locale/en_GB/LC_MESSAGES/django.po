@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,30 +96,4 @@ msgstr ""
 
 #: models.py:85
 msgid "The URL will be checked"
-msgstr ""
-
-#: templates/accounts/login.html:4
-msgid "Login"
-msgstr ""
-
-#: templates/accounts/login.html:14
-msgid "Username:"
-msgstr ""
-
-#: templates/accounts/login.html:17
-msgid "Password:"
-msgstr ""
-
-#: templates/accounts/logout.html:7
-msgid ""
-"Thanks for using e-cidadania. Now you can continue visting the website or "
-"log in again."
-msgstr ""
-
-#: templates/accounts/logout.html:9
-msgid "Login again"
-msgstr ""
-
-#: templates/accounts/profile.html:5
-msgid "User"
 msgstr ""

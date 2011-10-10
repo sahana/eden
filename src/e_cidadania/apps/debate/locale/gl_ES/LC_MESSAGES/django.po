@@ -2,94 +2,137 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-26 17:46+0200\n"
+"POT-Creation-Date: 2011-10-10 09:34+0200\n"
 "PO-Revision-Date: 2011-09-22 10:47\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
-#: models.py:40
+#: models.py:41 models.py:69
 msgid "Title"
 msgstr "Titulo"
-
-#: models.py:41
-msgid "Objectives"
-msgstr "Obxectivos"
 
 #: models.py:42
 msgid "Description"
 msgstr "Descrición"
 
-#: models.py:58
-msgid "Phase number"
-msgstr "Número de fase"
+#: models.py:43
+msgid "Scope"
+msgstr ""
 
-#: models.py:60
-msgid "X Scale"
-msgstr "Escala X"
+#: models.py:45
+msgid "X Values"
+msgstr ""
 
-#: models.py:62
-msgid "Y Scale"
-msgstr "Escala Y"
+#: models.py:46
+msgid "Y Values"
+msgstr ""
 
 #: models.py:68
-msgid "Start"
-msgstr "Data inicio"
+msgid "Note div ID"
+msgstr ""
 
-#: models.py:69
-msgid "End"
-msgstr "Data fin"
-
-#: models.py:72
-msgid "Phase "
-msgstr "Fase"
-
-#: models.py:83
+#: models.py:70
 msgid "Message"
 msgstr "Mensaxe"
 
-#: models.py:84
-msgid "Explanation"
-msgstr "Explicación"
+#: models.py:71
+msgid "Parent TD or DIV"
+msgstr ""
 
-#: models.py:86
-msgid "Coordinates"
-msgstr "Coordenadas"
-
-#: templates/debate/debate_add.html:4
-msgid "Create new space"
+#: templates/debate/debate_add.html:4 templates/debate/debate_board.html:4
+#, fuzzy
+msgid "Create new debate"
 msgstr "Crear novo espazo"
 
-#: templates/debate/debate_add.html:12
-msgid "Create a new space"
+#: templates/debate/debate_add.html:16 templates/debate/debate_board.html:16
+#, fuzzy
+msgid "Create a new debate"
 msgstr "Crear un novo espazo"
 
-#: templates/debate/debate_add.html:37
-msgid "Add new phase"
+#: templates/debate/debate_add.html:23 templates/debate/debate_board.html:23
+msgid "Remove column"
+msgstr ""
+
+#: templates/debate/debate_add.html:24 templates/debate/debate_board.html:24
+msgid "Add column"
+msgstr ""
+
+#: templates/debate/debate_add.html:48 templates/debate/debate_board.html:56
+msgid "Remove row"
+msgstr ""
+
+#: templates/debate/debate_add.html:49 templates/debate/debate_board.html:57
+msgid "Add row"
+msgstr ""
+
+#: templates/debate/debate_add.html:52 templates/debate/debate_board.html:66
+msgid "Other debate data"
+msgstr ""
+
+#: templates/debate/debate_add.html:95 templates/debate/debate_board.html:109
+msgid "Save"
+msgstr ""
+
+#: templates/debate/debate_add.html:96 templates/debate/debate_board.html:110
+msgid "Cancel"
+msgstr ""
+
+#: templates/debate/debate_board.html:61
+#, fuzzy
+msgid "Add new note"
 msgstr "Engadir nova fase"
 
-#: templates/debate/debate_add.html:38
-msgid "Phase"
-msgstr "Fase"
+#: templates/debate/debate_board.html:62
+#, fuzzy
+msgid "Add phase"
+msgstr "Engadir nova fase"
 
-#: templates/debate/debate_add.html:39
-msgid "Finish"
-msgstr "Finalizar"
+#~ msgid "Objectives"
+#~ msgstr "Obxectivos"
 
-#: templates/debate/debate_add.html:56
-msgid "How to add new debates"
-msgstr "Cómo engadir novos debates"
+#~ msgid "Phase number"
+#~ msgstr "Número de fase"
 
-#: templates/debate/debate_add.html:58
-msgid "Modules"
-msgstr "Módulos"
+#~ msgid "X Scale"
+#~ msgstr "Escala X"
+
+#~ msgid "Y Scale"
+#~ msgstr "Escala Y"
+
+#~ msgid "Start"
+#~ msgstr "Data inicio"
+
+#~ msgid "End"
+#~ msgstr "Data fin"
+
+#~ msgid "Phase "
+#~ msgstr "Fase"
+
+#~ msgid "Explanation"
+#~ msgstr "Explicación"
+
+#~ msgid "Coordinates"
+#~ msgstr "Coordenadas"
+
+#~ msgid "Phase"
+#~ msgstr "Fase"
+
+#~ msgid "Finish"
+#~ msgstr "Finalizar"
+
+#~ msgid "How to add new debates"
+#~ msgstr "Cómo engadir novos debates"
+
+#~ msgid "Modules"
+#~ msgstr "Módulos"
