@@ -75,7 +75,7 @@
                             {% endcomment %}
                             $('#datepicker').datepicker({
                                 onSelect: function(dateText) {
-                                    var month = dateText.split("/")[1];
+                                    var month = dateText.split("/")[0];
                                     var year = dateText.split("/")[2];
                                     window.location = "calendar/" + year + "/" + month + "/";
                                 }

@@ -62,6 +62,7 @@ class EventCalendar(LocaleHTMLCalendar):
         return self.day_cell('noday', '&nbsp;')
         
     def formatmonth(self, year, month):
+        # WTF is this!?
         self.year, self.month = year, month
         return super(EventCalendar, self).formatmonth(self.year, self.month)
     
