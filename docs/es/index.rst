@@ -20,8 +20,9 @@ y algunas librerías externas.
 .. |Models| image:: images/models.png
 .. _Models: http://postimage.org/image/z7b8s72c/full/
 
-.. warning:: e-cidadania is in heavy development, and because of that, some parts
-             of it may suffer changes, especially the data models until some releases.
+.. warning:: e-cidadania está en desarrollo, y por ello algunos componentes pueden
+             variar sus carcaterísticas, especialmente los modelos de datos y
+             esta documentación.
 
 
 Documentación
@@ -35,8 +36,16 @@ Documentación
     docs/usermanual
     docs/adminmanual
 
-Desarrollo
-----------
+Apariencia / Temas
+------------------
+
+.. toctree::
+    :maxdepth: 2
+
+    theming/themes
+
+Desarrollo (inglés)
+-------------------
 
 .. toctree::
     :maxdepth: 2
@@ -47,16 +56,8 @@ Desarrollo
     dev/documenting
     dev/i18n
 
-Apariencia / Temas
-------------------
-
-.. toctree::
-    :maxdepth: 2
-
-    theming/themes
-
-Referencia
-----------
+Referencia (inglés)
+-------------------
 
 .. toctree::
     :maxdepth: 1
@@ -90,16 +91,19 @@ Acerca de este documento
 
 :Autores:
 
-    Oscar Carballal <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
 
-:Traducción al Gallego:
+
+:Traducción al gallego:
 
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
 
     Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
+    
+    Antón Meixome <meixome@certima.net>
 
 
-:Traducción al Inglés:
+:Traducción al inglés:
 
     Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
 
