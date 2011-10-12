@@ -67,20 +67,37 @@
             {% if get_place.mod_cal %}
                 <div id="widget">
                     <h2>{% trans "Calendar" %}</h2><br />
-                    <div id="datepicker"></div>
-                        <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
-                        <script type="text/javascript">
-                            {% comment %}
+                    <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
+                    <script type="text/javascript">
+                        {% comment %}
+                            This code make thw calendar inhibit the onSelect function
+                            on load it returns the error:
+                            Uncaught TypeError: Property 'datepicker' of object function (a,b){return new e.fn.init(a,b,h)} is not a function (anonymous function)
+                            
                             $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);
-                            {% endcomment %}
-                            $('#datepicker').datepicker({
-                                onSelect: function(dateText) {
-                                    var month = dateText.split("/")[0];
-                                    var year = dateText.split("/")[2];
-                                    window.location = "calendar/" + year + "/" + month + "/";
-                                }
-                            });
-                        </script>
+                            
+                            
+                                                    $('#datepicker').datepicker($.extend({},
+                             $.datepicker.regional[ '{{ LANGUAGE_CODE }}' ], {
+                             onSelect: function(dateText) {
+                                 var month = dateText.split("/")[0];
+                                 var year = dateText.split("/")[2];
+                                 window.location = "calendar/" + year + "/" + month + "/";
+                             }
+                        }));
+                 
+                 
+                 
+                        {% endcomment %}
+                        $('#datepicker').datepicker({
+                             onSelect: function(dateText) {
+                                 var month = dateText.split("/")[0];
+                                 var year = dateText.split("/")[2];
+                                 window.location = "calendar/" + year + "/" + month + "/";
+                             }
+                        });
+                    </script>
+                    <div id="datepicker"></div>
                     </div>
             {% endif %}
 
@@ -192,6 +209,7 @@
                 </div>
             {% endif %}
 
+            {% comment %}
             <div id="widget">
                 <h2>{% trans "Share" %}</h2><br />
                 <!-- Facebook -->
@@ -242,6 +260,7 @@
                 
                 <a href="rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/>RSS Feed</a>
             </div>
+            {% endcomment %}
         </div>
     {% endblock %}
 
