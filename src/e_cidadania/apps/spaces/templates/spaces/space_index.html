@@ -70,12 +70,14 @@
                     <div id="datepicker"></div>
                         <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
                         <script type="text/javascript">
+                            {% comment %}
                             $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);
+                            {% endcomment %}
                             $('#datepicker').datepicker({
                                 onSelect: function(dateText) {
-                                    var month = dateText.split("/")[0]
-                                    var year = dateText.split("/")[2]
-                                    window.location = "calendar/" + year + "/" + month + "/"
+                                    var month = dateText.split("/")[1];
+                                    var year = dateText.split("/")[2];
+                                    window.location = "calendar/" + year + "/" + month + "/";
                                 }
                             });
                         </script>

@@ -44,7 +44,7 @@ def calendar(request, space_name, year, month):
                                       meeting_date__month = month)
 
     cur_lang = translation.get_language()
-    cur_locale = translation.to_locale(cur_lang)+'.UTF-8' #default encoding with django
+    cur_locale = translation.to_locale(cur_lang) + '.UTF-8' #default encoding with django
     cal = EventCalendar(meetings, settings.FIRST_WEEK_DAY, cur_locale).formatmonth(int(year), int(month))
 
     # cal = EventCalendar(meetings).formatmonth(int(year), int(month))

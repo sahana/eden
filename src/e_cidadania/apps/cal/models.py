@@ -63,7 +63,7 @@ class EventCalendar(LocaleHTMLCalendar):
         
     def formatmonth(self, year, month):
         self.year, self.month = year, month
-        return super(EventCalendar, self).formatmonth(year, month)
+        return super(EventCalendar, self).formatmonth(self.year, self.month)
     
     def group_by_day(self, events):
         field = lambda event: event.meeting_date.day
