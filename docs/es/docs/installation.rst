@@ -4,28 +4,6 @@ Instalación
 La instalación de e-cidadania es muy simple y se realiza de la misma manera que
 cualquier otra plataforma django estándar.
 
-Requisitos
-----------
-
-- Apache, nginx, or any other web server with CGI suppport
-- FastCGI, CGI, Passenger or other CGI.
-
-**Dependencias**
-
-- django 1.3
-- PIL *(Python Imaging Library)*
-- python-datetime *(versión 1.5)*
-- django-tagging
-- django-wysiwyg
-- django-grappelli (para la administración)
-- feedparser
-
-Puedes instalar todas las dependencias automáticamente con este comando:
-
-::
-
-    # pip install -r requirements.txt
-
 Descargar la plataforma
 -----------------------
 
@@ -47,7 +25,7 @@ Versión de desarrollo
 .....................
 
 La versión de desarrollo está disponible desde varios sitios. Utilizamos `GIT <http://git-scm.com/>`_
-como sistema de control de versiones, asó que tendrás que instalarlo en tu ordenador.
+como sistema de control de versiones, así que tendrás que instalarlo en tu ordenador.
 
     **Gitorious:** *(repositorio oficial)*::
 
@@ -61,25 +39,33 @@ como sistema de control de versiones, asó que tendrás que instalarlo en tu ord
 
         git clone git://repo.or.cz/e_cidadania.git
 
-Instalando con Apache 2
------------------------
+Requisitos
+----------
 
-Esta sección está en desarrollo.
+- Python 2.5 o superior
+- Apache, nginx, u otro servidor web con soporte CGI
+- FastCGI, CGI, Passenger u otro CGI
 
-Instalando con nginx + FastCGI
--------------------------------
+**Dependencias**
 
-.. note:: The installtion through FastCGI should work for other web servers since
-          FastCGI is the one who handles e-cidadania, and the server only serves
-          the static content.
+- django 1.3
+- PIL *(Python Imaging Library)*
+- python-datetime *(versión 1.5)*
+- django-tagging
+- django-wysiwyg
+- django-grappelli (para la administración)
+- feedparser
 
-The installation with nginx and FastCGI...
 
-This section is in development.
+Instalar dependencias
+---------------------
 
-Now you can continue to "Configuration".
+Puedes instalar todas las dependencias automáticamente con este comando:
 
-Instalación en DreamHost
-------------------------
+::
 
-Esta sección está en desarrollo, pero se puede consultar el manual en http://blog.oscarcp.com
+    # pip install -r requirements.txt
+
+Si no dispones del programa *pip* también puedes instalar las dependencias a través
+del programa *easy_install*.
+

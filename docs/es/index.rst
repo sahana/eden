@@ -8,7 +8,7 @@ e-cidadania documentation
 
 **e-cidadania** es una plataforma de e-democracia hecha con software abierto
 para la participación ciudadana. Las características clave son: un sistema de
-propuestas, un revolucionario sistema de debate ordenado. repositorio de documentos,
+propuestas, un revolucionario sistema de debate ordenado, repositorio de documentos,
 informes autogenerados y perfiles avanzaqdos de usuario entre otras cosas como
 geolocalización y mensajería.
 
@@ -25,14 +25,22 @@ y algunas librerías externas.
              esta documentación.
 
 
-Documentación
--------------
+Instalación y configuración
+---------------------------
 
 .. toctree::
     :maxdepth: 2
 
     docs/installation
     docs/configuration
+    docs/deployment
+    
+Manuales
+--------
+
+.. toctree::
+    :maxdepth: 3
+    
     docs/usermanual
     docs/adminmanual
 
@@ -44,8 +52,8 @@ Apariencia / Temas
 
     theming/themes
 
-Desarrollo (inglés)
--------------------
+Desarrollo
+----------
 
 .. toctree::
     :maxdepth: 2
@@ -70,9 +78,13 @@ Referencia (inglés)
     reference/proposals_forms
     reference/proposals_models
     reference/proposals_views
+    reference/news_admin
+    reference/news_forms
+    reference/news_models
+    reference/news_views
 
-Finale
-======
+Colofón
+=======
 
 Conseguir ayuda
 ---------------
@@ -89,23 +101,33 @@ Conseguir ayuda
 Acerca de este documento
 ------------------------
 
+e-cidadania es un proyecto de Cidadania S. Coop. Galega
+
 :Autores:
 
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
 
+:Corrección:
 
-:Traducción al gallego:
+    Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
+
+Traducciones
+............
+
+:Gallego:
 
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
 
     Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
     
     Antón Meixome <meixome@certima.net>
+    
+    Luisa Vicente Comojo <luisa.vicente@cidadania.coop>
 
 
-:Traducción al inglés:
+:Inglés:
 
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
 
 Agradecimientos
 ---------------

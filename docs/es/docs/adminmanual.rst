@@ -48,10 +48,10 @@ Los usuarios tienen dos formas de registrarse:
   correspondiente desde *"User profiles"*
 
 * **Registrándose ellos mismos** Esta es la forma más rápida pero también menos
-  conveniente. Cone ste registro el usuario no tendrá ninguno de sus datos personales
+  conveniente. Con este registro el usuario no tendrá ninguno de sus datos personales
   en la base de datos, ni pertenecerá a ningún proceso participativo salvo que se
   le permita. De la misma forma, sólo podrá visualizar los procesos participativos
-  abiertos, pero no podrá participar a menos que se le incluya en el grupo,
+  abiertos, pero no podrá participar a menos que se le incluya en el grupo.
 
 .. note:: Este comportamiento es susceptible de cambiar en un futuro.
 
@@ -83,7 +83,7 @@ de django. De esa forma ya disponemos de permisos basados en grupo o individuale
 
    Como podrás observar, tenemos dos paneles de permisos y un campo para escribir el
    nombre. Basta con que pases los permisos que quieras para ese grupo al panel de
-   la derecha (mediante las felchas que hay entre los dos paneles) y luego le pongas
+   la derecha (mediante las flechas que hay entre los dos paneles) y luego le pongas
    un nombre al grupo.
 
    Para guardar haz clic abajo a la derecha donde pone *"Guardar"*.

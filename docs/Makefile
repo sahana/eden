@@ -37,9 +37,9 @@ epub: $(SPHINX_DEPENDENCIES)
 	cd gl && make html LANG=gl
 
 latexpdf: $(SPHINX_DEPENDENCIES)
-	cd en && make html LANG=en
-	cd es && make html LANG=es
-	cd gl && make html LANG=gl
+	cd en && make latexpdf LANG=en
+	cd es && make latexpdf LANG=es
+	cd gl && make latexpdf LANG=gl
 
 clean:
 	rm -rf $(BUILDDIR)/*

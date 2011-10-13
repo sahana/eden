@@ -1,5 +1,5 @@
-User accounts
-=============
+Cuentas de usuario
+==================
 
 Th user account system in e-cidadania is abased on the django *auth* module and
 in django-userprofile, created by James Bennet.

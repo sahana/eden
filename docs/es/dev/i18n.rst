@@ -1,56 +1,56 @@
-Translations
+Traducciones
 ============
 
-For the translation we use two tools:
+Para las traducciones utilizamos dis herramientas:
 
 - django-rosetta
 - gettext
 
-Both ways of translating are simple thaks to the Django *middleware*.
+Ambas formas de traducir son sencillas gracias al *middleware* de django.
 
-Translating with rosetta
-------------------------
+En vez de hacer un fichero de traducción global, hemos decidido mantener un
+fichero de traducción para cada aplicación, de esa forma aunque se cambien los
+módulos, las traducciones se mantendrán.
 
-To make translations with rosetta, you will need to have an account on the system and
-belong to the **'translators'** group. Once you have done that, the rest is simple.
 
-Just access to the `translation URL`_ and the first you will see is a list with the
-languages available to translate.
+Traduciendo con rosetta
+-----------------------
 
-.. _translation URL: http://ecidadania.org/rosetta
+Para realizar traducciones con rosetta necesitarás una cuenta en el sistema y estar
+en el grupo **"traductores"**. Una vez hayas conseguido eso, lo demás es simple.
+
+Tan sólo tienes que acceder a la `URL de traducción`_ y lo primero que verás será
+una lista con los idiomas disponibles para traducir.
+
+.. _URL de traducción: http://ecidadania.org/rosetta
 
 .. image:: ../images/rosetta1.png
     :align: center
 
-Click on the component you want to translate and start translating (the translation is
-done from english to other languages). If you find yourself stuck you can use the
-option "Suggest" which will make a query to the Google Translate database and write
-for you the translation.
+Haz clic en el componente que quieras traducir y empieza (la traducción se realiza
+desde el inglés a los demás idiomas). Si te atascas en algún momento puedes
+utilizar la opción "Sugerencia", que hará una petición a Google Translate y pondrá
+la traducción más oportuna.
 
-.. warning:: Never trust the results of the "suggest" button. In most occasions
-             will be incorrect.
+.. warning:: Nunca confíes en el resultado del botón "Sugerir". En muchas ocasiones
+             se equivocará.
 
-Translating with gettext
-------------------------
+Traduciendo con gettext
+-----------------------
 
-Gettext is a well known tool by all the translators around the world. Its a standard.
-Thanks to the django *middleware* out work will be minimum, we only have to edit
-the .po files in the source files.
+Gettext es una herramienta bien conocida por todo los traductores alrededor del
+mundo ya que es un estándar. Gracias al *middleware* de django, el trabajo será
+mínimo, sólo tendremos que editar los archivos .po que hay en el código fuente.
 
 .. image:: ../images/gettext1.png
     :align: center
 
-Instead of making one global translation, we decided to keep a translation file
-for every module, that way the translations will keep even if the modules are moved.
+Los ficheros suelen encontrarse en un directorio llamado **locale** dentro del módulo.
+En él podrás encontrar directorios con los códigos de país (es_ES, en_GB, gl_ES, etc.)
+y dentro de ellos los ficheros .PO y .MO.
 
-The location of the strings is usually a directory called **locale** inside the
-module. Inside it, you can find directories with the country code (en, es, us,
-gl, fr, etc.) and inside this one, the PO and MO files.
+Para traducir, debes editar el fichero .PO que es un fichero de texto plano.
+Los ficheros .MO son la versión compilada del .PO para que el ordenador pueda
+entenderlos.
 
-To translate, you must edit the PO file, which is a plain text file.
-
-The MO file is the compiled version of the translation so the machine can read it
-to use it.
-
-.. warning:: Stablish a workflow for translators and explain it here.
-
+.. warning:: Establecer un flujo de trabajo para los traductores y explicarlo.
