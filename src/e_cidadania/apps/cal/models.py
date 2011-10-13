@@ -30,8 +30,12 @@ from django.utils.html import conditional_escape as esc
 
 class EventCalendar(LocaleHTMLCalendar):
 
-    """
-    Event calendar is a basic calendar made with HTMLCalendar module.
+    """    
+    Event calendar is a basic calendar made with HTMLCalendar module and
+    its instance LocaleHTMLCalendar for translation.
+    
+    :Attributes: LocaleHTMLCalendar
+    :Methods: formatday, formatmonth, group_by_day, day_cell
     """
     # This init is needed for multilanguage, see ticket #86
 
@@ -44,6 +48,10 @@ class EventCalendar(LocaleHTMLCalendar):
 #        self.events = self.group_by_day(events)
     
     def formatday(self, day, weekday):
+        
+        """
+        Format the day cell with the current events for the day.
+        """
         if day != 0:
             cssclass = self.cssclasses[weekday]
             if date.today() == date(self.year, self.month, day):
@@ -62,15 +70,27 @@ class EventCalendar(LocaleHTMLCalendar):
         return self.day_cell('noday', '&nbsp;')
         
     def formatmonth(self, year, month):
+    
+        """
+        Format the current month wuth the events.
+        """
         # WTF is this!?
         self.year, self.month = year, month
         return super(EventCalendar, self).formatmonth(self.year, self.month)
     
     def group_by_day(self, events):
+        
+        """
+        Group the returned events into their respective dates.
+        """
         field = lambda event: event.meeting_date.day
         return dict(
             [(day, list(items)) for day, items in groupby(events, field)]
         )
     
     def day_cell(self, cssclass, body):
+        
+        """
+        Create the day cell.
+        """
         return '<td class="%s">%s</td>' % (cssclass, body)

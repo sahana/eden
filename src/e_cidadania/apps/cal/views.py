@@ -29,6 +29,12 @@ from e_cidadania import settings
 
 def calendar(request, space_name, year, month):
     
+    """
+    Returns an localized event calendar with all the Meeting objects.
+    
+    :Contexts: calendar, nextmonth, prevmonth, get_place
+    :Returns: Localized HTML Calendar
+    """
     # Avoid people writing wrong numbers or any program errors.
     if int(month) not in range(1, 13):
         return render_to_response('cal/error.html',

@@ -24,9 +24,18 @@ from e_cidadania.apps.debate.models import Debate, Note
 
 
 class DebateAdmin(admin.ModelAdmin):
+    
+    """
+    Administration for all the debates.
+    """
     list_display = ('title', 'pub_date')
     
+    
 class NoteAdmin(admin.ModelAdmin):
+    
+    """
+    Administration for all the notes in every debate.
+    """
     list_display = ('message', 'pub_date', 'pub_author')
 
 admin.site.register(Debate, DebateAdmin)

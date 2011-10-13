@@ -70,6 +70,12 @@ Referencia (inglés)
 .. toctree::
     :maxdepth: 1
 
+    reference/calendar_models
+    reference/calendar_views
+    reference/debate_admin
+    reference/debate_forms
+    reference/debate_models
+    reference/debate_views
     reference/spaces_admin
     reference/spaces_forms
     reference/spaces_models
