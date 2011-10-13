@@ -78,7 +78,8 @@ def add_new_debate(request, space_name):
             return redirect('/spaces/' + space_name + '/debate/' + saved_debate.id)
                 
         return render_to_response('debate/debate_add.html',
-                                  {'form': debate_form},
+                                  {'form': debate_form,
+                                   'get_place': place},
                                   context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html',
