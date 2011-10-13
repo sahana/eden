@@ -6,13 +6,13 @@
 
 {% block logo %}
     {% if get_place %}
-        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}"></a>
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
     {% endif %}
 {% endblock %}
   
 {% block banner %}
     {% if get_place %}
-        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}">
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
     {% endif %}
 {% endblock %}
 
