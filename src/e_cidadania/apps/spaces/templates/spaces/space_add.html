@@ -117,6 +117,22 @@
                     </span>
                 </div> 
             </div>
+            
+            <div class="clearfix {% if form.public.errors %}error{% endif%}"> 
+                <label for="prependedInput">{{ form.public.label }}</label> 
+                <div class="input"> 
+                    {{ form.public }}
+                    <span class="help-inline">
+                        {% if form.public.errors %}
+                            {% for error in form.public.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.public.help_text }}
+                        {% endif %}
+                    </span>
+                </div> 
+            </div>
 
             <hr />
             <h3>{% trans "Modules" %}</h3>

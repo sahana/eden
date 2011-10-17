@@ -1,60 +1,62 @@
 {% load i18n %}
-  {% if user.is_authenticated %}
-    <ul class="topnav">
-      <li><a href="/">{% trans "Home" %}</a></li>
+    {% if user.is_authenticated %}
+        <ul class="topnav">
+            <li><a href="/">{% trans "Home" %}</a></li>
 
-      <li class="sep"></li>      
+            <li class="sep"></li>      
       
-      <li>
-        <form action="/i18n/setlang/" method="post">{% csrf_token %}
-          <input name="next" type="hidden" value="/" />
-          <select id="language" name="language" onchange="this.form.submit()">
-            <option>{% trans "Language" %}</option>
-            {% for lang in LANGUAGES %}
-              <option value="{{ lang.0 }}">{{ lang.1 }}</option>
-            {% endfor %}
-          </select>
-        </form>
-      </li>
+            <li>
+                <form action="/i18n/setlang/" method="post">{% csrf_token %}
+                    <input name="next" type="hidden" value="/" />
+                    <select id="language" name="language" onchange="this.form.submit()">
+                        <option>{% trans "Language" %}</option>
+                        {% for lang in LANGUAGES %}
+                            <option value="{{ lang.0 }}">{{ lang.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </li>
       
-      <li class="sep"></li>
+            <li class="sep"></li>
       
-      <li>
-        <a href="/accounts/" class="username">
-          {% if user.get_profile.firstname %}
-            {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
-	        {% else %}
-	          {{ user.username }}
-	        {% endif %}
-	      </a>
-	      <ul class="subnav">
-          {% if user.is_staff %}
-	        <li><a href="/admin">{% trans "Administration" %}</a></li>
-	        <li><a href="/rosetta">{% trans "Translation" %}</a></li>
-	      {% endif %}
-	        <li><a href="/accounts/messages">{% trans "Messages" %}</a></li>
-	        <li><a href="/accounts/edit/personal">{% trans "Edit profile" %}</a></li>
-	        <li><a href="/accounts/logout">{% trans "Logout" %}</a></li>
-	      </ul>
-	  </li>
-	</ul>
-  {% else %}
-    <ul class="topnav">
-      <li><a href="/">{% trans "Home" %}</a></li>
-      <li class="sep"></li>
-      <li><a href="/accounts/login">{% trans "Login" %}</a></li>
-      <li class="sep"></li>
-      <li>
-        <form action="/i18n/setlang/" method="post">{% csrf_token %}
-          <input name="next" type="hidden" value="/" />
-          <select id="language" name="language" onchange="this.form.submit()">
-            <option>{% trans "Language" %}</option>
-            {% for lang in LANGUAGES %}
-              <option value="{{ lang.0 }}">{{ lang.1 }}</option>
-            {% endfor %}
-          </select>
-        </form>
-      </li>
-	  </ul>
+            <li>
+                <a href="{% url 'profile_overview' %}" class="username">
+                    {% if user.get_profile.firstname %}
+                        {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
+	                {% else %}
+	                    {{ user.username }}
+	                {% endif %}
+	            </a>
+	            <ul class="subnav">
+                    {% if user.is_staff %}
+	                    <li><a href="{% url 'admin:index' %}">{% trans "Administration" %}</a></li>
+	                    <li><a href="{% url 'rosetta-home' %}">{% trans "Translation" %}</a></li>
+	                {% endif %}
+	                <li><a href="/accounts/messages">{% trans "Messages" %}</a></li>
+	                <li><a href="{% url 'profile_edit_personal' %}">{% trans "Edit profile" %}</a></li>
+	                <li><a href="{% url 'logout' %}">{% trans "Logout" %}</a></li>
+	            </ul>
+	        </li>
+	    </ul>
+    {% else %}
+        <ul class="topnav">
+            <li><a href="/">{% trans "Home" %}</a></li>
+            <li class="sep"></li>
+            <li><a href="{% url 'login' %}">{% trans "Login" %}</a></li>
+            
+            <li class="sep"></li>
+            
+            <li>
+                <form action="/i18n/setlang/" method="post">{% csrf_token %}
+                    <input name="next" type="hidden" value="/" />
+                    <select id="language" name="language" onchange="this.form.submit()">
+                        <option>{% trans "Language" %}</option>
+                        {% for lang in LANGUAGES %}
+                            <option value="{{ lang.0 }}">{{ lang.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </li>
+	    </ul>
 	{% endif %}
 

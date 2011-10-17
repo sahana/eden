@@ -34,22 +34,24 @@
 	<body>
 
     {% if messages %}
-      <ul class="messages hidden">
-        <div class="closemsg">X</div>
-        {% for message in messages %}
-          <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message|safe }}</li>
-        {% endfor %}
-      </ul>
+        <ul class="messages hidden">
+            <div class="closemsg">X</div>
+            {% for message in messages %}
+                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message|safe }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
 
     <div class="topbar">
-      <div id="version">
-	      v0.1 beta
-	    </div>
-	    <div id="userbar">
-	      {% include "menu.html" %}
-	    </div>
-	  </div>
+    
+            <div id="version">
+	            v0.1 beta
+	        </div>
+	        <div id="userbar">
+	            {% include "menu.html" %}
+	        </div>
+
+	</div>
 
       <div id="jsnotify" class="hidden">
         <div id="basic-template">
