@@ -375,21 +375,20 @@ def add_doc(request, space_name):
     :rtype: Object
     :context: form, get_place
     """
-
-    doc = Document()
-    form = DocForm(request.POST or None, request.FILES or None, instance=doc)
+    form = DocForm(request.POST or None, request.FILES or None)
     place = get_object_or_404(Space, url=space_name)
     
     for i in request.user.profile.spaces.all():
         if i.url == space_name or request.user.is_staff:
     
             if request.method == 'POST':
-                form_uncommited = form.save(commit=False)
-                form_uncommited.space = place
-                form_uncommited.author = request.user
                 if form.is_valid():
+                    form_uncommited = form.save(commit=False)
+                    form_uncommited.space = place
+                    form_uncommited.author = request.user
+    
                     form_uncommited.save()
-                    messages.success(request, _('The document has been added successfully.'))
+                    #messages.success(request, _('The document has been added successfully.'))
                     return redirect('/spaces/' + space_name)
         
             return render_to_response('spaces/document_add.html',
