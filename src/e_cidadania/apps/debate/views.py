@@ -101,11 +101,11 @@ def create_note(request, space_name):
     """
     note_form = NoteForm(request.POST or None)
         
-    if request.method == "POST" and request.is_ajax:
-        note_form_uncommited = note_form.save(commit=False)
-        note_form_uncommited.author = request.user
-        
+    if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
+            note_form_uncommited = note_form.save(commit=False)
+            note_form_uncommited.author = request.user
+
             saved_note = note_form_uncommited.save()
             msg = "The note has been created."       
             
@@ -123,11 +123,11 @@ def update_note(request, space_name):
     note = get_object_or_404(Note, noteid=request.POST['noteid'])
     note_form = NoteForm(request.POST or None, instance=note)
         
-    if request.method == "POST" and request.is_ajax:
-        note_form_uncommited = note_form.save(commit=False)
-        note_form_uncommited.pub_author = request.user
-        
+    if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
+            note_form_uncommited = note_form.save(commit=False)
+            note_form_uncommited.pub_author = request.user
+        
             saved_note = note_form_uncommited.save()
             msg = "The note has been updated."       
             
