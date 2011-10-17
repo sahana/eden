@@ -99,11 +99,12 @@ def add_proposal(request, space_name):
     form = ProposalForm(request.POST or None, request.FILES or None, instance=proposal)
 
     if request.method == 'POST':
-        form_uncommited = form.save(commit=False)
-        form_uncommited.space = prop_space
-        form_uncommited.support_votes = 0
-        form_uncommited.author = request.user
         if form.is_valid():
+            form_uncommited = form.save(commit=False)
+            form_uncommited.space = prop_space
+            form_uncommited.support_votes = 0
+            form_uncommited.author = request.user
+            
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
 
