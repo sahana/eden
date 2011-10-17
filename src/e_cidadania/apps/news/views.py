@@ -73,19 +73,19 @@ def add_post(request, space_name):
     form = NewsForm(request.POST or None)
 
     if request.method == 'POST':
-        form_uncommited = form.save(commit=False)
-        form_uncommited.author = request.user
-
-        # Get space id
-        place = Space.objects.get(url=space_name)
-        form_uncommited.space = place
-
-        # This should not be necessay since the editor filters the
-        # script tags
-        #if "<script>" in form_uncommited.post_message:
-        #    return "SCRIPT TAGS ARE NOT ALLOWED"
-
         if form.is_valid():
+            form_uncommited = form.save(commit=False)
+            form_uncommited.author = request.user
+
+            # Get space id
+            place = Space.objects.get(url=space_name)
+            form_uncommited.space = place
+
+            # This should not be necessay since the editor filters the
+            # script tags
+            #if "<script>" in form_uncommited.post_message:
+            #    return "SCRIPT TAGS ARE NOT ALLOWED"
+        
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
 
