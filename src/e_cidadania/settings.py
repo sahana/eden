@@ -14,7 +14,7 @@ import os
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 # Django settings
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 # Extending the user profile a bit more

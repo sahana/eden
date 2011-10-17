@@ -67,6 +67,10 @@ urlpatterns = patterns('',
     # Static content #### FOR DEVELOPMENT!! ####
     (r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'uploads'}),
+    
+    # Static content #### FOR DEVELOPMENT!! ####
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': 'static'}),
 
     # This urls is for the django comments system
     (r'^comments/', include('django.contrib.comments.urls')),
@@ -78,5 +82,6 @@ urlpatterns = patterns('',
     (r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
 )
 
-# Serve static files
-urlpatterns += staticfiles_urlpatterns()
+if settings.DEBUG:
+    # Serve static files
+    urlpatterns += staticfiles_urlpatterns()

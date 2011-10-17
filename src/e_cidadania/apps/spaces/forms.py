@@ -46,20 +46,6 @@ class SpaceForm(ModelForm):
 # but will be usually attached to SpaceForm
 EntityFormSet = modelformset_factory(Entity, extra=3)
 
-class EntityForm(ModelForm):
-
-    """
-    Returns a form to create or edit an entity, based on the :class:Entity data
-    model.
-    
-    :rtype: HTML Form
-    
-    .. versionadded:: 0.1
-    """
-    class Meta:
-        model = Entity
-
-
 class DocForm(ModelForm):
 
     """

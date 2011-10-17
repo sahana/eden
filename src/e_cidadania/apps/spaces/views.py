@@ -57,7 +57,7 @@ from django.views.generic.create_update import delete_object
 from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
-    EntityForm, EntityFormSet
+     EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.staticpages.models import StaticPage
 from e_cidadania.apps.debate.models import Debate
@@ -302,10 +302,10 @@ def create_space(request):
     
     if request.user.is_staff:    
         if request.method == 'POST':
-            space_form_uncommited = space_form.save(commit=False)
-            space_form_uncommited.author = request.user
     
             if space_form.is_valid() and entity_forms.is_valid():
+                space_form_uncommited = space_form.save(commit=False)
+                space_form_uncommited.author = request.user
                 new_space = space_form_uncommited.save()
                 space = get_object_or_404(Space, name=space_form_uncommited.name)
     
