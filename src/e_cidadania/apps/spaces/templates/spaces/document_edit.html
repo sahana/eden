@@ -23,23 +23,41 @@
                     </div> 
                 </div>
 
-                {{ form.non_field_errors }}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <span class="help-inline">{{ error|escape }}</span>
+                    {% endfor %}
+                {% endif %}
         
-                <div class="clearfix"> 
-                    {{ form.title.errors }}
+                <div class="clearfix {% if form.title.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.title.label }}</label> 
                     <div class="input"> 
                         {{ form.title }}
-                        <span class="help-inline">{{ form.title.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.title.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
-                    {{ form.docfile.errors }}
+                <div class="clearfix {% if form.docfile.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.docfile.label }}</label> 
                     <div class="input"> 
                         {{ form.docfile }}
-                        <span class="help-inline">{{ form.docfile.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.docfile.errors %}
+                                {% for error in form.docfile.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.docfile.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
         

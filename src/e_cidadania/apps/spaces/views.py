@@ -506,10 +506,10 @@ def add_meeting(request, space_name):
     place = get_object_or_404(Space, url=space_name)
     
     if request.method == 'POST':
-        form_uncommited = form.save(commit=False)
-        form_uncommited.meeting_author = request.user
-        form_uncommited.space = place
         if form.is_valid():
+            form_uncommited = form.save(commit=False)
+            form_uncommited.meeting_author = request.user
+            form_uncommited.space = place
             form_uncommited.save()
             messages.success(request, _('Meeting added successfully.'))
             return redirect('/spaces/' + space_name)

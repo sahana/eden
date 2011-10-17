@@ -18,60 +18,106 @@
       
             <form enctype="" action="" method="post">{% csrf_token %}
         
-                {{ form.non_field_errors }}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <span class="help-inline">{{ error|escape }}</span>
+                    {% endfor %}
+                {% endif %}
                 
-                <div class="clearfix"> 
-                    {{ form.title.errors }}
+                <div class="clearfix {% if form.title.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.title.label }}</label> 
                     <div class="input"> 
                         {{ form.title }}
-                        <span class="help-inline">{{ form.title.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.title.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
-                    {{ form.description.errors }}
+                <div class="clearfix {% if form.description.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.description.label }}</label> 
                     <div class="input"> 
                         {{ form.description }}
                         {% wysiwyg_editor "id_description" %}
-                        <span class="help-inline">{{ form.description.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.description.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
-                    {{ form.location.errors }}
+                <div class="clearfix {% if form.location.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.location.label }}</label> 
                     <div class="input"> 
                         {{ form.location }}
-                        <span class="help-inline">{{ form.location.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.location.errors %}
+                                {% for error in form.location.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.location.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
-                    {{ form.meeting_type.errors }}
+                <div class="clearfix {% if form.meeting_type.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.meeting_type.label }}</label> 
                     <div class="input"> 
                         {{ form.meeting_type }}
-                        <span class="help-inline">{{ form.meeting_type.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.meeting_type.errors %}
+                                {% for error in form.meeting_type.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.meeting_type.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
-                    {{ form.meeting_date.errors }}
+                <div class="clearfix {% if form.meeting_date.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.meeting_date.label }}</label> 
                     <div class="input">
                         <input type="text" name="meeting_date" id="datepicker">
-                        <span class="help-inline">{{ form.meeting_date.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.meeting_date.errors %}
+                                {% for error in form.meeting_date.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.meeting_date.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
-                    {{ form.user.errors }}
+                <div class="clearfix {% if form.user.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.user.label }}</label> 
                     <div class="input">
                         {{ form.user }}
-                        <span class="help-inline">{{ form.user.help_text }}</span>
+                        <span class="help-inline">
+                            {% if form.user.errors %}
+                                {% for error in form.user.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.user.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 

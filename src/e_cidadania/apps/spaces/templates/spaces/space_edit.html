@@ -18,11 +18,9 @@
         <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
             
             {% if form.non_field_errors %}
-                <ol>
-                    {% for error in form.non_field_errors %}
-                        <li class="clearfix error"><strong>{{ error|escape }}</strong></li>
-                    {% endfor %}
-                </ol>
+                {% for error in form.non_field_errors %}
+                    <span class="help-inline">{{ error|escape }}</span>
+                {% endfor %}
             {% endif %}
         
             <div class="clearfix {% if form.name.errors %}error{% endif%}">
