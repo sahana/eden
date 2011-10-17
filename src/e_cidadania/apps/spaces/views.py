@@ -238,11 +238,11 @@ def edit_space(request, space_name):
     entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
                                  queryset=Entity.objects.all().filter(space=place))
 
-    if request.method == 'POST':
-        form_uncommited = form.save(commit=False)
-        form_uncommited.author = request.user
-        
+    if request.method == 'POST':        
         if form.is_valid() and entity_forms.is_valid():
+            form_uncommited = form.save(commit=False)
+            form_uncommited.author = request.user
+            
             new_space = form_uncommited.save()
             space = form_uncommited.url
             
@@ -302,10 +302,10 @@ def create_space(request):
     
     if request.user.is_staff:    
         if request.method == 'POST':
-    
             if space_form.is_valid() and entity_forms.is_valid():
                 space_form_uncommited = space_form.save(commit=False)
                 space_form_uncommited.author = request.user
+                
                 new_space = space_form_uncommited.save()
                 space = get_object_or_404(Space, name=space_form_uncommited.name)
     

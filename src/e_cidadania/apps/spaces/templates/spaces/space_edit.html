@@ -11,66 +11,114 @@
     {% block centercol %}
         <div class="grid_16">
     
-            <div id="contenttitles">
-                {% trans "Edit space" %}
-            </div>
+        <div id="contenttitles">
+            {% trans "Edit space" %}
+        </div>
       
-            <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
-
-            {{ form.non_field_errors }}
-
-            <div class="clearfix"> 
-                {{ form.name.errors }}
+        <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <ol>
+                    {% for error in form.non_field_errors %}
+                        <li class="clearfix error"><strong>{{ error|escape }}</strong></li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        
+            <div class="clearfix {% if form.name.errors %}error{% endif%}">
                 <label for="prependedInput">{{ form.name.label }}</label> 
                 <div class="input"> 
                     {{ form.name }}
-                    <span class="help-inline">{{ form.name.help_text }}</span>
+                    <span class="help-inline">
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.name.help_text }}
+                        {% endif %}
+                    </span>
                 </div> 
-            </div>
-            
-            <div class="clearfix"> 
-                {{ form.url.errors }}
+            </div>   
+
+            <div class="clearfix {% if form.url.errors %}error{% endif%}"> 
                 <label for="prependedInput">{{ form.url.label }}</label> 
                 <div class="input"> 
                     {{ form.url }}
-                    <span class="help-inline">{{ form.url.help_text }}</span>
+                    <span class="help-inline">
+                        {% if form.url.errors %}
+                            {% for error in form.url.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.url.help_text }}
+                        {% endif %}
+                    </span>
                 </div> 
-            </div>
-            
-            <div class="clearfix"> 
-                {{ form.description.errors }}
+            </div>   
+
+            <div class="clearfix {% if form.description.errors %}error{% endif%}"> 
                 <label for="prependedInput">{{ form.description.label }}</label> 
                 <div class="input"> 
                     {{ form.description }}
                     {% wysiwyg_editor "id_description" %}
-                    <span class="help-inline">{{ form.description.help_text }}</span>
+                    <span class="help-inline">
+                        {% if form.description.errors %}
+                            {% for error in form.description.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.description.help_text }}
+                        {% endif %}
+                    </span>
                 </div> 
-            </div>
-            
-            <div class="clearfix"> 
-                {{ form.logo.errors }}
+            </div>   
+
+            <div class="clearfix {% if form.logo.errors %}error{% endif%}"> 
                 <label for="prependedInput">{{ form.logo.label }}</label> 
                 <div class="input"> 
                     {{ form.logo }}
-                    <span class="help-inline">{{ form.logo.help_text }}</span>
+                    <span class="help-inline">
+                        {% if form.logo.errors %}
+                            {% for error in form.logo.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.logo.help_text }}
+                        {% endif %}
+                    </span>
                 </div> 
-            </div>
-            
-            <div class="clearfix"> 
-                {{ form.banner.errors }}
+            </div>   
+
+            <div class="clearfix {% if form.banner.errors %}error{% endif%}"> 
                 <label for="prependedInput">{{ form.banner.label }}</label> 
                 <div class="input"> 
                     {{ form.banner }}
-                    <span class="help-inline">{{ form.banner.help_text }}</span>
+                    <span class="help-inline">
+                        {% if form.banner.errors %}
+                            {% for error in form.banner.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.banner.help_text }}
+                        {% endif %}
+                    </span>
                 </div> 
-            </div>
-            
-            <div class="clearfix"> 
-                {{ form.authorized_groups.errors }}
+            </div>   
+
+            <div class="clearfix {% if form.authorized_groups.errors %}error{% endif%}"> 
                 <label for="prependedInput">{{ form.authorized_groups.label }}</label> 
                 <div class="input"> 
                     {{ form.authorized_groups }}
-                    <span class="help-inline">{{ form.authorized_groups.help_text }}</span>
+                    <span class="help-inline">
+                        {% if form.authorized_groups.errors %}
+                            {% for error in form.authorized_groups.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.authorized_groups.help_text }}
+                        {% endif %}
+                    </span>
                 </div> 
             </div>
             
