@@ -137,14 +137,33 @@
             </div>
            
             <hr />
-            <h3>{% trans "Modules" %}</h3>
 
-            <div class="fieldWrapper">
-                <p>{{ form.mod_debate }} {% trans "Debate" %}</p>
-                <p>{{ form.mod_proposals }} {% trans "Proposals" %}</p>
-                <p>{{ form.mod_news }} {% trans "News" %}</p>
-                <p>{{ form.mod_cal }} {% trans "Calendar" %}</p>
-                <p>{{ form.mod_docs }} {% trans "Documentation" %}</p>
+            <div class="clearfix">
+                <label id="optionsChekboxes">{% trans "Modules" %}</label>
+                <div class="input">
+                    <ul class="inputs-list">
+                        <li><label>
+                            {{ form.mod_debate }}
+                            <span>{{ form.mod_debate.label }}</span>
+                        </label></li>
+                        <li><label>
+                            {{ form.mod_proposals }}
+                            <span>{{ form.mod_proposals.label }}</span>
+                        </label></li>
+                        <li><label>
+                            {{ form.mod_news }}
+                            <span>{{ form.mod_news.label }}</span>
+                        </label></li>
+                        <li><label>
+                            {{ form.mod_cal }}
+                            <span>{{ form.mod_cal.label }}</span>
+                        </label></li>
+                        <li><label>
+                            {{ form.mod_docs }}
+                            <span>{{ form.mod_docs.label }}</span>
+                        </label></li>
+                    </ul>
+                </div>
             </div>
         
             {{ form.author.as_hidden }}

@@ -50,11 +50,11 @@ class Space(models.Model):
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
-    mod_debate = models.BooleanField(_('Debate module'))
-    mod_proposals = models.BooleanField(_('Proposals module'))
-    mod_news = models.BooleanField(_('News module'))
-    mod_cal = models.BooleanField(_('Calendar module'))
-    mod_docs = models.BooleanField(_('Documents module'))
+    mod_debate = models.BooleanField(_('Debate'))
+    mod_proposals = models.BooleanField(_('Proposals'))
+    mod_news = models.BooleanField(_('News'))
+    mod_cal = models.BooleanField(_('Calendar'))
+    mod_docs = models.BooleanField(_('Documents'))
 
     class Meta:
         ordering = ['name']
