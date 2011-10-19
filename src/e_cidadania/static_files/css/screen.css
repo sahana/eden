@@ -374,7 +374,7 @@ input[type="text"], input[type="password"] {
     padding: 0 10px 2px 10px;
     height: 32px;
     line-height: 32px;
-    font-size: 11px;
+    font-size: 1em;
     color: #FFF;
     background: url(../assets/userbar.png) #000 repeat;
     font-size: 1em;
@@ -642,6 +642,7 @@ ul.topnav {
 	background: #222;
 	/*font-size: 1.2em;*/
 	background: url(topnav_bg.gif) repeat-x;
+	font-size: 1.4em;
 }
 ul.topnav li {
 	float: left;

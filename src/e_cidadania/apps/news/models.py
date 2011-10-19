@@ -41,7 +41,7 @@ class Post(models.Model):
     pub_index = models.BooleanField(_('Publish in index page'))
     space = models.ForeignKey(Space, verbose_name=_('Publish in'),
                                    blank=True, null=True,
-        help_text=_('If you want to post to the index leave this blank'))
+            help_text=_('If you want to post to the index leave this blank'))
     post_tags = TagField()
 
     def __unicode__(self):
@@ -55,7 +55,10 @@ class Post(models.Model):
     
     @models.permalink
     def get_absolute_url(self):
-        return ('view-post', (), {
-            'space_name': self.space.url,
-            'post_id': str(self.id)})
-
+        if self.space is not None:
+            return ('view-post', (), {
+                'space_name': self.space.url,
+                'post_id': str(self.id)})
+        else:
+            return ('view-site-post', (), {
+                'post_id': str(self.id)})

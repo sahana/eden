@@ -8,6 +8,32 @@
 
 {% block content %}
 
+    <script type="text/javascript">
+        function upvote() {
+            $.ajax({
+                type: "POST",
+                url: "../add_support_vote/",
+                data: ({propid: {{ proposal.id }} }),
+                success: function(msg) {
+                    alert("Data Saved: " + msg);
+                },
+                statusCode: {
+                    405: function() {
+                        $('#jsnotify').notify("create", {
+                            title: "Can't send vote",
+                            text: "There has been an error while sending your vote.",
+                            icon: "alert.png"
+                        });  
+                    },
+                }
+            });
+            //$.post("../add_support_vote/", {
+            //    propid: {{ proposal.id }},
+            //    message: "asdasd",
+            //});
+         }
+    </script>
+
     {% block centercol %}
         <div class="grid_11">
 
@@ -16,15 +42,20 @@
                 <div id="tools">
                     <a href="{% url 'add-proposal' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
                     {% if perms.proposals.edit_proposal %}
-                        <a href="{% url 'edit-proposal' get_place.url p.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
+                        <a href="{% url 'edit-proposal' get_place.url proposal.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
                     {% endif %}
                     {% if perms.proposals.delete_proposal %}
-                        <a href="{% url 'delete-proposal' get_place.url p.id %}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
+                        <a href="{% url 'delete-proposal' get_place.url proposal.id %}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
                     {% endif %}
                 </div>
                 {% endif %}
                 <div id="votes">
-                    <span style="font-size:30px;text-align:center;">{{ proposal.support_votes }}</span><br/>apoyos
+                    <span style="font-size:30px;text-align:center;">
+                        {{ proposal.support_votes }}
+                    </span><br/>
+                    <form id="ajaxform" enctype="" action="" method="post">{% csrf_token %}
+                        <a href="javascript:upvote()" class="btn small">apoyar</a>
+                    </form>
                 </div>
                 <!-- Here goes the voting button -->
                 <div id="proposal">

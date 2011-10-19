@@ -76,7 +76,7 @@ class IndexEntriesFeed(Feed):
     description = _('Updates on the main e-cidadania site.')
 
     def items(self):
-        return Post.objects.all().order_by('-post_pubdate')[:10]
+        return Post.objects.all().order_by('-pub_date')[:10]
 
     def item_title(self, item):
         return item.post_title

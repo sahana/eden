@@ -22,6 +22,8 @@
 Proposal module views.
 """
 
+from django.db.models import F
+
 # Generic class-based views
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -37,6 +39,23 @@ from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.proposals.forms import ProposalForm
 from e_cidadania.apps.spaces.models import Space
 
+
+def vote_proposal(request, space_name):
+
+    """
+    Increment support votes for the proposal in 1.
+    """
+#    prop = Proposal.objects.filter(pk=request.POST['propid'])
+#    prop.update(support_votes=F('support_votes')+1)
+    prop = get_object_or_404(Proposal, pk=request.POST['propid'])
+    proposal_form = ProposalForm(request.POST or None, instance=prop)
+    
+    if request.method == "POST" and request.is_ajax:
+        proposal_form.support_votes += 1
+        proposal_form.save()
+
+    return HttpResponse("hecho")
+        
 
 class ListProposals(ListView):
 
