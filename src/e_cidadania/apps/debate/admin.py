@@ -28,7 +28,7 @@ class DebateAdmin(admin.ModelAdmin):
     """
     Administration for all the debates.
     """
-    list_display = ('title', 'pub_date')
+    list_display = ('title', 'date')
     
     
 class NoteAdmin(admin.ModelAdmin):

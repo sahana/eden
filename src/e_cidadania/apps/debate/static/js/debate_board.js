@@ -138,11 +138,13 @@ function addTableRow() {
         var n = $("tr:last td", this).length;
         var tds = '<tr>';
         var inputs = $('#' + tableID + ' input').length;
+        var criteriacount = $('#' + tableID + ' td[id^=debate-hcriteria]').length;
+
         for(var i = 0; i < n; i++){
             var tdlength = $('#' + tableID + ' td').length;
             if (i == 0) {
                 // The first TD must be empty, only with a form for the title.
-                tds += "<td id='debate-hcriteria' class='criteria-title'><div id='debate-ttitle'><input class='small' id='debate1-criteria" + (inputs+1) + "' type='text' value='Test criteria'></div></td>";
+                tds += "<td id='debate-hcriteria" + (criteriacount+1) + "' class='criteria-htitle'><div id='debate-ttitle'><input class='small' id='" + tableID + "-criteria" + (inputs+1) + "' type='text' value='Test criteria'></div></td>";
                 // Remove the first TD from the tds count.
                 n -= 1;
             }
@@ -187,7 +189,9 @@ function addTableColumn() {
     var tableID = $('table').attr('id');
     var inputs = $('#' + tableID + ' input').length;
     var tdlength = $('#' + tableID + ' td').length;
-    $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
+    var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
+    
+    $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria" + (criteriacount+1) + "' class='criteria-vtitle'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
     $('#' + tableID + ' tbody tr').each(function(){
         var tdlength = $('#' + tableID + ' td').length;
         $(this).append("<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
@@ -219,34 +223,55 @@ function saveTable() {
         saveTable() - Saves the table data. Instead of using a standard form,
         we submite the data trough ajax post, and treat it as a form in the
         django view.
-    */
+    */   
     $('#ajaxform').submit( function() {
-        var xvalues = {};
-        var yvalues = {};
-        
-        var yfields = $('#debate-hcriteria input');
-        var xfields = $('#debate-vcriteria input');
-        
+
+        var xvalues = [];
+        var yvalues = [];
+   
+        var yfields = $('td.criteria-htitle :input');
+        var xfields = $('th.criteria-vtitle :input');
+
         $.each(yfields, function(i, field){
-            yvalues[field.id] = field.value;
-            //alert(yvalues[field.id]);
-        });
-        var yvalues = yvalues.get().join(',');
-        alert(yvalues);
+            yvalues.push(field.value);
+        });        
         
         $.each(xfields, function(i, field){
-            xvalues[field.id] = field.value;
-            alert(xvalues[field.id]);
+            xvalues.push(field.value);
         });
+
+        $('#id_yvalues').val(yvalues);
+        $('#id_xvalues').val(yvalues);
         
-        alert(yvalues);
-        
-        return xvalues, yvalues
-        
-//        $.post("../save_table/", {
-//            xvalues
+        return true;
+
+
+
+//        var xvalues = {};
+//        var yvalues = {};
+//   
+//        var yfields = $('td.criteria-htitle :input');
+//        var xfields = $('th.criteria-vtitle :input');
+//        
+////        alert('Hay ' + yfields.length + ' yfields y ' + xfields.length + ' xfields');
+//     
+//        $.each(yfields, function(i, field){
+//            yvalues[field.id] = field.value;
+//        });        
+//        
+//        $.each(xfields, function(i, field){
+//            xvalues[field.id] = field.value;
 //        });
-    });
+//             
+////        var yvalues_ordered = yvalues.get().join(',');
+////        alert(yvalues_ordered);
+//        
+//        alert('asd ' + $.param(yvalues) + 'asdfasd ' + $.param(xvalues));
+//        
+//        
+//        
+//        return xvalues, yvalues
+  });
 }
 
 /*******************

@@ -41,12 +41,12 @@ class Debate(models.Model):
     title = models.CharField(_('Title'), max_length=200, unique=True)
     description = models.TextField(_('Description'), blank=True, null=True)
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
-    space = models.ForeignKey(Space)
+    space = models.ForeignKey(Space, blank=True, null=True)
     xvalues = models.CharField(_('X Values'), max_length=300, blank=True, null=True)
     yvalues = models.CharField(_('Y Values'), max_length=300, blank=True, null=True)
     
-    pub_date = models.DateTimeField(auto_now_add=True)
-    pub_author = models.ForeignKey(User)
+    date = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User, blank=True, null=True)
     
     def __unicode__(self):
         return self.title

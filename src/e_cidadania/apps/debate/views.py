@@ -70,12 +70,15 @@ def add_new_debate(request, space_name):
     
     if request.user.has_perm('debate_add') or request.user.is_staff:
         if request.method == 'POST':
-            debate_form_uncommited = debate_form.save(commit=False)
-            debate_form_uncommited.space = place
-            debate_form_uncommited.author = request.user
-            saved_debate = debate_form_uncommited.save()
+            if debate_form.is_valid():
+                debate_form_uncommited = debate_form.save(commit=False)
+                debate_form_uncommited.space = place
+                debate_form_uncommited.author = request.user
+                debate_form_uncommited.xvalues = request.POST['xvalues']
+                debate_form_uncommited.yvalues = request.POST['yvalues']
+                saved_debate = debate_form_uncommited.save()
             
-            return redirect('/spaces/' + space_name + '/debate/' + saved_debate.id)
+                return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
                 
         return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,

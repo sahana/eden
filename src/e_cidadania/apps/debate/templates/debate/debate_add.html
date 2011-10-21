@@ -27,14 +27,14 @@
                     <thead>
                         <tr id="debate1-headers">
                             <th id="corner" class="corner-criteria"></th>
-                            <th id="debate-vcriteria">
+                            <th id="debate-vcriteria" class="criteria-vtitle">
                                 <input id="debate1-criteria2" class="small" type="text" value="Column title">
                             </th>
                         </tr>
                     </thead>
                     <tbody id="debate-body">
                         <tr id="debate-row-1">
-                            <td id="debate-hcriteria" class="criteria-title">
+                            <td id="debate-hcriteria" class="criteria-htitle">
                                 <div id="debate-ttitle">
                                     <input class="small" id="debate1-criteria1" type="text" value="Test criteria">
                                 </div>
@@ -51,44 +51,62 @@
                 <hr />
                 <h1>{% trans "Other debate data" %}</h1><br/><br/>
                 
-                {{ form.non_field_errors }}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <span class="help-inline">{{ error|escape }}</span>
+                    {% endfor %}
+                {% endif %}
 
-               <div class="clearfix"> 
+               <div class="clearfix {% if form.title.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.title.label }}</label> 
                     <div class="input"> 
-                        {{ form.title }} 
+                        {{ form.title }}
+                        <span class="help-inline">
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.title.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
+                <div class="clearfix {% if form.scope.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.scope.label }}</label> 
                     <div class="input"> 
-                        {{ form.scope }} 
+                        {{ form.scope }}
+                        <span class="help-inline">
+                            {% if form.scope.errors %}
+                                {% for error in form.scope.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.scope.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                <div class="clearfix"> 
+                <div class="clearfix {% if form.description.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.description.label }}</label> 
                     <div class="input"> 
-                        {{ form.description }} 
+                        {{ form.description }}
+                        <span class="help-inline">
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.description.help_text }}
+                            {% endif %}
+                        </span>
                     </div> 
                 </div>
                 
-                {{ phaseform.management_form }}
-                
-                <div class="clearfix"> 
-                    <label for="prependedInput">{{ phaseform.start_date.label }}</label> 
-                    <div class="input"> 
-                        {{ phaseform.start_date }} 
-                    </div> 
-                </div>
-                
-                <div class="clearfix"> 
-                    <label for="prependedInput">{{ phaseform.end_date.label }}</label> 
-                    <div class="input"> 
-                        {{ phaseform.end_date }} 
-                    </div> 
-                </div>
+                {{ form.xvalues.as_hidden }}
+                {{ form.yvalues.as_hidden }}
                 
                 <hr />
 

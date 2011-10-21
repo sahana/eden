@@ -169,11 +169,11 @@
                             <li>
                                 <p><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a>
                                 {% if perms.debate.edit_debate %}
-                                    <a href="{% url 'edit-debate' get_place.url %}">
+                                    {% comment%}<a href="{% url 'edit-debate' get_place.url debate.id %}">{% endcomment %}
                                         <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                     </a>
                                     {% if perms.debate.delete_debate %}
-                                        <a href="{% url 'delete-debate' get_place.url %}">
+                                        {% comment %}<a href="{% url 'delete-debate' get_place.url %}">{% endcomment %}
                                             <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
                                         </a>
                                     {% endif %}
