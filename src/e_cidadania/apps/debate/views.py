@@ -19,7 +19,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
-These are the views that control the spaces, meetings and documents.
+These are the views that control the debates.
 """
 # JSON stuff
 import json
@@ -158,4 +158,22 @@ def view_debate(request, space_name):
     pass
     
 class ListDebates(ListView):
-    pass
+    """
+    Return a list of debates for the current space.
+    """
+    paginate_by = 10
+    
+    def get_queryset(self):
+        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        debates = Debate.objects.all().filter(space=current_space)
+        
+        # Here must go a validation so a user registered to the space
+        # can always see the debate list. While an anonymous or not
+        # registered user can't see anything unless the space is public
+        
+        return debates
+        
+    def get_context_data(self, **kwargs):
+        context = super(ListDebates, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
