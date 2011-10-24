@@ -14,7 +14,7 @@
             <h2>{% trans "Recent processes"%}</h2><br />
             <ul>
                 {% for space in spaces %}
-                    <li><a href="{{ space.get_absolute_url }}" rel="popover" data-content="{{ space.description|safe }}" data-original-title="{{ space.name }}">{{ space.name }}</a>
+                    <li><a href="{{ space.get_absolute_url }}" rel="popover" data-content="{{ space.description|removetags:'p'|safe }}" data-original-title="{{ space.name }}">{{ space.name }}</a>
                         {% if space.public %}
                             <span class="label success">{% trans "Public" %}</span>
                         {% else %}

@@ -44,9 +44,12 @@
 
     <div class="topbar">
     
-            <div id="version">
-	            v0.1 beta
-	        </div>
+            {% if debug_mode %}
+                <div id="version">
+	                version {{ version }} {{ status }}
+	            </div>
+	        {% endif %}
+
 	        <div id="userbar">
 	            {% include "menu.html" %}
 	        </div>

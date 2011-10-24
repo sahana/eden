@@ -67,7 +67,7 @@ function saveOnChangeNote() {
         saveOnChangeNote() - Call the updateNote() function every time a note
         is modified but not moved. This works for changes in textareas, inputs
         and selects.
-    */
+    */ 
     $('.note').change( function() {
         updateNote($(this));
     });
@@ -80,12 +80,17 @@ function deleteNote(noteObj) {
         after that we remove the note from the board.
     */
     var noteID = noteObj.attr('id');
+    var answer = confirm("Are you sure?");
     
-    $.post('../delete_note/', {
-        noteid: noteID,
-    });
+    if (answer) {
+        $.post('../delete_note/', {
+            noteid: noteID,
+        });
     
-    $('#' + noteID).remove();
+        $('#' + noteID).remove();
+    } else {
+        alert("Gracias!");
+    }
 }
 
 function getClickedNote() {
@@ -230,47 +235,22 @@ function saveTable() {
         var yvalues = [];
    
         var yfields = $('td.criteria-htitle :input');
+        alert(xfields);
         var xfields = $('th.criteria-vtitle :input');
 
         $.each(yfields, function(i, field){
             yvalues.push(field.value);
         });        
-        
+        alert(yvalues);
         $.each(xfields, function(i, field){
             xvalues.push(field.value);
         });
 
         $('#id_yvalues').val(yvalues);
-        $('#id_xvalues').val(yvalues);
+        $('#id_xvalues').val(xvalues);
+        alert(xvalues);
         
         return true;
-
-
-
-//        var xvalues = {};
-//        var yvalues = {};
-//   
-//        var yfields = $('td.criteria-htitle :input');
-//        var xfields = $('th.criteria-vtitle :input');
-//        
-////        alert('Hay ' + yfields.length + ' yfields y ' + xfields.length + ' xfields');
-//     
-//        $.each(yfields, function(i, field){
-//            yvalues[field.id] = field.value;
-//        });        
-//        
-//        $.each(xfields, function(i, field){
-//            xvalues[field.id] = field.value;
-//        });
-//             
-////        var yvalues_ordered = yvalues.get().join(',');
-////        alert(yvalues_ordered);
-//        
-//        alert('asd ' + $.param(yvalues) + 'asdfasd ' + $.param(xvalues));
-//        
-//        
-//        
-//        return xvalues, yvalues
   });
 }
 

@@ -24,14 +24,13 @@ access to '/spaces/'.
 """
 from django.conf.urls.defaults import *
 
-from e_cidadania.apps.debate.views import ListDebates
+from e_cidadania.apps.debate.views import ListDebates, ViewDebate
 
 urlpatterns = patterns('e_cidadania.apps.debate.views',
 
-    
     url(r'^$', ListDebates.as_view(), name='list-debates'),
 
-    url(r'^(?P<debate_id>\d+)/', 'view_debate', name='view-debate'),
+    url(r'^(?P<debate_id>\d+)/', ViewDebate.as_view(), name='view-debate'),
     
     url(r'^add/', 'add_new_debate', name='add-debate'),
     

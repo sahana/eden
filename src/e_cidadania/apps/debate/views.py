@@ -154,9 +154,35 @@ def delete_note(request, space_name):
     else:
         return HttpResponse("You're not the author of the note. Can't delete")
         
-def view_debate(request, space_name):
-    pass
+class ViewDebate(DetailView):
+    """
+    View a debate.
+    """
+    context_object_name = 'debate'
+    template_name = 'debate/debate_view.html'
     
+    def get_object(self):
+        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+    
+        return debate    
+    
+    def get_context_data(self, **kwargs):
+        context = super(ViewDebate, self).get_context_data(**kwargs)
+        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = current_space
+        
+        # Return xvalues and yvalues as array
+        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+        xvalues = debate.xvalues.split(',')
+        context['xvalues'] = xvalues
+        
+        yvalues = debate.yvalues.split(',')
+        context['yvalues'] = yvalues
+        
+        return context
+
+
 class ListDebates(ListView):
     """
     Return a list of debates for the current space.

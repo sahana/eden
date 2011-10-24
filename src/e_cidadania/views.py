@@ -33,6 +33,7 @@ from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
 from e_cidadania.apps.spaces.models import Space
 from e_cidadania.apps.staticpages.models import StaticPage
+from e_cidadania import settings
 
 def index_view(request):
 
@@ -51,6 +52,9 @@ def index_view(request):
         'spaces': space_list,
         'recent_spaces': recent_spaces,
         'page': page_list,
+        'version': settings.__version__,
+        'status': settings.__status__,       
+        'debug_mode': settings.DEBUG,
     }
 
     if request.user.is_anonymous():

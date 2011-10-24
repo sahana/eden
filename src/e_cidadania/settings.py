@@ -1,13 +1,13 @@
 # Django settings for e_cidadania project.
 
-__author__ = "Oscar Carballal"
+__author__ = "Oscar Carballal Prego"
 __copyright__ = "Copyright 2011, Cidadania Sociedade Cooperativa Galega"
-__credits__ = ["Oscar Carballal"]
-__license__ = "GPL3"
-__version__ = "0.4"
-__maintainer__ = "Oscar Carballal"
+__credits__ = ["Oscar Carballal Prego"]
+__license__ = "GPLv3"
+__version__ = "0.1"
+__maintainer__ = "Oscar Carballal Prego"
 __email__ = "oscar.carballal@cidadania.coop"
-__status__ = "Prototype"
+__status__ = "final"
 
 # Get the current directory
 import os
