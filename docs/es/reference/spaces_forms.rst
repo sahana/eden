@@ -5,8 +5,8 @@
 
 .. autoclass:: SpaceForm(ModelForm)
 
-.. autoclass:: EntityForm(ModelForm)
-
 .. autoclass:: DocForm(ModelForm)
 
 .. autoclass:: MeetingForm(ModelForm)
+
+:mod:`EntityFormSet` --- modelformset_factory

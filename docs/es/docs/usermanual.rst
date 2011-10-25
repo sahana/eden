@@ -1,7 +1,7 @@
 Manual de usuario
 =================
 
-Bievenido al manual de usuario de e-cidadania. Este manual está destinado a
+Bienvenido al manual de usuario de e-cidadania. Este manual está destinado a
 todos los nuevos usuarios de la plataforma. El objetivo es cubrir lo mejor
 posible todas las funciones de e-cidadania evitando ser demasiado específicos.
 
@@ -65,13 +65,15 @@ datos personales.
 Para los procesos oficiales esto seguramente sea una obligación, pero no para
 los procesos que inician los usuarios por su cuenta.
 
-Actividades dentro del espacio
-------------------------------
 
-Dentro de cada espacuio se pueden realizar diversas actividades
+Propuestas
+----------
 
-Cómo enviar una propuesta
--------------------------
+El módulo de propuestas permite realizar propuestas para que la gente las
+vote o las apoye.
+
+Ese tipo de valoraciones se tendrán después en cuenta en el proceso de votación
+definitivo.
 
 Enviar una propuesta es de lo más sencillo. Basta con acceder al espacio de
 participación correspondiente y hacer clic en "Añadir una propuesta" en la
@@ -80,7 +82,8 @@ columna de la derecha.
 Aparecerá un formulario que tiene varios campos:
 
 Título
-    El título de la propuesta. Debe ser una síntesis concisa de la propuesta.
+    El nombre de la propuesta. Debe ser una síntesis concisa de la propuesta que
+    no debe ocupar demasiado.
     
 Descripción
     Una descripción más extensa de la propuesta. Se pueden vincular elementos
@@ -96,8 +99,11 @@ Etiquetas
         Titulo: La acera de Cobián Roffignac está rota
         Etiquetas: acera, cobian roffignac, pontevedra, roto
 
-Cómo participar en un debate
-----------------------------
+.. warning:: Una vez hecha una propuesta no se podrá editar ni eliminar. Este
+             comportamiento es susceptible de cambiar en e-cidadania 0.1.5
+             
+Debates
+-------
 
 El sistema de debates es nuevo, así que procura prestar atención para no
 perderte, esto no es un foro al uso.
@@ -131,6 +137,13 @@ página web constantemente.
 
 Para obtener el enlace del feed, basta con que hagas clic abajo de todo en
 "RSS Feed".
+
+Ten en cuenta que cada espacio tiene un feed diferente, así como la página principal
+de e-cidadania. Si quieres un feed sólo de tu espacio deberás hacer clic en el icono
+RSS de tu espacio y no en el de la página principal.
+
+.. note:: En e-cidadania 0.1.5 se espera tener un único botón de RSS que llevará
+          al usuario a un selector de feeds RSS.
 
 Preguntas frecuentes
 --------------------

@@ -1,16 +1,37 @@
-Authors and translators
-=======================
+Acerca de este documento
+========================
 
-:Authors:
+:Autores:
 
-    Oscar Carballal <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
 
-:Galician translation:
+:Corrección:
+
+    Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
+
+Traducciones
+............
+
+:Gallego:
 
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
 
     Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
     
-:Spanish translation:
+    Antón Meixome <meixome@certima.net>
+    
+    Luisa Vicente Comojo <luisa.vicente@cidadania.coop>
 
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+
+:Inglés:
+
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
+
+Agradecimientos
+---------------
+
+- Algueirada
+- Xunta de Galicia
+- CESGA (Centro de Supercomputación de Galicia)
+- Concello de Ferrol
+- NovaCaixaGalicia

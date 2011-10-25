@@ -102,7 +102,7 @@ de comandos para que todo esté en orden.
     crear un usuario de administración. Elegiremos la opción que más nos convenga
     y seguiremos.
     
-    En principio con esto es suficiente. Si por algún motivo quiere meter un set
+    En principio con esto es suficiente. Si por algún motivo quieres meter un set
     de datos previos, deberás hacerlo a través de los métodos que Django ofrece,
     pero eso cae fuera de este manual.
 

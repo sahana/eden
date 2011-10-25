@@ -235,20 +235,21 @@ function saveTable() {
         var yvalues = [];
    
         var yfields = $('td.criteria-htitle :input');
-        alert(xfields);
         var xfields = $('th.criteria-vtitle :input');
 
         $.each(yfields, function(i, field){
             yvalues.push(field.value);
         });        
-        alert(yvalues);
+
         $.each(xfields, function(i, field){
             xvalues.push(field.value);
         });
 
         $('#id_yvalues').val(yvalues);
         $('#id_xvalues').val(xvalues);
-        alert(xvalues);
+        
+        matrix = []
+        
         
         return true;
   });

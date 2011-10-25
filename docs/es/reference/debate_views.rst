@@ -13,6 +13,6 @@
 
 .. autofunction:: delete_note(request, space_name)
 
-.. autofunction:: view_debate(request, space_name)
+.. autofunction:: ViewDebate(DetailView)
 
 .. autoclass:: ListDebates(ListView)

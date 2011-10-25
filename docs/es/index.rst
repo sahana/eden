@@ -104,43 +104,7 @@ Conseguir ayuda
 
 - Archiva un informe de error en el `bug tracker <http://dev.ecidadania.org>`_.
 
-Acerca de este documento
-------------------------
-
-e-cidadania es un proyecto de Cidadania S. Coop. Galega
-
-:Autores:
-
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
-
-:Corrección:
-
-    Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
-
-Traducciones
-............
-
-:Gallego:
-
-    Armando Broz Fidalgo <armando.broz@cidadania.coop>
-
-    Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
+.. toctree::
+    :maxdepth: 1
     
-    Antón Meixome <meixome@certima.net>
-    
-    Luisa Vicente Comojo <luisa.vicente@cidadania.coop>
-
-
-:Inglés:
-
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
-
-Agradecimientos
----------------
-
-- Algueirada
-- Xunta de Galicia
-- CESGA (Centro de Supercomputación de Galicia)
-- Concello de Ferrol
-- NovaCaixaGalicia
-
+    authors
