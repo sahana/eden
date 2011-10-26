@@ -16,35 +16,31 @@ and some external libraries.
 
 |Models|_
 
-.. |Models| image:: images/models.png
+.. |Models| image:: ../images/models.png
 .. _Models: http://postimage.org/image/z7b8s72c/full/
 
-.. warning:: e-cidadania is in heavy development, and because of that, some parts
-             of it may suffer changes, especially the data models until some releases.
+.. warning:: e-cidadania is in heavy development, because of that, some parts
+             of it may suffer changes, especially the data models and documentation
+             until some releases.
 
-
-Documentation
--------------
+Installation & Configuration
+----------------------------
 
 .. toctree::
     :maxdepth: 2
 
     docs/installation
     docs/configuration
-    docs/usermanual
-    docs/adminmanual
+    docs/deployment
 
-Development
------------
+Manuals
+-------
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
-    dev/styleguide
-    dev/useraccounts
-    dev/modules
-    dev/documenting
-    dev/i18n
+    docs/usermanual
+    docs/adminmanual
 
 Appearance / Themes
 -------------------
@@ -54,20 +50,29 @@ Appearance / Themes
 
     theming/themes
 
+Development
+-----------
+
+.. toctree::
+    :maxdepth: 2
+    
+    dev/styleguide
+    dev/useraccounts
+    dev/modules
+    dev/documenting
+    dev/i18n
+
 Reference
 ---------
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    reference/spaces_admin
-    reference/spaces_forms
-    reference/spaces_models
-    reference/spaces_views
-    reference/proposals_admin
-    reference/proposals_forms
-    reference/proposals_models
-    reference/proposals_views
+    reference/calendar
+    reference/debate
+    reference/spaces
+    reference/proposals
+    reference/news
 
 Finale
 ======
@@ -82,32 +87,11 @@ Getting help
   * ecidadania-dev@freelists.org
   * ecidadania-es@freelists.org
 
-- Bug reporting in the e-cidadania `bug tracker <http://dev.ecidadania.org>`_.
+- Bug reporting in the e-cidadania `bug tracker <http://dev.ecidadania.org>`_ or
+  contact us through e-mail at soporte@ecidadania.org
 
-About this document
--------------------
-
-:Authors:
-
-    Oscar Carballal <oscar.carballal@cidadania.coop> <info@oscarcp.com>
-
-:Galician translation:
-
-    Armando Broz Fidalgo <armando.broz@cidadania.coop>
-
-    Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
-
-
-:English translation:
-
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
-
-Thanks
-------
-
-- Algueirada
-- Xunta de Galicia
-- CESGA (Centro de Supercomputación de Galicia)
-- Concello de Ferrol
-- NovaCaixaGalicia
+.. toctree::
+    :maxdepth: 1
+    
+    authors
 

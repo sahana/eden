@@ -3,13 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-e-cidadania documentation
-=========================
+Documentación de e-cidadania
+============================
 
 **e-cidadania** es una plataforma de e-democracia hecha con software abierto
 para la participación ciudadana. Las características clave son: un sistema de
 propuestas, un revolucionario sistema de debate ordenado, repositorio de documentos,
-informes autogenerados y perfiles avanzaqdos de usuario entre otras cosas como
+informes autogenerados y perfiles avanzados de usuario entre otras cosas como
 geolocalización y mensajería.
 
 Esta plataforma está basada en el framework `django <http://www.djangoproject.com>`_ 
@@ -17,11 +17,11 @@ y algunas librerías externas.
 
 |Models|_
 
-.. |Models| image:: images/models.png
+.. |Models| image:: ../images/models.png
 .. _Models: http://postimage.org/image/z7b8s72c/full/
 
 .. warning:: e-cidadania está en desarrollo, y por ello algunos componentes pueden
-             variar sus carcaterísticas, especialmente los modelos de datos y
+             variar sus características, especialmente los modelos de datos y
              esta documentación.
 
 
@@ -82,14 +82,15 @@ Colofón
 Conseguir ayuda
 ---------------
 
-- Prueba a mirar en el `PUF <http://app.ecidadania.org/faq>`_ (Preguntas de Uso Frecuente).
+- Prueba a mirar en el `P+F <http://app.ecidadania.org/faq>`_ (Preguntas Más Frecuentes).
 - Listas de correo de e-cidadania
 
   * ecidadania-users@freelists.org
   * ecidadania-dev@freelists.org
   * ecidadania-es@freelists.org
 
-- Archiva un informe de error en el `bug tracker <http://dev.ecidadania.org>`_.
+- Crear un informe de error en el `bug tracker <http://dev.ecidadania.org>`_ o
+  infórmanos a través de correo electrónico en soporte@ecidadania.org
 
 .. toctree::
     :maxdepth: 1

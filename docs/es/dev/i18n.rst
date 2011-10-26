@@ -1,7 +1,7 @@
 Traducciones
 ============
 
-Para las traducciones utilizamos dis herramientas:
+Para las traducciones utilizamos dos herramientas:
 
 - django-rosetta
 - gettext
@@ -24,7 +24,7 @@ una lista con los idiomas disponibles para traducir.
 
 .. _URL de traducción: http://ecidadania.org/rosetta
 
-.. image:: ../images/rosetta1.png
+.. image:: ../../images/rosetta1.png
     :align: center
 
 Haz clic en el componente que quieras traducir y empieza (la traducción se realiza
@@ -42,7 +42,7 @@ Gettext es una herramienta bien conocida por todo los traductores alrededor del
 mundo ya que es un estándar. Gracias al *middleware* de django, el trabajo será
 mínimo, sólo tendremos que editar los archivos .po que hay en el código fuente.
 
-.. image:: ../images/gettext1.png
+.. image:: ../../images/gettext1.png
     :align: center
 
 Los ficheros suelen encontrarse en un directorio llamado **locale** dentro del módulo.

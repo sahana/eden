@@ -10,8 +10,8 @@ Un módulo es básicamente una aplicación de django que incorporamos a e-cidada
 En estos momentos apostamos por la estructura estándar en cuanto a distribución y
 nombrado de archivos.
 
-.. warning:: Recomendamos encarecidamente que se tenga experiencia previa en django y python
-          antes de crear un módulo.
+.. warning:: Recomendamos encarecidamente que se tenga experiencia previa en
+             django y python antes de crear un módulo.
 
 Un módulo consta de tres partes básicas, el modelo, la vista y la plantilla.
 

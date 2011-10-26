@@ -19,7 +19,7 @@ languages available to translate.
 
 .. _translation URL: http://ecidadania.org/rosetta
 
-.. image:: ../images/rosetta1.png
+.. image:: ../../images/rosetta1.png
     :align: center
 
 Click on the component you want to translate and start translating (the translation is
@@ -37,7 +37,7 @@ Gettext is a well known tool by all the translators around the world. Its a stan
 Thanks to the django *middleware* out work will be minimum, we only have to edit
 the .po files in the source files.
 
-.. image:: ../images/gettext1.png
+.. image:: ../../images/gettext1.png
     :align: center
 
 Instead of making one global translation, we decided to keep a translation file
