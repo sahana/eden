@@ -34,13 +34,13 @@ Instalación y configuración
     docs/installation
     docs/configuration
     docs/deployment
-    
+
 Manuales
 --------
 
 .. toctree::
     :maxdepth: 3
-    
+
     docs/usermanual
     docs/adminmanual
 
@@ -94,5 +94,5 @@ Conseguir ayuda
 
 .. toctree::
     :maxdepth: 1
-    
+
     authors

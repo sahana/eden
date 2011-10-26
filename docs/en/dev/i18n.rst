@@ -8,6 +8,10 @@ For the translation we use two tools:
 
 Both ways of translating are simple thaks to the Django *middleware*.
 
+Instead of making one global translation file, we decided to keep one
+transaltion file for every application, this way even if the modules change
+the translations will keep intact.
+
 Translating with rosetta
 ------------------------
 

@@ -128,12 +128,12 @@ CSS
 
         body {
             background: #FAFAFA;
-	        padding: 0;
-	        margin: 0;
-	        font-family: Verdana, "Lucida Sans", Arial;
-	        font-size: 1em;
-	        color: #000;
-	        cursor: default;
+	          padding: 0;
+	          margin: 0;
+	          font-family: Verdana, "Lucida Sans", Arial;
+	          font-size: 1em;
+	          color: #000;
+	          cursor: default;
         }
 
 **Colores**

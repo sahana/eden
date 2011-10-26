@@ -19,7 +19,7 @@ and some external libraries.
 .. |Models| image:: ../images/models.png
 .. _Models: http://postimage.org/image/z7b8s72c/full/
 
-.. warning:: e-cidadania is in heavy development, because of that, some parts
+.. warning:: e-cidadania is in heavy development, because of that some parts
              of it may suffer changes, especially the data models and documentation
              until some releases.
 
@@ -55,7 +55,7 @@ Development
 
 .. toctree::
     :maxdepth: 2
-    
+
     dev/styleguide
     dev/useraccounts
     dev/modules
@@ -92,6 +92,6 @@ Getting help
 
 .. toctree::
     :maxdepth: 1
-    
+
     authors
 

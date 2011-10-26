@@ -16,7 +16,7 @@ Python
     The python imports must precede any others, and the external librearies or
     third party modules must precede the application ones.
 
-    *Ejemplo*::
+    *Example*::
 
         import os
         import sys
@@ -106,7 +106,11 @@ HTML
     rendered results in application.
 
 **Indentation**
-    The X/HTML code must be indented with two spaces, no exception.
+    The X/HTML code must be indented with four spaces like python code, no exceptions.
+
+    .. note:: There may be some old code that follows the old indentation
+              rule (2 spaces per level). If you see it we would be glad to
+              receive a path to solve it.
 
 CSS
 ---
@@ -118,12 +122,12 @@ CSS
 
         body {
             background: #FAFAFA;
-	    padding: 0;
-	    margin: 0;
-	    font-family: Verdana, "Lucida Sans", Arial;
-	    font-size: 1em;
-	    color: #000;
-	    cursor: default;
+	          padding: 0;
+	          margin: 0;
+	          font-family: Verdana, "Lucida Sans", Arial;
+	          font-size: 1em;
+	          color: #000;
+	          cursor: default;
         }
 
 **Colors**
@@ -137,5 +141,4 @@ CSS
 JavaScript
 ----------
 
-Estilo de código JavaScript.
-
+The JavaScript code follows the same rules from the python code.

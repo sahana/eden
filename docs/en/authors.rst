@@ -8,7 +8,7 @@ About this document
 :Corrections:
 
     Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
-    
+
 Translations
 ............
 
@@ -17,9 +17,9 @@ Translations
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
 
     Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
-    
+
     Antón Meixome <meixome@certima.net>
-    
+
     Luisa Vicente Comojo <luisa.vicente@cidadania.coop>
 
 
