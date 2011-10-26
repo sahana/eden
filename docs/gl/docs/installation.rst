@@ -1,16 +1,52 @@
-Installation
-============
+Instalación
+===========
 
-e-cidadania installation is very simple and is done the same as any other django
-platforms.
+La instalación de e-cidadania es muy simple y se realiza de la misma manera que
+cualquier otra plataforma django estándar.
 
-Requirements
-------------
+Descargar la plataforma
+-----------------------
 
-- Apache, nginx, or any other web server with CGI suppport
-- FastCGI, CGI, Passenger or other CGI.
+.. note:: La sección de descargas de la web oficial todavía no está disponible.
 
-**Dependencies**
+Existen numerosas formas de descargar e-cidadania. La más sencilla de todas es
+ir a le sección `descargas <http://ecidadania.org/downloads>`_ de la web y bajarse
+la última versión estable o de desarrollo, listas para utilizar.
+
+Versión estable
+...............
+
+Puedes encontrar la última versión estable en la página de descargas de ecidadania.org::
+
+    http://ecidadania.org/downloads
+
+
+Versión de desarrollo
+.....................
+
+La versión de desarrollo está disponible desde varios sitios. Utilizamos `GIT <http://git-scm.com/>`_
+como sistema de control de versiones, así que tendrás que instalarlo en tu ordenador.
+
+    **Gitorious:** *(repositorio oficial)*::
+
+        git clone git://gitorious.org/e-cidadania/mainline.git
+
+    **GitHub** *(repositorio secundario)*::
+
+        git clone git://github.com/oscarcp/e-cidadania.git
+
+    **Repo.or.cz** *(espejo oficial)*::
+
+        git clone git://repo.or.cz/e_cidadania.git
+
+Requisitos
+----------
+
+- Python 2.5 o superior
+- Apache, nginx, u otro servidor web con soporte CGI
+- FastCGI, CGI, Passenger u otro CGI
+
+**Dependencias**
 
 - django 1.3
 - PIL *(Python Imaging Library)*
@@ -20,61 +56,16 @@ Requirements
 - django-grappelli (para la administración)
 - feedparser
 
-You can install all the required dependencies automatically with this command:
+
+Instalar dependencias
+---------------------
+
+Puedes instalar todas las dependencias automáticamente con este comando:
 
 ::
 
     # pip install -r requirements.txt
 
-Downloading platform
---------------------
+Si no dispones del programa *pip* también puedes instalar las dependencias a través
+del programa *easy_install*.
 
-.. note:: The download section in the official website is not available yet.
-
-The are several ways to download e-cidadania. The most simple of them is going to
-the `downloads <http://ecidadania.org/downloads>`_ page in the website and download
-the latest stable or development versions, ready to use.
-
-Stable version
-...............
-
-You can find the latest stable version in the download page in ecidadania.org::
-
-    http://ecidadania.org/downloads
-
-
-Development version
-...................
-
-Development version is available through various places. We use `GIT <http://git-scm.com/>`_
-as control version system, so you will have to install it in your computer.
-
-    **Gitorious:** *(official repository)*::
-
-        git clone git://gitorious.org/e-cidadania/mainline.git
-
-    **GitHub** *(secondary repository)*::
-
-        git clone git://github.com/oscarcp/e-cidadania.git
-
-    **Repo.or.cz** *(official mirror)*::
-
-        git clone git://repo.or.cz/e_cidadania.git
-
-Installing with Apache 2
-------------------------
-
-This section is in developent.
-
-Installing with nginx + FastCGI
--------------------------------
-
-.. note:: The installtion through FastCGI should work for other web servers since
-          FastCGI is the one who handles e-cidadania, and the server only serves
-          the static content.
-
-The installation with nginx and FastCGI...
-
-This section is in development.
-
-Now you can continue to "Configuration".

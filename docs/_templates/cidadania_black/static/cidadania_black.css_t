@@ -105,7 +105,7 @@ div.body h6 {
 {% if theme_index_logo %}
 div.indexwrapper h1 {
     text-indent: -999999px;
-    background: url({{ theme_index_logo }}) no-repeat center center;
+    background: url({{ logo }}) no-repeat center center;
     height: {{ theme_index_logo_height }};
 }
 {% endif %}

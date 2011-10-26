@@ -9,7 +9,7 @@ Acerca de este documento
 
     Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
 
-Traducións
+Traducions
 ..........
 
 :Galego:

@@ -1,9 +1,10 @@
-Style guide
-===========
+Guía de estilo
+==============
 
-The style guide stablish a series of rules to follow when coding in e-cidadania.
-This rules are unbreakable. The style guide follows closely the `PEP8`_ document,
-with some exceptions provided from the internal style guide at `Pocoo`_.
+La guía de estilo establece una serie de normas a seguir cuando se programa en
+e-cidadania. Estas normas son *inquebrantables*. La guía de estilo sigue muy
+de cerca el documento `PEP8`_, con algunas excepciones que vienen de la guía de
+estilo interna de `Pocoo`_.
 
 .. _PEP8: http://www.python.org/dev/peps/pep-0008
 .. _Pocoo: http://www.pocoo.org//internal/styleguide/
@@ -12,9 +13,10 @@ Python
 ------
 
 **Imports**
-    Every import must be situated in the file header, below to the comment header.
-    The python imports must precede any others, and the external librearies or
-    third party modules must precede the application ones.
+    Todos los imports deben estar situados en la cabecera del archivo, por debajo
+    del comentario de cabecera. Los imports de módulos python deben preceder a todos
+    los demás, y las librerías externas o módulos de terceras partes deben preceder
+    a los de las aplicacion.
 
     *Ejemplo*::
 
@@ -25,20 +27,22 @@ Python
 
         from myapp.module import function
 
-**Line width (columns)**
-    The code must be always 80 columns wide except on templates.
+**Ancho de línea (columnas)**
+    El código debe ser siempre de 80 columnas de ancho, se permite un par de columnas
+    extra en casos de necesidad.
 
-**Long declarations**
-    If a code line does not fit in 80 columns, try to reduce it declaring variables
-    previously. If it still can not fit, you can divide the lines this way:
+**Declaraciones largas**
+    Si una línea de código no cabe en 80 columnas, intenta reducirlo declarando
+    variables previamente. Si todavía no encaja, puedes dividir las lineas de la
+    siguiente forma:
 
-    *Parentheses*::
+    *Sentencias con paréntesis*::
 
         website = models.URLField(_('Website'), verify_exists=True,
                                   max_length=200, null=True, blank=True,
                                   help_text=_('The URL will be checked'))
 
-    *Declararations*::
+    *Declaraciones*::
 
         this_is_a_very_long(function_call, 'with many parameters') \
             .that_returns_an_object_with_an_attribute
@@ -47,7 +51,7 @@ Python
                      .order_by(MyModel.name.desc()) \
                      .limit(10)
 
-    *Lists, tuples and dictionariess*::
+    *Listas, tuplas y diccionarios*::
 
         items = [
             'this is the first', 'set of items', 'with more items',
@@ -60,15 +64,16 @@ Python
             ('another': thing),
         }
 
-**Indentation**
-    Indentation must be *always* 4 spaces per level, no exceptions. You can not
-    use tabs for indentig.
+**Indentación**
+    La indentación debe ser **siempre** de 4 espacios por nivel. No se permite el
+    uso de tabulaciones para indentar.
 
-**Blank lines**
-    Every function and classes must be separated by two blank lines. The code
-    inside a class or method by one blank line.
+**Líneas en blanco**
+    Cada función y clase debe de estar separado por dos líneas en blanco. El
+    código dentro de una clase o método debe de estar separado por una línea en
+    blanco.
 
-    *Example*::
+    *Ejemplo*::
 
         class ListDocs(ListView):
             ----blank line----
@@ -100,42 +105,47 @@ Python
 HTML
 ----
 
-**Columns**
-    HTML code does not have a column limit, but it must be indented in a way we
-    can locate easily every element inside the document. The indentation preceeds
-    rendered results in application.
+**Columnas**
+    El código HTML no tiene límite de columnas, pero debe estar indentado de forma
+    que se pueda localizar rápidamente cada elemento en el documento. El estilo
+    de indentación precede al resultado renderizado en el navegador.
 
-**Indentation**
-    The X/HTML code must be indented with two spaces, no exception.
+**Indentación**
+    El código X/HTML debe de estar indentado con 4 espacios por nivel igual que
+    el código python, sin excepciones.
+    
+    .. note:: Puede que haya código antiguo que siga la anterior norma de indentación
+              que establecía dos espacios por nivel. Si ves algún archivo así
+              agradeceríamos que nos enviases un parche para solucionarlo.
 
 CSS
 ---
 
-**Indentation**
-    Indentation will be 4 spaces, always, like Python code.
+**Indentación**
+    La indentación es de 4 espacios, igual que en el código python.
 
-    *Example*::
+    *Ejemplo*::
 
         body {
             background: #FAFAFA;
-	    padding: 0;
-	    margin: 0;
-	    font-family: Verdana, "Lucida Sans", Arial;
-	    font-size: 1em;
-	    color: #000;
-	    cursor: default;
+	        padding: 0;
+	        margin: 0;
+	        font-family: Verdana, "Lucida Sans", Arial;
+	        font-size: 1em;
+	        color: #000;
+	        cursor: default;
         }
 
-**Colors**
-    Colors must be always wrote in hexadecimal. You are allowed to use three digits
-    abbreviations.
+**Colores**
+    Los colores deben ser escritos siempre en hexadecimal. Se permite utilizar
+    abreviaturas de tres dígitos.
 
-**Font size**
-    Font size must be declared in **em's** except a presentation requirement.
+**Tamaño de fuente**
+    El tamaño de fuente debe estar especificado siempre en **em's** salvo que
+    sea un requisito de la presentación.
 
 
 JavaScript
 ----------
 
-Estilo de código JavaScript.
-
+Al código javascript se le aplican las mismas normas que al código python.

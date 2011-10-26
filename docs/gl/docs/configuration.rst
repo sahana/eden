@@ -1,13 +1,13 @@
-Configuration
+Configuración
 =============
 
-The e-cidadania platform is almost ready-to-use adter unpacking, but you will have
-to edit the `settings.py` file.
+La plataforma e-cidadania viene casi lista para funcionar tan pronto la
+descargues, pero aún te queda editar el archivo `settings.py` y algunos pasos más.
 
-Database
---------
+Base de datos (BDD)
+-------------------
 
-**Configuring the database**::
+**Configurando la base de datos**::
 
     DATABASES = {
         'default': {
@@ -20,11 +20,10 @@ Database
         }
     }
     
-First of all will be to set up the database. By default e-cidadania is set up to
-use a local SQLite3 database, which will be useful if Lo primero de todo será configurar la base de datos. Por defecto, e-cidadania
-viene configurado para utilizar una base de datos local SQLite3, que puede
-servirte para hacer pruebas si lo necesitas pero no se debe utilizar bajo ningún
-concepto en producción.
+Lo primero de todo es configurar la base de datos. Por defecto e-cidadania viene
+configurado para utilizar una base de datos local de tipo SQLite 3, que te puede
+resultar útil para realizar pruebas antes de poner la plataforma en producción,
+pero que deberás cambiar tan pronto como termines las pruebas.
 
 Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
 
@@ -67,7 +66,7 @@ Correo electrónico
 
 *ADMINS* (lista)
 
-    Lista de adminsitradores y cuentas de correo para la notificación
+    Lista de administradores y cuentas de correo para la notificación
     de errores del servidor. Sólo funciona si DEBUG = False
     
 *EMAIL_HOST* (servidor)
@@ -86,8 +85,45 @@ Idioma
 
     Idioma con el cual funcionará django por defecto.
 
+Después de settings.py
+----------------------
+
+Después de configurar e-cidadania a tu gusto, tendrás que ejecutar una serie
+de comandos para que todo esté en orden.
+
+*Crear la BDD*
+
+    Para crear la base de datos con el primer usuario de administración ejecutamos
+    desde la raíz del proyecto::
+    
+    ./manage.py syncdb
+    
+    Creará las tablas de la base de datos y posteriormente nos preguntará si queremos
+    crear un usuario de administración. Elegiremos la opción que más nos convenga
+    y seguiremos.
+    
+    En principio con esto es suficiente. Si por algún motivo quieres meter un set
+    de datos previos, deberás hacerlo a través de los métodos que Django ofrece,
+    pero eso cae fuera de este manual.
+
+*Recoger ficheros estáticos*
+
+    e-cidadania viene configurado para servir los ficheros estáticos tanto en
+    desarrollo como en producción, pero en este último hay que *recolectarlos* y
+    juntarlos en un directorio.
+    
+    Ese directorio viene predeterminado como "static", y los ficheros estáticos
+    propios de e-cidadania están almacenados en "static_files". Para *recolectar*
+    los ficheros debes ejecutar el comando::
+    
+    ./manage.py collectstatic
+    
+    Tras ejecutarlo puedes borrar el directorio *static_files* si quieres, aunque
+    recomendamos mantenerlo por si algún día necesitas ejecutar el servidor de
+    desarrollo.
+    
 Plugins
 -------
 
-.. note:: Esta sección está sin redactar.
+.. note:: e-cidadania aún no soporta plugins, pero lo hará en un futuro.
 
