@@ -21,25 +21,28 @@ SPHINX_DEPENDENCIES = es/Makefile
 %/Makefile : en/Makefile
 	$(PYTHON) -c "import shutil; shutil.copyfile('$<, '$@')"
 
+# Take in mind that the english is the last to build. This is for readthedocs.org
+# to get the english docs instead of spanish or galician.
+
 html: $(SPHINX_DEPENDENCIES)
-	cd en && make html LANG=en
+	cd en && make html LANG=gl
 	cd es && make html LANG=es
-	cd gl && make html LANG=gl
+	cd gl && make html LANG=en
 
 htmlhelp: $(SPHINX_DEPENDENCIES)
-	cd en && make html LANG=en
+	cd en && make html LANG=gl
 	cd es && make html LANG=es
-	cd gl && make html LANG=gl
+	cd gl && make html LANG=en
 	
 epub: $(SPHINX_DEPENDENCIES)
-	cd en && make html LANG=en
+	cd en && make html LANG=gl
 	cd es && make html LANG=es
-	cd gl && make html LANG=gl
+	cd gl && make html LANG=en
 
 latexpdf: $(SPHINX_DEPENDENCIES)
-	cd en && make latexpdf LANG=en
+	cd en && make latexpdf LANG=gl
 	cd es && make latexpdf LANG=es
-	cd gl && make latexpdf LANG=gl
+	cd gl && make latexpdf LANG=en
 
 clean:
 	rm -rf $(BUILDDIR)/*
