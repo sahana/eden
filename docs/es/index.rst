@@ -68,26 +68,13 @@ Referencia (inglés)
 -------------------
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    reference/calendar_models
-    reference/calendar_views
-    reference/debate_admin
-    reference/debate_forms
-    reference/debate_models
-    reference/debate_views
-    reference/spaces_admin
-    reference/spaces_forms
-    reference/spaces_models
-    reference/spaces_views
-    reference/proposals_admin
-    reference/proposals_forms
-    reference/proposals_models
-    reference/proposals_views
-    reference/news_admin
-    reference/news_forms
-    reference/news_models
-    reference/news_views
+    reference/calendar
+    reference/debate
+    reference/spaces
+    reference/proposals
+    reference/news
 
 Colofón
 =======
