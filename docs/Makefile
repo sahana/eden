@@ -46,8 +46,8 @@ latex: $(SPHINX_DEPENDENCIES)
 	cd en && make latex LANG=en
 
 latexpdf: $(SPHINX_DEPENDENCIES)
-	cd gl && make latexpdf LANG=gl
 	cd es && make latexpdf LANG=es
+    #cd gl && make latexpdf LANG=gl
 	cd en && make latexpdf LANG=en
 
 clean:
