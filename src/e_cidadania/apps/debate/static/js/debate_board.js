@@ -40,6 +40,7 @@ function createNote() {
     
     $.post("../create_note/", {
         noteid: noteID,
+        debateid: $('#debate-number').text(),
         parent: $('#' + noteID).parent('td').attr('id'),
         title: $('#' + noteID + ' textarea').val(),
         message: "Blablbla",
@@ -145,6 +146,7 @@ function addTableRow() {
         var inputs = $('#' + tableID + ' input').length;
         var criteriacount = $('#' + tableID + ' td[id^=debate-hcriteria]').length;
 
+        var td = 1
         for(var i = 0; i < n; i++){
             var tdlength = $('#' + tableID + ' td').length;
             if (i == 0) {
@@ -153,7 +155,8 @@ function addTableRow() {
                 // Remove the first TD from the tds count.
                 n -= 1;
             }
-            tds += "<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>";
+            tds += "<td id='sortable" + (tdlength+td) + "-" + tableID + "' class='connectedSortable'></td>";
+            td += 1
         }
         tds += '</tr>';
         if($('tbody', this).length > 0){
@@ -248,12 +251,23 @@ function saveTable() {
         $('#id_yvalues').val(yvalues);
         $('#id_xvalues').val(xvalues);
         
-        matrix = []
-        
-        
+        matrix = [];
+//        var tr = $('tbody tr');
+//        var tr_length = tr.length;
+//        var td = $('tbody tr td');
+//        var td_length = td.length;
+//        
+//        for ( i = 0; i < tr.length; i++ ) {
+//            for ( d = 0; d < td.length; d++ ) {
+//            
+//            }
+//        }        
+//        
         return true;
   });
 }
+
+
 
 /*******************
     MAIN LOOP

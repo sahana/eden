@@ -16,37 +16,39 @@
                 {% trans "Create a new debate" %}
             </div>
 
+            <div id="debate-number" class="hidden">{{ debateid }}</div>
+
             <div id="debate">
 
             <form id="ajaxform" enctype="" action="" method="post">{% csrf_token %}
                 
-                <a href="javascript:removeTableColumn()" id="del-column-btn" class="btn danger small">{% trans "Remove column" %}</a>
-                <a href="javascript:addTableColumn()" id="new-column-btn" class="btn primary small">{% trans "Add column" %}</a>
+                <span class="btn danger small" id="del-column-btn" onclick="removeTableColumn()">{% trans "Remove column" %}</span>
+                <span class="btn primary small" id="new-column-btn" onclick="addTableColumn()">{% trans "Add column" %}</span>
                 
-                <table id="debate1" cellspacing="0">
+                <table id="debate{{ debateid }}" cellspacing="0">
                     <thead>
-                        <tr id="debate1-headers">
+                        <tr id="debate{{ debateid }}-headers">
                             <th id="corner" class="corner-criteria"></th>
                             <th id="debate-vcriteria" class="criteria-vtitle">
-                                <input id="debate1-criteria2" class="small" type="text" value="Column title">
+                                <input id="debate{{ debateid }}-criteria2" class="small" type="text" value="Column title">
                             </th>
                         </tr>
                     </thead>
                     <tbody id="debate-body">
-                        <tr id="debate-row-1">
+                        <tr>
                             <td id="debate-hcriteria" class="criteria-htitle">
                                 <div id="debate-ttitle">
-                                    <input class="small" id="debate1-criteria1" type="text" value="Test criteria">
+                                    <input class="small" id="debate{{ debateid }}-criteria1" type="text" value="Test criteria">
                                 </div>
                             </td>
-                            <td id="sortable-debate1" class="connectedSortable">
+                            <td id="sortable-debate{{ debateid }}" class="connectedSortable">
                             </td>
                         </tr>
                     </tbody>
                 </table>
                 
-                <a href="javascript:removeTableRow()" id="del-row-btn" class="btn danger small">{% trans "Remove row" %}</a>         
-                <a href="javascript:addTableRow()" id="new-row-btn" class="btn primary small">{% trans "Add row" %}</a>
+                <span class="btn danger small" onclick="removeTableRow()">{% trans "Remove row" %}</span>
+                <span class="btn primary small" onclick="addTableRow()">{% trans "Add row" %}</span>
 
                 <hr />
                 <h1>{% trans "Other debate data" %}</h1><br/><br/>

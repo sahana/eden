@@ -64,10 +64,11 @@ def add_new_debate(request, space_name):
     debate_form = DebateForm(request.POST or None)
 
     try:
-        current_debate_id = Debate.objects.latest('id')
+        last_debate_id = Debate.objects.latest('id')
+        current_debate_id = last_debate_id.pk + 1
     except:
         current_debate_id = 1
-    
+
     if request.user.has_perm('debate_add') or request.user.is_staff:
         if request.method == 'POST':
             if debate_form.is_valid():
@@ -82,7 +83,8 @@ def add_new_debate(request, space_name):
                 
         return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,
-                                   'get_place': place},
+                                   'get_place': place,
+                                   'debateid': current_debate_id},
                                   context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html',
@@ -108,12 +110,15 @@ def create_note(request, space_name):
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
             note_form_uncommited.author = request.user
+            note_form_uncommited.debate = request.POST['debateid']
 
             saved_note = note_form_uncommited.save()
             msg = "The note has been created."       
             
+        else:
+            msg = "There was some error in the petition."
     else:
-        msg = "There was some error in the petition."
+        msg = "The petition was not POST."
         
     return HttpResponse(msg)
     
@@ -129,7 +134,7 @@ def update_note(request, space_name):
     if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
-            note_form_uncommited.pub_author = request.user
+            note_form_uncommited.author = request.user
         
             saved_note = note_form_uncommited.save()
             msg = "The note has been updated."       
@@ -162,14 +167,13 @@ class ViewDebate(DetailView):
     template_name = 'debate/debate_view.html'
     
     def get_object(self):
-        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-    
+        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])   
         return debate    
     
     def get_context_data(self, **kwargs):
         context = super(ViewDebate, self).get_context_data(**kwargs)
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         context['get_place'] = current_space
         
         # Return xvalues and yvalues as array
@@ -179,6 +183,9 @@ class ViewDebate(DetailView):
         
         yvalues = debate.yvalues.split(',')
         context['yvalues'] = yvalues
+        
+        notes = Note.objects.all().filter(debate=current_debate.pk)
+        context['notes'] = notes
         
         return context
 

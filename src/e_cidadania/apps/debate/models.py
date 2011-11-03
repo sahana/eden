@@ -65,6 +65,7 @@ class Note(models.Model):
     
     .. versionadded:: 0.1b
     """
+    debate = models.IntegerField('Debate', blank=True, null=True)
     noteid = models.CharField(_('Note div ID'), max_length=100, blank=True, null=True)
     title = models.CharField(_('Title'), max_length=60, blank=True, null=True)
     message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
