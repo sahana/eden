@@ -25,7 +25,7 @@ This file contains all the forms for the debate modules.
 from django.forms import ModelForm, Textarea, TextInput
 from django.forms.models import modelformset_factory
 
-from e_cidadania.apps.debate.models import Debate, Note
+from e_cidadania.apps.debate.models import Debate, Note, Row
 
 class DebateForm(ModelForm):
 
@@ -41,6 +41,14 @@ class DebateForm(ModelForm):
         widgets = {
             'title': TextInput(attrs={'class': 'medium'}),
         }
+
+class RowForm(ModelForm):
+
+    """
+    """
+    class Meta:
+        model = Row
+        exclude = ('debate',)
 
 class NoteForm(ModelForm):
 

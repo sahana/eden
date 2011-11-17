@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-10-10 09:34+0200\n"
+"POT-Creation-Date: 2011-11-14 18:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: models.py:41 models.py:69
+#: models.py:41 models.py:83
 msgid "Title"
 msgstr ""
 
@@ -30,23 +30,31 @@ msgstr ""
 msgid "Scope"
 msgstr ""
 
-#: models.py:45
+#: models.py:44
 msgid "X Values"
 msgstr ""
 
-#: models.py:46
-msgid "Y Values"
+#: models.py:48
+msgid "Last update"
 msgstr ""
 
-#: models.py:68
+#: models.py:64
+msgid "Criteria"
+msgstr ""
+
+#: models.py:67
+msgid "Sortables"
+msgstr ""
+
+#: models.py:82
 msgid "Note div ID"
 msgstr ""
 
-#: models.py:70
+#: models.py:84
 msgid "Message"
 msgstr ""
 
-#: models.py:71
+#: models.py:85
 msgid "Parent TD or DIV"
 msgstr ""
 
@@ -54,42 +62,70 @@ msgstr ""
 msgid "Create new debate"
 msgstr ""
 
-#: templates/debate/debate_add.html:16 templates/debate/debate_board.html:16
+#: templates/debate/debate_add.html:22 templates/debate/debate_board.html:16
 msgid "Create a new debate"
 msgstr ""
 
-#: templates/debate/debate_add.html:23 templates/debate/debate_board.html:23
+#: templates/debate/debate_add.html:31 templates/debate/debate_board.html:23
 msgid "Remove column"
 msgstr ""
 
-#: templates/debate/debate_add.html:24 templates/debate/debate_board.html:24
+#: templates/debate/debate_add.html:32 templates/debate/debate_board.html:24
 msgid "Add column"
 msgstr ""
 
-#: templates/debate/debate_add.html:48 templates/debate/debate_board.html:56
+#: templates/debate/debate_add.html:59 templates/debate/debate_board.html:56
 msgid "Remove row"
 msgstr ""
 
-#: templates/debate/debate_add.html:49 templates/debate/debate_board.html:57
+#: templates/debate/debate_add.html:60 templates/debate/debate_board.html:57
 msgid "Add row"
 msgstr ""
 
-#: templates/debate/debate_add.html:52 templates/debate/debate_board.html:66
+#: templates/debate/debate_add.html:63 templates/debate/debate_board.html:66
 msgid "Other debate data"
 msgstr ""
 
-#: templates/debate/debate_add.html:95 templates/debate/debate_board.html:109
+#: templates/debate/debate_add.html:123 templates/debate/debate_board.html:109
 msgid "Save"
 msgstr ""
 
-#: templates/debate/debate_add.html:96 templates/debate/debate_board.html:110
+#: templates/debate/debate_add.html:124 templates/debate/debate_board.html:110
 msgid "Cancel"
 msgstr ""
 
-#: templates/debate/debate_board.html:61
+#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:62
 msgid "Add new note"
 msgstr ""
 
 #: templates/debate/debate_board.html:62
 msgid "Add phase"
+msgstr ""
+
+#: templates/debate/debate_list.html:4 templates/debate/debate_list.html:12
+msgid "Debates in "
+msgstr ""
+
+#: templates/debate/debate_list.html:21
+msgid "There are no debates."
+msgstr ""
+
+#: templates/debate/debate_list.html:25
+msgid "Go back"
+msgstr ""
+
+#: templates/debate/debate_list.html:32
+msgid "previous"
+msgstr ""
+
+#: templates/debate/debate_list.html:35
+msgid "of"
+msgstr ""
+
+#: templates/debate/debate_list.html:38
+msgid "next"
+msgstr ""
+
+#: templates/debate/debate_view.html:5 templates/debate/debate_view.html:17
+msgid "View debate "
 msgstr ""

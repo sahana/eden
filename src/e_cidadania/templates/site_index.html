@@ -43,7 +43,7 @@
         <p class="intro">e-cidadania es un plataforma desarrollada para la participación ciudadana. Está hecha en software libre con lo que podrás mirar el código si lo deseas y mejorarlo. Bajo ningún concepto vamos a tenerte vigilado ni vamos a hacer nada malo con tus datos. Si deseas hacer tu propia instalación de e-cidadania basta con que sigas la documentación. Pero por el momento... por qué no participas?</p>
     
         <div class="indexbuttons">
-            <a href="{% url 'signup' %}" class="bigbutton orange">{% trans "Register" %}</a> <a href="{% url 'login' %}" class="bigbutton blue">{% trans "Login" %}</a> {% if user.is_staff %}<a href="{% url 'create-space' %}" class="bigbutton black">{% trans "Create your own space" %}</a>{% endif %}
+            {% if user.is_anonymous %}<a href="{% url 'signup' %}" class="bigbutton orange">{% trans "Register" %}</a> <a href="{% url 'login' %}" class="bigbutton blue">{% trans "Login" %}</a>{% endif %} {% if user.is_staff %}<a href="{% url 'create-space' %}" class="bigbutton black">{% trans "Create your own space" %}</a>{% endif %}
         </div>
         
     </div>

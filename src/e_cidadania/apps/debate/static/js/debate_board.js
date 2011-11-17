@@ -130,65 +130,172 @@ function makeSortable() {
     }).disableSelection();
 }
 
-function addTableRow() {
-    /*
-        addTableRow() - This function adds new rows to an existent table numbering
-        the sortables according to the debate number and current ULs.
-    */
 
-    var tableID = $('table').attr('id');
-    
-    $('#' + tableID).each(function(){
-        var $table = $(this);
-        // Number of td's in the last table row
-        var n = $("tr:last td", this).length;
-        var tds = '<tr>';
-        var inputs = $('#' + tableID + ' input').length;
-        var criteriacount = $('#' + tableID + ' td[id^=debate-hcriteria]').length;
+//function updateElementIndex(el, prefix, ndx) {
+//    /*
+//        updateElementIndex() - 
+//    */
+//    var id_regex = new RegExp('(' + prefix + '-\\d+-)');
+//    var replacement = prefix + '-' + ndx + '-';
+//    if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex, replacement));
+//    if (el.id) el.id = el.id.replace(id_regex, replacement);
+//    if (el.name) el.name = el.name.replace(id_regex, replacement);
+//}
 
-        var td = 1
-        for(var i = 0; i < n; i++){
-            var tdlength = $('#' + tableID + ' td').length;
-            if (i == 0) {
-                // The first TD must be empty, only with a form for the title.
-                tds += "<td id='debate-hcriteria" + (criteriacount+1) + "' class='criteria-htitle'><div id='debate-ttitle'><input class='small' id='" + tableID + "-criteria" + (inputs+1) + "' type='text' value='Test criteria'></div></td>";
-                // Remove the first TD from the tds count.
-                n -= 1;
-            }
-            tds += "<td id='sortable" + (tdlength+td) + "-" + tableID + "' class='connectedSortable'></td>";
-            td += 1
-        }
-        tds += '</tr>';
-        if($('tbody', this).length > 0){
-            $('tbody', this).append(tds).children(':last').hide().fadeIn("slow");
-        } else {
-            $(this).append(tds).children(':last').hide().slideDown("slow");
-        }
-        makeSortable();
-    });
-}
+//function deleteForm(btn, prefix) {
+//    /*
+//        deleteForm() -
+//    */
+//    var tableID = $('table').attr('id');
+//    var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
 
-function removeTableRow() {
-    /*
-        removeTableRow() - Remove the last row in the table. It removes
-        also the TDs and the notes.
-    */
-    var tableID = $('table').attr('id');
-    var trs = $('#' + tableID + ' tbody tr').length;
-    
-    if (trs > 1) {
-        $('#' + tableID + ' tr:last').fadeOut("fast", function() {
-            $(this).remove();
-        });
-    } else {
-        $('#jsnotify').notify("create", {
-            title: "Can't delete row",
-            text: "There must be at least one row in the table.",
-            icon: "alert.png"
-        });
-    }
-}
-        
+//    if (formCount > 2) {
+//        // Delete the item/form
+//        $('#' + tableID + ' tr:last').remove();
+//        //$(btn).parents('.item').remove();
+
+//        var forms = $('#' + tableID + ' tr') //$('.item'); // Get all the forms
+
+//        // Update the total number of forms (1 less than before)
+//        $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
+
+//        var i = 0;
+//        // Go through the forms and set their indices, names and IDs
+//        for (formCount = forms.length; i < formCount; i++) {
+//            $(forms.get(i)).children().children().each(function() {
+//                updateElementIndex(this, prefix, i);
+//            });
+//        }
+
+//    } // End if
+//    else {
+//        $('#jsnotify').notify("create", {
+//            title: "Can't delete row",
+//            text: "You need to have at least one row!",
+//            icon: "alert.png"
+//        });
+//    }
+//    return false;
+//  }
+
+
+//function addForm(btn, prefix) {
+//    var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+
+//    // You can only submit a maximum of 10 todo items 
+//    if (formCount < 10) {
+//        var tableID = $('table').attr('id');
+//        var tdlength = $('#' + tableID + ' td').length;
+//        var inputs = $('#' + tableID + ' tr input').length;
+//        // Clone a form (without event handlers) from the first form
+//        var row = $('#' + tableID + ' tbody tr:first').clone(false).get(0);
+//        // Insert it after the last form
+//        $(row).removeAttr('id').hide().insertAfter('#' + tableID + ' tbody tr:last').slideDown(300);
+//        var i = 0;
+//        $(row).children().each(function() {
+//            if (i != 0) {
+//                $(this).attr('id', 'sortable' + (tdlength) + '-' + tableID);
+//                $("input").attr('id', 'id_form-' + (inputs) + '-criteria');
+//                tdlength = $('#' + tableID + ' td').length;
+//            }
+//            i = 1;
+//        })
+//      
+//        // Remove the bits we don't want in the new row/form
+//        // e.g. error messages
+//        $(".errorlist", row).remove();
+//        $(row).children().removeClass('error');
+//    
+//        // Relabel/rename all the relevant bits
+//        $(row).children().children().each(function() {
+//            
+//            updateElementIndex(this, prefix, formCount);
+//    
+//            if ( $(this).attr('type') == 'text' )
+//                $(this).val('');
+//        });
+//      
+//        // Add an event handler for the delete item/form link 
+//        $(row).find('.delete').click(function() {
+//            return deleteForm(this, prefix);
+//        });
+
+//        // Update the total form count
+//        $('#id_' + prefix + '-TOTAL_FORMS').val(formCount + 1); 
+
+//    } // End if
+//    else {
+//        $('#jsnotify').notify("create", {
+//            title: "Can't create row",
+//            text: "Sorry, only ten rows are permitted.",
+//            icon: "alert.png"
+//        });
+//    }
+//    return false;
+//}
+
+
+//function addTableRow() {
+//    /*
+//        addTableRow() - This function adds new rows to an existent table numbering
+//        the sortables according to the debate number and current ULs.
+//    */
+
+//    var tableID = $('table').attr('id');
+//    
+//    $('#' + tableID).each(function(){
+//        var $table = $(this);
+//        // Number of td's in the last table row
+//        var n = $("tr:last td", this).length;
+//        var tds = '<tr>';
+//        var inputs = $('#' + tableID + ' input').length;
+//        var criteriacount = $('#' + tableID + ' td[id^=debate-hcriteria]').length;
+
+//        var td = 1
+//        for(var i = 0; i < n; i++){
+//            var tdlength = $('#' + tableID + ' td').length;
+//            if (i == 0) {
+//                // The first TD must be empty, only with a form for the title.
+//                tds += "<td id='debate-hcriteria" + (criteriacount+1) + "' class='criteria-htitle'><div id='debate-ttitle'><input class='small' id='" + tableID + "-criteria" + (inputs+1) + "' type='text' value='Test criteria'></div></td>";
+//                // Remove the first TD from the tds count.
+//                n -= 1;
+//            }
+//            tds += "<td id='sortable" + (tdlength+td) + "-" + tableID + "' class='connectedSortable'></td>";
+//            td += 1
+//        }
+//        tds += '</tr>';
+//        if($('tbody', this).length > 0){
+//            $('tbody', this).append(tds).children(':last').hide().fadeIn("slow");
+//        } else {
+//            $(this).append(tds).children(':last').hide().slideDown("slow");
+//        }
+//        makeSortable();
+//    });
+//}
+
+//function removeTableRow() {
+//    /*
+//        removeTableRow() - Remove the last row in the table. It removes
+//        also the TDs and the notes.
+//    */
+//    var tableID = $('table').attr('id');
+//    var trs = $('#' + tableID + ' tbody tr').length;
+//    
+//    if (trs > 1) {
+//        $('#' + tableID + ' tr:last').fadeOut("fast", function() {
+//            $(this).remove();
+//        });
+//    } else {
+//        $('#jsnotify').notify("create", {
+//            title: "Can't delete row",
+//            text: "There must be at least one row in the table.",
+//            icon: "alert.png"
+//        });
+//    }
+//}
+
+var tdlength = 0;
+
 function addTableColumn() {
     /*
         addTableColumn() - Create a new column ny creating a new sortable TD in
@@ -201,8 +308,9 @@ function addTableColumn() {
     
     $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria" + (criteriacount+1) + "' class='criteria-vtitle'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
     $('#' + tableID + ' tbody tr').each(function(){
-        var tdlength = $('#' + tableID + ' td').length;
-        $(this).append("<td id='sortable" + (tdlength+1) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
+        //var tdlength = $('#' + tableID + ' td').length;
+        $(this).append("<td id='sortable" + (tdlength) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
+        tdlength += 1;
     });
     makeSortable();
 }
@@ -233,36 +341,30 @@ function saveTable() {
         django view.
     */   
     $('#ajaxform').submit( function() {
+        var tableID = $('table').attr('id');
 
         var xvalues = [];
-        var yvalues = [];
-   
-        var yfields = $('td.criteria-htitle :input');
         var xfields = $('th.criteria-vtitle :input');
-
-        $.each(yfields, function(i, field){
-            yvalues.push(field.value);
-        });        
-
         $.each(xfields, function(i, field){
             xvalues.push(field.value);
         });
-
-        $('#id_yvalues').val(yvalues);
-        $('#id_xvalues').val(xvalues);
+        $('#id_columns').val(xvalues);
         
-        matrix = [];
-//        var tr = $('tbody tr');
-//        var tr_length = tr.length;
-//        var td = $('tbody tr td');
-//        var td_length = td.length;
-//        
-//        for ( i = 0; i < tr.length; i++ ) {
-//            for ( d = 0; d < td.length; d++ ) {
-//            
-//            }
-//        }        
-//        
+        var sortable = [];
+        var rows = $('#' + tableID + ' tbody tr');
+        alert('Tengo ' + rows.length + ' filas')
+        $.each(rows, function(i, field) {
+            alert('Deberia manipular un row y manipulo: '+ this);
+            var rowID = this.attr('id');
+            $(rowID + ' td').each(function() {
+                alert('Deberia manipular un TD y pillo: ' + this);
+                sortable.push($(this).attr('id'));
+            })
+            alert('Estos son los sortables: ' + sortable[0]);
+            $(this).val(sortable);
+            sortable.length = 0;
+        })
+              
         return true;
   });
 }

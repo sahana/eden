@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-10-10 09:34+0200\n"
+"POT-Creation-Date: 2011-11-14 18:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,11 +22,11 @@ msgstr ""
 msgid "Other data"
 msgstr ""
 
-#: models.py:35 templates/news/post_add.html:88
+#: models.py:35 templates/news/post_add.html:120
 msgid "Title"
 msgstr ""
 
-#: models.py:36 templates/news/post_add.html:89
+#: models.py:36 templates/news/post_add.html:121
 msgid "Text"
 msgstr ""
 
@@ -78,8 +78,9 @@ msgstr ""
 msgid "next"
 msgstr ""
 
-#: templates/news/news_list.html:61 templates/news/post_add.html:74
-#: templates/news/post_confirm_delete.html:34 templates/news/post_edit.html:88
+#: templates/news/news_list.html:61 templates/news/post_add.html:106
+#: templates/news/post_confirm_delete.html:34
+#: templates/news/post_edit.html:134
 msgid "Go back"
 msgstr ""
 
@@ -87,35 +88,35 @@ msgstr ""
 msgid "Add new post"
 msgstr ""
 
-#: templates/news/post_add.html:75 templates/news/post_edit.html:89
+#: templates/news/post_add.html:107 templates/news/post_edit.html:135
 msgid "Publish"
 msgstr ""
 
-#: templates/news/post_add.html:86
+#: templates/news/post_add.html:118
 msgid "How to add new posts"
 msgstr ""
 
-#: templates/news/post_add.html:88
+#: templates/news/post_add.html:120
 msgid "An spectacular title! (100 characters)"
 msgstr ""
 
-#: templates/news/post_add.html:89
+#: templates/news/post_add.html:121
 msgid "Your story."
 msgstr ""
 
-#: templates/news/post_add.html:90
+#: templates/news/post_add.html:122
 msgid "Tags"
 msgstr ""
 
-#: templates/news/post_add.html:90
+#: templates/news/post_add.html:122
 msgid "Please use them carefully, you are limited to 4 tags."
 msgstr ""
 
-#: templates/news/post_add.html:91
+#: templates/news/post_add.html:123
 msgid "Publish in index"
 msgstr ""
 
-#: templates/news/post_add.html:91
+#: templates/news/post_add.html:123
 msgid ""
 "If you mark this, the post will appear in the spaces index page AND in the "
 "main index."

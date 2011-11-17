@@ -39,9 +39,9 @@
                                 </td>
                                 
                                 {% for td in xvalues|length|get_range %}
-                                    <td id="sortable-debate{{ forloop.counter }}" class="connectedSortable">
+                                    <td id="sortable{{ forloop.counter }}-debate{{ debate.pk }}" class="connectedSortable">
                                         {% for note in notes %}
-                                            {% if note.parent == ('sortable-debate' + forloop.counter) %}
+                                            {% if note.parent == "sortable-debate" %}
                                                 <div id="{{ note.noteid }}" class="note">
                                                     <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
                                                     <textarea>{{ note.message }}</textarea>

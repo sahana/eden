@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-10-10 09:34+0200\n"
+"POT-Creation-Date: 2011-11-14 18:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,8 +22,8 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-#: admin.py:70 templates/spaces/space_add.html:76
-#: templates/spaces/space_add.html:154 templates/spaces/space_edit.html:78
+#: admin.py:70 templates/spaces/space_add.html:140
+#: templates/spaces/space_add.html:235 templates/spaces/space_edit.html:142
 msgid "Modules"
 msgstr ""
 
@@ -42,8 +42,8 @@ msgid ""
 "URL"
 msgstr ""
 
-#: models.py:37 models.py:151 templates/spaces/meeting_add.html:96
-#: templates/spaces/space_add.html:150
+#: models.py:37 models.py:151 templates/spaces/meeting_add.html:142
+#: templates/spaces/space_add.html:231
 msgid "Description"
 msgstr ""
 
@@ -51,7 +51,7 @@ msgstr ""
 msgid "Author"
 msgstr ""
 
-#: models.py:42 templates/spaces/space_add.html:151
+#: models.py:42 templates/spaces/space_add.html:232
 msgid "Logotype"
 msgstr ""
 
@@ -59,7 +59,7 @@ msgstr ""
 msgid "100px width, 75px height"
 msgstr ""
 
-#: models.py:45 templates/spaces/space_add.html:152
+#: models.py:45 templates/spaces/space_add.html:233
 msgid "Banner"
 msgstr ""
 
@@ -67,7 +67,7 @@ msgstr ""
 msgid "75px height"
 msgstr ""
 
-#: models.py:48 templates/spaces/space_add.html:153
+#: models.py:48 templates/spaces/space_add.html:234
 msgid "Authorized groups"
 msgstr ""
 
@@ -76,23 +76,23 @@ msgid "Public space"
 msgstr ""
 
 #: models.py:53
-msgid "Debate module"
+msgid "Debate"
 msgstr ""
 
 #: models.py:54
-msgid "Proposals module"
+msgid "Proposals"
 msgstr ""
 
 #: models.py:55
-msgid "News module"
+msgid "News"
 msgstr ""
 
-#: models.py:56
-msgid "Calendar module"
+#: models.py:56 templates/spaces/space_index.html:70
+msgid "Calendar"
 msgstr ""
 
-#: models.py:57
-msgid "Documents module"
+#: models.py:57 models.py:110 templates/spaces/space_index.html:135
+msgid "Documents"
 msgstr ""
 
 #: models.py:61
@@ -127,10 +127,6 @@ msgstr ""
 msgid "Document"
 msgstr ""
 
-#: models.py:110 templates/spaces/space_index.html:115
-msgid "Documents"
-msgstr ""
-
 #: models.py:129
 msgid "Meeting Type"
 msgstr ""
@@ -151,7 +147,7 @@ msgstr ""
 msgid "Meeting Date"
 msgstr ""
 
-#: models.py:152 templates/spaces/meeting_add.html:97
+#: models.py:152 templates/spaces/meeting_add.html:143
 msgid "Location"
 msgstr ""
 
@@ -159,7 +155,7 @@ msgstr ""
 msgid "Meeting"
 msgstr ""
 
-#: models.py:157 templates/spaces/space_index.html:88
+#: models.py:157 templates/spaces/space_index.html:108
 msgid "Meetings"
 msgstr ""
 
@@ -197,15 +193,11 @@ msgstr ""
 msgid "Space edited successfully"
 msgstr ""
 
-#: views.py:392
-msgid "The document has been added successfully."
-msgstr ""
-
-#: views.py:411
+#: views.py:410
 msgid "Document edited successfully."
 msgstr ""
 
-#: views.py:515
+#: views.py:514
 msgid "Meeting added successfully."
 msgstr ""
 
@@ -213,9 +205,9 @@ msgstr ""
 msgid "Upload new document"
 msgstr ""
 
-#: templates/spaces/document_add.html:43
+#: templates/spaces/document_add.html:61
 #: templates/spaces/document_confirm_delete.html:21
-#: templates/spaces/document_edit.html:50
+#: templates/spaces/document_edit.html:68
 #: templates/spaces/document_list.html:24
 #: templates/spaces/meeting_confirm_delete.html:21
 #: templates/spaces/meeting_list.html:25
@@ -224,29 +216,29 @@ msgstr ""
 msgid "Go back"
 msgstr ""
 
-#: templates/spaces/document_add.html:44
+#: templates/spaces/document_add.html:62
 msgid "Upload"
 msgstr ""
 
-#: templates/spaces/document_add.html:55
+#: templates/spaces/document_add.html:73
 msgid "What can I upload?"
 msgstr ""
 
-#: templates/spaces/document_add.html:57
+#: templates/spaces/document_add.html:75
 msgid "Allowed formats"
 msgstr ""
 
-#: templates/spaces/document_add.html:57
+#: templates/spaces/document_add.html:75
 msgid ""
 "Mainly all non executable documents (PDF, ODT, DOC). Audio and video are not "
 "allowed."
 msgstr ""
 
-#: templates/spaces/document_add.html:58
+#: templates/spaces/document_add.html:76
 msgid "Maximum size"
 msgstr ""
 
-#: templates/spaces/document_add.html:58
+#: templates/spaces/document_add.html:76
 msgid "Allowed size is 10MB"
 msgstr ""
 
@@ -263,8 +255,8 @@ msgstr ""
 #: templates/spaces/document_confirm_delete.html:22
 #: templates/spaces/meeting_confirm_delete.html:22
 #: templates/spaces/space_confirm_delete.html:17
-#: templates/spaces/space_index.html:42 templates/spaces/space_index.html:131
-#: templates/spaces/space_index.html:160
+#: templates/spaces/space_index.html:42 templates/spaces/space_index.html:151
+#: templates/spaces/space_index.html:182
 msgid "Delete"
 msgstr ""
 
@@ -273,8 +265,8 @@ msgstr ""
 msgid "Edit document"
 msgstr ""
 
-#: templates/spaces/document_edit.html:51
-#: templates/spaces/meeting_edit.html:79 templates/spaces/space_edit.html:138
+#: templates/spaces/document_edit.html:69
+#: templates/spaces/meeting_edit.html:128 templates/spaces/space_edit.html:219
 msgid "Save"
 msgstr ""
 
@@ -310,48 +302,49 @@ msgstr ""
 msgid "Create new meeting"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:82 templates/spaces/meeting_edit.html:78
-#: templates/spaces/space_add.html:135 templates/spaces/space_edit.html:137
+#: templates/spaces/meeting_add.html:128
+#: templates/spaces/meeting_edit.html:127 templates/spaces/space_add.html:216
+#: templates/spaces/space_edit.html:218
 msgid "Cancel"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:83 templates/spaces/space_add.html:136
+#: templates/spaces/meeting_add.html:129 templates/spaces/space_add.html:217
 msgid "Create"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:93
+#: templates/spaces/meeting_add.html:139
 msgid "How do meetings work?"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:95
+#: templates/spaces/meeting_add.html:141
 msgid "Title"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:95
+#: templates/spaces/meeting_add.html:141
 msgid "A descriptive title of the meeting. Be concise."
 msgstr ""
 
-#: templates/spaces/meeting_add.html:96
+#: templates/spaces/meeting_add.html:142
 msgid "A short resume of the points treated in the meeting."
 msgstr ""
 
-#: templates/spaces/meeting_add.html:97
+#: templates/spaces/meeting_add.html:143
 msgid "Where does the meeting took place."
 msgstr ""
 
-#: templates/spaces/meeting_add.html:98
+#: templates/spaces/meeting_add.html:144
 msgid "Meeting type"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:98
+#: templates/spaces/meeting_add.html:144
 msgid "Type of meeting."
 msgstr ""
 
-#: templates/spaces/meeting_add.html:99
+#: templates/spaces/meeting_add.html:145
 msgid "Meeting date"
 msgstr ""
 
-#: templates/spaces/meeting_add.html:99
+#: templates/spaces/meeting_add.html:145
 msgid "Date when the meeting took place."
 msgstr ""
 
@@ -374,7 +367,7 @@ msgstr ""
 msgid "Attendees"
 msgstr ""
 
-#: templates/spaces/meeting_edit.html:5 templates/spaces/meeting_edit.html:13
+#: templates/spaces/meeting_edit.html:5 templates/spaces/meeting_edit.html:15
 msgid "Edit meeting"
 msgstr ""
 
@@ -398,64 +391,43 @@ msgstr ""
 msgid "Create a new space"
 msgstr ""
 
-#: templates/spaces/space_add.html:79 templates/spaces/space_edit.html:81
-msgid "Debate"
-msgstr ""
-
-#: templates/spaces/space_add.html:80 templates/spaces/space_edit.html:82
-msgid "Proposals"
-msgstr ""
-
-#: templates/spaces/space_add.html:81 templates/spaces/space_edit.html:83
-msgid "News"
-msgstr ""
-
-#: templates/spaces/space_add.html:82 templates/spaces/space_edit.html:84
-#: templates/spaces/space_index.html:70
-msgid "Calendar"
-msgstr ""
-
-#: templates/spaces/space_add.html:83 templates/spaces/space_edit.html:85
-msgid "Documentation"
-msgstr ""
-
-#: templates/spaces/space_add.html:90 templates/spaces/space_edit.html:92
+#: templates/spaces/space_add.html:171 templates/spaces/space_edit.html:173
 msgid "Entities participating"
 msgstr ""
 
-#: templates/spaces/space_add.html:147
+#: templates/spaces/space_add.html:228
 msgid "How to add new spaces"
 msgstr ""
 
-#: templates/spaces/space_add.html:149
+#: templates/spaces/space_add.html:230
 msgid "Space name"
 msgstr ""
 
-#: templates/spaces/space_add.html:149
+#: templates/spaces/space_add.html:230
 msgid ""
 "The name of the space. Have in mind that this name will be used as the URL "
 "of your space. We recommend to use all lowercase. (100 chars)"
 msgstr ""
 
-#: templates/spaces/space_add.html:150
+#: templates/spaces/space_add.html:231
 msgid ""
 "An optional description for your space. It won't be showed to the users, but "
 "to the admins."
 msgstr ""
 
-#: templates/spaces/space_add.html:151
+#: templates/spaces/space_add.html:232
 msgid "An image of 75px height and 100px width."
 msgstr ""
 
-#: templates/spaces/space_add.html:152
+#: templates/spaces/space_add.html:233
 msgid "Another image. 75px height."
 msgstr ""
 
-#: templates/spaces/space_add.html:153
+#: templates/spaces/space_add.html:234
 msgid "This will set up what users can access to your space."
 msgstr ""
 
-#: templates/spaces/space_add.html:154
+#: templates/spaces/space_add.html:235
 msgid ""
 "Select the modules you will use in your space. This can be edited afterwards."
 msgstr ""
@@ -483,8 +455,8 @@ msgstr ""
 msgid "Add new post"
 msgstr ""
 
-#: templates/spaces/space_index.html:38 templates/spaces/space_index.html:127
-#: templates/spaces/space_index.html:156
+#: templates/spaces/space_index.html:38 templates/spaces/space_index.html:147
+#: templates/spaces/space_index.html:177
 msgid "Edit"
 msgstr ""
 
@@ -492,7 +464,7 @@ msgstr ""
 msgid "Written by"
 msgstr ""
 
-#: templates/spaces/space_index.html:50 templates/spaces/space_index.html:270
+#: templates/spaces/space_index.html:50 templates/spaces/space_index.html:295
 msgid "on"
 msgstr ""
 
@@ -504,75 +476,67 @@ msgstr ""
 msgid "Nothing published yet"
 msgstr ""
 
-#: templates/spaces/space_index.html:94
+#: templates/spaces/space_index.html:114
 msgid "View all meetings"
 msgstr ""
 
-#: templates/spaces/space_index.html:96
+#: templates/spaces/space_index.html:116
 msgid "Add meeting"
 msgstr ""
 
-#: templates/spaces/space_index.html:103
+#: templates/spaces/space_index.html:123
 msgid "Latest news"
 msgstr ""
 
-#: templates/spaces/space_index.html:109
+#: templates/spaces/space_index.html:129
 msgid "News archive"
 msgstr ""
 
-#: templates/spaces/space_index.html:137
+#: templates/spaces/space_index.html:157
 msgid "No documents available"
 msgstr ""
 
-#: templates/spaces/space_index.html:140
+#: templates/spaces/space_index.html:160
 msgid "View all documents"
 msgstr ""
 
-#: templates/spaces/space_index.html:142
+#: templates/spaces/space_index.html:162
 msgid "Add documents"
 msgstr ""
 
-#: templates/spaces/space_index.html:149
+#: templates/spaces/space_index.html:169
 msgid "Debates"
 msgstr ""
 
-#: templates/spaces/space_index.html:166
+#: templates/spaces/space_index.html:188
 msgid "No debates started"
 msgstr ""
 
-#: templates/spaces/space_index.html:169
+#: templates/spaces/space_index.html:191
 msgid "View all debates"
 msgstr ""
 
-#: templates/spaces/space_index.html:171
+#: templates/spaces/space_index.html:193
 msgid "Add debate"
 msgstr ""
 
-#: templates/spaces/space_index.html:178
+#: templates/spaces/space_index.html:200
 msgid "Newest proposals"
 msgstr ""
 
-#: templates/spaces/space_index.html:185
+#: templates/spaces/space_index.html:207
 msgid "No proposals available"
 msgstr ""
 
-#: templates/spaces/space_index.html:188
+#: templates/spaces/space_index.html:210
 msgid "View all proposals"
 msgstr ""
 
-#: templates/spaces/space_index.html:190
+#: templates/spaces/space_index.html:212
 msgid "Add proposal"
 msgstr ""
 
-#: templates/spaces/space_index.html:196
-msgid "Share"
-msgstr ""
-
-#: templates/spaces/space_index.html:234
-msgid "Tweet"
-msgstr ""
-
-#: templates/spaces/space_index.html:270
+#: templates/spaces/space_index.html:295
 msgid "Space created by"
 msgstr ""
 

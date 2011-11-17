@@ -43,6 +43,8 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
+from django.forms.formsets import formset_factory, BaseFormSet
+from django.core.context_processors import csrf
 
 # Function-based views
 from django.views.generic.list_detail import object_list, object_detail
@@ -50,8 +52,8 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # Application models
-from e_cidadania.apps.debate.models import Debate, Note
-from e_cidadania.apps.debate.forms import DebateForm, NoteForm
+from e_cidadania.apps.debate.models import Debate, Note, Row
+from e_cidadania.apps.debate.forms import DebateForm, NoteForm, RowForm
 from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
@@ -60,8 +62,20 @@ def add_new_debate(request, space_name):
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
     """
+    # This class is used to make empty formset forms required
+    # See http://stackoverflow.com/questions/2406537/django-formsets-make-first-required/4951032#4951032
+    class RequiredFormSet(BaseFormSet):
+        def __init__(self, *args, **kwargs):
+            super(RequiredFormSet, self).__init__(*args, **kwargs)
+            for form in self.forms:
+                form.empty_permitted = False
+
+    RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet)
+    
     place = get_object_or_404(Space, url=space_name)
+    
     debate_form = DebateForm(request.POST or None)
+    row_formset = RowFormSet(request.POST or None, prefix="rowform")
 
     try:
         last_debate_id = Debate.objects.latest('id')
@@ -71,18 +85,25 @@ def add_new_debate(request, space_name):
 
     if request.user.has_perm('debate_add') or request.user.is_staff:
         if request.method == 'POST':
-            if debate_form.is_valid():
+            if debate_form.is_valid() and row_formset.is_valid():
                 debate_form_uncommited = debate_form.save(commit=False)
                 debate_form_uncommited.space = place
                 debate_form_uncommited.author = request.user
-                debate_form_uncommited.xvalues = request.POST['xvalues']
-                debate_form_uncommited.yvalues = request.POST['yvalues']
+                debate_form_uncommited.columns = request.POST['columns']
+
                 saved_debate = debate_form_uncommited.save()
+                
+                for form in row_formset.forms:
+                    debate_instance = get_object_or_404(Debate, pk=current_debate_id)
+                    row = form.save(commit=False)
+                    row.debate = debate_instance
+                    #row.sortables = request.POST['sortables']
             
                 return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
                 
         return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,
+                                   'rowform': row_formset,
                                    'get_place': place,
                                    'debateid': current_debate_id},
                                   context_instance=RequestContext(request))
@@ -178,11 +199,11 @@ class ViewDebate(DetailView):
         
         # Return xvalues and yvalues as array
         debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        xvalues = debate.xvalues.split(',')
-        context['xvalues'] = xvalues
-        
-        yvalues = debate.yvalues.split(',')
-        context['yvalues'] = yvalues
+#        xvalues = debate.xvalues.split(',')
+#        context['xvalues'] = xvalues
+#        
+#        yvalues = debate.yvalues.split(',')
+#        context['yvalues'] = yvalues
         
         notes = Note.objects.all().filter(debate=current_debate.pk)
         context['notes'] = notes

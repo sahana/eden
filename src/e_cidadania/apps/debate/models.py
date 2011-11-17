@@ -41,11 +41,11 @@ class Debate(models.Model):
     title = models.CharField(_('Title'), max_length=200, unique=True)
     description = models.TextField(_('Description'), blank=True, null=True)
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
-    space = models.ForeignKey(Space, blank=True, null=True)
-    xvalues = models.CharField(_('X Values'), max_length=300, blank=True, null=True)
-    yvalues = models.CharField(_('Y Values'), max_length=300, blank=True, null=True)
+    columns = models.CharField(_('X Values'), max_length=300, blank=True, null=True)
     
+    space = models.ForeignKey(Space, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
+    date_mod = models.DateTimeField(_('Last update'), auto_now=True)
     author = models.ForeignKey(User, blank=True, null=True)
     
     def __unicode__(self):
@@ -57,6 +57,19 @@ class Debate(models.Model):
             'space_name': self.space.url,
             'debate_id': str(self.id)})
 
+
+class Row(models.Model):
+    """
+    """
+    criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
+    debate = models.ForeignKey(Debate)
+    date = models.DateTimeField(auto_now_add=True)
+    sortables = models.CharField(_('Sortables'), max_length=100, blank=True, null=True)
+    
+    def __unicode__(self):
+        return self.criteria + "(" + str(self.debate) + ")"
+           
+    
 class Note(models.Model):
 
     """

@@ -10,7 +10,13 @@
     {% block centercol %}
         <div class="grid_16">
         
+        <script src="{{ STATIC_URL }}/js/jquery.formset.js" type="text/javascript"></script>
         <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
+        <script type="text/javascript">
+           $(function() {
+               $('#ajaxform tbody tr').formset();
+           })
+       </script>
         
             <div id="contenttitles">
                 {% trans "Create a new debate" %}
@@ -35,20 +41,23 @@
                         </tr>
                     </thead>
                     <tbody id="debate-body">
-                        <tr>
-                            <td id="debate-hcriteria" class="criteria-htitle">
-                                <div id="debate-ttitle">
-                                    <input class="small" id="debate{{ debateid }}-criteria1" type="text" value="Test criteria">
-                                </div>
-                            </td>
-                            <td id="sortable-debate{{ debateid }}" class="connectedSortable">
-                            </td>
-                        </tr>
+                        {{ rowform.management_form }}
+                        {% for row in rowform.forms %}
+                            <tr>
+                                <td id="debate-hcriteria" class="criteria-htitle">
+                                    <div id="debate-ttitle">
+                                        {{ row.criteria }}
+                                        {{ row.sortables.as_hidden }}
+                                    </div>
+                                </td>
+                                <td id="sortable-debate{{ debateid }}" class="connectedSortable"></td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
                 
-                <span class="btn danger small" onclick="removeTableRow()">{% trans "Remove row" %}</span>
-                <span class="btn primary small" onclick="addTableRow()">{% trans "Add row" %}</span>
+<!--                <span class="btn danger small delete" onclick="deleteForm(this, 'form')">{% trans "Remove row" %}</span>-->
+<!--                <span class="btn primary small" onclick="addForm(this, 'form')">{% trans "Add row" %}</span>-->
 
                 <hr />
                 <h1>{% trans "Other debate data" %}</h1><br/><br/>
@@ -107,8 +116,7 @@
                     </div> 
                 </div>
                 
-                {{ form.xvalues.as_hidden }}
-                {{ form.yvalues.as_hidden }}
+                {{ form.columns.as_hidden }}
                 
                 <hr />
 

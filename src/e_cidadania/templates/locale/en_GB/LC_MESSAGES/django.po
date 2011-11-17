@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-10-10 09:34+0200\n"
+"POT-Creation-Date: 2011-11-14 18:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,7 +90,7 @@ msgstr ""
 msgid "Recent Actions"
 msgstr ""
 
-#: views.py:57
+#: views.py:61
 msgid ""
 "Hi! It seems that it's your first time "
 "here.                                  Maybe you want to <a href=\"/accounts/"
@@ -98,23 +98,23 @@ msgid ""
 "accounts/login\">login</a> if you have an account."
 msgstr ""
 
-#: views.py:74
+#: views.py:78
 msgid "e-cidadania news"
 msgstr ""
 
-#: views.py:76
+#: views.py:80
 msgid "Updates on the main e-cidadania site."
 msgstr ""
 
-#: views.py:110
+#: views.py:114
 msgid "Post added successfully"
 msgstr ""
 
-#: views.py:131
+#: views.py:135
 msgid "Post deleted successfully."
 msgstr ""
 
-#: views.py:146
+#: views.py:150
 msgid "Post edited successfully."
 msgstr ""
 
@@ -178,11 +178,11 @@ msgstr ""
 msgid "while we call the spaguetti squad to repair this."
 msgstr ""
 
-#: templates/base.html:113
+#: templates/base.html:118
 msgid "created by"
 msgstr ""
 
-#: templates/menu.html:12 templates/menu.html.py:51
+#: templates/menu.html:12 templates/menu.html.py:53
 msgid "Language"
 msgstr ""
 
@@ -206,7 +206,7 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
-#: templates/menu.html:45
+#: templates/menu.html:45 templates/site_index.html:46
 msgid "Login"
 msgstr ""
 
@@ -234,104 +234,61 @@ msgstr ""
 msgid "back to your profile"
 msgstr ""
 
-#: templates/site_index.html:4 templates/terms.html:4
+#: templates/site_index-new.html:4 templates/site_index.html:4
+#: templates/terms.html:4
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:14
-msgid ""
-"e-cidadania is a participative democracy tool for citizens. It has an "
-"advanced debate system, proposals, document versioning, and you can create "
-"specific spaces for every process, it has a lot of functions more but it's "
-"better that you try it by yourself."
+#: templates/site_index-new.html:11 templates/site_index.html:14
+msgid "Recent processes"
 msgstr ""
 
-#: templates/site_index.html:24
-msgid "Add news"
+#: templates/site_index-new.html:23
+msgid "e-cidadania is a citizen participation platform "
 msgstr ""
 
-#: templates/site_index.html:35
-msgid "Edit"
+#: templates/site_index-new.html:26 templates/site_index.html:46
+msgid "Register"
 msgstr ""
 
-#: templates/site_index.html:39
-msgid "Delete"
+#: templates/site_index-new.html:29
+msgid "Log In"
 msgstr ""
 
-#: templates/site_index.html:45
-msgid "Written by"
-msgstr ""
-
-#: templates/site_index.html:45
-msgid "on"
-msgstr ""
-
-#: templates/site_index.html:45
-msgid "Tags"
-msgstr ""
-
-#: templates/site_index.html:51
-msgid "Nothing published yet."
-msgstr ""
-
-#: templates/site_index.html:62
-msgid "What can you do with e-cidadania?"
-msgstr ""
-
-#: templates/site_index.html:62
-msgid "Discover it here"
-msgstr ""
-
-#: templates/site_index.html:66
-msgid "Create your own space"
-msgstr ""
-
-#: templates/site_index.html:66
-msgid "inside e-cidadania"
-msgstr ""
-
-#: templates/site_index.html:70
-msgid "Spaces list"
-msgstr ""
-
-#: templates/site_index.html:76
-msgid "No spaces"
-msgstr ""
-
-#: templates/site_index.html:79
-msgid "Go"
-msgstr ""
-
-#: templates/site_index.html:84
-msgid "Recently added spaces"
-msgstr ""
-
-#: templates/site_index.html:88
-msgid "No spaces have been added recently."
-msgstr ""
-
-#: templates/site_index.html:93
+#: templates/site_index-new.html:51 templates/site_index.html:95
 msgid "Share"
 msgstr ""
 
-#: templates/site_index.html:164
+#: templates/site_index-new.html:122 templates/site_index.html:132
 msgid "Tweet"
 msgstr ""
 
-#: templates/site_index.html:174
+#: templates/site_index-new.html:132 templates/site_index.html:142
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr ""
 
-#: templates/site_index.html:178
-msgid "e-cidadania development"
+#: templates/site_index.html:19
+msgid "Public"
 msgstr ""
 
-#: templates/site_index.html:179
-msgid "Do you want to help?"
+#: templates/site_index.html:21
+msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:179
-msgid "Access"
+#: templates/site_index.html:46
+msgid "Create your own space"
+msgstr ""
+
+#: templates/site_index.html:62
+msgid "Recent news"
+msgstr ""
+
+#: templates/site_index.html:67
+msgid "No public news"
+msgstr ""
+
+#: templates/site_index.html:85
+msgid "Get involved"
 msgstr ""
 
 #: templates/comments/approve.html:4
@@ -392,11 +349,11 @@ msgstr ""
 msgid "Leave a comment"
 msgstr ""
 
-#: templates/comments/form.html:18 templates/comments/preview.html:36
+#: templates/comments/form.html:28 templates/comments/preview.html:36
 msgid "Post"
 msgstr ""
 
-#: templates/comments/form.html:19 templates/comments/preview.html:37
+#: templates/comments/form.html:29 templates/comments/preview.html:37
 msgid "Preview"
 msgstr ""
 
@@ -414,6 +371,10 @@ msgstr ""
 
 #: templates/comments/posted.html:7
 msgid "Thank you for your comment"
+msgstr ""
+
+#: templates/comments/posted.html:10 templates/news/post_list.html:22
+msgid "Go back"
 msgstr ""
 
 #: templates/comments/preview.html:4 templates/comments/preview.html.py:17
@@ -444,8 +405,4 @@ msgstr ""
 
 #: templates/news/post_list.html:18
 msgid "There are no post."
-msgstr ""
-
-#: templates/news/post_list.html:22
-msgid "Go back"
 msgstr ""
