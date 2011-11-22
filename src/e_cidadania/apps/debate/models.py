@@ -59,6 +59,10 @@ class Debate(models.Model):
 
 class Column(models.Model):
     """
+    Column object. The debate table is done mixing columns and rows. The column
+    object is linked to the debate, but with no preferrable order.
+    
+    .. versionadded:: 0.1b
     """
     criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
     debate = models.ForeignKey(Debate)
@@ -69,6 +73,10 @@ class Column(models.Model):
     
 class Row(models.Model):
     """
+    Row object for the debate system.  Thw row object works exactly like the
+    column. It's associated to the debate in no preferred order.
+    
+    .. versionadded:: 0.1b
     """
     criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
     debate = models.ForeignKey(Debate)
@@ -97,5 +105,3 @@ class Note(models.Model):
     
     def __unicode__(self):
         return self.message
-        
-#class Matrix(modes.Model)
