@@ -57,14 +57,22 @@ class Debate(models.Model):
             'space_name': self.space.url,
             'debate_id': str(self.id)})
 
-
+class Column(models.Model):
+    """
+    """
+    criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
+    debate = models.ForeignKey(Debate)
+    date = models.DateTimeField(auto_now_add=True)
+    
+    def __unicode__(self):
+        return self.criteria + "(" + str(self.debate) + ")"
+    
 class Row(models.Model):
     """
     """
     criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
     debate = models.ForeignKey(Debate)
     date = models.DateTimeField(auto_now_add=True)
-    sortables = models.CharField(_('Sortables'), max_length=100, blank=True, null=True)
     
     def __unicode__(self):
         return self.criteria + "(" + str(self.debate) + ")"
@@ -78,11 +86,11 @@ class Note(models.Model):
     
     .. versionadded:: 0.1b
     """
-    debate = models.IntegerField('Debate', blank=True, null=True)
-    noteid = models.CharField(_('Note div ID'), max_length=100, blank=True, null=True)
+    column = models.ForeignKey(Column)
+    row = models.ForeignKey(Row)
+    debate = models.ForeignKey(Debate)
     title = models.CharField(_('Title'), max_length=60, blank=True, null=True)
     message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
-    parent = models.CharField(_('Parent TD or DIV'), max_length=200, blank=True, null=True)
 
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User, null=True, blank=True)
