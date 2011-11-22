@@ -6,26 +6,26 @@
 Documentación de e-cidadania
 ============================
 
-**e-cidadania** es una plataforma de e-democracia hecha con software abierto
-para la participación ciudadana. Las características clave son: un sistema de
-propuestas, un revolucionario sistema de debate ordenado, repositorio de documentos,
-informes autogenerados y perfiles avanzados de usuario entre otras cosas como
-geolocalización y mensajería.
+**e-cidadania** é unha plataforma de e-democracia feita con software aberto
+para a participación cidadá. As características clave son: un sistema de
+propostas, un revolucionario sistema de debate ordenado, repositorio de documentos,
+informes autoxerados e perfís avanzados de usuario entre outras cousas como
+xeolocalización e mensaxería.
 
-Esta plataforma está basada en el framework `django <http://www.djangoproject.com>`_ 
-y algunas librerías externas.
+Esta plataforma está baseada no framework `django <http://www.djangoproject.com>`_ 
+e algunhas librerías externas.
 
 |Models|_
 
 .. |Models| image:: ../images/models.png
 .. _Models: http://postimage.org/image/z7b8s72c/full/
 
-.. warning:: e-cidadania está en desarrollo, y por ello algunos componentes pueden
-             variar sus características, especialmente los modelos de datos y
+.. warning:: e-cidadania está en desenvolvemento, e por isto algúns compoñentes poden
+             variar as súas características, especialmente os modelos de datos e
              esta documentación.
 
 
-Instalación y configuración
+Instalación e configuración
 ---------------------------
 
 .. toctree::
@@ -35,8 +35,8 @@ Instalación y configuración
     docs/configuration
     docs/deployment
     
-Manuales
---------
+Manuais
+-------
 
 .. toctree::
     :maxdepth: 3
@@ -52,8 +52,8 @@ Apariencia / Temas
 
     theming/themes
 
-Desarrollo
-----------
+Desenvolvemento
+---------------
 
 .. toctree::
     :maxdepth: 2
@@ -79,17 +79,17 @@ Referencia (inglés)
 Colofón
 =======
 
-Conseguir ayuda
+Conseguir axuda
 ---------------
 
-- Prueba a mirar en el `P+F <http://app.ecidadania.org/faq>`_ (Preguntas Más Frecuentes).
+- Proba a mirar no `P+F <http://app.ecidadania.org/faq>`_ (Preguntas Máis Frecuentes).
 - Listas de correo de e-cidadania
 
   * ecidadania-users@freelists.org
   * ecidadania-dev@freelists.org
   * ecidadania-es@freelists.org
 
-- Crear un informe de error en el `bug tracker <http://dev.ecidadania.org>`_ o
+- Crear un informe de erro no `bug tracker <http://dev.ecidadania.org>`_ ou
   infórmanos a través de correo electrónico en soporte@ecidadania.org
 
 .. toctree::

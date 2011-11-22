@@ -9,18 +9,18 @@ Acerca de este documento
 
     Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
 
-Traducions
+Traducións
 ..........
 
 :Galego:
 
     Armando Broz Fidalgo <armando.broz@cidadania.coop>
 
-    Rosa Muñiz Castro <rosa.munhiz@cidadania.coop>
+    Rosa Muñíz Castro <rosa.munhiz@cidadania.coop>
     
     Antón Meixome <meixome@certima.net>
     
-    Luisa Vicente Comojo <luisa.vicente@cidadania.coop>
+    Luísa Vicente Comojo <luisa.vicente@cidadania.coop>
 
 
 :Inglés:

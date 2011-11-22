@@ -1,29 +1,29 @@
-Apariencias de e-cidadania
-==========================
+Aparencias de e-cidadania
+=========================
 
-Otras apariencias
+Outras aparencias
 -----------------
 
-Este es un pequeño índice de apariencias de e-cidadania.
+Este é un pequeno índice de aparencias de e-cidadania.
 
-Crea tu propia apariencia para e-cidadania
-------------------------------------------
+Crea a túa propia aparencia para e-cidadania
+--------------------------------------------
 
-Crear una nueva apariencia para e-cidadania puede llegar a ser algo difícil,
-pero no por ello imposible. Aquí te daremos las instrucciones precisas.
+Crear unha nova aparencia para e-cidadania pode chegar a ser algo difícil,
+pero non por iso imposible. Aquí darémosche as instrucións precisas.
 
 Referencia
 ----------
 
-Los temas de e-cidadania se localizan mayoritariamente en los propios módulos.
-Cada aplicación gestiona por separado sus apariencias, no en cuanto a estilo
-pero sí en cuanto a distribución.
+Os temas de e-cidadania localízanse maioritariamente nos propios módulos.
+Cada aplicación xestiona por separado as súas aparencias, non en canto a estilo
+pero si en canto a distribución.
 
-Además de esto, existen algunas platillas generales que están situadas en el
+Ademais disto, existen algúns modelos xerais que están situados no
 directorio `templates`.
 
-General
-.......
+Xeral
+.....
 
 asdasd
 
@@ -32,8 +32,8 @@ Perfil de usuario
 
 asdasdas
 
-Propuestas
-..........
+Propostas
+.........
 
 sdfsdfs
 

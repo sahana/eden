@@ -1,171 +1,171 @@
 Manual de usuario
 =================
 
-Bienvenido al manual de usuario de e-cidadania. Este manual está destinado a
-todos los nuevos usuarios de la plataforma. El objetivo es cubrir lo mejor
-posible todas las funciones de e-cidadania evitando ser demasiado específicos.
+Benvido ao manual de usuario de e-cidadania. Este manual está destinado a
+todos os novos usuarios da plataforma. O obxectivo é cubrir o mellor
+posible todas as funcións de e-cidadania evitando ser demasiado específicos.
 
 Premisas
 --------
 
- * e-cidadania será siempre libre y de código abierto.
- * Siempre daremos las mejores traducciones y opciones de accesibilidad posibles.
- * Bajo ningún concepto se registrará la actividad de los usuarios que no sea
-   relevante para el proceso.
+ * e-cidadania será sempre libre e de código aberto.
+ * Sempre daremos as mellores traducións e opcións de accesibilidade posibles.
+ * Baixo ningún concepto se rexistrará a actividade dos usuarios que non sexa
+   relevante para o proceso.
 
-Cómo funciona e-cidadania
+Como funciona e-cidadania
 -------------------------
 
-e-cidadania funciona de una forma muy similar a un gestor de proyectos. Por una
-parte tenemos la página principal, en la que podremos ver las noticias más
-relevantes relacionadas con los procesos en curso, así como opciones para las
-redes sociales o elegir el espacio al que queremos ir.
+e-cidadania funciona dunha forma moi similar a un xestor de proxectos. Por unha
+parte temos a páxina principal, na que poderemos ver as noticias máis
+relevantes relacionadas cos procesos en curso, así como opcións para as
+redes sociais ou elixir o espazo ao que queremos ir.
 
-La filosofía de los espacios es muy simple. Cada proceso de participación es un
-espacio, que puede ser público o privado. Dentro de cada espacio hay una serie
-de herramientas que el administrador del mismo podrá configurar a su gusto como
-por ejemplo: noticias, repositorio de documentos, sistema de propuestas, sistema
-de debates, seguimiento de reuniones, etc.
+A filosofía dos espazos é moi simple. Cada proceso de participación é un
+espazo, que pode ser público ou privado. Dentro de cada espazo hai unha serie
+de ferramentas que o administrador do mesmo poderá configurar ao seu gusto como
+por exemplo: noticias, repositorio de documentos, sistema de propostas, sistema
+de debates, seguimento de reunións, etc.
 
-No se puede acceder a los procesos salvo que se haya sido invitado, o que el
-proceso sea público. En cualquier caso, para participar en un proceso hay que
-ser admitido en el mismo.
+Non se pode acceder aos procesos salvo que se fora invitado, ou que o
+proceso sexa público. En calquera caso, para participar nun proceso hai que
+ser admitido no mesmo.
 
-Registrarse en la plataforma
-----------------------------
+Rexistrarse na plataforma
+-------------------------
 
-El sistema de registro de usuarios dependerá de lo que el administrador quiera.
-Por defecto, e-cidadania permite el registro de usuarios para poder realizar
-algunas tareas básicas, y visitar los espacios públicos, pero sin poder participar.
+O sistema de rexistro de usuarios dependerá do que o administrador queira.
+Por defecto, e-cidadania permite o rexistro de usuarios para poder realizar
+algunhas tarefas básicas, e visitar os espazos públicos, pero sen poder participar.
 
-Para registrarte debes hacer clic en "Entrar" y el la parte inferior del
-formulario de entrada te aparecerá la opción de registro. Basta con tu nombre,
-correo electrónico y clave.
+Para rexistrarte debes facer clic en "Entrar" e na parte inferior do
+formulario de entrada aparecerache a opción de rexistro. Chega co teu nome,
+correo electrónico e clave.
 
-Recuerda que esto sólo te permitirá ver los espacios públicos pero no podrás
-participar en ninguno salvo que seas incluído en él.
+Recorda que isto só che permitirá ver os espazos públicos pero non poderás
+participar en ningún excepto que sexas incluído nel.
 
-Cómo participar en un espacio
------------------------------
+Como participar nun espazo
+--------------------------
 
-Los usuarios nuevos que se hayan registrado automáticamente no
-tienen acceso a ningún espacio de la plataforma salvo los públicos, que podrán
-ver pero no participar en ellos.
+Os usuarios novos que se rexistren automaticamente non
+teñen acceso a ningún espazo da plataforma excepto os públicos, que poderán
+ver pero non participar neles.
 
-Para poder participar en un espacio es necesario solicitar el acceso. Eso se
-puede realizar o bien enviando un correo electrónico al administrador
-responsable de ese espacio, o entrando en el espacio y haciendo clic en el botón
-"Quiero participar", tras lo cual será enviada una notificación al administrador
-del espacio para que evalúe tu participación.
+Para poder participar nun espazo é necesario solicitar o acceso. Iso pódese
+realizar ou ben enviando un correo electrónico ao administrador
+responsable dese espazo, ou entrando no espazo e facendo clic no botón
+"Quero participar", tras o cal será enviada unha notificación ao administrador
+do espazo para que avalíe a túa participación.
 
-Otro aspecto importante de estar en un proceso de participación es que, dependiendo
-del tipo de proceso puede que necesites rellenar tu perfil de usuario, que incluye
-datos personales.
+Outro aspecto importante de estar nun proceso de participación é que, dependendo
+do tipo de proceso pode que precises encher o teu perfil de usuario, que inclúe
+datos persoais.
 
-Para los procesos oficiales esto seguramente sea una obligación, pero no para
-los procesos que inician los usuarios por su cuenta.
+Para os procesos oficiais isto seguramente sexa unha obrigación, pero non para
+os procesos que inician os usuarios pola súa conta.
 
 
-Propuestas
-----------
+Propostas
+---------
 
-El módulo de propuestas permite realizar propuestas para que la gente las
-vote o las apoye.
+O módulo de propostas permite realizar propostas para que a xente as
+vote ou as apoie.
 
-Ese tipo de valoraciones se tendrán después en cuenta en el proceso de votación
+Ese tipo de valoracións teranse despois en conta no proceso de votación
 definitivo.
 
-Enviar una propuesta es de lo más sencillo. Basta con acceder al espacio de
-participación correspondiente y hacer clic en "Añadir una propuesta" en la
-columna de la derecha.
+Enviar unha proposta é do máis sinxelo. Chega con acceder ao espazo de
+participación correspondente e facer clic en "Engadir unha proposta" na
+columna da dereita.
 
-Aparecerá un formulario que tiene varios campos:
+Aparecerá un formulario que ten varios campos:
 
 Título
-    El nombre de la propuesta. Debe ser una síntesis concisa de la propuesta que
-    no debe ocupar demasiado.
+    O nome da proposta. Debe ser unha síntese concisa da proposta que
+    non debe ocupar demasiado.
     
-Descripción
-    Una descripción más extensa de la propuesta. Se pueden vincular elementos
-    externos como páginas web, imágenes, vídeos, etc.
+Descrición
+    Unha descrición máis extensa da proposta. Pódense vincular elementos
+    externos como páxinas web, imaxes, vídeos, etc.
 
-Latitud/Longitud
-    Ahora mismo e-cidadania cuenta con un sistema básico de geoposicionamiento.
-    Si quieres situar tu propuesta en un mapa tendrás que poner las coordenadas.
+Latitude/Lonxitude
+    Agora mesmo e-cidadania conta con un sistema básico de xeoposicionamento.
+    Se queres situar a túa proposta nun mapa terás que poñer as coordenadas.
 
 Etiquetas
-    Las etiquetas identifican de forma sencilla tu propuesta, por ejemplo::
+    As etiquetas identifican de forma sinxela a túa proposta, por exemplo::
 
-        Titulo: La acera de Cobián Roffignac está rota
-        Etiquetas: acera, cobian roffignac, pontevedra, roto
+        Tiulo: A beirarrúa de Cobián Roffignac está rota
+        Etiquetas: beirarrúa, cobian roffignac, pontevedra, roto
 
-.. warning:: Una vez hecha una propuesta no se podrá editar ni eliminar. Este
-             comportamiento es susceptible de cambiar en e-cidadania 0.1.5
+.. warning:: Unha vez feita unha proposta non se poderá editar nin eliminar. Este
+             comportamento é susceptible de cambiar en e-cidadania 0.1.5
              
 Debates
 -------
 
-El sistema de debates es nuevo, así que procura prestar atención para no
-perderte, esto no es un foro al uso.
+O sistema de debates é novo, así que procura prestar atención para non
+perderte, isto non é un foro ao uso.
 
-Se han trasladado diversos modelos de debate presencial hasta esta
-plataforma, y uno de ellos es el que te vamos a enseñar ahora. ¡Ya
-verás qué rápido te acostumbras!
+Trasladáronse diversos modelos de debate presencial ata esta
+plataforma, e un deles é o que te imos ensinar agora. ¡Xa
+verás que rápido te afás!
 
-El sistema de debate consta de un *tablón* en donde se ponen las notas con
-las ideas de cada uno. Las notas están limitadas, para evitar una sobrecarga del
-tablón.
+O sistema de debate consta dun *taboleiro* onde se poñen as notas coas
+ideas de cada un. As notas están limitadas, para evitar unha sobrecarga do
+taboleiro.
 
-Para añadir tus ideas, basta con que hagas clic en el botón *"Nueva nota"* y
-se creará una nueva nota, en la que podrás escribir. Después basta con que
-la arrastres a la zona del tablón que quieras.
+Para endadir as túas ideas, chega con que fagas clic no botón *"Nova nota"* e
+crearase unha nova nota, na que poderás escribir. Despois chega con que
+a arrastres á zona do taboleiro que queiras.
 
-Cómo consultar documentos
+Como consultar documentos
 -------------------------
 
-Basta con hacer clic en el documento que quieras leer para que comience a
-descargarse. Si el documento que quieres no figura en la columna de la derecha
-puedes darle al botón "Ver todos los documentos" y se cargará una página
-nueva que te mostrará todos los documentos que están almacenados en ese espacio.
+Chega con facer clic no documento que queiras ler para que empece a
+descargarse. Se o documento que queres non figura na columna da dereita
+podes darlle ao botón "Ver todos os documentos" e cargarase unha páxina
+nova que che amosará todos os documentos que están almacenados nese espazo.
 
-Suscripción RSS
+Subscrición RSS
 ---------------
 
-Los espacios, así como la página principal, cuentan con feeds RSS para poder
-estar al día con tu lector de noticias favorito en vez de tener que visitar la
-página web constantemente.
+Os espazos, así como a páxina principal, contan con feeds RSS para poder
+estar ao día co teu lector de noticias favorito en vez de ter que visitar a
+páxina web constantemente.
 
-Para obtener el enlace del feed, basta con que hagas clic abajo de todo en
+Para obter o enlace do feed, chega con que fagas clic abaixo de todo en
 "RSS Feed".
 
-Ten en cuenta que cada espacio tiene un feed diferente, así como la página principal
-de e-cidadania. Si quieres un feed sólo de tu espacio deberás hacer clic en el icono
-RSS de tu espacio y no en el de la página principal.
+Ten en conta que cada espazo ten un feed diferente, así como a páxina principal
+de e-cidadania. Se queres un feed só do teu espazo deberás facer clic no icono
+RSS do teu espazo e non no da páxina principal.
 
-.. note:: En e-cidadania 0.1.5 se espera tener un único botón de RSS que llevará
-          al usuario a un selector de feeds RSS.
+.. note:: En e-cidadania 0.1.5 espérase ter un único botón de RSS que levará
+          ao usuario a un selector de feeds RSS.
 
 Preguntas frecuentes
 --------------------
 
- * ¿Puedo crear yo mi propio espacio de participación?
+ * ¿Podo crear eu o meu propio espazo de participación?
 
-   Si, pero actualmente hay que solicitarlo al administrador de la plataforma
-   ya que e-cidadania no permite la creación de espacios a nadie salvo a los
+   Si, pero actualmente hai que solicitalo ao administrador da plataforma
+   xa que e-cidadania non permite a creación de espazos a ninguén salvo aos
    administradores.
    
-   .. note:: Esto es susceptible de cambiar en un futuro.
+   .. note:: Isto e susceptible de cambiar nun futuro.
    
- * ¿Puedo participar en un espacio privado?
+ * ¿Podo participar nun espazo privado?
  
-   Depende de las condiciones que se hayan establecido para el espacio. En el
-   caso de los presupuestos participativos las condiciones son muy estrictas
-   y no podrás participar a menos que las reúnas.
+   Depende das condicións que se establezan para o espazo. No
+   caso dos orzamentos participativos as condicións son moi estritas
+   e non poderás participar a non ser que as reúnas.
    
- * ¿Existe aplicación para teléfonos móviles?
+ * ¿Existe aplicación para teléfonos móbiles?
 
-   e-cidadania ha sido diseñado y programado para que la interfaz funcione correctamente
-   en los smartphones actuales, no hay necesidad de una aplicación aparte. Basta
-   con que visites la web normalmente :)
+   e-cidadania foi diseñado e programado para que a interface funcione correctamente
+   nos smartphones actuais, non hai necesidade dunha aplicación aparte. Chega
+   con que visites a web normalmente :)
 
-Si tienes alguna pregunta que no está aquí por favor dínoslo!
+Se tes algunha pregunta que non está aquí por favor dínolo!

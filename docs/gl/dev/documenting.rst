@@ -1,17 +1,17 @@
-Generando la documentación
-==========================
+Xerando a documentación
+=======================
 
-La documentación de e-cidadania se genera a través del programa sphinx (1.1) en
+A documentación de e-cidadania xérase a través do programa sphinx (1.1) en
 tres idiomas por defecto, que son:
 
 - Inglés
 - Español
-- Gallego
+- Galego
 
-La documentación está estructurada de forma que sea lo más automática posible. Los
-tres idiomas se generan de una sentada al ejecutar `make html`.
+A documentación está estruturada de forma que sexa o máis automática posible. Os
+tres idiomas xéranse dunha sentada ao executar `make html`.
 
-Una vez realizado ese comando la documentación quedará distribuída de la siguiente
+Unha vez realizado ese comando a documentación quedará distribuída da seguinte
 forma::
 
     docs/
@@ -24,25 +24,25 @@ forma::
         theming/
         index.rst
 
-Las carpetas `es`, `en` y `gl` contienen la documentación en sus respectivos
-idiomas. La carpeta `reference` sólo existe en la raíz de la documentación y se
-replica en los otros idiomas (la referencia debe ser siempre en inglés y es
-autogenerada desde los comentarios de código).
+As carpetas `es`, `en` e `gl` conteñen a documentación nos seus respectivos
+idiomas. A carpeta `reference` só existe na raíz da documentación e replícase
+nos outros idiomas (a referencia debe ser sempre en inglés e é
+autoxerada dende os comentarios de código).
 
-Por motivos de compatibilidad (por ejemplo con la plataforma *Read The Docs*) una
-copia de la documentación en inglés se mantiene en la raíz, eso dará una solución
-en caso de que utilicemos alguna herramienta que busque la documentación en el
+Por motivos de compatibilidade (por exemplo coa plataforma *Read The Docs*) unha
+copia da documentación en inglés mantense na raíz, iso dará unha solución
+en caso de que utilicemos algunha ferramenta que busque a documentación no
 directorio por defecto. 
 
 
-Normas lingúisticas
+Normas lingüísticas
 -------------------
 
- * Siempre tratar de tú al lector, nunca de usted.
- * Siempre que una palabra tenga un equivalente en castellano, usar el equivalente
-   aunque sea más común el anglicismo.
+ * Sempre tratar de ti ao lector, nunca de vostede.
+ * Sempre que unha palabra teña un equivalente en castelán, usar o equivalente
+   aínda que sexa máis común o anglicismo.
    
-.. note:: Esta sección está sin terminar.
+.. note:: Esta sección está sen terminar.
 
 Palabras difusas
 ----------------

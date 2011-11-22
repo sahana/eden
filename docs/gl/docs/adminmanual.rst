@@ -1,62 +1,62 @@
 Manual de administración
 ========================
 
-Este manual te enseñará cómo manejar e-cidadania para que no te pierdas nada de 
+Este manual ensinarache como manexar e-cidadania para que non te perdas nada de 
 nada :).
 
-Concretamente trata la parte del administrador del sitio sin meterse en detalles
-técnicos innecesarios. Si en algún momento necesitas detalles técnicos es preferible
-que leas el manual de desarrollo, en el cual está todo especificado.
+Concretamente trata a parte do administrador do sitio sen meterse en detalles
+técnicos innecesarios. Se en algún momento necesitas detalles técnicos é preferible
+que leas o manual de desenvolvemento, no cal está todo especificado.
 
-Estructura del panel de administración
---------------------------------------
+Estrutura do panel de administración
+------------------------------------
 
 |Admin-es|_
 
 .. |Admin-es| image:: ../../images/admin/admin_es_mini.png
 .. _Admin-es: http://postimage.org/image/z7b8s72c/full/
 
-La página principal del panel de administración se divide en tres grandes zonas:
+A páxina principal do panel de administración divídese en tres grandes zonas:
 
- 1. Esta zona contiene todas las aplicaciones de la plataforma. Desde aquí podrás
-    añadir, editar o eliminar cualquier elemento de la base de datos.
+ 1. Esta zona contén todas as aplicacións da plataforma. Desde aquí poderás
+    engadir, editar ou eliminar calquera elemento da base de datos.
     
-    .. note:: Puede que aparezcan también otras aplicaciones de terceros, como
-              django-evolution o similares, que son para la gestión de ciertos
-              aspectos técnicos de la plataforma.
+    .. note:: Pode que aparezan tamén outras aplicacións de terceiros, como
+              django-evolution ou similares, que son para a xestión de certos
+              aspectos técnicos da plataforma.
               
- 2. Esta zona contiene lo que llamamos *widgets*. En ellos se puede mostrar casi
-    cualquier tipo de información.
+ 2. Esta zona contén o que chamamos *widgets*. Neles pódese amosar case
+    calquera tipo de información.
     
-    Normalmente esos widgets vienen configurados por defecto. Si quieres cambiar
-    su contenido basta con que edites el archivo **dashboard.py** que hay en
-    la raíz de la aplicación, pero ojo, no te lo recomendamos si no sabes lo que
-    estás haciendo. Si aún así quieres hacerlo, mira el `manual de django-grappelli <http://django-grappelli.readthedocs.org/en/latest/dashboard_api.html>`_.
+    Normalmente eses widgets veñen configurados por defecto. Se queres cambiar
+    o seu contido basta con que edites o arquivo **dashboard.py** que hai na
+    raíz da aplicación, pero ollo, non cho recomendamos se non sabes o que
+    estás facendo. Se aínda así queres facelo, mira o `manual de django-grappelli <http://django-grappelli.readthedocs.org/en/latest/dashboard_api.html>`_.
     
- 3. Esta es la zona de registro. Aquí se mostrará toda la actividad reciente que
-    haya ocurrido en la plataforma.
+ 3. Esta é a zona de rexistro. Aquí amosarase toda a actividade recente que
+    ocorrese na plataforma.
 
-Registro de usuarios
+Rexistro de usuarios
 --------------------
 
-Los usuarios tienen dos formas de registrarse:
+Os usuarios teñen dúas formas de rexistrarse:
 
-* **A través del proceso participativo presencial** Se anotan para participar en el
-  proceso, y se vuelcan sus datos en la base de datos de e-cidadania.
+* **A través do proceso participativo presencial** Anótanse para participar no
+  proceso, e vólcanse os seus datos na base de datos de e-cidadania.
   
-  En este caso tendrás que crear su usuario desde *"Usuarios"* y luego el perfil
-  correspondiente desde *"User profiles"*
+  Neste caso terás que crear o seu usuario dende *"Usuarios"* e logo o perfil
+  correspondente dende *"User profiles"*
 
-* **Registrándose ellos mismos** Esta es la forma más rápida pero también menos
-  conveniente. Con este registro el usuario no tendrá ninguno de sus datos personales
-  en la base de datos, ni pertenecerá a ningún proceso participativo salvo que se
-  le permita. De la misma forma, sólo podrá visualizar los procesos participativos
-  abiertos, pero no podrá participar a menos que se le incluya en el grupo.
+* **Rexistrándose eles mesmos** Esta é a forma máis rápida pero tamén menos
+  conveniente. Con este rexistro o usuario non terá ningún dos seus datos persoais
+  na base de datos, nin pertencerá a ningún proceso participativo salvo que se
+  lle permita. Da mesma maneira, só poderá visualizar os procesos participativos
+  abertos, pero non poderá participar a menos que se lle inclúa no grupo.
 
-.. note:: Este comportamiento es susceptible de cambiar en un futuro.
+.. note:: Este comportamento é susceptible de cambiar nun futuro.
 
-Por defecto e-cidadania tiene el registro de usuarios activado cuando se instala.
-Para desactivarlo tendrás que comentar una línea de código en el siguiente archivo:
+Por defecto e-cidadania ten o rexistro de usuarios activado cando se instala.
+Para desactivalo terás que comentar unha liña de código no seguinte arquivo:
 
 ::
 
@@ -67,86 +67,86 @@ Para desactivarlo tendrás que comentar una línea de código en el siguiente ar
 Permisos
 --------
 
-.. note:: En e-cidadania 0.2 se actualizará a permisos por fila, que permiten
-          un nivel mucho más detallado de permisos.
+.. note:: En e-cidadania 0.2 actualizarase a permisos por fila, que permiten
+          un nivel moito máis detallado de permisos.
 
-Los permisos en e-cidadania están heredados directamente del sistema de autenticación
-de django. De esa forma ya disponemos de permisos basados en grupo o individuales.
+Os permisos en e-cidadania están herdados directamente do sistema de autenticación
+de django. De esa maneira xa dispoñemos de permisos baseados en grupo ou individuais.
 
- * **Por grupo** Lo ideal es gestionar los usuarios a través de grupos. Se puede
-   hacer accediendo al panel de administración desde el menú que hay arriba a la
-   derecha, al lado del nombre de usuario.
+ * **Por grupo** O ideal é xestionar os usuarios a través de grupos. Pódese
+   facer accedendo ao panel de administración dende o menú que hai arriba á
+   dereita, ao lado do nome de usuario.
 
-   Una vez en el panel de administración basta con que hagamos clic en el botón que
-   hay al lado de *"Grupos"* que pone *" + Añadir"* y ahí tendremos opción a configurar
-   nuestros grupos.
+   Unha vez no panel de administración basta con que fagamos clic no botón que
+   hai ao lado de *"Grupos"* que pon *" + Engadir"* e aí teremos opción a configurar
+   os nosos grupos.
 
-   Como podrás observar, tenemos dos paneles de permisos y un campo para escribir el
-   nombre. Basta con que pases los permisos que quieras para ese grupo al panel de
-   la derecha (mediante las flechas que hay entre los dos paneles) y luego le pongas
-   un nombre al grupo.
+   Como poderás observar, temos dous paneis de permisos e un campo para escribir o
+   nome. Basta con que pases os permisos que queiras para ese grupo ao panel da
+   dereita (mediante as frechas que hai entre os dous paneles) e logo lle poñas
+   un nome ao grupo.
 
-   Para guardar haz clic abajo a la derecha donde pone *"Guardar"*.
+   Para gardar fai clic abaixo á dereita onde pon *"Gardar"*.
 
- * **Individuales** Puede que en algún momento quieras que alguien tenga una serie
-   de permisos en concreto que no encajan en ninguno de los grupos que has creado.
-   En ese caso es mejor darle los permisos al usuario en sí en vez de crear un
-   grupo para él solo.
+ * **Individuais** Pode que nalgún momento queiras que alguén teña unha serie
+   de permisos en concreto que non encaixan en ningún dos grupos que creaches.
+   Nese caso é mellor darlle os permisos ao usuario en si en vez de crear un
+   grupo para el só.
 
-   Para ello debes editar al usuario haciendo clic en *"Usuarios"* y seleccionando el
-   que quieras editar. Se te mostrarán una serie de datos del usuario como los grupos
-   a los que pertenece, fecha de registro, etc. Lo que nos interesa son los paneles
+   Para iso debes editar ao usuario facendo clic en *"Usuarios"* e seleccionando o
+   que queiras editar. Mostraránseche unha serie de datos do usuario como os grupos
+   aos que pertence, data de rexistro, etc. O que nos interesa son os paneis
    de permisos.
 
-   Funcionan exactamente igual que los de grupo. Basta con que lo configures y guardes
-   los cambios para aplicar los permisos al usuario.
+   Funcionan exactamente igual que os de grupo. Basta con que o configures e gardes
+   os cambios para aplicar os permisos ao usuario.
 
-Espacios
---------
+Espazos
+-------
 
-Los espacios son zonas separadas en las cuales tienen lugar los procesos participativos.
-Cada espacio puede configurarse a medida de las necesidades del proceso y no podrá
-participar ningún usuario que no haya sido "admitido".
+Os espazos son zonas separadas nas cales teñen lugar os procesos participativos.
+Cada espazo pode configurarse a medida das necesidades do proceso e non poderá
+participar ningún usuario que non fose "admitido".
 
-La creación de espacios corresponde al administrador de la plataforma, por medidas
-de seguridad.
+A creación de espazos corresponde ao administrador da plataforma, por medidas
+de seguridade.
 
-.. note:: Esta sección está sin terminar.
+.. note:: Esta sección está sen terminar.
 
 
 Módulos
 -------
 
-e-cidadania es una plataforma totalmente modular, incluso las características más
-básicas como noticias, repositorio de documentos, espacios, sistema de propuestas, etc.
-son módulos que pueden ser modificados o reemplazados sin afectar a la estructura
-de la plataforma.
+e-cidadania é unha plataforma totalmente modular, incluso as características máis
+básicas como noticias, repositorio de documentos, espazos, sistema de propostas, etc.
+son módulos que poden ser modificados ou substituídos sen afectar á estrutura
+da plataforma.
 
 Moderación
 ----------
 
-Las tareas de moderación dentro de la plataforma son muy sencillas. Cada módulo o
-aplicación tiene tres tareas básicas: crear, editar y eliminar.
+As tarefas de moderación dentro da plataforma son moi sinxelas. Cada módulo ou
+aplicación ten tres tarefas básicas: crear, editar e eliminar.
 
 **Crear**
-  Dependiendo del grado de moderación que tengas, podrás añadir contenido de
-  distintos tipos. Los niveles de moderación más altos permiten crear prácticamente
-  cualquier cosa y con un elevado grado de detalle.
+  Dependendo do grao de moderación que teñas, poderás engadir contido de
+  distintos tipos. Os niveis de moderación máis altos permiten crear practicamente
+  calquera cousa e cun elevado grao de detalle.
 
 **Editar**
-  La tarea de edición es similar a la de creación, con la diferencia de que se te
-  devolverá un formaluario con los datos del objeto que estés editando.
+  A tarefa de edición é similar á de creación, coa diferencia de que se che
+  devolverá un formaluario cos datos do obxecto que esteas editando.
   
-  El contenido generado por los usuarios debe ser preservado, sólo puede ser
-  eliminado por los administradores del sitio.
+  O contido xerado polos usuarios debe ser preservado, só pode ser
+  eliminado polos administradores do sitio.
   
 **Eliminar**
-  Normalmente en un foro, un moderador puede eliminar el contenido de un usuario.
-  En e-cidadania ese no es el objetivo. Todo el contenido generado por los usuarios
-  debe preservarse y sólo podrá ser eliminado por los administradores del sitio o
-  bajo petición del propio usuario.
+  Normalmente nun foro, un moderador pode eliminar o contido dun usuario.
+  En e-cidadania ese non é o obxectivo. Todo o contido xerado polos usuarios
+  debe preservarse e só poderá ser eliminado polos administradores do sitio ou
+  baixo petición do propio usuario.
 
-Errores frecuentes
-------------------
+Erros frecuentes
+----------------
 
-Lista de errores más frecuentes a la hora de administrar.
+Lista de erros máis frecuentes á hora de administrar.

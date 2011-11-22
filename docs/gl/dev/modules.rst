@@ -1,18 +1,18 @@
 Creando módulos
 ===============
 
-e-cidadania es extensible a través de módulos, incluso antes de que se instale.
+e-cidadania é extensible a través de módulos, incluso antes de que se instale.
 
-Estructura
-----------
+Estrutura
+---------
 
-Un módulo es básicamente una aplicación de django que incorporamos a e-cidadania.
-En estos momentos apostamos por la estructura estándar en cuanto a distribución y
-nombrado de archivos.
+Un módulo é basicamente unha aplicación de django que incorporamos a e-cidadania.
+Nestes momentos apostamos pola estrutura estándar en canto a distribución e
+nomeado de arquivos.
 
-.. warning:: Recomendamos encarecidamente que se tenga experiencia previa en
-             django y python antes de crear un módulo.
+.. warning:: Recomendamos encarecidamente que se teña experiencia previa en
+             django e python antes de crear un módulo.
 
-Un módulo consta de tres partes básicas, el modelo, la vista y la plantilla.
+Un módulo consta de tres partes básicas, o modelo de datos, a vista e modelo de vista.
 
-.. note:: Valorar si se debe explicar la creación de un módulo.
+.. note:: Valorar se se debe explicar a creación dun módulo.

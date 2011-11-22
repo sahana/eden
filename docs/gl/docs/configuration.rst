@@ -1,13 +1,13 @@
 Configuración
 =============
 
-La plataforma e-cidadania viene casi lista para funcionar tan pronto la
-descargues, pero aún te queda editar el archivo `settings.py` y algunos pasos más.
+A plataforma e-cidadania vén case lista para funcionar tan axiña a
+descargues, pero aínda che queda editar o arquivo `settings.py` e algúns pasos máis.
 
 Base de datos (BDD)
 -------------------
 
-**Configurando la base de datos**::
+**Configurando a base de datos**::
 
     DATABASES = {
         'default': {
@@ -20,12 +20,12 @@ Base de datos (BDD)
         }
     }
     
-Lo primero de todo es configurar la base de datos. Por defecto e-cidadania viene
-configurado para utilizar una base de datos local de tipo SQLite 3, que te puede
-resultar útil para realizar pruebas antes de poner la plataforma en producción,
-pero que deberás cambiar tan pronto como termines las pruebas.
+O primeiro de todo é configurar a base de datos. Por defecto e-cidadania vén
+configurado para utilizar unha base de datos local de tipo SQLite 3, que che pode
+resultar útil para realizar probas antes de poñer a plataforma en produción,
+pero que deberás cambiar tan axiña como remates as probas.
 
-Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
+Un exemplo de base de datos nun servidor compartido de DreamHost é iste::
 
     DATABASES = {
         'default': {
@@ -41,89 +41,89 @@ Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
 Modo Debug
 ----------
 
-El modo debug viene activado por defecto y se recomienda encarecidamente
-desactivarlo para comenzar a utilizar e-cidadania en producción. Para ello
-hay que desactivarlo en el fichero `settings.py`::
+O modo debug vén activado por defecto e recoméndase encarecidamente
+desactivalo para comezar a utilizar e-cidadania en produción. Para isto
+hai que desactivalo no ficheiro `settings.py`::
 
     DEBUG = False
 
-Perfiles de usuario
--------------------
+Perfís de usuario
+-----------------
 
 *ACCOUNT_ACTIVATION_DAYS* (número)
 
-    Esta variable especifica cuándos días tiene el usuario para activar su
-    cuenta desde que recibe el correo de confirmación.
+    Esta variable especifica cantos días ten o usuario para activar a súa
+    conta dende que recibe o correo de confirmación.
 
 *GOOGLE_MAPS_API_KEY* (hash)
 
-    Llave de la API de Google para poder utilizar la interfaz de mapas. Debes
-    crearte una propia a pesar de que e-cidadania venga con una configurada,
-    ya que sólo funcionará en el dominio que hayas especificado.
+    Chave da API de Google para poder utilizar a interface de mapas. Débeste
+    crear unha propia a pesar de que e-cidadania veña con unha configurada,
+    xa que só funcionará no dominio que houberas especificado.
 
 Correo electrónico
 ------------------
 
 *ADMINS* (lista)
 
-    Lista de administradores y cuentas de correo para la notificación
-    de errores del servidor. Sólo funciona si DEBUG = False
+    Lista de administradores e contas de correo para a notificación
+    de erros do servidor. Só funciona se DEBUG = False
     
 *EMAIL_HOST* (servidor)
 
-    Servidor de correo desde el cual se enviarán los correos a los usuarios.
+    Servidor de correo dende o cal se enviarán os correos aos usuarios.
     
 *DEFAULT_FROM_EMAIL*
 
-    Dirección por defecto desde la que se enviarán los correos si no se especifica
-    otra.
+    Enderezo por defecto dende a que se enviarán os correos se non se especifica
+    outra.
 
 Idioma
 ------
 
 *LANGUAGE_CODE* (código de idioma)
 
-    Idioma con el cual funcionará django por defecto.
+    Idioma co cal funcionará django por defecto.
 
-Después de settings.py
+Despois de settings.py
 ----------------------
 
-Después de configurar e-cidadania a tu gusto, tendrás que ejecutar una serie
-de comandos para que todo esté en orden.
+Despois de configurar e-cidadania ao teu gusto, terás que executar unha serie
+de comandos para que todo estea en orde.
 
-*Crear la BDD*
+*Crear a BDD*
 
-    Para crear la base de datos con el primer usuario de administración ejecutamos
-    desde la raíz del proyecto::
+    Para crear a base de datos co primeiro usuario de administración executamos
+    dende a raíz do proxecto::
     
     ./manage.py syncdb
     
-    Creará las tablas de la base de datos y posteriormente nos preguntará si queremos
-    crear un usuario de administración. Elegiremos la opción que más nos convenga
-    y seguiremos.
+    Creará as táboas da base de datos e posteriormente preguntaranos se queremos
+    crear un usuario de administración. Elixiremos a opción que máis nos conveña
+    e seguiremos.
     
-    En principio con esto es suficiente. Si por algún motivo quieres meter un set
-    de datos previos, deberás hacerlo a través de los métodos que Django ofrece,
-    pero eso cae fuera de este manual.
+    En principio con isto é suficiente. Se por algún motivo queres meter un set
+    de datos previos, deberás facelo a través dos métodos que Django ofrece,
+    pero iso cae fóra deste manual.
 
-*Recoger ficheros estáticos*
+*Recoller ficheiros estáticos*
 
-    e-cidadania viene configurado para servir los ficheros estáticos tanto en
-    desarrollo como en producción, pero en este último hay que *recolectarlos* y
-    juntarlos en un directorio.
+    e-cidadania vén configurado para servir os ficheiros estáticos tanto en
+    desenvolvemento como en produción, pero neste último hai que *recollelos* e
+    xuntalos nun directorio.
     
-    Ese directorio viene predeterminado como "static", y los ficheros estáticos
-    propios de e-cidadania están almacenados en "static_files". Para *recolectar*
-    los ficheros debes ejecutar el comando::
+    Ese directorio vén predeterminado como "static", e os ficheiros estáticos
+    propios de e-cidadania están almacenados en "static_files". Para *recoller*
+    os ficheiros debes executar o comando::
     
     ./manage.py collectstatic
     
-    Tras ejecutarlo puedes borrar el directorio *static_files* si quieres, aunque
-    recomendamos mantenerlo por si algún día necesitas ejecutar el servidor de
-    desarrollo.
+    Tras executalo podes borrar o directorio *static_files* se queres, aínda que
+    recomendamos mantelo por se algún día necesitas executar o servidor de
+    desenvolvemento.
     
 Plugins
 -------
 
-.. note:: e-cidadania aún no soporta plugins, pero lo hará en un futuro.
+.. note:: e-cidadania aínda non soporta plugins, pero farao nun futuro.
 

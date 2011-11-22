@@ -1,31 +1,31 @@
 Instalación
 ===========
 
-La instalación de e-cidadania es muy simple y se realiza de la misma manera que
-cualquier otra plataforma django estándar.
+A instalación de e-cidadania é moi simple e realízase da mesma maneira que
+calquera outra plataforma django estándar.
 
-Descargar la plataforma
------------------------
+Descargar a plataforma
+----------------------
 
-.. note:: La sección de descargas de la web oficial todavía no está disponible.
+.. note:: A sección de descargas da web oficial aínda non está dispoñible.
 
-Existen numerosas formas de descargar e-cidadania. La más sencilla de todas es
-ir a le sección `descargas <http://ecidadania.org/downloads>`_ de la web y bajarse
-la última versión estable o de desarrollo, listas para utilizar.
+Existen numerosas formas de descargar e-cidadania. A máis sinxela de todas é
+ir á sección `descargas <http://ecidadania.org/downloads>`_ da web e baixarse
+a última versión estable ou de desenvolvemento, listas para utilizar.
 
 Versión estable
 ...............
 
-Puedes encontrar la última versión estable en la página de descargas de ecidadania.org::
+Podes encontrar a última versión estable na páxina de descargas de ecidadania.org::
 
     http://ecidadania.org/downloads
 
 
-Versión de desarrollo
-.....................
+Versión de desenvolvemento
+..........................
 
-La versión de desarrollo está disponible desde varios sitios. Utilizamos `GIT <http://git-scm.com/>`_
-como sistema de control de versiones, así que tendrás que instalarlo en tu ordenador.
+A versión de desenvolvemento está dispoñible dende varios sitios. Utilizamos `GIT <http://git-scm.com/>`_
+como sistema de control de versións, así que terás que instalalo no teu ordenador.
 
     **Gitorious:** *(repositorio oficial)*::
 
@@ -35,7 +35,7 @@ como sistema de control de versiones, así que tendrás que instalarlo en tu ord
 
         git clone git://github.com/oscarcp/e-cidadania.git
 
-    **Repo.or.cz** *(espejo oficial)*::
+    **Repo.or.cz** *(espello oficial)*::
 
         git clone git://repo.or.cz/e_cidadania.git
 
@@ -43,8 +43,8 @@ Requisitos
 ----------
 
 - Python 2.5 o superior
-- Apache, nginx, u otro servidor web con soporte CGI
-- FastCGI, CGI, Passenger u otro CGI
+- Apache, nginx, ou outro servidor web con soporte CGI
+- FastCGI, CGI, Passenger ou outro CGI
 
 **Dependencias**
 
@@ -53,19 +53,19 @@ Requisitos
 - python-datetime *(versión 1.5)*
 - django-tagging
 - django-wysiwyg
-- django-grappelli (para la administración)
+- django-grappelli (para a administración)
 - feedparser
 
 
 Instalar dependencias
 ---------------------
 
-Puedes instalar todas las dependencias automáticamente con este comando:
+Podes instalar todas as dependencias automaticamente con este comando:
 
 ::
 
     # pip install -r requirements.txt
 
-Si no dispones del programa *pip* también puedes instalar las dependencias a través
-del programa *easy_install*.
+Se non dispós do programa *pip* tamén podes instalar as dependencias a través
+do programa *easy_install*.
 

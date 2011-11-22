@@ -1,23 +1,23 @@
-Despliegue
-==========
+Desplegue
+=========
 
 Apache 2
 --------
 
-Esta sección está en desarrollo.
+Esta sección está en desenvolvemento.
 
 nginx + FastCGI
 ---------------
 
-.. note:: La instalación a través de FastCGI debería funcionar para otros tipos
-          de servidor, ya que FastCGI es el que se encarga de ejecutar la aplicación
-          mientras que el servidor sólo se encarga del contenido estático.
+.. note:: A instalación a través de FastCGI debería funcionar para outros tipos
+          de servidor, xa que FastCGI é o que se encarga de executar a aplicación
+          mentres que o servidor só se encarga do contido estático.
 
-.. warning:: Esta sección está en desarrollo.
+.. warning:: Esta sección está en desenvolvemento.
 
 DreamHost
 ---------
 
-Las instrucciones de instalación para un servidor compartido en DreamHost son
-demasiado extensas para incluír en esta documentación, por favor, visita el
-blog de `Oscar Carballal <http://blog.oscarcp.com>`_ para ver cómo hacerlo.
+As instrucións de instalación para un servidor compartido en DreamHost son
+demasiado extensas para incluír nesta documentación, por favor, visita o
+blog de `Oscar Carballal <http://blog.oscarcp.com>`_ para ver como facelo.
