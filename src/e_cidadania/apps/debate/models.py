@@ -41,7 +41,6 @@ class Debate(models.Model):
     title = models.CharField(_('Title'), max_length=200, unique=True)
     description = models.TextField(_('Description'), blank=True, null=True)
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
-    columns = models.CharField(_('X Values'), max_length=300, blank=True, null=True)
     
     space = models.ForeignKey(Space, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -59,7 +58,7 @@ class Debate(models.Model):
 
 class Column(models.Model):
     """
-    Column object. The debate table is done mixing columns and rows. The column
+    Debate column object. The debate table is done mixing columns and rows. The column
     object is linked to the debate, but with no preferrable order.
     
     .. versionadded:: 0.1b

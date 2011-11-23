@@ -52,8 +52,8 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # Application models
-from e_cidadania.apps.debate.models import Debate, Note, Row
-from e_cidadania.apps.debate.forms import DebateForm, NoteForm, RowForm
+from e_cidadania.apps.debate.models import Debate, Note, Row, Column
+from e_cidadania.apps.debate.forms import DebateForm, NoteForm, RowForm, ColumnForm
 from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
@@ -62,6 +62,10 @@ def add_new_debate(request, space_name):
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
     """
+    place = get_object_or_404(Space, url=space_name)
+    
+    # Define FormSets
+    
     # This class is used to make empty formset forms required
     # See http://stackoverflow.com/questions/2406537/django-formsets-make-first-required/4951032#4951032
     class RequiredFormSet(BaseFormSet):
@@ -71,12 +75,13 @@ def add_new_debate(request, space_name):
                 form.empty_permitted = False
 
     RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet)
-    
-    place = get_object_or_404(Space, url=space_name)
-    
+    ColumnFormSet = formset_factory(ColumnForm, max_num=10, formset=RequiredFormSet)
+   
     debate_form = DebateForm(request.POST or None)
     row_formset = RowFormSet(request.POST or None, prefix="rowform")
+    column_formset = ColumnFormSet(request.POST or None, prefix="colform")
 
+    # Get the last PK and add 1 to get the current PK
     try:
         last_debate_id = Debate.objects.latest('id')
         current_debate_id = last_debate_id.pk + 1
@@ -89,21 +94,24 @@ def add_new_debate(request, space_name):
                 debate_form_uncommited = debate_form.save(commit=False)
                 debate_form_uncommited.space = place
                 debate_form_uncommited.author = request.user
-                debate_form_uncommited.columns = request.POST['columns']
 
                 saved_debate = debate_form_uncommited.save()
-                
+                debate_instance = get_object_or_404(Debate, pk=current_debate_id)
+ 
                 for form in row_formset.forms:
-                    debate_instance = get_object_or_404(Debate, pk=current_debate_id)
                     row = form.save(commit=False)
                     row.debate = debate_instance
-                    #row.sortables = request.POST['sortables']
-            
+                
+                for form in column_formset.forms:
+                    column = form.save(commit=False)
+                    column.debate = debate_instance
+                                
                 return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
                 
         return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,
                                    'rowform': row_formset,
+                                   'colform': column_formset,
                                    'get_place': place,
                                    'debateid': current_debate_id},
                                   context_instance=RequestContext(request))

@@ -14,8 +14,10 @@
         <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
         <script type="text/javascript">
            $(function() {
+               $('#ajaxform thead tr').formset();       
                $('#ajaxform tbody tr').formset();
            })
+           
        </script>
         
             <div id="contenttitles">
@@ -35,9 +37,17 @@
                     <thead>
                         <tr id="debate{{ debateid }}-headers">
                             <th id="corner" class="corner-criteria"></th>
-                            <th id="debate-vcriteria" class="criteria-vtitle">
-                                <input id="debate{{ debateid }}-criteria2" class="small" type="text" value="Column title">
-                            </th>
+                            {{ colform.management_form }}
+                            {% for col in colform.forms %}
+                                <tr>
+                                    <td id="debate{{ debateid }}-vcriteria" class="criteria-vtitle">
+                                        <div id="debate-ttitle">
+                                            {{ col.criteria }}
+                                        </div>
+                                    </td>
+                                    <td id="sortable-debate{{ debateid }}" class="connectedSortable"></td>
+                                </tr>
+                            {% endfor %}
                         </tr>
                     </thead>
                     <tbody id="debate-body">
@@ -47,7 +57,6 @@
                                 <td id="debate-hcriteria" class="criteria-htitle">
                                     <div id="debate-ttitle">
                                         {{ row.criteria }}
-                                        {{ row.sortables.as_hidden }}
                                     </div>
                                 </td>
                                 <td id="sortable-debate{{ debateid }}" class="connectedSortable"></td>
