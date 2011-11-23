@@ -36,7 +36,7 @@ Python
     variables previamente. Se aínda non encaixa, podes dividir as liñas da
     seguinte forma:
 
-    *Sentencias con parénteses*::
+    *Sentencias con paréntese*::
 
         website = models.URLField(_('Website'), verify_exists=True,
                                   max_length=200, null=True, blank=True,
@@ -115,7 +115,7 @@ HTML
     o código python, sen excepcións.
     
     .. note:: Poida que haxa código antigo que siga a anterior norma de sangría
-              que establecía dos espazos por nivel. Se ves algún arquivo así
+              que establecía dous espazos por nivel. Se ves algún arquivo así
               agradeceríamos que nos enviases un parche para solucionalo.
 
 CSS

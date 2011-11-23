@@ -21,7 +21,7 @@ parte temos a páxina principal, na que poderemos ver as noticias máis
 relevantes relacionadas cos procesos en curso, así como opcións para as
 redes sociais ou elixir o espazo ao que queremos ir.
 
-A filosofía dos espazos é moi simple. Cada proceso de participación é un
+A filosofía dos espazos é moi sinxela. Cada proceso de participación é un
 espazo, que pode ser público ou privado. Dentro de cada espazo hai unha serie
 de ferramentas que o administrador do mesmo poderá configurar ao seu gusto como
 por exemplo: noticias, repositorio de documentos, sistema de propostas, sistema
@@ -96,7 +96,7 @@ Latitude/Lonxitude
 Etiquetas
     As etiquetas identifican de forma sinxela a túa proposta, por exemplo::
 
-        Tiulo: A beirarrúa de Cobián Roffignac está rota
+        Título: A beirarrúa de Cobián Roffignac está rota
         Etiquetas: beirarrúa, cobian roffignac, pontevedra, roto
 
 .. warning:: Unha vez feita unha proposta non se poderá editar nin eliminar. Este

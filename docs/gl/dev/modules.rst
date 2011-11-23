@@ -1,7 +1,7 @@
 Creando módulos
 ===============
 
-e-cidadania é extensible a través de módulos, incluso antes de que se instale.
+e-cidadania é extensible a través de módulos, incluso antes de instalalo.
 
 Estrutura
 ---------

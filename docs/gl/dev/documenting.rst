@@ -50,7 +50,7 @@ Palabras difusas
 .. note:: Esta sección está en constante cambio.
 
 +-----------+----------+
-| Inglés    | Español  |
+| Inglés    | Galego   |
 +===========+==========+
 | Click     | Clic     |
 +-----------+----------+
@@ -60,5 +60,5 @@ Palabras difusas
 +-----------+----------+
 | Dashboard |          |
 +-----------+----------+
-| File      | Archivo  |
+| File      | Arquivo  |
 +-----------+----------+

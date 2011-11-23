@@ -5,7 +5,7 @@ Este manual ensinarache como manexar e-cidadania para que non te perdas nada de
 nada :).
 
 Concretamente trata a parte do administrador do sitio sen meterse en detalles
-técnicos innecesarios. Se en algún momento necesitas detalles técnicos é preferible
+técnicos innecesarios. Se en algún momento precisas detalles técnicos é preferible
 que leas o manual de desenvolvemento, no cal está todo especificado.
 
 Estrutura do panel de administración
@@ -18,7 +18,7 @@ Estrutura do panel de administración
 
 A páxina principal do panel de administración divídese en tres grandes zonas:
 
- 1. Esta zona contén todas as aplicacións da plataforma. Desde aquí poderás
+ 1. Esta zona contén todas as aplicacións da plataforma. Dende aquí poderás
     engadir, editar ou eliminar calquera elemento da base de datos.
     
     .. note:: Pode que aparezan tamén outras aplicacións de terceiros, como

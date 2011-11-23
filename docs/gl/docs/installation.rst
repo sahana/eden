@@ -60,7 +60,7 @@ Requisitos
 Instalar dependencias
 ---------------------
 
-Podes instalar todas as dependencias automaticamente con este comando:
+Podes instalar todas as dependencias automáticamente con este comando:
 
 ::
 
