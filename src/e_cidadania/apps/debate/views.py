@@ -90,7 +90,7 @@ def add_new_debate(request, space_name):
 
     if request.user.has_perm('debate_add') or request.user.is_staff:
         if request.method == 'POST':
-            if debate_form.is_valid() and row_formset.is_valid():
+            if debate_form.is_valid() and row_formset.is_valid() and column_formset.is_valid():
                 debate_form_uncommited = debate_form.save(commit=False)
                 debate_form_uncommited.space = place
                 debate_form_uncommited.author = request.user
@@ -108,7 +108,7 @@ def add_new_debate(request, space_name):
                                 
                 return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
                 
-        return render_to_response('debate/debate_add.html',
+        return render_to_response('debate/debate_add_simple.html',
                                   {'form': debate_form,
                                    'rowform': row_formset,
                                    'colform': column_formset,
@@ -201,20 +201,16 @@ class ViewDebate(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super(ViewDebate, self).get_context_data(**kwargs)
+        columns = Column.objects.all().filter(debate=self.kwargs['debate_id'])
+        rows = Row.objects.all().filter(debate=self.kwargs['debate_id'])
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        context['get_place'] = current_space
-        
-        # Return xvalues and yvalues as array
-        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-#        xvalues = debate.xvalues.split(',')
-#        context['xvalues'] = xvalues
-#        
-#        yvalues = debate.yvalues.split(',')
-#        context['yvalues'] = yvalues
-        
         notes = Note.objects.all().filter(debate=current_debate.pk)
+
+        context['get_place'] = current_space  
         context['notes'] = notes
+        context['columns'] = columns
+        context['rows'] = rows
         
         return context
 

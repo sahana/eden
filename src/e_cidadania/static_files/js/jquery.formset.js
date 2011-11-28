@@ -39,7 +39,7 @@
                 if (row.is('TR')) {
                     // If the forms are laid out in table rows, insert
                     // the remove button into the last table cell:
-                    row.children(':first #debate-ttitle').append('<a class="' + options.deleteCssClass +'" href="javascript:void(0)">' + options.deleteText + '</a>');
+                    row.children(':last').append('<a class="' + options.deleteCssClass +'" href="javascript:void(0)">' + options.deleteText + '</a>');
                 } else if (row.is('UL') || row.is('OL')) {
                     // If they're laid out as an ordered/unordered list,
                     // insert an <li> after the last list item:
@@ -136,10 +136,8 @@
                 addButton = $$.filter(':last').next();
             }
             addButton.click(function() {
-            
                 var formCount = parseInt($('#id_' + options.prefix + '-TOTAL_FORMS').val()),
-                    //row = options.formTemplate.clone(true).removeClass('formset-custom-template'),
-                    row = $('.' + options.formCssClass + ':last').clone(true).removeClass('formset-custom-template'),
+                    row = options.formTemplate.clone(true).removeClass('formset-custom-template'),
                     buttonRow = $(this).parents('tr.' + options.formCssClass + '-add').get(0) || this;
                 applyExtraClasses(row, formCount);
                 row.insertBefore($(buttonRow)).show();
@@ -158,12 +156,12 @@
 
     /* Setup plugin defaults */
     $.fn.formset.defaults = {
-        prefix: 'rowform',                  // The form prefix for your django formset
+        prefix: 'form',                  // The form prefix for your django formset
         formTemplate: null,              // The jQuery selection cloned to generate new form instances
-        addText: 'Add row',          // Text for the add link
-        deleteText: 'Delete row',            // Text for the delete link
-        addCssClass: 'add-row btn primary small',          // CSS class applied to the add link
-        deleteCssClass: 'delete-row btn small danger',    // CSS class applied to the delete link
+        addText: '',          // Text for the add link
+        deleteText: 'remove',            // Text for the delete link
+        addCssClass: 'add-row',          // CSS class applied to the add link
+        deleteCssClass: 'delete-row',    // CSS class applied to the delete link
         formCssClass: 'dynamic-form',    // CSS class applied to each form in a formset
         extraClasses: [],                // Additional CSS classes, which will be applied to each form in turn
         added: null,                     // Function called each time a new form is added

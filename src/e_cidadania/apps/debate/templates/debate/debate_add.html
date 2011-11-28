@@ -36,17 +36,12 @@
                 <table id="debate{{ debateid }}" cellspacing="0">
                     <thead>
                         <tr id="debate{{ debateid }}-headers">
-                            <th id="corner" class="corner-criteria"></th>
                             {{ colform.management_form }}
+                            <th id="corner" class="corner-criteria"></th>
                             {% for col in colform.forms %}
-                                <tr>
-                                    <td id="debate{{ debateid }}-vcriteria" class="criteria-vtitle">
-                                        <div id="debate-ttitle">
-                                            {{ col.criteria }}
-                                        </div>
-                                    </td>
-                                    <td id="sortable-debate{{ debateid }}" class="connectedSortable"></td>
-                                </tr>
+                                <th id="debate-vcriteria{{ debate_id }}" class="criteria-vtitle">
+                                    {{ col.criteria }}
+                                </th>
                             {% endfor %}
                         </tr>
                     </thead>

@@ -20,8 +20,21 @@
 
 from django.contrib import admin
 
-from e_cidadania.apps.debate.models import Debate, Note
+from e_cidadania.apps.debate.models import Debate, Note, Column, Row
 
+class ColumnInline(admin.TabularInline):
+
+    """
+    """
+    model = Column
+    extra = 2
+    
+class RowInline(admin.TabularInline):
+
+    """
+    """
+    model = Row
+    extra = 2
 
 class DebateAdmin(admin.ModelAdmin):
     
@@ -29,6 +42,7 @@ class DebateAdmin(admin.ModelAdmin):
     Administration for all the debates.
     """
     list_display = ('title', 'date')
+    inlines = [ColumnInline, RowInline]
     
     
 class NoteAdmin(admin.ModelAdmin):

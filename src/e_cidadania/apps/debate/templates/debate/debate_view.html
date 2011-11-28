@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load range %}
 
-{% block title %}{% trans "View debate " %}{{ debate.title }}{% endblock %}
+{% block title %}{% trans "View debate" %} {{ debate.title }}{% endblock %}
 {% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
 
@@ -14,7 +14,7 @@
         <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
         
             <div id="contenttitles">
-                {% trans "View debate " %}{{ debate.title}}
+                {% trans "View debate" %} {{ debate.title}}
             </div>
 
             <div id="debate-number" class="hidden">{{ debate.pk }}</div>
@@ -25,20 +25,20 @@
                     <thead>
                         <tr id="debate{{ debate.pk }}-headers">
                             <th id="corner" class="corner-criteria"></th>
-                            {% for xvalue in xvalues %}
-                                <th id="debate-vcriteria">{{ xvalue }}</th>
+                            {% for col in columns %}
+                                <th id="debate-vcriteria">{{ col.criteria }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
                     <tbody id="debate-body">
-                        {% for yvalue in yvalues %}
+                        {% for row in rows %}
                             <tr id="debate-row-{{ forloop.counter }}">
                                 
                                 <td id="debate-hcriteria" class="criteria-title">
-                                    <div id="debate-ttitle">{{ yvalue }}</div>
+                                    <div id="debate-ttitle">{{ row.criteria }}</div>
                                 </td>
                                 
-                                {% for td in xvalues|length|get_range %}
+                                {% for td in rows|length|get_range %}
                                     <td id="sortable{{ forloop.counter }}-debate{{ debate.pk }}" class="connectedSortable">
                                         {% for note in notes %}
                                             {% if note.parent == "sortable-debate" %}
