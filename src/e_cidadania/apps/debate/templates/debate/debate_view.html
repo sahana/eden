@@ -26,22 +26,18 @@
                         <tr id="debate{{ debate.pk }}-headers">
                             <th id="corner" class="corner-criteria"></th>
                             {% for col in columns %}
-                                <th id="debate-vcriteria">{{ col.criteria }}</th>
+                                <th id="{{ col.id }}">{{ col.criteria }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
                     <tbody id="debate-body">
                         {% for row in rows %}
                             <tr id="debate-row-{{ forloop.counter }}">
-                                
-                                <td id="debate-hcriteria" class="criteria-title">
-                                    <div id="debate-ttitle">{{ row.criteria }}</div>
-                                </td>
-                                
-                                {% for td in rows|length|get_range %}
-                                    <td id="sortable{{ forloop.counter }}-debate{{ debate.pk }}" class="connectedSortable">
+                                <th id="{{ row.id }}" class="debate-ttitle">{{ row.criteria }}</th>
+                                {% for td in columns %}
+                                    <td headers="{{ td.id }} {{ row.id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
-                                            {% if note.parent == "sortable-debate" %}
+                                            {% if note.column.id == "{{ td.id }}" and note.row.id == "{{ row.id }}" %}
                                                 <div id="{{ note.noteid }}" class="note">
                                                     <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
                                                     <textarea>{{ note.message }}</textarea>

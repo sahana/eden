@@ -1086,8 +1086,8 @@ table .criteria-title {
     border-style: none;
 }
 
-#debate-ttitle {
-    margin: 0px;
+.debate-ttitle {
+    margin: 5px;
     border-top: 1px solid #CCC;
     border-bottom: 1px solid #CCC;
     border-left: 1px solid #CCC;
@@ -1101,6 +1101,7 @@ table .criteria-title {
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
 }
+
 .criteria-title {
     padding: 5px 0px 5px 0px;
 }
