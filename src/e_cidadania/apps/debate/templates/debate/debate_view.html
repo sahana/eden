@@ -10,9 +10,7 @@
 
     {% block centercol %}
         <div class="grid_16">
-        
-        <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
-        
+
             <div id="contenttitles">
                 {% trans "View debate" %} {{ debate.title}}
             </div>
@@ -37,7 +35,7 @@
                                 {% for td in columns %}
                                     <td headers="{{ td.id }} {{ row.id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
-                                            {% if note.column.id == "{{ td.id }}" and note.row.id == "{{ row.id }}" %}
+                                            {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.noteid }}" class="note">
                                                     <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
                                                     <textarea>{{ note.message }}</textarea>
@@ -59,6 +57,8 @@
                 <div id="sortable-dispatcher"></div>
                 
             </div>
+
+            <script src="{{ STATIC_URL }}/js/debate_board.js" type="text/javascript"></script>
 
         </div>
 

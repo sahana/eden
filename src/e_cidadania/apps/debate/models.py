@@ -68,7 +68,7 @@ class Column(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     
     def __unicode__(self):
-        return self.criteria + "(" + str(self.debate) + ")"
+        return self.criteria
     
 class Row(models.Model):
     """
@@ -82,7 +82,7 @@ class Row(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     
     def __unicode__(self):
-        return self.criteria + "(" + str(self.debate) + ")"
+        return self.criteria
            
     
 class Note(models.Model):
