@@ -141,11 +141,14 @@ def create_note(request, space_name):
             note_form_uncommited.author = request.user
             note_form_uncommited.debate = request.POST['debateid']
 
-            saved_note = note_form_uncommited.save()
-            msg = "The note has been created."       
+            note_form_uncommited.save()
+            msg = "The note has been created."
+
+            return HttpResponse(msg)
             
         else:
             msg = "There was some error in the petition."
+            return HttpResponse(msg)
     else:
         msg = "The petition was not POST."
         
@@ -157,22 +160,31 @@ def update_note(request, space_name):
     Create a new note with default data.
     """
     place = get_object_or_404(Space, url=space_name)
-    note = get_object_or_404(Note, noteid=request.POST['noteid'])
+    note = get_object_or_404(Note, pk=request.POST['noteid'])
     note_form = NoteForm(request.POST or None, instance=note)
+    msg = "Nothing to save."
         
     if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
             note_form_uncommited.author = request.user
+            note_form_uncommited.column = get_object_or_404(Column, pk=request
+            .POST['column'])
+            note_form_uncommited.row = get_object_or_404(Row, pk=request
+            .POST['row'])
+            note_form_uncommited.message = request.POST['message']
         
-            saved_note = note_form_uncommited.save()
-            msg = "The note has been updated."       
+            note_form_uncommited.save()
+            msg = "The note has been updated."
+        else:
+            msg = "Error validating the form... Wait, what?"
+            return HttpResponse(msg)
             
     else:
         msg = "There was some error in the petition."
         
     return HttpResponse(msg)
-    
+
 
 def delete_note(request, space_name):
 

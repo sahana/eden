@@ -40,9 +40,8 @@ function createNote() {
     
     $.post("../create_note/", {
         debateid: $('#debate-number').text(),
-        parent: $('#' + noteID).parent('td').attr('id'),
         title: $('#' + noteID + ' textarea').val(),
-        message: "Blablbla",
+        message: "Blablbla"
     });
 }
 
@@ -53,12 +52,14 @@ function updateNote(noteObj) {
         Arguments: noteObj, note object.
     */
     var noteID = noteObj.attr('id');
+    var position = noteObj.parent().attr('headers').split(" ");
+    alert(position);
     
     $.post("../update_note/", {
         noteid: noteID,
-        parent: $('#' + noteID).parent('td').attr('id'),
-        title: $('#' + noteID + ' textarea').val(),
-        message: "Blablbla",
+        column: position[0],
+        row: position[1],
+        message: $('#' + noteID + ' textarea').val()
     });
 }
 
@@ -84,7 +85,7 @@ function deleteNote(noteObj) {
     
     if (answer) {
         $.post('../delete_note/', {
-            noteid: noteID,
+            noteid: noteID
         });
     
         $('#' + noteID).remove();
@@ -216,7 +217,7 @@ $(document).ready(function() {
     // Activate sortables
     makeSortable();
     // Run some functions on every debate, just in case
-    showDelete();
+    //showDelete();
     saveOnChangeNote();    
     saveTable();
 });
