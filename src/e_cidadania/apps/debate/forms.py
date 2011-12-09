@@ -68,3 +68,13 @@ class NoteForm(ModelForm):
     """
     class Meta:
         model = Note
+
+class UpdateNoteForm(ModelForm):
+
+    """
+    Returns a more simple version of the NoteForm for the AJAX interaction,
+    preventing modification of significative fields non relevant to AJAX.
+    """
+    class Meta:
+        model = Note
+        exclude = ('debate', 'pub_author',)

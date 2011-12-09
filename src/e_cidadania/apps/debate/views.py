@@ -53,7 +53,8 @@ from django.views.generic.create_update import delete_object
 
 # Application models
 from e_cidadania.apps.debate.models import Debate, Note, Row, Column
-from e_cidadania.apps.debate.forms import DebateForm, NoteForm, RowForm, ColumnForm
+from e_cidadania.apps.debate.forms import DebateForm, UpdateNoteForm, \
+    NoteForm, RowForm, ColumnForm
 from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
@@ -161,25 +162,23 @@ def update_note(request, space_name):
     """
     place = get_object_or_404(Space, url=space_name)
     note = get_object_or_404(Note, pk=request.POST['noteid'])
-    note_form = NoteForm(request.POST or None, instance=note)
+    # We are not using the request.POSt for the form since
+    # it's incomplete and destroys information.
+    note_form = UpdateNoteForm(request.POST or None, instance=note)
     msg = "Nothing to save."
         
     if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
-            note_form_uncommited.author = request.user
-            note_form_uncommited.column = get_object_or_404(Column, pk=request
-            .POST['column'])
-            note_form_uncommited.row = get_object_or_404(Row, pk=request
-            .POST['row'])
+            note_form_uncommited.column = get_object_or_404(Column, pk=request.POST['column'])
+            note_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
+            note_form_uncommited.title = request.POST['title']
             note_form_uncommited.message = request.POST['message']
         
             note_form_uncommited.save()
             msg = "The note has been updated."
         else:
-            msg = "Error validating the form... Wait, what?"
-            return HttpResponse(msg)
-            
+            msg = "The form is not valid, check field(s): " + note_form.errors
     else:
         msg = "There was some error in the petition."
         

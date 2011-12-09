@@ -38,7 +38,7 @@
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note">
                                                     <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
-                                                    <textarea>{{ note.message }}</textarea>
+                                                    <textarea id="text{{ note.id }}">{{ note.message }}</textarea>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}

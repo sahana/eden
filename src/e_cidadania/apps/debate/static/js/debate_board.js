@@ -53,13 +53,15 @@ function updateNote(noteObj) {
     */
     var noteID = noteObj.attr('id');
     var position = noteObj.parent().attr('headers').split(" ");
-    alert(position);
-    
+    var text = $('#text' + noteID).val();
+    alert(text);
+
     $.post("../update_note/", {
         noteid: noteID,
         column: position[0],
         row: position[1],
-        message: $('#' + noteID + ' textarea').val()
+        title: text,
+        message: "Test text"
     });
 }
 

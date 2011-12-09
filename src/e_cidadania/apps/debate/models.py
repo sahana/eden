@@ -95,7 +95,7 @@ class Note(models.Model):
     """
     column = models.ForeignKey(Column, null=True, blank=True)
     row = models.ForeignKey(Row, null=True, blank=True)
-    debate = models.ForeignKey(Debate)
+    debate = models.ForeignKey(Debate, null=True, blank=True)
     title = models.CharField(_('Title'), max_length=60, blank=True, null=True)
     message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
 
