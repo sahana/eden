@@ -17,3 +17,10 @@ docs/build/*
 .epio*
 epio*
 *.swp
+*.shx
+*.shp
+*.qpj
+*.prj
+*.dbf
+*.idea*
+src/e_cidadania/build/*

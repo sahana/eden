@@ -52,8 +52,9 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # Application models
-from e_cidadania.apps.debate.models import Debate, Note, Row
-from e_cidadania.apps.debate.forms import DebateForm, NoteForm, RowForm
+from e_cidadania.apps.debate.models import Debate, Note, Row, Column
+from e_cidadania.apps.debate.forms import DebateForm, UpdateNoteForm, \
+    NoteForm, RowForm, ColumnForm
 from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
@@ -62,6 +63,10 @@ def add_new_debate(request, space_name):
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
     """
+    place = get_object_or_404(Space, url=space_name)
+    
+    # Define FormSets
+    
     # This class is used to make empty formset forms required
     # See http://stackoverflow.com/questions/2406537/django-formsets-make-first-required/4951032#4951032
     class RequiredFormSet(BaseFormSet):
@@ -71,12 +76,13 @@ def add_new_debate(request, space_name):
                 form.empty_permitted = False
 
     RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet)
-    
-    place = get_object_or_404(Space, url=space_name)
-    
+    ColumnFormSet = formset_factory(ColumnForm, max_num=10, formset=RequiredFormSet)
+   
     debate_form = DebateForm(request.POST or None)
     row_formset = RowFormSet(request.POST or None, prefix="rowform")
+    column_formset = ColumnFormSet(request.POST or None, prefix="colform")
 
+    # Get the last PK and add 1 to get the current PK
     try:
         last_debate_id = Debate.objects.latest('id')
         current_debate_id = last_debate_id.pk + 1
@@ -85,25 +91,28 @@ def add_new_debate(request, space_name):
 
     if request.user.has_perm('debate_add') or request.user.is_staff:
         if request.method == 'POST':
-            if debate_form.is_valid() and row_formset.is_valid():
+            if debate_form.is_valid() and row_formset.is_valid() and column_formset.is_valid():
                 debate_form_uncommited = debate_form.save(commit=False)
                 debate_form_uncommited.space = place
                 debate_form_uncommited.author = request.user
-                debate_form_uncommited.columns = request.POST['columns']
 
                 saved_debate = debate_form_uncommited.save()
-                
+                debate_instance = get_object_or_404(Debate, pk=current_debate_id)
+ 
                 for form in row_formset.forms:
-                    debate_instance = get_object_or_404(Debate, pk=current_debate_id)
                     row = form.save(commit=False)
                     row.debate = debate_instance
-                    #row.sortables = request.POST['sortables']
-            
+                
+                for form in column_formset.forms:
+                    column = form.save(commit=False)
+                    column.debate = debate_instance
+                                
                 return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
                 
-        return render_to_response('debate/debate_add.html',
+        return render_to_response('debate/debate_add_simple.html',
                                   {'form': debate_form,
                                    'rowform': row_formset,
+                                   'colform': column_formset,
                                    'get_place': place,
                                    'debateid': current_debate_id},
                                   context_instance=RequestContext(request))
@@ -131,13 +140,17 @@ def create_note(request, space_name):
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
             note_form_uncommited.author = request.user
-            note_form_uncommited.debate = request.POST['debateid']
+            note_form_uncommited.debate = get_object_or_404(Debate,
+                                                            pk=request.POST['debateid'])
+            note_form_uncommited.title = request.POST['title']
+            note_form_uncommited.message = request.POST['message']
 
-            saved_note = note_form_uncommited.save()
-            msg = "The note has been created."       
-            
+            note_form_uncommited.save()
+            msg = "The note has been created."
+
         else:
-            msg = "There was some error in the petition."
+            msg = "The note form didn't validate. This fields gave errors: " \
+            + str(note_form.errors)
     else:
         msg = "The petition was not POST."
         
@@ -149,22 +162,29 @@ def update_note(request, space_name):
     Create a new note with default data.
     """
     place = get_object_or_404(Space, url=space_name)
-    note = get_object_or_404(Note, noteid=request.POST['noteid'])
-    note_form = NoteForm(request.POST or None, instance=note)
+    note = get_object_or_404(Note, pk=request.POST['noteid'])
+    # We are not using the request.POSt for the form since
+    # it's incomplete and destroys information.
+    note_form = UpdateNoteForm(request.POST or None, instance=note)
+    msg = "Nothing to save."
         
     if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
-            note_form_uncommited.author = request.user
+            note_form_uncommited.column = get_object_or_404(Column, pk=request.POST['column'])
+            note_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
+            note_form_uncommited.title = request.POST['title']
+            note_form_uncommited.message = request.POST['message']
         
-            saved_note = note_form_uncommited.save()
-            msg = "The note has been updated."       
-            
+            note_form_uncommited.save()
+            msg = "The note has been updated."
+        else:
+            msg = "The form is not valid, check field(s): " + note_form.errors
     else:
         msg = "There was some error in the petition."
         
     return HttpResponse(msg)
-    
+
 
 def delete_note(request, space_name):
 
@@ -188,25 +208,26 @@ class ViewDebate(DetailView):
     template_name = 'debate/debate_view.html'
     
     def get_object(self):
-        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])   
+        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         return debate    
     
     def get_context_data(self, **kwargs):
+        """
+        
+        """
         context = super(ViewDebate, self).get_context_data(**kwargs)
+        columns = Column.objects.all().filter(debate=self.kwargs['debate_id'])
+        rows = Row.objects.all().filter(debate=self.kwargs['debate_id'])
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        context['get_place'] = current_space
-        
-        # Return xvalues and yvalues as array
-        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-#        xvalues = debate.xvalues.split(',')
-#        context['xvalues'] = xvalues
-#        
-#        yvalues = debate.yvalues.split(',')
-#        context['yvalues'] = yvalues
-        
         notes = Note.objects.all().filter(debate=current_debate.pk)
+        last_note = Note.objects.latest('id')
+
+        context['get_place'] = current_space  
         context['notes'] = notes
+        context['columns'] = columns
+        context['rows'] = rows
+        context['lastnote'] = last_note.pk
         
         return context
 

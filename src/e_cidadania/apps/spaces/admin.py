@@ -62,7 +62,7 @@ class SpaceAdmin(admin.ModelAdmin):
     
     fieldsets = [
         (None, {'fields':
-            [('name', 'description')]}),
+            [('name', 'url'), 'description']}),
 
         (_('Appearance'), {'fields':
             [('logo', 'banner')]}),

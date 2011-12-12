@@ -1,20 +1,16 @@
 /* TEAM */
-    Unlimited Work Hours Man: Oscar Carballal Prego
+    Developer: Oscar Carballal Prego
     Contact: info [at] oscarcp [dot] com
     Identi.ca / Twitter: @oscarcp / @pizte
     From: Pontevedra, Galicia, Spain
     
-    The Lost Developer: Pedro Gracia
+    Developer: Pedro Gracia
     Contact: pedro.gracia [at] partidopirata [dot] es
     From: Barcelona, Catalonia, Spain
     
-    "I don't like this" sociologist: Ana Lorenzo Vila
+    Sociologist: Ana Lorenzo Vila
     Contact: ana.lorenzo [at] cidadania [dot] coop
     From: Vigo, Galicia, Spain
-    
-    Far Far Away Collaborator: Pedro Silva
-    Contact: pedro [at] blogaliza [dot] org
-    From: We really don't know where he is
 
 
 /* THANKS */
@@ -28,7 +24,7 @@
 
 
 /* SITE */
-    Last updated: 2011/05/05
+    Last updated: 2011/11/23
     Languages: Castellano / English / Galego
     Technologies: Python, XML, XHTML, JavaScript, SQL, CSS, ReStructuredText,
                   LaTeX.

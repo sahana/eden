@@ -41,7 +41,6 @@ class Debate(models.Model):
     title = models.CharField(_('Title'), max_length=200, unique=True)
     description = models.TextField(_('Description'), blank=True, null=True)
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
-    columns = models.CharField(_('X Values'), max_length=300, blank=True, null=True)
     
     space = models.ForeignKey(Space, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -57,17 +56,33 @@ class Debate(models.Model):
             'space_name': self.space.url,
             'debate_id': str(self.id)})
 
-
-class Row(models.Model):
+class Column(models.Model):
     """
+    Debate column object. The debate table is done mixing columns and rows. The column
+    object is linked to the debate, but with no preferrable order.
+    
+    .. versionadded:: 0.1b
     """
     criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
     debate = models.ForeignKey(Debate)
     date = models.DateTimeField(auto_now_add=True)
-    sortables = models.CharField(_('Sortables'), max_length=100, blank=True, null=True)
     
     def __unicode__(self):
-        return self.criteria + "(" + str(self.debate) + ")"
+        return self.criteria
+    
+class Row(models.Model):
+    """
+    Row object for the debate system.  Thw row object works exactly like the
+    column. It's associated to the debate in no preferred order.
+    
+    .. versionadded:: 0.1b
+    """
+    criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
+    debate = models.ForeignKey(Debate)
+    date = models.DateTimeField(auto_now_add=True)
+    
+    def __unicode__(self):
+        return self.criteria
            
     
 class Note(models.Model):
@@ -78,16 +93,14 @@ class Note(models.Model):
     
     .. versionadded:: 0.1b
     """
-    debate = models.IntegerField('Debate', blank=True, null=True)
-    noteid = models.CharField(_('Note div ID'), max_length=100, blank=True, null=True)
+    column = models.ForeignKey(Column, null=True, blank=True)
+    row = models.ForeignKey(Row, null=True, blank=True)
+    debate = models.ForeignKey(Debate, null=True, blank=True)
     title = models.CharField(_('Title'), max_length=60, blank=True, null=True)
     message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
-    parent = models.CharField(_('Parent TD or DIV'), max_length=200, blank=True, null=True)
 
     pub_date = models.DateTimeField(auto_now_add=True)
     pub_author = models.ForeignKey(User, null=True, blank=True)
     
     def __unicode__(self):
         return self.message
-        
-#class Matrix(modes.Model)
