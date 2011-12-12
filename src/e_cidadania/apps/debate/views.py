@@ -140,16 +140,17 @@ def create_note(request, space_name):
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
             note_form_uncommited.author = request.user
-            note_form_uncommited.debate = request.POST['debateid']
+            note_form_uncommited.debate = get_object_or_404(Debate,
+                                                            pk=request.POST['debateid'])
+            note_form_uncommited.title = request.POST['title']
+            note_form_uncommited.message = request.POST['message']
 
             note_form_uncommited.save()
             msg = "The note has been created."
 
-            return HttpResponse(msg)
-            
         else:
-            msg = "There was some error in the petition."
-            return HttpResponse(msg)
+            msg = "The note form didn't validate. This fields gave errors: " \
+            + str(note_form.errors)
     else:
         msg = "The petition was not POST."
         
@@ -207,21 +208,26 @@ class ViewDebate(DetailView):
     template_name = 'debate/debate_view.html'
     
     def get_object(self):
-        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])   
+        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         return debate    
     
     def get_context_data(self, **kwargs):
+        """
+        
+        """
         context = super(ViewDebate, self).get_context_data(**kwargs)
         columns = Column.objects.all().filter(debate=self.kwargs['debate_id'])
         rows = Row.objects.all().filter(debate=self.kwargs['debate_id'])
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         notes = Note.objects.all().filter(debate=current_debate.pk)
+        last_note = Note.objects.latest('id')
 
         context['get_place'] = current_space  
         context['notes'] = notes
         context['columns'] = columns
         context['rows'] = rows
+        context['lastnote'] = last_note.pk
         
         return context
 

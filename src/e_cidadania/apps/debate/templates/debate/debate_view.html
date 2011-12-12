@@ -16,6 +16,7 @@
             </div>
 
             <div id="debate-number" class="hidden">{{ debate.pk }}</div>
+            <div id="last-note" class="hidden">{{ lastnote }}</div>
             
             <div id="debate">
                 
@@ -37,8 +38,20 @@
                                         {% for note in notes %}
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note">
-                                                    <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
-                                                    <textarea id="text{{ note.id }}">{{ note.message }}</textarea>
+                                                    {% if perm.note.delete_note %}
+                                                        <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
+                                                    {% endif %}
+                                                    <textarea id="text{{ note.id }}">{{ note.title }}</textarea>
+                                                    <p class="hidden">Este
+                                                        es el mensaje real
+                                                        de la propuesta,
+                                                        que contendrá un
+                                                        montonazo de cosas
+                                                        interesantes y
+                                                        sobre todo
+                                                        contenido
+                                                        multimedia y
+                                                        comentarios.</p>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
@@ -46,15 +59,22 @@
                                 {% endfor %}
                             </tr>
                         {% endfor %}
-                        
-                        
                     </tbody>
                 </table>
                 
                 <br />
                 
                 <span class="btn primary small" id="new-note" onclick="createNote()">{% trans "Add new note" %}</span>
-                <div id="sortable-dispatcher"></div>
+                <div id="sortable-dispatcher">
+                    {% for note in notes %}
+                        {% if note.column.id == 99 and note.row.id == 99 %}
+                            <div id="{{ note.id }}" class="note">
+                                <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
+                                <textarea id="text{{ note.id }}">{{ note.message }}</textarea>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
                 
             </div>
 

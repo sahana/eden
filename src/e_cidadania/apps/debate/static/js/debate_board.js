@@ -31,17 +31,18 @@ function createNote() {
     */
     var noteLength = $('.note').length;
     var debateID = $('table').attr('id');
+    var lastnote = parseInt($('#last-note').text());
     
-    $('#sortable-dispatcher').append("<div id='" + debateID + "-note" + (noteLength+1) + "' class='note'><a href='javascript:getClickedNote()' id='deletenote' class='hidden'></a><textarea>Write here</textarea></div>").hide().show("slow");
+    $('#sortable-dispatcher').append("<div id='" + (lastnote+1) + "' class='note'><a href='javascript:getClickedNote()' id='deletenote' class='hidden'></a><textarea id='text" + (lastnote+1) + "'>Write here</textarea></div>").hide().show("slow");
     
     showDelete();
     saveOnChangeNote();
     var noteID = debateID + "-note" + (noteLength+1);
-    
+
     $.post("../create_note/", {
         debateid: $('#debate-number').text(),
-        title: $('#' + noteID + ' textarea').val(),
-        message: "Blablbla"
+        title: "Write here",
+        message: "Write here your message",
     });
 }
 
