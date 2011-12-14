@@ -34,6 +34,7 @@ function createNote() {
     var lastnote = parseInt($('#last-note').text());
     
     $('#sortable-dispatcher').append("<div id='" + (lastnote+1) + "' class='note'><a href='javascript:getClickedNote()' id='deletenote' class='hidden'></a><textarea id='text" + (lastnote+1) + "'>Write here</textarea></div>").hide().show("slow");
+    lastnote = lastnote + 1;
     
     showDelete();
     saveOnChangeNote();
@@ -55,7 +56,6 @@ function updateNote(noteObj) {
     var noteID = noteObj.attr('id');
     var position = noteObj.parent().attr('headers').split(" ");
     var text = $('#text' + noteID).val();
-    alert(text);
 
     $.post("../update_note/", {
         noteid: noteID,

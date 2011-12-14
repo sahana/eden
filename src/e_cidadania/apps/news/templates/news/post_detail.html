@@ -19,10 +19,16 @@
     {% endif %}
 {% endblock %}
 
+{% if get_place %}
+    {% block space %}
+        <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+    {% endblock %}
+{% endif %}
+
 {% block content %}
 
-    {% block centercol %}
-        <div class="grid_11">
+    <div class="row">
+        <div class="span11">
             <div class="post">
                 {% if perm.news.edit_post %}
                     <div id="tools">
@@ -40,12 +46,12 @@
             <p>{% render_comment_list for news %}</p>
             <p>{% render_comment_form for news %}</p>
         </div>
-    {% endblock%}
-
-    {% block rightcol %}
-        <div class="grid_5">
+        <div class="span5">
+            <h4>{% trans "Recent posts" %}</h4>
+            <h4>{% trans "Related posts" %}</h4>
+            <h4>{% trans "Share this post" %}</h4>
         </div>
-    {% endblock%}
+    </div>
 
 {% endblock %}
 

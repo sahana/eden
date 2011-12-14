@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-14 18:28+0100\n"
-"PO-Revision-Date: 2011-11-14 18:35\n"
+"POT-Creation-Date: 2011-12-13 01:25+0100\n"
+"PO-Revision-Date: 2011-12-13 01:30\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -142,7 +142,7 @@ msgstr ""
 msgid "Take me out of here!"
 msgstr "¡Sácame de aquí!"
 
-#: templates/404.html:65 templates/menu.html:4 templates/menu.html.py:43
+#: templates/404.html:65 templates/menu.html:3
 msgid "Home"
 msgstr "Inicio"
 
@@ -186,37 +186,45 @@ msgstr "página principal"
 msgid "while we call the spaguetti squad to repair this."
 msgstr "mientras nosotros llamamos al comando espaguetti para arreglar esto."
 
-#: templates/base.html:118
+#: templates/base.html:109
+msgid "Pages"
+msgstr "Páginas"
+
+#: templates/base.html:135
 msgid "created by"
 msgstr "creado por"
 
-#: templates/menu.html:12 templates/menu.html.py:53
-msgid "Language"
-msgstr "Idioma"
+#: templates/menu.html:5 templates/site_index.html:44
+msgid "Login"
+msgstr "Entrar"
 
-#: templates/menu.html:32
+#: templates/menu.html:6
+msgid "Sign up"
+msgstr "Registrarse"
+
+#: templates/menu.html:21
 msgid "Administration"
 msgstr "Administración"
 
-#: templates/menu.html:33
+#: templates/menu.html:22
 msgid "Translation"
 msgstr "Traducción"
 
-#: templates/menu.html:35
-msgid "Messages"
-msgstr "Mensajes"
-
-#: templates/menu.html:36
+#: templates/menu.html:24
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: templates/menu.html:37
+#: templates/menu.html:26
 msgid "Logout"
 msgstr "Salir"
 
-#: templates/menu.html:45 templates/site_index.html:46
-msgid "Login"
-msgstr "Entrar"
+#: templates/menu.html:31
+msgid "Profile"
+msgstr "Perfil"
+
+#: templates/menu.html:35
+msgid "Language"
+msgstr "Idioma"
 
 #: templates/not_allowed.html:4
 msgid "Not allowed"
@@ -255,7 +263,7 @@ msgstr "Procesos recientes"
 msgid "e-cidadania is a citizen participation platform "
 msgstr "e-cidadania es una plataforma de participación ciudadana"
 
-#: templates/site_index-new.html:26 templates/site_index.html:46
+#: templates/site_index-new.html:26 templates/site_index.html:44
 msgid "Register"
 msgstr "Registrarse"
 
@@ -263,15 +271,15 @@ msgstr "Registrarse"
 msgid "Log In"
 msgstr "Entrar"
 
-#: templates/site_index-new.html:51 templates/site_index.html:95
+#: templates/site_index-new.html:51 templates/site_index.html:80
 msgid "Share"
 msgstr "Compartir"
 
-#: templates/site_index-new.html:122 templates/site_index.html:132
+#: templates/site_index-new.html:122 templates/site_index.html:117
 msgid "Tweet"
 msgstr "Twittear"
 
-#: templates/site_index-new.html:132 templates/site_index.html:142
+#: templates/site_index-new.html:132 templates/site_index.html:127
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr "¿Tu red social favorita no está aquí? ¡Dínoslo!"
 
@@ -283,19 +291,23 @@ msgstr "Público"
 msgid "Private"
 msgstr "Privado"
 
-#: templates/site_index.html:46
+#: templates/site_index.html:44
 msgid "Create your own space"
 msgstr "Crea tu propio espacio"
 
-#: templates/site_index.html:62
+#: templates/site_index.html:51
 msgid "Recent news"
 msgstr "Noticias recientes"
 
-#: templates/site_index.html:67
+#: templates/site_index.html:56
 msgid "No public news"
 msgstr "No hay noticias públicas."
 
-#: templates/site_index.html:85
+#: templates/site_index.html:61
+msgid "Debates"
+msgstr "Debates"
+
+#: templates/site_index.html:65
 msgid "Get involved"
 msgstr "Involúcrate"
 

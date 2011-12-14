@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-14 18:28+0100\n"
+"POT-Creation-Date: 2011-12-13 01:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -134,7 +134,7 @@ msgstr ""
 msgid "Take me out of here!"
 msgstr ""
 
-#: templates/404.html:65 templates/menu.html:4 templates/menu.html.py:43
+#: templates/404.html:65 templates/menu.html:3
 msgid "Home"
 msgstr ""
 
@@ -178,36 +178,44 @@ msgstr ""
 msgid "while we call the spaguetti squad to repair this."
 msgstr ""
 
-#: templates/base.html:118
+#: templates/base.html:109
+msgid "Pages"
+msgstr ""
+
+#: templates/base.html:135
 msgid "created by"
 msgstr ""
 
-#: templates/menu.html:12 templates/menu.html.py:53
-msgid "Language"
+#: templates/menu.html:5 templates/site_index.html:44
+msgid "Login"
 msgstr ""
 
-#: templates/menu.html:32
+#: templates/menu.html:6
+msgid "Sign up"
+msgstr ""
+
+#: templates/menu.html:21
 msgid "Administration"
 msgstr ""
 
-#: templates/menu.html:33
+#: templates/menu.html:22
 msgid "Translation"
 msgstr ""
 
-#: templates/menu.html:35
-msgid "Messages"
-msgstr ""
-
-#: templates/menu.html:36
+#: templates/menu.html:24
 msgid "Edit profile"
 msgstr ""
 
-#: templates/menu.html:37
+#: templates/menu.html:26
 msgid "Logout"
 msgstr ""
 
-#: templates/menu.html:45 templates/site_index.html:46
-msgid "Login"
+#: templates/menu.html:31
+msgid "Profile"
+msgstr ""
+
+#: templates/menu.html:35
+msgid "Language"
 msgstr ""
 
 #: templates/not_allowed.html:4
@@ -247,7 +255,7 @@ msgstr ""
 msgid "e-cidadania is a citizen participation platform "
 msgstr ""
 
-#: templates/site_index-new.html:26 templates/site_index.html:46
+#: templates/site_index-new.html:26 templates/site_index.html:44
 msgid "Register"
 msgstr ""
 
@@ -255,15 +263,15 @@ msgstr ""
 msgid "Log In"
 msgstr ""
 
-#: templates/site_index-new.html:51 templates/site_index.html:95
+#: templates/site_index-new.html:51 templates/site_index.html:80
 msgid "Share"
 msgstr ""
 
-#: templates/site_index-new.html:122 templates/site_index.html:132
+#: templates/site_index-new.html:122 templates/site_index.html:117
 msgid "Tweet"
 msgstr ""
 
-#: templates/site_index-new.html:132 templates/site_index.html:142
+#: templates/site_index-new.html:132 templates/site_index.html:127
 msgid "Your favourite social site isn't here? Tell us!"
 msgstr ""
 
@@ -275,19 +283,23 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:46
+#: templates/site_index.html:44
 msgid "Create your own space"
 msgstr ""
 
-#: templates/site_index.html:62
+#: templates/site_index.html:51
 msgid "Recent news"
 msgstr ""
 
-#: templates/site_index.html:67
+#: templates/site_index.html:56
 msgid "No public news"
 msgstr ""
 
-#: templates/site_index.html:85
+#: templates/site_index.html:61
+msgid "Debates"
+msgstr ""
+
+#: templates/site_index.html:65
 msgid "Get involved"
 msgstr ""
 

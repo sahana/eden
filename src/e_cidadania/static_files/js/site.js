@@ -101,6 +101,7 @@ function sitestart() {
 $(document).ready(function(){
     //checkBrowser();
     sitestart();
+    $(".alert-message").alert();
 });
 
 

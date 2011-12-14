@@ -6,236 +6,230 @@
 
 {% block content %}
 
-    {% block centercol %}
-        <div class="grid_11">
+    <div class="row">
+        <div class="span16">
+            <h4>{% trans "Create a new space" %}</h4>
+        </div>
+    </div>
     
-        <div id="contenttitles">
-            {% trans "Create a new space" %}
-        </div>
-      
-        <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+    <div class="row">
+        <div class="span11">
+            <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <span class="help-inline">{{ error|escape }}</span>
+                    {% endfor %}
+                {% endif %}
             
-            {% if form.non_field_errors %}
-                {% for error in form.non_field_errors %}
-                    <span class="help-inline">{{ error|escape }}</span>
-                {% endfor %}
-            {% endif %}
-        
-            <div class="clearfix {% if form.name.errors %}error{% endif%}">
-                <label for="prependedInput">{{ form.name.label }}</label> 
-                <div class="input"> 
-                    {{ form.name }}
-                    <span class="help-inline">
-                        {% if form.name.errors %}
-                            {% for error in form.name.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.name.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>   
-
-            <div class="clearfix {% if form.url.errors %}error{% endif%}"> 
-                <label for="prependedInput">{{ form.url.label }}</label> 
-                <div class="input"> 
-                    {{ form.url }}
-                    <span class="help-inline">
-                        {% if form.url.errors %}
-                            {% for error in form.url.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.url.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>   
-
-            <div class="clearfix {% if form.description.errors %}error{% endif%}"> 
-                <label for="prependedInput">{{ form.description.label }}</label> 
-                <div class="input"> 
-                    {{ form.description }}
-                    {% wysiwyg_editor "id_description" %}
-                    <span class="help-inline">
-                        {% if form.description.errors %}
-                            {% for error in form.description.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.description.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>   
-
-            <div class="clearfix {% if form.logo.errors %}error{% endif%}"> 
-                <label for="prependedInput">{{ form.logo.label }}</label> 
-                <div class="input"> 
-                    {{ form.logo }}
-                    <span class="help-inline">
-                        {% if form.logo.errors %}
-                            {% for error in form.logo.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.logo.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>   
-
-            <div class="clearfix {% if form.banner.errors %}error{% endif%}"> 
-                <label for="prependedInput">{{ form.banner.label }}</label> 
-                <div class="input"> 
-                    {{ form.banner }}
-                    <span class="help-inline">
-                        {% if form.banner.errors %}
-                            {% for error in form.banner.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.banner.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>   
-
-            <div class="clearfix {% if form.authorized_groups.errors %}error{% endif%}"> 
-                <label for="prependedInput">{{ form.authorized_groups.label }}</label> 
-                <div class="input"> 
-                    {{ form.authorized_groups }}
-                    <span class="help-inline">
-                        {% if form.authorized_groups.errors %}
-                            {% for error in form.authorized_groups.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.authorized_groups.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>
-            
-            <div class="clearfix {% if form.public.errors %}error{% endif%}"> 
-                <label for="prependedInput">{{ form.public.label }}</label> 
-                <div class="input"> 
-                    {{ form.public }}
-                    <span class="help-inline">
-                        {% if form.public.errors %}
-                            {% for error in form.public.errors %}
-                                {{ error|escape }}
-                            {% endfor %}
-                        {% else %}
-                            {{ form.public.help_text }}
-                        {% endif %}
-                    </span>
-                </div> 
-            </div>
-
-            <hr />
-
-            <div class="clearfix">
-                <label id="optionsChekboxes">{% trans "Modules" %}</label>
-                <div class="input">
-                    <ul class="inputs-list">
-                        <li><label>
-                            {{ form.mod_debate }}
-                            <span>{{ form.mod_debate.label }}</span>
-                        </label></li>
-                        <li><label>
-                            {{ form.mod_proposals }}
-                            <span>{{ form.mod_proposals.label }}</span>
-                        </label></li>
-                        <li><label>
-                            {{ form.mod_news }}
-                            <span>{{ form.mod_news.label }}</span>
-                        </label></li>
-                        <li><label>
-                            {{ form.mod_cal }}
-                            <span>{{ form.mod_cal.label }}</span>
-                        </label></li>
-                        <li><label>
-                            {{ form.mod_docs }}
-                            <span>{{ form.mod_docs.label }}</span>
-                        </label></li>
-                    </ul>
+                <div class="clearfix {% if form.name.errors %}error{% endif%}">
+                    <label for="prependedInput">{{ form.name.label }}</label> 
+                    <div class="input"> 
+                        {{ form.name }}
+                        <span class="help-inline">
+                            {% if form.name.errors %}
+                                {% for error in form.name.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.name.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>   
+    
+                <div class="clearfix {% if form.url.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.url.label }}</label> 
+                    <div class="input"> 
+                        {{ form.url }}
+                        <span class="help-inline">
+                            {% if form.url.errors %}
+                                {% for error in form.url.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.url.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>   
+    
+                <div class="clearfix {% if form.description.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.description.label }}</label> 
+                    <div class="input"> 
+                        {{ form.description }}
+                        {% wysiwyg_editor "id_description" %}
+                        <span class="help-inline">
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.description.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>   
+    
+                <div class="clearfix {% if form.logo.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.logo.label }}</label> 
+                    <div class="input"> 
+                        {{ form.logo }}
+                        <span class="help-inline">
+                            {% if form.logo.errors %}
+                                {% for error in form.logo.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.logo.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>   
+    
+                <div class="clearfix {% if form.banner.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.banner.label }}</label> 
+                    <div class="input"> 
+                        {{ form.banner }}
+                        <span class="help-inline">
+                            {% if form.banner.errors %}
+                                {% for error in form.banner.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.banner.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>   
+    
+                <div class="clearfix {% if form.authorized_groups.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.authorized_groups.label }}</label> 
+                    <div class="input"> 
+                        {{ form.authorized_groups }}
+                        <span class="help-inline">
+                            {% if form.authorized_groups.errors %}
+                                {% for error in form.authorized_groups.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.authorized_groups.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
                 </div>
-            </div>
-
-            {{ form.author.as_hidden }}
-
-            <hr />
-
-            <h3>{% trans "Entities participating" %}</h3><br /><br />
-
-            {% comment %}
-                Entity forms
-            {% endcomment %}
-
-            {{ entityformset.management_form }}
-
-            {% for entity in entityformset %}
-                {{ entity.id }}
-                <div class="clearfix"> 
-                    {{ entity.errors }}
-                    <label for="prependedInput">{{ entity.name.label }}</label> 
+                
+                <div class="clearfix {% if form.public.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.public.label }}</label> 
+                    <div class="input"> 
+                        {{ form.public }}
+                        <span class="help-inline">
+                            {% if form.public.errors %}
+                                {% for error in form.public.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.public.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+    
+                <hr />
+    
+                <div class="clearfix">
+                    <label id="optionsChekboxes">{% trans "Modules" %}</label>
                     <div class="input">
-                        {{ entity.name }}
-                        <span class="help-inline">{{ entity.name.help_text }}</span>
-                    </div> 
+                        <ul class="inputs-list">
+                            <li><label>
+                                {{ form.mod_debate }}
+                                <span>{{ form.mod_debate.label }}</span>
+                            </label></li>
+                            <li><label>
+                                {{ form.mod_proposals }}
+                                <span>{{ form.mod_proposals.label }}</span>
+                            </label></li>
+                            <li><label>
+                                {{ form.mod_news }}
+                                <span>{{ form.mod_news.label }}</span>
+                            </label></li>
+                            <li><label>
+                                {{ form.mod_cal }}
+                                <span>{{ form.mod_cal.label }}</span>
+                            </label></li>
+                            <li><label>
+                                {{ form.mod_docs }}
+                                <span>{{ form.mod_docs.label }}</span>
+                            </label></li>
+                        </ul>
+                    </div>
                 </div>
+    
+                {{ form.author.as_hidden }}
+    
+                <hr />
+    
+                <h3>{% trans "Entities participating" %}</h3><br /><br />
+    
+                {% comment %}
+                    Entity forms
+                {% endcomment %}
+    
+                {{ entityformset.management_form }}
+    
+                {% for entity in entityformset %}
+                    {{ entity.id }}
+                    <div class="clearfix"> 
+                        {{ entity.errors }}
+                        <label for="prependedInput">{{ entity.name.label }}</label> 
+                        <div class="input">
+                            {{ entity.name }}
+                            <span class="help-inline">{{ entity.name.help_text }}</span>
+                        </div> 
+                    </div>
+                    
+                    <div class="clearfix">
+                        {{ entity.errors }}
+                        <label for="prependedInput">{{ entity.website.label }}</label> 
+                        <div class="input"> 
+                            {{ entity.website }}
+                            <span class="help-inline">{{ entity.website.help_text }}</span>
+                        </div> 
+                    </div>
+    
+                    <div class="clearfix"> 
+                        {{ entity.errors }}
+                        <label for="prependedInput">{{ entity.logo.label }}</label> 
+                        <div class="input"> 
+                            {{ entity.logo }}
+                            <span class="help-inline">{{ entity.logo.help_text }}</span>
+                        </div> 
+                    </div>
+                    
+                    <div class="clearfix">
+                        <label for="prependedInput"><hr /></label>
+                    </div>           
                 
-                <div class="clearfix">
-                    {{ entity.errors }}
-                    <label for="prependedInput">{{ entity.website.label }}</label> 
-                    <div class="input"> 
-                        {{ entity.website }}
-                        <span class="help-inline">{{ entity.website.help_text }}</span>
-                    </div> 
-                </div>
-
-                <div class="clearfix"> 
-                    {{ entity.errors }}
-                    <label for="prependedInput">{{ entity.logo.label }}</label> 
-                    <div class="input"> 
-                        {{ entity.logo }}
-                        <span class="help-inline">{{ entity.logo.help_text }}</span>
-                    </div> 
-                </div>
-                
-                <div class="clearfix">
-                    <label for="prependedInput"><hr /></label>
-                </div>           
-            
-            {% endfor %}
-       
-            <hr />
-            <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Cancel" %}</a>
-            <input class="btn small primary " type="submit" value="{% trans 'Create' %}" />
-
-        </form>
+                {% endfor %}
+           
+                <hr />
+                <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Cancel" %}</a>
+                <input class="btn small primary " type="submit" value="{% trans 'Create' %}" />
+    
+            </form>
         </div>
-
-    {% endblock %}
-
-
-    {% block rightcol %}
-        <div class="grid_5">
-            <div id="widget">
-                <h2>{% trans "How to add new spaces" %}</h2><br/>
-                <ul class="instructions">
-                    <li><strong>{% trans "Space name" %}</strong>: {% trans "The name of the space. Have in mind that this name will be used as the URL of your space. We recommend to use all lowercase. (100 chars)" %}</li>
-                    <li><strong>{% trans "Description" %}</strong>: {% trans "An optional description for your space. It won't be showed to the users, but to the admins." %}</li>
-                    <li><strong>{% trans "Logotype" %}</strong>: {% trans "An image of 75px height and 100px width." %}</li>
-                    <li><strong>{% trans "Banner" %}</strong>: {% trans "Another image. 75px height." %}</li>
-                    <li><strong>{% trans "Authorized groups" %}</strong>: {% trans "This will set up what users can access to your space." %}</li>
-                    <li><strong>{% trans "Modules" %}</strong>: {% trans "Select the modules you will use in your space. This can be edited afterwards." %}</li>
-                </ul>
-            </div>
+        <div class="span5">
+            <h4>{% trans "How to add new spaces" %}</h4><br/>
+            <ul class="instructions">
+                <li><strong>{% trans "Space name" %}</strong>: {% trans "The name of the space. Have in mind that this name will be used as the URL of your space. We recommend to use all lowercase. (100 chars)" %}</li>
+                <li><strong>{% trans "Description" %}</strong>: {% trans "An optional description for your space. It won't be showed to the users, but to the admins." %}</li>
+                <li><strong>{% trans "Logotype" %}</strong>: {% trans "An image of 75px height and 100px width." %}</li>
+                <li><strong>{% trans "Banner" %}</strong>: {% trans "Another image. 75px height." %}</li>
+                <li><strong>{% trans "Authorized groups" %}</strong>: {% trans "This will set up what users can access to your space." %}</li>
+                <li><strong>{% trans "Modules" %}</strong>: {% trans "Select the modules you will use in your space. This can be edited afterwards." %}</li>
+            </ul>
         </div>
-    {% endblock %}
+    </div>
 
 {% endblock %}
 

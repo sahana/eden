@@ -3,40 +3,32 @@
 {% load comments %}
 
 {% block title %}{% trans "View proposal" %} {{ proposal.id }} {% endblock %}
-{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
-{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+{% block logo %}
+    {% if get_place %}
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
+    {% endif %}
+{% endblock %}
+  
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
+    {% endif %}
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        function upvote() {
+            $.post("../add_support_vote/", {
+                propid: {{ proposal.id }},
+            });
+         }
+    </script>
+{% endblock %}
 
 {% block content %}
 
-    <script type="text/javascript">
-        function upvote() {
-            $.ajax({
-                type: "POST",
-                url: "../add_support_vote/",
-                data: ({propid: {{ proposal.id }} }),
-                success: function(msg) {
-                    alert("Data Saved: " + msg);
-                },
-                statusCode: {
-                    405: function() {
-                        $('#jsnotify').notify("create", {
-                            title: "Can't send vote",
-                            text: "There has been an error while sending your vote.",
-                            icon: "alert.png"
-                        });  
-                    },
-                }
-            });
-            //$.post("../add_support_vote/", {
-            //    propid: {{ proposal.id }},
-            //    message: "asdasd",
-            //});
-         }
-    </script>
-
-    {% block centercol %}
-        <div class="grid_11">
-
+    <div class="row">
+        <div class="span11">
             <div id="proposal-wrapper">
                 {% if perms.proposals.add_proposal %}
                 <div id="tools">
@@ -60,7 +52,7 @@
                 <!-- Here goes the voting button -->
                 <div id="proposal">
                     <div class="title">{{ proposal.title }}</div>
-                    <div class="message">{{ proposal.message }}</div>
+                    <div class="message">{{ proposal.description|safe }}</div>
                     <div class="creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
                 </div>
                 <div style="clear:left;"></div>
@@ -69,13 +61,11 @@
             <p>{% render_comment_list for proposal %}</p>
       
             <p>{% render_comment_form for proposal%}</p>
-      
         </div>
-    {% endblock%}
-  
-    {% block rightcol %}
-        <div class="grid_5">
+        
+        <div class="span5">
+            <h4></h4>
         </div>
-    {% endblock%}
+    </div>
 
 {% endblock %}

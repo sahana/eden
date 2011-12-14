@@ -221,13 +221,19 @@ class ViewDebate(DetailView):
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         notes = Note.objects.all().filter(debate=current_debate.pk)
-        last_note = Note.objects.latest('id')
+        try:
+            last_note = Note.objects.latest('id')
+        except:
+            last_note = 0
 
         context['get_place'] = current_space  
         context['notes'] = notes
         context['columns'] = columns
         context['rows'] = rows
-        context['lastnote'] = last_note.pk
+        if last_note == 0:
+            context['lastnote'] = 0
+        else:
+            context['lastnote'] = last_note.pk
         
         return context
 

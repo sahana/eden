@@ -3,18 +3,27 @@
 {% load wysiwyg %}
 
 {% block title %}{% trans "Add proposal" %}{% endblock %}
-{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
-{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+{% block logo %}
+    {% if get_place %}
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
+    {% endif %}
+{% endblock %}
+  
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
+    {% endif %}
+{% endblock %}
 
 {% block content %}
-    <div class="grid_16">
-        <div id="contenttitles">
-            {% trans "Add new proposal" %}
+
+    <div class="row">
+        <div class="span16">
+            <h4>{% trans "Add new proposal" %}</h4>
         </div>
     </div>
-  
-    {% block centercol %}
-        <div class="grid_11">
+    <div class="row">
+        <div class="span11">
             <form action="" method="post">{% csrf_token %}
 
                 {% if form.non_field_errors %}
@@ -112,24 +121,19 @@
                 <input class="btn small primary " type="submit" value="{% trans 'Publish' %}" />
             </form>
         </div>
-    {% endblock %}
-
-    {% block rightcol %}
-        <div class="grid_5">
-            <div id="widget">
-                {% if user.is_staff %}
-                    <h2>{% trans "Admins/moderators read this" %}</h2>
-                    <p class="instructions">{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
-                {% endif %}
-                <h2>{% trans "How to add new proposals" %}</h2><br/>
-                <ul class="instructions">
-                    <li><strong>{% trans "Title" %}</strong>: {% trans "Title resuming the proposal, be concise (50 characters)" %}</li>
-                    <li><strong>{% trans "Description" %}</strong>: {% trans "Describe here your proposal with detail. You can add images or any other content." %}</li>
-                    <li><strong>{% trans "Latitude/Longitude" %}</strong>: {% trans "You'll have to put this if you want to locate the proposal in a map." %}</li>
-                    <li><strong>{% trans "Tags" %}</strong>: {% trans "Relevant tags for the proposal, p.e. where the proposal is localted, what is related to it, etc." %}</li>
-                </ul>
-            </div>
+        <div class="span5">
+            {% if user.is_staff %}
+                <h4>{% trans "Admins/moderators read this" %}</h4>
+                <p class="instructions">{% trans "There are a lot more options in the proposals but they will appear only when you edit the proposal."%}</p>
+            {% endif %}
+            <h4>{% trans "How to add new proposals" %}</h4><br/>
+            <ul class="instructions">
+                <li><strong>{% trans "Title" %}</strong>: {% trans "Title resuming the proposal, be concise (50 characters)" %}</li>
+                <li><strong>{% trans "Description" %}</strong>: {% trans "Describe here your proposal with detail. You can add images or any other content." %}</li>
+                <li><strong>{% trans "Latitude/Longitude" %}</strong>: {% trans "You'll have to put this if you want to locate the proposal in a map." %}</li>
+                <li><strong>{% trans "Tags" %}</strong>: {% trans "Relevant tags for the proposal, p.e. where the proposal is localted, what is related to it, etc." %}</li>
+            </ul>
         </div>
-    {% endblock %}
+    </div>
 
 {% endblock %}

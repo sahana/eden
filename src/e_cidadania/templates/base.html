@@ -4,120 +4,136 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
 	<head>
 		<title>{% block title %}{% endblock %}</title>
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/reset.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/text.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/grid.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/layout.css" media="screen" />
-		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/nav.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/bootstrap.min.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/ui.notify.css" media="screen" />
 		<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/css/smoothness/jquery-ui-1.8.13.custom.css" media="screen" />
 		<link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}/css/screen.css"/>
-		<link rel="author" href="{{ STATIC_URL }}/humans.txt" />
 		<link rel="shortcut icon" href="{{ STATIC_URL }}/assets/favicon.ico" type="image/ico"/>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<meta name="Description" content="Site description"/>
+		<meta name="Description" content="e-cidadania es una plataforma de democracia participativa"/>
 		<meta name="Robots" content="all"/>
 		<script src="http://www.google.com/jsapi?key=ABQIAAAATqrYeRgzMa92HeAJ337iJhRWlTAuTwYT79cviOHriikXgTyaXRSApoqdJPf4dwJKYRnFn_s4iABNkg" type="text/javascript"></script>
 		<script type="text/javascript">
-			google.load("jquery", "1.6.3", {uncompressed:false});
+			google.load("jquery", "1.7.1", {uncompressed:false});
 			google.load("jqueryui", "1.8.16", {uncompressed:false});
 		</script>
+        <script src="{{ STATIC_URL }}/js/bootstrap-dropdown.js" type="text/javascript"></script>
+       	<script src="{{ STATIC_URL }}/js/bootstrap-alerts.js" type="text/javascript"></script>
     	<script src="{{ STATIC_URL }}/js/site.js" type="text/javascript"></script>
     	<script src="{{ STATIC_URL }}/js/jquery.notify.min.js" type="text/javascript"></script>
+    	<script type="text/javascript">
+    	    $(document).ready(function(){
+                $(".alert-message").alert();
+            });
+    	</script>
+       	{% block extrajs %}
+       	{% endblock %}
     	<!-- <script src="{{ STATIC_URL }}/js/jquery.form.js" type="text/javascript"></script> -->
 
 		{% comment %}
-		  This will load the wysiwyg system for all pages that iherit from base.html
+		    This will load the wysiwyg system for all pages that iherit from base.html
 		{% endcomment %}
 		{% wysiwyg_setup %}
 	</head>
 	<body>
-
-    {% if messages %}
-        <ul class="messages hidden">
-            <div class="closemsg">X</div>
-            {% for message in messages %}
-                <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message|safe }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    <div class="topbar">
     
-            {% if debug_mode %}
-                <div id="version">
-	                version {{ version }} {{ status }}
-	            </div>
-	        {% endif %}
-
-	        <div id="userbar">
-	            {% include "menu.html" %}
-	        </div>
-
-	</div>
-
-      <div id="jsnotify" class="hidden">
-        <div id="basic-template">
-          <!-- <a class="ui-notify-cross ui-notify-close" href="#">x</a> -->
-          <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}/assets/icons/#{icon}" alt="warning" /></div>
-          <h1>#{title}</h1>
-          <p>#{text}</p>
+        <div class="topbar">
+            <div class="fill">
+                <div class="container">
+                    {% block space %}
+                        <a class="brand" href="/">e-cidadania {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
+                    {% endblock %}
+                    {% include "menu.html" %}
+                </div>
+            </div>
         </div>
-      </div>
+        
+        {% if messages %}
+            <div class="alert-message fade in {% if message.tags %}{{ message.tags }}{% endif %}" style="margin-top:40px;">
+                <a class="close" href="#">x</a>
+                {% for message in messages %}
+                    <p>{{ message|safe }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    
+        <div id="jsnotify" class="hidden">
+            <div id="basic-template">
+                <!-- <a class="ui-notify-cross ui-notify-close" href="#">x</a> -->
+                <div style="float:left;margin:0 10px 0 0"><img src="{{ STATIC_URL }}/assets/icons/#{icon}" alt="warning" /></div>
+                <h1>#{title}</h1>
+                <p>#{text}</p>
+            </div>
+        </div>
+    
+        <div class="container">
+            <div style="margin-top:45px;">
+                <div class="row">
+                    <div class="span16">
+                        {% block header %}
+                            <div id="logo">
+	                            {% block logo %}
+	                                <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
+	                            {% endblock %}
+	                        </div>
+            
+ 	                        <div id="banner">
+	                            {% block banner %}
+		                            <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
+ 	                            {% endblock %}
+	                        </div>
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content">
+                {% block content %}
+                {% endblock %}
+            </div>
 
-	  <div class="container_16">
-
-      <div class="grid_16">
-        {% block header %}
-	        <div id="logo">
-	          {% block logo %}
-	            <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png"/></a>
-	          {% endblock %}
+        </div>
+        
+        <footer style="background:#EEE;padding-bottom:10px;border-bottom:1px solid #DDD;margin-bottom:15px;border-top:1px solid #DDD;">
+	        <div class="row" style="width:960px;margin:auto;">
+	               
+	        <div class="span4">
+	            {% block footerimg %}
+	                <img src="{{ STATIC_URL }}/assets/logos/logo.png" /><br />
+	            {% endblock %}
 	        </div>
-
- 	        <div id="banner">
-	          {% block banner %}
-		          <img src="{{ STATIC_URL }}/assets/banners/index.png"/>
- 	          {% endblock %}
+	                
+	        <div class="span4">
+	            <adress>
+	                <strong>{% trans "Pages" %}</strong><br />
+	                {% block footer %}
+                        {% for p in page %}
+                            <a href="/{{ p.uri }}" title="{{ p.name }}">{{ p.name }}</a><br /> |
+                        {% endfor %}
+	                {% endblock %}
+	            </adress>
 	        </div>
-	      {% endblock %}
-      </div>
-
-      <div class="clear"></div>
-
-      <div id="grid">
-      {% block content %}
-          {% block centercol %}
-          {% endblock %}
-
-          {% block rightcol %}
-          {% endblock %}
-      {% endblock %}
-      </div>
-
-      <div class="clear"></div>
-
-    </div>
-
-    <div id="footer">
-      <div id="footerimg">
-        {% block footerimg %}
-          <a href="http://www.cidadania.coop"><img src="{{ STATIC_URL }}/assets/logos/cidadania.png" /></a>
-          <a href="http://algueirada.blogaliza.org/"><img src="{{ STATIC_URL }}/assets/logos/algueirada.png" /></a>
-        {% endblock %}
-      </div>
-	    {% block footer %}
-        <p><a href="http://www.djangoproject.com">django</a> |
-           <a href="http://www.python.org">python</a> |
-           <a href="http://www.w3.org">xhtml</a> |
-           <a href="http://www.w3.org">css</a> |
-           <a href="http://www.w3.org">xml</a>
-        </p>
-	    {% endblock %}
-        <p>(c) 2010-{% now "Y" %} <a href="http://trac.cidadania.coop">e-cidadania</a> {% trans "created by" %} <a href="http://www.cidadania.coop">Cidadania Sociedade Cooperativa</a></p>
-        <p><a href="{{ STATIC_URL }}/humans.txt"><img src="{{ STATIC_URL }}/assets/humanstxt.png"/></a></p>
-    </div>
-
+	                
+	        <div class="span4">
+	            <strong>{% trans "Help" %}</strong><br />
+	            <a href="http://trac.cidadania.coop/MailingLists">{% trans "Mailing lists" %}</a><br />
+	            <a href="http://dev.ecidadania.org">{% trans "Issues" %}</a><br />
+	            <a href="mailto:soporte@ecidadania.org">{% trans "E-mail" %}</a>
+	        </div>
+	                
+	        <div class="span4">
+	            <strong>+info</strong><br />
+	        </div>
+	        </div>
+	    </footer>
+	   
+	    <div class="row" style="width:980px;margin:auto;">
+	        <div class="span16">
+                {% block extrainfo %}
+	                (c) 2010-{% now "Y" %} <a href="http://trac.cidadania.coop">e-cidadania</a> {% trans "created by" %} <a href="http://www.cidadania.coop">Cidadania Sociedade Cooperativa</a>
+	            {% endblock %}
+	        </div>
+	    </div>
 	</body>
 </html>
 

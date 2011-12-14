@@ -18,16 +18,17 @@
     {% endif %}
 {% endblock %}
 
+{% if get_place %}
+    {% block space %}
+        <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+    {% endblock %}
+{% endif %}
+
 {% block content %}
 
-    <div class="grid_16">
-        <div id="contenttitles">
-            {% trans "News archive" %}
-        </div>
-    </div>
-
-    {% block centercol %}
-        <div class="grid_16">
+    <div class="row">
+        <div class="span16">
+            <h4>{% trans "News archive" %}</h4>
             {% for post in post_list %}
                 <div class="listitem">
                     {% ifchanged post.pub_date|date:"F" %}
@@ -60,8 +61,7 @@
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
         </div>
-
-    {% endblock %}
+    </div>
 
 {% endblock %}
 

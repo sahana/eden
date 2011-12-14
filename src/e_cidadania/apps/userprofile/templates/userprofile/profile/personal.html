@@ -22,7 +22,9 @@
                 </div>
                 {% endfor %}
 	            
-	            <input type="submit" value="{% trans 'Save' %}" />
+	            <a href="{% url 'profile_overview' %}" class="btn">&laquo; {% trans "Go back" %}</a>
+	            <input type="submit" class="btn primary" value="{% trans 'Save' %}" />
+	            <a href="{% url 'profile_delete' %}" class="btn danger" style="float:right;">{% trans "Delete profile" %}</a>
 	        </form>
 	    </div>
 {% endblock %}

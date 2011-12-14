@@ -2,19 +2,25 @@
 {% load i18n %}
 
 {% block title %}{% trans "e-cidadania" %}{% endblock %}
+{% block extrajs %}
+    <script src="{{ STATIC_URL }}/js/bootstrap-twipsy.js" type="text/javascript"></script>
+    <script src="{{ STATIC_URL }}/js/bootstrap-popover.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block space %}
+    <a class="brand" href="/">e-cidadania {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
+{% endblock %}
 
 {% block content %}
 
-    <script src="{{ STATIC_URL }}/js/bootstrap-twipsy.js" type="text/javascript"></script>
-    <script src="{{ STATIC_URL }}/js/bootstrap-popover.js" type="text/javascript"></script>
-
-    <div class="grid_7">
-        
-        <div id="widgetindex">
-            <h2>{% trans "Recent processes"%}</h2><br />
-            <ul>
+    <div class="row">
+        <div class="span8">
+            <h3>{% trans "Recent processes"%}</h3><br />
+            <ul class="unstyled">
                 {% for space in spaces %}
-                    <li><a href="{{ space.get_absolute_url }}" rel="popover" data-content="{{ space.description|removetags:'p'|safe }}" data-original-title="{{ space.name }}">{{ space.name }}</a>
+                    <li><a href="{{ space.get_absolute_url }}" rel="popover"
+                           data-content="{{ space.description|removetags:'p'|safe }}"
+                           data-original-title="{{ space.name }}">{{ space.name }}</a>
                         {% if space.public %}
                             <span class="label success">{% trans "Public" %}</span>
                         {% else %}
@@ -33,34 +39,30 @@
                 {% endfor %}
             </ul>
         </div>
-        
-    </div>
-    
-    
-    <div class="grid_9">
-    
-        <p class="introtitle">e-<strong>cidadania</strong> <span style="font-size:.5em;color:#aaa;">/e.θi.da.'da.nia/</span></p>
-        <p class="intro">e-cidadania es un plataforma desarrollada para la participación ciudadana. Está hecha en software libre con lo que podrás mirar el código si lo deseas y mejorarlo. Bajo ningún concepto vamos a tenerte vigilado ni vamos a hacer nada malo con tus datos. Si deseas hacer tu propia instalación de e-cidadania basta con que sigas la documentación. Pero por el momento... por qué no participas?</p>
-    
-        <div class="indexbuttons">
-            {% if user.is_anonymous %}<a href="{% url 'signup' %}" class="bigbutton orange">{% trans "Register" %}</a> <a href="{% url 'login' %}" class="bigbutton blue">{% trans "Login" %}</a>{% endif %} {% if user.is_staff %}<a href="{% url 'create-space' %}" class="bigbutton black">{% trans "Create your own space" %}</a>{% endif %}
+        <div class="span8">
+            <p class="introtitle">e-<strong>cidadania</strong> <span style="font-size:.5em;color:#aaa;">/e.θi.da.'da.nia/</span></p>
+            <p class="intro">e-cidadania es un plataforma desarrollada para la participación ciudadana. Está hecha en software libre
+                con lo que podrás mirar el código si lo deseas y mejorarlo. Bajo ningún concepto vamos a tenerte vigilado ni vamos a
+                hacer nada malo con tus datos. Si deseas hacer tu propia instalación de e-cidadania basta con que sigas la
+                documentación. Pero por el momento... por qué no participas?</p>
         </div>
-        
     </div>
-
-    <div class="clear"></div>
     
-<!--    <div class="grid_16">-->
-<!--        <div class="bigbutton black count"><strong>13.512</strong> debates en <strong>7.645</strong> procesos participativos</div>-->
-<!--    </div>-->
+    {% if user.is_anonymous %}
+       <hr />
+       <div class="row">
+           <div class="span-one-third offset-one-third">
+               <a href="{% url 'signup' %}" class="btn success large">{% trans "Register" %}</a> {% trans "or" %} <a href="{% url 'login' %}" class="btn primary large">{% trans "Login" %}</a>
+           </div>
+       </div>
+    {% endif %}
     
-    <div class="clear"></div>
-    
-    <div class="grid_4">
-    
-        <div id="widgetindex">
-            <h2>{% trans "Recent news" %}</h2><br />
-            <ul>
+    <hr />
+ 
+    <div class="row">
+        <div class="span-one-third">
+            <h3>{% trans "Recent news" %}</h3>
+            <ul class="unstyled">
                 {% for post in publication %}
                     <li><a href="{{ post.get_absolute_url }}">{{ post.post_title }}</a></li>
                 {% empty %}
@@ -68,33 +70,28 @@
                 {% endfor %}
             </ul>
         </div>
-        
-    </div>
-
-    <div class="grid_4">
-
-        <div id="widgetindex">
-            <h2>Debates!</h2>
+        <div class="span-one-third">
+            <h3>{% trans "True democracy" %}</h3>
+            <p>El objetivo principal de e-cidadania es el de provver una plataforma real de democracia electrónica sin tapujos en la cual poder debatir los temas que nos interesan a todos.</p>
         </div>
-
-    </div>
-    
-    <div class="grid_4">
-
-        <div id="widgetindex">
-            <h2>{% trans "Get involved" %}</h2><br />
-            <p>Participa en el desarrollo de e-cidadania. Visita nuestra <a href="http://dev.ecidadania.org">página de desarrollo</a> y echa un vistazo.</p><br />
-            <p>No hace falta que seas programador. Cualquier aptitud nos sirve: traducción, documentación, testeo, programación, etc.</p>
+        <div class="span-one-third">
+            <h3>{% trans "The most complete tool ever" %}</h3>
+            <p>e-cidadania es la única herramienta que cubre los procesos participativos completos. ¿De qué sirve que hagas propuestas en una web si no se van a trasladar al modelo presencial o no se tendrán en cuenta?</p>
         </div>
-
     </div>
-    
-    <div class="grid_4">
 
-        <div id="widgetindex">
+    
+<!--    <div class="grid_16">-->
+<!--        <div class="bigbutton black count"><strong>13.512</strong> debates en <strong>7.645</strong> procesos participativos</div>-->
+<!--    </div>-->
+    
+
+    <!--<div class="grid_4">
+
+        <!--<div id="widgetindex">
             <h2>{% trans "Share" %}</h2><br />            
             <!-- Facebook -->
-            <div id="fb-root"></div>
+           <!--<div id="fb-root"></div>
             <script>(function(d, s, id) {
                 var js, fjs = d.getElementsByTagName(s)[0];
                 if (d.getElementById(id)) {return;}
@@ -107,7 +104,7 @@
             <!-- End Facebook -->                
             
             <!-- Google Plus -->
-            <g:plusone size="tall" href="http://ecidadania.org"></g:plusone>
+            <!--<g:plusone size="tall" href="http://ecidadania.org"></g:plusone>
             <script type="text/javascript">
                 window.___gcfg = {lang: 'es'};
                 (function() {
@@ -119,36 +116,34 @@
             <!-- End Google Plus -->
                 
             <!-- LinkedIn -->
-            <script src="http://platform.linkedin.com/in.js" type="text/javascript"></script>
+            <!--<script src="http://platform.linkedin.com/in.js" type="text/javascript"></script>
             <script type="IN/Share" data-url="http://ecidadania.org" data-counter="top"></script>
             <!-- End LinkedIn -->
                 
             <!-- Identi.ca -->
-            <div id="identishare" style="vertical-align: bottom;"></div>
+            <!--<div id="identishare" style="vertical-align: bottom;"></div>
             <script type="text/javascript" src="http://www.tildehash.com/identishare.php?style2&title='e-cidadania open source e-democracy platform'" defer="defer"></script>
             <!-- End Identi.ca -->
 
             <!-- Twitter -->
-            <a href="https://twitter.com/ecidadaniafloss" class="twitter-share-button" date-url="http://ecidadania.org" data-counturl="http://ecidadania.org" data-count="vertical" data-lang="es">{% trans "Tweet" %}</a>
+            <!--<a href="https://twitter.com/ecidadaniafloss" class="twitter-share-button" date-url="http://ecidadania.org" data-counturl="http://ecidadania.org" data-count="vertical" data-lang="es">{% trans "Tweet" %}</a>
             <script src="//platform.twitter.com/widgets.js" type="text/javascript"></script><br /><br />
             <!-- End Twitter -->
                 
             <!-- Tuenti -->
-            <script type="text/javascript" src="http://widgets.tuenti.com/widgets.js"></script>
+            <!--<script type="text/javascript" src="http://widgets.tuenti.com/widgets.js"></script>
             <a href="http://www.tuenti.com/share" class="tuenti-share-button" icon-style="light" share-url="http://ecidadania.org"></a><br /><br />
             <!-- End Tuenti -->
 
-            <a href="/rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/></a>
+            <!--<a href="/rss/"><img src="{{ STATIC_URL }}/assets/logos/rss_logo.png" alt="Feed RSS"/></a>
             <p><br />{% trans "Your favourite social site isn't here? Tell us!" %}</p>
         </div>
-    </div>
+    </div>-->
 {% endblock %}
 
 {% block footer %}
-    <p>
     {% for p in page %}
-        <a href="/{{ p.uri }}">{{ p.name }}</a> |
+        <a href="/{{ p.uri }}" title="{{ p.name }}">{{ p.name }}</a><br /> |
     {% endfor %}
-    </p>
 {% endblock %}
 

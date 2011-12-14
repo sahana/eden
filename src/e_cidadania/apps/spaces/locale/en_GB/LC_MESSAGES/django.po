@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-14 18:28+0100\n"
+"POT-Creation-Date: 2011-12-13 01:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -79,19 +79,19 @@ msgstr ""
 msgid "Debate"
 msgstr ""
 
-#: models.py:54
+#: models.py:54 templates/spaces/space_index.html:25
 msgid "Proposals"
 msgstr ""
 
-#: models.py:55
+#: models.py:55 templates/spaces/space_index.html:19
 msgid "News"
 msgstr ""
 
-#: models.py:56 templates/spaces/space_index.html:70
+#: models.py:56
 msgid "Calendar"
 msgstr ""
 
-#: models.py:57 models.py:110 templates/spaces/space_index.html:135
+#: models.py:57 models.py:110 templates/spaces/space_index.html:28
 msgid "Documents"
 msgstr ""
 
@@ -155,7 +155,7 @@ msgstr ""
 msgid "Meeting"
 msgstr ""
 
-#: models.py:157 templates/spaces/space_index.html:108
+#: models.py:157
 msgid "Meetings"
 msgstr ""
 
@@ -255,8 +255,8 @@ msgstr ""
 #: templates/spaces/document_confirm_delete.html:22
 #: templates/spaces/meeting_confirm_delete.html:22
 #: templates/spaces/space_confirm_delete.html:17
-#: templates/spaces/space_index.html:42 templates/spaces/space_index.html:151
-#: templates/spaces/space_index.html:182
+#: templates/spaces/space_index.html:100 templates/spaces/space_index.html:145
+#: templates/spaces/space_index.html:188
 msgid "Delete"
 msgstr ""
 
@@ -433,7 +433,7 @@ msgid ""
 msgstr ""
 
 #: templates/spaces/space_confirm_delete.html:4
-#: templates/spaces/space_index.html:26
+#: templates/spaces/space_index.html:48
 msgid "Delete space"
 msgstr ""
 
@@ -443,7 +443,7 @@ msgid ""
 msgstr ""
 
 #: templates/spaces/space_edit.html:5 templates/spaces/space_edit.html:15
-#: templates/spaces/space_index.html:21
+#: templates/spaces/space_index.html:43
 msgid "Edit space"
 msgstr ""
 
@@ -452,91 +452,119 @@ msgid "Index"
 msgstr ""
 
 #: templates/spaces/space_index.html:17
-msgid "Add new post"
+msgid "Overview"
 msgstr ""
 
-#: templates/spaces/space_index.html:38 templates/spaces/space_index.html:147
-#: templates/spaces/space_index.html:177
-msgid "Edit"
-msgstr ""
-
-#: templates/spaces/space_index.html:50
-msgid "Written by"
-msgstr ""
-
-#: templates/spaces/space_index.html:50 templates/spaces/space_index.html:295
-msgid "on"
-msgstr ""
-
-#: templates/spaces/space_index.html:50
-msgid "comments"
-msgstr ""
-
-#: templates/spaces/space_index.html:54
-msgid "Nothing published yet"
-msgstr ""
-
-#: templates/spaces/space_index.html:114
-msgid "View all meetings"
-msgstr ""
-
-#: templates/spaces/space_index.html:116
-msgid "Add meeting"
-msgstr ""
-
-#: templates/spaces/space_index.html:123
-msgid "Latest news"
-msgstr ""
-
-#: templates/spaces/space_index.html:129
-msgid "News archive"
-msgstr ""
-
-#: templates/spaces/space_index.html:157
-msgid "No documents available"
-msgstr ""
-
-#: templates/spaces/space_index.html:160
-msgid "View all documents"
-msgstr ""
-
-#: templates/spaces/space_index.html:162
-msgid "Add documents"
-msgstr ""
-
-#: templates/spaces/space_index.html:169
+#: templates/spaces/space_index.html:22
 msgid "Debates"
 msgstr ""
 
-#: templates/spaces/space_index.html:188
+#: templates/spaces/space_index.html:31
+msgid "Events"
+msgstr ""
+
+#: templates/spaces/space_index.html:34 templates/spaces/space_index.html:117
+msgid "Administration"
+msgstr ""
+
+#: templates/spaces/space_index.html:38 templates/spaces/space_index.html:119
+msgid "Add new post"
+msgstr ""
+
+#: templates/spaces/space_index.html:68
+msgid "News archive"
+msgstr ""
+
+#: templates/spaces/space_index.html:72
+msgid "Next events"
+msgstr ""
+
+#: templates/spaces/space_index.html:78
+msgid "View all meetings"
+msgstr ""
+
+#: templates/spaces/space_index.html:80
+msgid "Add meeting"
+msgstr ""
+
+#: templates/spaces/space_index.html:96 templates/spaces/space_index.html:140
+#: templates/spaces/space_index.html:184
+msgid "Edit"
+msgstr ""
+
+#: templates/spaces/space_index.html:108
+msgid "Written by"
+msgstr ""
+
+#: templates/spaces/space_index.html:108 templates/spaces/space_index.html:322
+msgid "on"
+msgstr ""
+
+#: templates/spaces/space_index.html:108
+msgid "comments"
+msgstr ""
+
+#: templates/spaces/space_index.html:112
+msgid "Nothing published yet"
+msgstr ""
+
+#: templates/spaces/space_index.html:120
+msgid "Edit post"
+msgstr ""
+
+#: templates/spaces/space_index.html:121
+msgid "Delete post"
+msgstr ""
+
+#: templates/spaces/space_index.html:123
+msgid "Highlighted news"
+msgstr ""
+
+#: templates/spaces/space_index.html:124
+msgid "Most commented"
+msgstr ""
+
+#: templates/spaces/space_index.html:125
+msgid "View monthly archive"
+msgstr ""
+
+#: templates/spaces/space_index.html:151
 msgid "No debates started"
 msgstr ""
 
-#: templates/spaces/space_index.html:191
+#: templates/spaces/space_index.html:154
 msgid "View all debates"
 msgstr ""
 
-#: templates/spaces/space_index.html:193
+#: templates/spaces/space_index.html:156
 msgid "Add debate"
 msgstr ""
 
-#: templates/spaces/space_index.html:200
-msgid "Newest proposals"
-msgstr ""
-
-#: templates/spaces/space_index.html:207
+#: templates/spaces/space_index.html:168
 msgid "No proposals available"
 msgstr ""
 
-#: templates/spaces/space_index.html:210
+#: templates/spaces/space_index.html:171
 msgid "View all proposals"
 msgstr ""
 
-#: templates/spaces/space_index.html:212
+#: templates/spaces/space_index.html:173
 msgid "Add proposal"
 msgstr ""
 
-#: templates/spaces/space_index.html:295
+#: templates/spaces/space_index.html:194
+msgid "No documents available"
+msgstr ""
+
+#: templates/spaces/space_index.html:197
+msgid "View all documents"
+msgstr ""
+
+#: templates/spaces/space_index.html:199
+msgid "Add documents"
+msgstr ""
+
+#: templates/spaces/space_index.html:322
 msgid "Space created by"
 msgstr ""
 

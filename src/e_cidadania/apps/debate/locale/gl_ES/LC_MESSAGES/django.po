@@ -2,23 +2,23 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-14 18:28+0100\n"
+"POT-Creation-Date: 2011-12-13 01:25+0100\n"
 "PO-Revision-Date: 2011-11-15 12:09\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
-#: models.py:41 models.py:83
+#: models.py:41 models.py:99
 msgid "Title"
 msgstr "Titulo"
 
@@ -30,71 +30,63 @@ msgstr "Descrición"
 msgid "Scope"
 msgstr "Alcance"
 
-#: models.py:44
-msgid "X Values"
-msgstr "X Valores"
-
-#: models.py:48
+#: models.py:47
 msgid "Last update"
 msgstr "Última actualización"
 
-#: models.py:64
+#: models.py:66 models.py:80
 msgid "Criteria"
 msgstr "Criterios"
 
-#: models.py:67
-msgid "Sortables"
-msgstr "Sortables"
-
-#: models.py:82
-msgid "Note div ID"
-msgstr "Nota div ID"
-
-#: models.py:84
+#: models.py:100
 msgid "Message"
 msgstr "Mensaxe"
 
-#: models.py:85
-msgid "Parent TD or DIV"
-msgstr "Pai TD ou DIV"
-
-#: templates/debate/debate_add.html:4 templates/debate/debate_board.html:4
+#: templates/debate/debate_add.html:4
+#: templates/debate/debate_add_simple.html:4
+#: templates/debate/debate_board.html:4
 msgid "Create new debate"
 msgstr "Crear novo debate"
 
-#: templates/debate/debate_add.html:22 templates/debate/debate_board.html:16
+#: templates/debate/debate_add.html:24 templates/debate/debate_board.html:16
 msgid "Create a new debate"
 msgstr "Crear un novo debate"
 
-#: templates/debate/debate_add.html:31 templates/debate/debate_board.html:23
+#: templates/debate/debate_add.html:33 templates/debate/debate_board.html:23
 msgid "Remove column"
 msgstr "Eliminar columna"
 
-#: templates/debate/debate_add.html:32 templates/debate/debate_board.html:24
+#: templates/debate/debate_add.html:34 templates/debate/debate_board.html:24
 msgid "Add column"
 msgstr "Engadir columna"
 
-#: templates/debate/debate_add.html:59 templates/debate/debate_board.html:56
+#: templates/debate/debate_add.html:63 templates/debate/debate_board.html:56
 msgid "Remove row"
 msgstr "Eliminar fila"
 
-#: templates/debate/debate_add.html:60 templates/debate/debate_board.html:57
+#: templates/debate/debate_add.html:64 templates/debate/debate_board.html:57
 msgid "Add row"
 msgstr "Engadir fila"
 
-#: templates/debate/debate_add.html:63 templates/debate/debate_board.html:66
+#: templates/debate/debate_add.html:67
+#: templates/debate/debate_add_simple.html:60
+#: templates/debate/debate_board.html:66
 msgid "Other debate data"
 msgstr "Outros datos de debate"
 
-#: templates/debate/debate_add.html:123 templates/debate/debate_board.html:109
+#: templates/debate/debate_add.html:127
+#: templates/debate/debate_add_simple.html:120
+#: templates/debate/debate_board.html:109
 msgid "Save"
 msgstr "Gardar"
 
-#: templates/debate/debate_add.html:124 templates/debate/debate_board.html:110
+#: templates/debate/debate_add.html:128
+#: templates/debate/debate_add_simple.html:121
+#: templates/debate/debate_board.html:110
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:62
+#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:67
 msgid "Add new note"
 msgstr "Engadir nova nota"
 
@@ -126,9 +118,22 @@ msgstr "de"
 msgid "next"
 msgstr "seguinte"
 
-#: templates/debate/debate_view.html:5 templates/debate/debate_view.html:17
-msgid "View debate "
+#: templates/debate/debate_view.html:5 templates/debate/debate_view.html:15
+#, fuzzy
+msgid "View debate"
 msgstr "Ver debate"
+
+#~ msgid "X Values"
+#~ msgstr "X Valores"
+
+#~ msgid "Sortables"
+#~ msgstr "Sortables"
+
+#~ msgid "Note div ID"
+#~ msgstr "Nota div ID"
+
+#~ msgid "Parent TD or DIV"
+#~ msgstr "Pai TD ou DIV"
 
 #~ msgid "Objectives"
 #~ msgstr "Obxectivos"

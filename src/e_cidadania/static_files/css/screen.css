@@ -7,62 +7,6 @@
     Distributed under terms of the GPLv3 license.
 */
 
-/* CSS RESET */
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, font, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	outline: 0;
-	font-size: 100%;
-	vertical-align: baseline;
-	background: transparent;
-}
-
-body {
-	line-height: 1;
-}
-
-ol, ul {
-	list-style: none;
-}
-
-blockquote, q {
-	quotes: none;
-}
-
-blockquote:before, blockquote:after,
-q:before, q:after {
-	content: '';
-	content: none;
-}
-
-:focus {
-	outline: 0;
-}
-
-ins {
-	text-decoration: none;
-}
-
-del {
-	text-decoration: line-through;
-}
-
-table {
-	border-collapse: collapse;
-	border-spacing: 0;
-}
-/* END CSS RESET */
-
-
 /* HTML TAGS DEFINITION */
 body {
 	background: #FAFAFA;
@@ -86,6 +30,25 @@ img {
 	border: none;
 }
 /* END HTML TAGS DEFINITION */
+
+/* COMMON CUSTOMIZATIONS */
+hr { /* This hr replaces the bootstrap one */
+    border-bottom: 1px solid #DDD;
+}
+/* END COMMON CUSTOMIZATIONS */
+
+/* SPACE INDEX */
+/* END SPACE INDEX */
+
+
+
+
+
+
+
+
+
+
 
 
 /* CUSTOMIZATIONS */
@@ -348,49 +311,6 @@ input[type="text"], input[type="password"] {
     margin-top: -8px;
     width: 16px;
     height: 16px;
-}
-
-.topbar {
-    width: 100%;
-    height: 25px;
-    margin: 0;
-    padding: 0;
-    font-size: 0.8em;
-    background: url(../assets/userbar.png) #000 repeat;
-}
-
-#version {
-    float: left;
-    line-height: 25px;
-    font-weight: bold;
-    color: #FFF;
-    margin-left: 20px;
-}
-
-#userbar {
-    float: right;
-    margin-right: 40px;
-
-    padding: 0 10px 2px 10px;
-    height: 32px;
-    line-height: 32px;
-    font-size: 1em;
-    color: #FFF;
-    background: url(../assets/userbar.png) #000 repeat;
-    font-size: 1em;
-
-    /* Fancy round borders for Webkit, Gecko and standard
-       implementations */
-    border-bottom-left-radius: 7px;
-    border-bottom-right-radius: 7px;
-    -moz-border-radius-bottomleft: 7px;
-    -moz-border-radius-bottomright: 7px;
-    -webkit-border-bottom-left-radius: 7px;
-    -webkit-border-bottom-right-radius: 7px;
-}
-
-#userbar a, #userbar a:visited {
-    color: #EEE;
 }
 
 #userbar a:hover {

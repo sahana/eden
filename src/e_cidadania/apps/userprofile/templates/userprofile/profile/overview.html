@@ -4,147 +4,127 @@
 
 {% block title %}{% trans "Overview of your profile" %}{% endblock %}
 
-  {% if GOOGLE_MAPS_API_KEY and user.get_profile.location %}
+{% if GOOGLE_MAPS_API_KEY and user.get_profile.location %}
     <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=yes">
     <script type="text/javascript">
-      function initialize() {
-        var latlng = new google.maps.LatLng( {{ user.get_profile.latitude|stringformat:"s" }}, {{ user.get_profile.longitude|stringformat:"s" }} );
-        var opts = {
-            zoom: 15,
-            center: latlng,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
+        function initialize() {
+            var latlng = new google.maps.LatLng( {{ user.get_profile.latitude|stringformat:"s" }}, {{ user.get_profile.longitude|stringformat:"s" }} );
+            var opts = {
+                zoom: 15,
+                center: latlng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            var map = new google.maps.Map(document.getElementById("location"), opts);
+            var marker = new google.maps.Marker({
+                position: latlng,
+                map: map,
+                title:"User!"
+            });
         };
-        var map = new google.maps.Map(document.getElementById("location"), opts);
-        var marker = new google.maps.Marker({
-            position: latlng,
-            map: map,
-            title:"User!"
-        });
-    };
     </script>
-    {% endif %}
+{% endif %}
     
 {% block content %}
 
-
-      <div class="grid_16">
-        <div id="contenttitles">
-          {% blocktrans with user.username as username %}
-            {{ username }} profile
-          {% endblocktrans %}
+    <div class="row">
+        <div class="span9">
+            <h2>{% blocktrans with user.username as username %}{{ username }} profile{% endblocktrans %}</h2>
         </div>
-        
-        <div id="useropts">
-	        <a href="{% url 'profile_edit_personal' %}">{% trans "Edit personal data" %}</a> |
+        <div class="span7">
+        	<a href="{% url 'profile_edit_personal' %}">{% trans "Edit personal data" %}</a> |
 	        <a href="{% url 'profile_edit_location' %}">{% trans "Edit location" %}</a> |
-	        <a href="{% url 'profile_delete' %}">{% trans "Delete profile" %}</a> |
 	        <a href="{% url 'profile_public' request.user %}">{% trans "Public profile" %}</a>
-	      </div>
-      </div>
-      
-      
-      <div class="clear"></div>
-      
-      
-      <div class="grid_8 userinfo">
-        <div id="avatar" class="span-3 center">
-        	<a href="{% url 'profile_edit_avatar' %}">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="span2">
+            <a href="{% url 'profile_edit_avatar' %}">
          		<img class="border" src="/static/generic.96.jpg" />
 	      	</a>
          	<p>
-         	  <a href="{% url 'profile_edit_avatar' %}">{% if user.get_profile.has_avatar %}{% trans "Change avatar" %}{% else %}{% trans "Add avatar" %}{% endif %}</a>
+         	    <a href="{% url 'profile_edit_avatar' %}">{% if user.get_profile.has_avatar %}{% trans "Change avatar" %}{% else %}{% trans "Add avatar" %}{% endif %}</a>
          	</p>
-	      </div>
-
-	   	  <div class="data">
-			    <p><strong>{% trans "Username" %}</strong>: {{ user }}</p>
-			    <p><strong>{% trans "Real name" %}</strong>: {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
-			    <p><strong>{% trans "Age" %}</strong>: {{ user.get_profile.get_age }} {% trans "years" %}
-			    <p><strong>{% trans "Member since" %}</strong>: {{ user.date_joined }}</p>
-			    <p><strong>{% trans "E-mail" %}</strong>: 
-				    <span class="{% if not email or not validated %}quiet red{% endif %}">
+        </div>
+        <div class="span7">
+            <p><strong>{% trans "Username" %}</strong>: {{ user }}</p>
+			<p><strong>{% trans "Real name" %}</strong>: {{ user.get_profile.firstname }} {{ user.get_profile.surname }}</p>
+			<p><strong>{% trans "Age" %}</strong>: {{ user.get_profile.get_age }} {% trans "years" %}
+			<p><strong>{% trans "Member since" %}</strong>: {{ user.date_joined }}</p>
+			<p><strong>{% trans "E-mail" %}</strong>: 
+			    <span class="{% if not email or not validated %}quiet red{% endif %}">
 				    {%if not email %}
-				      {% trans "Not set yet" %}
+				        {% trans "Not set yet" %}
 				    {% else %}
-				      {{ email }}
-				      {% if not validated %}
-				        {% trans " (Not validated)" %}
-				      {% endif %}
+				        {{ email }}
+				        {% if not validated %}
+				            {% trans " (Not validated)" %}
+				        {% endif %}
 				    {% endif %}
-				    </span>
-			    </p>
+				</span>
+			</p>
 			  
-			    <p><label for="location"><strong>{% trans "Country" %}</strong>:</label>
-			      {% if user.get_profile.country %}
-				      {{ user.get_profile.get_country_display }}
-			      {% else %}
-				      <span class="quiet red">{% trans "Not set" %}</span>
-			      {% endif %}
-			    </p>
+			<p><span id="location"><strong>{% trans "Country" %}</strong>:</span>
+			    {% if user.get_profile.country %}
+			        {{ user.get_profile.get_country_display }}
+			    {% else %}
+				    <span class="quiet red">{% trans "Not set" %}</span>
+			    {% endif %}
+		    </p>
 
-			    <p>
-			      <strong>{% trans "City" %}</strong>: {{ user.get_profile.province }}
-			    </p>
-			  </div>
-	    </div>
-	    
-
-  
-      <div class="grid_8 userinfo">
-        {% if GOOGLE_MAPS_API_KEY %}
-		      <p>{% trans "Location" %}:
+			<p><strong>{% trans "City" %}</strong>: {{ user.get_profile.province }}</p>
+        </div>
+        <div class="span7">
+            {% if GOOGLE_MAPS_API_KEY %}
+		        <p>{% trans "Location" %}:
 		        {% if user.get_profile.location %}
 			        {{ user.get_profile.location }}
 		        {% else %}
 			        {% trans "Not set" %}
 		        {% endif %}
-		      </p>
+		        </p>
 		    {% endif %}
 		    {% if user.get_profile.location %}
-		      <div class="span-12 last">
-		        <div id="location" style="width: 480px; height: 240px;"></div>
-		      </div>
+		        <div class="span-12 last">
+		            <div id="location" style="width: 480px; height: 240px;"></div>
+		        </div>
 		    {% endif %}
-      </div>
-      
-      
-      <div class="clear"></div>
-      
-      <div class="grid_16">
-      
-        <div class="spaces">
-          <h1>{% trans "Your spaces" %}</h1>
-          <ul class="spaces">
-            {% for space in user.get_profile.spaces.all %}
-              <li><a href="{{ space.get_absolute_url }}">{{ space.name }}</a></li>
-            {% empty %}
-              <p>{% trans "You are not signed to any space." %}</p>
-            {% endfor %}
-          </ul>
-			  </div>
-			  
-			  <div class="activity">
-			    <h1>{% trans "Your proposals" %}</h1>
-          {% for p in proposals %}
-            <div id="proposal-wrapper">
-            <div id="votes">
-              <span style="font-size:24px;text-align:center;">{{ p.support_votes }}</span><br/>apoyos
-            </div>
-            <!-- Here goes the voting button -->
-            <div id="proposal">
-              <div class="title" style="font-size: 1.5em;"><a href="/spaces/{{ p.belongs_to }}/proposal/view/{{ p.id }}/">{{ p.title }}</a></div>
-              <div class="creator">{{ p.pub_date|date:"j/m/Y G:i" }}</div>
-            </div>
-              {% comment %}
-                The following div is to make the wrapper to wrap everything.
-              {% endcomment %}
-            <div style="clear:left;"></div>
-            </div>
-          {% empty %}
-            <p>{% trans "You haven't made any proposals."%}</p>
-          {% endfor %}
         </div>
-      </div>
-
+    </div>
+   
+    <div class="row">
+        <div class="span8">
+            <h3>{% trans "Your spaces" %}</h3>
+            <ul class="unstyled">
+                {% for space in user.get_profile.spaces.all %}
+                    <li><a href="{{ space.get_absolute_url }}">{{ space.name }}</a></li>
+                {% empty %}
+                    <p>{% trans "You are not signed to any space" %}.</p>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="span8">
+            <h3>{% trans "Your proposals" %}</h3>
+            {% for p in proposals %}
+                <div id="proposal-wrapper">
+                    <div id="votes">
+                        <span style="font-size:24px;text-align:center;">{{ p.support_votes }}</span><br/>{% trans "support votes" %}
+                    </div>
+                    <!-- Here goes the voting button -->
+                    <div id="proposal">
+                        <div class="title" style="font-size: 1.5em;"><a href="/spaces/{{ p.belongs_to }}/proposal/view/{{ p.id }}/">{{ p.title }}</a></div>
+                        <div class="creator">{{ p.pub_date|date:"j/m/Y G:i" }}</div>
+                    </div>
+                    {% comment %}
+                        The following div is to make the wrapper to wrap everything.
+                    {% endcomment %}
+                    <div style="clear:left;"></div>
+                </div>
+            {% empty %}
+                <p>{% trans "You haven't made any proposals"%}.</p>
+            {% endfor %}
+        </div>
+    </div>
+ 
 {% endblock %}

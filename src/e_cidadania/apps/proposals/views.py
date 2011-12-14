@@ -22,8 +22,6 @@
 Proposal module views.
 """
 
-from django.db.models import F
-
 # Generic class-based views
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -45,8 +43,6 @@ def vote_proposal(request, space_name):
     """
     Increment support votes for the proposal in 1.
     """
-#    prop = Proposal.objects.filter(pk=request.POST['propid'])
-#    prop.update(support_votes=F('support_votes')+1)
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
     proposal_form = ProposalForm(request.POST or None, instance=prop)
     
@@ -123,11 +119,6 @@ def add_proposal(request, space_name):
             form_uncommited.author = request.user
             form_uncommited.save()
             return redirect('/spaces/' + space_name)
-        
-
-        return render_to_response('proposals/proposal_add.html',
-                              {'form': form, 'get_place': prop_space},
-                              context_instance = RequestContext(request))
     
     return render_to_response('proposals/proposal_add.html',
                               {'form': form, 'get_place': prop_space},
