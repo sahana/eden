@@ -198,7 +198,7 @@ def delete_note(request, space_name):
         return HttpResponse("The note has been deleted.")
     
     else:
-        return HttpResponse("You're not the author of the note. Can't delete")
+        return HttpResponse("You're not the author of the note. Can't delete.")
         
 class ViewDebate(DetailView):
     """

@@ -32,9 +32,9 @@
             <div class="post">
                 {% if perm.news.edit_post %}
                     <div id="tools">
-                        <a href="{% url 'edit-post' get_place.url news.id %}">Edit</a> |
+                        <a href="{% url 'edit-post' get_place.url news.id %}">{% trans "Edit" %}</a> |
                         {% if perm.news.delete_post %}
-                            <a href="{% url 'delete-post' get_place.url news.id %}">Delete</a>
+                            <a href="{% url 'delete-post' get_place.url news.id %}">{% trans "Delete" %}</a>
                         {% endif %}
                     </div>
                 {% endif %}

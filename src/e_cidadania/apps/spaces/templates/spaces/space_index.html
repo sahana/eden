@@ -73,12 +73,11 @@
                                 {% if publication %}
                                     <ul class="unstyled">
                                         {% for news in publication %}
-                                            <li><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a> {% trans "by"%} {{ news.author }} {% trans "on" %} {{ news.pub_date|date:"d F Y" }}</li>
-                                        {% empty %}
+                                            <li><a href="{% url 'profile_public' news.author %}">{{ news.author }}</a> {% trans "posted" %} <a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a> {% trans "on" %} {{ news.pub_date|date:"d F Y" }}</li>
+                                        {% empty %} 
                                             <li>{% trans "Nothing published yet" %}.</li>
                                         {% endfor %}
                                     </ul>
-                                    <p class="rightlink">&raquo; <a href="{% url 'list-space-news' get_place.url %}">{% trans "News archive" %}</a></p>
                                 {% endif %}  
                             {% endif %} 
                             
@@ -86,7 +85,7 @@
                                 <h6>{% trans "Proposals" %}</h6>
                                 <ul class="unstyled">
                                     {% for proposal in proposals %}
-                                        <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by"%} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                        <li><a href="{% url 'profile_public' proposal.author %}">{{ proposal.author }}</a> {% trans "proposed" %} <a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "on" %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No proposals available" %}.</li>
                                     {% endfor %} 
@@ -97,7 +96,7 @@
                                 <h6>{% trans "Debates" %}</h6>
                                 <ul class="unstyled">
                                     {% for debate in debates %}
-                                        <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a> {% trans "by"%} {{ debate.author }} {% trans " at " %} {{ debate.date|date:"d F Y" }}</li>
+                                        <li><a href="{% url 'profile_public' debate.author %}">{{ debate.author }}</a> {% trans "created debate" %} <a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a> {% trans "on" %} {{ debate.date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No debates started" %}.</li>
                                     {% endfor %}
@@ -115,10 +114,6 @@
                                     <li><p><a href="{{ m.get_absolute_url }}">{{ m.title }}</a></p></li>
                                 {% endfor %}
                             </ul>
-                            <br /><p class="rightlink">&raquo; <a href="{% url 'list-meetings' get_place.url %}">{% trans "View all meetings" %}</a></p>
-                            {% if perms.spaces.add_meeting %}
-                                <p class="rightlink">&raquo; <a href="{% url 'add-meeting' get_place.url %}">{% trans "Add meeting"%}</a></p>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -129,7 +124,7 @@
                     <div class="row">
                         <div class="span11 space-content">
                             {% for news in publication %}
-                                <h2 style="border-bottom:1px solid #DDD;">{{ news.post_title }}
+                                <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a>
                                     {% if perms.news.edit_post %}
                                         <a href="{% url 'edit-post' get_place.url news.id %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
@@ -142,7 +137,7 @@
                                     {% endif %}
                                 </h2>
                                 {% get_comment_count for news as comment_count %}
-                                <p style="padding-top:5px;padding-bottom:5px;border-bottom:1px solid #DDD;background: #EEE;">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
+                                <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
                                 {{ news.post_message|safe }}
                                 <div style="margin-bottom:30px;"></div>
                             {% endfor %}
@@ -159,15 +154,19 @@
                             <h4>{% trans "Highlighted news" %}</h4>
                             <h4>{% trans "Most commented" %}</h4>
                             <h4>{% trans "View monthly archive" %}</h4>
+                            <ul class="unstyled">
+                                <li><a href="{% url 'list-space-news' get_place.url %}">{% trans "News archive" %}</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
                 {% endif %}
                 
-                
+                {% if get_place.mod_debate %}
                 <div class="tab-pane" id="debates">
                     <div class="row">
                         <div class="span11">
+                            <h4>{% trans "Active debates" %}</h4>
                             <ul class="unstyled">
                                 {% for debate in debates %}
                                     <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></li>
@@ -175,6 +174,7 @@
                                     <li>{% trans "No debates started" %}.</li>
                                 {% endfor %}
                             </ul>
+                            <h4>{% trans "Closed debates" %}</h4>
                         </div>
                         <div class="span5">
                             <h4>{% trans "Administration" %}</h4>
@@ -205,18 +205,23 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 
-                
+                {% if get_place.mod_proposals %}
                 <div class="tab-pane" id="proposals">
                     <div class="row">
                         <div class="span11">
+                            <h4>{% trans "New proposals" %}</h4>
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
-                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a></li>
+                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by"%} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                 {% empty %}
                                     <li>{% trans "No proposals available" %}.</li>
                                 {% endfor %}
                             </ul>
+                            <h4>{% trans "Mixed proposals" %}</h4>
+                            <h4>{% trans "Most commented" %}</h4>
+                            <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
                         <div class="span5">
                             <h4>{% trans "Administration" %}</h4>
@@ -235,8 +240,9 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 
-                
+                {% if get_place.mod_docs %}
                 <div class="tab-pane" id="docs">
                     <div class="row">
                         <div class="span11">
@@ -276,40 +282,58 @@
                                     {% endif %}
                     {% endcomment %}
                 </div>
+                {% endif %}
                 
                 
                 <div class="tab-pane" id="events">
-                    <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
-                    <script type="text/javascript">
-                        {% comment %}
-                            This code make thw calendar inhibit the onSelect function
-                            on load it returns the error:
-                            Uncaught TypeError: Property 'datepicker' of object function (a,b){return new e.fn.init(a,b,h)} is not a function (anonymous function)
-                            
-                            $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);
-                            
-                            
-                                                    $('#datepicker').datepicker($.extend({},
-                             $.datepicker.regional[ '{{ LANGUAGE_CODE }}' ], {
-                             onSelect: function(dateText) {
-                                 var month = dateText.split("/")[0];
-                                 var year = dateText.split("/")[2];
-                                 window.location = "calendar/" + year + "/" + month + "/";
-                             }
-                        }));
-                 
-                 
-                 
-                        {% endcomment %}
-                        $('#datepicker').datepicker({
-                             onSelect: function(dateText) {
-                                 var month = dateText.split("/")[0];
-                                 var year = dateText.split("/")[2];
-                                 window.location = "calendar/" + year + "/" + month + "/";
-                             }
-                        });
-                    </script>
-                    <div id="datepicker"></div>
+                    <div class="row">
+                        <div class="span11">
+                            <script type="text/javascript" src="{{ STATIC_URL }}/js/jqueryui-datepicker-{{ LANGUAGE_CODE }}.js"></script>
+                            <script type="text/javascript">
+                                {% comment %}
+                                    This code make thw calendar inhibit the onSelect function
+                                    on load it returns the error:
+                                    Uncaught TypeError: Property 'datepicker' of object function (a,b){return new e.fn.init(a,b,h)} is not a function (anonymous function)
+                                    
+                                    $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);
+                                    
+                                    
+                                                            $('#datepicker').datepicker($.extend({},
+                                     $.datepicker.regional[ '{{ LANGUAGE_CODE }}' ], {
+                                     onSelect: function(dateText) {
+                                         var month = dateText.split("/")[0];
+                                         var year = dateText.split("/")[2];
+                                         window.location = "calendar/" + year + "/" + month + "/";
+                                     }
+                                }));
+                        
+                        
+                        
+                                {% endcomment %}
+                                $('#datepicker').datepicker({
+                                     onSelect: function(dateText) {
+                                         var month = dateText.split("/")[0];
+                                         var year = dateText.split("/")[2];
+                                         window.location = "calendar/" + year + "/" + month + "/";
+                                     }
+                                });
+                            </script>
+                            <div id="datepicker"></div>
+                        </div>
+                        <div class="span5">
+                            <h4>{% trans "Administration" %}</h4>
+                            <ul class="unstyled">
+                                {% if perms.spaces.add_meeting %}
+                                    <li><a href="{% url 'add-meeting' get_place.url %}">
+                                        <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new meeting' %}" title="{% trans 'Add new meeting' %}"/>{% trans "Add meeting"%}
+                                    </a></li>
+                                {% endif %}
+                            </ul>
+                            <h4>Otras opciones (traducir)</h4>
+                            <ul class="unstyled">
+                                <li><a href="{% url 'list-meetings' get_place.url %}">{% trans "View all meetings" %}</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

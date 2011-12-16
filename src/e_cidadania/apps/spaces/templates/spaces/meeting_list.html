@@ -18,7 +18,7 @@
                 <p><a href="{{ meeting.get_absolute_url }}">{{ meeting.title }}</a></p>
                 <p>{% trans "Published" %} {{ meeting.meeting_date }}</p>
             {% empty %}
-                <p>{% trans "There are no meetings in this space." %}</p>
+                <p>{% trans "There are no meetings in this space" %}.</p>
             {% endfor %}
       
             <hr />

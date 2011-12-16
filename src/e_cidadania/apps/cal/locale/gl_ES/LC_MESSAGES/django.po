@@ -8,52 +8,51 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-13 01:25+0100\n"
-"PO-Revision-Date: 2011-09-22 11:17\n"
-"Last-Translator:   <a@a.com>\n"
+"POT-Creation-Date: 2011-12-15 13:01+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: templates/cal/calendar.html:4 templates/cal/calendar.html.py:14
 msgid "Calendar"
-msgstr "Calendario"
+msgstr ""
 
 #: templates/cal/calendar.html:20
 msgid "Previous month"
-msgstr "Mes anterior"
+msgstr ""
 
 #: templates/cal/calendar.html:21
 msgid "Next month"
-msgstr "Mes seguinte"
+msgstr ""
 
 #: templates/cal/calendar.html:22
 msgid "Go back"
-msgstr "Volver"
+msgstr ""
 
 #: templates/cal/error.html:4
 msgid "Calendar error"
-msgstr "Erro do calendario"
+msgstr ""
 
 #: templates/cal/error.html:8
 msgid "You entered and incorrect month or year. Please correct it."
-msgstr "Introduciches un ano ou mes incorrectos. Por favor corríxeo."
+msgstr ""
 
 #: templates/cal/error.html:10
 msgid "You can go"
-msgstr "Podes ir"
+msgstr ""
 
 #: templates/cal/error.html:10
 msgid "back to home"
-msgstr "de volta ao inicio"
+msgstr ""
 
 #: templates/cal/error.html:10
 msgid "or"
-msgstr "ou"
+msgstr ""
 
 #: templates/cal/error.html:10
 msgid "back to your profile"
-msgstr "de volta ao teu perfil"
+msgstr ""

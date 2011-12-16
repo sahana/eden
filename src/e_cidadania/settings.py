@@ -1,7 +1,7 @@
 # Django settings for e_cidadania project.
 
 __author__ = "Oscar Carballal Prego"
-__copyright__ = "Copyright 2011, Cidadania Sociedade Cooperativa Galega"
+__copyright__ = "Cidadania Sociedade Cooperativa Galega"
 __credits__ = ["Oscar Carballal Prego"]
 __license__ = "GPLv3"
 __version__ = "0.1"
@@ -14,7 +14,7 @@ import os
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 # Django settings
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 # Extending the user profile a bit more

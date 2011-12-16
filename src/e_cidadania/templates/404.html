@@ -1,74 +1,15 @@
+{% extends "base.html" %}
 {% load i18n %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
-	<head>
-		<title>{% block title %}404 - Not Found{% endblock %}</title>
-		<link rel="shortcut icon" href="/{{ STATIC_URL }}/assets/favicon.ico" type="image/ico"/>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<meta name="Description" content="Site description"/>
-		<meta name="Robots" content="all"/>
-		
-		<style type="text/css">
-		  body {
-		    /* background: #A8D4FF; /* AZUL */
-		    font-family: arial;
-		    color: #5d5d5d;
-		  }
-		  
-		  a {
-		    color: #5d5d5d;
-		    text-decoration: none;
-		  }
-		  
-		  a:visited {
-		    color: #333;
-		  }
-		  #bottom {
-		    position:fixed;
-		    bottom: 0;
-		    left: 0;
-		    background: #000;
-		    width: 100%;
-		    height: 200px;
-		  }
-		  
-		  #bottom .text {
-		    padding-top: 10px; 
-		    width: 60%;
-		    margin: auto;
-		    font-size: 1em;
-		  }
 
-		  #title {
-		    font-size: 8em;
-		    text-align: right;
-		    position: absolute;
-		    bottom: 175px;
-		    right: 0;
-		    text-align: right;
-		    text-shadow: #888 -1px 1px 3px;
-		    color: #5d5d5d;
-		  }
-		  
-		  #out {
-		    
-		  }
-		</style>
-	</head>
-	<body>
-	  <img src="http://www.clipartpal.com/_thumbs/pd/holiday/halloween/witch_on_broom_01.png" width="130" height="120" border="0" alt="Silhouette of a black witch flying on a broom">
-	  <div id="title"><span style="font-size:45px;">{% trans "Not Found!" %} </span><strong>404</strong></div>
-	  <div id="bottom">
-	    <p class="text">
-	      <em>{% trans "A meiga stole this page. You better get out of here now that you can, before she gives you the evil eye. Meanwhile, we are going to get the torchs and pitchforks and go in search of her. Don't worry about us, we will manage somehow." %}</em><br /><br />
-	      <strong>{% trans "Take me out of here!" %}</strong><br /><br />
-	      <a href="http://ecidadania.org">{% trans "Home" %}</a> | 
-	      <a href="http://dev.ecidadania.org">{% trans "Development" %}</a> |
-	      <a href="#">{% trans "Help" %}</a> |
-	      <a href="#">{% trans "Terms of service" %}</a> |
-	      <a href="#">{% trans "Privacy" %}</a> |
-	      <a href="#">{% trans "About" %}</a>
-	    </p>
-	  </div>
-  </body>
-</html>
+{% block title %}404 - Not Found{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="span-one-third offset-one-third">
+            <h1>{% trans "Nooo...!" %}</h1><br />
+            <h1 style="font-size:12em;text-align:center;">404</h1><br /><br />
+            <h6 style="text-align:center;">{% trans "The page you're looking for does not exist." %}</h6>
+            <h6 style="text-align:center;">{% trans "May it be abstract?"%}</h6>
+        </div>
+    </div>
+{% endblock %}

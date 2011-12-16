@@ -85,7 +85,7 @@ class SpaceFeed(Feed):
         return obj.get_absolute_url()
     
     def description(self, obj):
-        return _("All the recent events in %s including news, proposals, documents, etc. ") % obj.name
+        return _("All the recent activity in %s ") % obj.name
 
     def items(self, obj):
         results = itertools.chain(
@@ -156,10 +156,10 @@ class ViewSpaceIndex(DetailView):
 
         if space_object.public == True or self.request.user.is_staff:
             if self.request.user.is_anonymous():
-                messages.info(self.request, _("Hello anonymous user. Please take in mind \
-                                              that this spaces is public to view, but \
+                messages.info(self.request, _("Hello anonymous user. Remember \
+                                              that this space is public to view, but \
                                               you must <a href=\"/accounts/register\">register</a> \
-                                              to participate."))
+                                              or <a href=\"/accounts/login\">login</a> to participate."))
             return space_object
 
         if self.request.user.is_anonymous():
@@ -579,7 +579,7 @@ class ListPosts(ListView):
             messages.set_level(self.request, messages.DEBUG)
             messages.debug(self.request, "Succesful query.")
        
-        return Post.objects.all().filter(space=place)
+        return Post.objects.all().filter(space=place).order_by('-pub_date')
     
     def get_context_data(self, **kwargs):
         context = super(ListPosts, self).get_context_data(**kwargs)

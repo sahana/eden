@@ -2,137 +2,121 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: e-cidadania 0.1\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-13 01:25+0100\n"
-"PO-Revision-Date: 2011-12-13 01:29\n"
-"Last-Translator:   <a@a.com>\n"
-"Language-Team: Spanish Team <ecidadania-es@freelists.org>\n"
+"POT-Creation-Date: 2011-12-15 13:00+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
-"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: models.py:41 models.py:99
 msgid "Title"
-msgstr "Título"
+msgstr ""
 
-#: models.py:42
+#: models.py:42 templates/debate/debate_view.html:23
 msgid "Description"
-msgstr "Descripción"
+msgstr ""
 
-#: models.py:43
+#: models.py:43 templates/debate/debate_view.html:24
 msgid "Scope"
-msgstr "Ámbito"
+msgstr ""
 
 #: models.py:47
 msgid "Last update"
-msgstr "Última actualización"
+msgstr ""
 
 #: models.py:66 models.py:80
 msgid "Criteria"
-msgstr "Criterio"
+msgstr ""
 
 #: models.py:100
 msgid "Message"
-msgstr "Mensaje"
+msgstr ""
 
 #: templates/debate/debate_add.html:4
 #: templates/debate/debate_add_simple.html:4
 #: templates/debate/debate_board.html:4
 msgid "Create new debate"
-msgstr "Crear nuevo debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:24 templates/debate/debate_board.html:16
 msgid "Create a new debate"
-msgstr "Crear un nuevo debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:33 templates/debate/debate_board.html:23
 msgid "Remove column"
-msgstr "Eliminar columna"
+msgstr ""
 
 #: templates/debate/debate_add.html:34 templates/debate/debate_board.html:24
 msgid "Add column"
-msgstr "Añadir columna"
+msgstr ""
 
 #: templates/debate/debate_add.html:63 templates/debate/debate_board.html:56
 msgid "Remove row"
-msgstr "Eliminar fila"
+msgstr ""
 
 #: templates/debate/debate_add.html:64 templates/debate/debate_board.html:57
 msgid "Add row"
-msgstr "Añadir fila"
+msgstr ""
 
 #: templates/debate/debate_add.html:67
 #: templates/debate/debate_add_simple.html:60
 #: templates/debate/debate_board.html:66
 msgid "Other debate data"
-msgstr "Otros datos del debate"
+msgstr ""
 
 #: templates/debate/debate_add.html:127
 #: templates/debate/debate_add_simple.html:120
 #: templates/debate/debate_board.html:109
 msgid "Save"
-msgstr "Guardar"
+msgstr ""
 
 #: templates/debate/debate_add.html:128
 #: templates/debate/debate_add_simple.html:121
 #: templates/debate/debate_board.html:110
 msgid "Cancel"
-msgstr "Cancelar"
+msgstr ""
 
-#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:67
+#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:82
 msgid "Add new note"
-msgstr "Añadir nota"
+msgstr ""
 
 #: templates/debate/debate_board.html:62
 msgid "Add phase"
-msgstr "Añadir fase"
+msgstr ""
 
 #: templates/debate/debate_list.html:4 templates/debate/debate_list.html:12
 msgid "Debates in "
-msgstr "Debates en"
+msgstr ""
 
 #: templates/debate/debate_list.html:21
 msgid "There are no debates."
-msgstr "No hay debates."
+msgstr ""
 
 #: templates/debate/debate_list.html:25
 msgid "Go back"
-msgstr "Volver"
+msgstr ""
 
 #: templates/debate/debate_list.html:32
 msgid "previous"
-msgstr "anterior"
+msgstr ""
 
 #: templates/debate/debate_list.html:35
 msgid "of"
-msgstr "de"
+msgstr ""
 
 #: templates/debate/debate_list.html:38
 msgid "next"
-msgstr "siguiente"
+msgstr ""
 
-#: templates/debate/debate_view.html:5 templates/debate/debate_view.html:15
+#: templates/debate/debate_view.html:5
 msgid "View debate"
-msgstr "Ver debate"
-
-#~ msgid "X Values"
-#~ msgstr "Valores X"
-
-#~ msgid "Sortables"
-#~ msgstr "Sortables"
-
-#~ msgid "Note div ID"
-#~ msgstr "ID nota"
-
-#~ msgid "Parent TD or DIV"
-#~ msgstr "TD o DIV padre"
-
-#~ msgid "Y Values"
-#~ msgstr "Valores Y"
+msgstr ""

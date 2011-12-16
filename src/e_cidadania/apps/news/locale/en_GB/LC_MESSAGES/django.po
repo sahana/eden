@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-13 01:25+0100\n"
+"POT-Creation-Date: 2011-12-15 13:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,37 +58,37 @@ msgstr ""
 msgid "News list"
 msgstr ""
 
-#: templates/news/news_list.html:25
+#: templates/news/news_list.html:31
 msgid "News archive"
 msgstr ""
 
-#: templates/news/news_list.html:41
+#: templates/news/news_list.html:42
 msgid "There are no posts in this space."
 msgstr ""
 
-#: templates/news/news_list.html:48
+#: templates/news/news_list.html:49
 msgid "previous"
 msgstr ""
 
-#: templates/news/news_list.html:51
+#: templates/news/news_list.html:52
 msgid "of"
 msgstr ""
 
-#: templates/news/news_list.html:54
+#: templates/news/news_list.html:55
 msgid "next"
 msgstr ""
 
-#: templates/news/news_list.html:61 templates/news/post_add.html:106
-#: templates/news/post_confirm_delete.html:34
-#: templates/news/post_edit.html:134
+#: templates/news/news_list.html:62 templates/news/post_add.html:112
+#: templates/news/post_confirm_delete.html:37
+#: templates/news/post_edit.html:139
 msgid "Go back"
 msgstr ""
 
-#: templates/news/post_add.html:5 templates/news/post_add.html.py:23
+#: templates/news/post_add.html:5 templates/news/post_add.html.py:29
 msgid "Add new post"
 msgstr ""
 
-#: templates/news/post_add.html:107 templates/news/post_edit.html:135
+#: templates/news/post_add.html:113 templates/news/post_edit.html:140
 msgid "Publish"
 msgstr ""
 
@@ -126,31 +126,43 @@ msgstr ""
 msgid "Delete news"
 msgstr ""
 
-#: templates/news/post_confirm_delete.html:27
+#: templates/news/post_confirm_delete.html:32
 msgid "Delete post"
 msgstr ""
 
-#: templates/news/post_confirm_delete.html:31
+#: templates/news/post_confirm_delete.html:34
 msgid ""
 "Are you sure you want to delete this post? This action cannot be undone."
 msgstr ""
 
-#: templates/news/post_confirm_delete.html:35
+#: templates/news/post_confirm_delete.html:38
 msgid "Delete"
 msgstr ""
 
-#: templates/news/post_detail.html:37
+#: templates/news/post_detail.html:43
 msgid "Written by"
 msgstr ""
 
-#: templates/news/post_detail.html:37
+#: templates/news/post_detail.html:43
 msgid "on"
+msgstr ""
+
+#: templates/news/post_detail.html:50
+msgid "Recent posts"
+msgstr ""
+
+#: templates/news/post_detail.html:51
+msgid "Related posts"
+msgstr ""
+
+#: templates/news/post_detail.html:52
+msgid "Share this post"
 msgstr ""
 
 #: templates/news/post_edit.html:5
 msgid "Edit news"
 msgstr ""
 
-#: templates/news/post_edit.html:22
+#: templates/news/post_edit.html:28
 msgid "Edit post"
 msgstr ""

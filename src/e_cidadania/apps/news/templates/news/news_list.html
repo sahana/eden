@@ -30,12 +30,12 @@
         <div class="span16">
             <h4>{% trans "News archive" %}</h4>
             {% for post in post_list %}
+                {% ifchanged post.pub_date|date:"F" %}
+                    <h2 class="listmonth">{{ post.pub_date|date:"F Y" }}</h2>
+                {% endifchanged %}
                 <div class="listitem">
-                    {% ifchanged post.pub_date|date:"F" %}
-                        <h1 style="font-size: 2em;text-transform: uppercase;">{{ post.pub_date|date:"F Y" }}</h1>
-                    {% endifchanged %}
-                    <div class="postdate">{{ post.pub_date|date:"l d" }}</div>
-                    <div class="posttitle"><a href="{{ post.id }}">{{ post.post_title }}</a></div>
+                    <div class="listdate">{{ post.pub_date|date:"l d" }}</div>
+                    <div class="listtitle"><a href="{{ post.id }}">{{ post.post_title }}</a></div>
                 </div>
                 <div class="clear"></div>
             {% empty %}

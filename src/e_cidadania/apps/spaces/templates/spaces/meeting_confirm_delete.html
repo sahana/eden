@@ -15,7 +15,7 @@
             </div>
       
             <form action="" method="post">{% csrf_token %}
-                <p>{% trans "Are you sure you want to delete this meeting? This action cannot be undone." %}</p>
+                <p>{% trans "Are you sure you want to delete this meeting? This action cannot be undone" %}.</p>
 
                 <hr />
                 <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>

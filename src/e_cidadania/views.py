@@ -53,7 +53,7 @@ def index_view(request):
         'recent_spaces': recent_spaces,
         'page': page_list,
         'version': settings.__version__,
-        'status': settings.__status__,       
+        'status': settings.__status__,
         'debug_mode': settings.DEBUG,
     }
 
@@ -111,7 +111,7 @@ def add_news(request):
 
         if form.is_valid():
             form_uncommited.save()
-            messages.success(request, _('Post added successfully'))
+            messages.success(request, _('Post added successfully.'))
             return redirect('/')
 
     return render_to_response('news/post_add.html',

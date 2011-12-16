@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-13 01:25+0100\n"
+"POT-Creation-Date: 2011-12-15 13:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,11 +22,11 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
-#: models.py:42
+#: models.py:42 templates/debate/debate_view.html:23
 msgid "Description"
 msgstr ""
 
-#: models.py:43
+#: models.py:43 templates/debate/debate_view.html:24
 msgid "Scope"
 msgstr ""
 
@@ -86,7 +86,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:67
+#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:82
 msgid "Add new note"
 msgstr ""
 
@@ -118,6 +118,6 @@ msgstr ""
 msgid "next"
 msgstr ""
 
-#: templates/debate/debate_view.html:5 templates/debate/debate_view.html:15
+#: templates/debate/debate_view.html:5
 msgid "View debate"
 msgstr ""

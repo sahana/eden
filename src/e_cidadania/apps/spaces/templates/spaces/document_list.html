@@ -17,7 +17,7 @@
             {% for doc in document_list %}
                 <p><a href="{{ MEDIA_URL}}{{ doc.docfile.url }}"><strong>{{ doc.title }}</strong></a> <em>{% trans "published" %} {{ doc.pub_date }}</em></p>
             {% empty %}
-                <p>{% trans "There are no documents in this space." %}</p>
+                <p>{% trans "There are no documents in this space" %}.</p>
             {% endfor %}
       
             <hr />

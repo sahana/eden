@@ -31,8 +31,7 @@ class Space(models.Model):
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
     url = models.CharField(_('URL'), max_length=100, unique=True,
-                            help_text=_('All lowercase. Obligatory. \
-                                        Take in mind that this will be the\
+                            help_text=_('All lowercase. This will be the \
                                         accesible URL'))
     description = models.TextField(_('Description'))
     date = models.DateTimeField(auto_now_add=True)
@@ -40,7 +39,7 @@ class Space(models.Model):
 
     logo = models.ImageField(upload_to='spaces/logos',
                              verbose_name=_('Logotype'),
-                             help_text=_('100px width, 75px height'))
+                             help_text=_('100x75 pixels'))
     banner = models.ImageField(upload_to='spaces/banners',
                                verbose_name=_('Banner'),
                                help_text=_('75px height'))
@@ -126,8 +125,8 @@ class MeetingType(models.Model):
     typetitle = models.CharField(_('Name'), max_length=100)
 
     class Meta:
-        verbose_name = _('Meeting Type')
-        verbose_name_plural = _('Meeting Types')
+        verbose_name = _('Meeting type')
+        verbose_name_plural = _('Meeting types')
 
     def __unicode__(self):
         return self.typetitle
@@ -146,7 +145,7 @@ class Meeting(models.Model):
     meeting_author = models.ForeignKey(User, verbose_name=_('Author'),
                                      blank=True, null=True,
                                      related_name='meeting_author')
-    meeting_date = models.DateField(verbose_name=_('Meeting Date'))
+    meeting_date = models.DateField(verbose_name=_('Meeting date'))
     meeting_type = models.ForeignKey(MeetingType, blank=True, null=True)
     description = models.TextField(_('Description'), blank=True, null=True)
     location = models.TextField(_('Location'), blank=True, null=True)
