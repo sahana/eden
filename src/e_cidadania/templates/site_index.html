@@ -35,8 +35,11 @@
                                 })
                             })
                     </script>
-                    <br />
+                {% empty %}
+                    <li>{% trans "There are no spaces." %}</li>
                 {% endfor %}
+                <br />
+                <li>&raquo;<a href="{% url 'list-spaces' %}">{% trans "View all the spaces" %}</a></li>
             </ul>
         </div>
         <div class="span8">
@@ -66,7 +69,7 @@
                 {% for post in publication %}
                     <li><a href="{{ post.get_absolute_url }}">{{ post.post_title }}</a></li>
                 {% empty %}
-                    <p>{% trans "No public news" %}.</p>
+                    <p>{% trans "No public news." %}</p>
                 {% endfor %}
             </ul>
         </div>
@@ -84,7 +87,7 @@
     
     <div class="row">
         <div class="span16">
-            <strong>13.512</strong> debates en <strong>7.645</strong> procesos participativos
+            <strong>7.645</strong> procesos participativos
         </div>
     </div>
 
