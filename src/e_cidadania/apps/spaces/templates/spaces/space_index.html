@@ -61,10 +61,10 @@
                     <div class="row">
                         <div class="span11 space-content">
                             {% if get_place.description %}
-                                <p><strong>{% trans "Description" %}:</strong> {{ get_place.description|removetags:'p'|safe }}</p>
+                                <p><strong>{% trans "Description:" %}</strong> {{ get_place.description|removetags:'p'|safe }}</p>
                             {% endif %}
-                            <p><strong>{% trans "Current status" %}:</strong> Ejemplo</p>
-                            <p><strong>{% trans "Users" %}:</strong> 13411</p>
+                            <p><strong>{% trans "Current status:" %}</strong> Ejemplo</p>
+                            <p><strong>{% trans "Users: %}</strong> 13411</p>
                             <hr />
                             <h4>{% trans "Recent activity" %}</h4>
                             
@@ -75,7 +75,7 @@
                                         {% for news in publication %}
                                             <li><a href="{% url 'profile_public' news.author %}">{{ news.author }}</a> {% trans "posted" %} <a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a> {% trans "on" %} {{ news.pub_date|date:"d F Y" }}</li>
                                         {% empty %} 
-                                            <li>{% trans "Nothing published yet" %}.</li>
+                                            <li>{% trans "Nothing published yet." %}</li>
                                         {% endfor %}
                                     </ul>
                                 {% endif %}  
@@ -87,7 +87,7 @@
                                     {% for proposal in proposals %}
                                         <li><a href="{% url 'profile_public' proposal.author %}">{{ proposal.author }}</a> {% trans "proposed" %} <a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "on" %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                     {% empty %}
-                                        <li>{% trans "No proposals available" %}.</li>
+                                        <li>{% trans "No proposals available." %}</li>
                                     {% endfor %} 
                                 </ul>
                             {% endif %}
@@ -98,7 +98,7 @@
                                     {% for debate in debates %}
                                         <li><a href="{% url 'profile_public' debate.author %}">{{ debate.author }}</a> {% trans "created debate" %} <a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a> {% trans "on" %} {{ debate.date|date:"d F Y" }}</li>
                                     {% empty %}
-                                        <li>{% trans "No debates started" %}.</li>
+                                        <li>{% trans "No debates started." %}</li>
                                     {% endfor %}
                                 </ul>
                             {% endif %} 
@@ -171,7 +171,7 @@
                                 {% for debate in debates %}
                                     <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></li>
                                 {% empty %}
-                                    <li>{% trans "No debates started" %}.</li>
+                                    <li>{% trans "No debates started." %}</li>
                                 {% endfor %}
                             </ul>
                             <h4>{% trans "Closed debates" %}</h4>
@@ -216,7 +216,7 @@
                                 {% for proposal in proposals %}
                                     <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by"%} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                 {% empty %}
-                                    <li>{% trans "No proposals available" %}.</li>
+                                    <li>{% trans "No proposals available." %}</li>
                                 {% endfor %}
                             </ul>
                             <h4>{% trans "Mixed proposals" %}</h4>
@@ -250,7 +250,7 @@
                                 {% for doc in documents %}
                                     <li><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }}</a></li>
                                 {% empty %}
-                                    <li>{% trans "No documents available" %}.</li>
+                                    <li>{% trans "No documents available." %}</li>
                                 {% endfor %}
                             </ul>
                         </div>
@@ -418,5 +418,5 @@
 {% endblock %}
 
 {% block extrainfo %}
-    <p>{% trans "Space created by" %}: {{ get_place.author }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
+    <p>{% trans "Space created by:" %} {{ get_place.author }} {% trans "on" %} {{ get_place.date|date:"j/m/Y G:i"}}</p>
 {% endblock %}
