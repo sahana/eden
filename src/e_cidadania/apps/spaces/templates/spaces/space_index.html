@@ -64,7 +64,7 @@
                                 <p><strong>{% trans "Description:" %}</strong> {{ get_place.description|removetags:'p'|safe }}</p>
                             {% endif %}
                             <p><strong>{% trans "Current status:" %}</strong> Ejemplo</p>
-                            <p><strong>{% trans "Users: %}</strong> 13411</p>
+                            <p><strong>{% trans "Users:" %}</strong> 13411</p>
                             <hr />
                             <h4>{% trans "Recent activity" %}</h4>
                             
@@ -140,6 +140,10 @@
                                 <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
                                 {{ news.post_message|safe }}
                                 <div style="margin-bottom:30px;"></div>
+                            {% empty %}
+                                <ul class="unstyled">
+                                    <li>{% trans "There are no news for this space." %}</li>
+                                </ul>
                             {% endfor %}
                         </div>
                         <div class="span5 space-sidebar">
@@ -271,15 +275,16 @@
                         </div>
                     </div>
                     {% comment %}
-                                            {% if perms.spaces.edit_document %}
-                                                <a href="{% url 'edit-document' get_place.url doc.id %}">
-                                                    <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
-                                            </a>
-                                    {% if perms.spaces.delete_document %}
-                                        <a href="{% url 'delete-document' get_place.url doc.id %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
-                                        </a>
-                                    {% endif %}
+                        {% if perms.spaces.edit_document %}
+                            <a href="{% url 'edit-document' get_place.url doc.id %}">
+                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                            </a>
+                        {% endif %}
+                        {% if perms.spaces.delete_document %}
+                            <a href="{% url 'delete-document' get_place.url doc.id %}">
+                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                            </a>
+                        {% endif %}
                     {% endcomment %}
                 </div>
                 {% endif %}
