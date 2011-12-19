@@ -1,31 +1,30 @@
 {% load comments i18n %}
 <div id="ctitle">{% trans "Leave a comment" %}</div>
 <form action="{% comment_form_target %}" method="post" class="commentform">{% csrf_token %}
-  {% if next %}<div><input type="hidden" name="next" value="{{ next }}" /></div>{% endif %}
-  {% for field in form %}
-    {% if field.is_hidden %}
-      <div>{{ field }}</div>
-    {% else %}
-        <div class="clearfix {% if field.errors %}error{% endif%}" {% ifequal field.name "honeypot" %} style="display:none;"{% endifequal %}>
-            <label for="prependedInput">{{ field.label }}</label> 
-            <div class="input"> 
-                {{ field }}
-                <span class="help-inline">
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            {{ error|escape }}
-                        {% endfor %}
-                    {% else %}
-                        {{ form.name.help_text }}
-                    {% endif %}
-                </span>
-            </div> 
-        </div>
-    {% endif %}
-    
-  {% endfor %}
-  <p class="submit">
-    <input type="submit" name="post" class="submit-post btn" value="{% trans "Post" %}" />
-    <input type="submit" name="preview" class="submit-preview btn" value="{% trans "Preview" %}" />
-  </p>
+    {% if next %}<div><input type="hidden" name="next" value="{{ next }}" /></div>{% endif %}
+    {% for field in form %}
+        {% if field.is_hidden %}
+            <div>{{ field }}</div>
+        {% else %}
+            <div class="clearfix {% if field.errors %}error{% endif%}" {% ifequal field.name "honeypot" %} style="display:none;"{% endifequal %}>
+                <label for="prependedInput">{{ field.label }}</label>
+                <div class="input">
+                    {{ field }}
+                    <span class="help-inline">
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        {% else %}
+                            {{ form.name.help_text }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    <p class="submit">
+        <input type="submit" name="post" class="submit-post btn" value="{% trans "Post" %}" />
+        <input type="submit" name="preview" class="submit-preview btn" value="{% trans "Preview" %}" />
+    </p>
 </form>

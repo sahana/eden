@@ -3,7 +3,7 @@
 
 {% trans "Following this link, you will validate your e-mail address:" %}
 
-http://{{ domain }}{% url email_validation_process key %}
+http://{{ domain }}{% url 'email_validation_process' key %}
 
 {% trans "Your username, in case you've forgotten:" %} {{ user.username }}
 
