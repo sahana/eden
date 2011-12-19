@@ -22,10 +22,6 @@ a {
 	text-decoration: none;
 }
 
-p {
-	text-indent: 10px;
-}
-
 img {
 	border: none;
 }
@@ -79,7 +75,27 @@ hr { /* This hr replaces the bootstrap one */
 }
 /* END NEWS LIST/ARCHIVE */
 
+/* COMMENT LIST */
+.comment {
+    border-right: 1px solid #DDD;
+    border-left: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
 
+.comment_data {
+    background: #EEE;
+    border-top: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+    padding: 5px;
+    margin-bottom: 15px;
+}
+
+.comment_text {
+    padding: 0px 10px 0px 10px;
+}
+/* END COMMENT LIST*/
 
 
 
