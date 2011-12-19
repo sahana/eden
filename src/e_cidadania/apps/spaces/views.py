@@ -251,7 +251,7 @@ def edit_space(request, space_name):
                 ef.space = space
                 ef.save()
             
-            messages.success(self.request, _('Space edited successfully'))
+            messages.success(request, _('Space edited successfully'))
             return redirect('/spaces/' + space)
 
     for i in request.user.profile.spaces.all():
