@@ -27,9 +27,13 @@
             This space is meant for the start and end fields
         </div>
     </div>
-    
+
+{% endblock %}
+
+{% block freewidth %}
+
     <div class="row">
-        <div class="span16">
+        <div class="span16 specialmargin">
             <div id="debate-number" class="hidden">{{ debate.pk }}</div>
             <div id="last-note" class="hidden">{{ lastnote }}</div>
             
@@ -47,7 +51,7 @@
                     <tbody id="debate-body">
                         {% for row in rows %}
                             <tr id="debate-row-{{ forloop.counter }}">
-                                <th id="{{ row.id }}" class="debate-ttitle">{{ row.criteria }}</th>
+                                <th id="{{ row.id }}" style="width:10px;"><div class="debate-ttitle">{{ row.criteria }}</div></th>
                                 {% for td in columns %}
                                     <td headers="{{ td.id }} {{ row.id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
