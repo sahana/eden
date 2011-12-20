@@ -13,31 +13,30 @@
 </script>
 {% endblock %}
 
-{% block nav-main %}
-{% include "userprofile/menu.html" %}
-{% endblock %}
-
 {% block content %}
-	<form action="" method="post" accept-charset="utf-8">
-	<fieldset>
-		<legend>{% if user.email %}{% trans "E-mail change" %}{% else %}{% trans "Add e-mail" %}{% endif %}</legend>
-		<label for="id_email">{% trans 'New e-mail address' %}</label>
-		<p>{{ form.email }}
-		{% if form.email.errors %}
-			<span class="quiet red"><br />* {{ form.email.errors|join:"; " }}</span>
-		{% endif %}
-		</p>
-		{% if form.non_field_errors %}
-			<ul class="quiet red">{{ form.non_field_errors.as_ul }}</ul>
-		{% endif %}
-	</fieldset>
-	<p><input type="submit" value="{% trans 'Send confirmation' %}" /></p>
-	</form>
-{% endblock %}
 
-{% block content-related %}
-	<div class="box">
-		<h3>{% trans "Add e-mail" %}</h3>
-		<p>{% trans "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation" %}.</p>
-	</div>
+    <div class="row">
+        <div class="span16">
+            <h4>{% trans "Add e-mail" %}</h4>
+            <p>{% trans "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation" %}.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span16">
+            <form action="" method="post" accept-charset="utf-8">
+                <legend>{% if user.email %}{% trans "E-mail change" %}{% else %}{% trans "Add e-mail" %}{% endif %}</legend>
+                <label for="id_email">{% trans 'New e-mail address' %}</label>
+                <p>{{ form.email }}
+                    {% if form.email.errors %}
+                        <span class="quiet red"><br />* {{ form.email.errors|join:"; " }}</span>
+                    {% endif %}
+                </p>
+                {% if form.non_field_errors %}
+                    <ul class="quiet red">{{ form.non_field_errors.as_ul }}</ul>
+                {% endif %}
+                <p><input type="submit" value="{% trans 'Send confirmation' %}" /></p>
+            </form>
+        </div>
+    </div>
+
 {% endblock %}
