@@ -1,0 +1,155 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" y="0.0" x="0.0">
+    <defs>
+        <symbol viewBox="0 -800 556 1050" id="a">
+            <path d="M65 369Q71 539 275 539Q372 539 422 503T472 396V88Q472 47 517 47Q526 47 535 49V-14Q500 -23 478 -23Q438 -23 418 -5T392 54Q308 -23 214 -23Q135 -23 89 19T42 132Q42 155 46 174T56 207T76 234T99 255T131 270T166 281T208 290T252 297T302 304Q351 310 370 323T389 362V384Q389 422 359 442T272 462Q214 462 184 440T149 369H65ZM232 50Q301 50 345 86T389 165V259Q364 247 314 239T226 225T159 197T129 134T156 72T232 50Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="b">
+            <path d="M54 729H137V453Q194 539 299 539Q403 539 463 465T523 264Q523 134 461 56T295 -23Q188 -23 129 67V0H54V729ZM283 461Q217 461 177 406T137 258T177 111T283 55Q351 55 393 110T436 255Q436 349 395 405T283 461Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="e">
+            <path d="M513 234H127Q128 162 155 122Q198 54 281 54Q383 54 418 159H502Q486 73 427 25T278 -23Q168 -23 104 51T40 255T105 461T280 539Q354 539 410 502T492 401Q513 346 513 234ZM129 302H423Q424 304 424 308Q424 373 382 417T279 462Q216 462 175 419T129 302Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 222 1050" id="i">
+            <path d="M150 518V-6H67V518H150ZM150 729V624H66V729H150Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 222 1050" id="l">
+            <path d="M152 729V0H68V729H152Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="L">
+            <path d="M173 729V82H533V0H80V729H173Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="1">
+            <path d="M259 505H102V568Q204 581 235 604T289 709H347V0H259V505Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="0">
+            <path d="M43 343Q43 432 58 500T96 606T151 669T212 701T275 709Q507 709 507 337Q507 162 448 70T275 -23Q161 -23 102 70T43 343ZM417 631T275 631T133 342Q133 50 273 50Q347 50 382 122T417 345Q417 631 275 631Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="3">
+            <path d="M270 632Q194 632 166 591T135 480H47Q52 709 269 709Q370 709 427 657T485 514Q485 406 386 367Q450 345 478 306T506 198Q506 97 441 37T266 -23Q48 -23 32 206H120Q125 129 161 92T269 55Q338 55 377 92T416 197Q416 326 269 326L232 325H221V400Q316 402 355 424T395 511Q395 567 362 599T270 632Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="2">
+            <path d="M50 463Q57 709 284 709Q385 709 448 651T511 501Q511 369 361 287L261 233Q196 198 168 165T133 87H506V0H34Q40 117 81 180T233 307L325 359Q421 414 421 499Q421 556 381 594T281 632Q148 632 138 463H50Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="5">
+            <path d="M476 709V622H181L153 424Q212 467 284 467Q386 467 449 402T513 231Q513 119 445 48T270 -23Q229 -23 195 -14T138 7T97 40T69 76T51 115T40 148T35 174H123Q154 55 268 55Q340 55 381 99T423 219Q423 298 381 343T268 389Q227 389 198 375T138 323H57L110 709H476Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 611 1050" id="T">
+            <path d="M354 647V0H261V647H21V729H593V647H354Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="X">
+            <path d="M391 374L649 0H534L335 304L135 0H22L280 374L38 729H151L338 443L526 729H637L391 374Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="Y">
+            <path d="M387 286V0H294V286L13 729H128L342 374L550 729H661L387 286Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 500 1050" id="x">
+            <path d="M292 271L473 0H376L245 201L112 0H17L202 267L27 524H122L248 334L374 524H468L292 271Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 278 1050" id="t">
+            <path d="M254 524V456H168V97Q168 69 177 60T214 50Q239 50 254 54V-16Q215 -23 186 -23Q137 -23 111 -2T85 60V456H14V524H85V668H168V524H254Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+    </defs>
+    <rect opacity="0.35" height="25.1666666667" width="261.055238095" y="22.0" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="25.1666666667" width="261.055238095" y="47.1666666667" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <rect opacity="0.35" height="25.1666666667" width="261.055238095" y="72.3333333333" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="25.1666666667" width="261.055238095" y="97.5" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <rect opacity="0.35" height="25.1666666667" width="261.055238095" y="122.666666667" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="25.1666666667" width="261.055238095" y="147.833333333" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <g>
+        <use y="174.0" x="46.0044267435" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="174.0" x="50.2406172197" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="87.0802898599" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="174.0" x="91.3164803361" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="95.5526708123" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="130.274248214" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="174.0" x="134.510438691" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="174.0" x="138.746629167" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="173.468206569" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="174.0" x="177.704397045" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="181.940587521" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="216.662164923" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="174.0" x="220.8983554" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="174.0" x="225.134545876" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="259.856123278" height="8.0" xlink:href="#3" width="4.23619047619" />
+        <use y="174.0" x="264.092313754" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="268.32850423" height="8.0" xlink:href="#0" width="4.23619047619" />
+    </g>
+    <g>
+        <use y="138.717136115" x="21.0" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="138.717136115" x="25.2361904762" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="138.717136115" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="138.717136115" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="102.297576422" x="21.0" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="102.297576422" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="102.297576422" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="102.297576422" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="65.8780167291" x="21.0" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="65.8780167291" x="25.2361904762" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="65.8780167291" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="65.8780167291" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="29.458457036" x="21.0" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="29.458457036" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="29.458457036" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="29.458457036" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+    </g>
+    <svg maxX="339.113793103" maxY="2657.31185567" height="151.0" width="261.055238095" viewBox="38.9447619048 22.0 261.055238095 151.0" id="canvas-root" minX="36.9242647059" minY="584.25" y="22.0" x="38.9447619048">
+        <g id="data">
+            <circle cy="70.0065563515" cx="232.315855789" r="2" data="Acre" fill="rgb(70,64,84)" />
+            <circle cy="134.728714661" cx="46.70012883" r="2" data="Alagoas" fill="rgb(39,168,12)" />
+            <circle cy="36.2918987801" cx="258.089944821" r="2" data="Amapa" fill="rgb(101,33,84)" />
+            <circle cy="31.2169645477" cx="246.082914996" r="2" data="Amazonas" fill="rgb(112,33,74)" />
+            <circle cy="153.230567436" cx="91.0950208463" r="2" data="Bahia" fill="rgb(21,168,30)" />
+            <circle cy="152.885130329" cx="78.5120913903" r="2" data="Ceara" fill="rgb(22,172,24)" />
+            <circle cy="106.297576422" cx="201.41947146" r="2" data="Distrito Federal" fill="rgb(44,95,79)" />
+            <circle cy="100.889271808" cx="237.270456895" r="2" data="Goias" fill="rgb(42,74,102)" />
+            <circle cy="170.760197079" cx="83.0680255691" r="2" data="Litigated Zone" fill="rgb(11,180,28)" />
+            <circle cy="117.897206184" cx="177.878764157" r="2" data="Mato Grosso do Sul" fill="rgb(38,112,69)" />
+            <circle cy="142.646504242" cx="158.094622323" r="2" data="Minas Gerais" fill="rgb(24,131,64)" />
+            <circle cy="81.9310391455" cx="276.591601017" r="2" data="Mato Grosso" fill="rgb(49,47,123)" />
+            <circle cy="105.193563887" cx="179.729328844" r="2" data="Maranhao" fill="rgb(48,105,65)" />
+            <circle cy="160.105983264" cx="58.8440040067" r="2" data="Paraiba" fill="rgb(18,184,17)" />
+            <circle cy="102.364263975" cx="173.487378391" r="2" data="Parana" fill="rgb(52,106,61)" />
+            <circle cy="57.5841946278" cx="239.008750341" r="2" data="Para" fill="rgb(82,54,82)" />
+            <circle cy="141.615032656" cx="137.822336798" r="2" data="Piaui" fill="rgb(26,141,52)" />
+            <circle cy="157.669047397" cx="60.3157381082" r="2" data="Pernambuco" fill="rgb(19,182,17)" />
+            <circle cy="136.23445449" cx="121.078708921" r="2" data="Rio de Janeiro" fill="rgb(31,146,42)" />
+            <circle cy="161.911382185" cx="48.7018324533" r="2" data="Rio Grande do Norte" fill="rgb(17,189,13)" />
+            <circle cy="112.780258048" cx="100.345608911" r="2" data="Rio Grande do Sul" fill="rgb(54,137,28)" />
+            <circle cy="67.808381061" cx="286.049840898" r="2" data="Rondonia" fill="rgb(59,37,122)" />
+            <circle cy="85.7997912961" cx="55.5255250654" r="2" data="Roraima" fill="rgb(93,114,12)" />
+            <circle cy="84.9192948823" cx="194.508438124" r="2" data="Santa Catarina" fill="rgb(64,87,67)" />
+            <circle cy="56.475618762" cx="282.912072889" r="2" data="Sao Paulo" fill="rgb(71,35,113)" />
+            <circle cy="138.457118795" cx="40.6236094332" r="2" data="Sergipe" fill="rgb(36,172,10)" />
+            <circle cy="97.0366026716" cx="240.664267908" r="2" data="Tocantins" fill="rgb(44,71,103)" />
+            <line y2="54.9221814167" stroke-width="1" x2="300.0" stroke="black" y1="156.903359777" x1="38.9447619048" fill="rgb(-12,235,-3)" />
+        </g>
+    </svg>
+    <rect height="151.0" width="261.055238095" stroke="black" y="22.0" x="38.9447619048" stroke-width="1" fill="none" />
+    <g class="labels">
+        <use y="5.0" x="120.471428571" height="15.0" xlink:href="#T" width="8.72857142857" />
+        <use y="5.0" x="129.2" height="15.0" xlink:href="#i" width="3.17142857143" />
+        <use y="5.0" x="132.371428571" height="15.0" xlink:href="#t" width="3.97142857143" />
+        <use y="5.0" x="136.342857143" height="15.0" xlink:href="#l" width="3.17142857143" />
+        <use y="5.0" x="139.514285714" height="15.0" xlink:href="#e" width="7.94285714286" />
+        <use y="5.0" x="151.742857143" height="15.0" xlink:href="#T" width="8.72857142857" />
+        <use y="5.0" x="160.471428571" height="15.0" xlink:href="#e" width="7.94285714286" />
+        <use y="5.0" x="168.414285714" height="15.0" xlink:href="#x" width="7.14285714286" />
+        <use y="5.0" x="175.557142857" height="15.0" xlink:href="#t" width="3.97142857143" />
+        <use y="185.0" x="153.22" height="10.0" xlink:href="#X" width="6.35238095238" />
+        <use y="185.0" x="162.42952381" height="10.0" xlink:href="#L" width="5.29523809524" />
+        <use y="185.0" x="167.724761905" height="10.0" xlink:href="#a" width="5.29523809524" />
+        <use y="185.0" x="173.02" height="10.0" xlink:href="#b" width="5.29523809524" />
+        <use y="185.0" x="178.315238095" height="10.0" xlink:href="#e" width="5.29523809524" />
+        <use y="185.0" x="183.61047619" height="10.0" xlink:href="#l" width="2.11428571429" />
+        <g transform="rotate(-90)">
+            <use y="5.0" x="-113.752380952" height="10.0" xlink:href="#Y" width="6.35238095238" />
+            <use y="5.0" x="-104.542857143" height="10.0" xlink:href="#L" width="5.29523809524" />
+            <use y="5.0" x="-99.2476190476" height="10.0" xlink:href="#a" width="5.29523809524" />
+            <use y="5.0" x="-93.9523809524" height="10.0" xlink:href="#b" width="5.29523809524" />
+            <use y="5.0" x="-88.6571428571" height="10.0" xlink:href="#e" width="5.29523809524" />
+            <use y="5.0" x="-83.3619047619" height="10.0" xlink:href="#l" width="2.11428571429" />
+        </g>
+    </g>
+</svg>

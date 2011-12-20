@@ -1,0 +1,72 @@
+{{extend "layout.html"}}
+{{if request.function == "index":}}
+  <h1>{{=T("Available databases and tables")}}</h1>
+  {{if not databases:}}{{=T("No databases in this application")}}{{pass}}
+  {{for db in sorted(databases):}}
+    {{for table in databases[db].tables:}}
+      <h2>{{=A("%s.%s" % (db, table), _href=URL(f='select', args=[db], vars=dict(query="%s.%s.id>0" % (db, table))))}}</h2>
+      [ {{=A(T("insert new") + " " + table, _href=URL(f='insert', args=[db,table]))}} ]
+    <br /><br />
+    {{pass}}
+  {{pass}}
+{{elif request.function == "select":}}
+  <h1>{{=XML(T("database %s select") % A(request.args[0], _href=URL(f='index'))) }}
+  </h1>
+   {{if table:}}
+  [ {{=A(T("insert new %s") % table, _href=URL(f='insert', args=[request.args[0], table]))}} ]<br/><br/>
+    <h2>{{=T("Rows in table")}}</h2><br/>
+   {{else:}}
+    <h2>{{=T("Rows selected")}}</h2><br/>
+   {{pass}}
+   {{=form}}
+   <p>{{=T('The "query" is a condition like "db.table1.field1==\'value\'". Something like "db.table1.field1 == db.table2.field2" results in a SQL JOIN.')}}<br/>
+      {{=T("Use (...)&(...) for AND, (...)|(...) for OR, and ~(...)  for NOT to build more complex queries.")}}<br/>
+      {{=T('"update" is an optional expression like "field1=\'newvalue\'". You cannot update or delete the results of a JOIN')}}</p>
+    <br/><br/>
+    <h3>{{=nrows}} {{=T("selected")}}</h3>
+    {{if start>0:}}[ {{=A(T("previous 100 rows"), _href=URL(f='select', args=request.args[0], vars=dict(start=start - 100)))}} ]{{pass}}
+    {{if stop<nrows:}}[ {{=A(T("next 100 rows"), _href=URL(f='select', args=request.args[0], vars=dict(start=start + 100)))}} ]{{pass}}    
+    {{if rows:}}
+       <div style="overflow: auto;" width="80%">
+       {{linkto=URL(f='update', args=request.args[0])}}
+       {{upload=URL(f='download', args=request.args[0])}}    
+       {{=SQLTABLE(rows, linkto, upload, orderby=True, _class="sortable")}}
+       </div>
+    {{pass}}
+    <br/><br/><h2>{{=T("Import/Export")}}</h2><br/>
+    [ <a href="{{=URL(f='csv', args=request.args[0], vars=dict(query=query))}}">{{=T("export as csv file")}}</a> ]
+  {{if table:}}
+    {{=FORM(T("or import from csv file") + " ", INPUT(_type="file", _name="csvfile"), INPUT(_type="hidden", _value=table, _name="table"), INPUT(_type="submit", _value="import"))}}
+  {{pass}}
+
+{{elif request.function=="insert":}}  
+  <h1>{{=T("database")}} {{=A(request.args[0], _href=URL(f='index'))}}
+    {{=T("table")}} {{=A(request.args[1], _href=URL(f='select', args=request.args[0], vars=dict(query="%s.%s.id > 0" % tuple(request.args[:2]))))}}
+  </h1>
+  <h2>{{=T("New Record")}}</h2><br/>
+  {{=form}}
+{{elif request.function=="update":}}
+  <h1>{{=T("database")}} {{=A(request.args[0], _href=URL(f='index'))}}
+    {{=T("table")}} {{=A(request.args[1], _href=URL(f='select', args=request.args[0], vars=dict(query="%s.%s.id > 0" % tuple(request.args[:2]))))}}
+    {{=T("record id")}} {{=A(request.args[2], _href=URL(f='update', args=request.args[:3]))}}
+  </h1>
+  <h2>{{=T("Edit current record")}}</h2><br/><br/>{{=form}}
+{{elif request.function == "state":}}
+  <h1>{{=T("Internal State")}}</h1>
+  <h2>{{=T("Current request")}}</h2>
+  {{=BEAUTIFY(request)}}
+  <br/><h2>{{=T("Current response")}}</h2>
+  {{=BEAUTIFY(response)}}
+  <br/><h2>{{=T("Current session")}}</h2>
+  {{=BEAUTIFY(session)}}
+{{pass}}
+<script><!--
+$(document).ready(function(){
+  $('table.sortable tbody tr').mouseover( function() {
+     $(this).addClass('highlight'); }).mouseout( function() { 
+     $(this).removeClass('highlight'); });
+  $('table.sortable tbody tr:odd').addClass('odd');
+  $('table.sortable tbody tr:even').addClass('even');
+
+});
+//--></script>

@@ -1,0 +1,8 @@
+{{extend "display.html"}}
+{{try:}}
+ {{id = int(request.args(0))}}
+{{except ValueError:}}
+ {{id = int(request.args(1))}}
+{{pass}}
+<a class="action-btn" href="{{=URL(f='budget_staff_bundle', args=id)}}">{{=T("Contents")}}</a>
+<p></p>

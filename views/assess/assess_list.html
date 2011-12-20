@@ -1,0 +1,5 @@
+{{extend "layout.html"}}
+{{if auth.is_logged_in():}}
+{{add_btn = A(T("Add Assessment"), _id="add-btn", _class="action-btn", _href=URL(c="assess", f="basic_assess"))}}
+{{pass}}
+{{include "_list.html"}}

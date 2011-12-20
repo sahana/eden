@@ -1,0 +1,247 @@
+{{extend "layout.html"}}
+<link href="/{{=request.application}}/static/scripts/ext/examples/fileuploadfield.css" rel="stylesheet" type="text/css" charset="utf-8" />
+<style type="text/css">
+    .x-grid3 .x-window-ml{
+        padding-left: 0;	
+    } 
+    .x-grid3 .x-window-mr {
+        padding-right: 0;
+    } 
+    .x-grid3 .x-window-tl {
+        padding-left: 0;
+    } 
+    .x-grid3 .x-window-tr {
+        padding-right: 0;
+    } 
+    .x-grid3 .x-window-tc .x-window-header {
+        height: 3px;
+        padding:0;
+        overflow:hidden;
+    } 
+    .x-grid3 .x-window-mc {
+        border-width: 0;
+        background: #cdd9e8;
+    } 
+    .x-grid3 .x-window-bl {
+        padding-left: 0;
+    } 
+    .x-grid3 .x-window-br {
+        padding-right: 0;
+    }
+    .x-grid3 .x-panel-btns {
+        padding:0;
+    }
+    .x-grid3 .x-panel-btns td.x-toolbar-cell {
+        padding:3px 3px 0;
+    }
+    .x-box-inner {
+        zoom:1;
+    }
+    .icon-user-add {
+        background-image: url(/{{=request.application}}/static/img/silk/user_add.png) !important;
+    }
+    .icon-user-delete {
+        background-image: url(/{{=request.application}}/static/img/silk/user_delete.png) !important;
+    }        
+</style>
+    
+
+
+<p>&nbsp;</p>
+
+<div id='table-container'>
+<table>
+<tr><b>{{=T("Load Raw File into Grid")}}</b>:</tr>
+<tr><div id='upload_button'></div></tr>
+<tr><a href='#' class='action-btn'>{{=T("Load Cleaned Data into Database")}}</a></tr>
+</table>
+</div>
+
+<script type="text/javascript" src="/{{=request.application}}/static/scripts/ext/examples/FileUploadField.js"></script>
+<script type="text/javascript" src="/{{=request.application}}/static/scripts/ext/examples/RowEditor.js"></script>
+
+<script type="text/javascript">//<![CDATA[
+Ext.onReady(function() {
+
+    // Upload Button
+    var fbutton = new Ext.ux.form.FileUploadField({
+        renderTo: 'upload_button',
+        buttonOnly: true,
+        listeners: {
+            'fileselected': function(fb, v){
+                // Load the Store
+                // Display the Grid
+            }
+        }
+    });
+
+    // Data format
+    var Waypoint = Ext.data.Record.create([{
+        name: 'name',
+        type: 'string'
+    }, {
+        name: 'description',
+        type: 'string'
+    }, {
+        name: 'category',
+        type: 'string'
+    //}, {
+    // @ToDo: We want to have the field, but not display to user
+    //    name: 'created_on',
+    //    type: 'date',
+    //    dateFormat: 'timestamp'
+    },{
+        name: 'lat',
+        type: 'float'
+    },{
+        name: 'lon',
+        type: 'float'
+    }]);
+    
+    // Store to hold the uploaded waypoints in
+    var store = new Ext.data.GroupingStore({
+        reader: new Ext.data.JsonReader({fields: Waypoint}),
+        data: {},
+        sortInfo: {field: 'name', direction: 'ASC'}
+    });
+
+    // Grid with Editable Rows to clean the data up
+    var editor = new Ext.ux.grid.RowEditor({
+        saveText: 'Update'
+    });
+
+    var grid = new Ext.grid.GridPanel({
+        store: store,
+        width: 600,
+        region: 'center',
+        margins: '0 5 5 5',
+        autoExpandColumn: 'name',
+        plugins: [editor],
+        view: new Ext.grid.GroupingView({
+            markDirty: false
+        }),
+        tbar: [{
+            iconCls: 'icon-user-add',
+            text: 'Add Waypoint',
+            handler: function(){
+                var e = new Waypoint({
+                    name: '',
+                    description: '',
+                    category: '',
+                    //created_on: (new Date()).clearTime(),
+                    lat: '',
+                    lon: ''
+                });
+                editor.stopEditing();
+                store.insert(0, e);
+                grid.getView().refresh();
+                grid.getSelectionModel().selectRow(0);
+                editor.startEditing(0);
+            }
+        },{
+            ref: '../removeBtn',
+            iconCls: 'icon-user-delete',
+            text: 'Remove Waypoint',
+            disabled: true,
+            handler: function(){
+                editor.stopEditing();
+                var s = grid.getSelectionModel().getSelections();
+                for(var i = 0, r; r = s[i]; i++){
+                    store.remove(r);
+                }
+            }
+        }],
+
+        columns: [
+        new Ext.grid.RowNumberer(),
+        {
+            id: 'name',
+            header: 'Name',
+            dataIndex: 'name',
+            width: 150,
+            sortable: true,
+            editor: {
+                xtype: 'textfield',
+                allowBlank: false
+            }
+        },{
+            header: 'Description',
+            dataIndex: 'description',
+            width: 100,
+            sortable: true,
+            editor: {
+                xtype: 'textfield',
+                allowBlank: true
+            }
+        },{
+            header: 'Category',
+            dataIndex: 'category',
+            width: 150,
+            sortable: true,
+            editor: {
+                xtype: 'textfield',
+                allowBlank: false
+            }
+        //},{
+        // We don't want to display this column - no need to be editable
+        //    xtype: 'datecolumn',
+        //    header: 'Start Date',
+        //    dataIndex: 'start',
+        //    format: 'm/d/Y',
+        //    width: 100,
+        //    sortable: true,
+        //    groupRenderer: Ext.util.Format.dateRenderer('M y'),
+        //    editor: {
+        //        xtype: 'datefield',
+        //        allowBlank: false,
+        //       minValue: '01/01/2006',
+        //        minText: 'Can\'t have a start date before GPS was invented!',
+        //        maxValue: (new Date()).format('m/d/Y')
+        //    }
+        },{
+            xtype: 'numbercolumn',
+            header: 'Lat',
+            dataIndex: 'lat',
+            format: '0.00',
+            width: 100,
+            sortable: true,
+            editor: {
+                xtype: 'numberfield',
+                allowBlank: false,
+                minValue: -90,
+                maxValue: 90
+            }
+        },{
+            xtype: 'numbercolumn',
+            header: 'Lon',
+            dataIndex: 'lon',
+            format: '0.00',
+            width: 100,
+            sortable: true,
+            editor: {
+                xtype: 'numberfield',
+                allowBlank: false,
+                minValue: -180,
+                maxValue: 180
+            }
+        }]
+    });
+
+    var layout = new Ext.Panel({
+        title: 'Clean Waypoints before inserting into Database',
+        layout: 'border',
+        layoutConfig: {
+            columns: 1
+        },
+        width: 600,
+        height: 600,
+        items: [grid]
+    });
+    layout.render(Ext.getBody());
+
+    grid.getSelectionModel().on('selectionchange', function(sm){
+        grid.removeBtn.setDisabled(sm.getCount() < 1);
+    });
+
+});
+//]]></script>

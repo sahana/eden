@@ -1,0 +1,47 @@
+@charset "UTF-8";
+/* Delphi Decision Maker */
+/* Results Page */
+.delphi_wide li {
+    padding: 5px 20px;
+    font-weight: bold;
+}
+.delphi_wide td,
+.delphi_wide th {
+    padding: 4px 30px;
+    border-bottom: 1px dotted;
+}
+.delphi_wide th {
+    text-align: center;
+    border: 1px dotted;
+    font-weight: bold;
+}
+/* Voting Page */
+#solutions,
+#rankings {
+    list-style-type: none;
+    margin: 0;
+    margin-right: 10px;
+    background: #eee;
+    padding: 5px 5px 20px;
+    min-height: 60px;
+    width: 223px;
+}
+#solutions li,
+#rankings li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1.2em;
+    /*width: 200px;*/
+}
+.ui-state-highlight {
+    height: 1.5em;
+    line-height: 1.2em;
+}
+.saving {
+    padding: 3px 10px;
+    background-color: #fe5c00;
+    color: #eeeeec;
+}
+.saved {
+    background-color: #4e9a06;
+}

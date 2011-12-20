@@ -1,0 +1,43 @@
+{{extend "layout.html"}}
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+{{pass}}
+<div id='rheader'>
+{{try:}}
+ {{=rheader}}
+{{except:}}
+ {{pass}}
+</div>
+{{try:}}
+ {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+{{include "formats.html"}}
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+<p>&nbsp;</p>
+<div style='margin-top: 1.0em;'>
+<a class='action-btn' onclick="s3_viewMapMulti('{{=request.controller}}','{{=request.function}}',{{=request.args[0]}},'{{=request.args[1]}}');return false" href='#'>View All on Map</a>
+</div>
+<p>&nbsp;</p>
+{{except:}}
+{{pass}}
+</div>
+<div id='map'></div>
+{{try:}}
+ {{=H3(addtitle)}}
+{{except:}}
+{{pass}}
+{{include "key.html"}}
+<div class='form-container'>
+{{try:}}
+ {{=form}}
+{{except:}}
+{{pass}}
+</div>
+{{include "pagenav.html"}}
+{{include "searchbox.html"}}
+<p>&nbsp;</p>
+{{include "dataTables.html"}}

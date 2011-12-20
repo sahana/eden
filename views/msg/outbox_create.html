@@ -1,0 +1,105 @@
+{{extend "layout.html"}}
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+{{pass}}
+<script type="text/javascript">//<![CDATA[
+$(function() {
+    // Hide the real Input Field
+    $("#msg_outbox_pe_id").hide();
+    // Autocomplete-enable the Dummy Input
+    $("#dummy").autocomplete('{{=URL(c='msg',f='search')}}', {
+        minChars: 2,
+		//mustMatch: true,
+		// TODO : Should get multiple working 
+		multiple: false,
+		matchContains: true,
+		autofill: true,
+		dataType: 'json',
+        parse: function(data) {
+            var rows = new Array();
+            for(var i=0; i<data.length; i++){
+                rows[i] = { data:data[i], value:data[i].id, result:data[i].name };
+            }
+            return rows;
+        },
+         formatItem: function(row, i, n) {
+             return row.name;
+ 		}
+    });
+    // Populate the real Input when the Dummy is selected
+    $("#dummy").result(function(event, data, formatted) {
+        var newvalue = data.id;
+        $("#msg_outbox_pe_id").val(newvalue);
+    });
+//     $("#dummy_submit").click(function(){
+// 		return true;
+//     });
+});
+//]]></script>
+<div class="form-container">
+{{try:}}
+ {{=form.custom.begin}}
+ <table>
+ <tbody>
+ <tr id="msg_outbox_pe_id__row">
+ <td>
+ <label>{{=form.custom.label.pe_id}}</label>
+ </td>
+ <td>
+ {{=INPUT(_id="dummy", _class="ac_input", _size="50")}}
+  {{=form.custom.widget.pe_id}}
+ </td>
+ <td>
+ {{=form.custom.comment.pe_id}}
+ </td>
+</tr>
+ <tr id="msg_outbox_subject__row">
+ <td>
+ <label>{{=form.custom.label.subject}}</label>
+ </td>
+ <td>
+ {{=form.custom.widget.subject}}
+ </td>
+ <td>
+ {{=form.custom.comment.subject}}
+ </td>
+ </tr>
+ <tr id='msg_outbox_body__row'>
+ <td>
+ <label>{{=form.custom.label.body}}</label>
+ </td>
+ <td>
+ {{=form.custom.widget.body}}
+ </td>
+ <td>
+ {{=form.custom.comment.body}}
+ </td>
+ </tr>
+  <tr id="msg_outbox_pr_message_method__row">
+ <td>
+ <label>{{=form.custom.label.pr_message_method}}</label>
+ </td>
+ <td>
+ {{=form.custom.widget.pr_message_method}}
+ </td>
+ <td>
+ {{=form.custom.comment.pr_message_method}}
+ </td>
+ </tr>
+ <tr id="submit_record__row">
+ <td>
+ </td>
+ <td>
+  {{=INPUT(_type="submit", _value=T("Send message"), _id="dummy_submit")}}
+ </td>
+ </tr>
+ <td>
+ </td>
+ </tbody>
+ </table>
+ {{=form.custom.end}}
+{{except:}}
+{{pass}}
+</div>
+<p>&nbsp;</p>

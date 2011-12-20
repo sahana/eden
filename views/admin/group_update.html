@@ -1,0 +1,10 @@
+{{extend "layout.html"}}
+{{include "_update.html"}}
+<p>&nbsp;</p>
+{{try:}}
+ {{id = int(request.args(0))}}
+{{except ValueError:}}
+ {{id = int(request.args(1))}}
+{{pass}}
+<a class="action-btn" href="{{=URL(f="users", args=id)}}">{{=T("Users")}}</a>
+

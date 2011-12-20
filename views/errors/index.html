@@ -1,0 +1,22 @@
+{{extend 'layout.html'}}
+<div id='home' class='clearfix'>
+<div class='errors'>
+    <h2>{{=message}}</h2>
+    {{if response.custom_image:}}
+        <img src='/{{=app}}/static/img/{{=custom_image}}' align='left' />
+    {{else:}}
+        <img src='/{{=app}}/static/img/http_warning.png' align='left' />
+    {{pass}}
+    <br/>
+    <ul>
+        {{ for suggest in suggestions: }}
+            <li>{{=suggest}}</li>
+        {{pass}}
+        <li>Details - {{=details}}</li>
+        <li>You may want to <a href='http://eden.sahanafoundation.org/report'>report a bug</a> about this issue.</li>
+        {{ if not res.ticket in (None,'None'): }}
+            <li>View ticket for this problem here - <a href='/{{=app}}/admin/ticket/{{=res.ticket}}' target='_blank'>{{=res.ticket}}</a></li>
+        {{pass}}
+    </ul>
+</div>
+</div>

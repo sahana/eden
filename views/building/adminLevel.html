@@ -1,0 +1,25 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h2>{{=T("Summary by Administration Level")}}</h2>
+
+<div class='table-container'>
+<table class='display'>
+<thead>
+<th>{{=T("Date")}}</th>
+{{for i in range(7):}}
+<th><img width=24 height=24 src="/eden/static/img/{{=building_estimated_damage_image[i+1]}}"><br/>{{=building_estimated_damage[i+1]}}</th>
+{{pass}}
+<th><img width=24 height=24 src="/eden/static/img/sum.png"><br/>{{=T("Total")}}</th>
+</thead>
+<tbody>
+{{cnt = 1}}
+{{for details in report:}}
+	<tr class='{{if cnt%2 == 1:}}odd{{else:}}even{{pass}}'>
+	<td>{{=details[0]}}</td>{{for i in range(7):}}<td>{{=details[1][i]}}</td>{{pass}}
+	<td><b>{{=details[1][7]}}</b></td></tr>
+{{cnt += 1}}
+{{pass}}
+<tbody>
+</table>
+</div>
+</div>

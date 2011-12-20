@@ -1,0 +1,9 @@
+<tr style="display: none;"
+    id="{{="%s-%s-%s" % (report, details[0][0].replace(' ','-'), cnt)}}"
+    class="{{if cnt%2 == 1:}}odd{{else:}}even{{pass}}"
+>
+<td></td><td>{{=details[0][1]+":"}}</td>
+{{for i in range(7):}}<td>{{=details[i+1]}}</td>{{pass}}
+<td><b>({{=details[8]}})</b></td>
+</tr>
+{{cnt += 1}}

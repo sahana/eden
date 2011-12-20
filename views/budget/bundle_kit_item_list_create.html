@@ -1,0 +1,127 @@
+{{extend "layout.html"}}
+{{include "budget/bundle_kit_item_header.html"}}
+{{=P(A(T("Edit Description"), _href=URL(f='bundle', args=(bundle, "update"))))}}
+{{try:}}
+ {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+<div class='form-container'>
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+{{except:}}
+{{pass}}
+</div>
+</div>
+<p>&nbsp;</p>
+{{try:}}
+ {{=H3(addtitle)}}
+{{except:}}
+{{pass}}
+{{include "key.html"}}
+<div class='form-container'>
+{{try:}}
+ {{=form1}}
+{{except:}}
+{{pass}}
+{{try:}}
+ {{=form2}}
+{{except:}}
+{{pass}}
+</div>
+<script type="text/javascript">//<![CDATA[
+$(function() {
+    // Set the Crud dropdowns to the current Bundle
+    var options = '<option value="' + {{=bundle}} + '"></option>';
+    $("#budget_bundle_kit_bundle_id").html(options);
+    $("#budget_bundle_item_bundle_id").html(options);
+    // Hide the dropdowns
+    $("#budget_bundle_kit_bundle_id__row").hide();
+    $("#budget_bundle_item_bundle_id__row").hide();
+    
+    // Hide the Items form
+    $("form:last").hide();
+    
+    // When the Type changes:
+	$("input[name='kit_item1']:radio").change(function() {
+		// What is the new type?
+        type=$("input[name='kit_item1']:radio:checked").val();
+        if (type=="Item") {
+            // Hide the Kits form
+            $("form:eq(1)").hide();
+            // Set the radio to 'Item'
+            $("input[name='kit_item2']:nth(1)").attr("checked","checked");
+            // Show the Items form
+            $("form:last").show();
+        }
+    })
+	$("input[name='kit_item2']:radio").change(function() {
+		// What is the new type?
+        type=$("input[name='kit_item2']:radio:checked").val();
+        if (type=="Kit") {
+            // Hide the Items form
+            $("form:last").hide();
+            // Set the radio to 'Kit'
+            $("input[name='kit_item1']:nth(0)").attr("checked","checked");
+            // Show the Kits form
+            $("form:eq(1)").show();
+        }
+	})
+    // When the Kit changes:
+	$("#budget_bundle_kit_kit_id").change(function() {
+		// What is the new Kit?
+        kit = $(this).val();
+        // Read details on Item
+        $.getJSON("{{=URL(f='kit')}}" + "/" + kit + "?format=json", function(json){
+            // Does it have a Minutes cost?
+            if (json[0].total_minute_cost==0.0) {
+                // Disable the input
+                $("#budget_bundle_kit_minutes").attr("disabled", true);
+            } else {
+                // Enable the input
+                $("#budget_bundle_kit_minutes").removeAttr("disabled");
+            }
+            // Does it have a Megabytes cost?
+            if (json[0].total_megabyte_cost==0.0) {
+                // Disable the input
+                $("#budget_bundle_kit_megabytes").attr("disabled", true);
+            } else {
+                // Enable the input
+                $("#budget_bundle_kit_megabytes").removeAttr("disabled");
+            }
+        });
+    })
+    // When the Item changes:
+	$("#budget_bundle_item_item_id").change(function() {
+		// What is the new Item?
+        item = $(this).val();
+        // Read details on Item
+        $.getJSON("{{=URL(f='item')}}" + "/" + item + "?format=json", function(json){
+            // Does it have a Minutes cost?
+            if (json[0].minute_cost==0.0) {
+                // Disable the input
+                $("#budget_bundle_item_minutes").attr("disabled", true);
+            } else {
+                // Enable the input
+                $("#budget_bundle_item_minutes").removeAttr("disabled");
+            }
+            // Does it have a Megabytes cost?
+            if (json[0].megabyte_cost==0.0) {
+                // Disable the input
+                $("#budget_bundle_item_megabytes").attr("disabled", true);
+            } else {
+                // Enable the input
+                $("#budget_bundle_item_megabytes").removeAttr("disabled");
+            }
+        });
+    });
+    // Set disabled values before submitting form
+    $("input[value='{{=T('Add')}}']").click(function(event){
+        $('input:disabled').val('0')
+        $('input:disabled').attr("disabled", false);
+        // Pass to CRUD controller
+        event.default();
+        return false;
+    })
+});
+//]]></script>

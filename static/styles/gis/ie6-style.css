@@ -1,0 +1,7 @@
+.olControlZoomPanel div {
+    background-image: url(../../img/gis/openlayers/theme_default/zoom-panel-NOALPHA.png);
+}
+.olControlPanPanel div {
+    background-image: url(../../img/gis/openlayers/theme_default/pan-panel-NOALPHA.png);
+}
+

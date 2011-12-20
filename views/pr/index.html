@@ -1,0 +1,90 @@
+{{extend "layout.html"}}
+{{if session.s3.debug:}}
+<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{else:}}
+<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+<div id='home'>
+{{=H2(module_name)}}
+<div style='margin:20px auto; width:96%; max-width:1000px;'>
+    <div>
+        {{=H4(T("Search for a Person"))}}
+        {{try:}}{{=form}}{{except:pass}}
+        <div><br /></div>
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function(){
+    $('#advanced-form').hide()
+    $('#advanced-lnk').click(function() {
+        $('#simple-form').hide()
+        $('#advanced-form').show()
+    });
+    $('#simple-lnk').click(function() {
+        $('#advanced-form').hide()
+        $('#simple-form').show()
+    });
+    {{try:}}
+        {{if not simple:}}
+            $('#simple-form').hide()
+            $('#advanced-form').show()
+        {{pass}}
+    {{except:}}
+    {{pass}}
+});
+//]]></script>
+        <div id='table-container'>
+            {{try:}}
+            {{=items}}
+            {{except:}}
+            {{pass}}
+        </div>
+        {{include "dataTables.html"}}
+    </div>
+    <div>
+        {{=H4("%s: %s" % (T("Total Persons"), total and total or "?"))}}
+        <div id='charts'>
+            <table>
+                <tr>
+                    <td>
+                        <div id='chart1' style='width:260px; height:200px;'></div>
+                    </td>
+                    <td>
+                        <div id='chart2' style='width:260px; height:200px;'></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</div><!-- home -->
+{{if session.s3.debug:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
+<!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->
+<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/excanvas.js"></script><![endif]-->
+{{else:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
+<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
+{{pass}}
+<script type="text/javascript" language="javascript">//<![CDATA[
+$(document).ready(function(){
+    var gender = {{try:}}{{=XML(gender)}}{{except:}}0{{pass}};
+    var age = {{try:}}{{=XML(age)}}{{except:}}0{{pass}};
+
+    if ( gender ) {
+        var plot1 = $.jqplot('chart1', [gender], {
+          title: 'Persons by Gender',
+          seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
+          legend:{show:true, escapeHtml:true}
+        });
+    }
+
+    if ( age ) {
+        var plot2 = $.jqplot('chart2', [age], {
+          title: 'Persons by Age Group',
+          seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
+          legend:{show:true, escapeHtml:true}
+        });
+    }
+});
+//]]></script>

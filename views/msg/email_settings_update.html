@@ -1,0 +1,14 @@
+{{extend "layout.html"}}
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+{{pass}}
+<p>{{=T("These are settings for Inbound Mail.")}}</p><p>{{=T("Outbound Mail settings are configured in models/000_config.py.")}}</p>
+<H3>{{=T("Inbound Mail Settings")}}</H3>
+<div class='form-container'>
+{{try:}}
+ {{=form}}
+{{except:}}
+{{pass}}
+</div>
+<p>&nbsp;</p>

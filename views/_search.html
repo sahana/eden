@@ -1,0 +1,57 @@
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+{{pass}}
+<div id='rheader'>
+{{try:}}
+ {{=XML(rheader)}}
+ </div>
+ <div id='component'>
+{{except:}}
+ <div>
+{{pass}}
+<div id='map'></div>
+<div class='form-container'>
+{{try:}}
+    {{=form}}
+{{except:}}
+{{pass}}
+</div>
+<div><br /></div>
+<div id='table-container'>
+{{try:}}
+    {{if items:}}
+    {{=H3(subtitle)}}
+    {{pass}}
+{{except:}}
+{{pass}}
+<div id='list_formats'>
+{{try:}}
+{{if isinstance(items, DIV):}}
+<a href='{{=r.url(method="", representation="pdf", vars=session.s3.filter)}}' title='{{=T("Export in PDF format")}}'><img src='/{{=request.application}}/static/img/pdficon_small.gif'/></a>
+<a href='{{=r.url(method="", representation="xls", vars=session.s3.filter)}}' title='{{=T("Export in XLS format")}}'><img src='/{{=request.application}}/static/img/icon-xls.png'/></a>
+<a href='{{=r.url(method="", representation="rss", vars=session.s3.filter)}}' title='{{=T("Export in RSS format")}}'><img src='/{{=request.application}}/static/img/RSS_16.png'/></a>
+{{if "location_id" in r.target()[2] or "site_id" in r.target()[2]:}}
+    <a href='{{=r.url(method="", representation="kml", vars=session.s3.filter)}}' title='{{=T("Export in KML format")}}'><img src='/{{=request.application}}/static/img/kml_icon.png'/></a>
+    <a id='gis_datatables_map-btn' title='{{=T("Show on Map")}}'><img src='/{{=request.application}}/static/img/map_icon.png'/></a>
+{{pass}}
+{{pass}}
+{{except:}}
+{{pass}}
+</div>
+{{try:}}
+    {{=items}}
+{{except:}}
+{{pass}}
+</div>
+{{try:}}
+    {{=add_btn}}
+{{except:}}
+{{pass}}
+</div>
+{{if session.s3.debug:}}
+<script src="/{{=request.application}}/static/scripts/S3/s3.search.js" type="text/javascript" charset="utf-8"></script>
+{{else:}}
+<script src="/{{=request.application}}/static/scripts/S3/s3.search.min.js" type="text/javascript" charset="utf-8"></script>
+{{pass}}
+{{include "dataTables.html"}}

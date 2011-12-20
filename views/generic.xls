@@ -1,0 +1,24 @@
+{{
+# to use this download and unzip pyXLWriter in applications/[yourapp]/modules/
+try:
+    import uuid, os
+    exec('import applications.%s.modules.pyXLWriter as xl' % request.application)
+    filename=os.path.join(request.folder,'private','%s.xls' % uuid.uuid4())
+    workbook = xl.Workbook(filename)
+    for pagename,content in pages:
+        worksheet = workbook.add_worksheet(pagename)
+        for (r,row) in enumerate(content):
+            for (c,element) in enumerate(row):
+                print '%s%s' % (chr(ord('A')+c),(r+1)), element
+                worksheet.write('%s%s' % (chr(ord('A')+c),(r+1)), str(element))
+            pass
+        pass
+    pass
+    workbook.close()
+    data = open(filename,'rb').read()
+    os.unlink(filename)
+    response.headers['Content-Type']='application/vnd.ms-excel'
+    response.write(data,escape=False)
+except:
+    raise HTTP(405, T('This information could not be represented in a spreadsheet.'))
+}}

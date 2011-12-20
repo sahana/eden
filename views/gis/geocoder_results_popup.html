@@ -1,0 +1,107 @@
+<script type="text/javascript">
+GeoCoderResultSelectionDialog = Ext.extend(Ext.Window, {
+    title: '{{=T("Geocoder Selection")}}',
+    width: 280,
+    height: 300,
+    shadowOffset:6,
+    layout: 'fit',
+    buttonAlign: 'center',
+
+    initComponent: function() {
+        GeoCoderResultSelectionDialog.superclass.initComponent.call(this);
+
+        // The Ext ArrayStore apparently needs an array, without any
+        // hashes in it.
+        var places = this.address_list.Placemark;
+        var tmpArray = new Array();
+        for (place in places) {
+            tmpArray.push([places[place].id, places[place].address]);
+        }
+
+        var store = new Ext.data.ArrayStore({
+            data   : tmpArray,
+            fields : ['id', 'address']
+        });
+
+        this.listView = new Ext.list.ListView({
+            store: store,
+            singleSelect: true,
+            emptyText: '{{=T("Sorry, there are no addresses to display")}}',
+            reserveScrollOffset: true,
+
+            columns: [{
+                header: 'id',
+                width: .10,
+                dataIndex: 'id'
+            },{
+                header: '{{=T("Address")}}',
+                dataIndex: 'address',
+            }]
+        });
+
+        this.add(this.listView);
+
+        var okayButton = new Ext.Button({
+            text:'{{=T("OK")}}',
+            scope:this,
+            minWidth:75,
+            handler:this.onOkay
+        });
+        this.addButton(okayButton);
+
+        var closeButton = new Ext.Button({
+            text:'{{=T("Cancel")}}',
+            scope:this,
+            minWidth:75,
+            handler:this.onClose
+        });
+        this.addButton(closeButton);
+
+    },
+
+    onClose: function() {
+        this.close();
+    },
+
+    onOkay: function() {
+        // Use "getSelectedRecords()" here to use the ID to search for
+        // the entire Placemark entry instead of the index (which can be
+        // out of order due to column sorting in the listview.
+        this.onFinish(this.listView.getSelectedRecords());
+    },
+
+    /**
+     * This is the method to be handled by programmer
+     * to process the id returned by the tree selection.
+     * Note that multiple selection is possible hence
+     * the expected array from the tree.
+     */
+    onFinish: function(addresses) {
+        if (addresses.length) {
+            // Note, it appears it is necessary to search the original
+            // address list again if the listview is sorted.
+            selectedRecord = addresses[0];
+            selectedId = selectedRecord.data.id;
+            //s3_debug('Selected ID:', selectedId);
+            selectedPlacemark = null;
+            var places = this.address_list.Placemark;
+            for (place in places) {
+                if (places[place].id == selectedId)
+                    selectedPlacemark = places[place];
+            }
+            this.onFinished(selectedPlacemark);
+        }
+        this.onClose();
+    }
+});
+
+// Popup
+function geocode_results_picker(locations_list, selection_callback){
+    var win;
+    if(!win){
+        win = new GeoCoderResultSelectionDialog({address_list: locations_list});
+        win.onFinished = selection_callback;
+    }
+    win.show(this);
+}
+</script>

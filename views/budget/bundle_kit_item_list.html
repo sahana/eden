@@ -1,0 +1,15 @@
+{{extend 'layout.html'}}
+{{include 'budget/bundle_kit_item_header.html'}}
+<p>&nbsp;</p>
+{{=H3(T('Contents'))}}
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+{{except:}}
+{{pass}}
+</div>
+<p>&nbsp;</p>
+{{try:}}
+ {{=add_btn}}
+{{except:}}
+{{pass}}

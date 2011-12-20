@@ -1,0 +1,18 @@
+﻿/* Calendar */
+#calendar {}
+#calendar_wrap { padding: 20px; }
+#calendar table { width: 100%; }
+#calendar tbody td { text-align: center; }
+#calendar #next { text-align: right; }
+
+/*
+.flash { margin: 0 auto; text-align: center; border: 1px #000000; background-color: #FF5C1F; color: white; margin-top: 0.0em; margin-bottom: 1.0em; padding-top: 1.0em; padding-bottom: 1.0em; cursor: pointer; }
+*/
+/* Web2Py original Flash better than T2 but still need to remove 'clear: both' & 
+div.error { background-color: red; color: white; padding: 3px}
+*/
+ 
+.tag_row { height: 20px; padding: 5px 5px 5px 5px}
+.tag_col { padding: 0px 5px 0px 0px}
+.tag_on, .tag_on:hover {color: white; background-color:#79A73B; padding: 5px 5px 5px 5px }
+.tag_off, .tag_off:hover {color:black; background-color: #dddddd; padding: 5px 5px 5px 5px }

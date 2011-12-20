@@ -1,0 +1,36 @@
+<script type="text/javascript">//<![CDATA[
+
+{{include "org/offices_by_org.js"}}
+
+$(function() {
+   // Offices Selector
+    var options = "<option value=''>{{=T("Select an Organization to see a list of offices")}}</option>";
+    $('#org_staff_office_id').html(options);
+
+  {{if r.representation == "popup":}}
+  {{else:}}
+    s3_tb_cleanup = function(id){
+        if(id == "org_staff_office_id" || id == "org_staff_organisation_id" ){
+            load_offices(true);
+        }
+    }
+
+    // if we are going to add a new office, and the organisation is pre-selected,
+    // we auto-assign the new office to that organisation
+    set_parent_id = function(href, caller){
+        if(caller != 'org_staff_office_id')
+            return href;
+
+        id = $("#org_staff_organisation_id").val()
+        if(id == ''){
+            return href.replace(/organisation_id=(.*?)&/, '');
+        } else if(!href.match(/organisation_id/)){
+            return href.replace('?', '?organisation_id=' + id + '&');
+        } else {
+            return href.replace(/organisation_id=(.*?)&/, 'organisation_id=' + id + '&');
+        }
+    };
+  {{pass}}
+});
+//]]></script>
+

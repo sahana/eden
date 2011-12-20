@@ -1,0 +1,74 @@
+#assess_section2_male_05__row td,
+#assess_section2_female_05__row td,
+#assess_section2_dead_women__row td,
+#assess_section2_missing_women__row td,
+#assess_section2_injured_women__row td,
+#assess_section2_household_head_elderly__row td,
+#assess_section2_disabled_physical__row td,
+#assess_section2_comments__row td {
+    padding-top: 2em;
+}
+
+#assess_section3_kits_hygiene_received__row td,
+#assess_section3_kits_household_received__row td,
+#assess_section3_kits_dwelling_received__row td,
+#assess_section3_comments__row td {
+    padding-top: 1.5em;
+}
+
+#assess_section4_swater_source_type__row td,
+#assess_section4_dwater_source_type__row td,
+#assess_section4_water_coll_time__row td,
+#assess_section4_defec_place_type__row td,
+#assess_section4_close_industry__row td,
+#assess_section4_latrines_number__row td,
+#assess_section4_comments__row td {
+    padding-top: 1.5em;
+}
+
+#assess_section5_health_services_post_disaster__row td,
+#assess_section5_health_services_available_types__row td,
+#assess_section5_chronical_illness_cases__row td,
+#assess_section5_breast_milk_substitutes_pre_disaster__row td,
+#assess_section5_u5_diarrhea__row td,
+#assess_section5_comments__row td {
+    padding-top: 1.5em;
+}
+
+#assess_section6_food_sources_disruption__row td,
+#assess_section6_comments__row td {
+    padding-top: 1.5em;
+}
+
+#assess_section7_main_expenses__row td,
+#assess_section7_other_assistance_needed__row td,
+#assess_section7_comments__row td {
+    padding-top: 1.5em;
+}
+
+#assess_section8_schools_public__row td,
+#assess_section8_schools_destroyed__row td,
+#assess_section8_teachers_active_pre_disaster__row td,
+#assess_section8_children_1318_female__row td,
+#assess_section8_school_attendance_barriers__row td,
+#assess_section8_school_assistance_tents_available__row td,
+#assess_section8_school_assistance_tents_available__row td,
+#assess_section8_school_assistance_other_available__row td,
+#assess_section8_comments__row td {
+    padding-top: 1.5em;
+}
+
+#assess_section9_sec_incidents__row td,
+#assess_section9_sec_current_needs__row td,
+#assess_section9_children_missing__row td,
+#assess_section9_children_evacuated__row td,
+#assess_section9_children_with_older_caregivers__row td,
+#assess_section9_people_in_institutions_est_total__row td,
+#assess_section9_staff_in_institutions_present__row td,
+#assess_section9_child_activities_o12f_pre_disaster__row td,
+#assess_section9_child_activities_u12f_post_disaster__row td,
+#assess_section9_child_activities_o12f_post_disaster__row td,
+#assess_section9_comments__row td {
+    padding-top: 2em;
+}
+

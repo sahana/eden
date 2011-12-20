@@ -1,0 +1,7 @@
+<thead>
+<tr><th>{{=T("Date")}}</th><th>{{=T("Hour")}}</th>
+{{for i in range(7):}}<th><img width=24 height=24 src="/eden/static/img/{{=building_estimated_damage_image[i+1]}}"><br/>{{=building_estimated_damage[i+1]}}</th>{{pass}}
+<th><img width=24 height=24 src="/eden/static/img/sum.png"><br/>{{=T("Total")}}</th>
+</tr>
+<tr><th></th><th>{{=T("Total")}}</th>{{for i in range(8):}}<th>{{=totals[i]}}</th>{{pass}}</tr>
+</thead>

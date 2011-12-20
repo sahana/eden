@@ -1,0 +1,11 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h2>{{=T("Vehicle Management")}}</h2>
+<p>{{=T("Vehicles are assets with some extra details.")}}</p>
+<h3>{{=T("Vehicles")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="vehicle", f="vehicle", args="create")}}'>{{=T("Create New Vehicle")}}</a>
+  <li><a href='{{=URL(c="vehicle", f="vehicle")}}'>{{=T("List All Vehicles")}}</a>
+  <li><a href='{{=URL(c="vehicle", f="vehicle", args="search")}}'>{{=T("Search Vehicles")}}</a>
+</ul>
+</div>

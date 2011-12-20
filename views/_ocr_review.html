@@ -1,0 +1,53 @@
+{{extend "layout.html"}}
+{{=H2(T("OCR Form Review"))}}
+<script src="{{=URL("static","scripts/S3/s3.ocr.review.js")}}"></script>
+<style type="text/css">
+div.resource_name {
+    font-size:20px;
+    background-color: #ddd;
+    padding: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+table.ptable {
+    width: 100%;
+}
+
+tr.fieldtr td {
+    padding: 5px;
+}
+.ignore-button {
+    background-color: #fff;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+.ignore-button-toggle-yes {
+    background-color: #0f0;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+.lightbox-bg {
+    background: #fff none repeat scroll 0 0;
+    display: none;
+    height: 800px;
+    left: 0;
+    filter: alpha(opacity=80);
+    opacity: 0.8;
+    top: 0;
+    width:100%;
+    z-index: 50;
+    position: fixed;
+}
+.modal-loader {
+    position: fixed;
+    left: 45%;
+    top: 45%;
+    z-index: 51;
+    text-align: center;
+}
+</style>
+{{=reviewform}}

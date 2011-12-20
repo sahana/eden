@@ -1,0 +1,25 @@
+{{extend "layout.html"}}
+{{include "gis/catalogue_toolbar.html"}}
+<p>&nbsp;</p>
+<h3>{{=T("Add/Edit/Remove Layers")}}:</h3>
+<ul>
+<li><a href='{{=URL(f="layer_feature")}}'>Features</a> - Internal Resources</li>
+<li><a href='{{=URL(f="layer_geojson")}}'>GeoJSON</a> - Feeds</li>
+<li><a href='{{=URL(f="layer_georss")}}'>GeoRSS</a> - Feeds</li>
+<li><a href='{{=URL(f="layer_gpx")}}'>GPX</a> - GPS eXchange format</li>
+<li><a href='{{=URL(f="layer_kml")}}'>KML</a> - Google Earth's Keyhole Markup Language</li>
+<li><a href='{{=URL(f="layer_mgrs")}}'>MGRS</a> - Military Grid Reference System PDFs</li>
+<li><a href='{{=URL(f="layer_openstreetmap")}}'>OSM</a> - OpenStreetMap Tiles</li>
+<li><a href='{{=URL(f="layer_tms")}}'>TMS</a> - Tile Mapping Service</li>
+<li><a href='{{=URL(f="layer_wfs")}}'>WFS</a> - Web Feature Service</li>
+<li><a href='{{=URL(f="layer_wms")}}'>WMS</a> - Web Map Service</li>
+<!--<li><a href='{{=URL(f="layer_xyz")}}'>XYZ</a> - XYZ Tiles</li>-->
+<li><a href='{{=URL(f="layer_js")}}'>JS</a> - Advanced Javascript Layers (needs extra permissions as dangerous!)</li>
+</ul>
+<h3>{{=T("Enable/Disable Layers")}}:</h3>
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+{{except:}}
+{{pass}}
+</div>

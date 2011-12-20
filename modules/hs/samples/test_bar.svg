@@ -1,0 +1,164 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" y="0.0" x="0.0">
+    <defs>
+        <symbol viewBox="0 -800 556 1050" id="a">
+            <path d="M65 369Q71 539 275 539Q372 539 422 503T472 396V88Q472 47 517 47Q526 47 535 49V-14Q500 -23 478 -23Q438 -23 418 -5T392 54Q308 -23 214 -23Q135 -23 89 19T42 132Q42 155 46 174T56 207T76 234T99 255T131 270T166 281T208 290T252 297T302 304Q351 310 370 323T389 362V384Q389 422 359 442T272 462Q214 462 184 440T149 369H65ZM232 50Q301 50 345 86T389 165V259Q364 247 314 239T226 225T159 197T129 134T156 72T232 50Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="b">
+            <path d="M54 729H137V453Q194 539 299 539Q403 539 463 465T523 264Q523 134 461 56T295 -23Q188 -23 129 67V0H54V729ZM283 461Q217 461 177 406T137 258T177 111T283 55Q351 55 393 110T436 255Q436 349 395 405T283 461Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="e">
+            <path d="M513 234H127Q128 162 155 122Q198 54 281 54Q383 54 418 159H502Q486 73 427 25T278 -23Q168 -23 104 51T40 255T105 461T280 539Q354 539 410 502T492 401Q513 346 513 234ZM129 302H423Q424 304 424 308Q424 373 382 417T279 462Q216 462 175 419T129 302Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 778 1050" id="G">
+            <path d="M137 362Q137 324 144 286T169 205T215 132T291 80T398 59Q498 59 562 122T627 283V303H405V385H709V-4H650L627 93Q523 -23 378 -23Q230 -23 137 83T44 357Q44 405 53 453T87 555T149 648T250 714T394 741Q519 741 599 680T699 508H604Q589 578 533 618T393 659Q277 659 207 578T137 362Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="p">
+            <path d="M54 -218V524H131V445Q190 539 298 539Q402 539 462 462T523 253Q523 128 462 53T299 -23Q202 -23 138 55V-218H54ZM284 461Q218 461 178 406T138 258T178 111T284 55Q352 55 394 110T436 255Q436 349 395 405T284 461Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="h">
+            <path d="M403 363Q403 418 370 442T295 466Q231 466 192 418T153 289V0H70V729H153V452Q190 500 227 519T321 539Q397 539 441 501T486 396V0H403V363Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="L">
+            <path d="M173 729V82H533V0H80V729H173Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 222 1050" id="l">
+            <path d="M152 729V0H68V729H152Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="1">
+            <path d="M259 505H102V568Q204 581 235 604T289 709H347V0H259V505Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="0">
+            <path d="M43 343Q43 432 58 500T96 606T151 669T212 701T275 709Q507 709 507 337Q507 162 448 70T275 -23Q161 -23 102 70T43 343ZM417 631T275 631T133 342Q133 50 273 50Q347 50 382 122T417 345Q417 631 275 631Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="2">
+            <path d="M50 463Q57 709 284 709Q385 709 448 651T511 501Q511 369 361 287L261 233Q196 198 168 165T133 87H506V0H34Q40 117 81 180T233 307L325 359Q421 414 421 499Q421 556 381 594T281 632Q148 632 138 463H50Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="5">
+            <path d="M476 709V622H181L153 424Q212 467 284 467Q386 467 449 402T513 231Q513 119 445 48T270 -23Q229 -23 195 -14T138 7T97 40T69 76T51 115T40 148T35 174H123Q154 55 268 55Q340 55 381 99T423 219Q423 298 381 343T268 389Q227 389 198 375T138 323H57L110 709H476Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="Y">
+            <path d="M387 286V0H294V286L13 729H128L342 374L550 729H661L387 286Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="X">
+            <path d="M391 374L649 0H534L335 304L135 0H22L280 374L38 729H151L338 443L526 729H637L391 374Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="B">
+            <path d="M623 208Q623 114 564 57T408 0H79V729H375Q436 729 481 711T548 664T581 605T591 544Q591 432 490 385Q560 358 591 316T623 208ZM498 415T498 531T352 647H172V415H352Q498 415 498 531ZM399 82Q448 82 479 103T520 151T530 207Q530 264 496 298T399 333H172V82H399Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 333 1050" id="r">
+            <path d="M321 451Q237 449 195 412T153 272V0H69V524H146V429Q182 488 215 513T289 539Q300 539 321 536V451Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+    </defs>
+    <rect opacity="0.35" height="26.8333333333" width="261.055238095" y="22.0" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="26.8333333333" width="261.055238095" y="48.8333333333" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <rect opacity="0.35" height="26.8333333333" width="261.055238095" y="75.6666666667" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="26.8333333333" width="261.055238095" y="102.5" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <rect opacity="0.35" height="26.8333333333" width="261.055238095" y="129.333333333" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="26.8333333333" width="261.055238095" y="156.166666667" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <g>
+        <use y="155.168465451" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="155.168465451" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="155.168465451" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="123.376940946" x="21.0" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="123.376940946" x="25.2361904762" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="123.376940946" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="123.376940946" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="91.5854164403" x="21.0" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="91.5854164403" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="91.5854164403" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="91.5854164403" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="59.7938919347" x="21.0" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="59.7938919347" x="25.2361904762" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="59.7938919347" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="59.7938919347" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="28.0023674291" x="21.0" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="28.0023674291" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="28.0023674291" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="28.0023674291" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+    </g>
+    <svg maxX="81" maxY="2657.31185567" height="161.0" width="261.055238095" viewBox="38.9447619048 22.0 261.055238095 161.0" id="canvas-root" minX="0" minY="125.190441176" y="22.0" x="38.9447619048">
+        <g id="data">
+            <rect group="Acre" name="Total Rain" height="127.053892642" width="3.22290417402" y="63.9060973153" x="38.9447619048" data="Acre Total Rain: 1998.23529412" fill="rgb(200,10,10)" />
+            <rect group="Acre" name="Summer" height="47.9042171609" width="3.22290417402" y="143.055772796" x="42.1676660788" data="Acre Summer: 753.411764706" fill="rgb(10,10,200)" />
+            <rect group="Alagoas" name="Total Rain" height="70.5563375011" width="3.22290417402" y="120.403652456" x="48.6134744268" data="Alagoas Total Rain: 1109.67213115" fill="rgb(200,10,10)" />
+            <rect group="Alagoas" name="Summer" height="9.07048676222" width="3.22290417402" y="181.889503195" x="51.8363786008" data="Alagoas Summer: 142.655737705" fill="rgb(10,10,200)" />
+            <rect group="Amapa" name="Total Rain" height="156.484241921" width="3.22290417402" y="34.4757480356" x="58.2821869489" data="Amapa Total Rain: 2461.1" fill="rgb(200,10,10)" />
+            <rect group="Amapa" name="Summer" height="48.3994169073" width="3.22290417402" y="142.56057305" x="61.5050911229" data="Amapa Summer: 761.2" fill="rgb(10,10,200)" />
+            <rect group="Amazonas" name="Total Rain" height="160.91427615" width="3.22290417402" y="30.0457138075" x="67.9508994709" data="Amazonas Total Rain: 2530.77319588" fill="rgb(200,10,10)" />
+            <rect group="Amazonas" name="Summer" height="50.7064983434" width="3.22290417402" y="140.253491614" x="71.1738036449" data="Amazonas Summer: 797.484536082" fill="rgb(10,10,200)" />
+            <rect group="Bahia" name="Total Rain" height="54.4056176452" width="3.22290417402" y="136.554372312" x="77.6196119929" data="Bahia Total Rain: 855.662295082" fill="rgb(200,10,10)" />
+            <rect group="Bahia" name="Summer" height="19.3597876098" width="3.22290417402" y="171.600202347" x="80.842516167" data="Bahia Summer: 304.480327869" fill="rgb(10,10,200)" />
+            <rect group="Ceara" name="Total Rain" height="54.7071581456" width="3.22290417402" y="136.252831811" x="87.288324515" data="Ceara Total Rain: 860.404761905" fill="rgb(200,10,10)" />
+            <rect group="Ceara" name="Summer" height="15.8456149076" width="3.22290417402" y="175.114375049" x="90.511228689" data="Ceara Summer: 249.211309524" fill="rgb(10,10,200)" />
+            <rect group="Distrito Federal" name="Total Rain" height="95.3745735168" width="3.22290417402" y="95.5854164403" x="96.957037037" data="Distrito Federal Total Rain: 1500.0" fill="rgb(200,10,10)" />
+            <rect group="Distrito Federal" name="Summer" height="42.8549750335" width="3.22290417402" y="148.105014924" x="100.179941211" data="Distrito Federal Summer: 674.0" fill="rgb(10,10,200)" />
+            <rect group="Goias" name="Total Rain" height="100.095614906" width="3.22290417402" y="90.8643750512" x="106.625749559" data="Goias Total Rain: 1574.25" fill="rgb(200,10,10)" />
+            <rect group="Goias" name="Summer" height="48.4264397031" width="3.22290417402" y="142.533550254" x="109.848653733" data="Goias Summer: 761.625" fill="rgb(10,10,200)" />
+            <rect group="Litigated Zone" name="Total Rain" height="39.1035751419" width="3.22290417402" y="151.856414815" x="116.294462081" data="Litigated Zone Total Rain: 615.0" fill="rgb(200,10,10)" />
+            <rect group="Litigated Zone" name="Summer" height="13.6067724884" width="3.22290417402" y="177.353217469" x="119.517366255" data="Litigated Zone Summer: 214.0" fill="rgb(10,10,200)" />
+            <rect group="Mato Grosso do Sul" name="Total Rain" height="85.2489729617" width="3.22290417402" y="105.711016995" x="125.963174603" data="Mato Grosso do Sul Total Rain: 1340.75" fill="rgb(200,10,10)" />
+            <rect group="Mato Grosso do Sul" name="Summer" height="34.0487227455" width="3.22290417402" y="156.911267212" x="129.186078777" data="Mato Grosso do Sul Summer: 535.5" fill="rgb(10,10,200)" />
+            <rect group="Minas Gerais" name="Total Rain" height="63.6447053011" width="3.22290417402" y="127.315284656" x="135.631887125" data="Minas Gerais Total Rain: 1000.96969697" fill="rgb(200,10,10)" />
+            <rect group="Minas Gerais" name="Summer" height="32.1421946547" width="3.22290417402" y="158.817795302" x="138.854791299" data="Minas Gerais Summer: 505.515151515" fill="rgb(10,10,200)" />
+            <rect group="Mato Grosso" name="Total Rain" height="116.644719929" width="3.22290417402" y="74.3152700279" x="145.300599647" data="Mato Grosso Total Rain: 1834.52542373" fill="rgb(200,10,10)" />
+            <rect group="Mato Grosso" name="Summer" height="56.4488153764" width="3.22290417402" y="134.511174581" x="148.523503821" data="Mato Grosso Summer: 887.796610169" fill="rgb(10,10,200)" />
+            <rect group="Maranhao" name="Total Rain" height="96.3382930635" width="3.22290417402" y="94.6216968935" x="154.969312169" data="Maranhao Total Rain: 1515.15686275" fill="rgb(200,10,10)" />
+            <rect group="Maranhao" name="Summer" height="35.644532603" width="3.22290417402" y="155.315457354" x="158.192216343" data="Maranhao Summer: 560.598039216" fill="rgb(10,10,200)" />
+            <rect group="Paraiba" name="Total Rain" height="48.4038989911" width="3.22290417402" y="142.556090966" x="164.638024691" data="Paraiba Total Rain: 761.270491803" fill="rgb(200,10,10)" />
+            <rect group="Paraiba" name="Summer" height="11.9822777034" width="3.22290417402" y="178.977712254" x="167.860928865" data="Paraiba Summer: 188.450819672" fill="rgb(10,10,200)" />
+            <rect group="Parana" name="Total Rain" height="98.8080581634" width="3.22290417402" y="92.1519317937" x="174.306737213" data="Parana Total Rain: 1554.0" fill="rgb(200,10,10)" />
+            <rect group="Parana" name="Summer" height="33.1267685348" width="3.22290417402" y="157.833221422" x="177.529641387" data="Parana Summer: 521.0" fill="rgb(10,10,200)" />
+            <rect group="Para" name="Total Rain" height="137.897676051" width="3.22290417402" y="53.0623139065" x="183.975449735" data="Para Total Rain: 2168.7804878" fill="rgb(200,10,10)" />
+            <rect group="Para" name="Summer" height="47.9005225935" width="3.22290417402" y="143.059467364" x="187.198353909" data="Para Summer: 753.353658537" fill="rgb(10,10,200)" />
+            <rect group="Piaui" name="Total Rain" height="64.5451020794" width="3.22290417402" y="126.414887878" x="193.644162257" data="Piaui Total Rain: 1015.13065327" fill="rgb(200,10,10)" />
+            <rect group="Piaui" name="Summer" height="27.3819282272" width="3.22290417402" y="163.57806173" x="196.867066432" data="Piaui Summer: 430.648241206" fill="rgb(10,10,200)" />
+            <rect group="Pernambuco" name="Total Rain" height="50.5311599184" width="3.22290417402" y="140.428830039" x="203.31287478" data="Pernambuco Total Rain: 794.726907631" fill="rgb(200,10,10)" />
+            <rect group="Pernambuco" name="Summer" height="12.0843542627" width="3.22290417402" y="178.875635694" x="206.535778954" data="Pernambuco Summer: 190.0562249" fill="rgb(10,10,200)" />
+            <rect group="Rio de Janeiro" name="Total Rain" height="69.2419403732" width="3.22290417402" y="121.718049584" x="212.981587302" data="Rio de Janeiro Total Rain: 1089.0" fill="rgb(200,10,10)" />
+            <rect group="Rio de Janeiro" name="Summer" height="24.9881382614" width="3.22290417402" y="165.971851696" x="216.204491476" data="Rio de Janeiro Summer: 393.0" fill="rgb(10,10,200)" />
+            <rect group="Rio Grande do Norte" name="Total Rain" height="46.8279221116" width="3.22290417402" y="144.132067845" x="222.650299824" data="Rio Grande do Norte Total Rain: 736.484375" fill="rgb(200,10,10)" />
+            <rect group="Rio Grande do Norte" name="Summer" height="10.3029376527" width="3.22290417402" y="180.657052304" x="225.873203998" data="Rio Grande do Norte Summer: 162.0390625" fill="rgb(10,10,200)" />
+            <rect group="Rio Grande do Sul" name="Total Rain" height="89.7156821548" width="3.22290417402" y="101.244307802" x="232.319012346" data="Rio Grande do Sul Total Rain: 1411.0" fill="rgb(200,10,10)" />
+            <rect group="Rio Grande do Sul" name="Summer" height="22.2116784546" width="3.22290417402" y="168.748311502" x="235.54191652" data="Rio Grande do Sul Summer: 349.333333333" fill="rgb(10,10,200)" />
+            <rect group="Rondonia" name="Total Rain" height="128.972733622" width="3.22290417402" y="61.9872563352" x="241.987724868" data="Rondonia Total Rain: 2028.4137931" fill="rgb(200,10,10)" />
+            <rect group="Rondonia" name="Summer" height="57.4637286736" width="3.22290417402" y="133.496261283" x="245.210629042" data="Rondonia Summer: 903.75862069" fill="rgb(10,10,200)" />
+            <rect group="Roraima" name="Total Rain" height="113.267591544" width="3.22290417402" y="77.6923984127" x="251.65643739" data="Roraima Total Rain: 1781.41176471" fill="rgb(200,10,10)" />
+            <rect group="Roraima" name="Summer" height="11.0410094518" width="3.22290417402" y="179.918980505" x="254.879341564" data="Roraima Summer: 173.647058824" fill="rgb(10,10,200)" />
+            <rect group="Santa Catarina" name="Total Rain" height="114.036198402" width="3.22290417402" y="76.9237915555" x="261.325149912" data="Santa Catarina Total Rain: 1793.5" fill="rgb(200,10,10)" />
+            <rect group="Santa Catarina" name="Summer" height="38.0862463577" width="3.22290417402" y="152.873743599" x="264.548054086" data="Santa Catarina Summer: 599.0" fill="rgb(10,10,200)" />
+            <rect group="Sao Paulo" name="Total Rain" height="138.86537904" width="3.22290417402" y="52.0946109166" x="270.993862434" data="Sao Paulo Total Rain: 2184.0" fill="rgb(200,10,10)" />
+            <rect group="Sao Paulo" name="Summer" height="56.6101079696" width="3.22290417402" y="134.349881987" x="274.216766608" data="Sao Paulo Summer: 890.333333333" fill="rgb(10,10,200)" />
+            <rect group="Sergipe" name="Total Rain" height="67.3017223335" width="3.22290417402" y="123.658267624" x="280.662574956" data="Sergipe Total Rain: 1058.48529412" fill="rgb(200,10,10)" />
+            <rect group="Sergipe" name="Summer" height="8.3789367969" width="3.22290417402" y="182.58105316" x="283.88547913" data="Sergipe Summer: 131.779411765" fill="rgb(10,10,200)" />
+            <rect group="Tocantins" name="Total Rain" height="103.458704034" width="3.22290417402" y="87.5012859232" x="290.331287478" data="Tocantins Total Rain: 1627.14285714" fill="rgb(200,10,10)" />
+            <rect group="Tocantins" name="Summer" height="48.59561603" width="3.22290417402" y="142.364373927" x="293.554191652" data="Tocantins Summer: 764.285714286" fill="rgb(10,10,200)" />
+        </g>
+    </svg>
+    <rect height="161.0" width="261.055238095" stroke="black" y="22.0" x="38.9447619048" stroke-width="1" fill="none" />
+    <g class="labels">
+        <use y="185.0" x="153.22" height="10.0" xlink:href="#X" width="6.35238095238" />
+        <use y="185.0" x="162.42952381" height="10.0" xlink:href="#L" width="5.29523809524" />
+        <use y="185.0" x="167.724761905" height="10.0" xlink:href="#a" width="5.29523809524" />
+        <use y="185.0" x="173.02" height="10.0" xlink:href="#b" width="5.29523809524" />
+        <use y="185.0" x="178.315238095" height="10.0" xlink:href="#e" width="5.29523809524" />
+        <use y="185.0" x="183.61047619" height="10.0" xlink:href="#l" width="2.11428571429" />
+        <g transform="rotate(-90)">
+            <use y="5.0" x="-118.752380952" height="10.0" xlink:href="#Y" width="6.35238095238" />
+            <use y="5.0" x="-109.542857143" height="10.0" xlink:href="#L" width="5.29523809524" />
+            <use y="5.0" x="-104.247619048" height="10.0" xlink:href="#a" width="5.29523809524" />
+            <use y="5.0" x="-98.9523809524" height="10.0" xlink:href="#b" width="5.29523809524" />
+            <use y="5.0" x="-93.6571428571" height="10.0" xlink:href="#e" width="5.29523809524" />
+            <use y="5.0" x="-88.3619047619" height="10.0" xlink:href="#l" width="2.11428571429" />
+        </g>
+        <use y="5.0" x="116.892857143" height="15.0" xlink:href="#B" width="9.52857142857" />
+        <use y="5.0" x="126.421428571" height="15.0" xlink:href="#a" width="7.94285714286" />
+        <use y="5.0" x="134.364285714" height="15.0" xlink:href="#r" width="4.75714285714" />
+        <use y="5.0" x="143.407142857" height="15.0" xlink:href="#G" width="11.1142857143" />
+        <use y="5.0" x="154.521428571" height="15.0" xlink:href="#r" width="4.75714285714" />
+        <use y="5.0" x="159.278571429" height="15.0" xlink:href="#a" width="7.94285714286" />
+        <use y="5.0" x="167.221428571" height="15.0" xlink:href="#p" width="7.94285714286" />
+        <use y="5.0" x="175.164285714" height="15.0" xlink:href="#h" width="7.94285714286" />
+    </g>
+</svg>

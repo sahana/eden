@@ -1,0 +1,22 @@
+Welcome to the Sahana Eden Developer environment
+
+To launch Sahana, double-click on the Eclipse icon & start the debugger.
+
+Firefox will open on the local site & also has other Bookmarks
+
+You should Register in Sahana - 1st user will get Admin rights.
+
+To view the Filesystem in Eclipse, click on the 'PyDev' button in the upper-right of the screen.
+
+For the ticket viewer:
+Admin password: eden
+
+To open an interactive Python shell in the Sahana environment, open the terminal & type:
+w2p
+
+To update this virtual machine, open the terminal & type:
+update
+
+Password for the Sahana user: eden
+
+Happy coding!

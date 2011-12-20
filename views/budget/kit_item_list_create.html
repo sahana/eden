@@ -1,0 +1,36 @@
+{{extend "layout.html"}}
+{{include "budget/kit_item_header.html"}}
+{{=P(A(T("Edit Description"), _href=URL(f="kit", args=(kit, "update"))))}}
+{{try:}}
+ {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+<div class='form-container'>
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+{{except:}}
+{{pass}}
+</div>
+</div>
+<p>&nbsp;</p>
+{{try:}}
+ {{=H3(addtitle)}}
+{{except:}}
+{{pass}}
+{{include 'key.html'}}
+<div class='form-container'>
+{{try:}}
+ {{=form}}
+{{except:}}
+{{pass}}
+</div>
+<script type="text/javascript">//<![CDATA[
+$(function() {
+    // Set the Crud dropdown to the current Kit
+    var options = '<option value="' + {{=kit}} + '"></option>';
+    $("#budget_kit_item_kit_id").html(options);
+    // Hide the dropdown
+    $("#budget_kit_item_kit_id__row").hide();
+    });
+//]]></script>

@@ -1,0 +1,12 @@
+{{extend "layout.html"}}
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+{{pass}}
+<div class='form-container'>
+{{try:}}
+ {{=form}}
+{{except:}}
+{{pass}}
+</div>
+<p>&nbsp;</p>

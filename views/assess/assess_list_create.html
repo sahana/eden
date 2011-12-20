@@ -1,0 +1,11 @@
+{{extend "layout.html"}}
+{{include "_list_create.html"}}
+{{try:}}
+{{incident = s3mgr.get_session("irs", "ireport")}}
+<script type="text/javascript">//<![CDATA[
+$(function() {
+    //$('#assess_assess_incident_id').val({{=incident}});
+});
+//]]></script>
+{{except:}}
+{{pass}}

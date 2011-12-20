@@ -1,0 +1,2 @@
+Example.com, Manager, User, managerUser@example.com
+Example.com, Staff, User, staffUser@example.com 

@@ -1,0 +1,14 @@
+<div id='popup' class='clearfix'>
+{{try:}}
+ <div class='form-container'>
+  {{=form}}
+ </div>
+{{except:}}
+{{pass}}
+{{try:}}
+ <div id='table-container'>
+  {{=items}}
+ </div>
+{{except:}}
+{{pass}}
+</div>

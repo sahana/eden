@@ -1,0 +1,7 @@
+{{extend "layout.html"}}
+{{try:}}
+  {{=sform}}
+{{except:}}
+{{pass}}
+{{include "hrm/org_choose.html"}}
+{{include "_list_create.html"}}

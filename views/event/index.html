@@ -1,0 +1,9 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h2>{{=T("Events")}}</h2>
+<p>{{=T("This module allows you to manage Events - whether pre-planned (e.g. exercises) or Live Incidents. You can allocate appropriate Resources (Human, Assets & Facilities) so that these can be mobilized easily.")}}</p>
+<ul>
+<li><b><a href='{{=URL(c="event", f="event", args="create")}}'>{{=T("Create New Event")}}</a></b></li>
+<li><b><a href='{{=URL(c="event", f="event")}}'>{{=T("Manage Events")}}</a></b></li>
+</ul>
+</div>

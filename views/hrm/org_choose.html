@@ -1,0 +1,8 @@
+{{try:}}
+ {{if session.hrm.multiorg:}}
+  {{=A(SPAN(H4(orgname, _style="border:none;padding:0;margin:0;margin-left:6px;margin-top:8px;")), _href=URL(c="hrm", f="organisation"), _title="Choose Organization")}}
+ {{else:}}
+  {{=H4(orgname, _style="border:none;")}}
+ {{pass}}
+{{except:}}
+{{pass}}

@@ -1,0 +1,84 @@
+"Template","Template Description","Complete Question","Date Question","Time Question","Location Question","Priority Question","Section","Section Position","Question","Question Type","Question Notes","Question Position","Question Code","Meta Data"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Name of the affected Township","Location",,1,"MRCS-BI-1",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Type of disasters","String",,2,"MRCS-BI-2",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Time of occurrence","String",,3,"MRCS-BI-3",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Reason for disaster","String",,4,"MRCS-BI-4",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Initial Disaster reported date: -","String",,5,"MRCS-BI-5",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Affected VDC and population descriptions","String",,6,"MRCS-BI-6",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Name of States/Division/Township/Village Tract","String",,7,"MRCS-BI-7",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",1,"Name of affected sites/community","String",,8,"MRCS-BI-8",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Human",2,"Estimated population total","Numeric",,9,"MRCS-H-1","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Human",2,"Number of Males","Numeric",,10,"MRCS-H-2","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Human",2,"Number of Females","Numeric",,11,"MRCS-H-3","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Number of volunteers mobilized for First Aid Responders Total","Numeric",,12,"MRCS-Re-1","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Number of volunteers mobilized for First Aid Responders Male","Numeric",,13,"MRCS-Re-2","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Number of volunteers mobilized for First Aid Responders Female","Numeric",,14,"MRCS-Re-3","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Number of Service Volunteers mobilized Total","Numeric",,15,"MRCS-Re-4","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Number of Service Volunteers mobilized Male","Numeric",,16,"MRCS-Re-5","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Number of Service Volunteers mobilized Female","Numeric",,17,"MRCS-Re-6","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"PSP Support Assessment - Total","Numeric",,18,"MRCS-Re-7",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"PSP Support Assessment - Male","Numeric",,19,"MRCS-Re-8",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"PSP Support Assessment - Female ","Numeric",,20,"MRCS-Re-9",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Others in response - Total","Numeric",,21,"MRCS-Re-10",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Others in response - Male","Numeric",,22,"MRCS-Re-11",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",3,"Others in response - Female","Numeric",,23,"MRCS-Re-12",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Shelter",4,"Number of completely destroyed houses","Numeric",,24,"MRCS-Sh-1","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Shelter",4,"Total estimated loss amount from completely destroyed houses","Numeric",,25,"MRCS-Sh-2",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Shelter",4,"Approach to collect information on completely destroyed houses","Text",,26,"MRCS-Sh-3",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Number of damaged school buildings","Numeric",,27,"MRCS-In-1","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Total estimated loss amount from damaged school buildings","Numeric",,28,"MRCS-In-2",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Approach to collect information on damaged school buildings","Text",,29,"MRCS-In-3",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Number of damaged bridges/roads","Numeric",,30,"MRCS-In-4","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Total estimated loss amount from bridges/roads","Numeric",,31,"MRCS-In-5",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Approach to collect information on bridges/roads","Text",,32,"MRCS-In-6",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Number of damaged Community resource center (VDC, Library, Evacuation shelter)","Numeric",,33,"MRCS-In-7","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Total estimated loss amount from Community resource center (VDC, Library, Evacuation shelter)","Numeric",,34,"MRCS-In-8",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Approach to collect information on Community resource center (VDC, Library, Evacuation shelter)","Text",,35,"MRCS-In-9",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Number of damaged Community resource center (VDC, Library, Evacuation shelter)","Numeric",,36,"MRCS-In-10","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Total estimated loss amount from Community resource center (VDC, Library, Evacuation shelter)","Numeric",,37,"MRCS-In-11",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Infrastructure",5,"Approach to collect information on Community resource center (VDC, Library, Evacuation shelter)","Text",,38,"MRCS-In-12",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",6,"Number of damaged Health posts","Numeric",,39,"MRCS-He-1","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",6,"Total estimated loss amount from Health posts","Numeric",,40,"MRCS-He-2",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",6,"Approach to collect information on Health posts","Text",,41,"MRCS-He-3",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Food",7,"Number of damaged Cultivated crops (in acres)","Numeric",,42,"MRCS-Fo-1",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Food",7,"Total estimated loss amount from Cultivated crops (in acres)","Numeric",,43,"MRCS-Fo-2",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Food",7,"Approach to collect information on Cultivated crops (in acres)","String",,44,"MRCS-Fo-3",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Food",7,"Number of damaged Fertile lands (in acres)","Numeric",,45,"MRCS-Fo-4",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Total estimated loss amount from Fertile lands (in acres)","Numeric",,46,"MRCS-Li-1",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Approach to collect information on Fertile lands (in acres)","Text",,47,"MRCS-Li-2",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Number of damaged Livestock","Numeric",,48,"MRCS-Li-3",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Total estimated loss amount from Livestock","Numeric",,49,"MRCS-Li-4",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Approach to collect information on Livestock","Text",,50,"MRCS-Li-5",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Number of damaged IG schemes","Numeric",,51,"MRCS-Li-6",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Total estimated loss amount from IG schemes","Numeric",,52,"MRCS-Li-7",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Approach to collect information on IG schemes","Text",,53,"MRCS-Li-8",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Number of damaged Fish ponds","Numeric",,54,"MRCS-Li-9",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Total estimated loss amount from Fish ponds","Numeric",,55,"MRCS-Li-10",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Approach to collect information on Fish ponds","Text",,56,"MRCS-Li-11",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Number of damaged Small shops","Numeric",,57,"MRCS-Li-12",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Total estimated loss amount from Small shops","Numeric",,58,"MRCS-Li-13",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Livelihoods",8,"Approach to collect information on Small shops","Text",,59,"MRCS-Li-14",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Possibility of disease outbreak VDC for Cholera","String",,60,"MRCS-He-4",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Sites/Community at risk from Cholera","String",,61,"MRCS-He-5",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Estimated population at that site at risk from Cholera","Numeric",,62,"MRCS-He-6","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Possibility of disease outbreak VDC for Malaria","String",,63,"MRCS-He-7",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Sites/Community at risk from Malaria","String",,64,"MRCS-He-8",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Estimated population at that site at risk from Malaria","Numeric",,65,"MRCS-He-9","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Possibility of disease outbreak VDC for Diarrhea","String",,66,"MRCS-He-10",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Sites/Community at risk from Diarrhea","String",,67,"MRCS-He-11",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Estimated population at that site at risk from Diarrhea","Numeric",,68,"MRCS-He-12","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Possibility of disease outbreak VDC for Snake bites","String",,69,"MRCS-He-13",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Sites/Community at risk from Snake bites","String",,70,"MRCS-He-14",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Estimated population at that site at risk from Snake bites","Numeric",,71,"MRCS-He-15","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Possibility of disease outbreak VDC for Encephalitis","String",,72,"MRCS-He-16",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Sites/Community at risk from Encephalitis","String",,73,"MRCS-He-17",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Estimated population at that site at risk from Encephalitis","Numeric",,74,"MRCS-He-18","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Possibility of other disease outbreak VDC (please specify diseases identified)","String",,75,"MRCS-He-19",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Sites/Community at risk from other diseases","String",,76,"MRCS-He-20",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Health",9,"Estimated population at that site at risk from other diseases","Numeric",,77,"MRCS-He-21","{'Format': 'n'}"
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",10,"Access( what means can use to reach beneficiaries, general security situation, people perception on relief management)","String",,78,"MRCS-Re-13",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",10,"Recommendations for immediate actions","String",,79,"MRCS-Re-14",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",10,"Constraints/problems","String",,80,"MRCS-Re-15",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Response",10,"Conclusions","String",,81,"MRCS-Re-16",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",11,"Team Leader Name","String",,82,"MRCS-BI-9",
+"MRCS","Myanmar Red Cross Society","MRCS-BI-9","MRCS-BI-5",,"MRCS-BI-1","MRCS-Sh-1","Background Info",12,"Team Member Name","String",,83,"MRCS-BI-10",

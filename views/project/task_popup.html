@@ -1,0 +1,27 @@
+{{extend "layout.html"}}
+{{include "_popup.html"}}
+{{if "caller" in request.vars:}}
+<script type="text/javascript">//<![CDATA[
+$(function() {
+  {{if "irs_ireport" in request.vars.caller:}}
+    // If coming from an Incident then pre-populate fields
+    var subject = self.parent.$('#irs_ireport_name').val();
+    $('#project_task_subject').val(subject);
+    var message = self.parent.$('#irs_ireport_message').val();
+    var contact = self.parent.$('#irs_ireport_contact').val();
+    var report_id = self.parent.$('input[name="_formname"]').val();
+    report_id = report_id.substr(12, report_id.length);
+    message = subject + '\n\n' + message + '\n\n' + contact + '\n\nIncident Report: ' + report_id;
+    $('#project_task_description').val(message);
+    var location = self.parent.$('#irs_ireport_location_id').val();
+    if (location) {
+        $('#project_task_location_id').val(location);
+        // Hide the Location until we get the Location Selector to display the Location properly
+        // - this would probably be best done by populating all these values server-side
+        // - but this isn't possible unless the parent record is saved, which is currently doesn't need to be
+        $('[id*=location]').hide()
+    }
+  {{pass}}
+});
+//]]></script>
+{{pass}}

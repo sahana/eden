@@ -1,0 +1,21 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{=H2(module_name)}}
+<p>
+{{=T("The Building Asssesments module allows building safety to be assessed, e.g. after an Earthquake.")}}
+</p>
+<h3>{{=T("Forms")}}:</h3>
+NZSEE {{=T("Safety Assessment Form")}} ({{=T("ATC-20 Rapid Evaluation modified for New Zealand")}})
+<ul>
+<li><a href='{{=URL(f="nzseel1", args=["create"], vars={"triage":1})}}'>{{=T("Submit new Level 1 assessment (triage)")}}</a></li>
+<li><a href='{{=URL(f="nzseel1", args=["create"])}}'>{{=T("Submit new Level 1 assessment (full form)")}}</a></li>
+<li><a href='{{=URL(f="nzseel2", args=["create"])}}'>{{=T("Submit new Level 2 assessment")}}</a></li>
+<li><a href='{{=URL(f="nzseel1")}}'>{{=T("List Level 1 assessments")}}</a></li>
+<li><a href='{{=URL(f="'nzseel2")}}'>{{=T("List Level 2 assessments")}}</a></li>
+</ul>
+<h3>{{=T("Reports")}}:</h3>
+<li><a href='{{=URL(f="report")}}'>{{=T("Snapshot Report")}}</a></li>
+<li><a href='{{=URL(f="timeline")}}'>{{=T("Timeline Report")}}</a></li>
+<li><a href='{{=URL(f="adminLevel")}}'>{{=T("Summary by Administration Level")}}</a></li>
+</ul>
+</div>

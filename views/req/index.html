@@ -1,0 +1,21 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h2>{{=T("Requests Management")}}</h2>
+<p>{{=T("The staff responsibile for Facilities can make Requests for assistance. Commitments can be made against these Requests however the requests remain open until the requestor confirms that the request is complete.")}}<p>
+<h3>{{=T("Requests")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="req", f="req", args="create")}}'>{{=T("Create New Request")}}</a>
+  <li><a href='{{=URL(c="req", f="req")}}'>{{=T("List All Requests")}}</a> to be able to Commit to them
+{{if deployment_settings.has_module("inv"):}}
+  <li><a href='{{=URL(c="req", f="req_item")}}'>{{=T("List All Requested Items")}}</a>
+{{pass}}
+{{if deployment_settings.has_module("hrm"):}}
+  <li><a href='{{=URL(c="req", f="req_skill")}}'>{{=T("List All Requested Skills")}}</a>
+{{pass}}
+</ul>
+<h3>{{=T("Commitments")}}:</h3>
+<ul>
+  <!--<li><a href='{{=URL(c="req", f="commit", args="create")}}'>{{=T("Make New Commitment")}}</a>-->
+  <li><a href='{{=URL(c="req", f="commit")}}'>{{=T("List All Commitments")}}</a>
+</ul>
+</div>

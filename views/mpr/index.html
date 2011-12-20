@@ -1,0 +1,46 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{=H2(module_name)}}
+{{if auth.s3_logged_in():}}
+<div>
+{{=H5(T("Search here for a person record in order to:"))}}
+<ul style="margin-left: 40px;">
+    <li>{{=T("Report them missing")}}</li>
+    <li>{{=T("Report them as found")}}</li>
+<!--     <li>{{=T("Give information about where and when you have seen them")}}</li> -->
+    <li>{{=T("View and/or update their details")}}</li>
+</ul>
+{{try:}}
+{{if myself:}}
+<div style="color: red;">
+    <span style="font-weight: bold;">{{=T("You are currently reported missing!")}}</span>
+    &nbsp;
+    {{=T("Please report here where you are:")}}
+    &nbsp;
+    {{=A(T("Report my location"), _href=myself, _class="action-btn")}}
+</div>
+{{pass}}
+{{except:pass}}
+</div>
+{{else:}}
+<div>
+    {{=H5(T("You must be logged in to report persons missing or found."))}}
+    &nbsp;
+    {{=A(T("Login"), _href="/%s/default/user/login?_next=/%s/mpr/index" % (request.application, request.application), _class="action-btn")}}
+</div>
+{{pass}}
+<div style="margin:20px auto; width:96%; max-width:1000px;" >
+    <div style="width:100%; float:left;">
+        {{=H4(T("Find Person Record"))}}
+        {{try:}}{{=form}}{{except:pass}}
+        <div><br /></div>
+        <div id='table-container'>
+            {{try:}}
+            {{=items}}
+            {{except:}}
+            {{pass}}
+        </div>
+        {{include "dataTables.html"}}
+    </div>
+</div>
+</div>

@@ -1,0 +1,58 @@
+{{extend "layout.html"}}
+{{if session.s3.debug:}}
+<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{else:}}
+<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+<div id='home'>
+{{=H2(module_name)}}
+<div style='margin:20px auto; width:96%; max-width:1000px;'>
+    <div style='width:65%; float:left;'>
+        {{=H4(T("DVI Navigator"))}}
+        {{=H5(T("You have found a dead body?"))}}
+        <ul>
+            <li>{{=A(T("Submit a request for recovery"), _href=URL(c="dvi", f="recreq", args="create"))}}</li>
+        </ul>
+        {{=H5(T("You are a recovery team?"))}}
+        <ul>
+            <li>{{=A(T("See unassigned recovery requests"), _href=URL(c="dvi", f="recreq", vars={"recreq.status":"1"}))}}</li>
+            <li>{{=A(T("Get incoming recovery requests as RSS feed"), _href=URL(c="dvi", f="recreq.rss", vars={"recreq.status":"1"}))}}</li>
+        </ul>
+    </div>
+    <div style='width:30%; float:right;'>
+        {{=H4("%s: %s" % (T("Bodies recovered"), total))}}
+        <div id='charts' style='padding-top: 10px;'>
+            <table>
+                <tr>
+                    <td>
+                        <div id='chart1' style='width:260px; height:200px;'></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</div><!-- home -->
+{{if session.s3.debug:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
+<!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->
+<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/excanvas.js"></script><![endif]-->
+{{else:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
+<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
+{{pass}}
+<script type="text/javascript" language="javascript">//<![CDATA[
+$(document).ready(function(){
+    var status = {{try:}}{{=XML(status)}}{{except:}}0{{pass}};
+
+    if ( status ) {
+        var plot1 = $.jqplot('chart1', [status], {
+          title: 'Identification Progress',
+          seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
+          legend:{show:true, escapeHtml:true}
+        });
+    }
+});
+//]]></script>

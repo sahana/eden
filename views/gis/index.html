@@ -1,0 +1,9 @@
+{{extend "layout.html"}}
+<div style='margin:10px 0px 10px 0px; width:100%; max-width:980px;'>
+<div id='home'>
+    <a href='{{=URL(f="map_viewing_client")}}' style='font-weight:bold;padding-left:8px;'>{{=T("View Fullscreen Map")}}</a></td>
+    {{=XML(map)}}
+    {{include "gis/legend.html"}}
+    <p style='padding-left:10px;'>{{=XML(pconfig)}}</p>
+</div>
+</div>

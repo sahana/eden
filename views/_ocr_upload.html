@@ -1,0 +1,11 @@
+{{extend "layout.html"}}
+{{=H2(T("Scanned Forms Upload"))}}
+{{optionList = []}}
+{{if len(availForms) == 0:}}
+{{=DIV(P(T("No forms to the corresponding resource have been downloaded yet."), " ", A(T("click here"), _href=createurl), " ", T("to download a OCR Form.")),_id="rheader")}}
+{{else:}}
+{{for eachForm in availForms:}}
+{{optionList.append(OPTION("uuid %s [revision %s]" % (eachForm["uuid"], eachForm["revision"]), _value="%s" % str(eachForm["uuid"])))}}
+{{pass}}
+{{=DIV(FORM(TABLE(TR(TD(T("Available Forms")), TD(SELECT(optionList, _name="formuuid")), TD(DIV(_class="tooltip", _title="Comments|The form uuid and revision number is present at the bottom of each page of the form just close to the black markers.z"))), TR(TD(T("Upload Format")), TD(SELECT(OPTION(T("Image File(s), one image per page"), OPTION(T("Single PDF File"), _value="pdf"), _value="image"), _name="uploadformat"))), TR(TD(),TD(INPUT(_type="submit"),_style="text-align:right;"))), _action="", _method="get"),_id="rheader")}}
+{{pass}}

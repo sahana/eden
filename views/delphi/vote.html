@@ -1,0 +1,45 @@
+{{extend "layout.html"}}
+<div id='rheader'>
+ {{=rheader}}
+</div>
+<div id='component'>
+{{if duser.can_vote:}}
+  <div id='vote_div'>
+    <p>
+    {{if votes:}}
+        {{=T("Your current ordered list of solution options is shown in the right-hand column. You can change your vote by reordering this list. You may choose to ignore any solution options by having these in the left-hand column.")}}
+    {{else:}}
+        {{=T("Here are the solution options related to this problem. You should drag the solutions which you wish to vote on to the right-hand side & then order them with the preferred solution at the top. Note that you do not need to vote on all options.")}}
+    {{pass}}
+    </p>
+
+<div class='fleft'>
+<strong>{{=T("Unranked Options")}}</strong>
+<ul id='solutions' class='connectedSortable'>
+  {{for option in options:}}
+    <li class='ui-state-default tacenter' id='{{=option}}'>{{=options[option]}}</li>
+  {{pass}}
+</ul>
+</div>
+
+<div class='fleft'>
+<strong>{{=T("Your Rankings")}}</strong>
+<ul id='rankings' class='connectedSortable'>
+  {{for rank in rankings:}}
+    <li class='ui-state-default tacenter' id='{{=rank}}'>{{=rankings[rank]}}</li>
+  {{pass}}
+</ul>
+</div>
+
+<div class='clear'>
+    <p>
+    <button id='vote_button' class='action-btn'>{{=T("Save Vote")}}</button>
+    </p>
+</div>
+
+{{elif not auth.is_logged_in():}}
+  <p>{{=XML(T("You must %(login)s to Vote") % dict(login = A(T("login"), _href=URL(c="default", f="user", args=["login"], vars=dict(_next=login_next)))))}}</p>
+{{else:}}
+  <p>{{=T("You are not allowed to Vote")}}</p>
+{{pass}}
+</div>

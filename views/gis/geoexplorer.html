@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>GeoExplorer</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="shortcut icon" href="/{{=request.application}}/static/favicon.ico" type="image/x-icon">
+
+        <!-- Ext resources -->
+    {{if session.s3.debug:}}
+      {{if session.s3.cdn:}}
+        <!-- For Sites Hosted on the Public Internet, using Cachefly CDN's version of ExtJS may provide better performance -->
+        <link href="http://extjs.cachefly.net/ext-3.3.1/resources/css/ext-all.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <link href="http://extjs.cachefly.net/ext-3.3.1/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <script src="http://extjs.cachefly.net/ext-3.3.1/adapter/ext/ext-base-debug.js" type="text/javascript"></script>
+        <script src="http://extjs.cachefly.net/ext-3.3.1/ext-all-debug.js" type="text/javascript"></script>
+        <script src="http://extjs.cachefly.net/ext-3.3.1/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>
+      {{else:}}
+        <link href="/{{=request.application}}/static/scripts/ext/resources/css/ext-all.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <link href="/{{=request.application}}/static/scripts/ext/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <script src="/{{=request.application}}/static/scripts/ext/adapter/ext/ext-base-debug.js" type="text/javascript"></script>
+        <script src="/{{=request.application}}/static/scripts/ext/ext-all-debug.js" type="text/javascript"></script>
+        <script src="/{{=request.application}}/static/scripts/ext/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>
+      {{pass}}
+    {{else:}}
+      {{if session.s3.cdn:}}
+        <!-- For Sites Hosted on the Public Internet, using Cachefly CDN's version of ExtJS may provide better performance -->
+        <link href="http://extjs.cachefly.net/ext-3.3.1/resources/css/ext-all.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <link href="http://extjs.cachefly.net/ext-3.3.1/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <script src="http://extjs.cachefly.net/ext-3.3.1/adapter/ext/ext-base.js" type="text/javascript"></script>
+      {{else:}}
+        <link href="/{{=request.application}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" charset="utf-8" />
+        <script src="/{{=request.application}}/static/scripts/ext/adapter/ext/ext-base.js" type="text/javascript"></script>
+      {{pass}}
+    {{pass}}
+        <script type="text/javascript">
+        // For IE9, make ExtJS think we're Chrome, not IE6.
+        // http://www.sencha.com/forum/showthread.php?115849-OPEN-1434-ExtJS-TreePanel-and-IE9
+        if (Ext.isIE6 && !Ext.isIE9 && /msie 9/i.test(navigator.userAgent)) {
+            Ext.isIE6 = Ext.isIE = false;
+            Ext.isChrome = Ext.isIE9 = true;
+        }
+        </script>
+    {{if session.s3.debug:}}
+      {{if session.s3.cdn:}}
+        <!-- For Sites Hosted on the Public Internet, using Cachefly CDN's version of ExtJS may provide better performance -->
+        <script src="http://extjs.cachefly.net/ext-3.3.1/ext-all-debug.js" type="text/javascript"></script>
+        <script src="http://extjs.cachefly.net/ext-3.3.1/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>
+      {{else:}}
+        <script src="/{{=request.application}}/static/scripts/ext/ext-all-debug.js" type="text/javascript"></script>
+        <script src="/{{=request.application}}/static/scripts/ext/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>
+      {{pass}}
+    {{else:}}
+      {{if session.s3.cdn:}}
+        <!-- For Sites Hosted on the Public Internet, using Cachefly CDN's version of ExtJS may provide better performance -->
+        <script src="http://extjs.cachefly.net/ext-3.3.1/ext-all.js" type="text/javascript"></script>
+        <script src="http://extjs.cachefly.net/ext-3.3.1/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>
+      {{else:}}
+        <script src="/{{=request.application}}/static/scripts/ext/ext-all.js" type="text/javascript"></script>
+        <script src="/{{=request.application}}/static/scripts/ext/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>
+      {{pass}}
+    {{pass}}
+
+        <!-- Composer -->
+        <!-- OpenLayers resources -->
+        <link href="/{{=request.application}}/static/styles/gis/style.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+      {{if session.s3.debug:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/openlayers/lib/OpenLayers.js"></script>
+      {{else:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/OpenLayers.js"></script>
+      {{pass}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/openlayers/lib/OpenLayers/Layer/GoogleNG.js"></script>
+
+        <!-- GeoExt resources -->
+        <link href="/{{=request.application}}/static/styles/gis/popup.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+        <link href="/{{=request.application}}/static/styles/gis/layerlegend.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+        <!--<link href="/{{=request.application}}/static/styles/gis/gxtheme-gray.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />-->
+      {{if session.s3.debug:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExt/lib/GeoExt.js"></script>
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExt/lib/overrides/override-ext-ajax.js"></script>
+      {{else:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExt.js"></script>
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/geoext/lib/overrides/override-ext-ajax.js"></script>
+      {{pass}}
+
+        <!-- gxp resources -->
+        <link href="/{{=request.application}}/static/styles/gis/gxp.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+      {{if session.s3.debug:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/gxp/loader.js"></script>
+      {{else:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/gxp.js"></script>
+      {{pass}}
+
+        <!-- proj4js resources -->
+        <!--<script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/proj4js/lib/proj4js-compressed.js"></script>-->
+
+        <!-- GeoExplorer resources -->
+        <link href="/{{=request.application}}/static/styles/gis/geoexplorer.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+        <!--[if IE]><link href="/{{=request.application}}/static/styles/gis/ie.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" /><![endif]-->        
+        <link href="/{{=request.application}}/static/styles/gis/color-picker.ux.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+      {{if session.s3.debug:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExplorer/GeoExplorer.js"></script>
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExplorer/GeoExplorer/Composer.js"></script>
+      {{else:}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExplorer.js"></script>
+      {{pass}}
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/ext-community-extensions/rowactions/js/RowExpander.js"></script>
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExplorer/colorpicker/color-picker.ux.js"></script>
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/GeoExplorer/colorpicker/ColorManager.js"></script>
+
+        <!-- PrintPreview resources -->
+        <link href="/{{=request.application}}/static/styles/gis/printpreview.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+        <script type="text/javascript" src="/{{=request.application}}/static/scripts/gis/geoext/ux/PrintPreview.js"></script>
+
+        <script>
+            Ext.BLANK_IMAGE_URL = '/{{=request.application}}/static/img/gis/openlayers/blank.gif';
+            OpenLayers.ImgPath = '/{{=request.application}}/static/img/gis/openlayers/';
+            // optionally set locale based on query string parameter
+            if (GeoExt.Lang) {
+                GeoExt.Lang.set(OpenLayers.Util.getParameters()["locale"] || GeoExt.Lang.locale);
+            }
+            var s3_gis_proxy_url = '/{{=request.application}}/gis/proxy?url=';
+            var s3_gis_geoserver_url = '{{=geoserver_url}}';
+            var app = new GeoExplorer.Composer({
+              {{if auth.is_logged_in():}}
+                authStatus: 200,
+              {{else:}}
+                authStatus: 401,
+              {{pass}}
+                proxy: s3_gis_proxy_url,
+              {{if print_service:}}
+                printService: '{{=print_service}}',
+              {{else:}}
+                printService: null,
+              {{pass}}
+                about: {
+                    title: "GeoExplorer Demo Map",
+                    'abstract': 'This is a demonstration of GeoExplorer embedded within Sahana',
+                    contact: 'IRC #sahana-eden'
+                },
+                defaultSourceType: "gxp_wmscsource",
+                sources: {
+                  {{if geoserver_url:}}
+                    local: {
+                        url: s3_gis_geoserver_url,
+                        title: 'Local GeoServer',
+                        ptype: 'gxp_wmscsource'
+                    },
+                  {{pass}}
+                    //gxp.js (line 52)
+                    //h.arg is undefined
+                    // b,e,f,g,h){delete this.store;var j="";...dy",this)}.createDelegate(this),0)},
+                    //suite: {
+                    //    url: "http://v2.suite.opengeo.org/geoserver/ows",
+                    //    title: "Remote Suite GeoServer"
+                    //},
+                    mapquest: {
+                        ptype: "gxp_mapquestsource"
+                    },
+                    osm: {
+                        ptype: "gxp_osmsource"
+                    },
+                    google: {
+                        ptype: "gxp_googlesource"
+                    },
+                    bing: {
+                        ptype: "gxp_bingsource"
+                    },
+                    mapbox: {
+                        ptype: "gxp_mapboxsource"
+                    },
+                    ol: {
+                        ptype: "gxp_olsource"
+                    }
+                },
+                map: {
+                    projection: "EPSG:102113",
+                    units: "m",
+                    maxResolution: 156543.0339,
+                    maxExtent: [
+                        -20037508.34, -20037508.34,
+                        20037508.34, 20037508.34
+                    ],
+                    layers: [{
+                        source: "google",
+                        title: "Google Roadmap",
+                        name: "ROADMAP",
+                        group: "background"
+                    }, {
+                        source: "ol",
+                        group: "background",
+                        fixed: true,
+                        type: "OpenLayers.Layer",
+                        args: [
+                            "None", {visibility: false}
+                        ]
+                    }],
+                    center: [0, 0],
+                    zoom: 2
+                }
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

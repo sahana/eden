@@ -1,0 +1,26 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h1>{{=T("Supply Chain Management")}}</h1>
+<div class='col2left'>
+<h3>{{=T("Items")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("Create New Item")}}</a>
+  <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("List All Items")}}</a>
+  <li><a href='{{=URL(c="supply", f="item", args="search")}}'>{{=T("Search Items")}}</a>
+</ul>
+<h3>{{=T("Catalogs")}}</h3>
+<ul>
+  <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("Create New Catalog")}}</a>
+  <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("List All Catalogs & Add Items to Catalogs")}}</a>
+</ul>
+</div>
+{{if s3_has_role(ADMIN):}}
+<div class='col2right'>
+<h3>{{=T("Item Categories")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="supply", f="item_category", args="create")}}'>{{=T("Create New Item Category")}}</a>
+  <li><a href='{{=URL(c="supply", f="item_category")}}'>{{=T("List All Item Categories")}}</a>
+</ul>
+</div>
+{{pass}}
+</div>

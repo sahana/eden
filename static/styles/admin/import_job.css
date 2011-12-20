@@ -1,0 +1,4 @@
+/* Hide id column in the lines form */ 
+.import_job_lines .column_id {
+    display: none;
+}

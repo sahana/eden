@@ -1,0 +1,10 @@
+{{extend "layout.html"}}
+{{try:}}
+  {{=sectionSelect}}
+{{except:}}
+{{pass}}
+{{try:}}
+  {{=sform}}
+{{except:}}
+{{pass}}
+{{include "_create.html"}}

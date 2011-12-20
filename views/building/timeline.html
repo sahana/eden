@@ -1,0 +1,73 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h2>{{=T("Timeline")}}</h2>
+
+<h3>{{=T("Inspection Date")}}:</h3>
+
+<div class='table-container'>
+<table class='display'>
+{{include "building/incident_summary.html"}}
+<tbody>
+{{report = "inspection"}}
+{{for details in inspection:}}
+	{{if details[0][1] == "Total":}}
+		{{cnt = 1}}
+		{{include "building/incident_date_total.html"}}
+	{{else:}}
+		{{include "building/incident_hour_summary.html"}}
+	{{pass}}
+{{pass}}
+<tbody>
+</table>
+</div>
+
+<h3>{{=T("When reports were entered")}}:</h3>
+
+<div class='table-container'>
+<table class='display'>
+{{include "building/incident_summary.html"}}
+<tbody>
+{{report="creation"}}
+{{for details in creation:}}
+	{{if details[0][1] == "Total":}}
+		{{cnt = 1}}
+		{{include "building/incident_date_total.html"}}
+	{{else:}}
+		{{include "building/incident_hour_summary.html"}}
+	{{pass}}
+{{pass}}
+<tbody>
+</table>
+</div>
+
+</div>
+
+<script type="text/javascript">
+	function showStuff(report, date, cnt)
+	{
+		do
+		{
+			var id = '#' + report + '-' + date + '-' + cnt + '';
+			$(id).show();
+			cnt = (parseInt(cnt) + 1).toString();
+		} while ($(id).length)
+		id = '#' + report + '-' + date + '-plus';
+		$(id).hide();
+		id = '#' + report + '-' + date + '-minus';
+		$(id).show();
+	}
+
+	function hideStuff(report, date, cnt)
+	{
+		do
+		{
+			var id = '#' + report + '-' + date + '-' + cnt + '';
+			$(id).hide();
+			cnt = (parseInt(cnt) + 1).toString();
+		} while ($(id).length)
+		id = '#' + report + '-' + date + '-plus';
+		$(id).show();
+		id = '#' + report + '-' + date + '-minus';
+		$(id).hide();
+	}
+</script>

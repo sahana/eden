@@ -1,0 +1,22 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{=H2(module_name)}}
+<p>
+{{=T("The Assessments module allows field workers to send in assessments.")}}
+<p>
+</p>
+{{=T("2 different options are provided here currently:")}}
+</p>
+<h3>{{=T("Flexible Impact Assessments")}}:</h3>
+<ul>
+<li>{{=A(T("Create Impact Assessment"), _href=URL(f="basic_assess"))}}</li>
+<li>{{=A(T("List Impact Assessments"), _href=URL(f="assess"))}}</li>
+<li>{{=A(T("Create Mobile Impact Assessment"), _href=URL(f="mobile_basic_assess"))}}</li>
+</ul>
+<h3>{{=T("Rapid Assessments")}}:</h3>
+<p>{{=T("Built using the Template agreed by a group of NGOs working together as the")}} <a href='http://www.ecbproject.org/page/48' target='_blank'>{{=T("Emergency Capacity Building project")}}</a></p>
+<ul>
+<li>{{=A(T("Create Rapid Assessment"), _href=URL(f="rat", args="create"))}}</li>
+<li>{{=A(T("List Rapid Assessments"), _href=URL(f="rat"))}}</li>
+</ul>
+</div>

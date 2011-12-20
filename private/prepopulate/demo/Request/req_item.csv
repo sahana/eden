@@ -1,0 +1,7 @@
+Request,Item,Pack,Quantity,Currency,Value,Comments
+LAUREL_CANYON*07_2011#02,Aircraft,ea,2,USD,25000
+LAUREL_CANYON*07_2011#02,Helicopter,ea,4,USD,40000
+LAUREL_CANYON*07_2011#02,Ambulance & Equipment,ea,3,USD,1000
+LAUREL_CANYON*07_2011#01,Infant Formula,lbs,1000,USD,5
+LAUREL_CANYON*07_2011#01,Perishable Food,lbs,500,USD,12
+LAUREL_CANYON*07_2011#01,Canned/Dried Food,lbs,500,USD,8

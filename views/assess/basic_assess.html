@@ -1,0 +1,23 @@
+{{extend "layout.html"}}
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+{{pass}}
+{{try:}}
+ {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+{{if location:}}
+  {{=P(T("For"), ": ", B(location))}} 
+  <div id='map'></div>
+{{pass}}
+<div class='form-container'>
+{{try:}}
+ {{=form}}
+{{except:}}
+{{pass}}
+</div>
+<script type="text/javascript">//<![CDATA[
+//This could be done more elegantly                                        
+location_id = 'custom_assess_location_id';
+//]]></script>

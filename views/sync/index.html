@@ -1,0 +1,28 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{=H2(module_name)}}
+<p>
+{{=T("The synchronization module allows the synchronization of data resources between Sahana Eden instances.")}}
+</p>
+<hr/>
+<h5>{{=A(T("Settings"), _href=URL(c="sync", f="config"))}}</h5>
+<ul>
+    <li>{{=T("See the universally unique identifier (UUID) of this repository")}}</li>
+    <li>{{=T("Configure the default proxy server to connect to remote repositories")}}</li>
+</ul>
+<h5>{{=A(T("Repositories"), _href=URL(c="sync", f="repository"))}}</h5>
+<ul>
+    <li>{{=T("Configure connection details and authentication")}}</li>
+    <li>{{=T("Configure resources to synchronize, update methods and policies")}}</li>
+    <li>{{=T("Schedule synchronization jobs")}}</li>
+    <li>{{=T("View log entries per repository")}}</li>
+</ul>
+<h5>{{=A(T("Log"), _href=URL(c="sync", f="log"))}}</h5>
+<ul>
+    <li>{{=T("View all log entries")}}</li>
+</ul>
+<h5>{{=A(T("User Guidelines Synchronization"), _target="blank", _href="http://eden.sahanafoundation.org/wiki/UserGuidelinesSynchronization")}}</h5>
+<ul>
+    <li>{{=T("See a detailed description of the module on the Sahana Eden wiki")}}</li>
+</ul>
+</div>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<labels>
+
+    <!-- **********************************************************************
+
+         S3CSV labels: column and option label variants
+
+         This file is used by the ResolveColumnHeader and GetColumnValue
+         templates to find all acceptable variants of a column header or
+         column option by its standard label.
+
+         Make sure that there are no conflicting duplicates of labels for
+         different columns (duplicates for the same column will be
+         automatically resolved).
+
+         You can use the same syntax in the XML source (e.g. append to the
+         source tree) to add more variants.
+
+         General syntax:
+
+         <column name="StandardName">
+             <label>AlternativeName1</label>
+             <label>AlternativeName2</label>
+             <option value="InternalValue" name="StandardLabel">
+                 <label>AlternativeOptionLabel1</label>
+                 <label>AlternativeOptionLabel2</label>
+             </option>
+         </column>
+
+         Example:
+
+         <column name="PersonGender">
+             <label>PersonGender</label>
+             <label>Gender</label>
+             <label>Sex</label>
+             <option value="1" name="female">
+                 <label>F</label>
+             </option>
+             <option value="2" name="male">
+                 <label>M</label>
+             </option>
+         </column>
+
+    *********************************************************************** -->
+
+    <column name="PersonGender">
+        <label>PersonGender</label>
+        <label>Gender</label>
+        <label>Sex</label>
+<!--         <label>Title</label> -->
+        <option value="2" name="female">
+            <label>F</label>
+            <label>f</label>
+            <label>Female</label>
+            <label>Mrs</label>
+            <label>Mrs.</label>
+            <label>Ms</label>
+            <label>Ms.</label>
+        </option>
+        <option value="3" name="male">
+            <label>M</label>
+            <label>m</label>
+            <label>Male</label>
+            <label>Mr</label>
+            <label>Mr.</label>
+        </option>
+    </column>
+
+   <!-- ******************************************************************* -->
+
+</labels>

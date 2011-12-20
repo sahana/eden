@@ -1,0 +1,11 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{=H2(module_name)}}
+<p>
+{{=T("The Patient Tracking system keeps track of all the evacuated patients & their relatives.")}}
+<ul>
+    <li><a href='{{=URL(f="patient", args="search")}}'><b>{{=T("Search Patients")}}</b></a></li>
+    <li><a href='{{=URL(f="patient")}}'><b>{{=T("List Patients")}}</b></a></li>
+    <li><a href='{{=URL(f="patient", args="create")}}'><b>{{=T("Add new Patient")}}</b></a></li>
+</ul>
+</div>

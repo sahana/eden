@@ -1,0 +1,138 @@
+@charset "UTF-8";
+
+/*
+Sahana - Default Theme - Stylesheet
+-----------------------------------------------------------------------------------
+designer : Prabhath Sirisena - prabhath@vesess.com - http://nidahas.com
+updated : Priyanga Fonseka  - jo@opensource.lk
+updated for SahanaPy : Fran Boon  - francisboon@gmail.com
+updated for print form : Michael Howden - michael.howden@gmail.com
+Some content used from: http://matthewjamestaylor.com/blog/perfect-full-page.htm
+
+Selectors are listed in their order of appearance in the html, where applicable.
+----------------------------------------------------------------------------------
+
+  |---- Neutralizing Styles
+  |---- Basic Page Formatting Styles
+  |---- Header
+    +---- menu_auth
+  |---- menu_modules
+  |---- Content ( Home, Result, Module specific styles )
+  |---- Footer
+  |---- Form Layout Styles
+  |---- Popup Form Styles
+  |---- Popup Menu Styles
+  |---- Message Display Styles
+
+*/
+
+/* Neutralizing Styles
+   ------------------------------------------------------------------------------- */
+/* Neutralize styling: Elements we want to clean out entirely */
+html, body, form, fieldset, textarea { margin: 0; padding: 0; font: 100%/125% Arial, Helvetica, sans-serif; }
+
+/* Neutralize styling: Elements with a vertical margin */
+h1, h2, h3, h4, h5, h6, p, pre,
+blockquote, ul, ol, dl, address { margin: 0 0 1em 0; padding: 0;  }
+
+/* Apply left margin: Only to the few elements that need it */
+dd, blockquote { margin-left: 1em; }
+/* Breaks CSS dropdown menus
+li { margin-left: 1em; }
+*/
+
+/* Clear floats without structural markup */
+.clearfix:after { content: ".";  display: block; height: 0; clear: both; visibility: hidden; }
+
+/* Hides from IE-mac */
+* html .clearfix { height: 1%; }
+
+/* Basic Page Formatting Styles
+   ------------------------------------------------------------------------------- */
+body { font-size: 0.8em; color: #000; direction: ltr; }
+/* Miscellaneous conveniences: */
+form label { cursor: pointer; }
+fieldset { border: none; }
+
+table { border-collapse: collapse }
+
+#form-container {
+    width: 800;
+    padding-top:0;
+    padding-bottom:20;
+    padding-right:20;
+    padding-left:20;
+    border-style: solid;
+    border-width: 1;
+    border-color: black;
+    margin: 10
+}
+
+#form-container-landscape {
+    width: 900;
+    padding-top:0;
+    padding-bottom:20;
+    padding-right:20;
+    padding-left:20;
+    border-style: solid;
+    border-width: 1;
+    border-color: black;
+    margin: 10
+}
+
+
+#form-header {
+    /*background: url(../../img/fdm_logo_black.png) no-repeat right top;*/
+    height: 70;
+}
+
+#form-header table {
+    width: 100%;
+}
+
+#form-header  h2, h3, h4 {
+    vertical-align:text-top;
+    text-align: left;
+    margin: 0 0 0 0;
+}
+
+#form-header h2 {
+    font-size: 2em;
+}
+
+
+#form-header h2, h4 {
+    padding: 0 0 0 150;
+}
+
+#form-header h4 {
+    font-size: 0.7em;
+}
+
+h1 {
+    font-size: 3em;
+    text-align: center;
+    margin-top: 30;
+}
+
+#details-container {
+    padding: 10;
+    border-style: solid;
+    border-width: 1;
+    border-color: black;
+}
+
+#details-container  label{
+    font-size: 120%;
+}
+
+/* Tabular data view */
+div#table-container { font_size: 0.4em; width: 100%; overflow: auto; }
+div#table-container table thead tr th { border: 1px solid black; padding: 10;}
+div#table-container table tbody th { border: 1px solid black; }
+div#table-container table tr.even td { border: 1px solid black; text-align: center;}
+div#table-container table tr.odd td { border: 1px solid black; text-align: center; }
+
+
+
+

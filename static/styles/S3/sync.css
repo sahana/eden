@@ -1,0 +1,47 @@
+#sync_status {
+    background-color: #F7F2D1;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: 10px;
+    border: solid 1px #000000;
+    padding: 8px;
+    min-height:24em;
+}
+
+#sync_status .sync_message {
+    text-align: left;
+}
+
+#sync_status .sync_status {
+    float: right;
+    text-align: right;
+    font-weight: bold;
+}
+
+#sync_status .sync_ok {
+    color: #288D31;
+}
+
+#sync_status .sync_error {
+    color: #CE322E;
+    font-weight: bold;
+}
+
+#sync_status .sync_success {
+    color: #288D31;
+}
+
+#sync_status .sync_failure {
+    color: #E39921;
+    font-weight: bold;
+}
+
+#sync_status .sync_done {
+    color: #288D31;
+    font-weight: bold;
+}
+
+#sync_status .sync_skipped {
+    color: #E39921;
+    font-weight: bold;
+}

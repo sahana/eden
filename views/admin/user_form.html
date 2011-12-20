@@ -1,0 +1,64 @@
+{{form.attributes["_id"] = "regform"}}
+{{form[0].insert(7, TR(
+	TD(
+		LABEL("%s:" % T("Verify password"))
+	, _class="w2p_fl"), 
+	TD()
+))}}
+{{form[0].insert(7, TR(
+	TD(
+	 	INPUT(_name="password_two", _id="password_two", _type="password")
+	, _class="w2p_fw"),
+	TD(_class="w2p_fc")
+))}}
+{{if deployment_settings.get_auth_registration_requests_mobile_phone():}}
+  {{form[0].insert(-8, TR(
+	TD(
+		LABEL("%s:" % T("Mobile Phone"))
+	, _class="w2p_fl"), 
+	TD()
+  ))}}
+  {{form[0].insert(-8, TR(
+	TD(
+	 	INPUT(_name="mobile", _id="mobile", _class="string")
+	, _class="w2p_fw"),
+	TD(_class="w2p_fc")
+  ))}}
+{{pass}}
+
+{{if session.s3.debug:}}
+  {{if session.s3.cdn:}}
+{{response.s3.scripts.append( "http://ajax.aspnetcdn.com/ajax/jquery.validate/1.8.1/jquery.validate.js" )}}
+  {{else:}}
+{{response.s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )}}
+  {{pass}}
+ {{else:}}
+  {{if session.s3.cdn:}}
+{{response.s3.scripts.append( "http://ajax.aspnetcdn.com/ajax/jquery.validate/1.8.1/jquery.validate.min.js" )}}
+  {{else:}}
+{{response.s3.scripts.append( "%s/jquery.validate.min.js" % s3_script_dir )}}
+ {{pass}}
+{{pass}}
+
+{{if session.s3.debug:}}
+  {{response.s3.scripts.append( "%s/jquery.pstrength.1.3.js" % s3_script_dir )}}
+{{else:}}
+  {{response.s3.scripts.append( "%s/jquery.pstrength.1.3.min.js" % s3_script_dir )}}
+{{pass}}
+{{response.s3.jquery_ready.append("".join(("""
+$('.password:last').pstrength();
+if ($('#auth_user_password').val()) {
+    // Update form: don't want password_two validation
+    $('#password_two').rules('remove');
+    $('#auth_user_password').change( function() {
+        // unless the password is being changed
+        $('#password_two').rules('add', {
+            required: true,
+            equalTo: '.password:last',
+            messages: {
+                required: '""",  str(T("Repeat your password")), """',
+                equalTo: '""",  str(T("Enter the same password as above")), """'
+            },
+        });
+    });
+}""")))}}

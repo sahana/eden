@@ -1,0 +1,165 @@
+<html>
+    <head>
+        {{include "jquery.html"}}
+        <script><!--
+
+function ChartManager(view_URL) {
+    /*
+    This is designed to interface with a graph-generating view that knows
+    how to combine data sets on a graph so that the user can interactively
+    create graphs showing multiple things.
+    */
+    var chart_manager = this
+    
+    chart_manager.update_chart = function () {
+        var url_parts = []
+        $('#chart_spec_list li input:checked').each(
+            function (index, element) {
+                url_parts.push(
+                    $(element).attr('value')
+                )
+            }
+        )
+        if (url_parts.length) {
+            chart_manager.compute_size()
+            var spec = (
+                '?spec='+('['+url_parts.join(',')+']')+
+                '&width='+chart_manager.chart_width+
+                '&height='+chart_manager.chart_height
+            )
+            chart.attr('title', 
+                'width: '+chart_manager.chart_width+'pixels, \n'+
+                'height: '+chart_manager.chart_height+'pixels'
+            )
+            var src = view_URL+spec
+            chart_manager.waiting_for_new_image = true
+            chart.attr('src', src)
+            download_link.attr('href', view_URL+'_download'+spec)
+            download_link.html('Download')
+        }
+    }
+
+    var chart = $('#chart')
+    var container = $('#container')
+    var download_link = $('#download_link')
+    var fixed_size = $('#fixed_size')
+    function use_container_size() {
+        chart_manager.chart_width = container.width()
+        chart_manager.chart_height = container.height()
+    }
+    function use_fixed_size() {
+        chart_manager.chart_width = parseInt($('#width_input').val()) || container.width()
+        chart_manager.chart_height = parseInt($('#height_input').val()) || container.height()
+        $('#width_input').val(chart_manager.chart_width)
+        $('#height_input').val(chart_manager.chart_height)
+    }
+    function resize_based_on_window_size() {
+        if (!chart_manager.waiting_for_new_image) {
+            chart_manager.update_chart()
+        }
+        show_size(container.width(), container.height())
+    }
+    $(window).resize(resize_based_on_window_size)
+    function image_loaded_due_to_resize() {
+        chart_manager.waiting_for_new_image = false
+        // if the size has changed since, reload
+        if (
+            chart_manager.chart_width != container.width() ||
+            chart_manager.chart_height != container.height()
+        ) {
+            chart_manager.update_chart()
+        }
+    }
+    
+    function set_sizing_mode() {
+        if (fixed_size.is(':checked')) {
+            chart_manager.compute_size = use_fixed_size
+            $(window).unbind('resize', resize_based_on_window_size)
+            chart.unbind('load', image_loaded_due_to_resize)
+        }
+        else {
+            chart_manager.compute_size = use_container_size
+            $(window).bind('resize', resize_based_on_window_size)
+            chart.bind('load', image_loaded_due_to_resize)
+        }
+        chart_manager.update_chart()
+    }
+    set_sizing_mode()
+    chart_manager.compute_size()
+    fixed_size.change(set_sizing_mode)
+    
+    chart_manager.addChartSpec = function (chart_url, chart_name) {
+        var list_item = $(document.createElement('li'))
+        var id = $('#chart_spec_list li input').length
+        var list_item_id = 'list_item'+id
+        var list_checkbox = $(document.createElement('input')).attr({
+            id: list_item_id,
+            value: chart_url,
+            type: 'checkbox',
+            checked: true
+        }).click(function () {
+            chart_manager.update_chart()
+        })
+        list_item.append(list_checkbox)
+        
+        var editable_list_label = $(document.createElement('input')).attr({
+            id: 'chart_name_input'+id,
+            value: chart_name,
+            type: 'text',
+            size: 100
+        })
+        list_item.append(editable_list_label)
+        
+        $('#chart_spec_list').append(list_item)
+        chart_manager.update_chart()
+    }
+    
+    chart_manager.removeChartSpec = function (chart_url) {
+        // unimplemented, the user may close the window 
+        // to clear the charts
+    }
+    
+    function show_size(width, height) {
+        window.document.title = (
+            'Chart image ('+
+            'width: '+width+' pixels, '+
+            'height: '+height+' pixels)'
+        )
+    }
+    show_size(chart_manager.chart_width, chart_manager.chart_height)
+    $('#refresh').click(chart_manager.update_chart)
+}
+
+-->
+        </script>
+        <style type='text/css'>
+            #chart_spec_list li {
+                list-style: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container" 
+            style="padding:0px; margin:0px; position:absolute; top:0px; bottom:130px; left:0px; right:0px;"
+        >
+            <img id="chart" width="100%" height="100%" />
+        </div>
+                  
+        <div id="controls"
+            style="text-align:center; position:absolute; height:130px; bottom:0px; left:0px; right:0px;"
+        >
+            <ul id="chart_spec_list"></ul>
+            <a id="download_link"></a>
+            
+            <div>
+            <label for="fixed_size">Use fixed image size</label>
+            <input type="checkbox" id="fixed_size"/><br />
+            <label for="width">Width</label>
+            <input id="width_input"  size=4/>
+            <label for="height">Height</label>
+            <input id="height_input" size=4/>
+            <button id="refresh">Refresh</button>
+            </div>
+        </div>
+    </body>
+</html>

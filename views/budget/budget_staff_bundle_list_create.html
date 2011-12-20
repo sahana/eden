@@ -1,0 +1,71 @@
+{{extend 'layout.html'}}
+{{include 'budget/budget_staff_bundle_header.html'}}
+{{=P(A(T("Edit Description"), _href=URL(f='budget', args=(budget, 'update'))))}}
+{{try:}}
+ {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+<div class='form-container'>
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+{{except:}}
+{{pass}}
+</div>
+</div>
+<p>&nbsp;</p>
+{{try:}}
+ {{=H3(addtitle)}}
+{{except:}}
+{{pass}}
+{{include 'key.html'}}
+<div class='form-container'>
+{{try:}}
+ {{=form1}}
+{{except:}}
+{{pass}}
+{{try:}}
+ {{=form2}}
+{{except:}}
+{{pass}}
+</div>
+<script type="text/javascript">//<![CDATA[
+$(function() {
+    // Set the Crud dropdowns to the current budget
+    var options = '<option value="' + {{=budget}} + '"></option>';
+    $("#budget_budget_staff_budget_id").html(options);
+    $("#budget_budget_bundle_budget_id").html(options);
+    // Hide the dropdowns
+    $("#budget_budget_staff_budget_id__row").hide();
+    $("#budget_budget_bundle_budget_id__row").hide();
+    
+    // Hide the bundles form
+    $("form:last").hide();
+    
+    // When the Type changes:
+	$("input[name='staff_bundle1']:radio").change(function() {
+		// What is the new type?
+        type=$("input[name='staff_bundle1']:radio:checked").val();
+        if (type=="Bundle") {
+            // Hide the staffs form
+            $("form:eq(1)").hide();
+            // Set the radio to 'bundle'
+            $("input[name='staff_bundle2']:nth(1)").attr("checked","checked");
+            // Show the bundles form
+            $("form:last").show();
+        }
+    })
+	$("input[name='staff_bundle2']:radio").change(function() {
+		// What is the new type?
+        type=$("input[name='staff_bundle2']:radio:checked").val();
+        if (type=="Staff") {
+            // Hide the bundles form
+            $("form:last").hide();
+            // Set the radio to 'staff'
+            $("input[name='staff_bundle1']:nth(0)").attr("checked","checked");
+            // Show the staffs form
+            $("form:eq(1)").show();
+        }
+	})
+});
+//]]></script>

@@ -1,0 +1,13 @@
+{{extend 'layout.html'}}
+<h1>{{=T('Sahana Eden portable application generator')}}</h1>
+
+<h3>{{=T('Upload Web2py portable build as a zip file')}}</h3>
+{{=web2py_form}}
+
+<h3>{{=T('Generate portable application')}}</h3>
+{{=generator_form}}
+
+{{if download_last_form:}}
+<h3>{{=T('Download last build')}}</h3>
+    {{=download_last_form}}
+{{pass}}

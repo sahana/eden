@@ -1,0 +1,37 @@
+{{extend "layout.html"}}
+{{include "msg/group_user_header.html"}}
+{{=P(A(T("Edit Description"), _href=URL(f="group", args=("update", group))))}}
+{{try:}}
+ {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+<div class='form-container'>
+<div id='table-container'>
+{{try:}}
+ {{=items}}
+{{except:}}
+{{pass}}
+</div>
+</div>
+<p>&nbsp;</p>
+{{try:}}
+ {{=H3(addtitle)}}
+{{except:}}
+{{pass}}
+{{include "key.html"}}
+<div class='form-container'>
+{{try:}}
+ {{=form}}
+{{except:}}
+{{pass}}
+</div>
+{{include "dataTables.html"}}
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function() {
+    // Set the Crud dropdown to the current Group
+    var options = '<option value="' + {{=group}} + '"></option>';
+    $('#msg_group_user_msg_group_id').html(options);
+    // Hide the dropdown
+    $('#msg_group_user_msg_group_id__row').hide();
+    });
+//]]></script>

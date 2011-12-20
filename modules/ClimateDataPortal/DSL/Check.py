@@ -1,0 +1,188 @@
+import datetime
+
+from . import *
+
+check = Method("check")
+# checks arguments are correct type and in range only.
+
+def month_number_from_arg(month, error):
+    try:
+        month_number = Months.options[month]
+    except KeyError:
+        error(
+            "Months should be e.g. Jan/January or numbers "
+            "in range 1 to 12, not %s" % month
+        )
+        return 1
+    else:
+        return month_number
+
+@check.implementation(Months)
+def Months_check(month_filter):
+    month_filter.errors = []
+    error = month_filter.errors.append
+    month_filter.month_numbers = list()
+    for month in month_filter.months:                
+        month_number = month_number_from_arg(month, error) - 1
+        if month_number in month_filter.month_numbers:
+            error(
+                "%s was added more than once" % month_sequence[month_number]
+            )
+        month_filter.month_numbers.append(month_number)
+    return month_filter.errors
+
+@check.implementation(FromDate)
+def FromDate_check(from_date):
+    from_date.errors = []
+    error = from_date.errors.append
+    year = from_date.year
+    month = from_date.month or 1
+    day = from_date.day or 1
+    month_number = month_number_from_arg(month, error)
+    if not isinstance(year, int):
+        error("Year should be a whole number")
+    if not isinstance(day, int):
+        error("Day should be a whole number")
+    if not (1900 < year < 2500):
+        error("Year should be in range 1900 to 2500")
+    try:
+        from_date.date = datetime.date(year, month_number, day)
+    except:
+        error("Invalid date")
+    return from_date.errors
+
+import calendar
+
+@check.implementation(ToDate)
+def ToDate_check(to_date):
+    to_date.errors = []
+    error = to_date.errors.append
+    year = to_date.year
+    month = to_date.month or 1
+    day = to_date.day or -1
+    if not isinstance(year, int):
+        error("Year should be a whole number")
+    if not isinstance(day, int):
+        error("Day should be a whole number")
+    if not (1900 < year < 2500):
+        error("Year should be in range 1900 to 2500")
+    month_number = month_number_from_arg(month, error)
+    if day is -1:
+        # use last day of month
+        _, day = calendar.monthrange(year, month_number)
+    else:
+        day = to_date.day
+    try:
+        to_date.date = datetime.date(year, month_number, day)
+    except ValueError:
+        error("Invalid date")
+    return to_date.errors
+
+@check.implementation(Addition, Subtraction, Multiplication, Division)
+def Binop_check(binop):
+    binop.errors = []
+    left = check(binop.left)
+    right = check(binop.right)
+    return left or right
+
+@check.implementation(Pow)
+def PowRoot_check(binop):
+    binop.errors = []
+    error = binop.errors.append
+    exponent = binop.right
+    if not isinstance(exponent, int) or exponent == 0:
+        error("Exponent should be a positive, non-zero number.")
+    return check(binop.left) or binop.errors
+
+@check.implementation(*aggregations)
+def Aggregation_check(aggregation):
+    aggregation.errors = []
+    def error(message):
+        aggregation.errors.append(message)
+    allowed_specifications = (ToDate, FromDate, Months)
+    specification_errors = False
+    if not isinstance(aggregation.dataset_name, str):
+        error("First argument should be the name of a data set enclosed in "
+                "parentheses. ")
+    else:
+        if SampleTable.name_exists(aggregation.dataset_name, error):
+            aggregation.sample_table = SampleTable.with_name(aggregation.dataset_name)
+    for specification in aggregation.specification:
+        if not isinstance(specification, allowed_specifications):
+            error(
+                "%(specification)s cannot be used inside "
+                "%(aggregation_name)s(...).\n"
+                "Required arguments are table name: %(table_names)s.\n"
+                "Optional arguments are %(possibilities)s." % dict(
+                    specification = specification,
+                    aggregation_name = aggregation.__class__.__name__,
+                    table_names = ", ".join(
+                        map(
+                            '"%s %s"'.__mod__,
+                            climate_sample_tables
+                        )
+                    ),
+                    possibilities = ", ".join(
+                        Class.__name__+"(...)" for Class in allowed_specifications
+                    )
+                )
+            )
+        specification_errors |= bool(check(specification))
+    return aggregation.errors or specification_errors
+
+@check.implementation(Number)
+def Number_check(positive_number):
+    if positive_number.units._positive and positive_number.value < 0:
+        positive_number.errors = ["Affine Numbers must be positive"]
+    else:
+        positive_number.errors = []
+    return positive_number.errors
+
+check_analysis = Method("check_analysis")
+
+@check_analysis.implementation(Number)
+def Number_check_analysis(number, out):
+    out(number.value)
+    if number.errors:
+        out("# ^ ", ", ".join(number.errors))
+
+@check_analysis.implementation(FromDate, ToDate)
+def FromDate_check_analysis(date_spec, out):
+    out(date_spec)
+    if date_spec.errors:
+        out("# ^ ", ", ".join(date_spec.errors))
+
+@check_analysis.implementation(*operations)
+def Binop_check_analysis(binop, out):
+    def indent(*strings):
+        out("    ", *strings)
+
+    out("(")
+    check_analysis(binop.left, indent)
+
+    indent(binop.op)
+    
+    check_analysis(binop.right, indent)
+    out(")")
+    if binop.errors:
+        out("# ^ ", ", ".join(binop.errors))
+
+
+@check_analysis.implementation(*aggregations)
+def aggregation_check_analysis(aggregation, out):
+    out(type(aggregation).__name__, "(")
+    def indent(*strings):
+        out("    ", *strings)
+    indent(str(aggregation.sample_table), ",")
+    
+    for specification in aggregation.specification:
+        check_analysis(specification, indent)
+    out(")")
+    if aggregation.errors:
+        out("# ^ ", ", ".join(aggregation.errors))
+
+@check_analysis.implementation(int, float)
+def primitive_number_check_analysis(number, out):
+    out(number)
+
+        
