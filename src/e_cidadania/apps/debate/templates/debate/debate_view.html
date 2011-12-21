@@ -10,6 +10,10 @@
     <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
 {% endblock %}
 
+{% block extrajs %}
+    <script src="{{ STATIC_URL }}/js/bootstrap-modal.js" type="text/javascript"></script>
+{% endblock %}
+
 {% block content %}
 
     <div class="row">
@@ -57,20 +61,13 @@
                                         {% for note in notes %}
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note">
+                                                    <div class="handler"></div>
+                                                    <div class="deletenote">x</div>
                                                     {% if perm.note.delete_note %}
                                                         <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
                                                     {% endif %}
-                                                    <textarea id="text{{ note.id }}">{{ note.title }}</textarea>
-                                                    <p class="hidden">Este
-                                                        es el mensaje real
-                                                        de la propuesta,
-                                                        que contendrá un
-                                                        montonazo de cosas
-                                                        interesantes y
-                                                        sobre todo
-                                                        contenido
-                                                        multimedia y
-                                                        comentarios.</p>
+                                                    {{ note.title }}
+                                                    <button data-controls-modal="modal-from-dom" data-backdrop="true" data-keyboard="true" class="btn small">{% trans "Edit" %}</button>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
@@ -82,7 +79,43 @@
                 </table>
                 
                 <br />
-                
+
+                <div id="modal-from-dom" class="modal hide fade" style="display: none; ">
+                    <div class="modal-header">
+                        <a href="#" class="close">×</a>
+                        <h3>{% trans "Edit note" %}</h3>
+                    </div>
+                    <div class="modal-body">
+                        <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    <span class="help-inline">{{ error|escape }}</span>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="clearfix {% if form.name.errors %}error{% endif%}">
+                                <label for="prependedInput">{{ form.name.label }}</label>
+                                <div class="input">
+                                    {{ form.name }}
+                        <span class="help-inline">
+                            {% if form.name.errors %}
+                                {% for error in form.name.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.name.help_text }}
+                            {% endif %}
+                        </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn primary">{% trans "Save" %}</a>
+                    </div>
+                </div>
+
                 <span class="btn primary small" id="new-note" onclick="createNote()">{% trans "Add new note" %}</span>
                 <div id="sortable-dispatcher">
                     {% for note in notes %}
