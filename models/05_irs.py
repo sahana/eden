@@ -9,9 +9,13 @@
 if deployment_settings.has_module("irs"):
 
     # Staff as component of Incident Reports
+    if deployment_settings.has_module("vehicle"):
+        link_table = "irs_ireport_vehicle_human_resource"
+    else:
+        link_table = "irs_ireport_human_resource"
     s3mgr.model.add_component("hrm_human_resource",
                               irs_ireport=Storage(
-                                    link="irs_ireport_human_resource",
+                                    link=link_table,
                                     joinby="ireport_id",
                                     key="human_resource_id",
                                     # Dispatcher doesn't need to Add/Edit records, just Link
@@ -199,6 +203,12 @@ if deployment_settings.has_module("irs"):
         # @ToDo: If not using the Events module, we could have a 'lead incident' to track duplicates?
         #
 
+        # Porto codes
+        #irs_incident_type_opts = {
+        #    1100:T("Fire"),
+        #    6102:T("Hazmat"),
+        #    8201:T("Rescue")
+        #}
         resourcename = "ireport"
         tablename = "%s_%s" % (module, resourcename)
         table = db.define_table(tablename,
@@ -213,6 +223,8 @@ if deployment_settings.has_module("irs"):
                                       # (users use the subset by over-riding this in the Controller)
                                       requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
                                          sort_dict_by_values(irs_incident_type_opts))),
+                                      # Use this instead if a simpler set of Options required
+                                      #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
                                       represent = lambda opt: \
                                             irs_incident_type_opts.get(opt, opt)),
                                 # Better to use a plain text field than to clutter the PR
@@ -230,6 +242,7 @@ if deployment_settings.has_module("irs"):
                                       requires = [IS_NOT_EMPTY(),
                                                   IS_UTC_DATETIME(allow_future=False)]),
                                 location_id(),
+                                human_resource_id(label=T("Incident Commander")),
                                 Field("dispatch", "datetime",
                                       # We don't want these visible in Create forms
                                       # (we override in Update forms in controller)
@@ -432,7 +445,7 @@ if deployment_settings.has_module("irs"):
 
         # ---------------------------------------------------------------------
         # Link Tables for iReports
-        # @ToDo: Make these conditional on Event nor being activated?
+        # @ToDo: Make these conditional on Event not being activated?
         # ---------------------------------------------------------------------
         if deployment_settings.has_module("hrm"):
             tablename = "irs_ireport_human_resource"
@@ -443,14 +456,149 @@ if deployment_settings.has_module("irs"):
                                     *s3_meta_fields())
 
         if deployment_settings.has_module("vehicle"):
-            s3mgr.load("vehicle_vehicle")
-            vehicle_id = response.s3.vehicle_id
+            s3mgr.load("asset_asset")
+            asset_id = response.s3.asset_id
+            asset_represent = response.s3.asset_represent
             tablename = "irs_ireport_vehicle"
             table = db.define_table(tablename,
                                     ireport_id(),
-                                    vehicle_id(),
+                                    asset_id(label = T("Vehicle")),
+                                    Field("datetime", "datetime",
+                                          label=T("Dispatch Time"),
+                                          widget = S3DateTimeWidget(future=0),
+                                          requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
+                                          default = request.utcnow),
+                                    site_id,
+                                    location_id(label=T("Destination")),
+                                    Field("closed",
+                                          # @ToDo: Close all assignments when Incident closed
+                                          readable=False,
+                                          writable=False),
+                                    s3_comments(),
                                     *s3_meta_fields())
 
+            atable = db.asset_asset
+            query = (atable.type == s3.asset.ASSET_TYPE_VEHICLE) & \
+                    (atable.deleted == False) & \
+                    ((table.id == None) | \
+                     (table.closed == True) | \
+                     (table.deleted == True))
+            left = table.on(atable.id == table.asset_id)
+            table.asset_id.requires = IS_NULL_OR(IS_ONE_OF(db(query),
+                                                           "asset_asset.id",
+                                                           asset_represent,
+                                                           left=left,
+                                                           sort=True))
+            table.site_id.label = T("Fire Station")
+            table.site_id.readable = True
+            # Populated from fire_station_vehicle
+            #table.site_id.writable = True
+
+            def ireport_onaccept(form):
+                """
+                    Assign the appropriate vehicle & on-shift team to the incident
+                    @ToDo: Specialist teams
+                    @ToDo: Make more generic
+                """
+                
+                vars = form.vars
+                ireport = vars.id
+                category = vars.category
+                if category == "1100":
+                    # Fire
+                    types = ["VUCI", "ABSC"]
+                elif category == "6102":
+                    # Hazmat
+                    types = ["VUCI", "VCOT"]
+                elif category == "8201":
+                    # Rescue
+                    types = ["VLCI", "ABSC"]
+                else:
+                    types = ["VLCI"]
+
+                # 1st unassigned vehicle
+                # @ToDo: Filter by Org/Base
+                # @ToDo: Filter by those which are under repair (asset_log)
+                s3mgr.load("fire_station_vehicle")
+                table = db.irs_ireport_vehicle
+                atable = db.asset_asset
+                vtable = db.vehicle_vehicle
+                for type in types:
+                    query = (atable.type == s3.asset.ASSET_TYPE_VEHICLE) & \
+                            (vtable.type == type) & \
+                            (vtable.asset_id == atable.id) & \
+                            (atable.deleted == False) & \
+                            ((table.id == None) | \
+                             (table.closed == True) | \
+                             (table.deleted == True))
+                    left = table.on(atable.id == table.asset_id)
+                    vehicle = db(query).select(atable.id,
+                                               left=left,
+                                               limitby=(0, 1)).first()
+                    if vehicle:
+                        s3mgr.load("vehicle_vehicle")
+                        vehicle = vehicle.id
+                        query = (vtable.asset_id == vehicle) & \
+                                (db.fire_station_vehicle.vehicle_id == vtable.id) & \
+                                (db.fire_station.id == db.fire_station_vehicle.station_id) & \
+                                (db.org_site.id == db.fire_station.site_id)
+                        site = db(query).select(db.org_site.id,
+                                                limitby=(0, 1)).first()
+                        if site:
+                            site = site.id
+                        db.irs_ireport_vehicle.insert(ireport_id=ireport,
+                                                      asset_id=vehicle,
+                                                      site_id=site)
+                        if deployment_settings.has_module("hrm"):
+                            # Assign 1st 5 human resources on-shift
+                            # @ToDo: Filter by Base
+                            table = db.irs_ireport_vehicle_human_resource
+                            htable = db.hrm_human_resource
+                            on_shift = response.s3.fire_staff_on_duty()
+                            query = on_shift & \
+                                    ((table.id == None) | \
+                                     (table.closed == True) | \
+                                     (table.deleted == True))
+                            left = table.on(htable.id == table.human_resource_id)
+                            people = db(query).select(htable.id,
+                                                      left=left,
+                                                      limitby=(0, 5))
+                            # @ToDo: Find Ranking person to be team leader
+                            leader = people.first()
+                            if leader:
+                                leader = leader.id
+                            query = (db.irs_ireport.id == ireport)
+                            db(query).update(human_resource_id=leader)
+                            for person in people:
+                                table.insert(ireport_id=ireport,
+                                             asset_id=vehicle,
+                                             human_resource_id=person.id)
+                
+            s3mgr.configure("irs_ireport",
+                            # Porto-specific currently
+                            #create_onaccept=ireport_onaccept,
+                            #create_next=URL(args=["[id]", "human_resource"]),
+                            update_next=URL(args=["[id]", "update"]))
+
+            if deployment_settings.has_module("hrm"):
+                tablename = "irs_ireport_vehicle_human_resource"
+                table = db.define_table(tablename,
+                                        ireport_id(),
+                                        # Simple dropdown is faster for a small team
+                                        human_resource_id(represent=hr_represent,
+                                                          requires = IS_ONE_OF(db,
+                                                                               "hrm_human_resource.id",
+                                                                               hr_represent,
+                                                                               #orderby="pr_person.first_name"
+                                                                               ),
+                                                          widget=None),
+                                        asset_id(label = T("Vehicle")),
+                                        Field("closed",
+                                              # @ToDo: Close all assignments when Incident closed
+                                              readable=False,
+                                              writable=False),
+                                        *s3_meta_fields())
+            
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         return dict(
@@ -461,7 +609,9 @@ if deployment_settings.has_module("irs"):
     # Provide a handle to this load function
     s3mgr.loader(ireport_tables,
                  "irs_icategory",
-                 "irs_ireport")
+                 "irs_ireport",
+                 # @ToDo: Make this optional when Vehicle module is active
+                 "irs_ireport_vehicle")
 else:
     def ireport_id(**arguments):
         """ Allow FKs to be added safely to other models in case module disabled """

@@ -113,7 +113,7 @@ if deployment_settings.has_module("asset"):
             msg_record_deleted = T("Asset deleted"),
             msg_list_empty = T("No Assets currently registered"))
 
-        def asset_asset_represent(id):
+        def asset_represent(id):
             table = db.asset_asset
             itable = db.supply_item
             btable = db.supply_brand
@@ -140,9 +140,9 @@ if deployment_settings.has_module("asset"):
         asset_id = S3ReusableField("asset_id", db.asset_asset, sortby="number",
                                    requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                    "asset_asset.id",
-                                                                   asset_asset_represent,
+                                                                   asset_represent,
                                                                    sort=True)),
-                                   represent = asset_asset_represent,
+                                   represent = asset_represent,
                                    label = T("Asset"),
                                    ondelete = "RESTRICT")
 
@@ -739,7 +739,8 @@ SCRIPT("""
         # Return to Global Scope
         return dict(
             asset_id = asset_id,
-            asset_rheader = asset_rheader
+            asset_rheader = asset_rheader,
+            asset_represent = asset_represent,
             )
 
     # Provide a handle to this load function

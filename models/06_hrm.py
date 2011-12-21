@@ -210,6 +210,25 @@ if deployment_settings.has_module(module):
                             *s3_meta_fields())
 
     # -------------------------------------------------------------------------
+    def hr_represent(id):
+        """ Simple representation of HRs """
+
+        repr_str = NONE
+        htable = db.hrm_human_resource
+        ptable = db.pr_person
+
+        query = (htable.id == id) & \
+                (ptable.id == htable.person_id)
+        person = db(query).select(ptable.first_name,
+                                  ptable.middle_name,
+                                  ptable.last_name,
+                                  limitby=(0, 1)).first()
+        if person:
+            repr_str = s3_fullname(person)
+
+        return repr_str
+
+    # -------------------------------------------------------------------------
     def hrm_human_resource_represent(id,
                                      show_link = False,
                                      none_value = NONE

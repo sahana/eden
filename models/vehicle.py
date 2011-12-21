@@ -23,11 +23,12 @@ if deployment_settings.has_module("vehicle"):
                               asset_asset="asset_id")
 
     # Vehicles as component of Incident Reports
-    s3mgr.model.add_component("vehicle_vehicle",
+    s3mgr.model.add_component("asset_asset",
                               irs_ireport=Storage(
                                     link="irs_ireport_vehicle",
                                     joinby="ireport_id",
-                                    key="vehicle_id",
+                                    key="asset_id",
+                                    name="vehicle",
                                     # Dispatcher doesn't need to Add/Edit records, just Link
                                     actuate="link",
                                     autocomplete="name",
@@ -44,9 +45,42 @@ if deployment_settings.has_module("vehicle"):
             s3mgr.load("asset_asset")
         asset_id = response.s3.asset_id
 
+        # These are Porto-specific Types
+        #@ToDo:Move to database table to allow prepop for different deployments
+        vehicle_type_opts = {
+            "VSAT": T("Rescue Vehicle Tactical Assistance"),
+            "VLCI": T("Fire Fighter Light Vehicle"),
+            "ABTD": T("Patient Transportation Ambulance"),
+            "ABSC": T("Rescue Ambulance"),
+            "VUCI": T("Fire Fighter Urban Vehicle"),
+            "VTTU": T("Urban Tank Tactical Vehicle"),
+            "VCOT": T("Command Tactical Operational Vehicle"),
+            "VFCI": T("Fire Fighter Forest Vehicle"),
+            "VE30": T("Ladder Vehicle 30"),
+            "VTPT": T("Person Transportation Tactical Vehicle"),
+            "VTTR": T("Rural Tank Tactical Vehicle"),
+            "VTTF": T("Forest Tank Tactical Vehicle"),
+            "VECI": T("Fire Fighter Special Vehicle"),
+            "VRCI": T("Fire Fighter Rural Vehicle"),
+            "MOTA": T("Motorcycle"),
+            "VTPG": T("General Person Transportation Vehicle"),
+            "VTGC": T("Big Capacity Tank Vehicle"),
+            "ABTM": T("Doolie Transportation Ambulance"),
+            "VOPE": T("Specific Operations Vehicle"),
+            "VETA": T("Technical Support Vehicle"),
+            "VPME": T("Special Multirisk Protection Vehicle"),
+            "VAME": T("Scubadiving Support Vehicle"),
+            "VAPA": T("Alimentary Support Vehicle"),
+        }
+
         # Vehicles are a component of Assets
         tablename = "vehicle_vehicle"
         table = db.define_table(tablename,
+                                Field("type",
+                                      requires = IS_NULL_OR(IS_IN_SET(vehicle_type_opts)),
+                                      represent = lambda opt: \
+                                        vehicle_type_opts.get(opt, opt),
+                                      label=T("Type")),
                                 Field("name",
                                       label=T("ID")), # often the License Plate
                                 asset_id(),
@@ -85,8 +119,11 @@ if deployment_settings.has_module("vehicle"):
             msg_list_empty = T("No Vehicle Details currently defined"))
 
         vehicle_id = S3ReusableField("vehicle_id", table,
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "vehicle_vehicle.id", "%(name)s")),
-                                      represent = lambda id: (id and [db.vehicle_vehicle[id].name] or [NONE])[0],
+                                      requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                      "vehicle_vehicle.id",
+                                                                      "%(name)s")),
+                                      represent = lambda id: \
+                                        (id and [db.vehicle_vehicle[id].name] or [NONE])[0],
                                       label = T("Vehicle"),
                                       ondelete = "RESTRICT")
 

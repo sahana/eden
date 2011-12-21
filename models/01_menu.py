@@ -617,6 +617,45 @@ s3_menu_dict = {
                 ],
     },
 
+    # FIRE
+    # -------------------------------------------------------------------------
+    "fire": {
+        "menu": [
+            [T("Fire Stations"), False, aURL(c="fire", f="station"),
+            [
+                [T("New"), False, aURL(p="create", c="fire", f="station",
+                                       args="create")],
+                [T("List All"), False, aURL(c="fire", f="station")],
+                [T("Search"), False, aURL(c="fire", f="station",
+                                          args="search")],
+                [T("Import Stations"), False, aURL(c="fire", f="station",
+                                          args="import.xml")],
+                [T("Import Vehicles"), False, aURL(c="fire", f="station_vehicle",
+                                          args="import.xml")],
+            ]],
+            [T("Water Sources"), False, aURL(c="fire", f="water_source"),
+            [
+                [T("New"), False, aURL(p="create", c="fire", f="water_source",
+                                       args="create")],
+                [T("List All"), False, aURL(c="fire", f="water_source")],
+                [T("Search"), False, aURL(c="fire", f="water_source",
+                                          args="search")],
+                [T("Import"), False, aURL(c="fire", f="water_source",
+                                          args="import.xml")],
+            ]],
+            [T("Hazard Points"), False, aURL(c="fire", f="hazard_point"),
+            [
+                [T("New"), False, aURL(p="create", c="fire", f="hazard_point",
+                                       args="create")],
+                [T("List All"), False, aURL(c="fire", f="hazard_point")],
+                [T("Search"), False, aURL(c="fire", f="hazard_point",
+                                          args="search")],
+                [T("Import"), False, aURL(c="fire", f="hazard_point",
+                                          args="import.xml")],
+            ]],
+        ]
+    },
+
     # GIS / GIS Controllers
     # -------------------------------------------------------------------------
     "gis": {
@@ -669,8 +708,8 @@ s3_menu_dict = {
         "condition1": lambda: session.s3.hrm.mode is not None,
         "conditional1": [
                 [ T("Profile"),
-                    True,aURL(f="person",
-                              vars=dict(mode="personal"))
+                  True, aURL(f="person",
+                             vars=dict(mode="personal"))
                 ]],
 
         "condition2": lambda: (session.s3.hrm.mode is not None) and (session.s3.hrm.orgs or ADMIN in session.s3.roles),

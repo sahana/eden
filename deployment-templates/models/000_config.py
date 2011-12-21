@@ -638,6 +638,12 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
+    #("fire", Storage(
+    #       name_nice = T("Fire Stations"),
+    #       description = T("Fire Station Management"),
+    #       restricted = True,
+    #       module_type = 1,
+    #   )),
     #("ocr", Storage(
     #       name_nice = T("Optical Character Recognition"),
     #       description = T("Optical Character Recognition for reading the scanned handwritten paper forms."),
