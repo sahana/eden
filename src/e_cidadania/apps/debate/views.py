@@ -199,7 +199,22 @@ def delete_note(request, space_name):
     
     else:
         return HttpResponse("You're not the author of the note. Can't delete.")
-        
+
+
+def view_debate(request, space_name, debate_id):
+    """
+
+    """
+    newnote_form = NoteForm(request.POST or None)
+
+    if request.method =="POST":
+        if newnote_form.is_valid():
+            newnote_form_uncommited = newnote_form.save(commit=False)
+            newnote_form_uncommited.author = request.user
+
+            newnote_form_uncommited.save()
+
+
 class ViewDebate(DetailView):
     """
     View a debate.

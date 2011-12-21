@@ -43,7 +43,7 @@ function createNote() {
     $.post("../create_note/", {
         debateid: $('#debate-number').text(),
         title: "Write here",
-        message: "Write here your message",
+        message: "Write here your message"
     });
 }
 
@@ -55,14 +55,11 @@ function updateNote(noteObj) {
     */
     var noteID = noteObj.attr('id');
     var position = noteObj.parent().attr('headers').split(" ");
-    var text = $('#text' + noteID).val();
 
     $.post("../update_note/", {
         noteid: noteID,
         column: position[0],
         row: position[1],
-        title: text,
-        message: "Test text"
     });
 }
 

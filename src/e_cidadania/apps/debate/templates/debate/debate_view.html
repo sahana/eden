@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% load range %}
+{% load wysiwyg %}
 
 {% block title %}{% trans "View debate" %} {{ debate.title }}{% endblock %}
 {% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
@@ -55,6 +55,10 @@
                     <tbody id="debate-body">
                         {% for row in rows %}
                             <tr id="debate-row-{{ forloop.counter }}">
+                                {% comment %}
+                                    The th style width is meant to make smaller the th, since most browsers make
+                                    the th fill all the space.
+                                {% endcomment %}
                                 <th id="{{ row.id }}" style="width:10px;"><div class="debate-ttitle">{{ row.criteria }}</div></th>
                                 {% for td in columns %}
                                     <td headers="{{ td.id }} {{ row.id }}" id="sortable-debate" class="connectedSortable">
@@ -67,7 +71,7 @@
                                                         <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
                                                     {% endif %}
                                                     {{ note.title }}
-                                                    <button data-controls-modal="modal-from-dom" data-backdrop="true" data-keyboard="true" class="btn small">{% trans "Edit" %}</button>
+                                                    <button data-column="{{ td.id }}" data-row="{{ row.id }}" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true" class="btn small">{% trans "Edit" %}</button>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
@@ -80,33 +84,27 @@
                 
                 <br />
 
-                <div id="modal-from-dom" class="modal hide fade" style="display: none; ">
+                <div id="edit-current-note" class="modal hide fade" style="display: none; ">
                     <div class="modal-header">
                         <a href="#" class="close">×</a>
                         <h3>{% trans "Edit note" %}</h3>
                     </div>
                     <div class="modal-body">
-                        <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+                        <form enctype="" action="" method="post">{% csrf_token %}
 
-                            {% if form.non_field_errors %}
-                                {% for error in form.non_field_errors %}
-                                    <span class="help-inline">{{ error|escape }}</span>
-                                {% endfor %}
-                            {% endif %}
-
-                            <div class="clearfix {% if form.name.errors %}error{% endif%}">
-                                <label for="prependedInput">{{ form.name.label }}</label>
+                            <div class="clearfix">
+                                <label for="prependedInput">{% trans "Note title" %}</label>
                                 <div class="input">
-                                    {{ form.name }}
-                        <span class="help-inline">
-                            {% if form.name.errors %}
-                                {% for error in form.name.errors %}
-                                    {{ error|escape }}
-                                {% endfor %}
-                            {% else %}
-                                {{ form.name.help_text }}
-                            {% endif %}
-                        </span>
+                                    <input type="text" name="notename" />
+                                    <span class="help-inline">{% trans "100 characters" %}</span>
+                                </div>
+                            </div>
+                            <div class="clearfix">
+                                <label for="prependedInput">{% trans "Description" %}</label>
+                                <div class="input">
+                                    <textarea id="id_note_message"></textarea>
+                                    {% wysiwyg_editor "id_note_message" %}
+                                    <span class="help-inline"></span>
                                 </div>
                             </div>
                         </form>
