@@ -58,7 +58,7 @@ if deployment_settings.has_module(module):
                                       ),
                                 Field("fax", label = T("Fax"),
                                       requires = IS_NULL_OR(s3_phone_requires)),
-                                comments(),
+                                s3_comments(),
                                 *s3_meta_fields())
 
         s3mgr.configure("fire_station",
@@ -218,7 +218,7 @@ if deployment_settings.has_module(module):
                                 #Field("anti_seismic_construction", "boolean"),
                                 #Field("isolated_from_air", "boolean"),
                                 #Field("hermetic", "boolean"),
-                                comments(),
+                                s3_comments(),
                                 *s3_meta_fields())
 
         # =====================================================================
@@ -230,7 +230,7 @@ if deployment_settings.has_module(module):
                                 Field("name", "string"),
                                 organisation_id(),
                                 person_id(),
-                                comments(),
+                                s3_comments(),
                                 *s3_meta_fields())
 
         # =====================================================================

@@ -94,6 +94,7 @@ def template():
                             update_next = URL(c="survey", f="template"),
                             )
         return True
+    response.s3.prep = prep
 
      # Post-processor
     def postp(r, output):
@@ -122,19 +123,18 @@ def template():
                                         args=[template_id,"translate","[id]"])
                                ),
                           )
-                return output
-
+            return output
 
         # Add a button to show what the questionnaire looks like
-#        s3_action_buttons(r)
-#        s3.actions = s3.actions + [
-#                               dict(label=str(T("Display")),
-#                                    _class="action-btn",
-#                                    url=URL(c=module,
-#                                            f="templateRead",
-#                                            args=["[id]"])
-#                                   ),
-#                              ]
+        # s3_action_buttons(r)
+        # s3.actions = s3.actions + [
+                               # dict(label=str(T("Display")),
+                                    # _class="action-btn",
+                                    # url=URL(c=module,
+                                            # f="templateRead",
+                                            # args=["[id]"])
+                                   # ),
+                              # ]
 
         # Add some highlighting to the rows
         query = (r.table.status == 3) # Status of closed
@@ -148,6 +148,7 @@ def template():
         rows = db(query).select(r.table.id)
         s3.dataTableStyleWarning.extend(str(row.id) for row in rows)
         return output
+    response.s3.postp = postp
 
     if request.ajax:
         post = request.post_vars
@@ -160,12 +161,9 @@ def template():
                                           template_id=template_id,
                                           cloned_section_id=section_id)
             if id == None:
-                print "Failed to insert record"
+                print >> sys.stderr, "Failed to insert record"
             return
 
-    response.s3.prep = prep
-
-    response.s3.postp = postp
     rheader = response.s3.survey_template_rheader
     # remove CRUD generated buttons in the tabs
     s3mgr.configure(tablename,

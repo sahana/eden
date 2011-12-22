@@ -70,7 +70,8 @@ class DataMatrix():
         """
         posn = element.posn()
         if posn in self.matrix:
-            msg = "Attempting to add data %s at posn %s. This is already taken with data %s" %(element, posn, self.matrix[posn])
+            msg = "Attempting to add data %s at posn %s. This is already taken with data %s" % \
+                        (element, posn, self.matrix[posn])
             raise Exception(msg)
         self.matrix[posn] = element
         element.parents.append(self)
@@ -87,9 +88,9 @@ class DataMatrix():
         styleList = []
         row = rootElement.row
         col = rootElement.col
-        for v in range(rootElement.mergeV+1):
-            for h in range(rootElement.mergeH+1):
-                newPosn = "%s,%s" % (row+v,col+h)
+        for v in range(rootElement.mergeV + 1):
+            for h in range(rootElement.mergeH + 1):
+                newPosn = "%s,%s" % (row + v, col + h)
                 styleList += self.matrix[newPosn].styleList
         return styleList
 
@@ -102,18 +103,19 @@ class DataMatrix():
         row = rootElement.row
         col = rootElement.col
         posn = rootElement.posn()
-        for v in range(rootElement.mergeV+1):
-            for h in range(rootElement.mergeH+1):
-                newPosn = "%s,%s" % (row+v,col+h)
+        for v in range(rootElement.mergeV + 1):
+            for h in range(rootElement.mergeH + 1):
+                newPosn = "%s,%s" % (row + v, col + h)
                 if newPosn == posn:
                     continue
                 if newPosn in self.matrix:
                     if self.matrix[newPosn].joinedWith == posn:
                         continue
-                    msg = "Attempting to merge element at posn %s. The following data will be lost %s" %(newPosn, self.matrix[newPosn])
+                    msg = "Attempting to merge element at posn %s. The following data will be lost %s" % \
+                                (newPosn, self.matrix[newPosn])
                     self.matrix[newPosn].joinedWith = posn
                 else:
-                    childElement = MatrixElement(row,col,"",[])
+                    childElement = MatrixElement(row, col, "", [])
                     childElement.joinedWith = posn
                     self.matrix[newPosn] = childElement
 
@@ -127,27 +129,27 @@ class DataMatrix():
             for Left, Bottom, Right and Top borders respectively
         """
         for r in range(startrow, endrow):
-            posn = "%s,%s" % (r,startcol)
+            posn = "%s,%s" % (r, startcol)
             if posn in self.matrix:
                 self.matrix[posn].styleList.append("boxL")
             else:
-                self.addElement(MatrixElement(r,startcol,"","boxL"))
-            posn = "%s,%s" % (r,endcol)
+                self.addElement(MatrixElement(r, startcol, "", "boxL"))
+            posn = "%s,%s" % (r, endcol)
             if posn in self.matrix:
                 self.matrix[posn].styleList.append("boxR")
             else:
-                self.addElement(MatrixElement(r,endcol,"","boxR"))
-        for c in range(startcol, endcol+1):
-            posn = "%s,%s" % (startrow,c)
+                self.addElement(MatrixElement(r, endcol, "", "boxR"))
+        for c in range(startcol, endcol + 1):
+            posn = "%s,%s" % (startrow, c)
             if posn in self.matrix:
                 self.matrix[posn].styleList.append("boxT")
             else:
-                self.addElement(MatrixElement(startrow,c,"","boxT"))
-            posn = "%s,%s" % (endrow-1,c)
+                self.addElement(MatrixElement(startrow, c, "", "boxT"))
+            posn = "%s,%s" % (endrow - 1, c)
             if posn in self.matrix:
                 self.matrix[posn].styleList.append("boxB")
             else:
-                self.addElement(MatrixElement(endrow-1,c,"","boxB"))
+                self.addElement(MatrixElement(endrow - 1, c, "", "boxB"))
 
 
 # -----------------------------------------------------------------------------
@@ -183,7 +185,7 @@ class MatrixElement():
 
     def posn(self):
         """ Standard representation of the position """
-        return "%s,%s" % (self.row,self.col)
+        return "%s,%s" % (self.row, self.col)
 
     def nextX(self):
         return self.row + self.mergeH + 1
@@ -480,7 +482,8 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             display = "Default"
         if display == "Default":
             elements = []
-            elements.append(TR(TH(label),TD(widget),_class="survey_question"))
+            elements.append(TR(TH(label), TD(widget),
+                               _class="survey_question"))
             return TAG[""](elements)
         elif display == "Control Only":
             return TD(widget)
@@ -891,7 +894,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         if length == None:
             raise Exception("Need to have the options specified")
         for i in range(int(length)):
-            list.append(self.get(str(i+1)))
+            list.append(self.get(str(i + 1)))
         return list
 
     def writeToMatrix(self,
@@ -900,8 +903,8 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                       col,
                       langDict=dict(),
                       answerMatrix=None,
-                      style={"Label": True
-                            ,"LabelLeft" : False
+                      style={"Label" : True,
+                             "LabelLeft" : False
                             }
                      ):
         """
@@ -909,16 +912,17 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         """
         self._store_metadata()
         if "Label" in style and style["Label"]:
-            cell = MatrixElement(row,col,self._Tquestion(langDict), style="styleSubHeader")
+            cell = MatrixElement(row, col, self._Tquestion(langDict),
+                                 style="styleSubHeader")
             matrix.addElement(cell)
             if "LabelLeft" in style and style["LabelLeft"]:
                 col += 1
                 if self.selectionInstructions != None:
-                    cell = MatrixElement(row
-                                         ,col
-                                         ,survey_T(self.selectionInstructions
-                                                  ,langDict)
-                                         ,style="styleInstructions"
+                    cell = MatrixElement(row,
+                                         col,
+                                         survey_T(self.selectionInstructions,
+                                                  langDict),
+                                         style="styleInstructions",
                                          )
                     matrix.addElement(cell)
                     col += 1
@@ -939,7 +943,8 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             cell = MatrixElement(answerRow, 0, self.question["code"],
                                  style="styleSubHeader")
             answerMatrix.addElement(cell)
-            cell = MatrixElement(answerRow, 1, len(list), style="styleSubHeader")
+            cell = MatrixElement(answerRow, 1, len(list),
+                                 style="styleSubHeader")
             answerMatrix.addElement(cell)
             cell = MatrixElement(answerRow, 2, "|#|".join(list),
                                  style="styleSubHeader")
@@ -1236,7 +1241,8 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             qstnCode = "%s(%s)" % (self.question.code,element)
             self.attr["_name"] = qstnCode
             input = self.webwidget.widget(self.field, value, **self.attr)
-            table.append(self.layout(self.hierarchyElements[cnt], input, **attr))
+            table.append(self.layout(self.hierarchyElements[cnt], input,
+                                     **attr))
             cnt += 1
         return self.layout(self.question.name, table, **attr)
 
@@ -1265,7 +1271,8 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
                                             )
             record.complete_id = complete_id
             if len(record.result) == 0:
-                msg = "Unknown Location %s, %s, %s" %(answer, query, record.key)
+                msg = "Unknown Location %s, %s, %s" % \
+                            (answer, query, record.key)
                 _debug(msg)
             return record
         else:
@@ -1325,8 +1332,9 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             
             @todo: Extend this to test the L0-L4 values 
         """
+        db = current.db
         record = Storage()
-        gtable = current.db.gis_location
+        gtable = db.gis_location
         if "alternative" in rowList:
             query = (gtable.name == rowList["alternative"])
             record.key = rowList["alternative"]
@@ -1334,7 +1342,8 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             query = (gtable.name == rowList["raw"])
             record.key = rowList["raw"]
         if "Parent" in rowList:
-            parent_query = current.db(gtable.name == rowList["Parent"]).select(gtable.id)
+            q = gtable.name == rowList["Parent"]
+            parent_query = db(q).select(gtable.id)
             query = query & (gtable.parent.belongs(parent_query))
             record.key += rowList["Parent"]
         return (query, record)
@@ -1641,7 +1650,8 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         gridStyle = style
         gridStyle["Label"] = False
         if self.data != None:
-            cell = MatrixElement(row,col,survey_T(self.subtitle, langDict), style="styleSubHeader")
+            cell = MatrixElement(row, col, survey_T(self.subtitle, langDict),
+                                 style="styleSubHeader")
             matrix.addElement(cell)
             # Add a *mostly* blank line for the heading.
             # This will be added on the first run through the list
@@ -1654,12 +1664,17 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             for line in self.data:
                 col = startcol
                 row = nextrow
-                cell = MatrixElement(row,col,survey_T(self.rows[posn], langDict), style="styleText")
+                cell = MatrixElement(row, col, survey_T(self.rows[posn],
+                                                        langDict),
+                                     style="styleText")
                 matrix.addElement(cell)
                 col += 1
                 for cell in line:
                     if firstRun:
-                        cell = MatrixElement(row-1,col,survey_T(self.columns[colCnt], langDict), style="styleSubHeader")
+                        cell = MatrixElement(row - 1, col,
+                                             survey_T(self.columns[colCnt],
+                                                      langDict),
+                                             style="styleSubHeader")
                         matrix.addElement(cell)
                         colCnt += 1
                     if cell == "Blank":
@@ -1729,9 +1744,12 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                                                  metadata = metadata,
                                                 )
                         record = self.qtable(id)
-                        current.manager.s3.survey_updateMetaData(record, "GridChild", childMetadata)
+                        current.manager.s3.survey_updateMetaData(record,
+                                                                 "GridChild",
+                                                                 childMetadata)
 
-    def insertChildrenToList(self, question_id, template_id, section_id, qstn_posn):
+    def insertChildrenToList(self, question_id, template_id, section_id,
+                             qstn_posn):
         self.getMetaData(question_id)
         if self.data != None:
             posn = 0
@@ -1813,7 +1831,9 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
             if record != None:
                 parentWidget = survey_question_type["Grid"](record.id)
                 subHeading = parentWidget.getHeading(self.question.parentNumber)
-                return "%s - %s (%s)" % (record.name, self.question.name, subHeading)
+                return "%s - %s (%s)" % (record.name,
+                                         self.question.name,
+                                         subHeading)
         return self.question.name
 
     def subDisplay(self, **attr):
@@ -1822,7 +1842,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
         realWidget = survey_question_type[type]()
         realWidget.question = self.question
         realWidget.qstn_metadata = self.qstn_metadata
-        return realWidget.display(question_id=self.id, display = "Control Only")
+        return realWidget.display(question_id=self.id, display="Control Only")
 
     def getParentType(self):
         self._store_metadata()
@@ -1849,32 +1869,32 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
 ###############################################################################
 
 # Analysis Types
-def analysis_stringType(question_id,answerList):
-    return S3StringAnalysis("String",question_id,answerList)
-def analysis_textType(question_id,answerList):
-    return S3TextAnalysis("Text",question_id,answerList)
-def analysis_numericType(question_id,answerList):
-    return S3NumericAnalysis("Numeric",question_id,answerList)
-def analysis_dateType(question_id,answerList):
-    return S3DateAnalysis("Date",question_id,answerList)
-def analysis_optionType(question_id,answerList):
-    return S3OptionAnalysis("Option",question_id,answerList)
-def analysis_ynType(question_id,answerList):
-    return S3OptionYNAnalysis("YesNo",question_id,answerList)
-def analysis_yndType(question_id,answerList):
-    return S3OptionYNDAnalysis("YesNoDontKnow",question_id,answerList)
-def analysis_optionOtherType(question_id,answerList):
-    return S3OptionOtherAnalysis("OptionOther",question_id,answerList)
-def analysis_multiOptionType(question_id,answerList):
-    return S3MultiOptionAnalysis("MultiOption",question_id,answerList)
-def analysis_locationType(question_id,answerList):
-    return S3LocationAnalysis("Location",question_id,answerList)
-def analysis_linkType(question_id,answerList):
-    return S3LinkAnalysis("Link",question_id,answerList)
-def analysis_gridType(question_id,answerList):
-    return S3GridAnalysis("Grid",question_id,answerList)
-def analysis_gridChildType(question_id,answerList):
-    return S3GridChildAnalysis("GridChild",question_id,answerList)
+def analysis_stringType(question_id, answerList):
+    return S3StringAnalysis("String", question_id, answerList)
+def analysis_textType(question_id, answerList):
+    return S3TextAnalysis("Text", question_id, answerList)
+def analysis_numericType(question_id, answerList):
+    return S3NumericAnalysis("Numeric", question_id, answerList)
+def analysis_dateType(question_id, answerList):
+    return S3DateAnalysis("Date", question_id, answerList)
+def analysis_optionType(question_id, answerList):
+    return S3OptionAnalysis("Option", question_id, answerList)
+def analysis_ynType(question_id, answerList):
+    return S3OptionYNAnalysis("YesNo", question_id, answerList)
+def analysis_yndType(question_id, answerList):
+    return S3OptionYNDAnalysis("YesNoDontKnow", question_id, answerList)
+def analysis_optionOtherType(question_id, answerList):
+    return S3OptionOtherAnalysis("OptionOther", question_id, answerList)
+def analysis_multiOptionType(question_id, answerList):
+    return S3MultiOptionAnalysis("MultiOption", question_id, answerList)
+def analysis_locationType(question_id, answerList):
+    return S3LocationAnalysis("Location", question_id, answerList)
+def analysis_linkType(question_id, answerList):
+    return S3LinkAnalysis("Link", question_id, answerList)
+def analysis_gridType(question_id, answerList):
+    return S3GridAnalysis("Grid", question_id, answerList)
+def analysis_gridChildType(question_id, answerList):
+    return S3GridChildAnalysis("GridChild", question_id, answerList)
 #def analysis_ratingType(answerList):
 #    return S3RatingAnalysis(answerList)
 #    pass
@@ -1999,7 +2019,8 @@ class S3AbstractAnalysis():
         for answer in self.answerList:
             if self.valid(answer):
                 try:
-                    cast = self.castRawAnswer(answer["complete_id"], answer["value"])
+                    cast = self.castRawAnswer(answer["complete_id"],
+                                              answer["value"])
                     if cast != None:
                         self.valueList.append(cast)
                 except:
@@ -2050,10 +2071,12 @@ class S3AbstractAnalysis():
                         "type" : self.type
                         }
                  )
-        link = A(current.T("Chart"), _href=src, _target="blank",  _class="action-btn")
+        link = A(current.T("Chart"), _href=src, _target="blank",
+                 _class="action-btn")
         return DIV(link, _class="surveyChart%sWidget" % self.type)
 
-    def drawChart(self, output=None, data=None, label=None, xLabel=None, yLabel=None):
+    def drawChart(self, output=None, data=None, label=None,
+                  xLabel=None, yLabel=None):
         """
             This function will draw the chart using the answer set.
             
@@ -2088,7 +2111,7 @@ class S3AbstractAnalysis():
         """
         table = TABLE()
         for (key, value) in self.result:
-            table.append(TR(TD(B(key)),TD(value)))
+            table.append(TR(TD(B(key)), TD(value)))
         return table
 
     def uniqueCount(self):
@@ -2250,7 +2273,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             except:
                 continue
             if value != None:
-                self.zscore[complete_id] = (value - self.mean)/self.std
+                self.zscore[complete_id] = (value - self.mean) / self.std
 
     def priority(self, complete_id, priorityObj):
         priorityList = priorityObj.range
@@ -2270,7 +2293,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         priority = 0
         band = [""]
         for limit in priorityList:
-            band.append(int(self.mean+limit*self.std))
+            band.append(int(self.mean + limit * self.std))
         return band
 
     def chartButton(self, series_id):
@@ -2336,7 +2359,8 @@ class S3OptionAnalysis(S3AbstractAnalysis):
         self.listp = {}
         if self.cnt != 0:
             for (key, value) in self.list.items():
-                self.listp[key] = "%3.1f%%" % round((100.0 * value) / self.cnt,1)
+                self.listp[key] = "%3.1f%%" % \
+                    round((100.0 * value) / self.cnt, 1)
 
     def drawChart(self, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
@@ -2482,7 +2506,7 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
         chart.survey_bar(self.qstnWidget.question.name,
                          data,
                          label,
-                         self.qstnWidget.getList()
+                         None
                          )
         image = chart.draw(output=output)
         return image
@@ -2628,7 +2652,8 @@ class S3LinkAnalysis(S3AbstractAnalysis):
         valueMap = {}
         for answer in self.answerList:
             complete_id = answer["complete_id"]
-            parent_answer = linkWidget.loadAnswer(complete_id, parent_qid, forceDB=True)
+            parent_answer = linkWidget.loadAnswer(complete_id, parent_qid,
+                                                  forceDB=True)
             if relation == "groupby":
                 # @todo: check for different values
                 valueMap.update({parent_answer:answer})

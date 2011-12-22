@@ -194,7 +194,9 @@ class S3Chart(object):
         legendColCnt = 3
         cnt = len(labels)
         dcnt = len(dataList)
-        lcnt = (len(legendLabels) + legendColCnt - 1) / legendColCnt
+        lcnt = 0
+        if legendLabels != None:
+            lcnt = (len(legendLabels) + legendColCnt - 1) / legendColCnt
         width = 0.9 / dcnt
         offset = 0
         gap = 0.1 / dcnt
@@ -213,7 +215,7 @@ class S3Chart(object):
         left = arange(cnt)
         lblAdjust = (1.0 - gap) * 0.5
         # If we have 10 or less labels then display them
-        if cnt <= 10:
+        if cnt <= 20:
             ax.set_xticks(left + lblAdjust)
             try: # This function is only available with version 1.1 of matplotlib
                 ax.set_xticklabels(labels, rotation=-10)
@@ -226,12 +228,13 @@ class S3Chart(object):
                     newlabels.append(label)
                 ax.set_xticklabels(newlabels)
         ax.set_title(title)
-        fig.legend(bars,
-                   legendLabels,
-                   "upper left",
-                   mode="expand",
-                   ncol = legendColCnt,
-                   prop={"size":10},
-                  )
+        if legendLabels != None:
+            fig.legend(bars,
+                       legendLabels,
+                       "upper left",
+                       mode="expand",
+                       ncol = legendColCnt,
+                       prop={"size":10},
+                      )
 
 # =============================================================================

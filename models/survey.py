@@ -669,7 +669,7 @@ if deployment_settings.has_module(module):
                 # Wants to display the details of the selected questions
                 crud_strings = response.s3.crud_strings["survey_complete"]
                 question_ids = []
-                vars = current.request.vars
+                vars = request.vars
 
                 if "mode" in vars:
                     mode = vars["mode"]
@@ -702,10 +702,10 @@ if deployment_settings.has_module(module):
                 output["help"] = ""
             else:
                 crud_strings = response.s3.crud_strings["survey_series"]
-                if "viewing" in current.request.vars:
-                    dummy, series_id = current.request.vars.viewing.split(".")
-                elif "series" in current.request.vars:
-                    series_id = current.request.vars.series
+                if "viewing" in request.vars:
+                    dummy, series_id = request.vars.viewing.split(".")
+                elif "series" in request.vars:
+                    series_id = request.vars.series
                 else:
                     series_id = r.id
                 form = buildSeriesSummary(series_id)
@@ -760,20 +760,20 @@ if deployment_settings.has_module(module):
 
             crud_strings = response.s3.crud_strings["survey_series"]
             # Draw the chart
-            if "viewing" in current.request.vars:
-                dummy, series_id = current.request.vars.viewing.split(".")
-            elif "series" in current.request.vars:
-                series_id = current.request.vars.series
+            if "viewing" in request.vars:
+                dummy, series_id = request.vars.viewing.split(".")
+            elif "series" in request.vars:
+                series_id = request.vars.series
             else:
                 series_id = r.id
             debug = "Series ID %s<br />" % series_id
             numQstnList = None
             labelQuestion = None
-            if "post_vars" in current.request and len(current.request.post_vars) > 0:
-                if "labelQuestion" in current.request.post_vars:
-                    labelQuestion = current.request.post_vars.labelQuestion
-                if "numericQuestion" in current.request.post_vars:
-                    numQstnList = current.request.post_vars.numericQuestion
+            if "post_vars" in request and len(request.post_vars) > 0:
+                if "labelQuestion" in request.post_vars:
+                    labelQuestion = request.post_vars.labelQuestion
+                if "numericQuestion" in request.post_vars:
+                    numQstnList = request.post_vars.numericQuestion
                     if not isinstance(numQstnList,(list,tuple)):
                         numQstnList = [numQstnList]
                 debug += "Label: %s<br />Numeric: %s<br />" % (labelQuestion, numQstnList)
@@ -823,7 +823,7 @@ if deployment_settings.has_module(module):
                                          legendLabels)
                         image = chart.draw()
                         output["chart"] = image
-                    if current.request.ajax == True:
+                    if request.ajax == True:
                         return output["chart"].xml()
             #output["debug"] = debug
 
@@ -895,7 +895,6 @@ $("#chart_btn").click(function(){
             return output
 
         def seriesMap(r, **attr):
-            request = current.request
             s3 = response.s3
             # retain the rheader
             rheader = attr.get("rheader", None)
@@ -1033,7 +1032,7 @@ $("#chart_btn").click(function(){
                            _name="series",
                            _value="%s" % series_id
                           )
-            table.append(TR(TH(T("Display Question on Map:")),
+            table.append(TR(TH("%s:" % T("Display Question on Map")),
                             _class="survey_question"))
             table.append(priorityQstn)
             table.append(series)
@@ -1171,7 +1170,7 @@ $("#chart_btn").click(function(){
             for answer in answerList:
                 qstn_code = answer[1:answer.find('","')]
                 if qstn_code not in qstns:
-                    msg = T("Unknown question code of %s") % qstn_code
+                    msg = "%s: %s" % (T("Unknown question code"), qstn_code)
                     if answer_list not in form.errors:
                         form.errors.answer_list = msg
                     else:
@@ -1434,7 +1433,7 @@ $("#chart_btn").click(function(){
                     return None
 
                 msgNone = T("No translations exist in spreadsheet")
-                upload_file = current.request.post_vars.file
+                upload_file = request.post_vars.file
                 upload_file.file.seek(0)
                 openFile = upload_file.file.read()
                 lang = form.record.language
@@ -1443,19 +1442,19 @@ $("#chart_btn").click(function(){
                     workbook = xlrd.open_workbook(file_contents=openFile)
                 except:
                     msg = T("Unable to open spreadsheet")
-                    current.response.error = msg
-                    current.response.flash = None
+                    response.error = msg
+                    response.flash = None
                     return
                 try:
                     sheetL = workbook.sheet_by_name(lang)
                 except:
                     msg = T("Unable to find sheet %(sheet_name)s in uploaded spreadsheet") % dict(sheet_name=lang)
-                    current.response.error = msg
-                    current.response.flash = None
+                    response.error = msg
+                    response.flash = None
                     return
                 if sheetL.ncols == 1:
-                    current.response.warning = msgNone
-                    current.response.flash = None
+                    response.warning = msgNone
+                    response.flash = None
                     return
                 count = 0
                 lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % (request.application, code)
@@ -1471,10 +1470,10 @@ $("#chart_btn").click(function(){
                         count += 1
                 write_dict(lang_fileName, strings)
                 if count == 0:
-                    current.response.warning = msgNone
-                    current.response.flash = None
+                    response.warning = msgNone
+                    response.flash = None
                 else:
-                    current.response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % dict(count_of=count, language=lang)
+                    response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % dict(count_of=count, language=lang)
 
         # components
         s3mgr.model.add_component("survey_translate",
@@ -1783,8 +1782,8 @@ $("#chart_btn").click(function(){
 
                     sectionTable = db["survey_section"]
                     qlistTable = db["survey_question_list"]
-                    if "vars" in current.request and "viewing" in current.request.vars:
-                        dummy, template_id = current.request.vars.viewing.split(".")
+                    if "vars" in request and "viewing" in request.vars:
+                        dummy, template_id = request.vars.viewing.split(".")
                     else:
                         template_id = r.id
 
@@ -1841,7 +1840,7 @@ $("#chart_btn").click(function(){
 
                 tablename, record = s3_rheader_resource(r)
                 if not record:
-                    series_id = current.request.vars.series
+                    series_id = request.vars.series
                     record = getSeries(series_id)
                 if record != None:
                     # Tabs
@@ -1910,7 +1909,7 @@ $("#chart_btn").click(function(){
                     sectionTitle = question["section"]
                 widgetObj = getWidgetFromQuestion(question["qstn_id"])
                 if readOnly:
-                    table.append(TR(TD(question["code"]),
+                    table.append(TR(TD(T(question["code"])),
                                     TD(widgetObj.type_represent()),
                                     TD(question["name"])
                                    )
@@ -1923,13 +1922,9 @@ $("#chart_btn").click(function(){
                         table.append(widget)
             form.append(table)
             if not readOnly:
-                button = INPUT(_type="submit", _name="Save", _value="Save")
+                button = INPUT(_type="submit", _name="Save", _value=T("Save"))
                 form.append(button)
             return form
-
-
-
-
 
         def survey_build_template_summary(template_id):
             table = TABLE(_id="template_summary",
@@ -2109,12 +2104,7 @@ $("#chart_btn").click(function(){
             return questions
 
 
-
-
-
-
         # Response
-
         def buildSeriesSummary(series_id):
             table = TABLE(_id="series_summary",
                           _class="dataTable display")
@@ -2162,7 +2152,7 @@ $("#chart_btn").click(function(){
             # turn multi-select on
             response.s3.dataTableSelectable = True
             response.s3.dataTablePostMethod = True
-            response.s3.dataTableSubmitLabel = current.T("Display Selected Questions")
+            response.s3.dataTableSubmitLabel = T("Display Selected Questions")
             series = INPUT(_type="hidden", _id="selectSeriesID", _name="series",
                         _value="%s" % series_id)
             mode = INPUT(_type="hidden", _id="importMode", _name="mode",
@@ -2211,10 +2201,11 @@ $("#chart_btn").click(function(){
             return answers
 
         def getLocationList(series_id):
+            s3 = response.s3
             response_locations = []
             question_id = getLocationQuestion(series_id)
-            answers = response.s3.survey_getAllAnswersForQuestionInSeries(question_id,
-                                                                          series_id)
+            answers = s3.survey_getAllAnswersForQuestionInSeries(question_id,
+                                                                 series_id)
             analysisTool = survey_analysis_type["Location"](question_id,
                                                             answers)
             for (key, value) in analysisTool.known.items():
@@ -2270,10 +2261,12 @@ $("#chart_btn").click(function(){
                                         _class="action-btn",
                                         url=URL(c=module,
                                                 f="series",
-                                                args=[r.id,"complete","[id]","update"])
+                                                args=[r.id,
+                                                      "complete",
+                                                      "[id]",
+                                                      "update"])
                                        ),
                                   ]
-
 
         def survey_build_completed_list(series_id, question_id_list):
             table = TABLE(_id="completed_list",
@@ -2341,7 +2334,7 @@ $("#chart_btn").click(function(){
             from tempfile import TemporaryFile
             csvfile = TemporaryFile()
             writer = csv.writer(csvfile)
-            writer.writerow(["complete_id","question_code","value"])
+            writer.writerow(["complete_id", "question_code", "value"])
             for row in answer:
                 writer.writerow(row)
             csvfile.seek(0)
@@ -2393,7 +2386,7 @@ $("#chart_btn").click(function(){
                 name = section.survey_section.name
                 id = section.survey_section.id
                 if section.survey_section.id in clonedSection:
-                    selectMasterSections.append([id,name])
+                    selectMasterSections.append([id, name])
                 else:
                     masterSections.append([id, name])
             dict = {"Available":masterSections,
@@ -2453,7 +2446,8 @@ $("#chart_btn").click(function(){
                     ulist.append(LI(name, _var=id))
             return container
 
-        def addContainerForDroppableElements(list, title, id, emptyMsg="Drop your item here"):
+        def addContainerForDroppableElements(list, title, id,
+                                             emptyMsg="Drop your item here"):
             """
                 @param list:a list of records in the drop zone, each record consists
                             of the unique id and the display representation
@@ -2616,7 +2610,9 @@ $("#chart_btn").click(function(){
             name = "name" in job.data and job.data.name
             posn = "posn" in job.data and job.data.posn
             template = "template_id" in job.data and job.data.template_id
-            query = ((table.name==name) & (table.template_id==template) & (table.posn==posn))
+            query = (table.name == name) & \
+                    (table.template_id == template) & \
+                    (table.posn == posn)
             return duplicator(job, query)
 
     def survey_question_duplicate(job):
@@ -2643,7 +2639,8 @@ $("#chart_btn").click(function(){
             table = job.table
             question = "question_id" in job.data and job.data.question_id
             descriptor  = "descriptor" in job.data and job.data.descriptor
-            query =  (table.descriptor==descriptor) &  (table.question_id==question)
+            query = (table.descriptor == descriptor) & \
+                    (table.question_id == question)
             return duplicator(job, query)
 
     def survey_question_list_duplicate(job):
@@ -2657,7 +2654,9 @@ $("#chart_btn").click(function(){
             tid = "template_id" in job.data and job.data.template_id
             qid = "question_id" in job.data and job.data.question_id
             sid = "section_id" in job.data and job.data.section_id
-            query =  (table.template_id==tid) & (table.question_id==qid) & (table.section_id==sid)
+            query = (table.template_id == tid) & \
+                    (table.question_id == qid) & \
+                    (table.section_id == sid)
             return duplicator(job, query)
 
     def survey_series_duplicate(job):
@@ -2697,7 +2696,8 @@ $("#chart_btn").click(function(){
             table = job.table
             qid = "question_id" in job.data and job.data.question_id
             rid = "complete_id" in job.data and job.data.complete_id
-            query = (table.question_id==qid) & (table.complete_id==rid)
+            query = (table.question_id == qid) & \
+                    (table.complete_id == rid)
             return duplicator(job, query)
 
     def survey_formatter_duplicate(job):
@@ -2709,14 +2709,17 @@ $("#chart_btn").click(function(){
             table = job.table
             tid = "template_id" in job.data and job.data.template_id
             sid = "section_id" in job.data and job.data.section_id
-            query = (table.template_id==tid) & (table.section_id==sid)
+            query = (table.template_id == tid) & \
+                    (table.section_id == sid)
             return duplicator(job, query)
 
     # De-duplicate resolvers
     s3mgr.configure("survey_answer", deduplicate=survey_answer_duplicate)
     s3mgr.configure("survey_complete", deduplicate=survey_complete_duplicate)
-    s3mgr.configure("survey_question_list", deduplicate=survey_question_list_duplicate)
-    s3mgr.configure("survey_question_metadata", deduplicate=survey_question_metadata_duplicate)
+    s3mgr.configure("survey_question_list",
+                    deduplicate=survey_question_list_duplicate)
+    s3mgr.configure("survey_question_metadata",
+                    deduplicate=survey_question_metadata_duplicate)
     s3mgr.configure("survey_question", deduplicate=survey_question_duplicate)
     s3mgr.configure("survey_template", deduplicate=survey_template_duplicate)
     s3mgr.configure("survey_section", deduplicate=survey_section_duplicate)
