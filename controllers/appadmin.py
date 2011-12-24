@@ -201,11 +201,11 @@ def select():
     session.last_query = request.vars.query
     form = FORM(TABLE(TR(T('Query') + ':', '', INPUT(_style='width:400px',
                 _name='query', _value=request.vars.query or '',
-                requires=IS_NOT_EMPTY(error_message=T("Cannot be empty")))), TR(T('Update') + ':',
+                requires=IS_NOT_EMPTY(error_message=T("Cannot be empty")))), TR(T('Update:'),
                 INPUT(_name='update_check', _type='checkbox',
                 value=False), INPUT(_style='width:400px',
                 _name='update_fields', _value=request.vars.update_fields
-                 or '')), TR(T('Delete') + ":", INPUT(_name='delete_check',
+                 or '')), TR(T('Delete:'), INPUT(_name='delete_check',
                 _class='delete', _type='checkbox', value=False), ''),
                 TR('', '', INPUT(_type='submit', _value='submit'))),
                 _action=URL(args=request.args))
@@ -311,7 +311,7 @@ def dropall():
 
     def dropRefTables(tableList, sqlite):
         for table in tableList:
-            _debug ("%s is referenced by:" % table)
+            _debug (T("%s is referenced by:") % table)
             for ref in table._referenced_by:
                 _debug ("   %s, %s" % ref)
             if not sqlite:
@@ -338,13 +338,13 @@ def dropall():
     runCnt = 1
     finished = False
     while not finished:
-        _debug ("Run number %s tables in db = %s" % (runCnt, total))
+        _debug (T("Run number %s tables in db = %s") % (runCnt, total))
         tableList = dropUnRefTables(tableList)
         newTotal = len(tableList)
         if (total-newTotal == 0) or (newTotal == 0):
             finished = True
-        _debug ('   Deleted %s tables' % (total-newTotal))
-        _debug ('   Remaining %s tables' % (newTotal))
+        _debug (T('   Deleted %s tables') % (total-newTotal))
+        _debug (T('   Remaining %s tables') % (newTotal))
         total = len(tableList)
         runCnt += 1
     dropRefTables(tableList, sqlite)
