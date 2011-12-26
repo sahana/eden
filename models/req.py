@@ -155,12 +155,12 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                       requires = [IS_EMPTY_OR(
                                                   IS_UTC_DATETIME_IN_RANGE(
                                                     maximum=request.utcnow,
-                                                    error_message="%s %%(max)s!" %
-                                                        T("Enter a valid past date")))],
-                                      widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
-                                                                future=0),
-                                      default = request.utcnow,
-                                      represent = s3_utc_represent),
+                                                    error_message="%s" %
+                                                        T("Enter a valid past date")))]),
+                                     # widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
+                                     #                           future=0),
+                                     # default = request.utcnow,
+                                     # represent = s3_utc_represent),
                                 Field("priority",
                                       "integer",
                                       default = 2,
@@ -178,22 +178,22 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                       requires = [IS_EMPTY_OR(
                                                   IS_UTC_DATETIME_IN_RANGE(
                                                     minimum=request.utcnow - datetime.timedelta(days=1),
-                                                    error_message="%s %%(min)s!" %
-                                                        T("Enter a valid future date")))],
-                                      widget = S3DateTimeWidget(past=0,
-                                                                future=8760),  # Hours, so 1 year
-                                      represent = s3_utc_represent),
+                                                    error_message="%s" %
+                                                        T("Enter a valid future date")))]),
+                                      #widget = S3DateTimeWidget(past=0,
+                                      #                          future=8760),  # Hours, so 1 year
+                                      #represent = s3_utc_represent),
                                 Field("date_required_until",
                                       "datetime",
                                       label = T("Date Required Until"),
                                       requires = [IS_EMPTY_OR(
                                                   IS_UTC_DATETIME_IN_RANGE(
                                                     minimum=request.utcnow - datetime.timedelta(days=1),
-                                                    error_message="%s %%(min)s!" %
+                                                    error_message="%s" %
                                                         T("Enter a valid future date")))],
-                                      widget = S3DateTimeWidget(past=0,
-                                                                future=8760), # Hours, so 1 year
-                                      represent = s3_utc_represent,
+                                      #widget = S3DateTimeWidget(past=0,
+                                      #                          future=8760), # Hours, so 1 year
+                                      #represent = s3_utc_represent,
                                       readable = False,
                                       writable = False
                                       ),
@@ -237,11 +237,11 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                       requires = [IS_EMPTY_OR(
                                                   IS_UTC_DATETIME_IN_RANGE(
                                                     maximum=request.utcnow,
-                                                    error_message="%s %%(max)s!" %
+                                                    error_message="%s" %
                                                         T("Enter a valid past date")))],
-                                      widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
-                                                                future=0),
-                                      represent = s3_utc_represent,
+                                      #widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
+                                      #                          future=0),
+                                      #represent = s3_utc_represent,
                                       readable = False,
                                       writable = False
                                       ),
@@ -740,7 +740,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                                           limitby=(0, 1)).first().id
                                     transit_status = SPAN( transit_status,
                                                            "           ",
-                                                           A( "Incoming Shipments",
+                                                           A( T("Incoming Shipments"),
                                                              _href = URL(c = site_record.instance_type.split("_")[0],
                                                                          f = "incoming",
                                                                          vars = {"viewing" : "%s.%s" % (site_record.instance_type, id)}
