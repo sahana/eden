@@ -106,6 +106,9 @@
                 {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
                 <div id='content' class='clearfix'>
                     {{include}}
+					{{if deployment_settings.share_social_media:}}
+						{{include 'socialmediasharing.html'}}
+					{{pass}}
                 </div>
             </div>
         </div>
