@@ -8,6 +8,8 @@
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <!-- http://dev.w3.org/html5/markup/meta.name.html -->
 <meta name="application-name" content="{{=request.application}}" />
+<meta property="og:title" content="{{=request.application}}" /> 
+
 <!-- Set your site up with Google: http://google.com/webmasters -->
 <meta name="google-site-verification" content="" />
 <!--  Mobile Viewport Fix
@@ -106,6 +108,14 @@
                 {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
                 <div id='content' class='clearfix'>
                     {{include}}
+					{{if deployment_settings.share_social_media:}}
+						<div id="social_media_share" align="right">
+						{{include 'socialmediasharing.html'}}
+						<script type="text/javascript">
+						jQuery($('#social_media_share').load('socialmediasharing.html'));
+						</script>
+						</div>
+					{{pass}}
                 </div>
             </div>
         </div>

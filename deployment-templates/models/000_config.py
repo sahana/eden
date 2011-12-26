@@ -289,6 +289,9 @@ deployment_settings.gis.spatialdb = False
 #deployment_settings.gis.geoserver_username = "admin"
 #deployment_settings.gis.geoserver_password = "password"
 
+# Social Media Sharing
+deployment_settings.share_social_media = True;
+
 # Twitter settings:
 # Register an app at http://twitter.com/apps
 # (select Aplication Type: Client)
@@ -296,6 +299,7 @@ deployment_settings.gis.spatialdb = False
 # You can keep these empty if you don't need Twitter integration
 deployment_settings.twitter.oauth_consumer_key = ""
 deployment_settings.twitter.oauth_consumer_secret = ""
+
 
 # Use 'soft' deletes
 deployment_settings.security.archive_not_delete = True
