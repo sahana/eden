@@ -390,7 +390,7 @@ class S3Config(Storage):
         """ Currently Unused """
         return self.ui.get("autocomplete", False)
     def get_ui_update_label(self):
-        return self.ui.get("update_label", current.T("Open"))
+        return self.ui.get("update_label", "Open")
     def get_ui_cluster(self):
         """ UN-style deployment? """
         return self.ui.get("cluster", False)

@@ -78,7 +78,8 @@ class S3CRUD(S3Method):
             @returns: output object to send to the view
         """
 
-        self.settings = self.manager.s3.crud
+        manager = current.manager
+        self.settings = manager.s3.crud
 
         # Pre-populate create-form?
         self.data = None
@@ -105,7 +106,7 @@ class S3CRUD(S3Method):
         elif self.method == "list":
             output = self.select(r, **attr)
         else:
-            r.error(405, self.manager.ERROR.BAD_METHOD)
+            r.error(405, manager.ERROR.BAD_METHOD)
 
         return output
 
@@ -118,11 +119,11 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
-        T = current.T
-
+        manager = current.manager
         session = current.session
         request = self.request
         response = current.response
+        T = current.T
 
         resource = self.resource
         table = resource.table
@@ -318,7 +319,7 @@ class S3CRUD(S3Method):
             return exporter(r, **attr)
 
         else:
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -331,6 +332,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        manager = current.manager
         session = current.session
         request = self.request
         response = current.response
@@ -469,11 +471,11 @@ class S3CRUD(S3Method):
             return exporter(resource, list_fields=list_fields)
 
         elif representation == "json":
-            exporter = S3Exporter(self.manager)
+            exporter = S3Exporter(manager)
             return exporter.json(resource)
 
         else:
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -486,15 +488,15 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        manager = current.manager
         session = current.session
         request = self.request
         response = current.response
+        T = current.T
 
         resource = self.resource
         table = resource.table
         tablename = resource.tablename
-
-        T = current.T
 
         representation = r.representation
 
@@ -622,7 +624,7 @@ class S3CRUD(S3Method):
             return self.import_url(r)
 
         else:
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -641,11 +643,10 @@ class S3CRUD(S3Method):
         request = self.request
         response = current.response
         manager = current.manager
+        T = current.T
 
         table = self.table
         tablename = self.tablename
-
-        T = current.T
 
         representation = r.representation
 
@@ -732,6 +733,7 @@ class S3CRUD(S3Method):
         session = current.session
         request = self.request
         response = current.response
+        manager = current.manager
 
         table = self.table
         tablename = self.tablename
@@ -1002,7 +1004,7 @@ class S3CRUD(S3Method):
                                  orderby=orderby)
 
         else:
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1039,6 +1041,7 @@ class S3CRUD(S3Method):
         """
 
         db = current.db
+        manager = current.manager
         resource = self.resource
         table = resource.table
 
@@ -1121,8 +1124,8 @@ class S3CRUD(S3Method):
         # Representation
         def __represent(f, row, columns=columns):
             if f.field:
-                return self.manager.represent(f.field,
-                                              record=row, linkto=linkto)
+                return manager.represent(f.field,
+                                         record=row, linkto=linkto)
             else:
                 if (f.tname, f.fname) in columns:
                     if f.tname in row and f.fname in row[f.tname]:
@@ -1169,11 +1172,10 @@ class S3CRUD(S3Method):
             @todo: parameter docstring?
         """
 
-        # Environment
+        manager = current.manager
         session = current.session
         request = self.request
         response = current.response
-        manager = current.manager
 
         # Get the CRUD settings
         audit = manager.audit
@@ -1354,7 +1356,8 @@ class S3CRUD(S3Method):
         return form
 
     # -------------------------------------------------------------------------
-    def crud_button(self, label,
+    @staticmethod
+    def crud_button(label,
                     tablename=None,
                     name=None,
                     _href=None,
@@ -1372,7 +1375,7 @@ class S3CRUD(S3Method):
         """
 
         if name:
-            labelstr = self.crud_string(tablename, name)
+            labelstr = S3CRUD.crud_string(tablename, name)
         else:
             labelstr = str(label)
         if not _href:
@@ -1444,7 +1447,8 @@ class S3CRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def truncate(self, text, length=48, nice=True):
+    @staticmethod
+    def truncate(text, length=48, nice=True):
         """
             Nice truncating of text
 
@@ -1558,8 +1562,8 @@ class S3CRUD(S3Method):
         # List button
         if "list" in buttons:
             if not r.component or r.multiple:
-                list_btn = self.crud_button(LIST, _href=href_list,
-                                            _id="list-btn")
+                list_btn = self.crud_button(LIST,
+                                            _href=href_list, _id="list-btn")
                 output.update(list_btn=list_btn)
 
         if not record_id:
@@ -1711,7 +1715,8 @@ class S3CRUD(S3Method):
             db.commit()
 
     # -------------------------------------------------------------------------
-    def import_url(self, r):
+    @staticmethod
+    def import_url(r):
         """
             Import data from URL query
 
@@ -1936,11 +1941,12 @@ class S3CRUD(S3Method):
         c = None
         f = None
 
+        manager = current.manager
         response = current.response
 
         prefix, name, table, tablename = r.target()
         permit = current.auth.s3_has_permission
-        model = r.manager.model
+        model = manager.model
 
         if authorised is None:
             authorised = permit("update", tablename)

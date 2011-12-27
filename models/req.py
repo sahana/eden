@@ -746,7 +746,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                                           limitby=(0, 1)).first().id
                                     transit_status = SPAN( transit_status,
                                                            "           ",
-                                                           A( "Incoming Shipments",
+                                                           A(T("Incoming Shipments"),
                                                              _href = URL(c = site_record.instance_type.split("_")[0],
                                                                          f = "incoming",
                                                                          vars = {"viewing" : "%s.%s" % (site_record.instance_type, id)}

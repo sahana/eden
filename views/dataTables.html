@@ -54,7 +54,10 @@ S3.dataTables = new Array();
       S3.dataTables.sAjaxSource = '{{=r.url(method="", representation="aaData")}}';
     {{pass}}
   {{else:}}
-    S3.dataTables.sAjaxSource = '{{=datatable_ajax_source}}';
+    {{try:}}
+      S3.dataTables.sAjaxSource = '{{=datatable_ajax_source}}';
+    {{except:}}
+    {{pass}}
   {{pass}}
 {{pass}}
 {{if response.aadata is not None:}}
@@ -68,7 +71,7 @@ S3.dataTables = new Array();
   S3.dataTables.aaSorting = {{=XML(sortby)}};{{pass}}
 {{except:}}{{pass}}
 {{if response.s3.hideCol is not None:}}
-  S3.dataTables.hideList = {{=XML(response.s3.hideCol)}};{{pass}} 
+  S3.dataTables.hideList = {{=XML(response.s3.hideCol)}};{{pass}}
 {{if response.s3.dataTable_NobFilter:}}
   S3.dataTables.bFilter = false;{{pass}}
 {{if response.s3.dataTable_sDom:}}

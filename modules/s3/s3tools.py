@@ -303,16 +303,10 @@ class S3BulkImporter(object):
         @author: Graeme Foster
     """
 
-    def __init__(self, manager, s3base):
-        """
-            Constructor
+    def __init__(self):
+        """ Constructor """
 
-            @param manager: the S3ResourceController
-        """
-
-        self.manager = manager
         response = current.response
-        self.s3base = s3base
         self.importTasks = []
         self.specialTasks = []
         self.tasks = []
@@ -422,7 +416,7 @@ class S3BulkImporter(object):
         """ Method that will execute each import job, in order """
 
         if task[0] == 1:
-            manager = self.manager
+            manager = current.manager
             db = current.db
             request = current.request
             response = current.response
@@ -642,9 +636,9 @@ class S3Comment(object):
         self.title = unicode(title).decode("utf-8") if title else None
 
         self.anchor_title =\
-            unicode(anchor_title).decode("utf-8") if anchor_title else None
+            str(anchor_title).decode("utf-8") if anchor_title else None
         self.anchor_link =\
-            unicode(anchor_link).decode("utf-8") if anchor_link else None
+            str(anchor_link).decode("utf-8") if anchor_link else None
 
     def markup(self):
         """

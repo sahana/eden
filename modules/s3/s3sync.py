@@ -82,6 +82,7 @@ class S3Sync(S3Method):
             @param attr: controller attributes for the request
         """
 
+        manager = current.manager
         output = dict()
 
         if r.method == "sync":
@@ -90,14 +91,14 @@ class S3Sync(S3Method):
             elif r.http in ("PUT", "POST"):
                 output = self.__receive(r, **attr)
             else:
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, manager.ERROR.BAD_METHOD)
         elif r.name == "repository" and r.method == "register":
             if r.http == "GET":
                 output = self.__register(r, **attr)
             else:
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, manager.ERROR.BAD_METHOD)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, manager.ERROR.BAD_METHOD)
 
         return output
 
@@ -220,7 +221,8 @@ class S3Sync(S3Method):
         """
 
         ignore_errors = True
-        xml = current.manager.xml
+        manager = current.manager
+        xml = manager.xml
 
         resource_name = task.resource_name
         prefix, name = resource_name.split("_", 1)
@@ -238,7 +240,7 @@ class S3Sync(S3Method):
         last_sync = task.last_sync
 
         # Get the target resource for this task
-        resource = current.manager.define_resource(prefix, name)
+        resource = manager.define_resource(prefix, name)
 
         # Add msince and deleted to the URL
         if last_sync and task.update_policy not in ("THIS", "OTHER"):
@@ -373,7 +375,7 @@ class S3Sync(S3Method):
             if not success:
                 result = self.log.FATAL
                 if not message:
-                    error = current.manager.error
+                    error = manager.error
                     message = "%s" % error
                 output = xml.json_message(False, 400, message)
 
@@ -407,7 +409,8 @@ class S3Sync(S3Method):
            @param task: a sync_task row
          """
 
-        xml = current.manager.xml
+        manager = current.manager
+        xml = manager.xml
 
         resource_name = task.resource_name
         prefix, name = resource_name.split("_", 1)
@@ -442,7 +445,7 @@ class S3Sync(S3Method):
 
         # Export the resource as S3XML
         prefix, name = task.resource_name.split("_", 1)
-        resource = current.manager.define_resource(prefix, name,
+        resource = manager.define_resource(prefix, name,
                                                    include_deleted=True)
         data = resource.export_xml(msince=last_sync)
 

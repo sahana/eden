@@ -148,27 +148,37 @@ def s3_populate_browser_compatibility(request):
 # Interactive view formats
 s3.interactive_view_formats = ("html", "popup", "iframe")
 
-# Error messages
-UNAUTHORISED = T("Not authorised!")
-BADFORMAT = T("Unsupported data format!")
-BADMETHOD = T("Unsupported method!")
-BADRECORD = T("Record not found!")
-INVALIDREQUEST = T("Invalid request!")
-XLWT_ERROR = T("xlwt module not available within the running Python - this needs installing for XLS output!")
-REPORTLAB_ERROR = T("ReportLab module not available within the running Python - this needs installing for PDF output!")
+from gluon.storage import Messages
+current.messages = Messages(T)
+current.messages.update(
+    UNAUTHORISED = "Not authorised!",
+    BADFORMAT = "Unsupported data format!",
+    BADMETHOD = "Unsupported method!",
+    BADRECORD = "Record not found!",
+    INVALIDREQUEST = "Invalid request!",
+    XLWT_ERROR = "xlwt module not available within the running Python - this needs installing for XLS output!",
+    REPORTLAB_ERROR = "ReportLab module not available within the running Python - this needs installing for PDF output!",
 
-# Common Labels
-#BREADCRUMB = ">> "
-UNKNOWN_OPT = T("Unknown")
-NONE = "-"
-#READ = T("Open")
-READ = T("Details")
-UPDATE = deployment_settings.get_ui_update_label()
-#UPDATE = T("Update")
-DELETE = T("Delete")
-COPY = T("Copy")
-NOT_APPLICABLE = T("N/A")
-SELECT_LOCATION = T("Select a location")
+    # Common Labels
+    #BREADCRUMB = ">> ",
+    UNKNOWN_OPT = "Unknown",
+    NONE = "-",
+    #READ = "Open",
+    READ = "Details",
+    UPDATE = deployment_settings.get_ui_update_label(),
+    DELETE = "Delete",
+    COPY = "Copy",
+    NOT_APPLICABLE = "N/A",
+    SELECT_LOCATION = "Select a location"
+)
+globals().update([(u, T(current.messages[u]))
+                  for u in current.messages
+                  if isinstance(current.messages[u], str)])
+try:
+    UPDATE
+except:
+    # 000_config needs updating to so that deployment_settings.ui.update_label is a str not a T()
+    UPDATE = str(current.messages["UPDATE"])
 
 s3mgr.LABEL.update(READ=READ, UPDATE=UPDATE, DELETE=DELETE, COPY=COPY)
 

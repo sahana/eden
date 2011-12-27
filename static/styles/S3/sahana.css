@@ -332,7 +332,9 @@ table {
         width: auto;
 }
 */
-
+.submenu {
+    z-index: 9999;
+}
 /* Menu Buttons */
 #modulenav li div {
     text-align: center;

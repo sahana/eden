@@ -5252,7 +5252,7 @@ class S3MAP(S3Method):
             @returns: output object to send to the view
         """
 
-        gis = r.manager.gis
+        gis = current.manager.gis
 
         # @ToDo: Deprecate gis controller's display_feature() & display_features()
         # @ToDo: Build feature query

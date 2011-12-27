@@ -3669,6 +3669,7 @@ class S3RoleManager(S3Method):
         """
 
         method = self.method
+        manager = current.manager
 
         if method == "list":
             output = self._list(r, **attr)
@@ -3681,7 +3682,7 @@ class S3RoleManager(S3Method):
         elif method == "users":
             output = self._users(r, **attr)
         else:
-            r.error(405, self.manager.ERROR.BAD_METHOD)
+            r.error(405, manager.ERROR.BAD_METHOD)
 
         if r.http == "GET" and method not in ("create", "update", "delete"):
             current.session.s3.cancel = r.url()
@@ -3698,7 +3699,8 @@ class S3RoleManager(S3Method):
         request = self.request
         response = current.response
         resource = self.resource
-        auth = self.manager.auth
+        manager = current.manager
+        auth = manager.auth
 
         db = current.db
         table = self.table
@@ -3875,10 +3877,10 @@ class S3RoleManager(S3Method):
 
         elif r.representation == "xls":
             # Not implemented yet
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, manager.ERROR.BAD_FORMAT)
 
         else:
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -3892,10 +3894,11 @@ class S3RoleManager(S3Method):
 
         request = self.request
         session = current.session
+        manager = current.manager
         db = current.db
         T = current.T
 
-        crud_settings = self.manager.s3.crud
+        crud_settings = manager.s3.crud
 
         CACL = T("Application Permissions")
         FACL = T("Function Permissions")
@@ -3903,8 +3906,8 @@ class S3RoleManager(S3Method):
 
         CANCEL = T("Cancel")
 
-        auth = self.manager.auth
-        model = self.manager.model
+        auth = manager.auth
+        model = manager.model
         acl_table = auth.permission.table
 
         if r.interactive:
@@ -4287,7 +4290,7 @@ class S3RoleManager(S3Method):
             current.response.view = "admin/role_edit.html"
 
         else:
-            r.error(501, self.manager.BAD_FORMAT)
+            r.error(501, manager.BAD_FORMAT)
 
         return output
 
@@ -4298,10 +4301,11 @@ class S3RoleManager(S3Method):
         """
 
         session = current.session
+        manager = current.manager
         request = self.request
         T = current.T
 
-        auth = self.manager.auth
+        auth = manager.auth
 
         if r.interactive:
 
@@ -4345,7 +4349,7 @@ class S3RoleManager(S3Method):
             else:
                 session.error = T("No role to delete")
         else:
-            r.error(501, self.manager.BAD_FORMAT)
+            r.error(501, manager.BAD_FORMAT)
 
         redirect(URL(c="admin", f="role", vars=request.get_vars))
 
@@ -4363,12 +4367,13 @@ class S3RoleManager(S3Method):
         CANCEL = T("Cancel")
 
         session = current.session
+        manager = current.manager
         sr = session.s3.system_roles
         request = self.request
-        crud_settings = self.manager.s3.crud
+        crud_settings = manager.s3.crud
         formstyle = crud_settings.formstyle
 
-        auth = self.manager.auth
+        auth = manager.auth
         gtable = auth.settings.table_group
         mtable = auth.settings.table_membership
 
@@ -4428,7 +4433,7 @@ class S3RoleManager(S3Method):
                 session.error = T("No user to update")
                 redirect(r.url(method=""))
         else:
-            r.error(501, self.manager.BAD_FORMAT)
+            r.error(501, manager.BAD_FORMAT)
 
         return output
 
@@ -4441,11 +4446,12 @@ class S3RoleManager(S3Method):
         output = dict()
 
         session = current.session
+        manager = current.manager
         request = self.request
 
         db = current.db
         T = current.T
-        auth = self.manager.auth
+        auth = manager.auth
 
         utable = auth.settings.table_user
         gtable = auth.settings.table_group
@@ -4568,7 +4574,7 @@ class S3RoleManager(S3Method):
                 session.error = T("No role to update")
                 redirect(r.there())
         else:
-            r.error(501, self.manager.BAD_FORMAT)
+            r.error(501, manager.BAD_FORMAT)
 
         return output
 

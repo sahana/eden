@@ -54,7 +54,7 @@ class DataMatrix():
     """
         Class that sets the data up ready for export to a specific format,
         such as a spreadsheet or a PDF document.
-        
+
         It holds the data in a matrix with each element holding details on:
          * A unique position
          * The actual text to be displayed
@@ -78,7 +78,7 @@ class DataMatrix():
         if element.merged():
             self.joinElements(element)
         if element.row > self.lastRow:
-            self.lastRow = element.row 
+            self.lastRow = element.row
 
     def joinedElementStyles(self, rootElement):
         """
@@ -156,7 +156,7 @@ class DataMatrix():
 class MatrixElement():
     """
         Class that holds the details of a single element in the matrix
-        
+
         * posn - row & col
         * text - the actual data that will be displayed at the given position
         * style - a list of styles that will be applied to this location
@@ -297,7 +297,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         @ivar webwidget: The web2py widget that should be used to display the
                          question type
         @ivar typeDescription: The description of the type when it is displayed
-                               on the screen such as in reports 
+                               on the screen such as in reports
 
         The instance variables when the widget is associated with a question:
 
@@ -383,7 +383,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             query = (self.mtable.question_id == self.id)
             self.rows = db(query).select()
             for row in self.rows:
-                # Remove any double quotes from around the data before storing 
+                # Remove any double quotes from around the data before storing
                 self.qstn_metadata[row.descriptor] = row.value.strip('"')
 
     def get(self, value, default=None):
@@ -507,7 +507,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         return survey_T(self.question["name"], langDict)
 
     def writeToMatrix(self,
-                      matrix, 
+                      matrix,
                       row,
                       col,
                       langDict=dict(),
@@ -568,7 +568,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
 
             NOTE: Not currently used but will be used when the UI supports the
                   creation of the template and specifically the questions in
-                  the template 
+                  the template
         """
         if "question_id" in attr:
             self._store_metadata(attr["question_id"])
@@ -663,7 +663,7 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         T = current.T
         self.metalist.append("Length")
         self.metalist.append("Format")
-        self.typeDescription = T("Numeric") 
+        self.typeDescription = T("Numeric")
 
     def display(self, **attr):
         length = self.get("length", 10)
@@ -877,7 +877,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         self.selectionInstructions = "Type x to mark box. Select just one option"
         self.metalist.append("Length")
         self.webwidget = RadioWidget
-        self.typeDescription = T("Option") 
+        self.typeDescription = T("Option")
 
     def display(self, **attr):
         S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
@@ -930,7 +930,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                 cell.merge(horizontal=1)
                 row += 1
                 if self.selectionInstructions != None:
-                    cell = MatrixElement(row, col, 
+                    cell = MatrixElement(row, col,
                                          survey_T(self.selectionInstructions,
                                                   langDict),
                                          style="styleInstructions")
@@ -1050,7 +1050,7 @@ class S3QuestionTypeOptionYNDWidget(S3QuestionTypeOptionWidget):
 ##########################################################################
 class S3QuestionTypeOptionOtherWidget(S3QuestionTypeOptionWidget):
     """
-        Option Question Type widget with a final other option attached 
+        Option Question Type widget with a final other option attached
 
         provides a widget for the survey module that will manage simple
         yes no questions.
@@ -1120,7 +1120,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     """
         Location widget: Question Type widget
 
-        provides a widget for the survey module that will link to the 
+        provides a widget for the survey module that will link to the
         gis_locaton table, and provide the record if a match exists.
 
         Available metadata for this class:
@@ -1170,14 +1170,14 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     def getAnswer(self):
         """
             Return the value of the answer for this question
-            
+
             Overloaded method.
-            
+
             The answer can either be stored as a plain text or as a JSON string
-            
+
             If it is plain text then this is the location as entered, and is
             the value that needs to be returned.
-            
+
             If it is a JSON value then it should include the raw value and
             any other of the following properties.
             {'raw':'original value',
@@ -1281,7 +1281,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     def parseForm(self, vars, code):
         """
             Get the location hierarchy data from the different html input tags
-            and merge them into a JSON string to be saved in survey_answer  
+            and merge them into a JSON string to be saved in survey_answer
         """
         hierarchy = self.get("Hierarchy")
         answerList = {}
@@ -1294,14 +1294,14 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             jsonValue = unescape(jsonAnswer, {'"': "'"})
             return jsonValue
         return None
-            
+
 
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
 
             If the value is a json then data might need to be extracted from it
-            
+
         """
         try:
             answerList = self.getAnswerListFromJSON(value)
@@ -1329,8 +1329,8 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     def buildQuery(self, rowList):
         """
             Function that will build a gis_location query
-            
-            @todo: Extend this to test the L0-L4 values 
+
+            @todo: Extend this to test the L0-L4 values
         """
         db = current.db
         record = Storage()
@@ -1360,7 +1360,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         return json.loads(jsonAnswer)
 
     def writeToMatrix(self,
-                      matrix, 
+                      matrix,
                       row,
                       col,
                       langDict=dict(),
@@ -1502,7 +1502,7 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
             else:
                 self.typeDescription = T("%s linked to %s") % (type, parent)
         except:
-            self.typeDescription = T("Link") 
+            self.typeDescription = T("Link")
 
     def display(self, **attr):
         type = self.get("Type")
@@ -1552,7 +1552,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
     """
         Grid widget: Question Type widget
 
-        provides a widget for the survey module that hold a grid of related 
+        provides a widget for the survey module that hold a grid of related
         questions.
 
         Available metadata for this class:
@@ -1687,7 +1687,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                         realWidget = survey_question_type[type](childWidget.id)
                         (endrow, col) = realWidget.writeToMatrix(matrix,
                                                                  row,
-                                                                 col, 
+                                                                 col,
                                                                  langDict,
                                                                  answerMatrix,
                                                                  style)
@@ -1777,7 +1777,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                             qstnPosn += 1
                         except:
                             pass # already on the database no change required
-        
+
     def getChildWidget (self, code):
             # Get the question from the database
             query = (self.qtable.code == code)
@@ -1857,7 +1857,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
                       style={}
                      ):
         """
-            Dummy function that doesn't write anything to the matrix, 
+            Dummy function that doesn't write anything to the matrix,
             because it is handled by the Grid question type
         """
         return (row, col)
@@ -1928,19 +1928,19 @@ class S3AnalysisPriority():
                           4:"#FF0000", # red
                           5:"#880088", # purple
                         },
-                 image={-1:"grey", 
-                          0:"blue", 
-                          1:"green", 
-                          2:"yellow", 
-                          3:"orange", 
+                 image={-1:"grey",
+                          0:"blue",
+                          1:"green",
+                          2:"yellow",
+                          3:"orange",
                           4:"red",
                           5:"purple",
                         },
-                 desc={-1:"No Data", 
-                          0:"Very Low", 
-                          1:"Low", 
-                          2:"Medium Low", 
-                          3:"Medium High", 
+                 desc={-1:"No Data",
+                          0:"Very Low",
+                          1:"Low",
+                          2:"Medium Low",
+                          3:"Medium High",
                           4:"High",
                           5:"Very High",
                         },
@@ -1982,7 +1982,7 @@ class S3AbstractAnalysis():
     """
         Abstract class used to hold all the responses for a single question
         and perform some simple analysis on the data.
-        
+
         This class holds the main functions for:
          * displaying tables of results
          * displaying charts
@@ -1993,8 +1993,8 @@ class S3AbstractAnalysis():
         question_id    - The id from the database
         answerList     - A list of answers, taken from the survey_answer
                          id, complete_id and value
-                         See models/survey.py getAllAnswersForQuestionInSeries() 
-        valueList      - A list of validated & sanitised values 
+                         See models/survey.py getAllAnswersForQuestionInSeries()
+        valueList      - A list of validated & sanitised values
         result         - A list of results before formatting
         type           - The question type
         qstnWidget     - The question Widget for this question
@@ -2027,7 +2027,7 @@ class S3AbstractAnalysis():
                     if DEBUG:
                         raise
                     pass
-        
+
         self.basicResults()
 
     def valid(self, answer):
@@ -2079,7 +2079,7 @@ class S3AbstractAnalysis():
                   xLabel=None, yLabel=None):
         """
             This function will draw the chart using the answer set.
-            
+
             This function must be overridden by the subclass.
         """
         msg = "Programming Error: No chart for %sWidget" % self.type
@@ -2090,7 +2090,7 @@ class S3AbstractAnalysis():
     def summary(self):
         """
             Calculate a summary of basic data.
-            
+
             Where necessary, this will function be overridden.
         """
         self.result = []
@@ -2099,12 +2099,12 @@ class S3AbstractAnalysis():
     def count(self):
         """
             Create a basic count of the data set.
-            
+
             Where necessary, this will function be overridden.
         """
-        self.result.append(([current.T("Replies")], len(self.answerList))) 
+        self.result.append(([current.T("Replies")], len(self.answerList)))
         return self.format()
-    
+
     def format(self):
         """
             This function will take the results and present them in a HTML table
@@ -2130,16 +2130,16 @@ class S3AbstractAnalysis():
         """
             method to group the answers by the categories passed in
             The categories will belong to another question.
-            
-            For example the categories might be an option question which has 
+
+            For example the categories might be an option question which has
             responses from High, Medium and Low. So all the responses that
             correspond to the High category will go into one group, the Medium
             into a second group and Low into the final group.
-            
+
             Later these may go through a filter which could calculate the
             sum, or maybe the mean. Finally the result will be split.
-            
-            See controllers/survey.py - series_graph() 
+
+            See controllers/survey.py - series_graph()
         """
         grouped = {}
         answers = {}
@@ -2516,14 +2516,14 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
 class S3LocationAnalysis(S3AbstractAnalysis):
     """
         Widget for analysing Location type questions
-        
+
         The analysis will compare the location values provided with
         data held on the gis_location table.
-        
+
         The data held can be in its raw form (the actual value imported) or
         in a more refined state, which may include the actual location id
         held on the database or an alternative value which is a string.
-        
+
         The raw value may be a local name for the place whilst the altervative
         value should be the actual value held on the database.
         The alternative value is useful for matching duplicate responses that
@@ -2532,11 +2532,11 @@ class S3LocationAnalysis(S3AbstractAnalysis):
     def castRawAnswer(self, complete_id, answer):
         """
             Convert the answer for the complete_id into a database record.
-            
+
             This can have one of three type of return values.
             A single record: The actual location
             Multiple records: The set of location, on of which is the location
-            None: No match is found on the database.  
+            None: No match is found on the database.
         """
         records = self.qstnWidget.getLocationRecord(complete_id, answer)
         return records
@@ -2550,7 +2550,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         self.result.append((T("Duplicate Locations"), self.dcnt))
         self.result.append((T("Unknown Locations"), self.ucnt))
         return self.format()
-    
+
     def count(self):
         """
             Returns a table of basic results
@@ -2564,15 +2564,15 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         """
             Calculate the basic results, which consists of a number of list
             related to the locations
-            
+
             LISTS (dictionaries)
             ====================
             All maps are keyed on the value used in the database lookup
-            locationList - holding the number of times the value exists 
+            locationList - holding the number of times the value exists
             complete_id  - a list of complete_id at this location
             duplicates   - a list of duplicate records
             known        - The record from the database
-            
+
             Calculated Values
             =================
             cnt  - The number of unique locations
@@ -2657,14 +2657,14 @@ class S3LinkAnalysis(S3AbstractAnalysis):
             if relation == "groupby":
                 # @todo: check for different values
                 valueMap.update({parent_answer:answer})
-        valueList = [] 
+        valueList = []
         for answer in valueMap.values():
             valueList.append(answer)
         self.widget = survey_analysis_type[type](question_id, valueList)
 
     def summary(self):
         return self.widget.summary()
-    
+
     def count(self):
         return self.widget.count()
 

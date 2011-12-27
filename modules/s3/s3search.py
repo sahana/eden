@@ -1079,7 +1079,7 @@ class S3Search(S3CRUD):
 
         # Not supported
         else:
-            r.error(501, self.manager.ERROR.BAD_FORMAT)
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1133,7 +1133,7 @@ class S3Search(S3CRUD):
                         )
         search_vars["prefix"] = r.prefix
         search_vars["function"] = r.function
-        s3mgr = self.manager
+        s3mgr = current.manager
         s3mgr.load("pr_save_search")
         db = current.db
         table = db.pr_save_search
@@ -1226,6 +1226,7 @@ class S3Search(S3CRUD):
         resource = self.resource
         settings = current.deployment_settings
         db = current.db
+        manager = current.manager
         table = self.table
         tablename = self.tablename
         gis = current.gis
@@ -1258,14 +1259,14 @@ class S3Search(S3CRUD):
         if "load" in r.get_vars:
             search_id = r.get_vars.get("load", None)
             if not search_id:
-                r.error(400, self.manager.ERROR.BAD_RECORD)
+                r.error(400, manager.ERROR.BAD_RECORD)
             r.post_vars = r.vars
-            self.manager.load("pr_save_search")
+            manager.load("pr_save_search")
             search_table = db.pr_save_search
             _query = (search_table.id == search_id)
             record = db(_query).select(limitby=(0, 1)).first()
             if not record:
-                r.error(400, self.manager.ERROR.BAD_RECORD)
+                r.error(400, manager.ERROR.BAD_RECORD)
             s_vars = cPickle.loads(record.search_vars)
             r.post_vars = Storage(s_vars["criteria"])
             r.http = "POST"
@@ -1961,7 +1962,7 @@ class S3Search(S3CRUD):
         # r contains the resource name:
         tablename = r.tablename
         component = r.component_name
-        s3mgr = self.manager
+        s3mgr = current.manager
         db = current.db
         session = current.session
         auth =  current.auth
@@ -2006,8 +2007,8 @@ class S3LocationSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = self.manager.xml
-        gis = self.manager.gis
+        xml = current.manager.xml
+        gis = current.manager.gis
 
         output = None
         request = self.request
@@ -2213,7 +2214,7 @@ class S3OrganisationSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = self.manager.xml
+        xml = current.manager.xml
 
         output = None
         request = self.request
@@ -2295,7 +2296,7 @@ class S3PersonSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = self.manager.xml
+        xml = current.manager.xml
 
         output = None
         request = self.request
@@ -2381,7 +2382,7 @@ class S3PentitySearch(S3Search):
         """
 
 
-        xml = self.manager.xml
+        xml = current.manager.xml
 
         output = None
         request = self.request

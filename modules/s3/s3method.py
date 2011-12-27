@@ -68,11 +68,11 @@ class S3Method(object):
 
         # Environment of the request
         self.request = r
-        self.manager = current.manager
+        manager = current.manager
 
         # Settings
-        self.permit = self.manager.permit
-        self.download_url = self.manager.s3.download_url
+        self.permit = manager.permit
+        self.download_url = manager.s3.download_url
 
         # Init
         self.next = None

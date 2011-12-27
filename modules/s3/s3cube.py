@@ -73,13 +73,15 @@ class S3Cube(S3CRUD):
             @todo: support server-side chart generation
         """
 
+        manager = current.manager
+
         if r.http in ("GET", "POST"):
             if r.interactive:
                 output = self.analyze(r, **attr)
             else:
-                r.error(501, self.manager.ERROR.BAD_FORMAT)
+                r.error(501, manager.ERROR.BAD_FORMAT)
         else:
-            r.error(405, self.manager.ERROR.BAD_METHOD)
+            r.error(405, manager.ERROR.BAD_METHOD)
 
         return output
 

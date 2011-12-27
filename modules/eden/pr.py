@@ -127,9 +127,10 @@ class S3PersonModel(S3Model):
         sit_trackable = self.table("sit_trackable")
         pe_label = s3.pr_pe_label
 
-        NONE = T("None")
-        UNKNOWN_OPT = T("Unknown")
-        SELECT_LOCATION = T("Select a location")
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+        SELECT_LOCATION = messages.SELECT_LOCATION
 
         # ---------------------------------------------------------------------
         # Person
@@ -538,7 +539,7 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     db = current.db
 
     if not id:
-        return NONE
+        return current.messages.NONE
 
     pe_str = T("None (no such record)")
 

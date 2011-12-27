@@ -179,14 +179,10 @@ class S3XML(S3Codec):
         text="$")
 
     # -------------------------------------------------------------------------
-    def __init__(self, manager):
-        """
-            Constructor
+    def __init__(self):
+        """ Constructor """
 
-            @param manager: the S3ResourceController
-        """
-
-        self.manager = manager
+        manager = current.manager
 
         self.domain = manager.domain
         self.error = None
@@ -425,7 +421,7 @@ class S3XML(S3Codec):
         elif f in (self.OROLE):
             return self.represent_role(v)
 
-        manager = self.manager
+        manager = current.manager
         return manager.represent(table[f],
                                  value=v,
                                  strip_markup=True,

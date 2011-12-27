@@ -150,16 +150,18 @@ class S3RequestManager(object):
         self.auth = current.auth
         self.gis = current.gis
 
-        # Helpers
-        self.query_builder = S3QueryBuilder(self)
+        # Register
+        current.manager = self
 
-        self.model = S3ModelExtensions(self)
+        # Helpers
+        self.query_builder = S3QueryBuilder()
+        self.model = S3ModelExtensions()
         self.configure = self.model.configure
         self.load = S3Model.table
         self.loader = self.model.loader
 
-        self.linker = S3RecordLinker(self)
-        self.xml = S3XML(self)
+        self.linker = S3RecordLinker()
+        self.xml = S3XML()
         self.exporter = S3Exporter()
         self.sync = S3Sync()
 
@@ -276,12 +278,13 @@ class S3RequestManager(object):
 
         session = current.session
 
-        if self.RCVARS not in session:
-            session[self.RCVARS] = Storage()
-        if self.RCVARS in session:
-            tablename = "%s_%s" % (prefix, name)
-            session[self.RCVARS][tablename] = id
+        RCVARS = self.RCVARS
 
+        if RCVARS not in session:
+            session[RCVARS] = Storage()
+        if RCVARS in session:
+            tablename = "%s_%s" % (prefix, name)
+            session[RCVARS][tablename] = id
         return True # always return True to make this chainable
 
     # -------------------------------------------------------------------------
@@ -295,13 +298,15 @@ class S3RequestManager(object):
 
         session = current.session
 
+        RCVARS = self.RCVARS
+
         if prefix and name:
             tablename = "%s_%s" % (prefix, name)
-            if self.RCVARS in session and tablename in session[self.RCVARS]:
-                del session[self.RCVARS][tablename]
+            if RCVARS in session and tablename in session[RCVARS]:
+                del session[RCVARS][tablename]
         else:
-            if self.RCVARS in session:
-                del session[self.RCVARS]
+            if RCVARS in session:
+                del session[RCVARS]
 
         return True # always return True to make this chainable
 
@@ -358,6 +363,8 @@ class S3RequestManager(object):
             @param extended_comments: Typically the comments are abbreviated
         """
 
+        xml = self.xml
+
         NONE = str(current.T("None")).decode("utf-8")
         cache = current.cache
         fname = field.name
@@ -380,9 +387,9 @@ class S3RequestManager(object):
             if not xml_escape and val is not None:
                 ftype = str(field.type)
                 if ftype in ("string", "text"):
-                    val = text = self.xml.xml_encode(str(val))
+                    val = text = xml.xml_encode(str(val))
                 elif ftype == "list:string":
-                    val = text = [self.xml.xml_encode(str(v)) for v in val]
+                    val = text = [xml.xml_encode(str(v)) for v in val]
 
         # Get text representation
         if field.represent:
@@ -429,7 +436,7 @@ class S3RequestManager(object):
 
         # XML-escape text
         elif xml_escape:
-            text = self.xml.xml_encode(text)
+            text = xml.xml_encode(text)
 
         try:
             text = text.decode("utf-8")
@@ -453,6 +460,7 @@ class S3RequestManager(object):
 
         xml = self.xml
         UID = xml.UID
+        db = current.db
 
         # Get primary keys
         pkeys = [f for f in table.fields if table[f].unique]
@@ -495,7 +503,7 @@ class S3RequestManager(object):
 
         # Try to find exactly one match by non-UID unique keys
         if query:
-            original = current.db(query).select(table.ALL, limitby=(0, 2))
+            original = db(query).select(table.ALL, limitby=(0, 2))
             if len(original) == 1:
                 return original.first()
 
@@ -503,8 +511,7 @@ class S3RequestManager(object):
         if UID in pvalues:
             uid = self.xml.import_uid(pvalues[UID])
             query = (table[UID] == uid)
-            original = current.db(query).select(table.ALL,
-                                                limitby=(0, 1)).first()
+            original = db(query).select(table.ALL, limitby=(0, 1)).first()
             if original:
                 return original
 
@@ -549,14 +556,14 @@ class S3Request(object):
                    current web2py request object
         """
 
-        self.manager = manager
+        manager = current.manager
 
         # Common settings
         self.UNAUTHORISED = current.T("Not Authorized")
         self.INTERACTIVE_FORMATS = manager.s3.interactive_view_formats
         self.DEFAULT_REPRESENTATION = "html"
-        self.ERROR = self.manager.ERROR
-        self.HOOKS = self.manager.HOOKS # HOOKS = "s3"
+        self.ERROR = manager.ERROR
+        self.HOOKS = manager.HOOKS # HOOKS = "s3"
 
         # XSLT Paths
         self.XSLT_PATH = "static/formats"
@@ -669,7 +676,7 @@ class S3Request(object):
                                       self.resource.name,
                                       self.id)
             else:
-                manager.error = self.manager.ERROR.BAD_RECORD
+                manager.error = manager.ERROR.BAD_RECORD
                 if self.representation == "html":
                     current.session.error = manager.error
                     self.component = None # => avoid infinite loop
@@ -704,7 +711,7 @@ class S3Request(object):
         if self.link and self.id and self.component_id:
             self.link_id = self.link.link_id(self.id, self.component_id)
             if self.link_id is None:
-                manager.error = self.manager.ERROR.BAD_RECORD
+                manager.error = manager.ERROR.BAD_RECORD
                 if self.representation == "html":
                     current.session.error = manager.error
                     self.component = None # => avoid infinite loop
@@ -831,6 +838,7 @@ class S3Request(object):
         """
 
         request = current.request
+        manager = current.manager
 
         self.id = None
         self.component_name = None
@@ -840,7 +848,7 @@ class S3Request(object):
         representation = self.extension
 
         # Get the names of all components
-        model = self.manager.model
+        model = manager.model
         tablename = "%s_%s" % (self.prefix, self.name)
         components = model.get_components(tablename)
         if components:
@@ -908,7 +916,7 @@ class S3Request(object):
             @param attr: Parameters for the method handler
         """
 
-        manager = self.manager
+        manager = current.manager
         request = current.request
         response = current.response
         session = current.session
@@ -1035,7 +1043,8 @@ class S3Request(object):
         """
 
         method = self.method
-        model = self.manager.model
+        manager = current.manager
+        model = manager.model
 
         tablename = self.component and self.component.tablename or self.tablename
 
@@ -1081,7 +1090,7 @@ class S3Request(object):
             return self.__DELETE()
 
         elif method == "clear" and not r.component:
-            self.manager.clear_session(self.prefix, self.name)
+            manager.clear_session(self.prefix, self.name)
             if "_next" in self.vars:
                 request_vars = dict(_next=self._next)
             else:
@@ -1131,7 +1140,7 @@ class S3Request(object):
                 post_vars = self.post_vars
                 table = self.target()[2]
                 if "deleted" in table and "id" not in post_vars: # and "uuid" not in post_vars:
-                    original = self.manager.original(table, post_vars)
+                    original = current.manager.original(table, post_vars)
                     if original and original.deleted:
                         self.post_vars.update(id=original.id)
                         self.vars.update(id=original.id)
@@ -1157,7 +1166,7 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        manager = r.manager
+        manager = current.manager
         resource = r.resource
         _vars = r.get_vars
 
@@ -1273,7 +1282,7 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        manager = r.manager
+        manager = current.manager
         auth = manager.auth
         xml = manager.xml
 
@@ -1402,7 +1411,7 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        manager = r.manager
+        manager = current.manager
         resource = r.resource
         stylesheet = r.stylesheet()
         json_formats = manager.json_formats
@@ -1591,7 +1600,7 @@ class S3Request(object):
             Action upon unauthorised request
         """
 
-        auth = self.manager.auth
+        auth = current.manager.auth
         auth.permission.fail()
 
     # -------------------------------------------------------------------------
@@ -1604,7 +1613,7 @@ class S3Request(object):
             @param tree: the tree causing the error
         """
 
-        xml = self.manager.xml
+        xml = current.manager.xml
 
         if self.representation == "html":
             current.session.error = message
@@ -1815,16 +1824,6 @@ class S3QueryBuilder(object):
     """
 
     # -------------------------------------------------------------------------
-    def __init__(self, manager):
-        """
-            Constructor
-
-            @param manager: the S3RequestManager
-        """
-
-        self.manager = manager
-
-    # -------------------------------------------------------------------------
     def parse_bbox_query(self, resource, vars):
         """
             Build a BBOX filter query
@@ -1890,7 +1889,8 @@ class S3QueryBuilder(object):
             @todo: deprecate?
         """
 
-        linker = self.manager.linker
+        db = current.db
+        linker = current.manager.linker
         q = None
 
         for k in vars:
@@ -1901,8 +1901,8 @@ class S3QueryBuilder(object):
                 else:
                     link = link[1:]
                 o_tn = link.pop()
-                if o_tn in current.db:
-                    link_table = current.db[o_tn]
+                if o_tn in db:
+                    link_table = db[o_tn]
                 else:
                     continue
                 operator = link.pop()
@@ -2001,7 +2001,7 @@ class S3QueryBuilder(object):
             hook = q[cn]
 
             if fn == "uid":
-                fn = self.manager.xml.UID
+                fn = manager.xml.UID
             fjoin = None
             if fk is not None:
                 if fk not in table.fields:
@@ -2154,8 +2154,9 @@ class S3QueryBuilder(object):
         resource.clear()
         resource.clear_query()
 
-        xml = self.manager.xml
-        deletion_status = self.manager.DELETED
+        manager = current.manager
+        xml = manager.xml
+        DELETED = manager.DELETED
 
         if vars:
             queries = self.parse_url_query(resource, vars)
@@ -2176,9 +2177,10 @@ class S3QueryBuilder(object):
             mquery = resource.accessible_query("read", table)
         else:
             mquery = (table._id > 0)
-        if deletion_status in table.fields and \
-           not resource.include_deleted:
-            remaining = (table[deletion_status] != True)
+
+        # Deletion status
+        if DELETED in table.fields and not resource.include_deleted:
+            remaining = (table[DELETED] != True)
             mquery = remaining & mquery
 
         # Master query
@@ -2415,8 +2417,8 @@ class S3Resource(object):
         """
 
         # DB and manager
-        self.manager = manager
-        current.db = current.db
+        manager = current.manager
+        db = current.db
 
         self.ERROR = manager.ERROR
 
@@ -2437,11 +2439,11 @@ class S3Resource(object):
         self.alias = name
 
         # Table
-        model = self.manager.model
+        model = manager.model
         self.tablename = "%s_%s" % (self.prefix, self.name)
         model.load(self.tablename)
         try:
-            self.table = current.db[self.tablename]
+            self.table = db[self.tablename]
         except:
             manager.error = "Undefined table: %s" % self.tablename
             raise KeyError(manager.error)
@@ -2537,7 +2539,7 @@ class S3Resource(object):
                                    include_deleted=self.include_deleted)
 
         # CRUD
-        self.crud = self.manager.crud()
+        self.crud = manager.crud()
         self.crud.resource = self
 
         # Pending Imports
@@ -2551,13 +2553,13 @@ class S3Resource(object):
         if not self.search:
             if "name" in self.table:
                 T = current.T
-                self.search = self.manager.search(
+                self.search = manager.search(
                                 name="search_simple",
                                 label=T("Name"),
                                 comment=T("Enter a name to search for. You may use % as wildcard. Press 'Search' without input to list all items."),
                                 field=["name"])
             else:
-                self.search = self.manager.search()
+                self.search = manager.search()
 
         # Temporary fix
         self.resource = self
@@ -2660,13 +2662,15 @@ class S3Resource(object):
             @param attributes: select attributes
         """
 
+        db = current.db
+        manager = current.manager
         table = self.table
         if self._query is None:
             self.build_query()
         # Get the rows
-        rows = current.db(self._query).select(*fields, **attributes)
+        rows = db(self._query).select(*fields, **attributes)
         # Audit
-        audit = self.manager.audit
+        audit = manager.audit
         try:
             # Audit "read" record by record
             if self.tablename in rows:
@@ -2694,7 +2698,8 @@ class S3Resource(object):
             @param limit: the maximum number of records to load
         """
 
-        xml = current.manager.xml
+        manager = current.manager
+        xml = manager.xml
         table = self.table
 
         if not len(table.virtualfields):
@@ -2727,7 +2732,7 @@ class S3Resource(object):
             else:
                 rows = self.select(table.ALL)
         self._ids = [row.id for row in rows]
-        uid = self.manager.xml.UID
+        uid = manager.xml.UID
         if uid in table.fields:
             self._uids = [row[uid] for row in rows]
         return self
@@ -2774,7 +2779,7 @@ class S3Resource(object):
         manager = current.manager
         model = manager.model
 
-        settings = self.manager.s3.crud
+        settings = manager.s3.crud
         archive_not_delete = settings.archive_not_delete
 
         table = self.table
@@ -2917,9 +2922,9 @@ class S3Resource(object):
                                 linked.delete(ondelete=ondelete, cascade=True)
 
                     # Clear session
-                    if self.manager.get_session(prefix=self.prefix,
-                                                name=self.name) == row.id:
-                        self.manager.clear_session(prefix=self.prefix, name=self.name)
+                    if manager.get_session(prefix=self.prefix,
+                                           name=self.name) == row.id:
+                        manager.clear_session(prefix=self.prefix, name=self.name)
 
                     # Pull back prior error status
                     manager.error = error
@@ -2947,7 +2952,7 @@ class S3Resource(object):
                             fields.update(deleted_fk=json.dumps(fk))
 
                     # Update the row to set deleted=True, finally
-                    current.db(self.table.id == row.id).update(**fields)
+                    db(self.table.id == row.id).update(**fields)
 
                     numrows += 1
                     self.audit("delete", self.prefix, self.name,
@@ -2970,9 +2975,9 @@ class S3Resource(object):
                     continue
 
                 # Clear session
-                if self.manager.get_session(prefix=self.prefix,
-                                            name=self.name) == row.id:
-                    self.manager.clear_session(prefix=self.prefix, name=self.name)
+                if manager.get_session(prefix=self.prefix,
+                                       name=self.name) == row.id:
+                    manager.clear_session(prefix=self.prefix, name=self.name)
 
                 try:
                     del table[row.id]
@@ -3021,17 +3026,18 @@ class S3Resource(object):
             @param left: left joins, if required
         """
 
+        db = current.db
         if not self._query:
             self.build_query()
         if self._length is None:
             if distinct:
-                rows = current.db(self._query).select(self.table._id,
-                                                      left=left,
-                                                      distinct=distinct)
+                rows = db(self._query).select(self.table._id,
+                                              left=left,
+                                              distinct=distinct)
                 self._length = len(rows)
             else:
                 cnt = self.table[self.table.fields[0]].count()
-                row = current.db(self._query).select(cnt, left=left).first()
+                row = db(self._query).select(cnt, left=left).first()
                 if row:
                     self._length = row[cnt]
         return self._length
@@ -3161,7 +3167,8 @@ class S3Resource(object):
             @returns: a list of record UIDs
         """
 
-        if self.manager.xml.UID not in self.table.fields:
+        manager = current.manager
+        if manager.xml.UID not in self.table.fields:
             return None
 
         if not self._uids:
@@ -3180,7 +3187,7 @@ class S3Resource(object):
             if no query is given, all IDs in the primary table
         """
 
-        uid = self.manager.xml.UID
+        uid = current.manager.xml.UID
 
         if self._query is None:
             self.build_query()
@@ -3236,7 +3243,7 @@ class S3Resource(object):
         """
 
         id = item.get("id", None)
-        uid = item.get(self.manager.xml.UID, None)
+        uid = item.get(current.manager.xml.UID, None)
 
         if (id or uid) and not self._ids:
             self.__load_ids()
@@ -3286,7 +3293,7 @@ class S3Resource(object):
 
         import uuid
 
-        manager = self.manager
+        manager = current.manager
         xml = manager.xml
 
         output = None
@@ -3353,7 +3360,8 @@ class S3Resource(object):
 
         """
 
-        manager = self.manager
+        db = current.db
+        manager = current.manager
         model = manager.model
         xml = manager.xml
         audit = manager.audit
@@ -3383,7 +3391,6 @@ class S3Resource(object):
         popup_label = None
         if "layer" in current.request.vars:
             layer_id = current.request.vars.layer
-            db = current.db
             ltable = db.gis_layer_feature
             query = (ltable.id == layer_id)
             layer = db(query).select(ltable.popup_label,
@@ -3744,7 +3751,7 @@ class S3Resource(object):
             @param args: parameters to pass to the transformation stylesheet
         """
 
-        manager = self.manager
+        manager = current.manager
         xml = manager.xml
         permit = manager.permit
 
@@ -3876,7 +3883,7 @@ class S3Resource(object):
             @todo: update for link table support
         """
 
-        manager = self.manager
+        manager = current.manager
         db = current.db
         xml = manager.xml
         permit = manager.auth.s3_has_permission
@@ -4139,35 +4146,38 @@ class S3Resource(object):
             @param as_json: convert into JSON after transformation
         """
 
+        manager = current.manager
+        xml = manager.xml
+
         # Get the structure of the main resource
-        root = etree.Element(self.xml.TAG.root)
-        main = self.xml.get_struct(self.prefix, self.name,
-                                   parent=root,
-                                   meta=meta,
-                                   options=options,
-                                   references=references)
+        root = etree.Element(xml.TAG.root)
+        main = xml.get_struct(self.prefix, self.name,
+                              parent=root,
+                              meta=meta,
+                              options=options,
+                              references=references)
 
         # Include the selected components
         for component in self.components.values():
             prefix = component.prefix
             name = component.name
-            sub = self.xml.get_struct(prefix, name,
-                                      parent=main,
-                                      meta=meta,
-                                      options=options,
-                                      references=references)
+            sub = xml.get_struct(prefix, name,
+                                 parent=main,
+                                 meta=meta,
+                                 options=options,
+                                 references=references)
 
         # Transformation
         tree = etree.ElementTree(root)
         if stylesheet is not None:
-            tfmt = self.xml.ISOFORMAT
-            args = dict(domain=self.manager.domain,
-                        base_url=self.manager.s3.base_url,
+            tfmt = xml.ISOFORMAT
+            args = dict(domain=manager.domain,
+                        base_url=manager.s3.base_url,
                         prefix=self.prefix,
                         name=self.name,
                         utcnow=datetime.datetime.utcnow().strftime(tfmt))
 
-            tree = self.xml.transform(tree, stylesheet, **args)
+            tree = xml.transform(tree, stylesheet, **args)
             if tree is None:
                 return None
 
@@ -4177,9 +4187,9 @@ class S3Resource(object):
 
         # Otherwise string-ify it
         if as_json:
-            return self.xml.tree2json(tree, pretty_print=True)
+            return xml.tree2json(tree, pretty_print=True)
         else:
-            return self.xml.tostring(tree, pretty_print=True)
+            return xml.tostring(tree, pretty_print=True)
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -4219,7 +4229,7 @@ class S3Resource(object):
             @param skip: list of field names to skip
         """
 
-        manager = self.manager
+        manager = current.manager
         xml = manager.xml
 
         table = self.table
@@ -4271,7 +4281,7 @@ class S3Resource(object):
                 start = 0
 
         if not limit:
-            limit = self.manager.ROWSPERPAGE
+            limit = current.manager.ROWSPERPAGE
             if limit is None:
                 return None
 
@@ -4288,6 +4298,7 @@ class S3Resource(object):
             Get a component join query for this resource
         """
 
+        manager = current.manager
         if self.parent is None:
             return None
         else:
@@ -4303,8 +4314,8 @@ class S3Resource(object):
             rkey = self.rkey
             join = ((ltable[pkey] == linktable[lkey]) &
                     (linktable[rkey] == rtable[fkey]))
-            if self.manager.DELETED in linktable:
-                join = ((linktable[self.manager.DELETED] != True) & join)
+            if manager.DELETED in linktable:
+                join = ((linktable[manager.DELETED] != True) & join)
         else:
             join = (ltable[pkey] == rtable[fkey])
         return join

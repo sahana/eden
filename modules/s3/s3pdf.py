@@ -649,7 +649,7 @@ class S3PDF(S3Method):
                     table = db.ocr_data_xml
                     row = db(table.image_set_uuid == setuuid).select().first()
                     if not row:
-                        r.error(501, self.manager.ERROR.BAD_RECORD)
+                        r.error(501, manager.ERROR.BAD_RECORD)
 
                     data_file = open(os.path.join(r.folder,
                                                   "uploads",
@@ -858,7 +858,7 @@ class S3PDF(S3Method):
                                                 uploadformat=uploadformat))
 
             else:
-                r.error(405, self.manager.ERROR.BAD_METHOD)
+                r.error(405, manager.ERROR.BAD_METHOD)
 
         elif r.http == "POST":
             if method == "create":
@@ -1916,11 +1916,13 @@ class S3PDF(S3Method):
                    right=None,
                    **args):
 
+        manager = current.manager
+
         self.content = []
         self.output = StringIO()
         self.layoutEtree = etree.Element("s3ocrlayout")
         try:
-            pdfTitle = self.manager.s3.crud_strings[\
+            pdfTitle = manager.s3.crud_strings[\
                 self.tablename].subtitle_list.decode("utf-8")
         except:
                 pdfTitle = self.resource.tablename
@@ -2166,6 +2168,7 @@ class S3PDF(S3Method):
         """
 
         T = current.T
+        manager = current.manager
         s3ocr_root = self.__s3OCREtree() # get element s3xml
         self.s3ocrxml = etree.tostring(s3ocr_root, pretty_print=DEBUG)
         self.content = []
@@ -2325,7 +2328,7 @@ class S3PDF(S3Method):
                                 self.content.append(DateBoxes(s3ocr_layout_field_etree))
 
                     else:
-                        self.r.error(501, self.manager.PARSE_ERROR)
+                        self.r.error(501, manager.PARSE_ERROR)
                         print sys.stderr("%s :invalid field type: %s" %\
                                              (eachfield.attrib.get("name"),
                                               fieldtype))
@@ -2423,7 +2426,8 @@ class S3PDF(S3Method):
             @return: the title as a String
         """
 
-        crudStrings = self.manager.s3.crud_strings
+        manager = current.manager
+        crudStrings = manager.s3.crud_strings
         try:
             return crudStrings.get(resource.table._tablename).get("title_list")
         except:

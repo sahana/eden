@@ -1167,7 +1167,7 @@ if populate > 0:
     s3mgr.model.add_component("auth_membership", auth_user="user_id")
 
     # Create the bulk Importer object
-    bi = s3base.S3BulkImporter(s3mgr, s3base)
+    bi = s3base.S3BulkImporter()
 
     # Allow population via shell scripts
     if not request.env.request_method:

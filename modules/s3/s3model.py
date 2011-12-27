@@ -58,6 +58,7 @@ class S3Model(object):
     """ Base class for S3 models """
 
     LOCK = "s3_model_lock"
+    DELETED = "deleted"
 
     def __init__(self, module=None):
         """ Constructor """
@@ -253,10 +254,11 @@ class S3Model(object):
         """
 
         db = current.db
-        if tablename not in db:
-            return db.define_table(tablename, *fields, **args)
+        if tablename in db:
+            table = db[tablename]
         else:
-            return db[tablename]
+            table = db.define_table(tablename, *fields, **args)
+        return table
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -266,12 +268,13 @@ class S3Model(object):
         """
 
         db = current.db
-        if tablename not in db:
+        if tablename in db:
+            table = db[tablename]
+        else:
             manager = current.manager
             model = manager.model
-            return model.super_entity(tablename, key, types, *fields, **args)
-        else:
-            return db[tablename]
+            table = model.super_entity(tablename, key, types, *fields, **args)
+        return table
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -325,14 +328,9 @@ class S3ModelExtensions(object):
     """
 
     # -------------------------------------------------------------------------
-    def __init__(self, manager):
-        """
-            Constructor
+    def __init__(self):
+        """ Constructor """
 
-            @param db: the database
-        """
-
-        self.manager = manager
         self.components = {}
         self.config = Storage()
         self.globalvars = Storage()
@@ -1008,13 +1006,10 @@ class S3RecordLinker(object):
     """
 
     # -------------------------------------------------------------------------
-    def __init__(self, manager):
-        """
-            Constructor
+    def __init__(self):
+        """ Constructor """
 
-            @param manager: the S3RequestManager
-        """
-
+        manager = current.manager
         self.tablename = manager.rlink_tablename
 
 

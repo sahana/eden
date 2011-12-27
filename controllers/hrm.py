@@ -60,6 +60,8 @@ def s3_menu_prep():
     if session.s3.hrm.mode != "personal" and \
        (ADMIN in roles or session.s3.hrm.orgs):
         session.s3.hrm.mode = None
+    elif deployment_settings.get_security_policy() in (1, 2):
+        session.s3.hrm.mode = None
     else:
         session.s3.hrm.mode = "personal"
 
@@ -69,8 +71,8 @@ s3_menu(module, prep=s3_menu_prep)
 def index():
     """ Dashboard """
 
-    if session.error:
-        return dict()
+    if response.error:
+        return dict(r=None)
 
     mode = session.s3.hrm.mode
     if mode is not None:
@@ -829,9 +831,11 @@ def job_role():
     """ Job Roles Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    response.s3.prep = prep
 
     output = s3_rest_controller(module, resourcename)
     return output
@@ -956,9 +960,11 @@ def certificate():
     """ Certificates Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    response.s3.prep = prep
 
     # Load Models
     s3mgr.load("hrm_skill")

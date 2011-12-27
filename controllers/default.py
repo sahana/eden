@@ -272,15 +272,6 @@ $('#manage_facility_select').change(function() {
             # This browser has logged-in before
             registered = True
 
-        # Provide a login box on front page
-        request.args = ["login"]
-        auth.messages.submit_button = T("Login")
-        login_form = auth()
-        login_div = DIV(H3(T("Login")),
-                        P(XML("%s <b>%s</b> %s" % (T("Registered users can"),
-                                                   T("login"),
-                                                   T("to access the system")))))
-
         if self_registration:
             # Provide a Registration box on front page
             request.args = ["register"]
@@ -290,8 +281,8 @@ $('#manage_facility_select').change(function() {
                 auth.messages.submit_button = T("Register")
             register_form = auth()
             register_div = DIV(H3(T("Register")),
-                               P(XML("%s <b>%s</b>" % (T("If you would like to help, then please"),
-                                                       T("sign-up now")))))
+                               P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
+                                        dict(sign_up_now=B(T("sign-up now"))))))
 
              # Add client-side validation
             s3_register_validation()
@@ -328,6 +319,14 @@ $('#manage_facility_select').change(function() {
         $('#login_form').removeClass('hide');
     });""" % post_script
             response.s3.jquery_ready.append(register_script)
+
+        # Provide a login box on front page
+        request.args = ["login"]
+        auth.messages.submit_button = T("Login")
+        login_form = auth()
+        login_div = DIV(H3(T("Login")),
+                        P(XML(T("Registered users can %(login)s to access the system" % \
+                                dict(login=B(T("login")))))))
 
     if deployment_settings.frontpage.rss:
         response.s3.external_stylesheets.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css" )
