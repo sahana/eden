@@ -43,9 +43,12 @@ class Debate(models.Model):
     scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
     
     space = models.ForeignKey(Space, blank=True, null=True)
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(_('Date created'), auto_now_add=True)
     date_mod = models.DateTimeField(_('Last update'), auto_now=True)
     author = models.ForeignKey(User, blank=True, null=True)
+    start_date = models.DateField(_('Start date'), blank=True, null=True)
+    end_date = models.DateField(_('End date'), blank=True, null=True)
+
     
     def __unicode__(self):
         return self.title
@@ -99,8 +102,10 @@ class Note(models.Model):
     title = models.CharField(_('Title'), max_length=60, blank=True, null=True)
     message = models.TextField(_('Message'), max_length=100, null=True, blank=True)
 
-    pub_date = models.DateTimeField(auto_now_add=True)
-    pub_author = models.ForeignKey(User, null=True, blank=True)
-    
+    date = models.DateTimeField(_('Date created'), auto_now_add=True)
+    author = models.ForeignKey(User, null=True, blank=True, related_name="note_author")
+    last_mod_author = models.ForeignKey(User, null=True, blank=True, related_name="update_author")
+    last_mod = models.DateTimeField(_('Last modification time'), auto_now=True)
+
     def __unicode__(self):
         return self.message
