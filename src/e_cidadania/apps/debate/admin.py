@@ -50,7 +50,7 @@ class NoteAdmin(admin.ModelAdmin):
     """
     Administration for all the notes in every debate.
     """
-    list_display = ('message', 'pub_date', 'pub_author')
+    list_display = ('message', 'date', 'author')
 
 admin.site.register(Debate, DebateAdmin)
 admin.site.register(Note, NoteAdmin)
