@@ -30,7 +30,7 @@ from e_cidadania.apps.debate.models import Debate, Note, Row, Column
 class DebateForm(ModelForm):
 
     """
-    Returns a form created from the Debate data model.
+    Returns an empty form for creating a new Debate.
     
     :rtype: HTML Form
     
@@ -48,8 +48,7 @@ class RowForm(ModelForm):
     """
     class Meta:
         model = Row
-        exclude = ('debate',)
-        
+
 class ColumnForm(ModelForm):
     """
     """
@@ -74,7 +73,26 @@ class UpdateNoteForm(ModelForm):
     """
     Returns a more simple version of the NoteForm for the AJAX interaction,
     preventing modification of significative fields non relevant to AJAX.
+
+    :rtype: HTML Form
+    .. versionadded:: 0.1b
     """
     class Meta:
         model = Note
-        exclude = ('debate', 'pub_author',)
+        exclude = ('debate', 'author', 'row', 'column', 'date')
+
+class UpdateNotePosition(ModelForm):
+
+    """
+    This is a partial form to save only the position updates of the notes in the
+    debates. This form excludes all the fields except Column and Row just for
+    security, this wau the original data of the note cannot be modified. Moving
+    notes does not count as modification, so we also exclude last modification data.
+
+    :rtype: HTML Form
+    .. versionadded:: 0.1.5
+    """
+    class Meta:
+        model = Note
+        exclude = ('author', 'debate', 'last_mod', 'last_mod_author', 'date',
+            'message', 'title')
