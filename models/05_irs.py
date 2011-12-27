@@ -212,7 +212,7 @@ if deployment_settings.has_module("irs"):
         resourcename = "ireport"
         tablename = "%s_%s" % (module, resourcename)
         table = db.define_table(tablename,
-                                super_link(db.sit_situation),
+                                super_link(s3db.sit_situation),
                                 Field("name", label = T("Short Description"),
                                       requires = IS_NOT_EMPTY()),
                                 Field("message", "text", label = T("Message"),
@@ -232,7 +232,7 @@ if deployment_settings.has_module("irs"):
                                       comment = (T("At/Visited Location (not virtual)"))),
                                 #person_id(label = T("Reporter Name"),
                                 #          comment = (T("At/Visited Location (not virtual)"),
-                                #                     s3_person_comment(T("Reporter Name"),
+                                #                     pr_person_comment(T("Reporter Name"),
                                 #                                       T("The person at the location who is reporting this incident (optional)")))),
                                 Field("contact", label = T("Contact Details")),
                                 #organisation_id(label = T("Assign to Org.")),
@@ -290,7 +290,7 @@ if deployment_settings.has_module("irs"):
             msg_list_empty = T("No Incident Reports currently registered"))
 
         s3mgr.configure(tablename,
-                        super_entity = db.sit_situation,
+                        super_entity = s3db.sit_situation,
                         # Open tabs after creation
                         create_next = URL(args=["[id]", "update"]),
                         update_next = URL(args=["[id]", "update"]),

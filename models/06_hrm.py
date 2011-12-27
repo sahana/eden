@@ -158,7 +158,7 @@ if deployment_settings.has_module(module):
 
     tablename = "hrm_human_resource"
     table = db.define_table(tablename,
-                            super_link(db.sit_trackable),
+                            super_link(s3db.sit_trackable),
 
                             # Administrative data
                             organisation_id(widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
@@ -539,7 +539,7 @@ if deployment_settings.has_module(module):
             hrm_update_staff_role(record, user_id)
 
     s3mgr.configure(tablename,
-                    super_entity = db.sit_trackable,
+                    super_entity = s3db.sit_trackable,
                     deletable = False,
                     search_method = human_resource_search,
                     onaccept = hrm_human_resource_onaccept,
@@ -1375,6 +1375,7 @@ S3FilterFieldChange({
     s3mgr.loader(skills_tables, "hrm_skill_type",
                                 "hrm_skill",
                                 "hrm_competency",
+                                "hrm_credential",
                                 "hrm_training",
                                 "hrm_certificate",
                                 "hrm_certification",

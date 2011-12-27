@@ -55,7 +55,7 @@ if deployment_settings.has_module("proc"):
                                       represent = s3_url_represent),
                                 s3_comments(),
                                 *(address_fields() + s3_meta_fields()))
-        
+
         # CRUD strings
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Supplier"),
@@ -84,7 +84,7 @@ if deployment_settings.has_module("proc"):
                 return record.name
             else:
                 return UNKNOWN
-            
+
         # Reusable Field
         supplier_id = S3ReusableField("supplier_id", db.proc_supplier, sortby="name",
                     requires = IS_NULL_OR(IS_ONE_OF(db, "proc_supplier.id",
@@ -149,7 +149,7 @@ if deployment_settings.has_module("proc"):
                                 # @ToDo: Add estimated shipping costs
                                 s3_comments(),
                                 *s3_meta_fields())
-        
+
         # CRUD strings
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Procurement Plan"),
@@ -220,7 +220,7 @@ if deployment_settings.has_module("proc"):
                                     record.order_date)
             else:
                 return UNKNOWN
-        
+
         plan_id = S3ReusableField("plan_id", db.proc_plan, sortby="date",
                                   requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                   "proc_plan.id",
@@ -247,7 +247,7 @@ if deployment_settings.has_module("proc"):
                                 Field("pack_value",
                                        "double",
                                        readable=False,
-                                       writable=False, 
+                                       writable=False,
                                        label = T("Value per Pack")),
                                 # @ToDo: Move this into a Currency Widget for the pack_value field
                                 currency_type("currency",

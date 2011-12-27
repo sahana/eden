@@ -33,10 +33,9 @@ if deployment_settings.has_module("project"):
     s3mgr.model.add_component("project_site",
                               project_project="project_id")
 
-    # Activities as component of Projects and Sites
+    # Activities as component of Projects
     s3mgr.model.add_component("project_activity",
-                              project_project="project_id",
-                              org_site=super_key(db.org_site))
+                              project_project="project_id")
 
     # Beneficiaries as component of Project Sites and Activities
     s3mgr.model.add_component("project_beneficiary",
@@ -129,15 +128,14 @@ if deployment_settings.has_module("project"):
         """
 
         table = db[tablename]
-        set = db(table.id > 0).select(table.id,
-                                        table.name).as_dict()
+        rows = db(table.id > 0).select(table.id, table.name).as_dict()
 
         if isinstance(opt, (list, tuple)):
             opts = opt
-            vals = [represent_string % set.get(opt) for opt in opts if opt in set.keys()]
+            vals = [represent_string % rows.get(opt) for opt in opts if opt in rows.keys()]
         elif isinstance(opt, int):
             opts = [opt]
-            vals = represent_string % set.get(opt)
+            vals = [represent_string % rows.get(opt)]
         else:
             return NONE
 
@@ -145,6 +143,7 @@ if deployment_settings.has_module("project"):
             vals = ", ".join(vals)
         else:
             vals = len(vals) and vals[0] or ""
+
         return vals
 
     # =========================================================================
@@ -161,6 +160,7 @@ if deployment_settings.has_module("project"):
         table = db.define_table(tablename,
                                 Field("name", length=128, notnull=True, unique=True),
                                 Field("comments"),
+                                format = "%(name)s",
                                 *s3_meta_fields())
 
         multi_theme_id = S3ReusableField("multi_theme_id", "list:reference project_theme",
@@ -171,7 +171,8 @@ if deployment_settings.has_module("project"):
                                                                         "%(name)s",
                                                                         sort=True,
                                                                         multiple=True)),
-                                         represent = lambda opt: multiref_represent(opt, "project_theme"),
+                                         represent = lambda opt, row=None: \
+                                                     multiref_represent(opt, "project_theme"),
                                          default = [],
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: CheckboxesWidgetS3.widget(f, v, cols = 3))
@@ -184,6 +185,7 @@ if deployment_settings.has_module("project"):
         table = db.define_table(tablename,
                                 Field("name", length=128, notnull=True, unique=True),
                                 Field("comments"),
+                                format="%(name)s",
                                 *s3_meta_fields())
 
         multi_hazard_id = S3ReusableField("multi_hazard_id", "list:reference project_hazard",
@@ -194,7 +196,8 @@ if deployment_settings.has_module("project"):
                                                                           "%(name)s",
                                                                           sort=True,
                                                                           multiple=True)),
-                                          represent = lambda opt: multiref_represent(opt, "project_hazard"),
+                                          represent = lambda opt, row=None: \
+                                                      multiref_represent(opt, "project_hazard"),
                                           ondelete = "RESTRICT",
                                           widget = lambda f, v: CheckboxesWidgetS3.widget(f, v, cols = 3))
 
@@ -209,7 +212,7 @@ if deployment_settings.has_module("project"):
             5: "HFA5: Strengthen disaster preparedness for effective response at all levels.",
         }
 
-        def hfa_opts_represent(opt):
+        def hfa_opts_represent(opt, row=None):
             opts = opt
             if isinstance(opt, int):
                 opts = [opt]
@@ -226,7 +229,7 @@ if deployment_settings.has_module("project"):
         # ---------------------------------------------------------------------
         # Countries (multi-link)
         #
-        def countries_represent(locations):
+        def countries_represent(locations, row=None):
 
             from gluon.dal import Rows
             if isinstance(locations, Rows):
@@ -306,6 +309,7 @@ if deployment_settings.has_module("project"):
 
                                 Field("objectives", "text",
                                       label = T("Objectives")),
+                                format="%(name)s",
                                 *s3_meta_fields())
 
         # CRUD strings
@@ -329,7 +333,7 @@ if deployment_settings.has_module("project"):
             msg_list_empty = T("No Projects currently registered"))
 
         # Reusable field
-        def project_represent(id, show_link=True):
+        def project_represent(id, row=None, show_link=True):
             if id:
                 val = (id and [db.project_project[id].name] or [NONE])[0]
                 if not show_link:
@@ -415,11 +419,11 @@ if deployment_settings.has_module("project"):
                                 organisation_id(),
                                 Field("role", "integer",
                                       requires = IS_NULL_OR(IS_IN_SET(project_organisation_types)),
-                                      represent = lambda opt: \
+                                      represent = lambda opt, row=None: \
                                         project_organisation_types.get(opt, NONE)),
                                 Field("amount", "double",
                                       requires = IS_FLOAT_AMOUNT(),
-                                      represent = lambda v: \
+                                      represent = lambda v, row=None: \
                                         IS_FLOAT_AMOUNT.represent(v, precision=2),
                                       widget = IS_FLOAT_AMOUNT.widget,
                                       label = T("Funds Contributed by this Organization")),
@@ -493,6 +497,7 @@ if deployment_settings.has_module("project"):
         table = db.define_table(tablename,
                                 Field("name", length=128,
                                       notnull=True, unique=True),
+                                format="%(name)s",
                                 *s3_meta_fields())
 
         ADD_ACTIVITY_TYPE = T("Add Activity Type")
@@ -520,7 +525,7 @@ if deployment_settings.has_module("project"):
                                                                            "project_activity_type.id",
                                                                            "%(name)s",
                                                                            sort=True)),
-                                           represent = lambda id: \
+                                           represent = lambda id, row=None: \
                                             s3_get_db_field_value(tablename = "project_activity_type",
                                                                   fieldname = "name",
                                                                   look_up_value = id),
@@ -538,7 +543,7 @@ if deployment_settings.has_module("project"):
                                                                                  "%(name)s",
                                                                                  sort=True,
                                                                                  multiple=True)),
-                                                 represent = lambda opt: \
+                                                 represent = lambda opt, row=None: \
                                                     multiref_represent(opt,
                                                                        "project_activity_type"),
                                                  #comment = skill_help,
@@ -578,6 +583,7 @@ if deployment_settings.has_module("project"):
                                 #organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                 location_id(widget = S3LocationSelectorWidget(hide_address=True)),
                                 s3_comments(),
+                                format="%(name)s",
                                 *s3_meta_fields())
 
         class project_activity_virtualfields:
@@ -630,9 +636,10 @@ if deployment_settings.has_module("project"):
                                                                        "project_activity.id",
                                                                        "%(name)s",
                                                                        sort=True)),
-                                       represent = lambda id: s3_get_db_field_value(tablename = "project_activity",
-                                                                                    fieldname = "name",
-                                                                                    look_up_value = id),
+                                       represent = lambda id, row=None: \
+                                                    s3_get_db_field_value(tablename = "project_activity",
+                                                                          fieldname = "name",
+                                                                          look_up_value = id),
                                        label = T("Activity"),
                                        comment = DIV(A(ADD_ACTIVITY,
                                                        _class="colorbox",
@@ -679,9 +686,12 @@ if deployment_settings.has_module("project"):
         analyze_fields = [
                             (T("Organization"), "organisation"),
                             (T("Project"), "project_id$name"),
-                            "location_id",
                             (T("Activity"), "name"),
-                            (T("Activity Type"), "multi_activity_type_id")
+                            "location_id",
+                            (T("Activity Type"), "multi_activity_type_id"),
+                            (T("Theme"), "project_id$multi_theme_id"),
+                            (T("Hazard"), "project_id$multi_hazard_id"),
+                            (T("HFA"), "project_id$hfa"),
                          ]
         s3mgr.configure(tablename,
                         search_method=project_activity_search,
@@ -745,7 +755,7 @@ if deployment_settings.has_module("project"):
         project_site_id = S3ReusableField("project_site_id", db.project_site,
                                           #sortby="default/indexname",
                                           requires = IS_NULL_OR(IS_ONE_OF(db, "project_site.id", "%(name)s")),
-                                          represent = lambda id: \
+                                          represent = lambda id, row=None: \
                                                       (id and [db(db.project_site.id == id).select(db.project_site.name,
                                                                                                    limitby=(0, 1)).first().name] or [NONE])[0],
                                           label = T("Project Site"),
@@ -788,7 +798,7 @@ if deployment_settings.has_module("project"):
             msg_list_empty = T("No Beneficiary Types Found")
         )
 
-        def beneficiary_type_represent(type_id):
+        def beneficiary_type_represent(type_id, row=None):
 
             if isinstance(type_id, Row):
                 if "name" in type_id:
@@ -867,7 +877,7 @@ if deployment_settings.has_module("project"):
                                                                          "project_beneficiary.id",
                                                                          "%(type)s",
                                                                          sort=True)),
-                                         represent = lambda id: \
+                                         represent = lambda id, row=None: \
                                             s3_get_db_field_value(tablename = "project_beneficiary",
                                                                   fieldname = "type",
                                                                   look_up_value = id),
@@ -1071,7 +1081,7 @@ if deployment_settings.has_module("project"):
                                                            zero=None),
                                       default = 2,
                                       label = T("Status"),
-                                      represent = lambda opt: \
+                                      represent = lambda opt, row=None: \
                                         project_task_status_opts.get(opt,
                                                                      UNKNOWN_OPT)),
                                 Field("name",
@@ -1086,7 +1096,7 @@ if deployment_settings.has_module("project"):
                                                            zero=None),
                                       default = 2,
                                       label = T("Priority"),
-                                      represent = lambda opt: \
+                                      represent = lambda opt, row=None: \
                                         project_task_priority_opts.get(opt,
                                                                        UNKNOWN_OPT)),
                                 # Could be an Organisation, a Team or a Person
@@ -1094,8 +1104,8 @@ if deployment_settings.has_module("project"):
                                            readable = True,
                                            writable = True,
                                            label = T("Assigned to"),
-                                           represent = lambda id: \
-                                            s3_pentity_represent(id, show_label=False),
+                                           represent = lambda id, row=None: \
+                                            s3.pr_pentity_represent(id, show_label=False),
                                            # @ToDo: Widget
                                            #widget = S3PentityWidget(),
                                            #comment = DIV(_class="tooltip",
@@ -1111,7 +1121,7 @@ if deployment_settings.has_module("project"):
                                                         T("Enter a valid future date")))],
                                       widget = S3DateTimeWidget(past=0,
                                                                 future=8760),  # Hours, so 1 year
-                                      represent = s3_utc_represent),
+                                      represent = lambda v, row=None: s3_utc_represent(v)),
                                 Field("time_estimated", "time",
                                       label = "%s (%s)" % (T("Time Estimate"),
                                                            T("hours"))),
@@ -1151,7 +1161,8 @@ if deployment_settings.has_module("project"):
                                   label = T("Task"),
                                   sortby="name",
                                   requires = IS_NULL_OR(IS_ONE_OF(db, "project_task.id", "%(name)s")),
-                                  represent = lambda id: (id and [db.project_task[id].name] or [NONE])[0],
+                                  represent = lambda id, row=None: \
+                                                (id and [db.project_task[id].name] or [NONE])[0],
                                   comment = DIV(A(ADD_TASK,
                                                   _class="colorbox",
                                                   _href=URL(c="project", f="task",
@@ -1369,7 +1380,7 @@ if deployment_settings.has_module("project"):
                                 ),
                             TR(
                                 TH("%s: " % table.pe_id.label),
-                                s3_pentity_represent(record.pe_id,
+                                s3.pr_pentity_represent(record.pe_id,
                                                      show_label=False),
                                 TH("%s: " % table.location_id.label),
                                 gis_location_represent(record.location_id),

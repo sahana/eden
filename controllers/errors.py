@@ -5,7 +5,8 @@
 
     TODO: add/replace the following to your routes.py in web2py directory
     routes_onerror = [
-        ("eden/401", "/eden/default/user/login"),
+        ('eden/400', '!'),
+        ('eden/401', '!'),
         ("eden/*", "/eden/errors/index"),
         ("*/*", "/eden/errors/index"),
     ]
@@ -13,6 +14,7 @@
     NOTE: if Eden is installed elsewhere or exists under different name in applications folder,
           just rename it in above list. Comment the last route to disable error
           catching for other apps in the same web2py environment
+
 """
 
 from gluon.http import defined_status

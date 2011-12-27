@@ -504,7 +504,7 @@ def person():
         _crud.title_create = T("Add Home Address")
         _crud.title_update = T("Edit Home Address")
         s3mgr.model.add_component("pr_address",
-                                  pr_pentity=dict(joinby=super_key(db.pr_pentity),
+                                  pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
                                                   multiple=False))
         address_tab_name = T("Home Address")
         # Default type for HR
@@ -594,9 +594,6 @@ def person():
         if deployment_settings.has_module("asset"):
             tabs.append((T("Assets"), "asset"))
 
-    # Upload for configuration (add replace option)
-    response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
-
     # Import pre-process
     def import_prep(data, group=group):
         """
@@ -646,7 +643,7 @@ def person():
     def prep(r):
         if r.representation == "s3json":
             s3mgr.show_ids = True
-        elif r.interactive:
+        elif r.interactive and r.method != "import":
             resource = r.resource
 
             # Assume volunteers only between 12-81

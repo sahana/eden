@@ -127,18 +127,13 @@ from gluon.tools import callback
 # S3 Custom Validators,
 # imported here into the global namespace in order
 # to access them without the s3base namespace prefix
-exec("from applications.%s.modules.s3.s3validators import *" % request.application)
-# Faster for Production (where app-name won't change):
-#from applications.eden.modules.s3.s3validators import *
+from s3.s3validators import *
 
 # S3 Custom Utilities and Widgets
 # imported here into the global namespace in order
 # to access them without the s3base namespace prefix
-exec("from applications.%s.modules.s3.s3utils import *" % request.application)
-exec("from applications.%s.modules.s3.s3widgets import *" % request.application)
-# Faster for Production (where app-name won't change):
-#from applications.eden.modules.s3.s3utils import *
-#from applications.eden.modules.s3.s3widgets import *
+from s3.s3utils import *
+from s3.s3widgets import *
 
 # VITA
 vita = s3base.S3Vita()

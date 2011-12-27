@@ -70,6 +70,11 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
         s3mgr.model.add_component("req_commit_item",
                                   req_commit="commit_id")
 
+    if deployment_settings.has_module("hrm"):
+        # Commitment Persons as component of Commitment
+        s3mgr.model.add_component("req_commit_person",
+                                  req_commit="commit_id")
+
     def req_tables():
         """ Load the Request Tables when needed """
 
@@ -140,7 +145,8 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
         resourcename = "req"
         tablename = "req_req"
         table = db.define_table(tablename,
-                                event_id(default=session.s3.event),
+                                event_id(default=session.s3.event,
+                                         ondelete="SET NULL"),
                                 Field("type", "integer",
                                       requires = IS_IN_SET(req_type_opts, zero=None),
                                       represent = lambda opt: \
@@ -330,7 +336,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                                       sort=True),
                                  represent = req_represent,
                                  label = T("Request"),
-                                 ondelete = "RESTRICT")
+                                 ondelete = "CASCADE")
 
         #----------------------------------------------------------------------
         def req_onaccept(form):
@@ -1108,7 +1114,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                            comment = DIV( _class="tooltip",
                                                           _title="%s|%s" % (T("Request Item"),
                                                                             T("Select Items from the Request"))),
-                                           ondelete = "RESTRICT",
+                                           ondelete = "CASCADE",
 script =
     SCRIPT("""
     $(document).ready(function() {
@@ -1418,10 +1424,8 @@ script =
                     table = db.project_task
                     task = table.insert(name=record.request_number,
                                         description=record.purpose,
-                                        person_id=record.requester_id,
                                         priority=record.priority,
                                         location_id=location,
-                                        organisation_id=organisation,
                                         site_id=record.site_id)
                     # Add the Request as a Component to the Task
                     table = db.project_task_req
@@ -1578,7 +1582,7 @@ script =
                                                               sort=True)),
                                     represent = commit_represent,
                                     label = T("Commitment"),
-                                    ondelete = "RESTRICT")
+                                    ondelete = "CASCADE")
 
         # -----------------------------------------------------------------
         def commit_onvalidation(form):

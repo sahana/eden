@@ -3,7 +3,7 @@
 __doc__ = """Climate data portal models
 
 Climate data is stored in dynamically created tables.
-These tables can be added from the command line script add_table.py 
+These tables can be added from the command line script add_table.py
 in modules.ClimateDataPortal.
 The table definitions are stored in climate_sample_table_spec.
 
@@ -36,7 +36,7 @@ if deployment_settings.has_module("climate"):
             **attrs
         )
 
-    # @ToDo: would be great if we had a table that could represent 
+    # @ToDo: would be great if we had a table that could represent
     # places. gis_location doesn't fit the bill as there are so many
     # other fields that climate doesn't use.
     # elevation is not included as it would just mean a performance hit
@@ -131,7 +131,7 @@ if deployment_settings.has_module("climate"):
     # internally all scales must be ratio scales if coefficient of variations is to
     # be used
     # rainfall (mm), temp (K) are ok
-    # output units 
+    # output units
 
     climate_sample_table_spec = climate_define_table(
         "sample_table_spec",
@@ -148,7 +148,7 @@ if deployment_settings.has_module("climate"):
                 length = 1,
                 notnull = True,
                 # web2py requires a default value for not null fields
-                default = "", 
+                default = "",
                 required = True
             ),
             Field(
@@ -189,7 +189,7 @@ if deployment_settings.has_module("climate"):
                 required = True
             ),
             Field(
-                # this maps to the name of a python class 
+                # this maps to the name of a python class
                 # thats deals with the monthly aggregated data.
                 "aggregation",
                 "string",

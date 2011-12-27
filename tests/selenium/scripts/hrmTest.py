@@ -11,7 +11,7 @@ class HRMTest(SahanaTest):
         This test suite assumes that the database has been prepopulated with
         test data, specifically:
         * Standard user data (admin@example.com)
-        * 
+        *
     """
     _sortList = (
                  "createSearchDeletePerson",
@@ -188,7 +188,7 @@ class HRMTest(SahanaTest):
         HRMTest.volCreateTemplate.addInput(inputID="gis_location_lon")
         HRMTest.volCreateTemplate.addInput(inputID="gis_location_lon_search", visible=False)
         HRMTest.volCreateTemplate.addButton("Save")
-        
+
         HRMTest.volRecordTemplate = self.action.getFormTemplate()
         HRMTest.volRecordTemplate.addInput(labelID="hrm_human_resource_organisation_id__label",
                           inputID="dummy_hrm_human_resource_organisation_id")
@@ -344,7 +344,7 @@ class HRMTest(SahanaTest):
             print "Strict compliance met"
         else:
             print failures
-        
+
         # Save a blank form and let's check the validation errors
         self.assertTrue(self.action.saveForm("Save", success=False))
         # validation on required field
@@ -356,7 +356,7 @@ class HRMTest(SahanaTest):
         nonperson = "non-Person1"
         self.action.fillForm("pr_person_first_name", person)
         self.assertTrue(self.action.saveForm("Save", message="Person added", success=True))
-        
+
         # STEP 3: The newly created person can be found
         self.action.openPage("pr/person", heading="List Persons")
         print "Looking for %s" % person
@@ -367,7 +367,7 @@ class HRMTest(SahanaTest):
         # STEP 5: The newly created person can be deleted
         result = self.action.deleteObject("pr/person", person, "Person")
         self.assertTrue(result)
-        
+
         self.action.logout()
 
     def AddUserAsStaff(self):
@@ -481,9 +481,9 @@ class HRMTest(SahanaTest):
             This will add the admin user, check the details are correct
             Then it will clear and check the details are all removed
             Then it will add the admin user, check the details are correct
-            Then it will select normal user and check the details are correct 
+            Then it will select normal user and check the details are correct
             Then it will add the admin user, add more details & check everything is displayed
-            Then it will select normal user and check the details are correct 
+            Then it will select normal user and check the details are correct
         """
         template = self.volCreateTemplate
         # STEP 1: Log in as admin
@@ -588,7 +588,7 @@ class HRMTest(SahanaTest):
     def AddNewUserAsVolunteer(self):
         """
             This will add a newly created user as a volunteer of the organisation
-            Example.net 
+            Example.net
         """
         template = self.volCreateTemplate
         # STEP 1: Log in as admin
@@ -641,7 +641,7 @@ class HRMTest(SahanaTest):
         self.action.fillForm("auth_user_first_name", "First")
         self.action.fillForm("auth_user_last_name", "Last")
         # The HTML id for the email and password elements are duplicated in a clear violation of HTML rules!
-        # so need to locate them directly  
+        # so need to locate them directly
         self.action.fillForm("document.forms[1].elements[4]", "first.m.last@example.com")
         self.action.fillForm("document.forms[1].elements[5]", "testing")
         self.action.fillForm("auth_user_password_two", "testing")
@@ -764,7 +764,7 @@ class HRMTest(SahanaTest):
         self.action.fillForm("gis_location_L3_ac", "Waterperry")
         self.action.fillForm("gis_location_lat", "51.754848420123")
         self.action.fillForm("gis_location_lon", "-1.0940863470739")
-        
+
         # STEP 3: save the form
         self.assertTrue(self.action.saveForm("Save",
                                              message="Office added",
@@ -781,7 +781,7 @@ class HRMTest(SahanaTest):
         # Step 1 move to staff
         self.useSahanaAdminAccount()
         self.action.login(self._user, self._password )
-        
+
         self.action.openPage("hrm/index", heading="Staff and Volunteers")
         result = self.action.findLink('See all [0-9]+ staff members')
         self.assertTrue(result)
@@ -802,7 +802,7 @@ class HRMTest(SahanaTest):
             print "Strict compliance met"
         else:
             print failures
-        
+
         self.action.fillForm("hrm_human_resource_job_title", "Chief of Staff")
         self.action.fillAutoComplete("dummy_hrm_human_resource_site_id",
                                      "Example Head Office",
@@ -826,11 +826,11 @@ class HRMTest(SahanaTest):
         # Step 1 move to staff
         self.useSahanaAdminAccount()
         self.action.login(self._user, self._password )
-        
+
         self.action.openPage("hrm/index", heading="Staff and Volunteers")
         result = self.action.findLink('See all [0-9]+ volunteers')
         self.assertTrue(result)
-        # Step 2 open volunteer named First Middle Last  
+        # Step 2 open volunteer named First Middle Last
         self.action.searchUnique("First")
         self.action.openLink("link=Open")
         # Step 3 assign a location
@@ -911,7 +911,7 @@ class HRMTest(SahanaTest):
         self.assertTrue(self.action.quickLink("link=Sign-up for Account"))
         self.action.fillForm("auth_user_first_name", "Other")
         self.action.fillForm("auth_user_last_name", "User")
-        # The email and password HTML ids are duplicated so need to locate them directly  
+        # The email and password HTML ids are duplicated so need to locate them directly
         self.action.fillForm("document.forms[1].elements[4]", "otheruser@example.com")
         self.action.fillForm("document.forms[1].elements[5]", "testing")
         self.action.fillForm("auth_user_password_two", "testing")
@@ -932,8 +932,8 @@ class HRMTest(SahanaTest):
                         )
         self.action.logout()
         self.action.login("otheruser@example.com", "testing" )
-        
-        # Step 4 Open the staff member otheruser@example.com and verify details 
+
+        # Step 4 Open the staff member otheruser@example.com and verify details
         self.action.openPage("hrm/index", heading="Personal Profile")
         self.action.openLink("link=Positions")
         self.assertTrue(self.action.searchUnique("Example.com"))

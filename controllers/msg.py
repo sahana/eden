@@ -73,7 +73,7 @@ def outbox():
 
     # Subject works for Email but not SMS
     table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
-    table.pe_id.represent = lambda id: s3_pentity_represent(id, default_label = "")
+    table.pe_id.represent = lambda id: s3db.pr_pentity_represent(id, default_label = "")
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -808,9 +808,9 @@ def search():
 
 # -----------------------------------------------------------------------------
 def recipient_represent(id, default_label=""):
-            """ Simplified output as-compared to s3_pentity_represent """
+            """ Simplified output as-compared to pr_pentity_represent """
             output = ""
-            table = db.pr_pentity
+            table = s3db.pr_pentity
             pe = db(table.pe_id == id).select(table.instance_type,
                                               limitby=(0, 1)).first()
             if not pe:
@@ -832,7 +832,7 @@ def recipient_represent(id, default_label=""):
                 if group:
                     output = group.name
             return output
-            
+
 # -----------------------------------------------------------------------------
 def person_search(value, type=None):
 
@@ -851,8 +851,8 @@ def person_search(value, type=None):
     if type:
         represent = recipient_represent
     else:
-        represent = s3_pentity_represent
-    
+        represent = s3db.pr_pentity_represent
+
     if type == "pr_group" or not type:
         # Check Groups
         query = (groups["name"].lower().like("%" + value + "%")) & (groups.deleted == False)

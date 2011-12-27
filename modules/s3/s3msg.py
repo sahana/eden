@@ -433,7 +433,7 @@ class S3Msg(object):
         """
 
         limit = current.deployment_settings.get_mail_limit()
-        
+
         if limit:
             current.manager.load("msg_outbox")
             db = current.db
@@ -492,7 +492,7 @@ class S3Msg(object):
     def prepare_opengeosms(self, location_id, code="S", map="google", text=""):
         """
             Function to create an OpenGeoSMS
-            
+
             @param: location_id - reference to record in gis_location table
             @param: code - the type of OpenGeoSMS:
                 S = Sahana

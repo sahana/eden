@@ -372,7 +372,7 @@ s3_menu_dict = {
                 [T("Search"), False, aURL(c="asset", f="asset",
                                           args="search")],
                 [T("Import"), False, aURL(p="create", c="asset", f="asset",
-                                          args="import.xml")],
+                                          args="import")],
             ]],
             [T("Items"), False, aURL(c="asset", f="item"),
             [
@@ -739,7 +739,7 @@ s3_menu_dict = {
                                       expiring=1))],
                [T("Import"),
                 False, aURL(p="create", f="person",
-                            args=["import.xml"],
+                            args=["import"],
                             vars=dict(group="staff"))],
                #[T("Dashboard"),
                # False, aURL(f="index")],
@@ -761,7 +761,7 @@ s3_menu_dict = {
                             vars=dict(group="volunteer"))],
                [T("Import"),
                 False, aURL(p="create", f="person",
-                            args=["import.xml"],
+                            args=["import"],
                             vars=dict(group="volunteer"))],
             ]],
             [T("Teams"), False, aURL(f="group"), [
@@ -823,7 +823,7 @@ s3_menu_dict = {
                     [T("Search"), False, aURL(c="inv", f="warehouse",
                                               args="search")],
                     [T("Import"), False, aURL(p="create", c="inv", f="warehouse",
-                                              args=["import.xml"])],
+                                              args=["import"])],
                 ]],
                 [T("Inventories"), False, aURL(c="inv", f="warehouse"), [
                     [T("Search Inventory Items"), False, aURL(c="inv", f="inv_item",
@@ -831,7 +831,7 @@ s3_menu_dict = {
                     [s3.crud_strings.inv_recv.title_search, False, aURL(c="inv", f="recv",
                                                                         args="search")],
                     [T("Import"), False, aURL(p="create", c="inv", f="warehouse",
-                                              args=["import.xml"],
+                                              args=["import"],
                                               vars={"extra_data":True})],
                 ]],
                 [s3.crud_strings.inv_recv.subtitle_list, False, aURL(c="inv", f="recv"), [
@@ -925,9 +925,9 @@ s3_menu_dict = {
                 #[T("New"), False, aURL(p="create", f="complete", args="create")],
                 #[T("List All"), False, aURL(f="complete")],
                 [T("Import Templates"), False, aURL(f="question_list",
-                                                    args="import.xml")],
+                                                    args="import")],
                 [T("Import Completed Responses"), False, aURL(f="complete",
-                                                              args="import.xml")]
+                                                              args="import")]
             ]],
             ]
     },
@@ -984,7 +984,7 @@ s3_menu_dict = {
                     [T("Search"), False, aURL(c="org", f="organisation",
                                               args="search")],
                     [T("Import"), False, aURL(c="org", f="organisation",
-                                              args="import.xml")]
+                                              args="import")]
                 ]],
                 [T("Offices"), False, aURL(c="org", f="office"), [
                     [T("New"), False,
@@ -994,7 +994,7 @@ s3_menu_dict = {
                     [T("Search"), False, aURL(c="org", f="office",
                                               args="search")],
                     [T("Import"), False, aURL(c="org", f="office",
-                                              args="import.xml")]
+                                              args="import")]
                 ]],
             ],
     },
@@ -1069,11 +1069,11 @@ s3_menu_dict = {
             ]],
             [T("Import"), False, aURL(f="index"),[
                 [T("Import Projects"), False, aURL(p="create", f="project",
-                                                   args="import.xml")],
+                                                   args="import")],
                 [T("Import Project Organisations"), False, aURL(p="create", f="organisation",
-                                                                args="import.xml")],
+                                                                args="import")],
                 [T("Import Project Activities"), False, aURL(p="create", f="activity",
-                                                             args="import.xml")],
+                                                             args="import")],
             ]],
             [T("Activity Types"), False, aURL(f="activity_type"),[
                 [T("Add New Activity Type"), False, aURL(p="create", f="activity_type", args="create")],

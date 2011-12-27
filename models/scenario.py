@@ -26,7 +26,7 @@ if deployment_settings.has_module(module):
                                     actuate="link",
                                     autocomplete="name",
                                     autodelete=False))
-    
+
     # Human Resources as a component of Scenarios
     s3mgr.model.add_component("hrm_human_resource",
                               scenario_scenario=Storage(
@@ -48,10 +48,10 @@ if deployment_settings.has_module(module):
                                     actuate="embed",
                                     autocomplete="name",
                                     autodelete=False))
-    
+
     # Sites as a component of Scenarios
     s3mgr.model.add_component("scenario_site", scenario_scenario="scenario_id")
-    
+
     # Activities as a component of Scenarios
     #s3mgr.model.add_component("project_activity",
     #                          scenario_scenario=Storage(
@@ -61,7 +61,7 @@ if deployment_settings.has_module(module):
     #                                actuate="embed",
     #                                autocomplete="name",
     #                                autodelete=False))
-    
+
     # Map Config as a component of Scenarios
     s3mgr.model.add_component("gis_config",
                               scenario_scenario=Storage(
@@ -151,7 +151,7 @@ if deployment_settings.has_module(module):
                                         (id and [db(db.scenario_scenario.id == id).select(db.scenario_scenario.name,
                                                                                           limitby=(0, 1)).first().name] or [NONE])[0],
                                       label = T("Scenario"),
-                                      ondelete = "RESTRICT",
+                                      ondelete = "SET NULL",
                                       # Comment these to use a Dropdown & not an Autocomplete
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",

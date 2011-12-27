@@ -125,7 +125,7 @@ class SQLTABLES3(SQLTABLE):
                  th_link="",
                  **attributes):
 
-        # reverted since it causes errors (admin/user & manual importing of req/req/import.xml)
+        # reverted since it causes errors (admin/user & manual importing of req/req/import)
         # super(SQLTABLES3, self).__init__(**attributes)
         TABLE.__init__(self, **attributes)
         self.components = []

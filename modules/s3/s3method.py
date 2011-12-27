@@ -68,7 +68,7 @@ class S3Method(object):
 
         # Environment of the request
         self.request = r
-        self.manager = r.manager
+        self.manager = current.manager
 
         # Settings
         self.permit = self.manager.permit

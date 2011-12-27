@@ -301,6 +301,7 @@ $(document).ready(function() {
         'bServerSide': bServerSide,
         'bFilter': bFilter,
         'bSort': true,
+        'bDeferRender': true,
         'aaSorting': aaSorting,
         'aoColumns': ColumnSettings,
         'iDisplayLength': iDisplayLength,

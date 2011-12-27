@@ -15,14 +15,14 @@
     <li><a href='{{=URL(f="organisation", args="search")}}'><b>{{=T("Search Organizations")}}</b></a></li>
     <li><a href='{{=URL(f="organisation")}}'><b>{{=T("List Organizations")}}</b></a></li>
     <li><a href='{{=URL(f="organisation", args="create")}}'><b>{{=T("Create new Organization")}}</b></a></li>
-    <li><a href='{{=URL(f="organisation", args="import.xml")}}'><b>{{=T("Import Organizations")}}</b></a></li>
+    <li><a href='{{=URL(f="organisation", args="import")}}'><b>{{=T("Import Organizations")}}</b></a></li>
 </ul>
 <h3>{{=T("Offices")}}:</h3>
 <ul>
     <li><a href='{{=URL(f="office", args="search")}}'><b>{{=T("Search Offices")}}</b></a></li>
     <li><a href='{{=URL(f="office")}}'><b>{{=T("List Offices")}}</b></a></li>
     <li><a href='{{=URL(f="office", args="create")}}'><b>{{=T("Create new Office")}}</b></a></li>
-    <li><a href='{{=URL(f="office", args="import.xml")}}'><b>{{=T("Import Offices")}}</b></a></li>
+    <li><a href='{{=URL(f="office", args="import")}}'><b>{{=T("Import Offices")}}</b></a></li>
 </ul>
 {{if deployment_settings.has_module("project"):}}
 <h3>{{=T("Projects")}}:</h3>

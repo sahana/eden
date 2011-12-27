@@ -530,6 +530,9 @@ location_id = S3ReusableField("location_id", db.gis_location,
                               #widget = S3LocationAutocompleteWidget(),
                               ondelete = "RESTRICT")
 
+# Make available for S3Models
+s3.location_id = location_id
+
 # -----------------------------------------------------------------------------
 # Locations as component of Locations ('Parent')
 #s3mgr.model.add_component(table, joinby=dict(gis_location="parent"),
@@ -547,7 +550,7 @@ location_id = S3ReusableField("location_id", db.gis_location,
 
 tablename = "gis_config"
 table = db.define_table(tablename,
-                        super_link(db.pr_pentity), # pe_id for Personal configs
+                        super_link(s3db.pr_pentity), # pe_id for Personal configs
                         # This name will be used in the 'Regions' menu.
                         # This is the region name if this config represents
                         # a region, the person's name for a personal config
@@ -879,7 +882,7 @@ def gis_config_form_setup():
         try:
             # Infer a name for personal configs.
             if "pe_id" in form.request_vars:
-                form.vars.name = s3_pentity_represent(form.request_vars.pe_id)
+                form.vars.name = s3.pr_pentity_represent(form.request_vars.pe_id)
         except:
             # AJAX Save of Viewport from Map
             pass

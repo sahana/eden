@@ -134,12 +134,12 @@ def update_check(environment):
             #version_pattern = r"VERSION_\w*\s*=\s*([0-9]+)"
             #version_matcher = re.compile(version_pattern).match
             #has_version = False
-                
+
     if copied_from_template:
         errors.append(
             "The following files were copied from templates and should be edited: %s" %
             ", ".join(copied_from_template))
-    
+
     return {"error_messages": errors, "warning_messages": warnings}
 
 # =============================================================================

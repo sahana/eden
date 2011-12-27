@@ -72,7 +72,7 @@ if deployment_settings.has_module(module):
                      _href=URL(c="delphi",
                                f="group",
                                args=[id]))
-        
+
         group_id = S3ReusableField("group_id", db.delphi_group, notnull=True,
                                    label = T("Problem Group"),
                                    requires = IS_ONE_OF(db, "delphi_group.id",
@@ -240,7 +240,7 @@ if deployment_settings.has_module(module):
                 return output
             else:
                 return record.name
-        
+
         problem_id = S3ReusableField("problem_id", db.delphi_problem, notnull=True,
                                      label = T("Problem"),
                                      requires = IS_ONE_OF(db, "delphi_problem.id",
@@ -378,7 +378,7 @@ if deployment_settings.has_module(module):
             if not record:
                 return UNKNOWN_OPT
             return record.name
-        
+
         solution_id = S3ReusableField("solution_id", db.delphi_solution,
                                       label = T("Solution"),
                                       requires = IS_EMPTY_OR(IS_ONE_OF(db,

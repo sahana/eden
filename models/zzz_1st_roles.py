@@ -13,7 +13,7 @@ elif populate:
     # The query used here takes 2/3 the time of .count().
     if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
         populate = 0
-    
+
 # Add core roles as long as at least one populate setting is on
 if populate > 0:
 

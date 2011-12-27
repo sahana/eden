@@ -46,6 +46,10 @@
 from s3tools import *
 from s3navigation import *
 
+# Model helpers
+from s3fields import FieldS3, S3ReusableField
+from s3model import S3Model
+
 # Authentication, Authorization, Accounting
 from s3aaa import *
 
@@ -90,3 +94,6 @@ from s3task import *
 
 # Charting
 from s3chart import *
+
+# Codecs for data export/import
+from s3codec import *

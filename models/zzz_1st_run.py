@@ -11,7 +11,7 @@ if populate > 0:
     import sys
 
     # Load all Models to ensure all DB tables present
-    s3mgr.model.load_all_models()
+    s3db.load_all_models()
 
     # Add core data as long as at least one populate setting is on
 

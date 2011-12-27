@@ -72,7 +72,7 @@ if deployment_settings.has_module("doc"):
                                       represent = lambda url: \
                                         url and A(url,_href=url) or NONE),
                                 person_id(label=T("Author"),
-                                          comment = s3_person_comment(T("Author"), T("The Author of this Document (optional)"))),
+                                          comment = pr_person_comment(T("Author"), T("The Author of this Document (optional)"))),
                                 organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                 Field("date", "date"),
                                 location_id(),
@@ -254,27 +254,17 @@ if deployment_settings.has_module("doc"):
                                 #activity_id(readable=False, writable=False),    # So that we can add Documents as Components of Activities
                                 *s3_meta_fields())
 
-        def s3_image_represent(id):
+        def s3_image_represent(filename):
             """ Represent an Image as a clickable thumbnail """
-            if not id:
-                return ""
-            else:
-                table = db.doc_image
-                image = db(table.id == id).select(table.image,
-                                                  limitby=(0, 1)).first()
-                if image:
-                    filename = image.image
-                else:
-                    return ""
 
-                return DIV(A(IMG(_src=URL(c="default", f="download",
-                                          args=filename),
-                                 _height=40),
+            return DIV(A(IMG(_src=URL(c="default", f="download",
+                                      args=filename),
+                             _height=40),
                              _class="zoom",
                              _href="#zoom-media_image-%s" % id),
-                           DIV(IMG(_src=URL(c="default", f="download",
-                                            args=filename),
-                                   _width=600),
+                       DIV(IMG(_src=URL(c="default", f="download",
+                                        args=filename),
+                               _width=600),
                                _id="zoom-media_image-%s" % id,
                                _class="hidden"))
 

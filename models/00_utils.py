@@ -665,7 +665,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.set_handler("import", s3base.S3PDF(),
                   http = ["GET", "POST"],
                   representation="pdf")
-    r.set_handler("import", s3base.S3Importer(), transform=True)
+    r.set_handler("import", s3base.S3Importer())
 
     # Execute the request
     output = r(**attr)

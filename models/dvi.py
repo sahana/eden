@@ -14,6 +14,9 @@ if deployment_settings.has_module(module):
     def dvi_tables():
         """ Load the DVI Tables when needed """
 
+        pr_gender = s3db.pr_gender
+        pr_age_group = s3db.pr_age_group
+
         # Recovery Request ====================================================
         #
         task_status = {
@@ -141,7 +144,7 @@ if deployment_settings.has_module(module):
         tablename = "dvi_body"
         table = db.define_table(tablename,
                                 super_link(db.pr_pentity), # pe_id
-                                super_link(db.sit_trackable), # track_id
+                                super_link(s3db.sit_trackable), # track_id
                                 pe_label(),
                                 morgue_id(),
                                 dvi_recreq_id(),
@@ -217,7 +220,7 @@ if deployment_settings.has_module(module):
                 field = ["pe_label"])
 
         s3mgr.configure(tablename,
-                        super_entity=(db.pr_pentity, db.sit_trackable),
+                        super_entity=(db.pr_pentity, s3db.sit_trackable),
                         create_onaccept=dvi_body_onaccept,
                         create_next=URL(f="body", args=["[id]", "checklist"]),
                         search_method=dvi_body_search,
@@ -367,6 +370,7 @@ if deployment_settings.has_module(module):
             c_title = T("Person.")
             c_comment = T("Type the first few characters of one of the Person's names.")
 
+            ADD_PERSON = T("Add Person")
             return DIV(A(ADD_PERSON,
                          _class="colorbox",
                          _href=URL(c="pr", f="person", args="create",

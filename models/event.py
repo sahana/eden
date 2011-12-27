@@ -24,7 +24,7 @@ if deployment_settings.has_module(module):
 
     # Incidents as a component of Events
     s3mgr.model.add_component("event_incident", event_event="event_id")
-    
+
     # Tasks as a component of Events
     s3mgr.model.add_component("project_task",
                               event_event=Storage(
@@ -36,7 +36,7 @@ if deployment_settings.has_module(module):
                                     actuate="link",
                                     autocomplete="name",
                                     autodelete=False))
-    
+
     # Human Resources as a component of Events
     s3mgr.model.add_component("event_human_resource", event_event="event_id")
     s3mgr.model.add_component("hrm_human_resource",
@@ -59,10 +59,10 @@ if deployment_settings.has_module(module):
                                     actuate="embed",
                                     autocomplete="name",
                                     autodelete=False))
-    
+
     # Sites as a component of Events
     s3mgr.model.add_component("event_site", event_event="event_id")
-    
+
     # Activities as a component of Events
     #s3mgr.model.add_component("project_activity",
     #                          event_event=Storage(
@@ -72,7 +72,7 @@ if deployment_settings.has_module(module):
     #                                actuate="embed",
     #                                autocomplete="name",
     #                                autodelete=False))
-    
+
     # Map Config as a component of Events
     s3mgr.model.add_component("gis_config",
                               event_event=Storage(
@@ -237,7 +237,7 @@ if deployment_settings.has_module(module):
             create_next_url = URL(args=["[id]", "asset"])
         else:
             create_next_url = URL(args=["[id]", "site"])
-        
+
         s3mgr.configure(tablename,
                         create_onaccept=event_create_onaccept,
                         create_next = create_next_url,
@@ -291,7 +291,7 @@ if deployment_settings.has_module(module):
                                                                    sort=True)),
                                    represent = event_represent,
                                    label = T("Event"),
-                                   ondelete = "RESTRICT",
+                                   ondelete = "CASCADE",
                                    # Uncomment these to use an Autocomplete & not a Dropdown
                                    #widget = S3AutocompleteWidget()
                                    #comment = DIV(_class="tooltip",
@@ -359,7 +359,7 @@ if deployment_settings.has_module(module):
                                       #                                T("Enter some characters to bring up a list of possible matches")))
                                     )
 
-        
+
         # =====================================================================
         # Link Tables for Resources used in this Event (@ToDo: Move to Incident)
         # =====================================================================
@@ -395,7 +395,7 @@ if deployment_settings.has_module(module):
                 msg_record_modified = T("Incident Report updated"),
                 msg_record_deleted = T("Incident Report removed"),
                 msg_list_empty = T("No Incident Reports currently registered in this event"))
-        
+
         # ---------------------------------------------------------------------
         # Staff/Volunteers
         # @ToDo: Use Positions, not individual HRs

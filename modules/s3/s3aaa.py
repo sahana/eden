@@ -2970,6 +2970,9 @@ class S3Permission(object):
             acl = ((acl[0] & ~self.CREATE) | acl[1]) & permission
             if acl != permission:
                 permitted = False
+        else:
+            if permission != self.READ:
+                permitted = self.auth.s3_logged_in()
 
         if permitted:
             return URL(a=a,

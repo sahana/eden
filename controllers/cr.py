@@ -141,9 +141,9 @@ def shelter():
     # Usually, the pe_id field is an invisible foreign key, therefore it
     # has no default representation/requirements => need to add this here:
     pe_id.label = T("Person/Group")
-    pe_id.represent = s3_pentity_represent
+    pe_id.represent = s3.pr_pentity_represent
     pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                               s3_pentity_represent,
+                               s3.pr_pentity_represent,
                                filterby="instance_type",
                                orderby="instance_type",
                                filter_opts=("pr_person",
@@ -234,11 +234,11 @@ def cr_shelter_prep(r):
                 db.pr_presence.proc_desc.readable = db.pr_presence.proc_desc.writable = False
                 # AT: Add Person
                 db.pr_presence.pe_id.comment = \
-                    DIV(s3_person_comment(T("Add Person"), REGISTER_LABEL),
+                    DIV(pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
                         DIV(A(s3.crud_strings.pr_group.label_create_button,
                               _class="colorbox",
                               _href=URL(c="pr", f="group", args="create",
-                                        vars=dict(format="popup")),
+                                        vars=dict(format="popup", child="pe_id")),
                               _target="top",
                               _title=s3.crud_strings.pr_group.label_create_button),
                             DIV(_class="tooltip",

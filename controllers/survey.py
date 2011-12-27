@@ -1033,7 +1033,7 @@ def newAssessment():
             tranForm.append(exportBtn)
             urlimport = URL(c=module,
                             f="complete",
-                            args=["import.xml"],
+                            args=["import"],
                             vars = {"viewing":"%s.%s" % ("survey_series", series_id)}
                             )
             buttons = DIV (A(T("Import completed Assessment Template Spreadsheet"),

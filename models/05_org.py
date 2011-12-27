@@ -615,7 +615,7 @@ org_site_types = auth.org_site_types
 tablename = "org_site"
 table = super_entity(tablename, "site_id", org_site_types,
                      # @ToDo: Make Sites Trackable (Mobile Hospitals & Warehouses)
-                     #super_link(db.sit_trackable), # track_id
+                     #super_link(s3db.sit_trackable), # track_id
                      #Field("code",
                      #      length=10,           # Mayon compatibility
                      #      notnull=True,

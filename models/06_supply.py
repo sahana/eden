@@ -1064,7 +1064,7 @@ S3FilterFieldChange({
         tablename = "supply_item_entity"
         table = super_entity(tablename, "item_entity_id", item_types,
                              # @ToDo: Make Items Trackable?
-                             #super_link(db.sit_trackable), # track_id
+                             #super_link(s3db.sit_trackable), # track_id
                              #location_id(),
                              supply_item_id(represent = lambda id: \
                                                 supply_item_represent(id,
@@ -1386,7 +1386,7 @@ S3FilterFieldChange({
                     else:
                         # @ToDo: Assets and req_items
                         return NONE
-                        
+
                     #site = org_site_represent(record.site_id)
                     #return site
                     otable = db.org_office
@@ -1647,7 +1647,7 @@ $('#category_dropdown').change(function () {
         values.push( $(this).attr('name') );
     });
     if ( values.length ) {
-        $('#list_formats a').attr('href', function() { 
+        $('#list_formats a').attr('href', function() {
             var href = this.href.split('?')[0] + '?item_entity.item_id$item_category_id=' + values[0];
             for ( i = 1; i <= (values.length - 1); i++ ) {
                 href = href + ',' + values[i]
@@ -1655,7 +1655,7 @@ $('#category_dropdown').change(function () {
             return href;
         });
     } else {
-        $('#list_formats a').attr('href', function() { 
+        $('#list_formats a').attr('href', function() {
             return this.href.split('?')[0];
         });
     }
@@ -1672,7 +1672,7 @@ $('#organisation_dropdown').change(function () {
 
                 return output
             response.s3.postp = postp
-            
+
             output = s3_rest_controller("supply", "item_entity")
             return output
 

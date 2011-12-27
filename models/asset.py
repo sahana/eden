@@ -54,7 +54,7 @@ if deployment_settings.has_module("asset"):
         vehicle = deployment_settings.has_module("vehicle")
         tablename = "asset_asset"
         table = db.define_table(tablename,
-                                super_link(db.sit_trackable), # track_id
+                                super_link(s3db.sit_trackable), # track_id
                                 Field("number",
                                       label = T("Asset Number")),
                                 item_id,
@@ -147,7 +147,7 @@ if deployment_settings.has_module("asset"):
                                    ondelete = "RESTRICT")
 
         s3mgr.configure(tablename,
-                        super_entity=(db.supply_item_entity, db.sit_trackable)
+                        super_entity=(db.supply_item_entity, s3db.sit_trackable)
                        )
 
         #--------------------------------------------------------------------------
@@ -313,7 +313,7 @@ if deployment_settings.has_module("asset"):
         table.site_id.comment = (DIV(_class="tooltip",
                                      _title="%s|%s" % (T("Facility"),
                                                        T("Enter some characters to bring up a list of possible matches")),
-                                     
+
                                      ),
 SCRIPT("""
     $(document).ready(function() {
@@ -493,7 +493,7 @@ SCRIPT("""
             request.get_vars.pop("status", None)
             type = request.get_vars.pop("type", None)
             r.datetime = r.datetime.replace(tzinfo=None)
-            
+
             if r.datetime and \
                 (not current_log.datetime or \
                  current_log.datetime <= r.datetime):
@@ -642,7 +642,7 @@ SCRIPT("""
                         func = "vehicle"
                     else:
                         func = "asset"
-                    
+
                     # @ToDo: Check permissions before displaying buttons
 
                     asset_action_btns = [ A( T("Set Base Site"),

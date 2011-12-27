@@ -188,7 +188,8 @@ class S3XLS(S3Codec):
         not_found = s3.crud_strings.get(name, request.function)
         title = str(crud_strings.get(name, not_found))
 
-        sheet1.write_merge(rowCnt, rowCnt, 0, totalRows-1, title, styleLargeHeader)
+        if totalRows > 0:
+            sheet1.write_merge(rowCnt, rowCnt, 0, totalRows-1, title, styleLargeHeader)
         currentRow.write(totalRows, request.now, styleHeader)
         currentRow.height = 440
         rowCnt += 1

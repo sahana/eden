@@ -1215,7 +1215,7 @@ $("#chart_btn").click(function(){
                 return
             question = getQuestionFromCode(locQstn, series_id)
             if question["type"] != "Location":
-                # Problem with the template the location question isn't a location type 
+                # Problem with the template the location question isn't a location type
                 return
             widgetObj = getWidgetFromQuestion(question["qstn_id"])
             widgetObj.loadAnswer(complete_id, question["qstn_id"])
@@ -1231,7 +1231,7 @@ $("#chart_btn").click(function(){
 #            ##################################################################
 #            question = getQuestionFromCode(locQstn, series_id)
 #            if question["type"] != "Location":
-#                # Problem with the template the location question isn't a location type 
+#                # Problem with the template the location question isn't a location type
 #                return
 #            answer = loc
 #            widgetObj = getWidgetFromQuestion(question["qstn_id"])
@@ -1369,7 +1369,7 @@ $("#chart_btn").click(function(){
                     query = (atable.question_id == question_id) & \
                             (atable.complete_id == complete_id)
                     db(query).update(value = newValue)
-            
+
         s3mgr.configure(tablename,
                         onaccept = answer_onaccept,
                         )

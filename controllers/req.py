@@ -146,7 +146,7 @@ def req_item_inv_item():
                                     TH( "%s: " % T("Requested By") ),
                                     org_site_represent(req.site_id),
                                     TH( "%s: " % T("Item")),
-                                    response.s3.item_represent(req_item.item_id),
+                                    response.s3.inv_item_represent(req_item.item_id),
                                    ),
                                 TR(
                                     TH( "%s: " % T("Requester") ),

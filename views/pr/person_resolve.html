@@ -87,8 +87,8 @@ $(document).ready(function(){
                 makeRequest(xml, url, newRec, old);
             }
         });
-        
-       event.preventDefault(); 
+
+       event.preventDefault();
     });
 
 
@@ -131,15 +131,15 @@ $(document).ready(function(){
                 $('input[id="pr_person_pe_label"]').first().val(answer);
                 $('input[id="pr_person_pe_label"]').last().val('');
                 break;
-            case '3L':  
+            case '3L':
                 answer = $('input[id="pr_person_missing"]').last().attr('checked');
                 if (answer == true) {
                     $('input[id="pr_person_missing"]').first().attr('checked', true);
                     $('input[id="pr_person_missing"]').last().attr('checked', false);
-                    $('input[id="pr_person_missing"]').first().val(true); 
+                    $('input[id="pr_person_missing"]').first().val(true);
                 } else {
                     $('input[id="pr_person_missing"]').first().attr('checked', false);
-                    $('input[id="pr_person_missing"]').first().val(false); 
+                    $('input[id="pr_person_missing"]').first().val(false);
                 }
                 break;
             case '4L':
