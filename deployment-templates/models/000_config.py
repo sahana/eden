@@ -23,6 +23,9 @@ deployment_settings.database.username = "sahana"
 deployment_settings.database.password = "password" # NB Web2Py doesn't like passwords with an @ in them
 deployment_settings.database.pool_size = 30
 
+# Social Media Sharing
+deployment_settings.share_social_media = True;
+
 # Authentication settings
 # This setting should be changed _before_ registering the 1st user
 deployment_settings.auth.hmac_key = "akeytochange"
