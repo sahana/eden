@@ -48,7 +48,7 @@
                         <tr id="debate{{ debate.pk }}-headers">
                             <th id="corner" class="corner-criteria"></th>
                             {% for col in columns %}
-                                <th id="{{ col.id }}">{{ col.criteria }}</th>
+                                <th id="col-{{ col.id }}">{{ col.criteria }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -59,16 +59,16 @@
                                     The th style width is meant to make smaller the th, since most browsers make
                                     the th fill all the space.
                                 {% endcomment %}
-                                <th id="{{ row.id }}" style="width:10px;"><div class="debate-ttitle">{{ row.criteria }}</div></th>
+                                <th id="row-{{ row.id }}" style="width:10px;"><div class="debate-ttitle">{{ row.criteria }}</div></th>
                                 {% for td in columns %}
-                                    <td headers="{{ td.id }} {{ row.id }}" id="sortable-debate" class="connectedSortable">
+                                    <td headers="{{ td.id }}-{{ row.id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note">
                                                     <div class="handler"></div>
-                                                    {% if perm.note.delete_note %}
+                                                    {% if perms.note.delete_note %}
                                                         <div class="deletenote">
-                                                            <a href="javascript:getClickedNote()" id="deletenote" class="hidden">x</a>
+                                                            <a href="#" onclick="deleteNote(this)" id="deletenote">x</a>
                                                         </div>
                                                     {% endif %}
                                                     <p>{{ note.title }}</p>
@@ -117,16 +117,7 @@
                 </div>
 
                 <span class="btn primary small" id="new-note" onclick="createNote()">{% trans "Add new note" %}</span>
-                <div id="sortable-dispatcher">
-                    {% for note in notes %}
-                        {% if note.column.id == 99 and note.row.id == 99 %}
-                            <div id="{{ note.id }}" class="note">
-                                <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
-                                <textarea id="text{{ note.id }}">{{ note.message }}</textarea>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
+                <div id="sortable-dispatcher"></div>
                 
             </div>
             
