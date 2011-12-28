@@ -27,51 +27,105 @@ function showDelete() {
 
 function createNote() {
     /*
-        createNote() - Appends a new note within the sortable dispatcher.
-    */
-    var noteLength = $('.note').length;
-    var debateID = $('table').attr('id');
-    var lastnote = parseInt($('#last-note').text());
-    
-    $('#sortable-dispatcher').append("<div id='" + (lastnote+1) + "' class='note'><a href='javascript:getClickedNote()' id='deletenote' class='hidden'></a><textarea id='text" + (lastnote+1) + "'>Write here</textarea></div>").hide().show("slow");
-    lastnote = lastnote + 1;
-    
-    showDelete();
-    saveOnChangeNote();
-    var noteID = debateID + "-note" + (noteLength+1);
+     createNote() - Appends a new note within the sortable dispatcher.
+     */
 
-    $.post("../create_note/", {
-        debateid: $('#debate-number').text(),
-        title: "Write here",
-        message: "Write here your message"
+    var request = $.ajax({
+        type:"POST",
+        url:"../create_note/",
+        data:{
+            debateid:$('#debate-number').text(),
+            title:"Write here your title",
+            message:"Write here your message",
+            column:1,
+            row:1
+        }
+    });
+
+    request.done(function (note) {
+        $("#sortable-dispatcher").append("<div id='" + note.id + "' class='note'>" +
+            "<div class='handler'></div>" +
+            "<div class='deletenote'>" +
+            "<a href='javascript:getClickedNote()' id='deletenote' class='hidden'>x</a>" +
+            "</div>" + note.title +
+            "<button onclick='getNoteData()'" +
+            " data-controls-modal='edit-current-note'" +
+            " data-backdrop='true'" +
+            " data-keyboard='true'" +
+            " class='btn small'>Edit</button>" +
+            "</div>")
+    });
+
+    request.fail(function (jqXHR, textStatus) {
+        $('#jsnotify').notify("create", {
+            title:"Couldn't create note",
+            text:"There has been an error." + textStatus,
+            icon:"alert.png"
+        });
     });
 }
 
-function updateNote(noteObj) {
+function editNote(obj) {
     /*
         saveNote(noteObj) - Saves the notes making an AJAX call to django. This
         function is meant to be used with a Sortable 'stop' event.
         Arguments: noteObj, note object.
     */
-    var noteID = noteObj.attr('id');
-    var position = noteObj.parent().attr('headers').split(" ");
+    var noteID = $(obj).parent().attr('id');
 
-    $.post("../update_note/", {
-        noteid: noteID,
-        column: position[0],
-        row: position[1],
+    var request = $.ajax({
+        url: "../update_note/",
+        data: { noteid: noteID }
+    });
+
+    request.done(function(note) {
+        $("input[name='notename']").val(note.title);
+        $("textarea#id_note_message").val(note.message);
+        $("#last-edited-note").val(noteID);
+    });
+
+    request.fail(function (jqXHR, textStatus) {
+        $('#edit-current-note').modal('hide');
+        $('#jsnotify').notify("create", {
+            title:"Couldn't get note data",
+            text:"There has been an error." + textStatus,
+            icon:"alert.png"
+        });
     });
 }
 
-function saveOnChangeNote() {
+function saveNote() {
     /*
-        saveOnChangeNote() - Call the updateNote() function every time a note
-        is modified but not moved. This works for changes in textareas, inputs
-        and selects.
-    */ 
-    $('.note').change( function() {
-        updateNote($(this));
+        saveNote() - Saves the current edited note, only the title and message
+        field, since the other fields are managed through makeSortable() or by
+        django itself.
+    */
+    var noteID = $('#last-edited-note').val();
+
+    var request = $.ajax({
+        type: "POST",
+        url: "../update_note/",
+        data: {
+            noteid: noteID,
+            title: $("input[name='notename']").val(),
+            message: $("textarea#id_note_message").val()
+        }
     });
+
+    request.done(function(msg) {
+        $('#edit-current-note').modal('hide');
+        var newTitle = $("input[name='notename']").val();
+        $("div#" + noteID + " p").text(newTitle);
+    });
+
+    request.fail(function(jqXHR, textStatus) {
+        $('#edit-current-note').modal('hide');
+        $('#jsnotify').notify("create", {
+            title:"Couldn't save the note",
+            text:"There has been an error." + textStatus,
+            icon:"alert.png"
+        });
+    })
 }
 
 function deleteNote(noteObj) {
@@ -101,10 +155,6 @@ function getClickedNote() {
     });
 }
 
-/*
-    TABLE FUNCTIONS
-*/
-
 function makeSortable() {
     /*
         makeSortable() - Makes every element with id starting by 'sortable'
@@ -125,7 +175,25 @@ function makeSortable() {
             $(ui.placeholder).hide().show("normal");
         },
         stop: function(e,ui) {
-            updateNote(ui.item);
+            var noteObj = ui.item;
+            var noteID = noteObj.attr('id');
+            var position = noteObj.parent().attr('headers').split(" ");
+
+            $.ajax({
+                type: "POST",
+                url: "../update_position/",
+                data: {
+                    noteid: noteID,
+                    column: position[0],
+                    row: position[1]
+                }
+            }).fail(function(jqXHR, textStatus) {
+                $('#jsnotify').notify("create", {
+                    title:"Couldn't save position",
+                    text:"There has been an error." + textStatus,
+                    icon:"alert.png"
+                });
+            });
         }
     }).disableSelection();
 }
@@ -218,7 +286,5 @@ $(document).ready(function() {
     makeSortable();
     // Run some functions on every debate, just in case
     //showDelete();
-    saveOnChangeNote();    
-    saveTable();
 });
 
