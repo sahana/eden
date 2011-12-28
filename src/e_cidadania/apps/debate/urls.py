@@ -33,6 +33,8 @@ urlpatterns = patterns('e_cidadania.apps.debate.views',
     url(r'^(?P<debate_id>\d+)/', ViewDebate.as_view(), name='view-debate'),
     
     url(r'^add/', 'add_new_debate', name='add-debate'),
+
+    url(r'^update_position/', 'update_position', name='update-note-position'),
     
     url(r'^update_note/', 'update_note', name='update-note'),
     
