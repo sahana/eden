@@ -60,6 +60,10 @@ hr { /* This hr replaces the bootstrap one */
     height: 105px;
     padding-top: 25px;
 }
+
+#jsnotify {
+    margin-top: 45px;
+}
 /* END COMMON CUSTOMIZATIONS */
 
 /* SPACE INDEX */
