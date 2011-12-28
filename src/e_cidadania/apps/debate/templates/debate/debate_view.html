@@ -66,12 +66,13 @@
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note">
                                                     <div class="handler"></div>
-                                                    <div class="deletenote">x</div>
                                                     {% if perm.note.delete_note %}
-                                                        <a href="javascript:getClickedNote()" id="deletenote" class="hidden"></a>
+                                                        <div class="deletenote">
+                                                            <a href="javascript:getClickedNote()" id="deletenote" class="hidden">x</a>
+                                                        </div>
                                                     {% endif %}
-                                                    {{ note.title }}
-                                                    <button data-column="{{ td.id }}" data-row="{{ row.id }}" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true" class="btn small">{% trans "Edit" %}</button>
+                                                    <p>{{ note.title }}</p>
+                                                    <button onclick="editNote(this)" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true" class="btn small">{% trans "Edit" %}</button>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
@@ -103,14 +104,15 @@
                                 <label for="prependedInput">{% trans "Description" %}</label>
                                 <div class="input">
                                     <textarea id="id_note_message"></textarea>
-                                    {% wysiwyg_editor "id_note_message" %}
+                                    {% comment %}{% wysiwyg_editor "id_note_message" %}{% endcomment %}
                                     <span class="help-inline"></span>
                                 </div>
                             </div>
+                            <div id="last-edited-note" class="hidden"></div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <a href="#" class="btn primary">{% trans "Save" %}</a>
+                        <a href="#" onclick="saveNote()" class="btn primary">{% trans "Save" %}</a>
                     </div>
                 </div>
 
