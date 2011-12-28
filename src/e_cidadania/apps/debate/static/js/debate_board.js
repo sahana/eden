@@ -46,9 +46,9 @@ function createNote() {
         $("#sortable-dispatcher").append("<div id='" + note.id + "' class='note'>" +
             "<div class='handler'></div>" +
             "<div class='deletenote'>" +
-            "<a href='javascript:getClickedNote()' id='deletenote' class='hidden'>x</a>" +
-            "</div>" + note.title +
-            "<button onclick='getNoteData()'" +
+            "<a href='javascript:getClickedNote()' id='deletenote'>x</a>" +
+            "</div><p>" + note.title +
+            "</p><button onclick='editNote(this)'" +
             " data-controls-modal='edit-current-note'" +
             " data-backdrop='true'" +
             " data-keyboard='true'" +
@@ -81,7 +81,7 @@ function editNote(obj) {
     request.done(function(note) {
         $("input[name='notename']").val(note.title);
         $("textarea#id_note_message").val(note.message);
-        $("#last-edited-note").val(noteID);
+        $("#last-edited-note").text(noteID);
     });
 
     request.fail(function (jqXHR, textStatus) {
@@ -100,7 +100,7 @@ function saveNote() {
         field, since the other fields are managed through makeSortable() or by
         django itself.
     */
-    var noteID = $('#last-edited-note').val();
+    var noteID = $('#last-edited-note').text();
 
     var request = $.ajax({
         type: "POST",
@@ -115,7 +115,7 @@ function saveNote() {
     request.done(function(msg) {
         $('#edit-current-note').modal('hide');
         var newTitle = $("input[name='notename']").val();
-        $("div#" + noteID + " p").text(newTitle);
+        $("div#" + noteID + " > p").text(newTitle);
     });
 
     request.fail(function(jqXHR, textStatus) {
@@ -128,31 +128,34 @@ function saveNote() {
     })
 }
 
-function deleteNote(noteObj) {
+function deleteNote(obj) {
     /*
         deleteNote() - Delete a note making an AJAX call. This function is called
         through getClickedNote(). We locate the note ID, and post it to django,
         after that we remove the note from the board.
     */
-    var noteID = noteObj.attr('id');
+    var noteID = $(obj).parents('.note').attr('id');
     var answer = confirm("Are you sure?");
-    
-    if (answer) {
-        $.post('../delete_note/', {
-            noteid: noteID
-        });
-    
-        $('#' + noteID).remove();
-    } else {
-        alert("Gracias!");
-    }
-}
 
-function getClickedNote() {
-    $('.note a').click(function (){
-        var noteObj = $(this).parent();
-        deleteNote(noteObj);
-    });
+    if (answer) {
+        var request = $.ajax({
+            type: "POST",
+            url: "../delete_note/",
+            data: { noteid: noteID }
+        });
+
+        request.done(function(msg) {
+           $('#' + noteID).remove();
+        });
+
+        request.fail(function(jqXHR, textStatus) {
+            $('#jsnotify').notify("create", {
+                title:"Couldn't delete note",
+                text:"There has been an error." + textStatus,
+                icon:"alert.png"
+            });
+        });
+    }
 }
 
 function makeSortable() {
@@ -177,7 +180,7 @@ function makeSortable() {
         stop: function(e,ui) {
             var noteObj = ui.item;
             var noteID = noteObj.attr('id');
-            var position = noteObj.parent().attr('headers').split(" ");
+            var position = noteObj.parent().attr('headers').split("-");
 
             $.ajax({
                 type: "POST",
