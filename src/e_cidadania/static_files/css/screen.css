@@ -435,6 +435,10 @@ tbody td.criteria-title, tbody th.criteria-title {
     -o-transform: rotate(-2deg);*/
 }
 
+.mine {
+    background-color: #FFFF99;
+}
+
 .note-alpha {
     opacity: 0.5;
 }

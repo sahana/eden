@@ -64,7 +64,7 @@
                                     <td headers="{{ td.id }}-{{ row.id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
                                             {% if note.column.id == td.id and note.row.id == row.id %}
-                                                <div id="{{ note.id }}" class="note">
+                                                <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %}">
                                                     <div class="handler"></div>
                                                     {% if perms.note.delete_note %}
                                                         <div class="deletenote">
