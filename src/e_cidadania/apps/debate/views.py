@@ -229,9 +229,9 @@ def delete_note(request, space_name):
     """
     Deletes a note object.
     """
-    note = get_object_or_404(Note, noteid=request.POST['noteid'])
+    note = get_object_or_404(Note, pk=request.POST['noteid'])
 
-    if note.pub_author == request.user:
+    if note.author == request.user:
         note.delete()
         return HttpResponse("The note has been deleted.")
 
