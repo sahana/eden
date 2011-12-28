@@ -174,27 +174,6 @@ hr { /* This hr replaces the bootstrap one */
 }
 /* END LANGUAGE SELECTOR */
 
-/* DEBATE STYLES */
-.specialmargin {
-    width: 90%;
-    padding: 1% 4%;
-    background: #444;
-    border-top: 1px solid #999;
-    border-bottom: 1px solid #999;
-    padding: 40px 4.52%;
-    overflow: hidden;
-}
-
-#deletenote {
-    float: right;
-    background: url(../assets/icons/delete16.png) no-repeat;
-    margin-right: -8px;
-    margin-top: -8px;
-    width: 16px;
-    height: 16px;
-}
-/* END DEBATE STYLES */
-
 /* PROPOSAL STYLES */
 #proposal-wrapper {
     border: none;
@@ -388,6 +367,24 @@ td.filled ul li a {
 /* END CALENDAR */
 
 /* DEBATE */
+.specialmargin {
+    width: 90%;
+    padding: 1% 4%;
+    background: #444;
+    border-top: 1px solid #999;
+    border-bottom: 1px solid #999;
+    padding: 40px 4.52%;
+    overflow: hidden;
+}
+
+#deletenote {
+    float: right;
+    margin-right: -8px;
+    margin-top: -8px;
+    width: 16px;
+    height: 16px;
+}
+
 #debate, #debate td, #debate th {
     border-style: none;
 }
@@ -417,7 +414,7 @@ tbody td.criteria-title, tbody th.criteria-title {
     float: right;
     background: #F22;
     margin-right: -5px;
-    margin-top: -5px;
+    margin-top: -9px;
     padding: 2px;
     height: 6px;
 }
