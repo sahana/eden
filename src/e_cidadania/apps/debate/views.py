@@ -44,17 +44,12 @@ from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
 from django.forms.formsets import formset_factory, BaseFormSet
-from django.core.context_processors import csrf
-
-# Function-based views
-from django.views.generic.list_detail import object_list, object_detail
-from django.views.generic.create_update import create_object, update_object
-from django.views.generic.create_update import delete_object
+from django.core.exceptions import ObjectDoesNotExist
 
 # Application models
 from e_cidadania.apps.debate.models import Debate, Note, Row, Column
 from e_cidadania.apps.debate.forms import DebateForm, UpdateNoteForm, \
-    NoteForm, RowForm, ColumnForm
+    NoteForm, RowForm, ColumnForm, UpdateNotePosition
 from e_cidadania.apps.spaces.models import Space
 
 def add_new_debate(request, space_name):
@@ -86,7 +81,7 @@ def add_new_debate(request, space_name):
     try:
         last_debate_id = Debate.objects.latest('id')
         current_debate_id = last_debate_id.pk + 1
-    except:
+    except ObjectDoesNotExist:
         current_debate_id = 1
 
     if request.user.has_perm('debate_add') or request.user.is_staff:
@@ -131,8 +126,13 @@ def get_debates(request):
 def create_note(request, space_name):
 
     """
-    Saves the note content and position within the table. This function is
-    meant to be called as AJAX.
+    This function creates a new note inside the debate board. It receives the order
+    from the createNote() AJAX function. To create the note first we create the note
+    in the DB, and if successful we return some of its parameters to the debate
+    board for the user. In case the petition had errors, we return the error message
+    that will be shown by jsnotify.
+
+    .. versionadded:: 0.1.5
     """
     note_form = NoteForm(request.POST or None)
         
@@ -144,9 +144,16 @@ def create_note(request, space_name):
                                                             pk=request.POST['debateid'])
             note_form_uncommited.title = request.POST['title']
             note_form_uncommited.message = request.POST['message']
-
+            note_form_uncommited.column = get_object_or_404(Column,
+                                                            pk=request.POST['column'])
+            note_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
             note_form_uncommited.save()
-            msg = "The note has been created."
+
+            response_data = {}
+            response_data['id'] = note_form_uncommited.id
+            response_data['message'] = note_form_uncommited.message
+            response_data['title'] = note_form_uncommited.title
+            return HttpResponse(json.dumps(response_data), mimetype="application/json")
 
         else:
             msg = "The note form didn't validate. This fields gave errors: " \
@@ -154,27 +161,33 @@ def create_note(request, space_name):
     else:
         msg = "The petition was not POST."
         
-    return HttpResponse(msg)
-    
+    return HttpResponse(json.dumps(msg), mimetype="application/json")
+
+
 def update_note(request, space_name):
 
     """
-    Create a new note with default data.
+    Updated the current note with the POST data. UpdateNoteForm is an incomplete
+    form that doesn't handle some properties, only the important for the note editing.
     """
-    place = get_object_or_404(Space, url=space_name)
-    note = get_object_or_404(Note, pk=request.POST['noteid'])
-    # We are not using the request.POSt for the form since
-    # it's incomplete and destroys information.
-    note_form = UpdateNoteForm(request.POST or None, instance=note)
-    msg = "Nothing to save."
-        
-    if request.method == "POST" and request.is_ajax:        
+
+    if request.method == "GET" and request.is_ajax:
+        note = get_object_or_404(Note, pk=request.GET['noteid'])
+
+        response_data = {}
+        response_data['title'] = note.title
+        response_data['message'] = note.message
+
+        return HttpResponse(json.dumps(response_data), mimetype="application/json")
+
+    if request.method == "POST" and request.is_ajax:
+        note = get_object_or_404(Note, pk=request.POST['noteid'])
+        note_form = UpdateNoteForm(request.POST or None, instance=note)
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
-            note_form_uncommited.column = get_object_or_404(Column, pk=request.POST['column'])
-            note_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
             note_form_uncommited.title = request.POST['title']
             note_form_uncommited.message = request.POST['message']
+            note_form_uncommited.last_mod_author = request.user
         
             note_form_uncommited.save()
             msg = "The note has been updated."
@@ -185,6 +198,31 @@ def update_note(request, space_name):
         
     return HttpResponse(msg)
 
+def update_position(request, space_name):
+
+    """
+    This view saves the new note position in the debate board. Instead of reloading
+    all the note form with all the data, we use the partial form "UpdateNotePosition"
+    which only handles the column and row of the note.
+    """
+    note = get_object_or_404(Note, pk=request.POST['noteid'])
+    position_form = UpdateNotePosition(request.POST or None, instance=note)
+
+    if request.method == "POST" and request.is_ajax:
+        if position_form.is_valid():
+            position_form_uncommited = position_form.save(commit=False)
+            position_form_uncommited.column = get_object_or_404(Column, pk=request.POST['column'])
+            position_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
+
+            position_form_uncommited.save()
+            msg = "The note has been updated."
+        else:
+            msg = "There has been an error validating the form."
+    else:
+        msg = "There was some error in the petition."
+
+    return HttpResponse(msg)
+
 
 def delete_note(request, space_name):
 
@@ -192,27 +230,13 @@ def delete_note(request, space_name):
     Deletes a note object.
     """
     note = get_object_or_404(Note, noteid=request.POST['noteid'])
-    
+
     if note.pub_author == request.user:
         note.delete()
         return HttpResponse("The note has been deleted.")
-    
+
     else:
         return HttpResponse("You're not the author of the note. Can't delete.")
-
-
-def view_debate(request, space_name, debate_id):
-    """
-
-    """
-    newnote_form = NoteForm(request.POST or None)
-
-    if request.method =="POST":
-        if newnote_form.is_valid():
-            newnote_form_uncommited = newnote_form.save(commit=False)
-            newnote_form_uncommited.author = request.user
-
-            newnote_form_uncommited.save()
 
 
 class ViewDebate(DetailView):
@@ -221,14 +245,14 @@ class ViewDebate(DetailView):
     """
     context_object_name = 'debate'
     template_name = 'debate/debate_view.html'
-    
+
     def get_object(self):
         debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        return debate    
-    
+        return debate
+
     def get_context_data(self, **kwargs):
         """
-        
+
         """
         context = super(ViewDebate, self).get_context_data(**kwargs)
         columns = Column.objects.all().filter(debate=self.kwargs['debate_id'])
@@ -241,7 +265,7 @@ class ViewDebate(DetailView):
         except:
             last_note = 0
 
-        context['get_place'] = current_space  
+        context['get_place'] = current_space
         context['notes'] = notes
         context['columns'] = columns
         context['rows'] = rows
@@ -249,7 +273,7 @@ class ViewDebate(DetailView):
             context['lastnote'] = 0
         else:
             context['lastnote'] = last_note.pk
-        
+
         return context
 
 
@@ -258,17 +282,17 @@ class ListDebates(ListView):
     Return a list of debates for the current space.
     """
     paginate_by = 10
-    
+
     def get_queryset(self):
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         debates = Debate.objects.all().filter(space=current_space)
-        
+
         # Here must go a validation so a user registered to the space
         # can always see the debate list. While an anonymous or not
         # registered user can't see anything unless the space is public
-        
+
         return debates
-        
+
     def get_context_data(self, **kwargs):
         context = super(ListDebates, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
