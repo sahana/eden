@@ -3047,13 +3047,17 @@ class S3PDFDataSource:
                                              non_xml_output=True,
                                              extended_comments=True
                                             )
-                else:
-                    # Virtual
-                    text = item[field.fieldname]
-                # some represents replace the data with an image which will
-                # then be lost by the strip_markup, so get back what we can
-                if text == "":
-                    text = item[field.name]
+                if text == "" or not field.field:
+                    # some represents replace the data with an image which will
+                    # then be lost by the strip_markup, so get back what we can
+                    tname = field.tname
+                    fname = field.fname
+                    if fname in item:
+                        text = item[fname]
+                    elif tname in item and fname in item[tname]:
+                        text = item[tname][fname]
+                    else:
+                        text = ""
                 row.append(text)
             data.append(row)
             rowNumber += 1

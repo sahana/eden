@@ -838,8 +838,8 @@ $(document).ready(function() {
 
             output = s3_rest_controller("inv", "send",
                                         method = "list",
-                                        rheader = rheader_dict[tablename])
-            output["title"] = s3.crud_strings[tablename]["title_display"]
+                                        rheader = rheader_dict[tablename],
+                                        title = s3.crud_strings[tablename]["title_display"])
 
             return output
         # ---------------------------------------------------------------------

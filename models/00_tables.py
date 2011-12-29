@@ -340,7 +340,7 @@ def address_fields():
             address_L0(),
            )
     return fields
-
+s3.address_fields = address_fields
 
 # Hide Address fields in Create forms
 # inc list_create (list_fields over-rides)
@@ -397,6 +397,7 @@ def address_onvalidation(form):
                                          feature=location,
                                          ids=False,
                                          names=True)
+s3.address_onvalidation = address_onvalidation
 
 def address_update(table, record_id):
     """

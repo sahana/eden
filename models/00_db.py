@@ -135,10 +135,6 @@ from s3.s3validators import *
 from s3.s3utils import *
 from s3.s3widgets import *
 
-# VITA
-vita = s3base.S3Vita()
-current.vita = vita
-
 # GIS Module
 gis = s3base.GIS()
 current.gis = gis

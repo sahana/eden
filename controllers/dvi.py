@@ -131,8 +131,9 @@ def body():
 
     s3mgr.configure("dvi_body", main="pe_label", extra="gender")
 
-    db.pr_note.status.readable = False
-    db.pr_note.status.writable = False
+    ntable = s3db.pr_note
+    ntable.status.readable = False
+    ntable.status.writable = False
 
     dvi_tabs = [(T("Recovery"), ""),
                 (T("Checklist"), "checklist"),

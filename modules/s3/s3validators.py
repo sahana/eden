@@ -37,6 +37,8 @@
 
 __all__ = ["single_phone_number_pattern",
            "multi_phone_number_pattern",
+           "s3_single_phone_requires",
+           "s3_phone_requires",
            "IS_LAT",
            "IS_LON",
            "IS_INT_AMOUNT",
@@ -82,6 +84,10 @@ phone_number_pattern = "\+?\s*[\s\-\.\(\)\d]+(?:(?: x| ext)\s?\d{1,5})?"
 single_phone_number_pattern = "%s$" % phone_number_pattern
 multi_phone_number_pattern = "%s(\s*(,|/|;)\s*%s)*$" % (phone_number_pattern,
                                                         phone_number_pattern)
+
+s3_single_phone_requires = IS_MATCH(single_phone_number_pattern)
+s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
+                             error_message=current.T("Invalid phone number!"))
 
 # -----------------------------------------------------------------------------
 class IS_LAT(object):

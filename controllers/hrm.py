@@ -57,11 +57,10 @@ def s3_menu_prep():
         org_filter()
 
     # Set mode
-    if session.s3.hrm.mode != "personal" and \
-       (ADMIN in roles or session.s3.hrm.orgs):
-        session.s3.hrm.mode = None
-    elif deployment_settings.get_security_policy() in (1, 2):
-        session.s3.hrm.mode = None
+    if session.s3.hrm.mode != "personal":
+        if (ADMIN in roles or session.s3.hrm.orgs) or \
+           deployment_settings.get_security_policy() in (1, 2):
+            session.s3.hrm.mode = None
     else:
         session.s3.hrm.mode = "personal"
 
