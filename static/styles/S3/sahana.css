@@ -1328,7 +1328,7 @@ div#last_update {
 }
 
 #menu_box_1 {
-	width: 660px;
+	width: auto;
 	float: left;
 }
 
@@ -1339,6 +1339,7 @@ div#last_update {
 #login_box {
 	width: 455px;
 	float: left;
+        clear: left;
 }
 
 #home #login_box div {
@@ -1355,12 +1356,15 @@ div#last_update {
 }
 
 #facility_box {
-	width: 150px;
+	width: auto;
 	float: right;
+        text-align: center;
+        clear: left;
 }
 
 #facility_box img {
-	margin: 8px 0 0 11px;
+	margin: 0;
+        margin-left: 2px;
 }
 
 #manage_facility_box {
@@ -1381,6 +1385,7 @@ div#last_update {
 	margin-left: 10px;
 	padding-bottom: 40px; */
     width: 455px;
+    clear: left;
 }
 
 #org_box #list_wrapper {

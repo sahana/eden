@@ -250,12 +250,15 @@ def cr_shelter_prep(r):
                 # Set defaults
                 db.pr_presence.datetime.default = request.utcnow
                 db.pr_presence.observer.default = s3_logged_in_person()
+                popts = s3db.pr_presence_opts
+                pcnds = s3db.pr_presence_conditions
                 cr_shelter_presence_opts = {
-                    vita.CHECK_IN: vita.presence_conditions[vita.CHECK_IN],
-                    vita.CHECK_OUT: vita.presence_conditions[vita.CHECK_OUT]}
+                    popts.CHECK_IN: pcnds[popts.CHECK_IN],
+                    popts.CHECK_OUT: pcnds[popts.CHECK_OUT]
+                }
                 db.pr_presence.presence_condition.requires = IS_IN_SET(
                     cr_shelter_presence_opts, zero=None)
-                db.pr_presence.presence_condition.default = vita.CHECK_IN
+                db.pr_presence.presence_condition.default = popts.CHECK_IN
                 # Change the Labels
                 s3.crud_strings.pr_presence = Storage(
                     title_create = T("Register Person"),

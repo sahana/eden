@@ -512,6 +512,7 @@ class S3ModelExtensions(object):
         """
 
         db = current.db
+        load = S3Model.table
 
         hooks = Storage()
         single = False
@@ -519,11 +520,10 @@ class S3ModelExtensions(object):
             tablename = table._tablename
         else:
             tablename = table
-            self.load(tablename)
-            if tablename not in db:
+            table = load(tablename)
+            if table is None:
                 # Primary table not defined
                 return None
-            table = db[tablename]
         if isinstance(names, str):
             single = True
             names = [names]
@@ -543,11 +543,11 @@ class S3ModelExtensions(object):
         components = Storage()
         for alias in hooks:
             hook = hooks[alias]
-            self.load(hook.tablename)
+            load(hook.tablename)
             if hook.tablename not in db:
                 continue
             if hook.linktable:
-                self.load(hook.linktable)
+                load(hook.linktable)
                 if hook.linktable not in db:
                     continue
             component = Storage(values=hook.values,
@@ -602,17 +602,17 @@ class S3ModelExtensions(object):
         """
 
         db = current.db
+        load = S3Model.table
 
         hooks = Storage()
         if hasattr(table, "_tablename"):
             tablename = table._tablename
         else:
             tablename = table
-            self.load(tablename)
-            if tablename not in db:
+            table = load(tablename)
+            if table is None:
                 # Primary table not defined
                 return False
-            table = db[tablename]
         h = self.components.get(tablename, None)
         if h:
             self.__get_hooks(hooks, h)

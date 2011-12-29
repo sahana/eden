@@ -325,10 +325,6 @@ def presence():
 
     # Settings suitable for use in Map Popups
 
-    # This filter should be added to the gis_layer_feature query
-    #response.s3.filter = ((table.presence_condition.belongs(vita.PERSISTANT_PRESENCE)) & \
-    #                      (table.closed == False))
-
     table.pe_id.readable = True
     table.pe_id.label = "Name"
     table.pe_id.represent = person_represent

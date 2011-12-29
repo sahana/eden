@@ -47,7 +47,7 @@ from s3tools import *
 from s3navigation import *
 
 # Model helpers
-from s3fields import FieldS3, S3ReusableField
+from s3fields import *
 from s3model import S3Model
 
 # Authentication, Authorization, Accounting
@@ -79,9 +79,6 @@ from s3gis import *
 
 # Messaging
 from s3msg import *
-
-# VITA Person Data Toolkit
-from s3vita import *
 
 # Tracking System
 from s3track import *

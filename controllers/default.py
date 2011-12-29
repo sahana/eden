@@ -414,15 +414,16 @@ def site():
         site_id = request.args[0]
         site_r = db.org_site[site_id]
         tablename = site_r.instance_type
-        query = (db[tablename].site_id == site_id)
-        id = db(query).select(db[tablename].id,
-                              limitby = (0, 1)).first().id
-        cf = tablename.split("_", 1)
-        redirect(URL(c = cf[0],
-                     f = cf[1],
-                     args = [id]))
-    else:
-        raise HTTP(404)
+        table = s3db.table(tablename)
+        if table:
+            query = (table.site_id == site_id)
+            id = db(query).select(db[tablename].id,
+                                  limitby = (0, 1)).first().id
+            cf = tablename.split("_", 1)
+            redirect(URL(c = cf[0],
+                         f = cf[1],
+                         args = [id]))
+    raise HTTP(404)
 
 # -----------------------------------------------------------------------------
 def message():
