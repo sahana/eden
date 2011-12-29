@@ -1,7 +1,5 @@
 #!/bin/python27/python.exe
 
-print "True"
-
 import os
 import datetime
 now = datetime.datetime.today()
