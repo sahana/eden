@@ -1245,9 +1245,13 @@ def gis_location_duplicate(job):
       If the record is a duplicate then it will set the job method to update
 
       Rules for finding a duplicate:
-       - Look for a record with the same name, ignoring case
-       - and, if one exists, the same level
-       - and, if one exists, the same parent
+       - If code is present in the import,
+            Look for a record with the same code, ignoring case
+       - If code2 is present instead,
+            Look for a record with the same code2, ignoring case
+       - Else, Look for a record with the same name, ignoring case
+            and, if level exists in the import, the same level
+            and, if parent exists in the import, the same parent
     """
     # ignore this processing if we have an id
     if job.id:
@@ -1257,19 +1261,27 @@ def gis_location_duplicate(job):
         name = "name" in job.data and job.data.name or None
         level = "level" in job.data and job.data.level or None
         parent = "parent" in job.data and job.data.parent or None
+        code = "code" in job.data and job.data.code or None
+        code2 = "code2" in job.data and job.data.code2 or None
 
         if not name:
             return
 
-        # todo check the the lat and lon if they exist
-        lat = "lat" in job.data and job.data.lat
-        lon = "lon" in job.data and job.data.lon
+        # @ToDo: check the the lat and lon if they exist?
+        #lat = "lat" in job.data and job.data.lat
+        #lon = "lon" in job.data and job.data.lon
 
-        query = (table.name.lower().like('%%%s%%' % name.lower()))
-        if parent:
-            query = query & (table.parent == parent)
-        if level:
-            query = query & (table.level == level)
+        if code:
+            query = (table.code.lower().like('%%%s%%' % code.lower()))
+        elif code2:
+            query = (table.code2.lower().like('%%%s%%' % code2.lower()))
+        else:
+            # Name is primary
+            query = (table.name.lower().like('%%%s%%' % name.lower()))
+            if parent:
+                query = query & (table.parent == parent)
+            if level:
+                query = query & (table.level == level)
 
         _duplicate = db(query).select(table.id,
                                       table.uuid,

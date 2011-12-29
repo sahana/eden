@@ -214,19 +214,25 @@ class S3Chart(object):
             offset += width + gap
         left = arange(cnt)
         lblAdjust = (1.0 - gap) * 0.5
-        # If we have 10 or less labels then display them
-        if cnt <= 20:
-            ax.set_xticks(left + lblAdjust)
-            try: # This function is only available with version 1.1 of matplotlib
-                ax.set_xticklabels(labels, rotation=-10)
-                ax.tick_params(labelsize=self.width)
-            except AttributeError:
-                newlabels = []
-                for label in labels:
-                    if len(label) > 12:
-                        label = label[0:10] + "..."
-                    newlabels.append(label)
-                ax.set_xticklabels(newlabels)
+        if cnt <= 3:
+            angle = 0
+        elif cnt <= 10:
+            angle = -10
+        elif cnt <= 20:
+            angle = -30
+        else:
+            angle = -45
+        ax.set_xticks(left + lblAdjust)
+        try: # This function is only available with version 1.1 of matplotlib
+            ax.set_xticklabels(labels, rotation=angle)
+            ax.tick_params(labelsize=self.width)
+        except AttributeError:
+            newlabels = []
+            for label in labels:
+                if len(label) > 12:
+                    label = label[0:10] + "..."
+                newlabels.append(label)
+            ax.set_xticklabels(newlabels)
         ax.set_title(title)
         if legendLabels != None:
             fig.legend(bars,

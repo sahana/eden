@@ -78,9 +78,9 @@ class S3XLS(S3Codec):
 
 
     # -------------------------------------------------------------------------
-    def encode(self, resource, list_fields=None, report_groupby=None):
+    def extractResource(self, resource, list_fields, report_groupby):
         """
-            Export a resource as Microsoft Excel spreadsheet
+            Extract the items from the resource
 
             @param resource: the resource
             @param list_fields: fields to include in list views
@@ -88,25 +88,10 @@ class S3XLS(S3Codec):
         """
 
         manager = current.manager
-
-        # Try import xlwt
-        try:
-            import xlwt
-        except ImportError:
-            manager.session.error = self.ERROR.XLWT_ERROR
-            redirect(URL(extension=""))
-
-        # Environment
-        db = current.db
-        session = current.session
         request = current.request
         response = current.response
-
-        # Date/Time formats from L10N deployment settings
-        settings = current.deployment_settings
-        date_format = S3XLS.dt_format_translate(settings.get_L10n_date_format())
-        time_format = S3XLS.dt_format_translate(settings.get_L10n_time_format())
-        datetime_format = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
+        s3 = response.s3
+        
 
         # List fields
         if not list_fields:
@@ -116,16 +101,25 @@ class S3XLS(S3Codec):
         list_fields = [f for f in list_fields if f not in indices]
 
         # Filter and orderby
-        if response.s3.filter is not None:
-            resource.add_filter(response.s3.filter)
+        if s3.filter is not None:
+            resource.add_filter(s3.filter)
         orderby = report_groupby
 
         # Retrieve the resource contents
         crud = resource.crud
         table = resource.table
         lfields, joins = crud.get_list_fields(table, list_fields)
-        fields = [f for f in lfields if f.show]
-        #headers = [f.label for f in lfields if f.show]
+
+        # Use the title_list CRUD string for the title
+        name = "title_list"
+        tablename = resource.tablename
+        crud_strings = s3.crud_strings.get(tablename, s3.crud_strings)
+        not_found = s3.crud_strings.get(name, request.function)
+        title = str(crud_strings.get(name, not_found))
+
+        headers = [f.label for f in lfields if f.show]
+        types = [f.field.type for f in lfields if f.show]
+
         items = crud.sqltable(fields=list_fields,
                               start=None,
                               limit=None,
@@ -135,81 +129,147 @@ class S3XLS(S3Codec):
 
         if items is None:
             items = []
+        return (title, types, headers, items)
+
+    # -------------------------------------------------------------------------
+    def encode(self, data_source, **attr):
+        """
+            Export data as a Microsoft Excel spreadsheet
+
+            @param data_source: the source of the data that is to be encoded
+                               as a spreadsheet. This may be:
+                               resource: the resource
+                               item:     a list of pre-fetched values
+                                         the headings are in the first row
+                                         the data types are in the second row
+            @param attr: dictionary of parameters:
+                 * title:          The main title of the report
+                 * list_fields:    Fields to include in list views
+                 * report_groupby: Used to create a grouping of the result:
+                                   either a Field object of the resource
+                                   or a string which matches a value in the heading
+                 * use_colour:     True to add colour to the cells. default True
+        """
+        # Try import xlwt
+        import datetime
+        try:
+            from xlrd.xldate import xldate_from_date_tuple, \
+                               xldate_from_time_tuple, \
+                               xldate_from_datetime_tuple
+            import xlwt
+        except ImportError:
+            current.session.error = self.ERROR.XLWT_ERROR
+            redirect(URL(extension=""))
+
+        # Get the attributes
+        title = attr.get("title") 
+        list_fields = attr.get("list_fields") 
+        report_groupby = attr.get("report_groupby")
+        use_colour = attr.get("use_colour",True)
+        # Extract the data from the data_source
+        if isinstance(data_source, (list,tuple)):
+            headers = data_source[0]
+            types = data_source[1]
+            items = data_source[2:]
+        else:
+            (title, types, headers, items) = self.extractResource(data_source, list_fields, report_groupby)
+
+        if report_groupby != None:
+            if isinstance(report_groupby, Field):
+                groupby_label = report_groupby.label
+            else:
+                groupby_label = report_groupby
+
+        # Environment
+        request = current.request
+        response = current.response
+
+        # Date/Time formats from L10N deployment settings
+        settings = current.deployment_settings
+        date_format = S3XLS.dt_format_translate(settings.get_L10n_date_format())
+        time_format = S3XLS.dt_format_translate(settings.get_L10n_time_format())
+        datetime_format = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
 
         # Initialize output
         output = StringIO()
 
         # Create the workbook and a sheet in it
         book = xlwt.Workbook(encoding="utf-8")
-        sheet1 = book.add_sheet(str(table))
+        # Length of the title Needs to be fixed...
+        sheet1 = book.add_sheet(str(title[0:10]))
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()
         styleLargeHeader.font.bold = True
         styleLargeHeader.font.height = 400
-        styleLargeHeader.alignment.horz = styleLargeHeader.alignment.HORZ_CENTER
-        styleLargeHeader.pattern.pattern = styleLargeHeader.pattern.SOLID_PATTERN
-        styleLargeHeader.pattern.pattern_fore_colour = S3XLS.LARGE_HEADER_COLOUR
+        if use_colour:
+            styleLargeHeader.alignment.horz = styleLargeHeader.alignment.HORZ_CENTER
+            styleLargeHeader.pattern.pattern = styleLargeHeader.pattern.SOLID_PATTERN
+            styleLargeHeader.pattern.pattern_fore_colour = S3XLS.LARGE_HEADER_COLOUR
+
+        styleNotes = xlwt.XFStyle()
+        styleNotes.font.italic = True
+        styleNotes.font.height = 160 # 160 Twips = 8point
+        styleNotes.num_format_str = datetime_format
 
         styleHeader = xlwt.XFStyle()
         styleHeader.font.bold = True
         styleHeader.num_format_str = datetime_format
-        styleHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
-        styleHeader.pattern.pattern_fore_colour = S3XLS.HEADER_COLOUR
+        if use_colour:
+            styleHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
+            styleHeader.pattern.pattern_fore_colour = S3XLS.HEADER_COLOUR
 
         styleSubHeader = xlwt.XFStyle()
         styleSubHeader.font.bold = True
-        styleSubHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
-        styleSubHeader.pattern.pattern_fore_colour = S3XLS.SUB_HEADER_COLOUR
+        if use_colour:
+            styleSubHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
+            styleSubHeader.pattern.pattern_fore_colour = S3XLS.SUB_HEADER_COLOUR
 
         styleOdd = xlwt.XFStyle()
-        styleOdd.pattern.pattern = styleOdd.pattern.SOLID_PATTERN
-        styleOdd.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[0]
+        if use_colour:
+            styleOdd.pattern.pattern = styleOdd.pattern.SOLID_PATTERN
+            styleOdd.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[0]
 
         styleEven = xlwt.XFStyle()
-        styleEven.pattern.pattern = styleEven.pattern.SOLID_PATTERN
-        styleEven.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[1]
+        if use_colour:
+            styleEven.pattern.pattern = styleEven.pattern.SOLID_PATTERN
+            styleEven.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[1]
 
         # Initialize counters
         rowCnt = 0
         colCnt = 0
 
         # Title row
-        currentRow = sheet1.row(rowCnt)
-        totalRows = len(fields)-1
+        totalCols = len(headers)-1
         if report_groupby != None:
-            totalRows -= 1
+            totalCols -= 1
 
-        # Use the title_list CRUD string for the title
-        name = "title_list"
-        s3 = response.s3
-        tablename = resource.tablename
-        crud_strings = s3.crud_strings.get(tablename, s3.crud_strings)
-        not_found = s3.crud_strings.get(name, request.function)
-        title = str(crud_strings.get(name, not_found))
-
-        if totalRows > 0:
-            sheet1.write_merge(rowCnt, rowCnt, 0, totalRows-1, title, styleLargeHeader)
-        currentRow.write(totalRows, request.now, styleHeader)
+        if totalCols > 0:
+            sheet1.write_merge(rowCnt, rowCnt, 0, totalCols, str(title),
+                               styleLargeHeader)
+        currentRow = sheet1.row(rowCnt)
         currentRow.height = 440
+        rowCnt += 1
+        currentRow = sheet1.row(rowCnt)
+        currentRow.write(totalCols, request.now, styleNotes)
         rowCnt += 1
         currentRow = sheet1.row(rowCnt)
 
         # Header row
         fieldWidth=[]
-        for field in fields:
+        for label in headers:
             if report_groupby != None:
-                if field.label == report_groupby.label:
+                if label == groupby_label:
                     continue
-            currentRow.write(colCnt, str(field.label), styleHeader)
-            width=len(field.label)*S3XLS.COL_WIDTH_MULTIPLIER
+            currentRow.write(colCnt, str(label), styleHeader)
+            width = len(label) * S3XLS.COL_WIDTH_MULTIPLIER
             fieldWidth.append(width)
             sheet1.col(colCnt).width = width
             colCnt += 1
 
         # fix the size of the last column to display the date
         if 16*S3XLS.COL_WIDTH_MULTIPLIER > width:
-            sheet1.col(totalRows).width = 16*S3XLS.COL_WIDTH_MULTIPLIER
+            sheet1.col(totalCols).width = 16 * S3XLS.COL_WIDTH_MULTIPLIER
 
         subheading = None
         for item in items:
@@ -221,7 +281,7 @@ class S3XLS(S3Codec):
                 style = styleEven
             else:
                 style = styleOdd
-            for field in fields:
+            for label in headers:
                 represent = item[colCnt]
                 # Strip away markup from representation
                 try:
@@ -235,10 +295,10 @@ class S3XLS(S3Codec):
                 except:
                     pass
                 if report_groupby != None:
-                    if field.label == report_groupby.label:
+                    if label == groupby_label:
                         if subheading != represent:
                             subheading = represent
-                            sheet1.write_merge(rowCnt, rowCnt, 0, totalRows,
+                            sheet1.write_merge(rowCnt, rowCnt, 0, totalCols,
                                                represent, styleSubHeader)
                             rowCnt += 1
                             currentRow = sheet1.row(rowCnt)
@@ -247,31 +307,72 @@ class S3XLS(S3Codec):
                             else:
                                 style = styleOdd
                         continue
-                if field.colname:
-                    tab, col = field.colname.split(".")
-                try:
-                    # Check for Date formats
-                    coltype = db[tab][col].type
-                    if coltype == "date":
+                coltype=types[colCnt]
+                value = unicode(represent)
+                if coltype == "date":
+                    try:
+                        format = str(settings.get_L10n_date_format())
+                        cell_datetime = datetime.datetime.strptime(value,
+                                                                   format)
+                        date_tuple = (cell_datetime.year,
+                                      cell_datetime.month,
+                                      cell_datetime.day
+                                     )
+                        value = xldate_from_date_tuple(date_tuple,0)
                         style.num_format_str = date_format
-                    elif coltype == "datetime":
+                    except:
+                        pass
+                elif coltype == "datetime":
+                    try:
+                        format = str(settings.get_L10n_date_format())
+                        cell_datetime = datetime.datetime.strptime(value,
+                                                                   format)
+                        date_tuple = (cell_datetime.year,
+                                      cell_datetime.month,
+                                      cell_datetime.day,
+                                      cell_datetime.hour,
+                                      cell_datetime.minute,
+                                      cell_datetime.second,
+                                     )
+                        value = xldate_from_datetime_tuple(date_tuple,0)
                         style.num_format_str = datetime_format
-                    elif coltype == "time":
+                    except:
+                        pass
+                elif coltype == "time":
+                    try:
+                        format = str(settings.get_L10n_date_format())
+                        cell_datetime = datetime.datetime.strptime(value,
+                                                                   format)
+                        date_tuple = (cell_datetime.hour,
+                                      cell_datetime.minute,
+                                      cell_datetime.second,
+                                     )
+                        value = xldate_from_time_tuple(date_tuple)
                         style.num_format_str = time_format
-                except:
-                    pass
-                currentRow.write(colCnt, unicode(represent), style)
-                width = len(unicode(represent))*S3XLS.COL_WIDTH_MULTIPLIER
+                    except:
+                        pass
+                elif coltype == "integer":
+                    try:
+                        value = int(value)
+                    except:
+                        pass
+                elif coltype == "double":
+                    try:
+                        value = float(value)
+                    except:
+                        pass
+                currentRow.write(colCnt, value, style)
+                width = len(unicode(represent)) * S3XLS.COL_WIDTH_MULTIPLIER
                 if width > fieldWidth[colCnt]:
                     fieldWidth[colCnt] = width
                     sheet1.col(colCnt).width = width
                 colCnt += 1
         sheet1.panes_frozen = True
-        sheet1.horz_split_pos = 2
+        sheet1.horz_split_pos = 3
         book.save(output)
 
         # Response headers
-        filename = "%s_%s.xls" % (request.env.server_name, str(table))
+        filename = "%s_%s.xls" % (request.env.server_name, str(title))
         disposition = "attachment; filename=\"%s\"" % filename
         response.headers["Content-Type"] = contenttype(".xls")
         response.headers["Content-disposition"] = disposition

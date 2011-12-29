@@ -53,7 +53,7 @@
             <data field="competion_qstn"><xsl:value-of select="col[@field='Complete Question']"/></data>
             <data field="date_qstn"><xsl:value-of select="col[@field='Date Question']"/></data>
             <data field="time_qstn"><xsl:value-of select="col[@field='Time Question']"/></data>
-            <data field="location_qstn"><xsl:value-of select="col[@field='Location Question']"/></data>
+            <data field="location_detail"><xsl:value-of select="col[@field='Location Detail']"/></data>
             <data field="priority_qstn"><xsl:value-of select="col[@field='Priority Question']"/></data>
         </resource>
 

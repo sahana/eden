@@ -339,6 +339,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         self.attr = {}
         self.webwidget = StringWidget
         self.typeDescription = None
+        self.xlsWidgetSize = (6, 0)
         # The instance variables when the widget is associated with a question
         self.id = question_id
         self.question = None
@@ -500,6 +501,13 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         """
         return DIV(self.typeDescription, _class="surveyWidgetType")
 
+    def db_type(self):
+        """
+            Return the real database table type for this question
+            This assumes that the value is valid 
+        """
+        return "string"
+
     def _Tquestion(self, langDict):
         """
             Function to translate the question using the dictionary passed in
@@ -521,14 +529,24 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         """
         self._store_metadata()
         if "Label" in style and style["Label"]:
-            cell = MatrixElement(row, col, self._Tquestion(langDict),
+            _TQstn = self._Tquestion(langDict)
+            cell = MatrixElement(row,
+                                 col,
+                                 _TQstn,
                                  style="styleSubHeader")
+            maxWidth = 20
+            mergeLH = maxWidth/2
+            mergeLV = len(_TQstn)/maxWidth
+            cell.merge(mergeLH,mergeLV)
             matrix.addElement(cell)
             if "LabelLeft" in style and style["LabelLeft"]:
-                col += 1
+                col += 1 + mergeLH
             else:
-                row += 1
-        cell = MatrixElement(row,col,"", style="styleInput")
+                row += 1 + mergeLV
+        cell = MatrixElement(row, col, "", style="styleInput")
+        mergeWH = self.xlsWidgetSize[0]
+        mergeWV = self.xlsWidgetSize[1]
+        cell.merge(mergeWH,mergeWV)
         matrix.addElement(cell)
         if answerMatrix != None:
             answerRow = answerMatrix.lastRow+1
@@ -539,8 +557,12 @@ class S3QuestionTypeAbstractWidget(FormWidget):
                                  self.rowcol_to_cell(row, col),
                                  style="styleText")
             answerMatrix.addElement(cell)
-        return (row+1, col+1)
-
+        if "LabelLeft" in style and style["LabelLeft"]:
+            return (row + 1 + mergeLV + mergeWV,
+                    col + 1 + mergeWH)
+        else:
+            return (row + 1 + mergeLV + mergeWV,
+                    col + 1 + max(mergeLH, mergeWH))
 
     ######################################################################
     # Functions not fully implemented or used
@@ -603,6 +625,7 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.webwidget = TextWidget
         self.typeDescription = T("Long Text")
+        self.xlsWidgetSize = (12, 5)
 
 ##########################################################################
 # Class S3QuestionTypeStringWidget
@@ -627,6 +650,7 @@ class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
         T = current.T
         self.metalist.append("Length")
         self.typeDescription = T("Short Text")
+        self.xlsWidgetSize = (12, 0)
 
     def display(self, **attr):
         if "length" in self.qstn_metadata:
@@ -693,6 +717,16 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
             else:
                 return round(result, len(parts[2]))
 
+    def db_type(self):
+        """
+            Return the real database table type for this question
+            This assumes that the value is valid 
+        """
+        format = self.get("Format", "n")
+        if format == "n":
+            return "integer"
+        else:
+            return "double"
 
     ######################################################################
     # Functions not fully implemented or used
@@ -742,13 +776,8 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
         from s3widgets import S3DateWidget
         value = self.getAnswer()
         widget = S3DateWidget()
-#        self.field.name = self.question.code
         input = widget(self.field, value, **self.attr)
         return self.layout(self.question.name, input, **attr)
-#        length = 30
-#        attr["_size"] = length
-#        attr["_maxlength"] = length
-#        return S3QuestionTypeAbstractWidget.display(self, **attr)
 
     def formattedAnswer(self, data):
         """
@@ -904,19 +933,29 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                       langDict=dict(),
                       answerMatrix=None,
                       style={"Label" : True,
-                             "LabelLeft" : False
+                             "LabelLeft" : False,
+                             "SingleRow" : False
                             }
                      ):
         """
             Function to write out basic details to the matrix object
         """
         self._store_metadata()
+        maxWidth = 20
+        mergeH = maxWidth/2
+        mergeV = 0
         if "Label" in style and style["Label"]:
-            cell = MatrixElement(row, col, self._Tquestion(langDict),
-                                 style="styleSubHeader")
+            _TQstn = self._Tquestion(langDict)
+            cell = MatrixElement(row,
+                                 col,
+                                 _TQstn,
+                                 style="styleSubHeader"
+                                )
+            mergeV = len(_TQstn) / maxWidth
+            cell.merge(mergeH, mergeV)
             matrix.addElement(cell)
             if "LabelLeft" in style and style["LabelLeft"]:
-                col += 1
+                col += 1 + mergeH
                 if self.selectionInstructions != None:
                     cell = MatrixElement(row,
                                          col,
@@ -927,43 +966,61 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                     matrix.addElement(cell)
                     col += 1
             else:
-                cell.merge(horizontal=1)
-                row += 1
+                row += 1 + mergeV
                 if self.selectionInstructions != None:
-                    cell = MatrixElement(row, col,
+                    cell = MatrixElement(row,
+                                         col,
                                          survey_T(self.selectionInstructions,
                                                   langDict),
                                          style="styleInstructions")
+                    mergeV = len(self.selectionInstructions) / maxWidth
+                    cell.merge(mergeH,mergeV)
                     matrix.addElement(cell)
-                    cell.merge(horizontal=1)
-                    row += 1
+                    row += 1 + mergeV
         list = self.getList()
         if answerMatrix != None:
             answerRow = answerMatrix.lastRow+1
             cell = MatrixElement(answerRow, 0, self.question["code"],
                                  style="styleSubHeader")
             answerMatrix.addElement(cell)
-            cell = MatrixElement(answerRow, 1, len(list),
+            cell = MatrixElement(answerRow,
+                                 1,
+                                 len(list),
                                  style="styleSubHeader")
             answerMatrix.addElement(cell)
             cell = MatrixElement(answerRow, 2, "|#|".join(list),
                                  style="styleSubHeader")
             answerMatrix.addElement(cell)
             answerCol = 3
+        if style["SingleRow"]:
+            mergeRH = (mergeH - len(list)) / len(list)
+        else:
+            mergeRH = mergeH
         for option in list:
-            cell = MatrixElement(row, col, survey_T(option, langDict),
+            _TQstn = survey_T(option, langDict)
+            cell = MatrixElement(row,
+                                 col,
+                                 _TQstn,
                                  style="styleText")
+            mergeV = len(_TQstn)/maxWidth
+            cell.merge(mergeRH-1, mergeV)
             matrix.addElement(cell)
-            cell = MatrixElement(row, col+1,"", style="styleInput")
+            cell = MatrixElement(row, col+mergeRH, "", style="styleInput")
             matrix.addElement(cell)
             if answerMatrix != None:
                 cell = MatrixElement(answerRow, answerCol,
-                                     self.rowcol_to_cell(row, col + 1),
+                                     self.rowcol_to_cell(row, col + mergeRH),
                                      style="styleText")
                 answerMatrix.addElement(cell)
                 answerCol += 1
-            row += 1
-        return (row, col+2)
+            if style["SingleRow"]:
+                col += 2 + mergeRH
+            else:
+                row += 1 + mergeV
+        if style["SingleRow"]:
+            return (row + 1 + mergeV, col)
+        else:
+            return (row, col+mergeH+1)
 
 
     ######################################################################
@@ -1011,9 +1068,29 @@ class S3QuestionTypeOptionYNWidget(S3QuestionTypeOptionWidget):
 
     def getList(self):
         return ["Yes", "No"]
-#        T = current.T
-#        return [T("Yes"), T("No")]
 
+    def writeToMatrix(self,
+                      matrix,
+                      row,
+                      col,
+                      langDict=dict(),
+                      answerMatrix=None,
+                      style={}
+                     ):
+        """
+            Dummy function that doesn't write anything to the matrix, 
+            because it is handled by the Grid question type
+        """
+        style["Label"]=True
+        style["SingleRow"]=True
+        return S3QuestionTypeOptionWidget.writeToMatrix(self,
+                                                        matrix,
+                                                        row,
+                                                        col,
+                                                        langDict,
+                                                        answerMatrix,
+                                                        style
+                                                       )
 
 ##########################################################################
 # Class S3QuestionTypeOptionYNDWidget
@@ -1125,16 +1202,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-        Hierarchy: If the hierarchy value is set then extra questions will be
-                   displayed. These relate to the following json values:
-                    * Country - L0
-                    * Province - L1
-                    * District - L2
-                    * Community - (any of L1-L5)
-                    * alternative - (local or commonly used name)
-                    * Latitude
-                    * Longitude
-                   It will use deployment_settings.gis.location_hierarchy
         Parent:    Indicates which question is used to indicate the parent
                    This is used as a simplified Hierarchy.
 
@@ -1147,25 +1214,25 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         T = current.T
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.typeDescription = T("Location")
-        # @todo:  modify so that the metdata can define which bits are displayed
-        settings = current.deployment_settings
-        self.hierarchyElements = [str(settings.gis.location_hierarchy["L0"]),
-                                 str(settings.gis.location_hierarchy["L1"]),
-                                 str(settings.gis.location_hierarchy["L2"]),
-                                 str(settings.gis.location_hierarchy["L3"]),
-                                 str(settings.gis.location_hierarchy["L4"]),
-                                 "Latitude",
-                                 "Longitude",
-                                ]
-        self.hierarchyAnswers = ["L0",
-                                 "L1",
-                                 "L2",
-                                 "L3",
-                                 "L4",
-                                 "Latitude",
-                                 "Longitude",
-                                ]
-        self.locationLabel = self.hierarchyAnswers[0:-2]
+#        # @todo:  modify so that the metdata can define which bits are displayed
+#        settings = current.deployment_settings
+#        self.hierarchyElements = [str(settings.gis.location_hierarchy["L0"]),
+#                                 str(settings.gis.location_hierarchy["L1"]),
+#                                 str(settings.gis.location_hierarchy["L2"]),
+#                                 str(settings.gis.location_hierarchy["L3"]),
+#                                 str(settings.gis.location_hierarchy["L4"]),
+#                                 "Latitude",
+#                                 "Longitude",
+#                                ]
+#        self.hierarchyAnswers = ["L0",
+#                                 "L1",
+#                                 "L2",
+#                                 "L3",
+#                                 "L4",
+#                                 "Latitude",
+#                                 "Longitude",
+#                                ]
+#        self.locationLabel = self.hierarchyAnswers[0:-2]
 
     def getAnswer(self):
         """
@@ -1182,13 +1249,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             any other of the following properties.
             {'raw':'original value',
              'id':numerical value referencing a record on gis_location table,
-             'alternative':'alternative name for location',
              'parent':'name of the parent location'
-             'L0':L0 Name
-             'L1':L1 Name
-             'L2':L2 Name
-             'L3':L3 Name
-             'L4':L4 Name
              'Latitude':numeric
              'Longitude':numeric
             }
@@ -1221,30 +1282,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             This displays the widget on a web form. It uses the layout
             function to control how the widget is displayed
         """
-        hierarchy = self.get("Hierarchy")
-        if hierarchy == None:
-            return S3QuestionTypeAbstractWidget.display(self, **attr)
-        self.initDisplay(**attr)
-        try:
-            fullAnswer = self.getAnswerListFromJSON(self.question.answer)
-        except:
-            fullAnswer = {"L4":self.getAnswer()}
-        if not isinstance(fullAnswer, dict):
-            fullAnswer = {"L4":fullAnswer}
-        table = TABLE()
-        cnt = 0
-        for element in self.hierarchyAnswers:
-            if element in fullAnswer:
-                value = fullAnswer[element]
-            else:
-                value = ""
-            qstnCode = "%s(%s)" % (self.question.code,element)
-            self.attr["_name"] = qstnCode
-            input = self.webwidget.widget(self.field, value, **self.attr)
-            table.append(self.layout(self.hierarchyElements[cnt], input,
-                                     **attr))
-            cnt += 1
-        return self.layout(self.question.name, table, **attr)
+        return S3QuestionTypeAbstractWidget.display(self, **attr)
 
     def getLocationRecord(self, complete_id, answer):
         """
@@ -1258,42 +1296,25 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
                 rowList = self.getAnswerListFromJSON(answer)
             except:
                 query = (gtable.name == answer)
-                record.key = answer
+                key = answer
             else:
                 if "id" in rowList:
                     query = (gtable.id == rowList["id"])
-                    record.key = rowList["id"]
+                    key = rowList["id"]
                 else:
-                    (query, record) = self.buildQuery(rowList)
-            record.result = current.db(query).select(gtable.name,
-                                             gtable.lat,
-                                             gtable.lon,
-                                            )
+                    (query, key) = self.buildQuery(rowList)
+            record = current.db(query).select(gtable.name,
+                                              gtable.lat,
+                                              gtable.lon,
+                                             )
             record.complete_id = complete_id
-            if len(record.result) == 0:
-                msg = "Unknown Location %s, %s, %s" % \
-                            (answer, query, record.key)
+            record.key = key
+            if len(record.records) == 0:
+                msg = "Unknown Location %s, %s, %s" %(answer, query, record.key)
                 _debug(msg)
             return record
         else:
             return None
-
-    def parseForm(self, vars, code):
-        """
-            Get the location hierarchy data from the different html input tags
-            and merge them into a JSON string to be saved in survey_answer
-        """
-        hierarchy = self.get("Hierarchy")
-        answerList = {}
-        if hierarchy != None:
-            for element in self.hierarchyAnswers:
-                index = "%s(%s)" % (code,element)
-                if index in vars and vars[index] != "":
-                    answerList[element] = vars[index]
-            jsonAnswer = json.dumps(answerList)
-            jsonValue = unescape(jsonAnswer, {'"': "'"})
-            return jsonValue
-        return None
 
 
     def onaccept(self, value):
@@ -1308,20 +1329,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         except:
             return value
         newValue = {}
-        hierarchy = self.get("Hierarchy")
-        if hierarchy != None:
-            prevLocation = ""
-            lastLocation = ""
-            for element in self.hierarchyAnswers:
-                if element in answerList:
-                    newValue[element] = answerList[element]
-                    if element in self.locationLabel:
-                        prevLocation = lastLocation
-                        lastLocation = answerList[element]
-                        # @todo: need to see if gis_location exists if NOT add
-            # @todo: may need to add/update lat & lon to last location
-            newValue["raw"] = lastLocation
-            newValue["parent"] = prevLocation
         jsonAnswer = json.dumps(newValue)
         jsonValue = unescape(jsonAnswer, {'"': "'"})
         return jsonValue
@@ -1332,21 +1339,18 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
 
             @todo: Extend this to test the L0-L4 values
         """
-        db = current.db
-        record = Storage()
-        gtable = db.gis_location
+        gtable = current.db.gis_location
         if "alternative" in rowList:
             query = (gtable.name == rowList["alternative"])
-            record.key = rowList["alternative"]
+            key = rowList["alternative"]
         else:
             query = (gtable.name == rowList["raw"])
-            record.key = rowList["raw"]
+            key = rowList["raw"]
         if "Parent" in rowList:
-            q = gtable.name == rowList["Parent"]
-            parent_query = db(q).select(gtable.id)
+            parent_query = current.db(gtable.name == rowList["Parent"]).select(gtable.id)
             query = query & (gtable.parent.belongs(parent_query))
-            record.key += rowList["Parent"]
-        return (query, record)
+            key += rowList["Parent"]
+        return (query, key)
 
     def getAnswerListFromJSON(self, answer):
         """
@@ -1359,89 +1363,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         jsonAnswer = unescape(jsonAnswer, {"'": '"'})
         return json.loads(jsonAnswer)
 
-    def writeToMatrix(self,
-                      matrix,
-                      row,
-                      col,
-                      langDict=dict(),
-                      answerMatrix=None,
-                      style={"Label": True
-                            ,"LabelLeft" : True
-                            },
-                      ):
-        """
-            Function to write out basic details to the matrix object
-        """
-        self._store_metadata()
-        hierarchy = self.get("Hierarchy")
-        if hierarchy == None:
-            return S3QuestionTypeAbstractWidget.writeToMatrix(self,
-                                                              matrix,
-                                                              row,
-                                                              col,
-                                                              langDict,
-                                                              answerMatrix,
-                                                              style)
-        # The full hierarchy needs to be provided
-        # First display the question as a subtitle
-        cell = MatrixElement(row,
-                             col,
-                             self._Tquestion(langDict),
-                             style="styleSubHeader"
-                            )
-        matrix.addElement(cell)
-        row += 1
-        answerPosn = 3
-        originalCol = col
-        if answerMatrix != None:
-            answerRow = answerMatrix.lastRow+1
-            cell = MatrixElement(answerRow,
-                                 0,
-                                 self.question["code"],
-                                 style="styleSubHeader"
-                                )
-            answerMatrix.addElement(cell)
-            cell = MatrixElement(answerRow,
-                                 1,
-                                 len(self.hierarchyAnswers),
-                                 style="styleSubHeader"
-                                )
-            answerMatrix.addElement(cell)
-            cell = MatrixElement(answerRow,
-                                 2,
-                                 "|#|".join(self.hierarchyAnswers),
-                                 style="styleSubHeader"
-                                 )
-            answerMatrix.addElement(cell)
-        for value in self.hierarchyElements:
-            col = originalCol
-            if "Label" in style and style["Label"]:
-                cell = MatrixElement(row,
-                                     col,
-                                     survey_T(str(value), langDict),
-                                     style="styleSubHeader"
-                                    )
-                matrix.addElement(cell)
-                if "LabelLeft" in style and style["LabelLeft"]:
-                    col += 1
-                else:
-                    row += 1
-            cell = MatrixElement(row,
-                                 col,
-                                 "",
-                                 style="styleInput"
-                                )
-            matrix.addElement(cell)
-            if answerMatrix != None:
-                cell = MatrixElement(answerRow,
-                                     answerPosn,
-                                     self.rowcol_to_cell(row, col),
-                                     style="styleText"
-                                    )
-                answerMatrix.addElement(cell)
-                answerPosn += 1
-            row += 1
-        return (row+1, col+1)
 
     ######################################################################
     # Functions not fully implemented or used
@@ -1504,20 +1425,22 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         except:
             self.typeDescription = T("Link")
 
-    def display(self, **attr):
+    def realWidget(self):
         type = self.get("Type")
         realWidget = survey_question_type[type]()
         realWidget.question = self.question
         realWidget.qstn_metadata = self.qstn_metadata
-        return realWidget.display(**attr)
+        return realWidget
+
+    def display(self, **attr):
+        return self.realWidget().display(**attr)
 
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
         """
         type = self.get("Type")
-        realWidget = survey_question_type[type]()
-        return realWidget.onaccept(value)
+        return self.realWidget().onaccept(value)
 
     def getParentType(self):
         self._store_metadata()
@@ -1532,6 +1455,13 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
 
     def fullName(self):
         return self.question.name
+
+    def db_type(self):
+        """
+            Return the real database table type for this question
+            This assumes that the value is valid 
+        """
+        return self.realWidget().db_type()
 
     ######################################################################
     # Functions not fully implemented or used
@@ -1836,17 +1766,27 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
                                          subHeading)
         return self.question.name
 
-    def subDisplay(self, **attr):
-        S3QuestionTypeAbstractWidget.display(self, **attr)
+    def realWidget(self):
         type = self.get("Type")
         realWidget = survey_question_type[type]()
         realWidget.question = self.question
         realWidget.qstn_metadata = self.qstn_metadata
-        return realWidget.display(question_id=self.id, display="Control Only")
+        return realWidget
+
+    def subDisplay(self, **attr):
+        S3QuestionTypeAbstractWidget.display(self, **attr)
+        return self.realWidget().display(question_id=self.id, display = "Control Only")
 
     def getParentType(self):
         self._store_metadata()
         return self.get("Type")
+
+    def db_type(self):
+        """
+            Return the real database table type for this question
+            This assumes that the value is valid 
+        """
+        return self.realWidget().db_type()
 
     def writeToMatrix(self,
                       matrix,
@@ -2292,8 +2232,14 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         priorityList = priorityObj.range
         priority = 0
         band = [""]
+        cnt = 0
         for limit in priorityList:
-            band.append(int(self.mean + limit * self.std))
+            value = int(self.mean + limit * self.std)
+            if value < 0:
+                value = 0
+                priorityList[cnt] = - self.mean / self.std
+            band.append(value)
+            cnt += 1
         return band
 
     def chartButton(self, series_id):
@@ -2359,8 +2305,7 @@ class S3OptionAnalysis(S3AbstractAnalysis):
         self.listp = {}
         if self.cnt != 0:
             for (key, value) in self.list.items():
-                self.listp[key] = "%3.1f%%" % \
-                    round((100.0 * value) / self.cnt, 1)
+                self.listp[key] = "%3.1f%%" % round((100.0 * value) / self.cnt,1)
 
     def drawChart(self, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
@@ -2652,8 +2597,10 @@ class S3LinkAnalysis(S3AbstractAnalysis):
         valueMap = {}
         for answer in self.answerList:
             complete_id = answer["complete_id"]
-            parent_answer = linkWidget.loadAnswer(complete_id, parent_qid,
-                                                  forceDB=True)
+            parent_answer = linkWidget.loadAnswer(complete_id,
+                                                  parent_qid,
+                                                  forceDB=True
+                                                 )
             if relation == "groupby":
                 # @todo: check for different values
                 valueMap.update({parent_answer:answer})
