@@ -993,7 +993,8 @@ class S3CRUD(S3Method):
             exporter = S3Exporter()
             return exporter.xls(self.resource,
                                 list_fields=list_fields,
-                                report_groupby=report_groupby)
+                                report_groupby=report_groupby,
+                                **attr)
 
         elif representation == "json":
             exporter = S3Exporter()

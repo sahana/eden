@@ -48,6 +48,18 @@ if deployment_settings.has_module(module):
             4: T("Master")
         }
 
+        # The location hierarchy strings are added here (rather than using
+        # the system settings) because they will be dynamically
+        # translated when the spreadsheet is printed
+        hierarchyElements = {"L0":"Country",
+                             "L1":"State",
+                             "L2":"City",
+                             "L3":"Town",
+                             "L4":"Neighborhood",
+                             "Lat":"Latitude",
+                             "Lon":"Longitude",
+                            }
+
         # ==========================
         # Data Base Tables
         # ==========================
@@ -93,28 +105,32 @@ if deployment_settings.has_module(module):
                                          represent = lambda index: survey_template_status[index],
                                          readable=True,
                                          writable=False),
-                                   # Each of the following are links to questions in the template
-                                   # The link is based on the question code a char(16) unique field
+                                   # Standard questions which may belong to all template
+                                   # competion_qstn: who completed the assessment
+                                   # date_qstn: when it was completed (date)
+                                   # time_qstn: when it was completed (time)
+                                   # location_detail: json of the location question
+                                   #                  May consist of any of the following:
+                                   #                  L0, L1, L2, L3, L4, Lat, Lon
                                    Field("competion_qstn",
                                          "string",
-                                         length=16,
-                                         label = T("Who Completed the Assessment"),
+                                         length=200,
                                         ),
                                    Field("date_qstn",
                                          "string",
-                                         length=16,
-                                         label = T("Date assessment was completed"),
+                                         length=200,
                                         ),
                                    Field("time_qstn",
                                          "string",
-                                         length=16,
-                                         label = T("Time assessment was completed"),
+                                         length=200,
                                         ),
-                                   Field("location_qstn",
+                                   Field("location_detail",
                                          "string",
-                                         length=16,
-                                         label = T("Where assessment was completed"),
+                                         length=200,
                                         ),
+                                   # The priority question is the default question used in the map
+                                   # to determine to priority need of each point.
+                                   # The data is stored as the question code.
                                    Field("priority_qstn",
                                          "string",
                                          length=16,
@@ -141,7 +157,6 @@ if deployment_settings.has_module(module):
             msg_record_deleted = T("Assessment Template deleted"),
             msg_list_empty = T("No Assessment Templates currently registered"))
 
-
         def template_onvalidate(form):
             """
                 It is not valid to re-import a template that already has a
@@ -152,6 +167,57 @@ if deployment_settings.has_module(module):
             if template != None and template.status > 1:
                 return False
             return True
+
+        def template_onaccept(form):
+            """
+                All of the standard questions will now be generated
+                competion_qstn: who completed the assessment
+                date_qstn: when it was completed (date)
+                time_qstn: when it was completed (time)
+                location_detail: json of the location question
+                                 May consist of any of the following:
+                                 L0, L1, L2, L3, L4, Lat, Lon
+                                 for json entry a question will be generated
+                The code for each question will start with "STD-" followed by 
+                the type of question.
+            """
+            if form.vars.id:
+                template_id = form.vars.id
+            else:
+                return
+            if form.vars.competion_qstn != None:
+                name = form.vars.competion_qstn
+                code = "STD-WHO"
+                notes = "Who completed the assessment"
+                type = "String"
+                posn = -10 # negative used to force these question to appear first
+                addQuestion(template_id, name, code, notes, type, posn)
+            if form.vars.date_qstn != None:
+                name = form.vars.date_qstn
+                code = "STD-DATE"
+                notes = "Date the assessment was completed"
+                type = "Date"
+                posn += 1
+                addQuestion(template_id, name, code, notes, type, posn)
+            if form.vars.time_qstn != None:
+                name = form.vars.time_qstn
+                code = "STD-TIME"
+                notes = "Time the assessment was completed"
+                type = "String"
+                posn += 1
+                addQuestion(template_id, name, code, notes, type, posn)
+            if form.vars.location_detail != None:
+                rawjson = unescape(form.vars.location_detail, {"'": '"'})
+                locationList = json.loads(rawjson)
+                for loc in locationList:
+                    if loc in hierarchyElements:
+                        name = hierarchyElements[loc]
+                    else:
+                        name = backupName
+                    code = "STD-%s" % loc
+                    type = "Location"
+                    posn += 1
+                    addQuestion(template_id, name, code, "", type, posn)
 
         def template_represent(id):
             """
@@ -164,6 +230,45 @@ if deployment_settings.has_module(module):
                 return record.name
             else:
                 return None
+
+        def addQuestion(template_id, name, code, notes, type, posn):
+            # Add the question to the database if it's not already there
+            qstntable = db.survey_question
+            query = (qstntable.name == name) & \
+                    (qstntable.code == code)
+            record = db(query).select(qstntable.id, limitby=(0, 1)).first()
+            if record:
+                qstn_id = record.id
+            else:
+                qstn_id = qstntable.insert(name = name,
+                                           code = code,
+                                           notes = notes,
+                                           type = type
+                                          )
+            # Add these questions to the section: "Background Information"
+            sectable = db.survey_section
+            section_name = "Background Information"
+            query = (sectable.name == section_name) & \
+                    (sectable.template_id == template_id)
+            record = db(query).select(sectable.id, limitby=(0, 1)).first()
+            if record:
+                section_id = record.id
+            else:
+                section_id = sectable.insert(name = section_name,
+                                             template_id = template_id,
+                                             posn = 0 # special section with no position
+                                            )
+            # Add the question to the list of questions in the template
+            qstn_list_table = db.survey_question_list
+            query = (qstn_list_table.question_id == qstn_id) & \
+                    (qstn_list_table.template_id == template_id)
+            record = db(query).select(qstntable.id, limitby=(0, 1)).first()
+            if not record:
+                qstn_list_table.insert(question_id = qstn_id,
+                                       template_id = template_id,
+                                       section_id = section_id,
+                                       posn = posn
+                                      )
 
         template_id = S3ReusableField("template_id",
                                       db.survey_template,
@@ -178,6 +283,7 @@ if deployment_settings.has_module(module):
         s3mgr.model.add_component(table, survey_template="template_id")
         s3mgr.configure(tablename,
                         onvalidation = template_onvalidate,
+                        onaccept = template_onaccept,
                         )
         #**********************************************************************
         # Sections
@@ -238,7 +344,7 @@ if deployment_settings.has_module(module):
             within a section, and thus belong to the template.
 
             This holds the actual question and
-            a unique string code is used to identify the question.
+            A string code (unique within the template) is used to identify the question.
 
             It will have a type from the questionType dictionary.
             This type will determine the options that can be associated with it.
@@ -258,7 +364,6 @@ if deployment_settings.has_module(module):
                                        "string",
                                        length=16,
                                        notnull=True,
-                                       unique=True,
                                        ),
                                  Field("notes",
                                        "string",
@@ -490,6 +595,13 @@ if deployment_settings.has_module(module):
                                                section_id,
                                                posn,
                                               )
+            if type == "Location":
+                widgetObj = survey_question_type["Location"]()
+                widgetObj.insertChildrenToList(question_id,
+                                               template_id,
+                                               section_id,
+                                               posn,
+                                              )
 
         s3mgr.configure(tablename,
                         onaccept = question_list_onaccept,
@@ -566,6 +678,43 @@ if deployment_settings.has_module(module):
                                  *s3_meta_fields()
                                )
 
+        def formatter_onaccept(form):
+            """
+                If this is the formatter rules for the Background Information
+                section then add the standard questions to the layout
+            """
+            section_id = form.vars.section_id
+            section_name = db.survey_section[section_id].name
+            if section_name == "Background Information":
+                col1 = []
+                # Add the default layout
+                template = db.survey_template[form.vars.template_id]
+                if template.competion_qstn != "":
+                    col1.append("STD-WHO")
+                if template.date_qstn != "":
+                    col1.append("STD-DATE")
+                if template.time_qstn != "":
+                    col1.append("STD-TIME")
+                col2 = []
+                location_detail = template.location_detail
+                rawjson = unescape(location_detail, {"'": '"'})
+                locationList = json.loads(rawjson)
+                for loc in locationList:
+                    col2.append("STD-%s" % loc)
+                col = [col1, col2]
+                rule = [{"columns":col}]
+                oldrules = form.vars.rules
+                rawjson = unescape(oldrules, {"'": '"'})
+                ruleList = json.loads(rawjson)
+                ruleList[:0]=rule
+                rules = json.dumps(ruleList)
+                ftable = db.survey_formatter
+                db(ftable.id == form.vars.id).update(rules = rules)
+
+        s3mgr.configure(tablename,
+                        onaccept = formatter_onaccept,
+                        )
+
         # ---------------------------------------------------------------------
         # Series
         # ---------------------------------------------------------------------
@@ -608,7 +757,11 @@ if deployment_settings.has_module(module):
                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                  Field("logo", "string", default="", length=512),
                                  Field("language", "string", default="en", length=8),
-                                 Field("start_date", "date", default=None),
+                                 Field("start_date",
+                                       "date",
+                                       requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                       represent = s3_date_represent,
+                                       default=None),
                                  Field("end_date", "date", default=None),
                                  *s3_meta_fields())
 
@@ -664,7 +817,8 @@ if deployment_settings.has_module(module):
                 output = dict(rheader=rheader)
             else:
                 output = dict()
-            if request.env.request_method == "POST":
+            if request.env.request_method == "POST" \
+               or "mode" in request.vars:
                 # This means that the user has selected the questions and
                 # Wants to display the details of the selected questions
                 crud_strings = response.s3.crud_strings["survey_complete"]
@@ -673,7 +827,7 @@ if deployment_settings.has_module(module):
 
                 if "mode" in vars:
                     mode = vars["mode"]
-                    series_id = vars["series"]
+                    series_id = r.id
                     if "selected" in vars:
                         selected = vars["selected"].split(",")
                     else:
@@ -692,9 +846,32 @@ if deployment_settings.has_module(module):
                         elif mode == "Exclusive":
                             if str(question.posn) not in selected:
                                 question_ids.append(str(question.question_id))
-                    form = response.s3.survey_build_completed_list(series_id, question_ids)
-                    output["items"] = form
+                    items = buildCompletedList(series_id, question_ids)
+                    if r.representation == "xls":
+                        from s3.codecs.xls import S3XLS
+                        exporter = S3XLS()
+                        return exporter.encode(items,
+                                               title=crud_strings.title_selected,
+                                               use_colour=False
+                                              )
+                    if r.representation == "html":
+                        table = buildTableFromCompletedList(items)
+#                        exporter = S3Exporter()
+#                        table = exporter.html(items)
+                    output["items"] = table
                     output["sortby"] = [[0,"asc"]]
+                    url_pdf = URL(c="survey",
+                                  f="series",
+                                  args=[series_id,"summary.pdf"],
+                                  vars = {"mode":mode,"selected":vars["selected"]}
+                                 )
+                    url_xls = URL(c="survey",
+                                  f="series",
+                                  args=[series_id,"summary.xls"],
+                                  vars = {"mode":mode,"selected":vars["selected"]}
+                                 )
+                    response.s3.formats["pdf"]=url_pdf
+                    response.s3.formats["xls"]=url_xls
                 else:
                     output["items"] = None
                 output["title"] = crud_strings.title_selected
@@ -710,7 +887,7 @@ if deployment_settings.has_module(module):
                     series_id = r.id
                 form = buildSeriesSummary(series_id)
                 output["items"] = form
-                output["sortby"] = [[0,"asc"]]
+                output["sortby"] = [[0, "asc"]]
                 output["title"] = crud_strings.title_analysis_summary
                 output["subtitle"] = crud_strings.subtitle_analysis_summary
                 output["help"] = crud_strings.help_analysis_summary
@@ -927,7 +1104,7 @@ $("#chart_btn").click(function(){
             # Set up the legend
             for series_id in seriesList:
                 series_name = s3.survey_getSeriesName(series_id)
-                response_locations = s3.survey_getLocationList(series_id)
+                response_locations = getLocationList(series_id)
                 if pqstn_name == None:
                     pqstn = s3.survey_getPriorityQuestionForSeries(series_id)
                 else:
@@ -977,27 +1154,26 @@ $("#chart_btn").click(function(){
 
                 if len(response_locations) > 0:
                     for i in range( 0 , len( response_locations) ):
-                        complete_id_list = response_locations[i].complete_id
-                        for complete_id in complete_id_list:
-                            # Insert how we want this to appear on the map
-                            url = URL(c="survey",
-                                      f="series",
-                                      args=[series_id,
-                                            "complete",
-                                            complete_id,
-                                            "read"
-                                            ]
-                                      )
-                            response_locations[i].shape = "circle"
-                            response_locations[i].size = 5
-                            if analysisTool is None:
-                                priority = -1
-                            else:
-                                priority = analysisTool.priority(complete_id,
-                                                                 priorityObj)
-                            response_locations[i].colour = priorityObj.colour[priority]
-                            response_locations[i].popup_url = url
-                            response_locations[i].popup_label = response_locations[i].name
+                        complete_id = response_locations[i].complete_id
+                        # Insert how we want this to appear on the map
+                        url = URL(c="survey",
+                                  f="series",
+                                  args=[series_id,
+                                        "complete",
+                                        complete_id,
+                                        "read"
+                                        ]
+                                  )
+                        response_locations[i].shape = "circle"
+                        response_locations[i].size = 5
+                        if analysisTool is None:
+                            priority = -1
+                        else:
+                            priority = analysisTool.priority(complete_id,
+                                                             priorityObj)
+                        response_locations[i].colour = priorityObj.colour[priority]
+                        response_locations[i].popup_url = url
+                        response_locations[i].popup_label = response_locations[i].name
                     feature_queries.append({ "name": "%s: Assessments" % series_name,
                                              "query": response_locations,
                                              "active": True })
@@ -1210,103 +1386,11 @@ $("#chart_btn").click(function(){
             # answer in the location field
             ##################################################################
             templateRec = getTemplateFromSeries(series_id)
-            locQstn = templateRec["location_qstn"]
-            if not locQstn:
+            locDetails = templateRec["location_detail"]
+            if not locDetails:
                 return
-            question = getQuestionFromCode(locQstn, series_id)
-            if question["type"] != "Location":
-                # Problem with the template the location question isn't a location type
-                return
-            widgetObj = getWidgetFromQuestion(question["qstn_id"])
-            widgetObj.loadAnswer(complete_id, question["qstn_id"])
+            widgetObj = getdefaultLocationQuestion(complete_id)
             db(rtable.id == complete_id).update(location = widgetObj.repr())
-#            ##################################################################
-#            # Add additional data (if we have it) to the default location
-#            # From related questions as defined in the metadata:
-#            # Alternate Name
-#            # Parent
-#            # Latitude and Longitude
-#            ##################################################################
-#            # Parent
-#            ##################################################################
-#            question = getQuestionFromCode(locQstn, series_id)
-#            if question["type"] != "Location":
-#                # Problem with the template the location question isn't a location type
-#                return
-#            answer = loc
-#            widgetObj = getWidgetFromQuestion(question["qstn_id"])
-#            parentQstn = widgetObj.get("Parent")
-#            locationDict = {}
-#            if parentQstn != None:
-#                parentAnswer = extractAnswerFromAnswerList(answerList, parentQstn)
-#                if parentAnswer != None:
-#                    locationDict["parent"] = parentAnswer
-#
-#            ##################################################################
-#            # Alternate Name
-#            ##################################################################
-#            if locationDict != {}:
-#                locationDict["raw"] = loc
-#                answer = json.dumps(locationDict)
-#            locRec = widgetObj.getLocationRecord(id, answer)
-#            if locRec != None:
-#                if len(locRec.result) == 0:
-#                    # if the raw location is unknown see if we can find an alternative
-#                    # 1. Does the location contain parenthesis? Such as: "name (local name)"
-#                    loc1 = "-"
-#                    loc2 = "-"
-#                    loc3 = "-"
-#                    altFound = False
-#                    start = loc.find("(")
-#                    if start != -1:
-#                        end = loc.find(")")
-#                        if end == -1:
-#                            end = len(loc)
-#                        loc1 = loc[:start]
-#                        loc2 = loc[start+1:end]
-#                        loc3 = loc[end+1:]
-#                        if loc1 != "":
-#                            loc1Rec = widgetObj.getLocationRecord(id, loc1)
-#                            if len(loc1Rec.result) != 0:
-#                                locationDict["alternative"] = loc1
-#                                altFound = True
-#                        elif loc2 != "" and not altFound:
-#                            loc2Rec = widgetObj.getLocationRecord(id, loc2)
-#                            if len(loc2Rec.result) != 0:
-#                                locationDict["alternative"] = loc2
-#                                altFound = True
-#                        elif loc3 != "" and not altFound:
-#                            loc3Rec = widgetObj.getLocationRecord(id, loc3)
-#                            if len(loc3Rec.result) != 0:
-#                                locationDict["alternative"] = loc3
-#                                altFound = True
-#                    if altFound == False:
-#                        # strip all none alphabetics from the loc
-#                        max = len(loc)
-#                        i = 0
-#                        while(i < max and not loc[i].isalpha()):
-#                            i += 1
-#                        start = i
-#                        i = max-1
-#                        while(i > start and not loc[i].isalpha()):
-#                            i -= 1
-#                        end = i +1
-#                        altLoc = loc[start:end]
-#                        if (altLoc != "") and (altLoc != loc):
-#                            altLocRec = widgetObj.getLocationRecord(id, altLoc)
-#                            if len(altLocRec.result) != 0:
-#                                locationDict["alternative"] = altLoc
-#                                altFound = True
-#            ##################################################################
-#            # Update the table if anything has gone into locationDict
-#            ##################################################################
-#            if locationDict != {}:
-#                locationDict["raw"] = loc
-#                query = (atable.question_id == question["qstn_id"]) & \
-#                        (atable.complete_id == id)
-#                db(query).update(value = locationDict)
-
-
 
         s3mgr.configure(tablename,
                         onvalidation = complete_onvalidate,
@@ -1369,7 +1453,7 @@ $("#chart_btn").click(function(){
                     query = (atable.question_id == question_id) & \
                             (atable.complete_id == complete_id)
                     db(query).update(value = newValue)
-
+            
         s3mgr.configure(tablename,
                         onaccept = answer_onaccept,
                         )
@@ -1448,7 +1532,8 @@ $("#chart_btn").click(function(){
                 try:
                     sheetL = workbook.sheet_by_name(lang)
                 except:
-                    msg = T("Unable to find sheet %(sheet_name)s in uploaded spreadsheet") % dict(sheet_name=lang)
+                    msg = T("Unable to find sheet %(sheet_name)s in uploaded spreadsheet") % \
+                        dict(sheet_name=lang)
                     response.error = msg
                     response.flash = None
                     return
@@ -1457,7 +1542,8 @@ $("#chart_btn").click(function(){
                     response.flash = None
                     return
                 count = 0
-                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % (request.application, code)
+                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % \
+                    (request.application, code)
                 try:
                     strings = read_dict(lang_fileName)
                 except:
@@ -1473,7 +1559,8 @@ $("#chart_btn").click(function(){
                     response.warning = msgNone
                     response.flash = None
                 else:
-                    response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % dict(count_of=count, language=lang)
+                    response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % \
+                        dict(count_of=count, language=lang)
 
         # components
         s3mgr.model.add_component("survey_translate",
@@ -1909,7 +1996,7 @@ $("#chart_btn").click(function(){
                     sectionTitle = question["section"]
                 widgetObj = getWidgetFromQuestion(question["qstn_id"])
                 if readOnly:
-                    table.append(TR(TD(T(question["code"])),
+                    table.append(TR(TD(question["code"]),
                                     TD(widgetObj.type_represent()),
                                     TD(question["name"])
                                    )
@@ -1925,6 +2012,10 @@ $("#chart_btn").click(function(){
                 button = INPUT(_type="submit", _name="Save", _value=T("Save"))
                 form.append(button)
             return form
+
+
+
+
 
         def survey_build_template_summary(template_id):
             table = TABLE(_id="template_summary",
@@ -1942,13 +2033,13 @@ $("#chart_btn").click(function(){
             numOfQstnTypes = len(survey_question_type) + 1
             questions = getAllQuestionsForTemplate(template_id)
             sectionTitle = ""
-            line = None
+            line = []
             body = TBODY()
             section = 0
             total = ["", T("Total")] + [0]*numOfQstnTypes
             for question in questions:
                 if sectionTitle != question["section"]:
-                    if line != None:
+                    if line != []:
                         br = TR()
                         for cell in line:
                             br.append(cell)
@@ -1989,6 +2080,31 @@ $("#chart_btn").click(function(){
         def survey_section_rheader(r, tabs=[]):
             pass
 
+        def getdefaultLocationQuestion(complete_id):
+            """
+                This will find the standard loaction question
+                It will check each standard location question in 
+                the hierarchy until either one is found or none are found
+            """
+            comtable = db.survey_complete
+            qsntable = db.survey_question
+            answtable = db.survey_answer
+            query = ((answtable.question_id == qsntable.id) & \
+                     (answtable.complete_id == comtable.id))
+            codeList = ["STD-L4","STD-L3","STD-L2","STD-L1","STD-L0"]
+            for locCode in codeList:
+                record = db(query & (qsntable.code == locCode)).select(qsntable.id,
+                                                                       limitby=(0, 1)).first()
+                if record:
+                    widgetObj = getWidgetFromQuestion(record.id)
+                    break
+            if record:
+                widgetObj.loadAnswer(complete_id, record.id)
+                return widgetObj
+            else:
+                return None
+            
+            
         def getQuestionFromCode(code, series_id):
             """
                 function to return the question for the given series
@@ -2063,14 +2179,6 @@ $("#chart_btn").click(function(){
                 if (code in vars) and vars[code] != "":
                     line = '"%s","%s"\n' % (code, vars[code])
                     text += line
-                else:
-                    # For locations with a hierarchy we need to do a little more
-                    if question["type"] == "Location":
-                        widgetObj = getWidgetFromQuestion(question["qstn_id"])
-                        value = widgetObj.parseForm(vars, code)
-                        if value != None:
-                            line = '"%s","%s"\n' % (code, value)
-                            text += line
             if complete_id == None:
                 # Insert into database
                 id = db.survey_complete.insert(series_id = series_id, answer_list = text)
@@ -2104,7 +2212,12 @@ $("#chart_btn").click(function(){
             return questions
 
 
+
+
+
+
         # Response
+
         def buildSeriesSummary(series_id):
             table = TABLE(_id="series_summary",
                           _class="dataTable display")
@@ -2152,7 +2265,7 @@ $("#chart_btn").click(function(){
             # turn multi-select on
             response.s3.dataTableSelectable = True
             response.s3.dataTablePostMethod = True
-            response.s3.dataTableSubmitLabel = T("Display Selected Questions")
+            response.s3.dataTableSubmitLabel = current.T("Display Selected Questions")
             series = INPUT(_type="hidden", _id="selectSeriesID", _name="series",
                         _value="%s" % series_id)
             mode = INPUT(_type="hidden", _id="importMode", _name="mode",
@@ -2201,17 +2314,20 @@ $("#chart_btn").click(function(){
             return answers
 
         def getLocationList(series_id):
-            s3 = response.s3
+            comtable = db.survey_complete
+            query = db(comtable.series_id == series_id)
+            rows = query.select(comtable.id)
             response_locations = []
-            question_id = getLocationQuestion(series_id)
-            answers = s3.survey_getAllAnswersForQuestionInSeries(question_id,
-                                                                 series_id)
-            analysisTool = survey_analysis_type["Location"](question_id,
-                                                            answers)
-            for (key, value) in analysisTool.known.items():
-                value.key = key
-                value.complete_id = analysisTool.complete_id[key]
-                response_locations.append(value)
+            for row in rows:
+                locWidget = getdefaultLocationQuestion(row.id)
+                complete_id = locWidget.question["complete_id"]
+                answer = locWidget.question["answer"]
+                if locWidget != None:
+                    record = locWidget.getLocationRecord(complete_id, answer)
+                    if len(record.records) == 1:
+                        location = record.records[0].gis_location
+                        location.complete_id = complete_id
+                        response_locations.append(location)
             return response_locations
 
 
@@ -2238,7 +2354,7 @@ $("#chart_btn").click(function(){
             # The answer list has been removed for the moment. Currently it
             # displays all answers for a summary it would be better to
             # be able to display just a few select answers
-            list_fields = ["created_on", "series_id", "location"]#"answer_list"]
+            list_fields = ["created_on", "series_id", "location", "modified_by"]#"answer_list"]
             s3mgr.configure("survey_complete", list_fields=list_fields)
 
         def survey_serieslist_dataTable_post(r):
@@ -2261,47 +2377,72 @@ $("#chart_btn").click(function(){
                                         _class="action-btn",
                                         url=URL(c=module,
                                                 f="series",
-                                                args=[r.id,
-                                                      "complete",
-                                                      "[id]",
-                                                      "update"])
+                                                args=[r.id,"complete","[id]","update"])
                                        ),
                                   ]
 
-        def survey_build_completed_list(series_id, question_id_list):
-            table = TABLE(_id="completed_list",
-                          _class="dataTable display")
-            hr = TR()
-            for question_id in question_id_list:
-                qtable = db.survey_question
-                query = (qtable.id == question_id)
-                question = db(query).select(qtable.name,
-                                            limitby=(0, 1)).first()
-                hr.append(TH(question.name))
-            header = THEAD(hr)
 
-            body = TBODY()
-            matrix = {}
+        def buildCompletedList(series_id, question_id_list):
+            """
+                build a list of completed items for the series including
+                just the questions in the list passed in
+
+                The list will come in three parts.
+                1) The first row is the header (list of field labels)
+                2) The seconds row is the type of each column
+                3) The remaining rows are the data
+
+                @param series_id: The id of the series
+                @param question_id_list: The list of questions to display
+            """
+            headers = []
+            types = []
+            items = []
+            qstn_posn = 0
+            rowLen = len(question_id_list)
+            complete_lookup = {}
             for question_id in question_id_list:
                 answers = getAllAnswersForQuestionInSeries(question_id,
                                                            series_id)
                 widgetObj = getWidgetFromQuestion(question_id)
+
+                qtable = db.survey_question
+                query = (qtable.id == question_id)
+                question = db(query).select(qtable.name,
+                                            limitby=(0, 1)).first()
+                headers.append(question.name)
+                types.append(widgetObj.db_type())
+
                 for answer in answers:
                     complete_id = answer["complete_id"]
-                    data = {question_id: widgetObj.repr(answer["value"])}
-                    if complete_id in matrix:
-                        matrix[complete_id].update(data)
+                    if complete_id in complete_lookup:
+                        row = complete_lookup[complete_id]
                     else:
-                        matrix.update({complete_id:data})
+                        row = len(complete_lookup)
+                        complete_lookup[complete_id]=row
+                        items.append(['']*rowLen)
+                    items[row][qstn_posn] = widgetObj.repr(answer["value"])
+                qstn_posn += 1
+            return [headers] + [types] + items
 
-            for row in matrix.values():
-                br = TR()
-                for question_id in question_id_list:
-                    if question_id in row:
-                        br.append(TD(row[question_id]))
-                    else:
-                        br.append(TD(""))
-                body.append(br)
+        def buildTableFromCompletedList(dataSource):
+            headers = dataSource[0]
+            items = dataSource[2:]
+
+            table = TABLE(_id="completed_list",
+                          _class="dataTable display")
+            hr = TR()
+            for title in headers:
+                hr.append(TH(title))
+            header = THEAD(hr)
+
+            body = TBODY()
+
+            for row in items:
+                tr = TR()
+                for answer in row:
+                    tr.append(TD(answer))
+                body.append(tr)
 
             table.append(header)
             table.append(body)
@@ -2540,7 +2681,6 @@ $("#chart_btn").click(function(){
             survey_answerlist_dataTable_post = survey_answerlist_dataTable_post,
             survey_serieslist_dataTable_post = survey_serieslist_dataTable_post,
             survey_save_answers_for_series = survey_save_answers_for_series,
-            survey_build_completed_list = survey_build_completed_list,
             survey_save_answers_for_complete = survey_save_answers_for_complete,
             survey_getAllAnswersForQuestionInSeries = getAllAnswersForQuestionInSeries,
             survey_getLocationList = getLocationList,
@@ -2604,15 +2744,18 @@ $("#chart_btn").click(function(){
            - Look for a record with the same name
            - the same template
            - and the same position within the template
+           - however if their is a record with position of zero then that record should be updated
         """
         if job.tablename == "survey_section":
             table = job.table
             name = "name" in job.data and job.data.name
-            posn = "posn" in job.data and job.data.posn
             template = "template_id" in job.data and job.data.template_id
             query = (table.name == name) & \
-                    (table.template_id == template) & \
-                    (table.posn == posn)
+                    (table.template_id == template)
+            posn = "posn" in job.data and job.data.posn
+            record = db(query & (table.posn == 0)).select(table.posn, limitby=(0, 1)).first()
+            if not record:
+                query = query & (table.posn == posn)
             return duplicator(job, query)
 
     def survey_question_duplicate(job):
