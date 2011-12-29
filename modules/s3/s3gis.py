@@ -253,7 +253,6 @@ class GIS(object):
         if not current.auth is not None:
             raise RuntimeError, "Undefined authentication controller"
         self.auth = current.auth
-        self.vita = current.vita
         self.messages = Messages(None)
         #self.messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
         self.messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"

@@ -47,6 +47,7 @@ __all__ = ["URL2",
            "s3_filter_staff",
            "s3_fullname",
            "s3_represent_facilities",
+           "s3_rheader_tabs",
            "jaro_winkler",
            "jaro_winkler_distance_row",
            "soundex",
@@ -320,6 +321,115 @@ def s3_mark_required(fields,
         return (labels, _required)
     else:
         return None
+
+# =============================================================================
+def s3_rheader_tabs(r, tabs=[], paging=False):
+    """
+        Constructs a DIV of component links for a S3RESTRequest
+
+        @param tabs: the tabs as list of tuples (title, component_name, vars),
+            where vars is optional
+        @param paging: add paging buttons previous/next to the tabs
+
+        @todo: move into S3CRUD
+    """
+
+    rheader_tabs = []
+
+    tablist = []
+    previous = next = None
+
+    # Check for r.method tab
+    mtab = r.component is None and \
+           [t[1] for t in tabs if t[1] == r.method] and True or False
+    for i in xrange(len(tabs)):
+        record_id = r.id
+        title, component = tabs[i][:2]
+        vars_in_request = True
+        if len(tabs[i]) > 2:
+            _vars = Storage(tabs[i][2])
+            for k,v in _vars.iteritems():
+                if r.get_vars.get(k) != v:
+                    vars_in_request = False
+                    break
+            if "viewing" in r.get_vars:
+                _vars.viewing = r.get_vars.viewing
+        else:
+            _vars = r.get_vars
+
+        here = False
+        if component and component.find("/") > 0:
+            function, component = component.split("/", 1)
+            if not component:
+                component = None
+        else:
+            if "viewing" in _vars:
+                tablename, record_id = _vars.viewing.split(".", 1)
+                function = tablename.split("_", 1)[1]
+            else:
+                function = r.function
+                record_id = r.id
+        if function == r.name or \
+           (function == r.function and "viewing" in _vars):
+            here = r.method == component or not mtab
+
+        if i == len(tabs)-1:
+            tab = Storage(title=title, _class = "tab_last")
+        else:
+            tab = Storage(title=title, _class = "tab_other")
+        if i > 0 and tablist[i-1]._class == "tab_here":
+            next = tab
+
+        if component:
+            if r.component and r.component.alias == component and vars_in_request or \
+               r.custom_action and r.method == component:
+                tab.update(_class = "tab_here")
+                previous = i and tablist[i-1] or None
+            if record_id:
+                args = [record_id, component]
+            else:
+                args = [component]
+            vars = Storage(_vars)
+            if "viewing" in vars:
+                del vars["viewing"]
+            tab.update(_href=URL(function, args=args, vars=vars))
+        else:
+            if not r.component and len(tabs[i]) <= 2 and here:
+                tab.update(_class = "tab_here")
+                previous = i and tablist[i-1] or None
+            vars = Storage(_vars)
+            args = []
+            if function != r.name:
+                if "viewing" not in vars and r.id:
+                    vars.update(viewing="%s.%s" % (r.tablename, r.id))
+                #elif "viewing" in vars:
+                elif not tabs[i][1]:
+                    if "viewing" in vars:
+                        del vars["viewing"]
+                    args = [record_id]
+            else:
+                if "viewing" not in vars and record_id:
+                    args = [record_id]
+            tab.update(_href=URL(function, args=args, vars=vars))
+
+        tablist.append(tab)
+        rheader_tabs.append(SPAN(A(tab.title, _href=tab._href), _class=tab._class))
+
+    if rheader_tabs:
+        if paging:
+            if next:
+                rheader_tabs.insert(0, SPAN(A(">", _href=next._href), _class="tab_next_active"))
+            else:
+                rheader_tabs.insert(0, SPAN(">", _class="tab_next_inactive"))
+            if previous:
+                rheader_tabs.insert(0, SPAN(A("<", _href=previous._href), _class="tab_prev_active"))
+            else:
+                rheader_tabs.insert(0, SPAN("<", _class="tab_prev_inactive"))
+        rheader_tabs = DIV(rheader_tabs, _class="tabs")
+    else:
+        rheader_tabs = ""
+
+    return rheader_tabs
 
 # =============================================================================
 
