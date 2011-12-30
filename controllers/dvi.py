@@ -97,7 +97,6 @@ def recreq():
     response.s3.prep = prep
     output = s3_rest_controller()
 
-    s3_menu(module, s3_menu_postp)
     return output
 
 # -----------------------------------------------------------------------------
@@ -111,7 +110,6 @@ def morgue():
     rheader = response.s3.dvi_rheader
     output = s3_rest_controller(rheader=lambda r: \
                                         rheader(r, tabs=morgue_tabs))
-    s3_menu(module, s3_menu_postp)
     return output
 
 # -----------------------------------------------------------------------------
@@ -120,14 +118,17 @@ def body():
 
     resourcename = request.function
 
+    btable = s3db.dvi_body
+    itable = s3db.dvi_identification
+
     status = request.get_vars.get("status", None)
     if status == "unidentified":
-        query = (db.dvi_identification.deleted == False) & \
-                (db.dvi_identification.status == 3)
-        ids = db(query).select(db.dvi_identification.pe_id)
+        query = (itable.deleted == False) & \
+                (itable.status == 3)
+        ids = db(query).select(itable.pe_id)
         ids = [i.pe_id for i in ids]
         if ids:
-            response.s3.filter = (~(db.dvi_body.pe_id.belongs(ids)))
+            response.s3.filter = (~(btable.pe_id.belongs(ids)))
 
     s3mgr.configure("dvi_body", main="pe_label", extra="gender")
 
@@ -143,10 +144,9 @@ def body():
                 (T("Journal"), "note"),
                 (T("Identification"), "identification")]
 
-    rheader = response.s3.dvi_rheader
+    rheader = s3db.dvi_rheader
     output = s3_rest_controller(rheader=lambda r: \
                                         rheader(r, tabs=dvi_tabs))
-    s3_menu(module, s3_menu_postp)
     return output
 
 # -----------------------------------------------------------------------------
@@ -223,7 +223,6 @@ def person():
                                 main="first_name",
                                 extra="last_name",
                                 rheader=rheader)
-    s3_menu(module, s3_menu_postp)
     return output
 
 # -------------------------------------------------------------------------

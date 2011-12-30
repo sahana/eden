@@ -98,6 +98,15 @@ class S3PersonEntity(S3Model):
         self.add_component("pr_physical_description",
                            pr_pentity=dict(joinby=pe_id,
                                            multiple=False))
+        self.add_component("dvi_identification",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
+        self.add_component("dvi_effects",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
+        self.add_component("dvi_checklist",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
