@@ -135,7 +135,8 @@ class S3Model(object):
         elif key in response.s3:
             return response.s3[key]
         else:
-            return self.table(key)
+            return self.table(key,
+                              AttributeError("undefined table: %s" % key))
 
     # -------------------------------------------------------------------------
     def model(self):
@@ -156,7 +157,7 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def table(tablename, *args):
+    def table(tablename, default=None):
         """
             Helper function to load a table definition by its name
         """
@@ -200,9 +201,10 @@ class S3Model(object):
             return db[tablename]
         elif tablename in response.s3:
             return response.s3[tablename]
-        elif len(args):
-            return args[0]
-        raise AttributeError("undefined table: %s" % tablename)
+        elif isinstance(default, Exception):
+            raise default
+        else:
+            return default
 
     # -------------------------------------------------------------------------
     @staticmethod
