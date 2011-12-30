@@ -1,1 +1,1 @@
-VERSION     filter=version
+VERSION filter=version merge=ours

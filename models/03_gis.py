@@ -10,6 +10,8 @@ MARKER = T("Marker")
 
 # Expose settings to views/modules
 _gis = response.s3.gis
+# Store old config to know whether we need to refresh options in zz_last
+_gis.old_config = session.s3.gis_config_id
 # For Bulk Importer
 s3.gis_import_csv = gis.import_csv
 s3.gis_set_default_location = gis.set_default_location
@@ -94,7 +96,18 @@ projection_id = S3ReusableField("projection_id", db.gis_projection,
                                 represent = lambda id: (id and [db(db.gis_projection.id == id).select(db.gis_projection.name,
                                                                                                       limitby=(0, 1)).first().name] or [NONE])[0],
                                 label = T("Projection"),
-                                comment = "",
+                                comment = DIV(A(T("Add Projection"),
+                                                _class="colorbox",
+                                                _href=URL(c="gis", f="projection",
+                                                          args="create",
+                                                          vars=dict(format="popup")),
+                                                _target="top",
+                                                _title=T("Add Projection")),
+                                              DIV(_class="tooltip",
+                                                  _title="%s|%s|%s|%s" % (T("Projection"),
+                                                                          T("The system supports 2 projections by default:"),
+                                                                          T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
+                                                                          T("WGS84 (EPSG 4236) is required for many WMS servers.")))),
                                 ondelete = "RESTRICT")
 
 s3mgr.configure(tablename, deletable=False)
@@ -501,7 +514,6 @@ members.represent = lambda id: \
 #                                 separator=", ") or NONE
 
 # CRUD Strings
-ADD_LOCATION = T("Add Location")
 LIST_LOCATIONS = T("List Locations")
 s3.crud_strings[tablename] = Storage(
     title_create = ADD_LOCATION,
@@ -643,8 +655,8 @@ table = db.define_table(tablename,
 
 # Reusable field - used by Events & Scenarios
 def config_represent(id):
-            url = URL(c="gis", f="config", args=id)
-            return A(T("Open"), _href=url, _class="action-btn")
+    url = URL(c="gis", f="config", args=id)
+    return A(T("Open"), _href=url, _class="action-btn")
 
 config_id = S3ReusableField("config_id", db.gis_config,
                             #readable=False,
@@ -882,7 +894,9 @@ def gis_config_form_setup():
         try:
             # Infer a name for personal configs.
             if "pe_id" in form.request_vars:
-                form.vars.name = s3.pr_pentity_represent(form.request_vars.pe_id)
+                name = s3.pr_pentity_represent(form.request_vars.pe_id)
+                name = "Personal: %s" % name
+                form.vars.name = name
         except:
             # AJAX Save of Viewport from Map
             pass
@@ -901,9 +915,16 @@ def gis_config_form_setup():
         """
 
         try:
-            if (form.request_vars.pe_id and form.vars.id) or \
-               (session.s3.gis_config_id and
-                form.vars.id == session.s3.gis_config_id):
+            update = False
+            if (form.request_vars.pe_id and form.vars.id):
+                table = db.pr_person
+                query = (table.uuid == auth.user.person_uuid)
+                pentity = db(query).select(table.pe_id, limitby=(0, 1)).first()
+                if pentity and pentity.pe_id == form.request_vars.pe_id:
+                    update = True
+            elif session.s3.gis_config_id and form.vars.id == session.s3.gis_config_id:
+                update = True
+            if update:
                 gis.set_config(form.vars.id, force_update_cache=True)
         except:
             # AJAX Save of Viewport from Map
@@ -981,7 +1002,6 @@ def gis_config_form_setup():
                     # restrictions, we could.
                     #delete_onaccept=gis_config_ondelete,
                     update_ondelete=gis_config_ondelete,
-                    deletable=False,
                     list_fields = ["id",
                                    "name",
                                    "region_location_id",
@@ -990,7 +1010,9 @@ def gis_config_form_setup():
                                    "lat",
                                    "lon"
                                 ])
-
+    if deployment_settings.get_security_map() and not s3_has_role("MapAdmin"):
+        s3mgr.configure(tablename,
+                        deletable=False)
 # -----------------------------------------------------------------------------
 # Local Names
 resourcename = "location_name"
@@ -1334,7 +1356,8 @@ s3mgr.configure("gis_location",
 #
 gis_opacity = S3ReusableField("opacity", "double", default=1.0,
                               requires = IS_FLOAT_IN_RANGE(0, 1),
-                              label = T("Opacity (1 for opaque, 0 for fully-transparent)"))
+                              widget = S3SliderWidget(minval=0, maxval=1, steprange=0.01, value=1),
+                              label = T("Opacity (left-side is fully transparent, right-side is opaque)"))
 gis_refresh = S3ReusableField("refresh", "integer", default=900,        # 15 minutes
                               requires = IS_INT_IN_RANGE(10, 86400),    # 10 seconds - 24 hours
                               label = T("Refresh Rate (seconds)"))
@@ -1438,8 +1461,8 @@ def gis_map_tables():
     #
 
     # Make available to global scope (for Map Service Catalogue & ???)
-    #_gis.layer_types = ["shapefile", "scan", "xyz"]
-    _gis.layer_types = ["bing", "coordinate", "openstreetmap", "geojson", "georss", "google", "gpx", "js", "kml", "mgrs", "tms", "wfs", "wms", "yahoo"]
+    #_gis.layer_types = ["shapefile", "scan", "xyz", "yahoo"]
+    _gis.layer_types = ["bing", "coordinate", "openstreetmap", "geojson", "georss", "google", "gpx", "js", "kml", "mgrs", "tms", "wfs", "wms"]
     gis_layer_wms_img_formats = ["image/jpeg", "image/png", "image/bmp", "image/tiff", "image/gif", "image/svg+xml"]
 
     # Base
@@ -1868,38 +1891,38 @@ def gis_map_tables():
     # -------------------------------------------------------------------------
     # Yahoo
     # @ToDo: Constrain to a single record
-    table = db.define_table("gis_layer_yahoo",
-                            name_field(),
-                            Field("description"),
-                            Field("enabled", "boolean", default=False),
-                            Field("apikey"),
-                            Field("satellite_enabled", "boolean", default=False),
-                            Field("satellite", default="Yahoo Satellite"),
-                            Field("maps_enabled", "boolean", default=False),
-                            Field("maps", default="Yahoo Maps"),
-                            Field("hybrid_enabled", "boolean", default=False),
-                            Field("hybrid", default="Yahoo Hybrid"),
-                            role_required(),       # Single Role
-                            #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3_timestamp())
+    # table = db.define_table("gis_layer_yahoo",
+                            # name_field(),
+                            # Field("description"),
+                            # Field("enabled", "boolean", default=False),
+                            # Field("apikey"),
+                            # Field("satellite_enabled", "boolean", default=False),
+                            # Field("satellite", default="Yahoo Satellite"),
+                            # Field("maps_enabled", "boolean", default=False),
+                            # Field("maps", default="Yahoo Maps"),
+                            # Field("hybrid_enabled", "boolean", default=False),
+                            # Field("hybrid", default="Yahoo Hybrid"),
+                            # role_required(),       # Single Role
+                            ## roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                            # *s3_timestamp())
 
-    def gis_yahoo_onvalidation(form):
-        """
-            Warn the user about issues
-        """
-        if not form.vars.apikey:
-            response.warning = T("Yahoo Layers cannot be displayed if there isn't a valid API Key")
-        # Enable the overall LayerType if any of the layers are enabled
-        if "satellite_enabled" in form.vars or \
-           "maps_enabled" in form.vars or \
-           "hybrid_enabled" in form.vars:
-            form.vars.enabled = True
-        else:
-            # Disable it
-            form.vars.enabled = False
+    # def gis_yahoo_onvalidation(form):
+        # """
+            # Warn the user about issues
+        # """
+        # if not form.vars.apikey:
+            # response.warning = T("Yahoo Layers cannot be displayed if there isn't a valid API Key")
+        ## Enable the overall LayerType if any of the layers are enabled
+        # if "satellite_enabled" in form.vars or \
+           # "maps_enabled" in form.vars or \
+           # "hybrid_enabled" in form.vars:
+            # form.vars.enabled = True
+        # else:
+            ## Disable it
+            # form.vars.enabled = False
 
-    s3mgr.configure("gis_layer_yahoo",
-                    onvalidation=gis_yahoo_onvalidation)
+    # s3mgr.configure("gis_layer_yahoo",
+                    # onvalidation=gis_yahoo_onvalidation)
 
     # -------------------------------------------------------------------------
     # GIS Cache

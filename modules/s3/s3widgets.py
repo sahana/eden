@@ -56,6 +56,7 @@ __all__ = ["S3HiddenWidget",
            "S3SearchAutocompleteWidget",
            "S3TimeIntervalWidget",
            "S3EmbedComponentWidget",
+           "S3SliderWidget",
            ]
 
 import copy
@@ -2954,5 +2955,65 @@ class S3EmbedComponentWidget(FormWidget):
                        ac_row,
                        table,
                        divider)
+
+# -----------------------------------------------------------------------------
+class S3SliderWidget(FormWidget):
+
+    """
+        Standard Slider Widget
+
+        @author: Daniel Klischies (daniel.klischies@freenet.de)
+        
+        @ToDo: The range of the slider should ideally be picked up from the Validator
+               Show the value of the slider numerically as well as simply a position
+    """
+
+    def __init__(self,
+                 minval,
+                 maxval,
+                 steprange,
+                 value):
+        self.minval = minval;
+        self.maxval = maxval;
+        self.steprange = steprange;
+        self.value = value;
+
+    def __call__(self, field, value, **attributes):
+
+        response = current.response
+
+        divid = str(field).replace(".", "_")
+        sliderdiv = DIV(_id=divid, **attributes)
+        inputid = "%s_input" % divid
+        localfield = str(field).split(".")
+        sliderinput = INPUT(_name=localfield[1],
+                            _id=inputid,
+                            _class="hidden",
+                            _value=self.value)
+        s3_script_dir = "/%s/static/scripts" % current.request.application
+        if current.session.s3.debug:
+            response.s3.scripts.append( "%s/S3/jquery.ui.slider.js" % s3_script_dir )
+        else:
+            response.s3.scripts.append( "%s/S3/jquery.ui.slider.js" % s3_script_dir )
+                   
+        response.s3.jquery_ready.append("""
+$( '#%s' ).slider({slide: function (event, ui) { $( '#%s' ).val( ui.value ); }});
+$( '#%s' ).slider('option', 'min', parseFloat('%f'));
+$( '#%s' ).slider('option', 'max', parseFloat('%f'));
+$( '#%s' ).slider('option', 'step', parseFloat('%f'));
+$( '#%s' ).slider('option', 'value', parseFloat('%f'));
+
+""" % (divid,
+       inputid,
+       divid,
+       self.minval,
+       divid,
+       self.maxval,
+       divid,
+       self.steprange,
+       divid,
+       self.value))
+
+        return TAG[""](sliderdiv, sliderinput)
 
 # END =========================================================================

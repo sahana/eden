@@ -245,8 +245,8 @@ class GIS(object):
     """
 
     def __init__(self):
-        self.deployment_settings = current.deployment_settings
-        self.public_url = current.deployment_settings.get_base_public_url()
+        settings = current.deployment_settings
+        self.public_url = settings.get_base_public_url()
         if not current.db is not None:
             raise RuntimeError, "Database must not be None"
         self.cache = (current.cache.ram, 60)
@@ -281,7 +281,7 @@ class GIS(object):
         # changes in settings or the gis_config table schema, so these are only
         # initial values.
         self.max_allowed_level_num = \
-            int(current.deployment_settings.get_gis_max_allowed_hierarchy_level()[1:])
+            int(settings.get_gis_max_allowed_hierarchy_level()[1:])
         self.allowed_hierarchy_level_keys = [
             "L%d" % n for n in range(0, self.max_allowed_level_num + 1)]
         self.allowed_region_level_keys = copy.copy(self.allowed_hierarchy_level_keys)
@@ -797,10 +797,10 @@ class GIS(object):
             Returns the default location hierarchy constrained to available table fields.
         """
 
-        deployment_settings = self.deployment_settings
+        settings = current.deployment_settings
 
         # Get the default levels that are within the allowed max.
-        hierarchy = deployment_settings.get_gis_default_location_hierarchy()
+        hierarchy = settings.get_gis_default_location_hierarchy()
         max_level_num = int(hierarchy.keys()[-1][1:])
         if max_level_num > self.max_allowed_level_num:
             hierarchy = copy.copy(hierarchy)
@@ -874,14 +874,14 @@ class GIS(object):
             values.
         """
 
-        db = current.db
-        s3mgr = current.manager
-        deployment_settings = self.deployment_settings
+        s3db = current.s3db
+        settings = current.deployment_settings
 
         # If necessary, adjust allowed hierarchy levels.
-        limit = int(deployment_settings.get_gis_max_allowed_hierarchy_level()[1:])
-        if "gis_config" in db:
-            level_keys = filter(self.is_level_key, db.gis_config.fields)
+        limit = int(settings.get_gis_max_allowed_hierarchy_level()[1:])
+        table = s3db.table("gis_config")
+        if table:
+            level_keys = filter(self.is_level_key, table.fields)
             self.gis_config_table_max_level_num = int(level_keys[-1][1:])
             limit = min(limit, self.gis_config_table_max_level_num)
         if limit != self.max_allowed_level_num:
@@ -893,8 +893,8 @@ class GIS(object):
             self.allowed_region_level_keys.extend(self.group_level.keys())
 
         # gis_location
-        if "gis_location" in db:
-            table = db.gis_location
+        table = s3db.table("gis_location")
+        if table:
             table.level.requires = \
                 IS_NULL_OR(IS_IN_SET(self.get_all_current_levels()))
             # Represent needs to vary per record not per region
@@ -921,9 +921,8 @@ class GIS(object):
 
 
         for tablename in tables_with_levels:
-            s3mgr.load(tablename)
-            if tablename in db:
-                table = db[tablename]
+            table = s3db.table(tablename)
+            if table:
                 for field in filter(self.is_level_key, table.fields):
                     table[field].label = self.get_location_hierarchy(field)
 
@@ -1068,9 +1067,9 @@ class GIS(object):
             # request.
             vars = Storage()  # scatch copy of config values for validation
             errors = Storage()
-            deployment_settings = self.deployment_settings
-            cache.update(deployment_settings.gis.default_config_values)
-            vars.update(deployment_settings.gis.default_config_values)
+            settings = current.deployment_settings
+            cache.update(settings.gis.default_config_values)
+            vars.update(settings.gis.default_config_values)
             cache.location_hierarchy = self.get_location_hierarchy_settings()
             vars.update(cache.location_hierarchy)
             # The values in 000_config may have errors -- check them.
@@ -1585,7 +1584,6 @@ class GIS(object):
             return None
 
         table = db[tablename]
-        deployment_settings = self.deployment_settings
 
         if "location_id" not in table.fields():
             # @ToDo: Add any special cases to be able to find the linked location
@@ -1603,7 +1601,8 @@ class GIS(object):
                                     table.ALL)
         output = Rows()
         # @ToDo: provide option to use PostGIS/Spatialite
-        # if deployment_settings.gis.spatialdb and deployment_settings.database.db_type == "postgres":
+        # settings = current.deployment_settings
+        # if settings.gis.spatialdb and settings.database.db_type == "postgres":
         if lon_min is None:
             # We have no BBOX so go straight to the full geometry check
             for row in features:
@@ -1664,9 +1663,9 @@ class GIS(object):
         """
 
         db = current.db
-        deployment_settings = self.deployment_settings
+        settings = current.deployment_settings
 
-        if deployment_settings.gis.spatialdb and deployment_settings.database.db_type == "postgres":
+        if settings.gis.spatialdb and settings.database.db_type == "postgres":
             # Use PostGIS routine
             # The ST_DWithin function call will automatically include a bounding box comparison that will make use of any indexes that are available on the geometries.
             # @ToDo: Support optional Category (make this a generic filter?)
@@ -1674,11 +1673,11 @@ class GIS(object):
             import psycopg2
             import psycopg2.extras
 
-            dbname = deployment_settings.database.database
-            username = deployment_settings.database.username
-            password = deployment_settings.database.password
-            host = deployment_settings.database.host
-            port = deployment_settings.database.port or "5432"
+            dbname = settings.database.database
+            username = settings.database.username
+            password = settings.database.password
+            host = settings.database.host
+            port = settings.database.port or "5432"
 
             # Convert km to degrees (since we're using the_geom not the_geog)
             radius = math.degrees(float(radius) / RADIUS_EARTH)
@@ -1727,7 +1726,7 @@ class GIS(object):
 
             return features
 
-        #elif deployment_settings.database.db_type == "mysql":
+        #elif settings.database.db_type == "mysql":
             # Do the calculation in MySQL to pull back only the relevant rows
             # Raw MySQL Formula from: http://blog.peoplesdns.com/archives/24
             # PI = 3.141592653589793, mysql's pi() function returns 3.141593
@@ -1853,7 +1852,6 @@ class GIS(object):
         """
 
         db = current.db
-        deployment_settings = self.deployment_settings
         table = db.gis_location
 
         if isinstance(feature_id, int):
@@ -1864,12 +1862,14 @@ class GIS(object):
             # Bail out
             return None
 
-        feature = db(query).select(
-                      table.id, table.lat, table.lon,
-                      limitby=(0, 1)).first()
+        feature = db(query).select(table.id,
+                                   table.lat,
+                                   table.lon,
+                                   limitby=(0, 1)).first()
 
         #query = (table.deleted == False)
-        #if filter and not deployment_settings.get_gis_display_l0():
+        #settings = current.deployment_settings
+        #if filter and not settings.get_gis_display_l0():
             # @ToDo: This query looks wrong. Does it intend to exclude both
             # L0 and no level? Because it's actually a no-op. If location is
             # L0 then first term is false, but there is a level so the 2nd
@@ -2668,8 +2668,8 @@ class GIS(object):
                 code = ""
 
             population = ""
-            if self.deployment_settings.has_module("assess"):
-                #db.manager.load_model("assess_population")
+            if current.deployment_settings.has_module("assess"):
+                #current.manager.load_model("assess_population")
                 ptable = db.assess_population
                 try:
                     population = row.pop("POPULATION")
@@ -2853,7 +2853,7 @@ class GIS(object):
         cache = self.cache
         db = current.db
         request = current.request
-        deployment_settings = self.deployment_settings
+        settings = current.deployment_settings
         table = db.gis_location
 
         url = "http://download.geonames.org/export/dump/" + country + ".zip"
@@ -3468,7 +3468,7 @@ class GIS(object):
         db = current.db
         auth = self.auth
         cache = self.cache
-        deployment_settings = self.deployment_settings
+        settings = current.deployment_settings
         s3mgr = current.manager
         s3mgr.load("gis_cache")
         cachetable = db.gis_cache
@@ -4118,7 +4118,7 @@ function addJSLayers() {
 
         # Duplicate Features to go across the dateline?
         # @ToDo: Action this again (e.g. for DRRPP)
-        if deployment_settings.get_gis_duplicate_features():
+        if settings.get_gis_duplicate_features():
             duplicate_features = "S3.gis.duplicate_features = true;"
         else:
             duplicate_features = ""
@@ -4307,7 +4307,7 @@ S3.gis.layers_feature_queries[%i] = {
                 #OSMLayer,
                 BingLayer,
                 GoogleLayer,
-                YahooLayer,
+                #YahooLayer,
                 TMSLayer,
                 WMSLayer,
                 FeatureLayer,
@@ -4393,8 +4393,8 @@ S3.gis.layers_feature_queries[%i] = {
             "S3.gis.maxResolution = %f;\n" % maxResolution,
             "S3.gis.maxExtent = new OpenLayers.Bounds(%s);\n" % maxExtent,
             "S3.gis.numZoomLevels = %i;\n" % numZoomLevels,
-            "S3.gis.max_w = %i;\n" % deployment_settings.get_gis_marker_max_width(),
-            "S3.gis.max_h = %i;\n" % deployment_settings.get_gis_marker_max_height(),
+            "S3.gis.max_w = %i;\n" % settings.get_gis_marker_max_width(),
+            "S3.gis.max_h = %i;\n" % settings.get_gis_marker_max_height(),
             mouse_position,
             duplicate_features,
             wms_browser_name,

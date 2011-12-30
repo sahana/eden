@@ -169,6 +169,7 @@ current.messages.update(
     DELETE = "Delete",
     COPY = "Copy",
     NOT_APPLICABLE = "N/A",
+    ADD_LOCATION = "Add Location",
     SELECT_LOCATION = "Select a location"
 )
 globals().update([(u, T(current.messages[u]))
