@@ -46,13 +46,11 @@ function createNote() {
         $("#sortable-dispatcher").append("<div id='" + note.id + "' class='note'>" +
             "<div class='handler'></div>" +
             "<div class='deletenote'>" +
-            "<a href='javascript:getClickedNote()' id='deletenote'>x</a>" +
-            "</div><p>" + note.title +
-            "</p><button onclick='editNote(this)'" +
-            " data-controls-modal='edit-current-note'" +
-            " data-backdrop='true'" +
-            " data-keyboard='true'" +
-            " class='btn small'>Edit</button>" +
+            "<a href='#' onclick='deleteNote(this)' id='deletenote'>x</a>" +
+            "</div><p class='note-text'>" + note.title +
+            "</p><span class='label'><a href='#' onclick='editNote(this)'" +
+            " data-controls-modal='edit-current-note' data-backdrop='true'" +
+            " data-keyboard='true'>Edit</a></span>" +
             "</div>")
     });
 
@@ -71,7 +69,7 @@ function editNote(obj) {
         function is meant to be used with a Sortable 'stop' event.
         Arguments: noteObj, note object.
     */
-    var noteID = $(obj).parent().attr('id');
+    var noteID = $(obj).parent().parent().attr('id');
 
     var request = $.ajax({
         url: "../update_note/",
@@ -276,7 +274,17 @@ function saveTable() {
   });
 }
 
-
+function showControls() {
+    $(".mine").hover(function(){
+            $(this).find(".deletenote").show();
+            $(this).find("#edit-note").show();
+        },
+        function() {
+            $(this).find(".deletenote").hide();
+            $(this).find("#edit-note").hide();
+        }
+    );
+}
 
 /*******************
     MAIN LOOP
@@ -287,7 +295,7 @@ $(document).ready(function() {
     $('#jsnotify').notify();
     // Activate sortables
     makeSortable();
-    // Run some functions on every debate, just in case
-    //showDelete();
+    // Show controls for some notes
+    showControls();
 });
 
