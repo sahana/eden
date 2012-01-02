@@ -212,7 +212,8 @@ if deployment_settings.has_module("irs"):
         resourcename = "ireport"
         tablename = "%s_%s" % (module, resourcename)
         table = db.define_table(tablename,
-                                super_link(s3db.sit_situation),
+                                super_link(s3db.sit_situation), # sit_id
+                                super_link(s3db.doc_entity),    # doc_od
                                 Field("name", label = T("Short Description"),
                                       requires = IS_NOT_EMPTY()),
                                 Field("message", "text", label = T("Message"),
@@ -290,7 +291,7 @@ if deployment_settings.has_module("irs"):
             msg_list_empty = T("No Incident Reports currently registered"))
 
         s3mgr.configure(tablename,
-                        super_entity = s3db.sit_situation,
+                        super_entity = (s3db.sit_situation, s3db.doc_entity),
                         # Open tabs after creation
                         create_next = URL(args=["[id]", "update"]),
                         update_next = URL(args=["[id]", "update"]),
@@ -302,6 +303,15 @@ if deployment_settings.has_module("irs"):
                                        "verified",
                                        "message",
                                     ])
+
+        s3mgr.model.add_component("project_task",
+                                  irs_ireport=Storage(
+                                        link="project_task_ireport",
+                                        joinby="ireport_id",
+                                        key="task_id",
+                                        actuate="replace",
+                                        autocomplete="name",
+                                        autodelete=False))
 
         ireport_id = S3ReusableField("ireport_id", table,
                                       requires = IS_NULL_OR(IS_ONE_OF(db, "irs_ireport.id", "%(name)s")),
@@ -500,7 +510,7 @@ if deployment_settings.has_module("irs"):
                     @ToDo: Specialist teams
                     @ToDo: Make more generic
                 """
-                
+
                 vars = form.vars
                 ireport = vars.id
                 category = vars.category
@@ -573,7 +583,7 @@ if deployment_settings.has_module("irs"):
                                 table.insert(ireport_id=ireport,
                                              asset_id=vehicle,
                                              human_resource_id=person.id)
-                
+
             s3mgr.configure("irs_ireport",
                             # Porto-specific currently
                             #create_onaccept=ireport_onaccept,
@@ -598,7 +608,7 @@ if deployment_settings.has_module("irs"):
                                               readable=False,
                                               writable=False),
                                         *s3_meta_fields())
-            
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         return dict(

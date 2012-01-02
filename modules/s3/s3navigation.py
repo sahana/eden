@@ -75,11 +75,11 @@ class S3Menu(DIV):
                 else:
                     if (i == 0) and (self.attributes["_id"] == "modulenav"):
                         # 1st item, so display logo
-                        in_ul = LI(DIV(A(SPAN(_class="S3menulogo"),
-                                         _href=link),
+                        in_ul = LI(DIV(SPAN(A(_href=link),
+                                            _class="S3menulogo"),
                                        SPAN(A(name,
-                                              _href=link,
-                                              _class="S3menuHome")),
+                                              _href=link),
+                                              _class="S3menuHome"),
                                        _class="hoverable"),
                                    _class=class_)
                     else:

@@ -256,7 +256,7 @@ if deployment_settings.has_module(module):
         if deployment_settings.has_module("project"):
             s3mgr.load("project_task")
             # Retrieve from the Global
-            task_id = response.s3.task_id
+            task_id = response.s3.project_task_id
 
             tablename = "scenario_task"
             table = db.define_table(tablename,

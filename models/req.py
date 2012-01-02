@@ -1330,7 +1330,7 @@ script =
 
             if deployment_settings.has_module("project"):
                 s3mgr.load("project_task")
-                task_id = response.s3.task_id
+                task_id = response.s3.project_task_id
                 tablename = "project_task_req"
                 table = db.define_table(tablename,
                                         task_id(),

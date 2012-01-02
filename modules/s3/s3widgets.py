@@ -2963,7 +2963,7 @@ class S3SliderWidget(FormWidget):
         Standard Slider Widget
 
         @author: Daniel Klischies (daniel.klischies@freenet.de)
-        
+
         @ToDo: The range of the slider should ideally be picked up from the Validator
                Show the value of the slider numerically as well as simply a position
     """
@@ -2995,7 +2995,7 @@ class S3SliderWidget(FormWidget):
             response.s3.scripts.append( "%s/S3/jquery.ui.slider.js" % s3_script_dir )
         else:
             response.s3.scripts.append( "%s/S3/jquery.ui.slider.js" % s3_script_dir )
-                   
+
         response.s3.jquery_ready.append("""
 $( '#%s' ).slider({slide: function (event, ui) { $( '#%s' ).val( ui.value ); }});
 $( '#%s' ).slider('option', 'min', parseFloat('%f'));

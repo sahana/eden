@@ -453,8 +453,16 @@ def rapid():
     return dict(item=str(session.s3.rapid_data_entry))
 
 # -----------------------------------------------------------------------------
+def user_profile_onaccept(form):
+    """ Update the UI locale from user profile """
+
+    if form.vars.language:
+        session.s3.language = form.vars.language
+    return
+
+# -----------------------------------------------------------------------------
 def user():
-    "Auth functions based on arg. See gluon/tools.py"
+    """ Auth functions based on arg. See gluon/tools.py """
 
     auth.settings.on_failed_authorization = URL(f="error")
 
@@ -463,6 +471,8 @@ def user():
         #_table_user.organisation.writable = False
         _table_user.utc_offset.readable = True
         _table_user.utc_offset.writable = True
+
+    auth.settings.profile_onaccept = user_profile_onaccept
 
     login_form = register_form = None
     if request.args and request.args(0) == "login":

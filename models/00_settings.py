@@ -169,6 +169,7 @@ current.messages.update(
     DELETE = "Delete",
     COPY = "Copy",
     NOT_APPLICABLE = "N/A",
+    ADD_PERSON = "Add Person",
     ADD_LOCATION = "Add Location",
     SELECT_LOCATION = "Select a location"
 )
@@ -544,6 +545,7 @@ s3.messages.confirmation_email = "%s %s %s %s. %s." % (T("Welcome to the"),
 
 # Valid Extensions for Image Upload fields
 IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
+s3.IMAGE_EXTENSIONS = IMAGE_EXTENSIONS
 # -----------------------------------------------------------------------------
 # List of Nations (ISO-3166-1 Country Codes)
 # @ToDo: Pull this list from the list of L0s in the database

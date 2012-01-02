@@ -496,7 +496,7 @@ if deployment_settings.has_module(module):
         if deployment_settings.has_module("project"):
             s3mgr.load("project_task")
             # Retrieve from the Global
-            task_id = response.s3.task_id
+            task_id = response.s3.project_task_id
 
             tablename = "event_task"
             table = db.define_table(tablename,
@@ -528,9 +528,7 @@ if deployment_settings.has_module(module):
         # - we only maintain a high-level overview
         # @ToDo: Search Widget
         if deployment_settings.has_module("project"):
-            s3mgr.load("project_activity")
-            # Retrieve from the Global
-            activity_id = response.s3.activity_id
+            activity_id = s3db.project_activity_id
 
             tablename = "event_activity"
             table = db.define_table(tablename,

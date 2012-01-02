@@ -551,11 +551,9 @@ s3_menu_dict = {
                                        fact="pe_label",
                                        aggregate="count"))],
             ]],
-
             [T("Missing Persons"), False, aURL(f="person"), [
                 [T("List all"), False, aURL(f="person")],
             ]],
-
             [T("Morgues"), False, aURL(f="morgue"),[
                 [T("New"),
                  False, aURL(p="create", f="morgue",
@@ -563,7 +561,6 @@ s3_menu_dict = {
                 [T("List All"),
                  False, aURL(f="morgue")],
             ]],
-
             [T("Help"), False, URL(f="index")]
         ]
     },

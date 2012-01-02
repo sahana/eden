@@ -121,6 +121,8 @@ sector_id = S3ReusableField("sector_id", "list:reference org_sector",
                             label = SECTOR,
                             ondelete = "RESTRICT")
 
+response.s3.org_sector_id = sector_id
+
 # =============================================================================
 # (Cluster) Subsector
 #
@@ -302,6 +304,15 @@ s3mgr.configure(tablename,
                                "website"
                             ])
 
+s3mgr.model.add_component("project_project",
+                          org_organisation=Storage(
+                                link="project_organisation",
+                                joinby="organisation_id",
+                                key="project_id",
+                                actuate="embed",
+                                autocomplete="name",
+                                autodelete=False))
+
 # -----------------------------------------------------------------------------
 def organisation_represent(id, showlink=False, acronym=True):
     if isinstance(id, Row):
@@ -357,6 +368,8 @@ organisation_id = S3ReusableField("organisation_id",
                                   # Comment this to use a Dropdown & not an Autocomplete
                                   widget = S3OrganisationAutocompleteWidget()
                                  )
+
+response.s3.org_organisation_id = organisation_id
 
 # -----------------------------------------------------------------------------
 def organisation_multi_represent(opt):
@@ -443,6 +456,13 @@ organisation_search = s3base.S3OrganisationSearch(
 
 s3mgr.configure(tablename,
                 search_method=organisation_search)
+
+# Components of organisations
+# Documents
+s3mgr.model.add_component("doc_document", org_organisation="organisation_id")
+
+# Images
+s3mgr.model.add_component("doc_image", org_organisation="organisation_id")
 
 # -----------------------------------------------------------------------------
 def organisation_rheader(r, tabs=[]):
@@ -690,6 +710,8 @@ def org_site_represent(id, default_label="[no label]", link = True):
 
     return site_str
 
+s3.org_site_represent = org_site_represent
+
 # -----------------------------------------------------------------------------
 site_id = super_link(db.org_site,
                      #writable = True,
@@ -703,6 +725,16 @@ site_id = super_link(db.org_site,
                                    _title="%s|%s" % (T("Facility"),
                                                      T("Enter some characters to bring up a list of possible matches")))
                     )
+
+response.s3.org_site_id = site_id
+
+# Components of sites
+
+# Documents
+s3mgr.model.add_component("doc_document", org_site=super_key(db.org_site))
+
+# Images
+s3mgr.model.add_component("doc_image", org_site=super_key(db.org_site))
 
 # =============================================================================
 # Rooms (for Sites)
@@ -784,6 +816,8 @@ office_comment = DIV(A(ADD_OFFICE,
                      DIV( _class="tooltip",
                           _title="%s|%s" % (ADD_OFFICE,
                                             T("If you don't see the Office in the list, you can add a new one by clicking link 'Add Office'."))))
+
+response.s3.org_office_comment = office_comment
 
 resourcename = "office"
 tablename = "org_office"

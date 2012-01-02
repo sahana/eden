@@ -37,6 +37,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonDescription",
            "pr_pentity_represent",
            "pr_person_represent",
+           "pr_person_comment",
            "pr_rheader"]
 
 from gluon import *
@@ -98,6 +99,15 @@ class S3PersonEntity(S3Model):
         self.add_component("pr_physical_description",
                            pr_pentity=dict(joinby=pe_id,
                                            multiple=False))
+        self.add_component("dvi_identification",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
+        self.add_component("dvi_effects",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
+        self.add_component("dvi_checklist",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -116,7 +126,6 @@ class S3PersonModel(S3Model):
              "pr_age_group",
              "pr_age_group_opts",
              "pr_person_id",
-             "pr_person_comment",
              "pr_group_id",
              "pr_group_represent",
              "pr_group_membership",
@@ -284,7 +293,7 @@ class S3PersonModel(S3Model):
                                   *s3.meta_fields())
 
         # CRUD Strings
-        ADD_PERSON = T("Add Person")
+        ADD_PERSON = current.messages.ADD_PERSON
         LIST_PERSONS = T("List Persons")
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add a Person"),
@@ -331,19 +340,6 @@ class S3PersonModel(S3Model):
                        deduplicate=self.person_deduplicate,
                        main="first_name",
                        extra="last_name")
-
-        # Reusable fields
-        pr_person_comment = lambda title, comment, caller=None, child=None: \
-                                DIV(A(ADD_PERSON,
-                                      _class="colorbox",
-                                      _href=URL(c="pr", f="person", args="create",
-                                      vars=dict(format="popup",
-                                                caller=caller,
-                                                child=child)),
-                                      _target="top",
-                                      _title=ADD_PERSON),
-                                    DIV(DIV(_class="tooltip",
-                                            _title="%s|%s" % (title, comment))))
 
         pr_person_id_comment = pr_person_comment(
                                     T("Person"),
@@ -607,7 +603,6 @@ class S3PersonModel(S3Model):
             pr_age_group = pr_age_group,
             pr_age_group_opts = pr_age_group_opts,
             pr_person_id = pr_person_id,
-            pr_person_comment = pr_person_comment,
             pr_group_id = pr_group_id,
             pr_group_represent = pr_group_represent
         )
@@ -1170,7 +1165,6 @@ class S3PersonPresence(S3Model):
         sit_situation = self.table("sit_situation")
         pr_person = self.table("pr_person")
         person_id = s3.pr_person_id
-        person_comment = s3.pr_person_comment
 
         ADD_LOCATION = current.messages.ADD_LOCATION
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
@@ -1234,8 +1228,8 @@ class S3PersonPresence(S3Model):
                                   person_id("observer",
                                             label=T("Observer"),
                                             default = auth.s3_logged_in_person(),
-                                            comment=person_comment(T("Observer"),
-                                                                   T("Person who has actually seen the person/group."))),
+                                            comment=pr_person_comment(T("Observer"),
+                                                                      T("Person who has actually seen the person/group."))),
                                   Field("shelter_id", "integer",
                                         readable = False,
                                         writable = False),
@@ -1525,7 +1519,6 @@ class S3PersonDescription(S3Model):
         sit_situation = self.table("sit_situation")
         pr_person = self.table("pr_person")
         person_id = s3.pr_person_id
-        person_comment = s3.pr_person_comment
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         #if deployment_settings.has_module("dvi") or \
@@ -2040,5 +2033,18 @@ def pr_rheader(r, tabs=[]):
                 return rheader
 
     return None
+
+# =============================================================================
+pr_person_comment = lambda title, comment, caller=None, child=None: \
+                        DIV(A(current.messages.ADD_PERSON,
+                              _class="colorbox",
+                              _href=URL(c="pr", f="person", args="create",
+                              vars=dict(format="popup",
+                                        caller=caller,
+                                        child=child)),
+                              _target="top",
+                              _title=current.messages.ADD_PERSON),
+                            DIV(DIV(_class="tooltip",
+                                    _title="%s|%s" % (title, comment))))
 
 # END =========================================================================
