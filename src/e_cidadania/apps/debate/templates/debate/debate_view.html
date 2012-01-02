@@ -67,12 +67,10 @@
                                                 <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %}">
                                                     <div class="handler"></div>
                                                     {% if perms.note.delete_note %}
-                                                        <div class="deletenote">
-                                                            <a href="#" onclick="deleteNote(this)" id="deletenote">x</a>
-                                                        </div>
+                                                        <div class="deletenote" class="hidden"><a href="#" onclick="deleteNote(this)" id="deletenote">X</a></div>
                                                     {% endif %}
-                                                    <p>{{ note.title }}</p>
-                                                    <button onclick="editNote(this)" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true" class="btn small">{% trans "Edit" %}</button>
+                                                    <p class="note-text">{{ note.title }}</p>
+                                                    <span id="edit-note" class="label hidden"><a href="#" onclick="editNote(this)" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true">{% trans "Edit" %}</a></span>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
