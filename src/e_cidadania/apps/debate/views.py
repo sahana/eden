@@ -52,6 +52,7 @@ from e_cidadania.apps.debate.forms import DebateForm, UpdateNoteForm, \
     NoteForm, RowForm, ColumnForm, UpdateNotePosition
 from e_cidadania.apps.spaces.models import Space
 
+
 def add_new_debate(request, space_name):
 
     """
