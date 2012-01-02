@@ -60,6 +60,7 @@ if deployment_settings.has_module(module):
                                                                           T("Add a new job role to the catalog."))))),
                                   ondelete = "RESTRICT")
 
+    response.s3.hrm_job_role_id = job_role_id
 
     # =========================================================================
     # Positions

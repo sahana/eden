@@ -284,6 +284,8 @@ currency_type = S3ReusableField("currency_type", "string",
                                 #    currency_type_opts.get(opt, UNKNOWN_OPT),
                                 writable = deployment_settings.get_fin_currency_writable())
 
+response.s3.currency_type = currency_type
+
 # =============================================================================
 # Addresses
 #

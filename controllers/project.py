@@ -55,8 +55,7 @@ def project():
                 if r.component_name == "organisation":
                     if r.method != "update":
                         host_role = 1
-                        s3mgr.load("project_organisation")
-                        otable = db.project_organisation
+                        otable = s3db.project_organisation
                         query = (otable.deleted != True) & \
                                 (otable.role == host_role) & \
                                 (otable.project_id == r.id)
@@ -64,7 +63,7 @@ def project():
                                                limitby=(0, 1)).first()
                         if row:
                             project_organisation_roles = \
-                                dict(s3.project_organisation_types)
+                                dict(s3.project_organisation_roles)
                             del project_organisation_roles[host_role]
                             otable.role.requires = \
                                 IS_NULL_OR(IS_IN_SET(project_organisation_roles))
@@ -75,25 +74,8 @@ def project():
                         ltable = db.gis_location
                         query = (ltable.id.belongs(countries))
                         countries = db(query).select(ltable.code)
-                        deployment_settings.gis.countries = \
-                            [c.code for c in countries]
-                elif r.component_name == "document":
-                    s3mgr.load("doc_document")
-                    s3mgr.load("project_activity")
-                    if "doc_document" in db:
-                        dtable = db.doc_document
-                        atable = db.project_activity
-                        field = dtable.activity_id
-                        query = (atable.project_id == r.id)
-                        field.readable = True
-                        field.writable = True
-                        field.requires = requires = IS_NULL_OR(
-                                                IS_ONE_OF(db(query),
-                                                          "project_activity.id",
-                                                          "%(name)s",
-                                                          sort=True))
-                        field.widget = None
-                        field.comment = None
+                        deployment_settings.gis.countries = [c.code for c in countries]
+
         return True
     response.s3.prep = prep
 
@@ -226,7 +208,7 @@ def task():
     response.s3.prep = prep
 
     return s3_rest_controller(module, resourcename,
-                              rheader=response.s3.task_rheader)
+                              rheader=response.s3.project_rheader)
 
 # =============================================================================
 def person():
@@ -257,7 +239,7 @@ def discuss(r, **attr):
     id = r.id
 
     # Add the RHeader to maintain consistency with the other pages
-    rheader = response.s3.task_rheader(r)
+    rheader = response.s3.project_rheader(r)
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
     response.s3.scripts.append(ckeditor)

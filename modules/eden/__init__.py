@@ -11,4 +11,7 @@
 
 import pr
 import sit
+import doc
+import project
 import dvi
+

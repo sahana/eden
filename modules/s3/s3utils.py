@@ -50,8 +50,7 @@ __all__ = ["URL2",
            "s3_rheader_tabs",
            "jaro_winkler",
            "jaro_winkler_distance_row",
-           "soundex",
-           "docChecksum"]
+           "soundex"]
 
 import sys
 import os
@@ -865,15 +864,5 @@ def soundex(name, len=4):
 
     # return soundex code padded to len characters
     return (sndx + (len * "0"))[:len]
-
-# =============================================================================
-
-def docChecksum(docStr):
-    """
-        Calculate a checksum for a file
-    """
-
-    converted = hashlib.sha1(docStr).hexdigest()
-    return converted
 
 # END =========================================================================

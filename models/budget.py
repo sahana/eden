@@ -22,9 +22,7 @@ if deployment_settings.has_module("budget") and \
         """ Load the Budget tables as-needed """
 
         # Load the models we depend on
-        if deployment_settings.has_module("project"):
-            s3mgr.load("project_project")
-            project_id = response.s3.project_id
+        project_id = s3db.project_project_id
 
         module = "budget"
 

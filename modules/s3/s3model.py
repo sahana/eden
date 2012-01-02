@@ -69,14 +69,11 @@ class S3Model(object):
         self.prefix = module
         self.settings = current.deployment_settings
 
-        mandatory_models = ("default",
-                            "admin",
-                            "appadmin",
-                            "errors",
-                            "sync",
+        mandatory_models = ("sync",
                             "gis",
                             "pr",
                             "sit",
+                            "doc",
                             "org")
 
         if module is not None:

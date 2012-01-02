@@ -55,6 +55,7 @@ if deployment_settings.has_module("asset"):
         tablename = "asset_asset"
         table = db.define_table(tablename,
                                 super_link(s3db.sit_trackable), # track_id
+                                super_link(s3db.doc_entity),    # doc_id
                                 Field("number",
                                       label = T("Asset Number")),
                                 item_id,
