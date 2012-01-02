@@ -13,22 +13,14 @@
     NOTE FUNCTIONS
 */
 
-function showDelete() {
-    /*
-        showDelete() - Show/hide the delete button when hovering a note.
-    */
-    $('.note').hover(
-        function () {
-            var getID = $(this).attr('id');
-            $('#' + getID + ' a#deletenote').toggle();
-        }
-    );
-}
-
 function createNote() {
     /*
-     createNote() - Appends a new note within the sortable dispatcher.
-     */
+        createNote() - Creates a new note related with the debate. Frist the
+        function creates the note in the server and after that we create a "fake"
+        note in the debate board with the data returned by the view. If for some
+        reason the user creates the note and leaves it before moving or editing the
+        note is positioned in position [1,1].
+    */
 
     var request = $.ajax({
         type:"POST",
@@ -65,9 +57,9 @@ function createNote() {
 
 function editNote(obj) {
     /*
-        saveNote(noteObj) - Saves the notes making an AJAX call to django. This
-        function is meant to be used with a Sortable 'stop' event.
-        Arguments: noteObj, note object.
+        editNote(obj) - This function detects the note the user clicked and raises
+        a modal dialog, after that it checks the note in the server and returns
+        it's data, prepopulating the fields.
     */
     var noteID = $(obj).parent().parent().attr('id');
 
@@ -199,6 +191,24 @@ function makeSortable() {
     }).disableSelection();
 }
 
+function showControls() {
+    /*
+        showControls() - Hides the edit and delete controls from the notes. If the
+        users hovers over a note created by himself, the note shows the controls.
+    */
+    $(".mine").hover(function(){
+            $(this).find(".deletenote").show();
+            $(this).find("#edit-note").show();
+        },
+        function() {
+            $(this).find(".deletenote").hide();
+            $(this).find("#edit-note").hide();
+        }
+    );
+}
+
+/* DEBATE CREATION */
+
 var tdlength = 0;
 
 function addTableColumn() {
@@ -272,18 +282,6 @@ function saveTable() {
               
         return true;
   });
-}
-
-function showControls() {
-    $(".mine").hover(function(){
-            $(this).find(".deletenote").show();
-            $(this).find("#edit-note").show();
-        },
-        function() {
-            $(this).find(".deletenote").hide();
-            $(this).find("#edit-note").hide();
-        }
-    );
 }
 
 /*******************

@@ -34,7 +34,7 @@ class Debate(models.Model):
     """
     Debate object. In every space there can be unlimited debates, each one of
     them holds all the related notes. Debates are filtered by space. Start/End
-    dates are gathered adding the phases dates.
+    dates are for letting users use the debate or not.
     
     .. versionadded:: 0.1b
     """
@@ -62,7 +62,7 @@ class Debate(models.Model):
 class Column(models.Model):
     """
     Debate column object. The debate table is done mixing columns and rows. The column
-    object is linked to the debate, but with no preferrable order.
+    object is linked to the debate, but with no preferable order.
     
     .. versionadded:: 0.1b
     """
