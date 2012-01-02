@@ -17,10 +17,26 @@
 
 {% block extrajs %}
     <script type="text/javascript">
-        function upvote() {
-            $.post("../add_support_vote/", {
-                propid: {{ proposal.id }},
+        function upvote(proposal) {
+            var request = $.ajax({
+                type: "POST",
+                url: "../add_support_vote/",
+                data: { propid: proposal }
             });
+
+            request.done(function(msg) {
+                var cur_votes = parseInt($("#votes span").html());
+                var votes = cur_votes + 1;
+                $("#votes span").html(votes);
+            });
+
+            request.fail(function(jqXHR, textStatus) {
+                $("#jsnotify").notify("create", {
+                    title:"Couldn't vote the proposal",
+                    text:"There has been an error." + textStatus,
+                    icon:"alert.png"
+                });
+            })
          }
     </script>
 {% endblock %}
@@ -45,9 +61,7 @@
                     <span style="font-size:30px;text-align:center;">
                         {{ proposal.support_votes }}
                     </span><br/>
-                    <form id="ajaxform" enctype="" action="" method="post">{% csrf_token %}
-                        <a href="javascript:upvote()" class="btn small">apoyar</a>
-                    </form>
+                    <button onclick="upvote({{ proposal.id }})" class="btn small">{% trans "support" %}</button>
                 </div>
                 <!-- Here goes the voting button -->
                 <div id="proposal">

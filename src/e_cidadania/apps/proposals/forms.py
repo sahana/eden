@@ -36,3 +36,14 @@ class ProposalForm(ModelForm):
     class Meta:
         model = Proposal
 
+
+class VoteProposal(ModelForm):
+
+    """
+    asd
+    """
+    class Meta:
+        model = Proposal
+        exclude = ('code', 'title', 'description', 'space', 'author', 'tags',
+                   'latitude', 'longitude', 'closed', 'closed_by', 'close_reason',
+                   'anon_allowed', 'refurbished', 'budget', 'pub_date', 'mod_date')

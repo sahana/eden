@@ -28,16 +28,17 @@ from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
 
 urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
-    url(r'^add/$', 'add_proposal', name='add-proposal'),
+    url(r'^$', ListProposals.as_view(), name='list-proposals'),
+
+    url(r'^add/', 'add_proposal', name='add-proposal'),
 
     url(r'^(?P<prop_id>\w+)/edit/$', 'edit_proposal', name='edit-proposal'),
 
     url(r'^(?P<prop_id>\w+)/delete/$', DeleteProposal.as_view(), name='delete-proposal'),
 
-    url(r'^(?P<prop_id>\w+)/', ViewProposal.as_view(), name='view-proposal'),
-    
-    url(r'^add_support_vote/$', 'vote_proposal', name='vote-proposal'),
+    url(r'^add_support_vote/', 'vote_proposal'),
 
-    url(r'^$', ListProposals.as_view(), name='list-proposals'),
+    url(r'^(?P<prop_id>\w+)/', ViewProposal.as_view(), name='view-proposal'),
+
 )
 

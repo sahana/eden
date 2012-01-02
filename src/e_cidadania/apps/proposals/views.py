@@ -30,28 +30,26 @@ from django.views.generic.detail import DetailView
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.template import RequestContext
+from django.views.decorators.http import require_POST
 
 from django.views.generic.create_update import update_object
+from django.db.models import F
+from django.http import HttpResponse
 
 from e_cidadania.apps.proposals.models import Proposal
-from e_cidadania.apps.proposals.forms import ProposalForm
+from e_cidadania.apps.proposals.forms import ProposalForm, VoteProposal
 from e_cidadania.apps.spaces.models import Space
 
-
+@require_POST
 def vote_proposal(request, space_name):
 
     """
     Increment support votes for the proposal in 1.
     """
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
-    proposal_form = ProposalForm(request.POST or None, instance=prop)
-    
-    if request.method == "POST" and request.is_ajax:
-        proposal_form.support_votes += 1
-        proposal_form.save()
-
-    return HttpResponse("hecho")
-        
+    prop.support_votes = F('support_votes') + 1
+    prop.save()
+    return HttpResponse("Vote emmited.")
 
 class ListProposals(ListView):
 
