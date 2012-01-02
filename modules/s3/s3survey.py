@@ -2535,10 +2535,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         self.complete_id = {}
         for answer in self.valueList:
             if answer != None:
-                if isinstance(answer, dict):
-                    key = answer.key
-                else:
-                    key = answer
+                key = answer.key
                 if key in self.locationList:
                     self.locationList[key] += 1
                 else:
@@ -2547,11 +2544,11 @@ class S3LocationAnalysis(S3AbstractAnalysis):
                         self.complete_id[key].append(answer.complete_id)
                     else:
                         self.complete_id[key] = [answer.complete_id]
-                    result = answer.result
+                    result = answer.records
                     if len(result) > 1:
                         self.duplicates[key] = result
                     if len(result) == 1:
-                        self.known[key] = result.first()
+                        self.known[key] = result[0]
         self.cnt = len(self.locationList)
         self.dcnt = len(self.duplicates)
         self.kcnt = len(self.known)
