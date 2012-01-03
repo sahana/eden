@@ -28,6 +28,12 @@ from e_cidadania.views import IndexEntriesFeed, ListNews
 
 admin.autodiscover()
 
+# We put here the dictionary with all the packages for translatin JavaScript code
+# Please refer to https://docs.djangoproject.com/en/dev/topics/i18n/internationalization/#specifying-translation-strings-in-javascript-code
+js_info_dict = {
+    'packages': ('e_cidadania.apps.debates',),
+}
+
 urlpatterns = patterns('',
 
 
@@ -76,6 +82,8 @@ urlpatterns = patterns('',
     (r'^comments/', include('django.contrib.comments.urls')),
 
     (r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
+
+    (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
 
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view

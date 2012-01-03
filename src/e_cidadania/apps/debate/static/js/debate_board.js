@@ -7,7 +7,18 @@
     Author: Oscar Carballal Prego <info@oscarcp.com>
 */
 
-
+// We put here the string for translation. This is meant to be translated by
+// django jsi18n
+var newTitle = gettext('Write here your title');
+var newMessage = gettext('Write here your message');
+var editString = gettext('Edit');
+var errorMsg = gettext('There has been an error.');
+var errorCreate = gettext("Couldn't create note.");
+var errorGetNote = gettext("Couldn't get note data.");
+var errorSave = gettext("Couldn't save note.");
+var errorSavePos = gettext("Couldn't save note position.");
+var errorDelete = gettext("Couldn't delete note.");
+var confirmDelete = gettext('Are you sure?');
 
 /*
     NOTE FUNCTIONS
@@ -27,8 +38,8 @@ function createNote() {
         url:"../create_note/",
         data:{
             debateid:$('#debate-number').text(),
-            title:"Write here your title",
-            message:"Write here your message",
+            title: newTitle,
+            message: newMessage,
             column:1,
             row:1
         }
@@ -42,14 +53,14 @@ function createNote() {
             "</div><p class='note-text'>" + note.title +
             "</p><span class='label'><a href='#' onclick='editNote(this)'" +
             " data-controls-modal='edit-current-note' data-backdrop='true'" +
-            " data-keyboard='true'>Edit</a></span>" +
+            " data-keyboard='true'>" + editString + "</a></span>" +
             "</div>")
     });
 
     request.fail(function (jqXHR, textStatus) {
         $('#jsnotify').notify("create", {
-            title:"Couldn't create note",
-            text:"There has been an error." + textStatus,
+            title: errorCreate,
+            text: errorMsg + textStatus,
             icon:"alert.png"
         });
     });
@@ -77,8 +88,8 @@ function editNote(obj) {
     request.fail(function (jqXHR, textStatus) {
         $('#edit-current-note').modal('hide');
         $('#jsnotify').notify("create", {
-            title:"Couldn't get note data",
-            text:"There has been an error." + textStatus,
+            title: errorGetNote,
+            text: errorMsg + textStatus,
             icon:"alert.png"
         });
     });
@@ -111,8 +122,8 @@ function saveNote() {
     request.fail(function(jqXHR, textStatus) {
         $('#edit-current-note').modal('hide');
         $('#jsnotify').notify("create", {
-            title:"Couldn't save the note",
-            text:"There has been an error." + textStatus,
+            title: errorSave,
+            text: errorMsg + textStatus,
             icon:"alert.png"
         });
     })
@@ -125,7 +136,7 @@ function deleteNote(obj) {
         after that we remove the note from the board.
     */
     var noteID = $(obj).parents('.note').attr('id');
-    var answer = confirm("Are you sure?");
+    var answer = confirm(confirmDelete);
 
     if (answer) {
         var request = $.ajax({
@@ -140,8 +151,8 @@ function deleteNote(obj) {
 
         request.fail(function(jqXHR, textStatus) {
             $('#jsnotify').notify("create", {
-                title:"Couldn't delete note",
-                text:"There has been an error." + textStatus,
+                title: errorDelete,
+                text: errorMsg + textStatus,
                 icon:"alert.png"
             });
         });
@@ -182,8 +193,8 @@ function makeSortable() {
                 }
             }).fail(function(jqXHR, textStatus) {
                 $('#jsnotify').notify("create", {
-                    title:"Couldn't save position",
-                    text:"There has been an error." + textStatus,
+                    title: errorSavePos,
+                    text: errorMsg + textStatus,
                     icon:"alert.png"
                 });
             });
