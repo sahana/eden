@@ -58,6 +58,7 @@ class S3Model(object):
     """ Base class for S3 models """
 
     LOCK = "s3_model_lock"
+    LOAD = "s3_model_load"
     DELETED = "deleted"
 
     def __init__(self, module=None):
@@ -77,6 +78,8 @@ class S3Model(object):
                             "org")
 
         if module is not None:
+            if self.__loaded():
+                return
             self.__lock()
             mandatory = module in mandatory_models
             if mandatory or self.settings.has_module(module):
@@ -85,8 +88,23 @@ class S3Model(object):
                 env = self.defaults()
             if isinstance(env, dict):
                 response.s3.update(env)
+            self.__loaded(True)
             self.__unlock()
         return
+
+    # -------------------------------------------------------------------------
+    def __loaded(self, loaded=None):
+
+        LOAD = self.LOAD
+        name = self.__class__.__name__
+        response = current.response
+        if LOAD not in response:
+            response[LOAD] = []
+        if name in response[LOAD]:
+            return True
+        elif loaded:
+            response[LOAD].append(name)
+        return loaded
 
     # -------------------------------------------------------------------------
     def __lock(self):
