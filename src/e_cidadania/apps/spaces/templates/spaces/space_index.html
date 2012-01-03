@@ -102,16 +102,21 @@
                             {% endif %} 
                             
                             {% if get_place.mod_cal %}
-                                <h6>{% trans "Events" %}</h6>           
+                                <h6>{% trans "Events" %}</h6>
+                                <ul class="unstyled">
+                                    {% for m in meeting %}
+                                        <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a> {% trans "on" %} {{ m.meeting_date|date:"d F Y" }}</li>
+                                    {% empty %}
+                                        <li>{% trans "No events registered." %}</li>
+                                    {% endfor %}
+                                </ul>
                             {% endif %}
                         </div>
                         <div class="span5 space-sidebar">
                             <h4>{% trans "Next events" %}</h4>
                             <ul class="unstyled">
                                 {% for m in meeting %}
-                                    <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a> {% trans "on" %} {{ m.meeting_date|date:"d F Y" }}</li>
-                                {% empty %}
-                                    <li>{% trans "No events registered." %}</li>
+                                    <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a></li>
                                 {% endfor %}
                             </ul>
                         </div>
