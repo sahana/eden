@@ -175,11 +175,10 @@ hr { /* This hr replaces the bootstrap one */
 /* END LANGUAGE SELECTOR */
 
 /* PROPOSAL STYLES */
-#proposal-wrapper {
-    border: none;
+.proposal-wrapper {
     background: none;
-    margin: 10px;
     border: 1px solid #DDD;
+    padding: 10px;
     /* Fancy round borders for Webkit, Gecko and standard
        implementations */
     border-bottom-left-radius: 7px;
@@ -205,18 +204,18 @@ hr { /* This hr replaces the bootstrap one */
     width: 80%;
 }
 
-#proposal .title {
+.proposal-title {
     font-size: 1.7em;
     margin-bottom: 10px;
 
 }
 
-#proposal .message {
+.proposal-message {
     margin-bottom: 10px;
     font-size: 12px;
 }
 
-#proposal .creator {
+.proposal-creator {
     font-size: 10px;
     font-style: italic;
     margin-bottom: 5px;

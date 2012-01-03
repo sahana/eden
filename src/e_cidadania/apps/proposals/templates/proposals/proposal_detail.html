@@ -8,7 +8,7 @@
         <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
     {% endif %}
 {% endblock %}
-  
+
 {% block banner %}
     {% if get_place %}
         <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
@@ -25,9 +25,10 @@
             });
 
             request.done(function(msg) {
-                var cur_votes = parseInt($("#votes span").html());
+                var cur_votes = parseInt($(".span1 p").html());
                 var votes = cur_votes + 1;
-                $("#votes span").html(votes);
+                $(".span1 p").html(votes);
+                $(".span1 button").attr('disabled', 'disabled');
             });
 
             request.fail(function(jqXHR, textStatus) {
@@ -41,44 +42,29 @@
     </script>
 {% endblock %}
 
+{% block space %}
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+{% endblock %}
+
 {% block content %}
 
     <div class="row">
-        <div class="span11">
-            <div id="proposal-wrapper">
-                {% if perms.proposals.add_proposal %}
-                <div id="tools">
-                    <a href="{% url 'add-proposal' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
-                    {% if perms.proposals.edit_proposal %}
-                        <a href="{% url 'edit-proposal' get_place.url proposal.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
-                    {% endif %}
-                    {% if perms.proposals.delete_proposal %}
-                        <a href="{% url 'delete-proposal' get_place.url proposal.id %}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
-                    {% endif %}
+        <div class="span16">
+            <div class="row proposal-wrapper">
+                <div class="span1">
+                    <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ support_votes_count }}</p>
+                    <button style="margin-left:-15px;" onclick="upvote({{ proposal.id }})" class="btn small" {% if user in proposal.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
                 </div>
-                {% endif %}
-                <div id="votes">
-                    <span style="font-size:30px;text-align:center;">
-                        {{ proposal.support_votes }}
-                    </span><br/>
-                    <button onclick="upvote({{ proposal.id }})" class="btn small">{% trans "support" %}</button>
+                <div class="span14">
+                    <div class="proposal-title">{{ proposal.title }}</div>
+                    <div class="proposal-message">{{ proposal.description|safe }}</div>
+                    <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
                 </div>
-                <!-- Here goes the voting button -->
-                <div id="proposal">
-                    <div class="title">{{ proposal.title }}</div>
-                    <div class="message">{{ proposal.description|safe }}</div>
-                    <div class="creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
-                </div>
-                <div style="clear:left;"></div>
             </div>
-      
+
             <p>{% render_comment_list for proposal %}</p>
       
             <p>{% render_comment_form for proposal%}</p>
-        </div>
-        
-        <div class="span5">
-            <h4></h4>
         </div>
     </div>
 
