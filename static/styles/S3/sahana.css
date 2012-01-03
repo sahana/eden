@@ -260,7 +260,7 @@ table {
 */
 /* response.menu_modules */
 #menu_modules {
-    position: relative;
+    position: fixed;
     height: 36px;
     background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
     border-top: 1px solid #2a323f;
@@ -283,6 +283,7 @@ table {
     padding-top: 0px;
     z-index: 25;
     min-width: 800px;
+    width: 100%;
 }
 #modulenav {
     position: relative;
@@ -471,6 +472,7 @@ table {
     width: 100%;         /* width of whole page */
     overflow: hidden;    /* This chops off any overhanging divs */
     z-index: 0;          /* This keeps drop down menus visible on maps */
+    margin-top: 42px;
 }
 
 /* common column settings */
@@ -505,6 +507,7 @@ table {
 .fullpage {
     background: #fff;    /* page background colour */
     padding-top: 1px;
+    overflow: visible;
 }
 .fullpage .col1 {
     width: 99%;         /* page width minus left and right padding */
@@ -531,7 +534,7 @@ table {
     padding:10px 30px 10px 30px;
    -moz-border-radius: 10px 10px 10px 10px;
    -webkit-border-radius: 10px 10px 10px 10px;
-   overflow:auto;
+   overflow: hidden;
 }
 #content h1,
 #content h2 {
@@ -778,9 +781,8 @@ input[disabled='disabled'] {
 
 /* Tabular data view */
 div#table-container {
-   display: table-cell;
-   width: 100%;
-   overflow: auto;
+   display: block;
+   overflow: visible;
 }
 div#table-container thead th {
 	text-align: left;
