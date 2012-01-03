@@ -95,7 +95,7 @@ class S3DocumentLibrary(S3Model):
                                                   comment=person_comment(T("Author"),
                                                                          T("The Author of this Document (optional)"))),
                                   s3.org_organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  Field("date", "date"),
+                                  Field("date", "date", label = T("Date Published")),
                                   s3.location_id(),
                                   s3.comments(),
                                   #Field("entered", "boolean", label=T("Entered")),

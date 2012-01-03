@@ -14,11 +14,8 @@ s3_menu(module)
 
 # =============================================================================
 def index():
-    """ Module's Home Page """
-
-    module_name = deployment_settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    """ Find projects """
+    return project()
 
 # =============================================================================
 def create():
@@ -29,6 +26,7 @@ def create():
 def project():
     """ RESTful CRUD controller """
 
+    resourcename = "project"
     db.hrm_human_resource.person_id.comment = DIV(_class="tooltip",
                                                   _title="%s|%s" % (T("Person"),
                                                                     T("Select the person assigned to this role for this project.")))
@@ -45,6 +43,15 @@ def project():
             (T("Documents"), "document"),
            ]
 
+    doc_table = s3db.table("doc_document", None)
+    if doc_table is not None:
+        doc_table.organisation_id.readable = False
+        doc_table.person_id.readable = False
+        doc_table.location_id.readable = False
+        doc_table.organisation_id.writable = False
+        doc_table.person_id.writable = False
+        doc_table.location_id.writable = False
+
     def prep(r):
         s3mgr.load("project_beneficiary")
         btable = db.project_beneficiary
@@ -55,7 +62,7 @@ def project():
                                                     filter_opts=[r.id],
                                                     sort=True))
         if r.interactive:
-           if r.component is not None:
+            if r.component is not None:
                 if r.component_name == "organisation":
                     if r.method != "update":
                         host_role = 1
@@ -79,6 +86,8 @@ def project():
                         query = (ltable.id.belongs(countries))
                         countries = db(query).select(ltable.code)
                         deployment_settings.gis.countries = [c.code for c in countries]
+            elif not r.id and r.function == "index":
+                r.method = "search"
 
         return True
     response.s3.prep = prep
@@ -164,6 +173,16 @@ def activity():
             (T("Tasks"), "task"),
             (T("Documents"), "document"),
            ]
+
+
+    doc_table = s3db.table("doc_document", None)
+    if doc_table is not None:
+        doc_table.organisation_id.readable = False
+        doc_table.person_id.readable = False
+        doc_table.location_id.readable = False
+        doc_table.organisation_id.writable = False
+        doc_table.person_id.writable = False
+        doc_table.location_id.writable = False
 
     rheader = lambda r: response.s3.project_rheader(r, tabs)
     return s3_rest_controller(module, resourcename,

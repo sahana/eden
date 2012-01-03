@@ -439,7 +439,7 @@ class S3ProjectModel(S3Model):
         multi_activity_type_id = S3ReusableField("multi_activity_type_id",
                                                  "list:reference project_activity_type",
                                                  sortby = "name",
-                                                 label = T("Activities"),
+                                                 label = T("Types of Activities"),
                                                  requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                                  "project_activity_type.id",
                                                                                  "%(name)s",
@@ -543,6 +543,8 @@ class S3ProjectModel(S3Model):
 
         self.configure(tablename,
                        super_entity="doc_entity",
+                       create_next=URL(c="project", f="activity",
+                                       args=["[id]", "beneficiary"]),
                        search_method=project_activity_search,
                        onaccept=self.project_activity_onaccept,
                        deduplicate=self.project_activity_deduplicate,
@@ -1475,6 +1477,7 @@ def project_rheader(r, tabs=[]):
     T = current.T
     s3 = current.response.s3
     settings = current.deployment_settings
+    pca = settings.get_project_community_activity
 
     rheader = None
 
@@ -1484,47 +1487,34 @@ def project_rheader(r, tabs=[]):
         record = r.record
         if record:
             if r.name == "project":
-                # @todo: integrate tabs?
                 rheader = DIV(TABLE(
                     TR(
-                        TH("%s: " % table.code.label),
-                        record.code,
-                        TH("%s: " % table.name.label),
-                        record.name
-                        ),
+                       TH("%s: " % table.name.label),
+                       record.name
+                      ),
                     TR(
-                        #TH("%s: " % table.location_id.label),
-                        #table.location_id.represent(record.location_id),
-                        ),
-                    #TR(
-                    #    TH("%s: " % table.status.label),
-                    #    project_status_opts.get(record.status, UNKNOWN_OPT),
-                    #    TH("%s: " % table.sector_id.label),
-                    #    sectors,
-                    #    )
+                       TH("%s: " % table.countries_id.label),
+                       table.countries_id.represent(record.countries_id),
+                      ),
                     ), rheader_tabs)
 
             elif r.name == "activity":
                 # @todo: integrate tabs?
-                rheader = DIV(TABLE(
-                    TR(
-                        TH("%s: " % table.name.label),
-                        record.name,
-                        ),
-                    #TR(
-                        #TH("%s: " % table.location_id.label),
-                        #gis_location_represent(record.location_id),
-                        #TH("%s: " % T("Duration")),
-                        #"%s to %s" % (record.start_date,
-                                        #record.end_date),
-                        #),
-                    #TR(
-                        #TH("%s: " % table.organisation_id.label),
-                        #organisation_represent(record.organisation_id),
-                        #TH("%s: " % table.sector_id.label),
-                        #org_sector_represent(record.sector_id),
-                        #),
-                    ), rheader_tabs)
+                if pca:
+                    tbl = TABLE(
+                                TR(
+                                   TH("%s: " % table.location_id.label),
+                                   s3.gis_location_represent(record.location_id)
+                                  )
+                               )
+                else:
+                    tbl = TABLE(
+                                TR(
+                                   TH("%s: " % table.name.label),
+                                   record.name
+                                  )
+                               )
+                rheader = DIV(tbl, rheader_tabs)
             elif r.name == "task":
                 tabs = [(T("Details"), None),
                         (T("Comments"), "discuss")]

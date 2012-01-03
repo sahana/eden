@@ -1043,7 +1043,7 @@ s3_menu_dict = {
         "menu": [],
         "condition1": lambda: deployment_settings.get_project_community_activity(),
         "conditional1": [
-            [T("Home"), False, aURL(f="index")],
+            #[T("Home"), False, aURL(f="index")],
             [T("Projects"), False, aURL(f="project"),[
                 [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
                 [T("List All Projects"), False, aURL(f="project")],
@@ -1083,7 +1083,7 @@ s3_menu_dict = {
 
         "condition2": lambda: not deployment_settings.get_project_community_activity(),
         "conditional2": [
-            [T("Home"), False, aURL(f="index")],
+            #[T("Home"), False, aURL(f="index")],
             [T("Projects"), False, aURL(f="project"),[
                 [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
                 [T("List All Projects"), False, aURL(f="project")],
