@@ -80,6 +80,7 @@ class S3ProjectModel(S3Model):
 
         # Enable DRR extensions?
         drr = self.settings.get_project_drr()
+        pca = self.settings.get_project_community_activity()
 
         NONE = current.messages.NONE
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
@@ -470,45 +471,75 @@ class S3ProjectModel(S3Model):
                                   *s3.meta_fields())
 
         # Field configuration
+        if pca:
+            table.name.readable = False
+            table.name.writable = False
+            table.name.requires = None
+
         # CRUD Strings
-        ADD_ACTIVITY = T("Add Activity")
-        LIST_ACTIVITIES = T("List Activities")
-        s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ACTIVITY,
-            title_display = T("Activity Details"),
-            title_list = LIST_ACTIVITIES,
-            title_update = T("Edit Activity"),
-            title_search = T("Search Activities"),
-            title_upload = T("Import Activity Data"),
-            title_report = T("Who is doing What Where"),
-            subtitle_create = T("Add New Activity"),
-            subtitle_list = T("Activities"),
-            subtitle_report = T("Activities"),
-            label_list_button = LIST_ACTIVITIES,
-            label_create_button = ADD_ACTIVITY,
-            msg_record_created = T("Activity Added"),
-            msg_record_modified = T("Activity Updated"),
-            msg_record_deleted = T("Activity Deleted"),
-            msg_list_empty = T("No Activities Found")
-        )
+        if pca:
+            ADD_ACTIVITY = T("Add Community")
+            LIST_ACTIVITIES = T("List Communities")
+            s3.crud_strings[tablename] = Storage(
+                title_create = ADD_ACTIVITY,
+                title_display = T("Community Details"),
+                title_list = LIST_ACTIVITIES,
+                title_update = T("Edit Community Details"),
+                title_search = T("Search Community"),
+                title_upload = T("Import Community Data"),
+                title_report = T("Who is doing What Where"),
+                subtitle_create = T("Add New Community"),
+                subtitle_list = T("Communities"),
+                subtitle_report = T("Communities"),
+                label_list_button = LIST_ACTIVITIES,
+                label_create_button = ADD_ACTIVITY,
+                msg_record_created = T("Community Added"),
+                msg_record_modified = T("Community Updated"),
+                msg_record_deleted = T("Community Deleted"),
+                msg_list_empty = T("No Communities Found")
+            )
+        else:
+            ADD_ACTIVITY = T("Add Activity")
+            LIST_ACTIVITIES = T("List Activities")
+            s3.crud_strings[tablename] = Storage(
+                title_create = ADD_ACTIVITY,
+                title_display = T("Activity Details"),
+                title_list = LIST_ACTIVITIES,
+                title_update = T("Edit Activity"),
+                title_search = T("Search Activities"),
+                title_upload = T("Import Activity Data"),
+                title_report = T("Who is doing What Where"),
+                subtitle_create = T("Add New Activity"),
+                subtitle_list = T("Activities"),
+                subtitle_report = T("Activities"),
+                label_list_button = LIST_ACTIVITIES,
+                label_create_button = ADD_ACTIVITY,
+                msg_record_created = T("Activity Added"),
+                msg_record_modified = T("Activity Updated"),
+                msg_record_deleted = T("Activity Deleted"),
+                msg_list_empty = T("No Activities Found")
+            )
 
         # Virtual Fields
         table.virtualfields.append(S3ProjectActivityVirtualfields())
 
         # Search Method
-        project_activity_search = S3Search(simple=(S3SearchSimpleWidget(field="name",
-                                                                        name="simple")))
+        if pca:
+            project_activity_search = S3Search(field="location_id$name")
+        else:
+            project_activity_search = S3Search(field="name")
 
         # Resource Configuration
         analyze_fields = [(T("Organization"), "organisation"),
                           (T("Project"), "project_id$name"),
-                          (T("Activity"), "name"),
                           "location_id",
                           (T("Activity Type"), "multi_activity_type_id"),
                           (T("Theme"), "project_id$multi_theme_id"),
                           (T("Hazard"), "project_id$multi_hazard_id"),
                           (T("HFA"), "project_id$hfa"),
                          ]
+        if not pca:
+            analyze_fields.append((T("Activity"), "name"))
 
         self.configure(tablename,
                        super_entity="doc_entity",
@@ -541,6 +572,7 @@ class S3ProjectModel(S3Model):
                                       ondelete = "CASCADE")
 
         # Components
+
         #Beneficiaries
         self.add_component("project_beneficiary",
                            project_activity="activity_id")
@@ -1291,12 +1323,17 @@ class S3ProjectModel(S3Model):
         """ Record creation post-processing """
 
         db = current.db
+        settings = current.deployment_settings
+        pca = settings.get_project_community_activity()
 
-        # @todo: only update if this is an individual location
-        if form.vars.name and form.vars.location_id:
-            table = S3Model.table("gis_location")
-            query = table.id == form.vars.location_id
-            db(query).update(name=form.vars.name)
+        if not pca:
+           if "name" in form.vars and \
+              form.vars.name and form.vars.location_id:
+                table = S3Model.table("gis_location")
+                query = (table.id == form.vars.location_id)
+                row = db(query).select(table.level, limitby=(0, 1)).first()
+                if row and not row.level:
+                    row.update_record(name=form.vars.name)
         return
 
     # ---------------------------------------------------------------------
@@ -1305,24 +1342,37 @@ class S3ProjectModel(S3Model):
         """ Import item de-duplication """
 
         db = current.db
+        settings = current.deployment_settings
+        pca = settings.get_project_community_activity()
 
         if item.id:
             return
-        # @todo: de-duplicate by location if name not present
-        if item.tablename == "project_activity" and \
-            "name" in item.data and \
-            "project_id" in item.data:
-            # Match activity by name and project_id
-            table = item.table
-            name = item.data.name
-            project_id = item.data.project_id
-            query = (table.name == name) & \
-                    (table.project_id == project_id)
-            duplicate = db(query).select(table.id,
-                                            limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        if item.tablename != "project_activity":
+            return
+        table = item.table
+        duplicate = None
+        if pca:
+           if "project_id" in item.data and \
+              "location_id" in item.data:
+                # Match activity by project_id and location_id
+                project_id = item.data.project_id
+                location_id = item.data.location_id
+                query = (table.project_id == project_id) & \
+                        (table.location_id == location_id)
+                duplicate = db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        else:
+           if "project_id" in item.data and "name" in item.data:
+                # Match activity by project_id and name
+                project_id = item.data.project_id
+                name = item.data.name
+                query = (table.project_id == project_id) & \
+                        (table.name == name)
+                duplicate = db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
         return
 
     # ---------------------------------------------------------------------

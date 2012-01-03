@@ -415,6 +415,8 @@ deployment_settings.security.archive_not_delete = True
 # Project Tracking
 # Uncomment this to show DRR-related categories
 #deployment_settings.project.drr = True
+# Uncomment this to track project activities as project communities
+#deployment_settings.project.community_activity = True
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False

@@ -33,9 +33,14 @@ def project():
                                                   _title="%s|%s" % (T("Person"),
                                                                     T("Select the person assigned to this role for this project.")))
 
+    if deployment_settings.get_project_community_activity():
+        activity_label = T("Communities")
+    else:
+        activity_label = T("Activities")
+
     tabs = [(T("Basic Details"), None),
             (T("Organizations"), "organisation"),
-            (T("Activities"), "activity"),
+            (activity_label, "activity"),
             (T("Tasks"), "task"),
             (T("Documents"), "document"),
            ]

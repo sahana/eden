@@ -1040,7 +1040,49 @@ s3_menu_dict = {
     # PROJECT / Project Tracking & Management
     # -------------------------------------------------------------------------
     "project": {
-        "menu": [
+        "menu": [],
+        "condition1": lambda: deployment_settings.get_project_community_activity(),
+        "conditional1": [
+            [T("Home"), False, aURL(f="index")],
+            [T("Projects"), False, aURL(f="project"),[
+                [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
+                [T("List All Projects"), False, aURL(f="project")],
+                [T("List All Communities"), False, aURL(f="activity")],
+                [T("Search"), False, aURL(f="project", args="search")],
+            ]],
+            [T("Tasks"), False, aURL(f="task"),[
+                [T("Add New Task"), False, aURL(p="create", f="task", args="create")],
+                [T("List All Tasks"), False, aURL(f="task")],
+                #[T("Search"), False, aURL(f="task", args="search")],
+            ]],
+            [T("Reports"), False, aURL(f="report"),[
+                [T("Who is doing What Where"), False, aURL(f="activity", args="analyze")],
+                [T("Beneficiaries"),
+                 False, aURL(f="beneficiary",
+                             args="analyze",
+                             vars=Storage(rows="project_id",
+                                          cols="type",
+                                          fact="number",
+                                          aggregate="sum"))],
+                [T("Funding"), False, aURL(f="organisation", args="analyze")],
+            ]],
+            [T("Import"), False, aURL(f="index"),[
+                [T("Import Projects"), False, aURL(p="create", f="project",
+                                                   args="import")],
+                [T("Import Project Organisations"), False, aURL(p="create", f="organisation",
+                                                                args="import")],
+                [T("Import Project Communities"), False, aURL(p="create", f="activity",
+                                                             args="import")],
+            ]],
+            [T("Activity Types"), False, aURL(f="activity_type"),[
+                [T("Add New Activity Type"), False, aURL(p="create", f="activity_type", args="create")],
+                [T("List All Activity Types"), False, aURL(f="activity_type")],
+                #[T("Search"), False, aURL(f="activity_type", args="search")]
+            ]],
+        ],
+
+        "condition2": lambda: not deployment_settings.get_project_community_activity(),
+        "conditional2": [
             [T("Home"), False, aURL(f="index")],
             [T("Projects"), False, aURL(f="project"),[
                 [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
@@ -1078,8 +1120,8 @@ s3_menu_dict = {
                 #[T("Search"), False, aURL(f="activity_type", args="search")]
             ]],
         ],
-        "condition1": lambda: deployment_settings.get_project_drr(),
-        "conditional1": [
+        "condition3": lambda: deployment_settings.get_project_drr(),
+        "conditional3": [
             [T("Hazards"), False, aURL(f="hazard"),[
                 [T("Add New Hazard"), False, aURL(p="create", f="hazard", args="create")],
                 [T("List All Hazards"), False, aURL(f="hazard")],
