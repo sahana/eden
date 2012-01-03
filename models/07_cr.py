@@ -180,7 +180,7 @@ if deployment_settings.has_module("cr"):
         resourcename = "shelter"
         tablename = "cr_shelter"
         table = db.define_table(tablename,
-                                super_link(db.org_site),
+                                super_link("site_id", "org_site"),
                                 #Field("code",
                                 #      length=10,           # Mayon compatibility
                                 #      notnull=True,
@@ -272,7 +272,7 @@ if deployment_settings.has_module("cr"):
                                      )
 
         s3mgr.configure(tablename,
-                        super_entity=db.org_site,
+                        super_entity="org_site",
                         # Update the Address Fields
                         onvalidation=address_onvalidation,
                         list_fields=["id",

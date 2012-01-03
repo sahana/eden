@@ -79,7 +79,7 @@ if deployment_settings.has_module(module):
     resourcename = "hospital"
     tablename = "%s_%s" % (module, resourcename)
     table = db.define_table(tablename,
-                    super_link(db.org_site),
+                    super_link("site_id", "org_site"),
                     Field("paho_uuid", unique=True, length=128,
                           requires = IS_NULL_OR(IS_NOT_ONE_OF(db,
                                                               "%s.paho_uuid" % tablename)),
@@ -233,7 +233,7 @@ if deployment_settings.has_module(module):
                                   ondelete = "RESTRICT")
 
     s3mgr.configure(tablename,
-                    super_entity=db.org_site,
+                    super_entity="org_site",
                     list_fields=[
                         "id",
                         "gov_uuid",

@@ -73,7 +73,7 @@ if deployment_settings.has_module("inv"):
         resourcename = "inv_item"
         tablename = "inv_inv_item"
         table = db.define_table(tablename,
-                                super_link(db.org_site, # site_id
+                                super_link("site_id", "org_site",
                                            label = T("Inventory"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            readable = True,
@@ -206,7 +206,7 @@ $(document).ready(function() {
 
         # ---------------------------------------------------------------------
         s3mgr.configure(tablename,
-                        super_entity = db.supply_item_entity,
+                        super_entity = "supply_item_entity",
                         search_method = inv_item_search,
                         report_groupby = db.inv_inv_item.site_id,
                         report_hide_comments = True)
@@ -277,7 +277,7 @@ $(document).ready(function() {
                                 person_id(name = "recipient_id",
                                           label = T("Received By"),
                                           default = s3_logged_in_person()),
-                                super_link(db.org_site,
+                                super_link("site_id", "org_site",
                                            label=T("By Facility"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            readable = True,
@@ -688,7 +688,7 @@ $(document).ready(function() {
 
         # ---------------------------------------------------------------------
         s3mgr.configure(tablename,
-                        super_entity = db.supply_item_entity,
+                        super_entity = "supply_item_entity",
                         )
 
         # =====================================================================
@@ -705,7 +705,7 @@ $(document).ready(function() {
                                 person_id(name = "sender_id",
                                           label = T("Sent By"),
                                           default = s3_logged_in_person()),
-                                super_link(db.org_site,
+                                super_link("site_id", "org_site",
                                            label = T("From Inventory"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            readable = True,

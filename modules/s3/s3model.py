@@ -7,7 +7,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @author: Dominic KÃ¶nig <dominic[at]aidiq.com>
+    @author: Dominic König <dominic[at]aidiq.com>
 
     @copyright: 2009-2011 (c) Sahana Software Foundation
     @license: MIT
@@ -58,6 +58,7 @@ class S3Model(object):
     """ Base class for S3 models """
 
     LOCK = "s3_model_lock"
+    LOAD = "s3_model_load"
     DELETED = "deleted"
 
     def __init__(self, module=None):
@@ -73,10 +74,12 @@ class S3Model(object):
                             "gis",
                             "pr",
                             "sit",
-                            "doc",
+                            #"doc",
                             "org")
 
         if module is not None:
+            if self.__loaded():
+                return
             self.__lock()
             mandatory = module in mandatory_models
             if mandatory or self.settings.has_module(module):
@@ -85,8 +88,23 @@ class S3Model(object):
                 env = self.defaults()
             if isinstance(env, dict):
                 response.s3.update(env)
+            self.__loaded(True)
             self.__unlock()
         return
+
+    # -------------------------------------------------------------------------
+    def __loaded(self, loaded=None):
+
+        LOAD = self.LOAD
+        name = self.__class__.__name__
+        response = current.response
+        if LOAD not in response:
+            response[LOAD] = []
+        if name in response[LOAD]:
+            return True
+        elif loaded:
+            response[LOAD].append(name)
+        return loaded
 
     # -------------------------------------------------------------------------
     def __lock(self):
@@ -109,8 +127,9 @@ class S3Model(object):
         name = self.__class__.__name__
         response = current.response
         if LOCK in response:
-            response[LOCK].remove(name)
-            if response[LOCK]:
+            if name in response[LOCK]:
+                response[LOCK].remove(name)
+            if not response[LOCK]:
                 del response[LOCK]
         return
 
@@ -277,25 +296,25 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def super_link(tablename, **args):
+    def super_link(name, tablename, **args):
         """
             Shortcut for current.manager.model.super_link
         """
 
         manager = current.manager
         model = manager.model
-        return model.super_link(tablename, **args)
+        return model.super_link(name, tablename, **args)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def super_key(supertable):
+    def super_key(supertable, default=None):
         """
             Shortcut for current.manager.model.super_key
         """
 
         manager = current.manager
         model = manager.model
-        return model.super_key(supertable)
+        return model.super_key(supertable, default=default)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -548,6 +567,10 @@ class S3ModelExtensions(object):
                 if not isinstance(supertables, (list, tuple)):
                     supertables = [supertables]
                 for s in supertables:
+                    if isinstance(s, str):
+                        s = S3Model.table(s)
+                    if s is None:
+                        continue
                     h = self.components.get(s._tablename, None)
                     if h:
                         self.__get_hooks(hooks, h, names=names, supertable=s)
@@ -635,6 +658,10 @@ class S3ModelExtensions(object):
             if not isinstance(supertables, (list, tuple)):
                 supertables = [supertables]
             for s in supertables:
+                if isinstance(s, str):
+                    s = S3Model.table(s)
+                if s is None:
+                    continue
                 h = self.components.get(s._tablename, None)
                 if h:
                     self.__get_hooks(hooks, h, supertable=s)
@@ -818,21 +845,23 @@ class S3ModelExtensions(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def super_key(supertable):
+    def super_key(supertable, default=None):
         """
             Get the name of the key for a super-entity
 
             @param supertable: the super-entity table
         """
 
+        if supertable is None and default:
+            return default
         try:
             return supertable._id.name
-        except AttributeError: pass
-
+        except AttributeError:
+            pass
         raise SyntaxError("No id-type key found in %s" % supertable._tablename)
 
     # -------------------------------------------------------------------------
-    def super_link(self, supertable,
+    def super_link(self, name, supertable,
                    label=None,
                    comment=None,
                    represent=None,
@@ -856,18 +885,30 @@ class S3ModelExtensions(object):
             @param represent: set a representation function for the field
         """
 
-        key = self.super_key(supertable)
-
-        requires = IS_ONE_OF(current.db,
-                             "%s.%s" % (supertable._tablename, key),
-                             represent,
-                             orderby=orderby,
-                             sort=sort,
-                             groupby=groupby,
-                             filterby=filterby,
-                             filter_opts=filter_opts)
-        if empty:
-            requires = IS_EMPTY_OR(requires)
+        if isinstance(supertable, str):
+            supertable = S3Model.table(supertable)
+        if supertable is None:
+            if name is not None:
+                return Field(name, "integer",
+                             readable=False,
+                             writable=False)
+            else:
+                raise SyntaxError("Undefined super-entity")
+        else:
+            key = self.super_key(supertable)
+            if name is not None and name != key:
+                raise SyntaxError("Primary key %s not found in %s" % \
+                                 (name, supertable._tablename))
+            requires = IS_ONE_OF(current.db,
+                                 "%s.%s" % (supertable._tablename, key),
+                                 represent,
+                                 orderby=orderby,
+                                 sort=sort,
+                                 groupby=groupby,
+                                 filterby=filterby,
+                                 filter_opts=filter_opts)
+            if empty:
+                requires = IS_EMPTY_OR(requires)
 
         return Field(key, supertable,
                      default = default,
@@ -906,6 +947,10 @@ class S3ModelExtensions(object):
 
         super_keys = Storage()
         for s in supertable:
+            if isinstance(s, str):
+                s = S3Model.table(s)
+            if s is None:
+                continue
             # Get the key
             key = self.super_key(s)
             skey = _record.get(key, None)
@@ -973,6 +1018,10 @@ class S3ModelExtensions(object):
         uid = record.get("uuid", None)
         if uid:
             for s in supertable:
+                if isinstance(s, str):
+                    s = S3Model.table(s)
+                if s is None:
+                    continue
                 if "deleted" in s.fields:
                     current.db(s.uuid == uid).update(deleted=True)
 
@@ -992,7 +1041,9 @@ class S3ModelExtensions(object):
         db = current.db
         if not hasattr(supertable, "_tablename"):
             # tablename passed instead of Table
-            supertable = db[supertable]
+            supertable = S3Model.table(supertable)
+        if supertable is None:
+            return (None, None, None)
         query = supertable._id == superid
         entry = db(query).select(supertable.instance_type,
                                  supertable.uuid,
@@ -1246,5 +1297,4 @@ class S3RecordLinker(object):
             mq = (to_table.id == None)
         return mq
 
-# =============================================================================
-
+# END =========================================================================

@@ -562,7 +562,7 @@ s3.location_id = location_id
 
 tablename = "gis_config"
 table = db.define_table(tablename,
-                        super_link(s3db.pr_pentity), # pe_id for Personal configs
+                        super_link("pe_id", "pr_pentity"), # pe_id for Personal configs
                         # This name will be used in the 'Regions' menu.
                         # This is the region name if this config represents
                         # a region, the person's name for a personal config

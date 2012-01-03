@@ -29,7 +29,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3IRSModel"]
+__all__ = ["S3IRSModel",
+           "irs_rheader"]
 
 import os
 import sys
@@ -57,10 +58,6 @@ class S3IRSModel(S3Model):
         human_resource_id = s3.human_resource_id
         location_id = s3.location_id
         person_id = self.pr_person_id
-
-        doc_entity = self.table("doc_entity")
-        org_site = self.table("org_site")
-        sit_situation = self.table("sit_situation")
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         datetime_represent = S3DateTime.datetime_represent
@@ -233,8 +230,8 @@ class S3IRSModel(S3Model):
         #}
         tablename = "irs_ireport"
         table = self.define_table(tablename,
-                                  self.super_link(sit_situation), # sit_id
-                                  self.super_link(doc_entity),    # doc_id
+                                  self.super_link("sit_id", "sit_situation"),
+                                  self.super_link("doc_id", "doc_entity"),
                                   Field("name", label = T("Short Description"),
                                         requires = IS_NOT_EMPTY()),
                                   Field("message", "text", label = T("Message"),
@@ -313,7 +310,7 @@ class S3IRSModel(S3Model):
             msg_list_empty = T("No Incident Reports currently registered"))
 
         self.configure(tablename,
-                       super_entity = (sit_situation, doc_entity),
+                       super_entity = ("sit_situation", "doc_entity"),
                        # Open tabs after creation
                        create_next = URL(args=["[id]", "update"]),
                        update_next = URL(args=["[id]", "update"]),
@@ -378,7 +375,7 @@ class S3IRSModel(S3Model):
                                             widget = S3DateTimeWidget(future=0),
                                             requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
                                             default = request.utcnow),
-                                      self.super_link(org_site),   # site_id
+                                      self.super_link("site_id", "org_site"),
                                       location_id(label=T("Destination")),
                                       Field("closed",
                                             # @ToDo: Close all assignments when Incident closed

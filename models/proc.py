@@ -114,7 +114,7 @@ if deployment_settings.has_module("proc"):
 
         tablename = "proc_plan"
         table = db.define_table(tablename,
-                                super_link(db.org_site, # site_id
+                                super_link("site_id", "org_site",
                                            #label = T("Inventory"),
                                            label = T("Office"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
@@ -316,7 +316,7 @@ if deployment_settings.has_module("proc"):
 
         # ---------------------------------------------------------------------
         s3mgr.configure(tablename,
-                        super_entity = db.supply_item_entity,
+                        super_entity = "supply_item_entity",
                         search_method = plan_item_search,
                         #report_groupby = db.proc_plan.site_id,
                         report_hide_comments = True)

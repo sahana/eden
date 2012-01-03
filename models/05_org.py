@@ -232,7 +232,7 @@ organisation_type_opts = {
 resourcename = "organisation"
 tablename = "org_organisation"
 table = db.define_table(tablename,
-                        super_link(db.pr_pentity), # pe_id
+                        super_link("pe_id", "pr_pentity"),
                         #Field("privacy", "integer", default=0),
                         #Field("archived", "boolean", default=False),
                         Field("name", notnull=True, unique=True,
@@ -294,7 +294,7 @@ s3.crud_strings[tablename] = Storage(
     msg_list_empty = T("No Organizations currently registered"))
 
 s3mgr.configure(tablename,
-                super_entity = db.pr_pentity,
+                super_entity = "pr_pentity",
                 list_fields = ["id",
                                "name",
                                "acronym",
@@ -532,10 +532,9 @@ def organisation_controller():
     if deployment_settings.has_module("assess"):
         s3mgr.load("assess_assess")
         tabs.append((T("Assessments"), "assess"))
-    if deployment_settings.has_module("project"):
-        tabs.append((T("Projects"), "project"))
-        # @ToDo
-        #tabs.append((T("Tasks"), "task"))
+    tabs.append((T("Projects"), "project"))
+    # @ToDo
+    #tabs.append((T("Tasks"), "task"))
 
     # Pre-process
     def prep(r):
@@ -635,7 +634,7 @@ org_site_types = auth.org_site_types
 tablename = "org_site"
 table = super_entity(tablename, "site_id", org_site_types,
                      # @ToDo: Make Sites Trackable (Mobile Hospitals & Warehouses)
-                     #super_link(s3db.sit_trackable), # track_id
+                     #super_link("track_id", "sit_trackable"),
                      #Field("code",
                      #      length=10,           # Mayon compatibility
                      #      notnull=True,
@@ -713,7 +712,7 @@ def org_site_represent(id, default_label="[no label]", link = True):
 s3.org_site_represent = org_site_represent
 
 # -----------------------------------------------------------------------------
-site_id = super_link(db.org_site,
+site_id = super_link("site_id", "org_site",
                      #writable = True,
                      #readable = True,
                      label = T("Facility"),
@@ -822,8 +821,8 @@ response.s3.org_office_comment = office_comment
 resourcename = "office"
 tablename = "org_office"
 table = db.define_table(tablename,
-                        super_link(db.pr_pentity), # pe_id
-                        super_link(db.org_site),   # site_id
+                        super_link("pe_id", "pr_pentity"),
+                        super_link("site_id", "org_site"),
                         Field("name", notnull=True,
                               length=64,           # Mayon Compatibility
                               label = T("Name")),
@@ -979,7 +978,7 @@ s3mgr.model.add_component(table,
                           org_organisation="organisation_id")
 
 s3mgr.configure(tablename,
-                super_entity=(db.pr_pentity, db.org_site),
+                super_entity=("pr_pentity", "org_site"),
                 onvalidation=address_onvalidation,
                 deduplicate=org_office_deduplicate,
                 list_fields=[ "id",

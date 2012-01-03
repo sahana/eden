@@ -1064,7 +1064,7 @@ S3FilterFieldChange({
         tablename = "supply_item_entity"
         table = super_entity(tablename, "item_entity_id", item_types,
                              # @ToDo: Make Items Trackable?
-                             #super_link(s3db.sit_trackable), # track_id
+                             #super_link("track_id", "sit_trackable"),
                              #location_id(),
                              supply_item_id(represent = lambda id: \
                                                 supply_item_represent(id,
@@ -1116,7 +1116,7 @@ S3FilterFieldChange({
             return item_str
 
         # -----------------------------------------------------------------------------
-        item_id = super_link(db.supply_item_entity,
+        item_id = super_link("item_entity_id", "supply_item_entity",
                              #writable = True,
                              #readable = True,
                              #label = T("Status"),

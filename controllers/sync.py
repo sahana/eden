@@ -52,7 +52,7 @@ def repository():
             (T("Resources"), "task"),
             (T("Schedule"), "job"),
             (T("Log"), "log"),
-            #(T("Conflicts"), "conflict")
+            (T("Manual Sync"), "now")
            ]
 
     s3mgr.model.set_method("sync", "repository",

@@ -358,15 +358,6 @@ def s3_rheader_resource(r):
 
     return (tablename, record)
 
-# -----------------------------------------------------------------------------
-def sort_dict_by_values(adict):
-    """
-        Sort a dict by value and return an OrderedDict.
-        - used by models/05_irs.py
-    """
-
-    return OrderedDict(sorted(adict.items(), key = lambda item: item[1]))
-
 
 # -----------------------------------------------------------------------------
 # CRUD functions
