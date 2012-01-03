@@ -65,7 +65,7 @@ class S3SituationModel(S3Model):
         # Trackable Types -----------------------------------------------------
         #
         # Use:
-        #   - add a field with super_link(db.sit_trackable)
+        #   - add a field with super_link("track_id", "sit_trackable")
         #   - add as super-entity in configure (super_entity=s3db.sit_trackable)
         #
         trackable_types = Storage(
@@ -75,15 +75,13 @@ class S3SituationModel(S3Model):
         )
 
         tablename = "sit_trackable"
-        table = self.super_entity(tablename, "track_id", trackable_types,
-                                  Field("track_timestmp", "datetime",
-                                        readable=False,
-                                        writable=False))
+        sit_trackable = self.super_entity(tablename, "track_id", trackable_types,
+                                          Field("track_timestmp", "datetime",
+                                                readable=False,
+                                                writable=False))
 
         self.configure(tablename,
                        editable=False, deletable=False, listadd=False)
-
-        sit_trackable = table
 
         # Presence Records for trackables -------------------------------------
         #
@@ -92,7 +90,7 @@ class S3SituationModel(S3Model):
         #
         tablename = "sit_presence"
         table = self.define_table(tablename,
-                                  self.super_link(sit_trackable),
+                                  self.super_link("track_id", sit_trackable),
                                   Field("timestmp", "datetime",
                                         label=T("Date/Time")),
                                   s3.location_id(),

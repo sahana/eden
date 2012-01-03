@@ -21,7 +21,7 @@ if deployment_settings.has_module(module):
         # ---------------------------------------------------------------------
         tablename = "msg_log"
         table = db.define_table(tablename,
-                                super_link(db.pr_pentity), # pe_id, Sender
+                                super_link("pe_id", "pr_pentity"),
                                 Field("sender"),        # The name to go out incase of the email, if set used
                                 Field("fromaddress"),   # From address if set changes sender to this
                                 Field("recipient"),
@@ -191,7 +191,7 @@ if deployment_settings.has_module(module):
         tablename = "msg_outbox"
         table = db.define_table(tablename,
                                 message_id(),
-                                super_link(db.pr_pentity), # pe_id, Person/Group to send the message out to
+                                super_link("pe_id", "pr_pentity"), # Person/Group to send the message out to
                                 Field("address"),   # If set used instead of picking up from pe_id
                                 Field("pr_message_method",
                                       length=32,

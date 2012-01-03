@@ -50,10 +50,7 @@ class S3DVIModel(S3Model):
 
         location_id = s3.location_id
 
-        pr_pentity = self.table("pr_pentity")
-        sit_trackable = self.table("sit_trackable")
-        pe_label = s3.pr_pe_label
-
+        pe_label = self.pr_pe_label
         person_id = self.pr_person_id
         pr_gender = self.pr_gender
         pr_age_group = self.pr_age_group
@@ -180,8 +177,8 @@ class S3DVIModel(S3Model):
         bool_repr = lambda opt: (opt and [T("yes")] or [""])[0]
         tablename = "dvi_body"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity),    # pe_id
-                                  self.super_link(sit_trackable), # track_id
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("track_id", "sit_trackable"),
                                   pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),
                                                        IS_NOT_ONE_OF(db, "dvi_body.pe_label")]),
                                   morgue_id(),
@@ -233,7 +230,7 @@ class S3DVIModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       super_entity=(pr_pentity, sit_trackable),
+                       super_entity=("pr_pentity", "sit_trackable"),
                        create_onaccept=self.body_onaccept,
                        create_next=URL(f="body", args=["[id]", "checklist"]),
                        search_method=body_search,
@@ -258,7 +255,7 @@ class S3DVIModel(S3Model):
 
         tablename = "dvi_checklist"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   checklist_item("personal_effects",
                                                  label = T("Inventory of Effects")),
                                   checklist_item("body_radiology",
@@ -302,7 +299,7 @@ class S3DVIModel(S3Model):
         #
         tablename = "dvi_effects"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity),  # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("clothing", "text"),  # @todo: elaborate
                                   Field("jewellery", "text"), # @todo: elaborate
                                   Field("footwear", "text"),  # @todo: elaborate
@@ -350,7 +347,7 @@ class S3DVIModel(S3Model):
 
         tablename = "dvi_identification"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("status", "integer",
                                         requires = IS_IN_SET(dvi_id_status, zero=None),
                                         default = 1,

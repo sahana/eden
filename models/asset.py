@@ -54,8 +54,8 @@ if deployment_settings.has_module("asset"):
         vehicle = deployment_settings.has_module("vehicle")
         tablename = "asset_asset"
         table = db.define_table(tablename,
-                                super_link(s3db.sit_trackable), # track_id
-                                super_link(s3db.doc_entity),    # doc_id
+                                super_link("track_id", "sit_trackable"),
+                                super_link("doc_id", "doc_entity"),
                                 Field("number",
                                       label = T("Asset Number")),
                                 item_id,
@@ -148,7 +148,7 @@ if deployment_settings.has_module("asset"):
                                    ondelete = "RESTRICT")
 
         s3mgr.configure(tablename,
-                        super_entity=(db.supply_item_entity, s3db.sit_trackable)
+                        super_entity=("supply_item_entity", "sit_trackable")
                        )
 
         #--------------------------------------------------------------------------

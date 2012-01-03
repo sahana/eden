@@ -81,10 +81,6 @@ class S3ProjectModel(S3Model):
         # Enable DRR extensions?
         drr = self.settings.get_project_drr()
 
-        org_site = self.table("org_site")
-        doc_entity = self.table("doc_entity")
-        pr_pentity = self.table("pr_pentity")
-
         NONE = current.messages.NONE
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
@@ -192,7 +188,7 @@ class S3ProjectModel(S3Model):
 
         tablename = "project_project"
         table = self.define_table(tablename,
-                                  self.super_link(doc_entity), # doc_id
+                                  self.super_link("doc_id", "doc_entity"),
                                   Field("name",
                                         label = T("Name"),
                                         # Require unique=True if using IS_NOT_ONE_OF like here (same table,
@@ -271,7 +267,7 @@ class S3ProjectModel(S3Model):
 
         # Resource Configuration
         self.configure(tablename,
-                       super_entity=doc_entity,
+                       super_entity="doc_entity",
                        deduplicate=self.project_project_deduplicate,
                        onvalidation=self.project_project_onvalidation,
                        create_next=URL(c="project", f="project",
@@ -462,7 +458,7 @@ class S3ProjectModel(S3Model):
         #
         tablename = "project_activity"
         table = self.define_table(tablename,
-                                  self.super_link(doc_entity), # doc_id
+                                  self.super_link("doc_id", "doc_entity"),
                                   project_id(),
                                   Field("name",
                                         label = T("Short Description"),
@@ -515,7 +511,7 @@ class S3ProjectModel(S3Model):
                          ]
 
         self.configure(tablename,
-                       super_entity=doc_entity,
+                       super_entity="doc_entity",
                        search_method=project_activity_search,
                        onaccept=self.project_activity_onaccept,
                        deduplicate=self.project_activity_deduplicate,
@@ -565,7 +561,7 @@ class S3ProjectModel(S3Model):
         #
         tablename = "project_site"
         table = self.define_table(tablename,
-                                  self.super_link(org_site), # site_id
+                                  self.super_link("site_id", "org_site"),
                                   project_id(),
                                   Field("name", notnull=True,
                                         length=64, # Mayon Compatibility
@@ -628,7 +624,7 @@ class S3ProjectModel(S3Model):
                                           ondelete = "CASCADE")
 
         self.configure(tablename,
-                        super_entity=org_site,
+                        super_entity="org_site",
                         onvalidation=s3.address_onvalidation)
 
         # ---------------------------------------------------------------------
@@ -800,7 +796,7 @@ class S3ProjectModel(S3Model):
 
         tablename = "project_task"
         table = self.define_table(tablename,
-                                  self.super_link(doc_entity), # doc_id
+                                  self.super_link("doc_id", "doc_entity"),
                                   Field("template", "boolean",
                                         default=False,
                                         readable=False,
@@ -829,7 +825,7 @@ class S3ProjectModel(S3Model):
                                                     project_task_priority_opts.get(opt,
                                                                                    UNKNOWN_OPT)),
                                   # Could be an Organisation, a Team or a Person
-                                  self.super_link(pr_pentity,
+                                  self.super_link("pe_id", "pr_pentity",
                                                   readable = True,
                                                   writable = True,
                                                   label = T("Assigned to"),
@@ -840,7 +836,7 @@ class S3ProjectModel(S3Model):
                                                   #comment = DIV(_class="tooltip",
                                                   #              _title="%s|%s" % (T("Assigned to"),
                                                   #                                T("Enter some characters to bring up a list of possible matches")))
-                                             ),
+                                                  ),
                                   Field("date_due", "datetime",
                                         label = T("Date Due"),
                                         requires = [IS_EMPTY_OR(
@@ -890,7 +886,7 @@ class S3ProjectModel(S3Model):
 
         # Resource Configuration
         self.configure(tablename,
-                       super_entity=doc_entity,
+                       super_entity="doc_entity",
                        copyable=True,
                        onvalidation=self.task_onvalidation,
                        create_onaccept=self.task_create_onaccept,
@@ -1077,7 +1073,7 @@ class S3ProjectModel(S3Model):
         )
 
     # -------------------------------------------------------------------------
-    def default(self):
+    def defaults(self):
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
@@ -1085,9 +1081,9 @@ class S3ProjectModel(S3Model):
                                 writable=False)
 
         return Storage(
-            project_project_id = dummy("project_id"),
-            project_activity_id = dummy("activity_id"),
-            project_task_id = dummy("task_id")
+            project_project_id = lambda:dummy("project_id"),
+            project_activity_id = lambda:dummy("activity_id"),
+            project_task_id = lambda:dummy("task_id")
         )
 
     # -------------------------------------------------------------------------
@@ -1482,13 +1478,10 @@ def project_rheader(r, tabs=[]):
             elif r.name == "task":
                 tabs = [(T("Details"), None),
                         (T("Comments"), "discuss")]
-                if settings.has_module("doc"):
-                    tabs.append((T("Attachments"), "document"))
-                if settings.has_module("hrm"):
-                    tabs.append((T("Roles"), "job_role"))
-                    tabs.append((T("Assignments"), "human_resource"))
-                if settings.has_module("req"):
-                    tabs.append((T("Requests"), "req"))
+                tabs.append((T("Attachments"), "document"))
+                tabs.append((T("Roles"), "job_role"))
+                tabs.append((T("Assignments"), "human_resource"))
+                tabs.append((T("Requests"), "req"))
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 

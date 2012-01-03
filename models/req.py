@@ -217,7 +217,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                                   label = T("Requested For"),
                                                   #default = s3_logged_in_human_resource()
                                                   ),
-                                super_link(db.org_site,
+                                super_link("site_id", "org_site",
                                            label = T("Requested For Facility"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            readable = True,
@@ -1188,7 +1188,7 @@ script =
                 db(db.req_req.id == req_id).update(**status_update)
 
             s3mgr.configure(tablename,
-                            super_entity=db.supply_item_entity,
+                            super_entity="supply_item_entity",
                             onaccept=req_item_onaccept,
                             create_next = URL(c="req",
                                               # Shows the inventory items which match a requested item
@@ -1328,14 +1328,13 @@ script =
                 else:
                     return None
 
-            if deployment_settings.has_module("project"):
-                s3mgr.load("project_task")
-                task_id = response.s3.project_task_id
-                tablename = "project_task_req"
-                table = db.define_table(tablename,
-                                        task_id(),
-                                        req_id(),
-                                        *s3_meta_fields())
+            s3mgr.load("project_task")
+            task_id = response.s3.project_task_id
+            tablename = "project_task_req"
+            table = db.define_table(tablename,
+                                    task_id(),
+                                    req_id(),
+                                    *s3_meta_fields())
 
             # On Accept to update req_req
             def req_skill_onaccept(form):
@@ -1498,7 +1497,7 @@ script =
         resourcename = "commit"
         tablename = "req_commit"
         table = db.define_table(tablename,
-                                super_link(db.org_site,
+                                super_link("site_id", "org_site",
                                            label = T("From Facility"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            # Non-Item Requests make False in the prep

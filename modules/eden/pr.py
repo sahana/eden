@@ -139,9 +139,7 @@ class S3PersonModel(S3Model):
         s3 = current.response.s3
         gis = current.gis
 
-        pr_pentity = self.table("pr_pentity")
-        sit_trackable = self.table("sit_trackable")
-        pe_label = s3.pr_pe_label
+        pe_label = self.pr_pe_label
 
         messages = current.messages
         NONE = messages.NONE
@@ -209,8 +207,8 @@ class S3PersonModel(S3Model):
 
         tablename = "pr_person"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity),          # pe_id
-                                  self.super_link(sit_trackable),       # track_id
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("track_id", "sit_trackable"),
                                   s3.location_id(readable=False,
                                                  writable=False),       # base location
                                   pe_label(comment = DIV(DIV(_class="tooltip",
@@ -326,7 +324,7 @@ class S3PersonModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       super_entity=(pr_pentity, sit_trackable),
+                       super_entity=("pr_pentity", "sit_trackable"),
                        list_fields = ["id",
                                       "first_name",
                                       "middle_name",
@@ -376,7 +374,7 @@ class S3PersonModel(S3Model):
 
         tablename = "pr_group"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("group_type", "integer",
                                         requires = IS_IN_SET(pr_group_types, zero=None),
                                         default = 4,
@@ -421,7 +419,7 @@ class S3PersonModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       super_entity=pr_pentity,
+                       super_entity="pr_pentity",
                        main="name",
                        extra="description")
 
@@ -522,7 +520,7 @@ class S3PersonModel(S3Model):
 
         tablename = "pr_contact"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("contact_method",
                                         length=32,
                                         requires = IS_IN_SET(contact_methods,
@@ -583,7 +581,7 @@ class S3PersonModel(S3Model):
         #
         tablename = "pr_contact_emergency"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("name",
                                         label= T("Name")),
                                   Field("relationship",
@@ -749,9 +747,7 @@ class S3PersonComponents(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        pr_pentity = self.table("pr_pentity")
-        pr_person = self.table("pr_person")
-        person_id = s3.pr_person_id
+        person_id = self.pr_person_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
@@ -768,7 +764,7 @@ class S3PersonComponents(S3Model):
         resourcename = "address"
         tablename = "pr_address"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("type", "integer",
                                         requires = IS_IN_SET(pr_address_type_opts, zero=None),
                                         widget = RadioWidget.widget,
@@ -838,7 +834,7 @@ class S3PersonComponents(S3Model):
         resourcename = "pimage"
         tablename = "pr_pimage"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("type", "integer",
                                         requires = IS_IN_SET(pr_pimage_type_opts, zero=None),
                                         default = 1,
@@ -1161,10 +1157,7 @@ class S3PersonPresence(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        pr_pentity = self.table("pr_pentity")
-        sit_situation = self.table("sit_situation")
-        pr_person = self.table("pr_person")
-        person_id = s3.pr_person_id
+        person_id = self.pr_person_id
 
         ADD_LOCATION = current.messages.ADD_LOCATION
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
@@ -1223,8 +1216,8 @@ class S3PersonPresence(S3Model):
         resourcename = "presence"
         tablename = "pr_presence"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity),    # pe_id
-                                  self.super_link(sit_situation), # sit_id
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("sit_id", "sit_situation"),
                                   person_id("observer",
                                             label=T("Observer"),
                                             default = auth.s3_logged_in_person(),
@@ -1318,7 +1311,7 @@ class S3PersonPresence(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       super_entity = sit_situation,
+                       super_entity = "sit_situation",
                        onvalidation = self.presence_onvalidation,
                        onaccept = self.presence_onaccept,
                        delete_onaccept = self.presence_onaccept,
@@ -1515,10 +1508,7 @@ class S3PersonDescription(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        pr_pentity = self.table("pr_pentity")
-        sit_situation = self.table("sit_situation")
-        pr_person = self.table("pr_person")
-        person_id = s3.pr_person_id
+        person_id = self.pr_person_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         #if deployment_settings.has_module("dvi") or \
@@ -1537,7 +1527,7 @@ class S3PersonDescription(S3Model):
         resourcename = "note"
         tablename = "pr_note"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   # Reporter
                                   #person_id("reporter"),
                                    Field("confirmed", "boolean",
@@ -1704,7 +1694,7 @@ class S3PersonDescription(S3Model):
         resourcename = "physical_description"
         tablename = "pr_physical_description"
         table = self.define_table(tablename,
-                                  self.super_link(pr_pentity), # pe_id
+                                  self.super_link("pe_id", "pr_pentity"),
                                   # Race and complexion
                                   Field("race", "integer",
                                         requires = IS_EMPTY_OR(IS_IN_SET(pr_race_opts)),

@@ -34,7 +34,7 @@ if deployment_settings.has_module(module):
         resourcename = "station"
         tablename = "fire_station"
         table = db.define_table(tablename,
-                                super_link(db.org_site),
+                                super_link("site_id", "org_site"),
                                 Field("name", notnull=True,
                                       length=64,
                                       label = T("Name")),
@@ -62,7 +62,7 @@ if deployment_settings.has_module(module):
                                 *s3_meta_fields())
 
         s3mgr.configure("fire_station",
-                        super_entity=db.org_site)
+                        super_entity="org_site")
 
         station_id = S3ReusableField("station_id", table,
                                       requires = IS_NULL_OR(IS_ONE_OF(db, "fire_station.id", "%(name)s")),

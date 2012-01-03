@@ -37,9 +37,8 @@ def project():
             (T("Organizations"), "organisation"),
             (T("Activities"), "activity"),
             (T("Tasks"), "task"),
+            (T("Documents"), "document"),
            ]
-    if deployment_settings.has_module("doc"):
-        tabs.append((T("Documents"), "document"))
 
     def prep(r):
         s3mgr.load("project_beneficiary")
@@ -155,13 +154,11 @@ def activity():
     s3mgr.load(tablename)
     table = db[tablename]
 
-    tabs = [
-            (T("Details"), None),
+    tabs = [(T("Details"), None),
             (T("Beneficiaries"), "beneficiary"),
             (T("Tasks"), "task"),
+            (T("Documents"), "document"),
            ]
-    if deployment_settings.has_module("doc"):
-        tabs.append((T("Documents"), "document"))
 
     rheader = lambda r: response.s3.project_rheader(r, tabs)
     return s3_rest_controller(module, resourcename,
@@ -436,8 +433,7 @@ def site_rheader(r):
         tablename, record = s3_rheader_resource(r)
         if tablename == "project_site" and record:
             site = record
-            tabs = [
-                    (T("Details"), None),
+            tabs = [(T("Details"), None),
                     #(T("Activities"), "activity"),
                     (T("Beneficiaries"), "beneficiary"),
                     #(T("Documents"), "document"),

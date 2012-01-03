@@ -53,8 +53,6 @@ class S3DocumentLibrary(S3Model):
 
         s3 = current.response.s3
 
-        org_site = self.table("org_site")
-        pr_pentity = self.table("pr_pentity")
         person_comment = self.pr_person_comment
 
         NONE = current.messages.NONE
@@ -81,8 +79,8 @@ class S3DocumentLibrary(S3Model):
         #
         tablename = "doc_document"
         table = self.define_table(tablename,
-                                  self.super_link(org_site),   # site_id
-                                  self.super_link(doc_entity), # doc_id
+                                  self.super_link("site_id", "org_site"),
+                                  self.super_link("doc_id", doc_entity),
                                   Field("name", length=128,
                                         notnull=True, unique=True,
                                         label=T("Name")),
@@ -174,9 +172,9 @@ class S3DocumentLibrary(S3Model):
 
         tablename = "doc_image"
         table = self.define_table(tablename,
-                                  self.super_link(org_site),   # site_id
-                                  self.super_link(pr_pentity), # pe_id
-                                  self.super_link(doc_entity), # doc_id
+                                  self.super_link("site_id", "org_site"),
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("doc_id", doc_entity),
                                   Field("name", length=128,
                                         notnull=True, unique=True,
                                         label=T("Name")),

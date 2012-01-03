@@ -134,6 +134,7 @@ from s3.s3validators import *
 # to access them without the s3base namespace prefix
 from s3.s3utils import *
 from s3.s3widgets import *
+from s3.s3navigation import s3_rheader_tabs
 
 # GIS Module
 gis = s3base.GIS()
