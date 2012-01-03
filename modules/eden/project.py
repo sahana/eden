@@ -1477,7 +1477,7 @@ def project_rheader(r, tabs=[]):
     T = current.T
     s3 = current.response.s3
     settings = current.deployment_settings
-    pca = settings.get_project_community_activity
+    pca = settings.get_project_community_activity()
 
     rheader = None
 

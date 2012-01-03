@@ -455,6 +455,17 @@ class S3IRSModel(S3Model):
             )
 
     # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+            - used by events module
+                    & legacy assess & impact modules
+        """
+        dummy = S3ReusableField("ireport_id", "integer",
+                                readable=False, writable=False)
+        return Storage(irs_ireport_id = dummy)
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def irs_icategory_onvalidation(form):
             """

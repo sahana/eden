@@ -14,8 +14,14 @@ s3_menu(module)
 
 # =============================================================================
 def index():
-    """ Find projects """
-    return project()
+    """ Module's Home Page """
+
+    # Bypass home page & go direct to searching for Projects
+    #return project()
+
+    module_name = deployment_settings.modules[module].name_nice
+    response.title = module_name
+    return dict(module_name=module_name)
 
 # =============================================================================
 def create():
