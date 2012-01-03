@@ -43,8 +43,6 @@ class Space(models.Model):
     banner = models.ImageField(upload_to='spaces/banners',
                                verbose_name=_('Banner'),
                                help_text=_('75px height'))
-    authorized_groups = models.ManyToManyField(Group,
-                                            verbose_name=_('Authorized groups'))
     public = models.BooleanField(_('Public space'))
     #theme = models.CharField(_('Theme'), m)
     
