@@ -29,19 +29,22 @@
 
     <div class="row">
         <div class="span11">
-            <div class="post">
-                {% if perm.news.edit_post %}
-                    <div id="tools">
-                        <a href="{% url 'edit-post' get_place.url news.id %}">{% trans "Edit" %}</a> |
-                        {% if perm.news.delete_post %}
-                            <a href="{% url 'delete-post' get_place.url news.id %}">{% trans "Delete" %}</a>
-                        {% endif %}
-                    </div>
+            <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a>
+                {% if perms.news.edit_post %}
+                    <a href="{% url 'edit-post' get_place.url news.id %}">
+                        <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                    </a>
                 {% endif %}
-                <h1>{{ news.post_title }}</h1>
-                <p>{{ news.post_message|safe }}</p>
-                <p>{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }}</p>
-            </div>
+                {% if perms.news.delete_post %}
+                    <a href="{% url 'delete-post' get_place.url news.id %}">
+                        <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                    </a>
+                {% endif %}
+            </h2>
+            {% get_comment_count for news as comment_count %}
+            <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
+            {{ news.post_message|safe }}
+            <div style="margin-bottom:30px;"></div>
 
             <p>{% render_comment_list for news %}</p>
             <p>{% render_comment_form for news %}</p>
