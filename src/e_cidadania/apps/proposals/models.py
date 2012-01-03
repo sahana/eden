@@ -95,7 +95,8 @@ class Proposal(models.Model):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     anon_allowed = models.NullBooleanField(default=False, blank=True)
-    support_votes = models.IntegerField(blank=True, null=True)
+    support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
+                                            null=True, blank=True)
     refurbished = models.NullBooleanField(default=False, blank=True)
     budget = models.IntegerField(blank=True, null=True)
 
