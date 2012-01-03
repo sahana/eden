@@ -31,6 +31,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.template import RequestContext
 from django.views.decorators.http import require_POST
+from django.db.models import Count
 
 from django.views.generic.create_update import update_object
 from django.db.models import F
@@ -47,8 +48,10 @@ def vote_proposal(request, space_name):
     Increment support votes for the proposal in 1.
     """
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
-    prop.support_votes = F('support_votes') + 1
-    prop.save()
+#    if Proposal.objects.filter(support_votes__contains=request.user):
+#        return HttpResponse("You already voted")
+#    else:
+    prop.support_votes.add(request.user)
     return HttpResponse("Vote emmited.")
 
 class ListProposals(ListView):
@@ -92,8 +95,10 @@ class ViewProposal(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ViewProposal, self).get_context_data(**kwargs)
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        support_votes_count = Proposal.objects.annotate(Count('support_votes'))
+        current_proposal = int(self.kwargs['prop_id']) - 1
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['support_votes_count'] = support_votes_count[current_proposal].support_votes__count
         return context
 
 
@@ -110,12 +115,9 @@ def add_proposal(request, space_name):
     prop_form = ProposalForm(request.POST or None)
 
     if request.method == 'POST':
-        print prop_form
         if prop_form.is_valid():
-            print prop_form
-            prop_form_uncommited = form.save(commit=False)
+            prop_form_uncommited = prop_form.save(commit=False)
             prop_form_uncommited.space = prop_space
-            prop_form_uncommited.support_votes = 0
             prop_form_uncommited.author = request.user
             prop_form_uncommited.save()
 
