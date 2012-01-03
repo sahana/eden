@@ -76,7 +76,7 @@ class Proposal(models.Model):
     :const:`CLOSE_REASONS` for :class:Proposal data model is hardcoded with four
     values, which will fit most of the requirements.
     """
-    code = models.CharField(_('Code'), max_length=50, unique=True, blank=True,
+    code = models.CharField(_('Code'), max_length=50, blank=True,
                             null=True)
     title = models.CharField(_('Title'), max_length=100, unique=True)
     description = models.TextField(_('Description'), max_length=300)

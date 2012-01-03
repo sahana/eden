@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-15 13:01+0100\n"
+"POT-Creation-Date: 2012-01-02 18:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -106,7 +106,7 @@ msgid "Updates on the main e-cidadania site."
 msgstr ""
 
 #: views.py:114
-msgid "Post added successfully"
+msgid "Post added successfully."
 msgstr ""
 
 #: views.py:135
@@ -117,87 +117,57 @@ msgstr ""
 msgid "Post edited successfully."
 msgstr ""
 
-#: templates/404.html:60
-msgid "Not Found!"
+#: templates/404.html:9
+msgid "Nooo...!"
 msgstr ""
 
-#: templates/404.html:63
+#: templates/404.html:11
+msgid "The page you're looking for does not exist."
+msgstr ""
+
+#: templates/404.html:12
+msgid "May it be abstract?"
+msgstr ""
+
+#: templates/500.html:10
+msgid "This wasn't supposed to happen! What did you do!?"
+msgstr ""
+
+#: templates/500.html:11
 msgid ""
-"A meiga stole this page. You better get out of here now that you can, before "
-"she gives you the evil eye. Meanwhile, we are going to get the torchs and "
-"pitchforks and go in search of her. Don't worry about us, we will manage "
-"somehow."
+"We will send the spaguetti squad to repair this. Meanwhile you can go back "
+"to the index."
 msgstr ""
 
-#: templates/404.html:64
-msgid "Take me out of here!"
-msgstr ""
-
-#: templates/404.html:65 templates/menu.html:3
-msgid "Home"
-msgstr ""
-
-#: templates/404.html:66
-msgid "Development"
-msgstr ""
-
-#: templates/404.html:67 templates/base.html:119
-msgid "Help"
-msgstr ""
-
-#: templates/404.html:68
-msgid "Terms of service"
-msgstr ""
-
-#: templates/404.html:69
-msgid "Privacy"
-msgstr ""
-
-#: templates/404.html:70
-msgid "About"
-msgstr ""
-
-#: templates/500.html:44
-msgid "Ooops!"
-msgstr ""
-
-#: templates/500.html:45
-msgid "The server had an unexpected error."
-msgstr ""
-
-#: templates/500.html:46
-msgid "Please go back to the"
-msgstr ""
-
-#: templates/500.html:46
-msgid "home page"
-msgstr ""
-
-#: templates/500.html:46
-msgid "while we call the spaguetti squad to repair this."
-msgstr ""
-
-#: templates/base.html:109
+#: templates/base.html:112
 msgid "Pages"
 msgstr ""
 
-#: templates/base.html:120
+#: templates/base.html:122
+msgid "Help"
+msgstr ""
+
+#: templates/base.html:123
 msgid "Mailing lists"
 msgstr ""
 
-#: templates/base.html:121
+#: templates/base.html:124
 msgid "Issues"
 msgstr ""
 
-#: templates/base.html:122
+#: templates/base.html:125
 msgid "E-mail"
 msgstr ""
 
-#: templates/base.html:134
+#: templates/base.html:137
 msgid "created by"
 msgstr ""
 
-#: templates/menu.html:5 templates/site_index.html:55
+#: templates/menu.html:3
+msgid "Home"
+msgstr ""
+
+#: templates/menu.html:5 templates/site_index.html:58
 msgid "Login"
 msgstr ""
 
@@ -233,57 +203,22 @@ msgstr ""
 msgid "Not allowed"
 msgstr ""
 
-#: templates/not_allowed.html:9
+#: templates/not_allowed.html:10
 msgid "You are not allowed to access here."
 msgstr ""
 
 #: templates/not_allowed.html:11
-msgid "You can go"
+msgid ""
+"You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your "
+"profile</a>"
 msgstr ""
 
-#: templates/not_allowed.html:11
-msgid "back to home"
-msgstr ""
-
-#: templates/not_allowed.html:11 templates/site_index.html:55
-msgid "or"
-msgstr ""
-
-#: templates/not_allowed.html:11
-msgid "back to your profile"
-msgstr ""
-
-#: templates/site_index-new.html:4 templates/site_index.html:4
-#: templates/terms.html:4
+#: templates/site_index.html:4
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index-new.html:11 templates/site_index.html:18
+#: templates/site_index.html:18
 msgid "Recent processes"
-msgstr ""
-
-#: templates/site_index-new.html:23
-msgid "e-cidadania is a citizen participation platform "
-msgstr ""
-
-#: templates/site_index-new.html:26 templates/site_index.html:55
-msgid "Register"
-msgstr ""
-
-#: templates/site_index-new.html:29
-msgid "Log In"
-msgstr ""
-
-#: templates/site_index-new.html:51 templates/site_index.html:92
-msgid "Share"
-msgstr ""
-
-#: templates/site_index-new.html:122 templates/site_index.html:129
-msgid "Tweet"
-msgstr ""
-
-#: templates/site_index-new.html:132 templates/site_index.html:139
-msgid "Your favourite social site isn't here? Tell us!"
 msgstr ""
 
 #: templates/site_index.html:25
@@ -294,20 +229,44 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:64
+#: templates/site_index.html:39
+msgid "There are no spaces."
+msgstr ""
+
+#: templates/site_index.html:42
+msgid "View all the spaces"
+msgstr ""
+
+#: templates/site_index.html:58
+msgid "Register"
+msgstr ""
+
+#: templates/site_index.html:58
+msgid "or"
+msgstr ""
+
+#: templates/site_index.html:67
 msgid "Recent news"
 msgstr ""
 
-#: templates/site_index.html:69
-msgid "No public news"
+#: templates/site_index.html:72
+msgid "No public news."
 msgstr ""
 
-#: templates/site_index.html:74
+#: templates/site_index.html:77
 msgid "True democracy"
 msgstr ""
 
-#: templates/site_index.html:78
+#: templates/site_index.html:81
 msgid "The most complete tool ever"
+msgstr ""
+
+#: templates/site_index.html:98
+msgid "Share"
+msgstr ""
+
+#: templates/site_index.html:135
+msgid "Tweet"
 msgstr ""
 
 #: templates/comments/approve.html:4
@@ -368,11 +327,11 @@ msgstr ""
 msgid "Leave a comment"
 msgstr ""
 
-#: templates/comments/form.html:28 templates/comments/preview.html:36
+#: templates/comments/form.html:27 templates/comments/preview.html:36
 msgid "Post"
 msgstr ""
 
-#: templates/comments/form.html:29 templates/comments/preview.html:37
+#: templates/comments/form.html:28 templates/comments/preview.html:37
 msgid "Preview"
 msgstr ""
 
@@ -380,7 +339,7 @@ msgstr ""
 msgid "Comments"
 msgstr ""
 
-#: templates/comments/list.html:8
+#: templates/comments/list.html:7
 msgid "said"
 msgstr ""
 
@@ -392,7 +351,7 @@ msgstr ""
 msgid "Thank you for your comment"
 msgstr ""
 
-#: templates/comments/posted.html:10 templates/news/post_list.html:22
+#: templates/comments/posted.html:10
 msgid "Go back"
 msgstr ""
 
@@ -416,12 +375,4 @@ msgstr ""
 
 #: templates/comments/preview.html:20
 msgid "or make changes"
-msgstr ""
-
-#: templates/news/post_list.html:4 templates/news/post_list.html.py:12
-msgid "News list"
-msgstr ""
-
-#: templates/news/post_list.html:18
-msgid "There are no post."
 msgstr ""

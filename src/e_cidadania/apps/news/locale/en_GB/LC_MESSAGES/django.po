@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-15 13:00+0100\n"
+"POT-Creation-Date: 2012-01-02 18:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,11 +22,11 @@ msgstr ""
 msgid "Other data"
 msgstr ""
 
-#: models.py:35 templates/news/post_add.html:120
+#: models.py:35
 msgid "Title"
 msgstr ""
 
-#: models.py:36 templates/news/post_add.html:121
+#: models.py:36
 msgid "Text"
 msgstr ""
 
@@ -58,27 +58,27 @@ msgstr ""
 msgid "News list"
 msgstr ""
 
-#: templates/news/news_list.html:31
+#: templates/news/news_list.html:33
 msgid "News archive"
 msgstr ""
 
-#: templates/news/news_list.html:42
+#: templates/news/news_list.html:44
 msgid "There are no posts in this space."
 msgstr ""
 
-#: templates/news/news_list.html:49
+#: templates/news/news_list.html:51
 msgid "previous"
 msgstr ""
 
-#: templates/news/news_list.html:52
+#: templates/news/news_list.html:54
 msgid "of"
 msgstr ""
 
-#: templates/news/news_list.html:55
+#: templates/news/news_list.html:57
 msgid "next"
 msgstr ""
 
-#: templates/news/news_list.html:62 templates/news/post_add.html:112
+#: templates/news/news_list.html:64 templates/news/post_add.html:112
 #: templates/news/post_confirm_delete.html:37
 #: templates/news/post_edit.html:139
 msgid "Go back"
@@ -97,7 +97,15 @@ msgid "How to add new posts"
 msgstr ""
 
 #: templates/news/post_add.html:120
+msgid "Title:"
+msgstr ""
+
+#: templates/news/post_add.html:120
 msgid "An spectacular title! (100 characters)"
+msgstr ""
+
+#: templates/news/post_add.html:121
+msgid "Text:"
 msgstr ""
 
 #: templates/news/post_add.html:121
@@ -105,7 +113,7 @@ msgid "Your story."
 msgstr ""
 
 #: templates/news/post_add.html:122
-msgid "Tags"
+msgid "Tags:"
 msgstr ""
 
 #: templates/news/post_add.html:122
@@ -113,7 +121,7 @@ msgid "Please use them carefully, you are limited to 4 tags."
 msgstr ""
 
 #: templates/news/post_add.html:123
-msgid "Publish in index"
+msgid "Publish in index:"
 msgstr ""
 
 #: templates/news/post_add.html:123
@@ -136,7 +144,12 @@ msgid ""
 msgstr ""
 
 #: templates/news/post_confirm_delete.html:38
+#: templates/news/post_detail.html:37
 msgid "Delete"
+msgstr ""
+
+#: templates/news/post_detail.html:35
+msgid "Edit"
 msgstr ""
 
 #: templates/news/post_detail.html:43

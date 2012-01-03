@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-15 13:00+0100\n"
+"POT-Creation-Date: 2012-01-02 18:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -79,7 +79,7 @@ msgid "Proposals"
 msgstr ""
 
 #: templates/proposals/proposal_add.html:5
-#: templates/proposals/proposal_detail.html:35
+#: templates/proposals/proposal_detail.html:51
 #: templates/proposals/proposal_list.html:17
 msgid "Add proposal"
 msgstr ""
@@ -153,7 +153,7 @@ msgid ""
 msgstr ""
 
 #: templates/proposals/proposal_confirm_delete.html:27
-#: templates/proposals/proposal_detail.html:40
+#: templates/proposals/proposal_detail.html:56
 #: templates/proposals/proposal_list.html:22
 msgid "Delete"
 msgstr ""
@@ -162,17 +162,21 @@ msgstr ""
 msgid "View proposal"
 msgstr ""
 
-#: templates/proposals/proposal_detail.html:37
+#: templates/proposals/proposal_detail.html:53
 #: templates/proposals/proposal_list.html:19
 msgid "Edit"
 msgstr ""
 
-#: templates/proposals/proposal_detail.html:56
+#: templates/proposals/proposal_detail.html:64
+msgid "support"
+msgstr ""
+
+#: templates/proposals/proposal_detail.html:70
 #: templates/proposals/proposal_list.html:34
 msgid "proposed by "
 msgstr ""
 
-#: templates/proposals/proposal_detail.html:56
+#: templates/proposals/proposal_detail.html:70
 #: templates/proposals/proposal_list.html:34
 msgid " at "
 msgstr ""

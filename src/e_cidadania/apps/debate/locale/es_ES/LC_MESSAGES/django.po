@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-15 13:00+0100\n"
+"POT-Creation-Date: 2012-01-02 18:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,28 +17,44 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: models.py:41 models.py:99
+#: models.py:41 models.py:102
 msgid "Title"
 msgstr ""
 
-#: models.py:42 templates/debate/debate_view.html:23
+#: models.py:42 templates/debate/debate_view.html:103
 msgid "Description"
 msgstr ""
 
-#: models.py:43 templates/debate/debate_view.html:24
+#: models.py:43
 msgid "Scope"
+msgstr ""
+
+#: models.py:46 models.py:105
+msgid "Date created"
 msgstr ""
 
 #: models.py:47
 msgid "Last update"
 msgstr ""
 
-#: models.py:66 models.py:80
+#: models.py:49
+msgid "Start date"
+msgstr ""
+
+#: models.py:50
+msgid "End date"
+msgstr ""
+
+#: models.py:69 models.py:83
 msgid "Criteria"
 msgstr ""
 
-#: models.py:100
+#: models.py:103
 msgid "Message"
+msgstr ""
+
+#: models.py:108
+msgid "Last modification time"
 msgstr ""
 
 #: templates/debate/debate_add.html:4
@@ -76,6 +92,7 @@ msgstr ""
 #: templates/debate/debate_add.html:127
 #: templates/debate/debate_add_simple.html:120
 #: templates/debate/debate_board.html:109
+#: templates/debate/debate_view.html:115
 msgid "Save"
 msgstr ""
 
@@ -85,7 +102,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:82
+#: templates/debate/debate_board.html:61 templates/debate/debate_view.html:119
 msgid "Add new note"
 msgstr ""
 
@@ -119,4 +136,28 @@ msgstr ""
 
 #: templates/debate/debate_view.html:5
 msgid "View debate"
+msgstr ""
+
+#: templates/debate/debate_view.html:27
+msgid "Description:"
+msgstr ""
+
+#: templates/debate/debate_view.html:28
+msgid "Scope:"
+msgstr ""
+
+#: templates/debate/debate_view.html:74
+msgid "Edit"
+msgstr ""
+
+#: templates/debate/debate_view.html:90
+msgid "Edit note"
+msgstr ""
+
+#: templates/debate/debate_view.html:96
+msgid "Note title"
+msgstr ""
+
+#: templates/debate/debate_view.html:99
+msgid "100 characters"
 msgstr ""
