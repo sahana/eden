@@ -319,6 +319,19 @@ class S3Model(object):
         model = manager.model
         return model.add_component(tablename, **args)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def set_method(tablename, **args):
+        """
+            Shortcut for current.manager.model.set_method
+        """
+
+        module, resourcename = tablename.split("_", 1)
+
+        manager = current.manager
+        model = manager.model
+        return model.set_method(module, resourcename, **args)
+
 # =============================================================================
 
 class S3ModelExtensions(object):

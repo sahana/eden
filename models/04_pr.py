@@ -4,7 +4,6 @@
     Person Registry
 
     @author: nursix
-    @author: Pratyush Nigam <pratyush.nigam@gmail.com>
     @see: U{http://eden.sahanafoundation.org/wiki/BluePrintVITA}
 """
 

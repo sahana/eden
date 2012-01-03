@@ -229,6 +229,9 @@ if deployment_settings.has_module(module):
 
         return repr_str
 
+    # Make available to global scope
+    response.s3.hr_represent = hr_represent
+
     # -------------------------------------------------------------------------
     def hrm_human_resource_represent(id,
                                      show_link = False,
