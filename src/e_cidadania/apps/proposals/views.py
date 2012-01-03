@@ -107,19 +107,22 @@ def add_proposal(request, space_name):
     :context: form, get_place
     """
     prop_space = get_object_or_404(Space, url=space_name)
-    form = ProposalForm(request.POST or None, request.FILES or None)
+    prop_form = ProposalForm(request.POST or None)
 
     if request.method == 'POST':
-        if form.is_valid():
-            form_uncommited = form.save(commit=False)
-            form_uncommited.space = prop_space
-            form_uncommited.support_votes = 0
-            form_uncommited.author = request.user
-            form_uncommited.save()
+        print prop_form
+        if prop_form.is_valid():
+            print prop_form
+            prop_form_uncommited = form.save(commit=False)
+            prop_form_uncommited.space = prop_space
+            prop_form_uncommited.support_votes = 0
+            prop_form_uncommited.author = request.user
+            prop_form_uncommited.save()
+
             return redirect('/spaces/' + space_name)
-    
+
     return render_to_response('proposals/proposal_add.html',
-                              {'form': form, 'get_place': prop_space},
+                              {'form': prop_form, 'get_place': prop_space},
                               context_instance = RequestContext(request))
 
 
