@@ -675,12 +675,6 @@ deployment_settings.modules = OrderedDict([
     #        restricted = False,
     #        module_type = 10,
     #    )),
-    #("ticket", Storage(
-    #        name_nice = T("Ticketing Module"),
-    #        description = T("Master Message Log to process incoming reports & requests"),
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
     # Vol depends on HRM
     #("vol", Storage(
     #        name_nice = T("Volunteers"),

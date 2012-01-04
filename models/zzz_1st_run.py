@@ -162,24 +162,6 @@ if populate > 0:
                                                     look_up_value = "Agriculture",
                                                     look_up_field = "abrv"))
 
-    # Project Module
-    #if deployment_settings.has_module("project"):
-    #    table = db.project_need_type
-    #    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-    #        table.insert( name = T("People Needing Food") )
-    #        table.insert( name = T("People Needing Water") )
-    #        table.insert( name = T("People Needing Shelter") )
-
-    # Ticketing System
-    #if deployment_settings.has_module("ticket"):
-    #    table = db.ticket_category
-    #    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-    #        table.insert( name = "Report Missing Person" )
-    #        table.insert( name = "Report Security Incident" )
-    #        table.insert( name = "Report Information" )
-    #        table.insert( name = "Request for Assistance" )
-    #        table.insert( name = "Offer of Help" )
-
     # GIS Module
     table = db.gis_marker
     # Can't do sub-folders :/
