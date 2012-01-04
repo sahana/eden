@@ -26,7 +26,7 @@ from django.conf.urls.defaults import *
 
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
                                           DeleteSpace, ListDocs, DeleteDocument, \
-                                          ListMeetings, DeleteMeeting, ViewMeeting, \
+                                          ListEvents, DeleteEvent, ViewEvent, \
                                           ListPosts, SpaceFeed
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
@@ -63,18 +63,18 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
 )
 
-# Meeting URLs
+# Event URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    url(r'^(?P<space_name>\w+)/meeting/add/$', 'add_meeting', name='add-meeting'),
+    url(r'^(?P<space_name>\w+)/event/add/$', 'add_event', name='add-event'),
 
-    url(r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/edit/$', 'edit_meeting', name='edit-meeting'),
+    url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/edit/$', 'edit_event', name='edit-event'),
 
-    url(r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/delete/$', DeleteMeeting.as_view(), name='delete-meeting'),
+    url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/delete/$', DeleteEvent.as_view(), name='delete-event'),
     
-    url(r'^(?P<space_name>\w+)/meeting/(?P<meeting_id>\d+)/$', ViewMeeting.as_view(), name='view-meeting'),
+    url(r'^(?P<space_name>\w+)/event(?P<event_id>\d+)/$', ViewEvent.as_view(), name='view-event'),
 
-    url(r'^(?P<space_name>\w+)/meeting/$', ListMeetings.as_view(), name='list-meetings'),
+    url(r'^(?P<space_name>\w+)/event/$', ListEvents.as_view(), name='list-events'),
 
 )
 

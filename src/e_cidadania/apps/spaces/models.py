@@ -137,52 +137,34 @@ class Document(models.Model):
     def get_absolute_url(self):
         return '/spaces/%s/docs/%s' % (self.space.url, self.id)
 
-
-class MeetingType(models.Model):
-
-    """
-    Meeting type model. This will give enough flexibility to add any type of
-    meeting in any space.
-    """
-    typetitle = models.CharField(_('Name'), max_length=100)
-
-    class Meta:
-        verbose_name = _('Meeting type')
-        verbose_name_plural = _('Meeting types')
-
-    def __unicode__(self):
-        return self.typetitle
-
-
-class Meeting(models.Model):
+class Event(models.Model):
 
     """
     Meeting data model. Every space (process) has N meetings. This will
     keep record of the assistants, meeting name, etc.
     """
-    title = models.CharField(_('Meeting title'), max_length=100)
+    title = models.CharField(_('Event name'), max_length=100)
     space = models.ForeignKey(Space, blank=True, null=True)
     user = models.ManyToManyField(User, verbose_name=_('Users'))
     pub_date = models.DateTimeField(auto_now_add=True)
-    meeting_author = models.ForeignKey(User, verbose_name=_('Author'),
+    event_author = models.ForeignKey(User, verbose_name=_('Created by'),
                                      blank=True, null=True,
                                      related_name='meeting_author')
-    meeting_date = models.DateField(verbose_name=_('Meeting date'))
-    meeting_type = models.ForeignKey(MeetingType, blank=True, null=True)
+    event_date = models.DateField(verbose_name=_('Event date'))
     description = models.TextField(_('Description'), blank=True, null=True)
     location = models.TextField(_('Location'), blank=True, null=True)
     
     class Meta:
-        ordering = ['meeting_date']
-        verbose_name = _('Meeting')
-        verbose_name_plural = _('Meetings')
-        get_latest_by = 'meeting_date'
+        ordering = ['event_date']
+        verbose_name = _('Event')
+        verbose_name_plural = _('Events')
+        get_latest_by = 'event_date'
 
     def __unicode__(self):
         return self.title
     
     @models.permalink
     def get_absolute_url(self):
-        return ('view-meeting', (), {
+        return ('view-event', (), {
             'space_name': self.space.url,
-            'meeting_id': str(self.id)})
+            'event_id': str(self.id)})

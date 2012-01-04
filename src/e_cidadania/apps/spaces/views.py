@@ -54,9 +54,9 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # e-cidadania data models
-from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting
+from e_cidadania.apps.spaces.models import Space, Entity, Document, Event
 from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, MeetingForm, \
+from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, EventForm, \
      EntityFormSet
 from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.staticpages.models import StaticPage
@@ -91,7 +91,7 @@ class SpaceFeed(Feed):
         results = itertools.chain(
             Post.objects.all().filter(space=obj).order_by('-pub_date')[:10],
             Proposal.objects.all().filter(space=obj).order_by('-pub_date')[:10],
-            Meeting.objects.all().filter(space=obj).order_by('-pub_date')[:10],
+            Event.objects.all().filter(space=obj).order_by('-pub_date')[:10],
         ) 
         
         return sorted(results, key=lambda x: x.pub_date, reverse=True)
@@ -188,7 +188,7 @@ class ViewSpaceIndex(DetailView):
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
         context['messages'] = messages.get_messages(self.request)
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
-        context['meeting'] = Meeting.objects.filter(space=place.id)
+        context['event'] = Event.objects.filter(space=place.id)
         return context
 
 
@@ -442,42 +442,42 @@ class DeleteDocument(DeleteView):
         return context
 
 #
-# MEETING VIEWS
+# EVENT VIEWS
 #
 
-class ListMeetings(ListView):
+class ListEvents(ListView):
 
     """
-    List all the meetings attached to a space.
+    List all the events attached to a space.
     
     :rtype: Object list
-    :context: meeting_list, get_place
+    :context: event_list, get_place
     """
     paginate_by = 25
-    context_object_name = 'meeting_list'
+    context_object_name = 'event_list'
 
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = Meeting.objects.all().filter(space=place.id).order_by\
-            ('meeting_date')
+        objects = Event.objects.all().filter(space=place.id).order_by\
+            ('event_date')
         return objects
 
     def get_context_data(self, **kwargs):
-        context = super(ListMeetings, self).get_context_data(**kwargs)
+        context = super(ListEvents, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
 
 
-class ViewMeeting(DetailView):
+class ViewEvent(DetailView):
     
     """
-    View the content of a Meeting.
+    View the content of a event.
     
     :rtype: Object
-    :context: meeting, get_place
+    :context: event, get_place
     """
-    context_object_name = 'meeting'
-    template_name = 'spaces/meeting_detail.html'
+    context_object_name = 'event'
+    template_name = 'spaces/event_detail.html'
 
     def get_object(self):
         space_name = self.kwargs['space_name']
@@ -486,14 +486,14 @@ class ViewMeeting(DetailView):
             self.template_name = 'not_allowed.html'
             return get_object_or_404(Space, url = space_name)
 
-        return get_object_or_404(Meeting, pk = self.kwargs['meeting_id'])
+        return get_object_or_404(Event, pk = self.kwargs['event_id'])
 
     def get_context_data(self, **kwargs):
-        context = super(ViewMeeting, self).get_context_data(**kwargs)
+        context = super(ViewEvent, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
         
-def add_meeting(request, space_name):
+def add_event(request, space_name):
     
     """
     Returns an empty MeetingForm to create a new Meeting. Space and author fields
@@ -502,43 +502,43 @@ def add_meeting(request, space_name):
     :rtype: HTML Form
     :context: form, get_place
     """
-    form = MeetingForm(request.POST or None)
+    form = EventForm(request.POST or None)
     place = get_object_or_404(Space, url=space_name)
     
     if request.method == 'POST':
         if form.is_valid():
             form_uncommited = form.save(commit=False)
-            form_uncommited.meeting_author = request.user
+            form_uncommited.event_author = request.user
             form_uncommited.space = place
             form_uncommited.save()
-            messages.success(request, _('Meeting added successfully.'))
+            #messages.success(request, _('Event added successfully.'))
             return redirect('/spaces/' + space_name)
     
-    return render_to_response('spaces/meeting_add.html',
+    return render_to_response('spaces/event_add.html',
                               {'form': form, 'get_place': place},
                               context_instance=RequestContext(request))
 
-def edit_meeting(request, space_name, meeting_id):
+def edit_event(request, space_name, event_id):
 
     """
     Returns a MeetingForm filled with the current Meeting data to be edited.
     
     :rtype: HTML Form
-    :context: meeting, get_place
+    :context: event, get_place
     """
     place = get_object_or_404(Space, url=space_name)
 
     return update_object(request,
-                         model = Meeting,
-                         object_id = meeting_id,
+                         model = Event,
+                         object_id = event_id,
                          login_required = True,
-                         template_name = 'spaces/meeting_edit.html',
-                         template_object_name = 'meeting',
+                         template_name = 'spaces/event_edit.html',
+                         template_object_name = 'event',
                          post_save_redirect = '/',
                          extra_context = {'get_place': place})
 
 
-class DeleteMeeting(DeleteView):
+class DeleteEvent(DeleteView):
 
     """
     Returns a confirmation page before deleting the Meeting object.
@@ -548,14 +548,14 @@ class DeleteMeeting(DeleteView):
     """
 
     def get_object(self):
-        return get_object_or_404(Meeting, pk = self.kwargs['meeting_id'])
+        return get_object_or_404(Event, pk = self.kwargs['event_id'])
 
     def get_success_url(self):
         current_space = self.kwargs['space_name']
         return '/spaces/{0}'.format(current_space)
    
     def get_context_data(self, **kwargs):
-        context = super(DeleteMeeting, self).get_context_data(**kwargs)
+        context = super(DeleteEvent, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
         

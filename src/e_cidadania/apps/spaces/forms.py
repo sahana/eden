@@ -27,7 +27,7 @@ from the data models.
 from django.forms import ModelForm
 from django.forms.models import modelformset_factory
 
-from e_cidadania.apps.spaces.models import Space, Document, Meeting, Entity
+from e_cidadania.apps.spaces.models import Space, Document, Event, Entity
 
 class SpaceForm(ModelForm):
     
@@ -60,7 +60,7 @@ class DocForm(ModelForm):
         model = Document
 
 
-class MeetingForm(ModelForm):
+class EventForm(ModelForm):
 
     """
     Returns a form to create or edit a space related meeting, based on the
@@ -71,4 +71,4 @@ class MeetingForm(ModelForm):
     .. versionadded:: 0.1
     """
     class Meta:
-        model = Meeting
+        model = Event

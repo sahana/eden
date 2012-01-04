@@ -23,7 +23,7 @@ from django.utils.safestring import mark_safe
 from django.template import RequestContext
 from django.utils import translation
 
-from e_cidadania.apps.spaces.models import Meeting, Space
+from e_cidadania.apps.spaces.models import Event, Space
 from e_cidadania.apps.cal.models import EventCalendar
 from e_cidadania import settings
 
@@ -41,7 +41,7 @@ def calendar(request, space_name, year, month):
                                   context_instance=RequestContext(request))
 
     place = get_object_or_404(Space, url=space_name)
-    meetings = Meeting.objects.order_by('meeting_date') \
+    meetings = Event.objects.order_by('event_date') \
                               .filter(space = place,
                                       meeting_date__year = year,
                                       meeting_date__month = month)

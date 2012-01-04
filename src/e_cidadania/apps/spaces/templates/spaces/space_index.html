@@ -104,8 +104,8 @@
                             {% if get_place.mod_cal %}
                                 <h6>{% trans "Events" %}</h6>
                                 <ul class="unstyled">
-                                    {% for m in meeting %}
-                                        <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a> {% trans "on" %} {{ m.meeting_date|date:"d F Y" }}</li>
+                                    {% for m in event %}
+                                        <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a> {% trans "on" %} {{ m.event_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No events registered." %}</li>
                                     {% endfor %}
@@ -115,7 +115,7 @@
                         <div class="span5 space-sidebar">
                             <h4>{% trans "Next events" %}</h4>
                             <ul class="unstyled">
-                                {% for m in meeting %}
+                                {% for m in event %}
                                     <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a></li>
                                 {% endfor %}
                             </ul>
@@ -333,15 +333,15 @@
                         <div class="span5">
                             <h4>{% trans "Administration" %}</h4>
                             <ul class="unstyled">
-                                {% if perms.spaces.add_meeting %}
-                                    <li><a href="{% url 'add-meeting' get_place.url %}">
-                                        <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new meeting' %}" title="{% trans 'Add new meeting' %}"/>{% trans "Add meeting"%}
+                                {% if perms.spaces.add_event %}
+                                    <li><a href="{% url 'add-event' get_place.url %}">
+                                        <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new event' %}" title="{% trans 'Add new event' %}"/>{% trans "Add event"%}
                                     </a></li>
                                 {% endif %}
                             </ul>
                             <h4>Otras opciones (traducir)</h4>
                             <ul class="unstyled">
-                                <li><a href="{% url 'list-meetings' get_place.url %}">{% trans "View all meetings" %}</a></li>
+                                <li><a href="{% url 'list-events' get_place.url %}">{% trans "View all events" %}</a></li>
                             </ul>
                         </div>
                     </div>

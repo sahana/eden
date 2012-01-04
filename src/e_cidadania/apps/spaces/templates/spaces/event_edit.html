@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load wysiwyg %}
+
+{% block title %}{% trans "Edit event" %}{% endblock %}
+{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
+{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+
+{% block content %}
+
+    {% block centercol %}
+        <div class="grid_11">
+  
+            <div id="contenttitles">
+                {% trans "Edit event" %}
+            </div>
+      
+            <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+            
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <span class="help-inline">{{ error|escape }}</span>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="clearfix {% if form.title.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.title.label }}</label> 
+                    <div class="input"> 
+                        {{ form.title }}
+                        <span class="help-inline">
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.title.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix {% if form.description.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.description.label }}</label> 
+                    <div class="input"> 
+                        {{ form.description }}
+                        {% wysiwyg_editor "id_description" %}
+                        <span class="help-inline">
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.description.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix {% if form.location.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.location.label }}</label> 
+                    <div class="input"> 
+                        {{ form.location }}
+                        <span class="help-inline">
+                            {% if form.location.errors %}
+                                {% for error in form.location.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.location.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix {% if form.event_type.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.event_type.label }}</label> 
+                    <div class="input"> 
+                        {{ form.event_type }}
+                        <span class="help-inline">
+                            {% if form.event_type.errors %}
+                                {% for error in form.event_type.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.event_type.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix {% if form.event_date.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.event_date.label }}</label> 
+                    <div class="input">
+                        <input type="text" name="event_date" id="datepicker">
+                        <span class="help-inline">
+                            {% if form.event_date.errors %}
+                                {% for error in form.event_date.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.event_date.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+                
+                <div class="clearfix {% if form.user.errors %}error{% endif%}"> 
+                    <label for="prependedInput">{{ form.user.label }}</label> 
+                    <div class="input">
+                        {{ form.user }}
+                        <span class="help-inline">
+                            {% if form.user.errors %}
+                                {% for error in form.user.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.user.help_text }}
+                            {% endif %}
+                        </span>
+                    </div> 
+                </div>
+        
+                {{ form.space.as_hidden }}
+                {{ form.event_author.as_hidden }}
+        
+                <hr />
+                <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Cancel" %}</a>
+                <input class="btn small primary " type="submit" value="{% trans 'Save' %}" />
+            </form>
+        </div>
+    {% endblock %}
+{% endblock %}

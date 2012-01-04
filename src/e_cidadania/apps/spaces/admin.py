@@ -26,7 +26,7 @@ will make their respective data models available for management.
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.spaces.models import Space, Entity, Document, Meeting, MeetingType
+from e_cidadania.apps.spaces.models import Space, Entity, Document, Event
 
 class EntityAdmin(admin.ModelAdmin):
 
@@ -103,7 +103,7 @@ class DocumentAdmin(admin.ModelAdmin):
             obj.author = request.user
         obj.save()
 
-class MeetingAdmin(admin.ModelAdmin):
+class EventAdmin(admin.ModelAdmin):
 
     """
     Meetings administration model.
@@ -111,24 +111,13 @@ class MeetingAdmin(admin.ModelAdmin):
     :list fields: title, space, meeting_date
     :search fields: title
     """
-    list_display = ('title', 'space', 'meeting_date')
+    list_display = ('title', 'space', 'event_date')
     search_fields = ('title',)
-    
-class MeetingTypeAdmin(admin.ModelAdmin):
-
-    """
-    Meeting type administration model.
-    
-    :list fields: typetitle
-    """
-    list_display = ('typetitle',)
-    search_fields = ('typetitle',)
 
 # This register line is commented because it collides with
 # admin.autoregister() in the main urls.py file.
 
 admin.site.register(Space, SpaceAdmin)
 admin.site.register(Document, DocumentAdmin)
-admin.site.register(Meeting, MeetingAdmin)
+admin.site.register(Event, EventAdmin)
 admin.site.register(Entity, EntityAdmin)
-admin.site.register(MeetingType, MeetingTypeAdmin)
