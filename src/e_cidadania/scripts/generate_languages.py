@@ -7,6 +7,7 @@ e-cidadania project.
 import sys
 import os
 import subprocess
+import argparse
 
 __author__ = "Oscar Carballal"
 __copyright__ = "Copyright 2011, Cidadania Sociedade Cooperativa Galega"
@@ -16,11 +17,6 @@ __version__ = "0.4"
 __maintainer__ = "Oscar Carballal"
 __email__ = "oscar.carballal@cidadania.coop"
 __status__ = "Prototype"
-
-print "\n>>>> e-cidadania language catalog generator <<<<"
-print "\nPlease note that this script must be run from the project root or from \
-the scripts directory. If you run it from somewhere else it won't work."
-raw_input('\nPress any key to continue or Ctrl-C to exit...')
 
 class Language():
 
@@ -48,17 +44,6 @@ class Language():
         self.applications = settings.ECIDADANIA_MODULES
         self.languages = settings.LANGUAGES
         self.apps = []
-        
-        # Spit out the information
-        print "\n>> Languages to generate:"
-        for lang in self.languages:
-            print ' - ' + lang[1]
-
-        print "\n>> Installed applications:"
-        for app in self.applications:
-            self.got_it = app.split('.')[2]
-            print ' - ' + self.got_it
-            self.apps.append(self.got_it)
 
     def _iterator(self, command, type):
 
@@ -80,18 +65,40 @@ class Language():
             subprocess.Popen.wait(a)
 
             
-    def generate_catalog(self):
+    def make(self):
         
         """
         Generate the language catalogs for the application and site root
         """
+        # Spit out the information
+        print "\n>> Languages to generate:"
+        for lang in self.languages:
+            print ' - ' + lang[1]
+
+        print "\n>> Installed applications:"
+        for app in self.applications:
+            self.got_it = app.split('.')[2]
+            print ' - ' + self.got_it
+            self.apps.append(self.got_it)
         self._iterator('django-admin.py makemessages -l ', 'Generating')
+        self._iterator('django-admin.py makemessages -d djangojs -l ', 'Generating JavaScript')
 
 
-    def compile_catalog(self):
+    def compile(self):
 
         """
         """
+        # Spit out the information
+        print "\n>> Languages to generate:"
+        for lang in self.languages:
+            print ' - ' + lang[1]
+
+        print "\n>> Installed applications:"
+        for app in self.applications:
+            self.got_it = app.split('.')[2]
+            print ' - ' + self.got_it
+            self.apps.append(self.got_it)
+
         for module in self.apps:
             os.chdir(self.cwd + '/apps/' + module)
             print '\n>> Compiling all messages for %s' % (module)
@@ -105,7 +112,7 @@ class Language():
         subprocess.Popen.wait(a)
 
 
-    def clean_catalogs(self):
+    def clean(self):
 
         """
         Removes the language installed catalogs in the platform, leaving the
@@ -127,13 +134,28 @@ catalogs, having to rebuild and translate them all.'
             a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
             subprocess.Popen.wait(a)
 
-lang = Language()
+#print "\nPlease note that this script must be run from the project root or from \
+#the scripts directory. If you run it from somewhere else it won't work."
+#raw_input('\nPress any key to continue or Ctrl-C to exit...')
 
-if sys.argv[1] == 'make':
-    lang.generate_catalog()
-elif sys.argv[1] == 'compile':
-    lang.compile_catalog()
-elif sys.argv[1] == 'clean':
-    lang.clean_catalogs()
-else:
-    print '\nChoices are: make, compile, clean'
+lang = Language()
+parser = argparse.ArgumentParser(description='e-cidadania language catalog generator.')
+subparser = parser.add_subparsers()
+parser_make = subparser.add_parser('make', help='Create all the language' \
+                                                ' catalogs for translation,'\
+                                                ' including JavaScript.')
+parser_make.set_defaults(func=lang.make)
+
+parser_compile = subparser.add_parser('compile', help='Compile all the language' \
+                                                      ' catalogs for use.')
+parser_compile.set_defaults(func=lang.compile)
+
+parser_clean = subparser.add_parser('clean', help='Delete all the language catalogs.' \
+                                                  ' After this you will'\
+                                                  ' have to rebuild the catalogs' \
+                                                  ' and translate them.')
+parser_clean.set_defaults(func=lang.clean)
+
+
+args = parser.parse_args()
+args.func()
