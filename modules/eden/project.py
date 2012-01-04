@@ -117,7 +117,7 @@ class S3ProjectModel(S3Model):
                                                                          sort=True,
                                                                          multiple=True)),
                                          represent = lambda opt, row=None: \
-                                                     multiref_represent(opt, "project_theme"),
+                                                     self.multiref_represent(opt, "project_theme"),
                                          default = [],
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
