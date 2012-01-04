@@ -80,9 +80,8 @@ class UserProfile(BaseProfile):
     nid = models.CharField(_('Identification document'), max_length=200,
                            null=True, blank=True)
     
-    website = models.URLField(_('Website'), verify_exists=True, max_length=200,
-                              null=True, blank=True,
-                              help_text=_('The URL will be checked'))
+    website = models.URLField(_('Website'), max_length=200,
+                              null=True, blank=True)
     spaces = models.ManyToManyField(Space)
     interests = models.ManyToManyField(Interest, blank=True, null=True)
     
