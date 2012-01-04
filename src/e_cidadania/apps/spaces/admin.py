@@ -51,8 +51,7 @@ class SpaceAdmin(admin.ModelAdmin):
 
     """
     Administration view for django admin to create spaces. The save() method
-    is overriden to store automatically the author
-    of the space.
+    is overriden to store automatically the author of the space.
     
     :list fields: name, description, date
     :search fields: name
