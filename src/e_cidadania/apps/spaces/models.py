@@ -20,22 +20,40 @@
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
+from e_cidadania.apps.spaces.file_validation import ContentTypeRestrictedFileField
+
+ALLOWED_CONTENT_TYPES = [
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+    'application/vnd.openxmlformats-officedocument.presentationml.template',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.oasis.opendocument.text',
+    'application/vnd.oasis.opendocument.presentation',
+    'application/vnd.oasis.opendocument.spreadsheet',
+    'application/vnd.openofficeorg.extension',
+]
 
 class Space(models.Model):
 
     """     
-    Spaces model. This model stores a "space" or "place". Every place has
-    a minimum set of settings for customization.
+    Spaces model. This model stores a "space" or "place" also known as a
+    participative process in reality. Every place has a minimum set of
+    settings for customization.
     """
-    name = models.CharField(_('Name'), max_length=100, unique=True)
+    name = models.CharField(_('Name'), max_length=250, unique=True,
+                            help_text=_('Max: 250 characters'))
     url = models.CharField(_('URL'), max_length=100, unique=True,
                             help_text=_('All lowercase. This will be the \
                                         accesible URL'))
-    description = models.TextField(_('Description'))
-    date = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, blank=True, null=True, verbose_name=_('Author'))
+    description = models.TextField(_('Description'),
+                                    default=_('Write here your description.'))
+    date = models.DateTimeField(_('Date of creation'), auto_now_add=True)
+    author = models.ForeignKey(User, blank=True, null=True,
+                                verbose_name=_('Space creator'))
 
     logo = models.ImageField(upload_to='spaces/logos',
                              verbose_name=_('Logotype'),
@@ -71,8 +89,8 @@ class Space(models.Model):
 class Entity(models.Model):
 
     """
-    This models stores the name of the entities responsible
-    for the creation of the space.
+    This model stores the name of the entities responsible for the creation
+    of the space or supporting it.
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
     website = models.CharField(_('Website'), max_length=100, null=True, blank=True)
@@ -92,11 +110,17 @@ class Entity(models.Model):
 class Document(models.Model):
 
     """
-    Document model
+    This models stores documents for the space, like a document repository,
+    There is no restriction in what a user can upload to the space
     """
     title = models.CharField(_('Document title'), max_length=100)
     space = models.ForeignKey(Space, blank=True, null=True)
-    docfile = models.FileField(upload_to='spaces/documents/%Y/%m/%d')
+    docfile = ContentTypeRestrictedFileField(_('File'),
+        upload_to='spaces/documents/%Y/%m/%d',
+        content_types=ALLOWED_CONTENT_TYPES,
+        max_upload_size=26214400
+    )
+    #docfile = models.FileField(upload_to='spaces/documents/%Y/%m/%d')
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
                                null=True)
