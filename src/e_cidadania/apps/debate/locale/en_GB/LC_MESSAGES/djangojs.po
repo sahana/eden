@@ -18,50 +18,42 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: admin.py:39
-msgid "Description"
+#: static/js/debate_board.js:11
+msgid "Write here your title"
 msgstr ""
 
-#: admin.py:42
-msgid "Options"
+#: static/js/debate_board.js:12
+msgid "Write here your message"
 msgstr ""
 
-#: models.py:31
-msgid "Page Title"
+#: static/js/debate_board.js:13
+msgid "Edit"
 msgstr ""
 
-#: models.py:32
-msgid "URL"
+#: static/js/debate_board.js:14
+msgid "There has been an error."
 msgstr ""
 
-#: models.py:33
-msgid "Content"
+#: static/js/debate_board.js:15
+msgid "Couldn't create note."
 msgstr ""
 
-#: models.py:34
-msgid "Show in footer"
+#: static/js/debate_board.js:16
+msgid "Couldn't get note data."
 msgstr ""
 
-#: models.py:35
-msgid "Author"
+#: static/js/debate_board.js:17
+msgid "Couldn't save note."
 msgstr ""
 
-#: models.py:37
-msgid "Last update"
+#: static/js/debate_board.js:18
+msgid "Couldn't save note position."
 msgstr ""
 
-#: models.py:38
-msgid "Order"
+#: static/js/debate_board.js:19
+msgid "Couldn't delete note."
 msgstr ""
 
-#: models.py:42
-msgid "Static Pages"
-msgstr ""
-
-#: templates/staticpages/staticpages_index.html:11
-msgid "Go back"
-msgstr ""
-
-#: templates/staticpages/staticpages_index.html:14
-msgid "last updated"
+#: static/js/debate_board.js:20
+msgid "Are you sure?"
 msgstr ""

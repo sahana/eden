@@ -1,3 +1,23 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2012 Cidadanía Coop.
+# Written by: Federico Capoano
+#
+# This file is part of e-cidadania.
+#
+# e-cidadania is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# e-cidadania is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
 from django.db.models import FileField
 from django.forms import forms
 from django.template.defaultfilters import filesizeformat
@@ -31,7 +51,7 @@ class ContentTypeRestrictedFileField(FileField):
             content_type = file.content_type
             if content_type in self.content_types:
                 if file._size > self.max_upload_size:
-                    raise forms.ValidationError(_('Please keep filesize under %s. Current filesize %s') % (filesizeformat(self.max_upload_size), filesizeformat(file._size)))
+                    raise forms.ValidationError(_('Please keep filesize under %s.') % (filesizeformat(self.max_upload_size), filesizeformat(file._size)))
             else:
                 raise forms.ValidationError(_('Filetype not supported.'))
         except AttributeError:

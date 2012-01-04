@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 18:08+0100\n"
+"POT-Creation-Date: 2012-01-04 17:33+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,7 +50,7 @@ msgstr ""
 msgid "Offtopic"
 msgstr ""
 
-#: models.py:48 models.py:81 templates/proposals/proposal_add.html:131
+#: models.py:48 models.py:81 templates/proposals/proposal_add.html:135
 msgid "Title"
 msgstr ""
 
@@ -58,7 +58,7 @@ msgstr ""
 msgid "Code"
 msgstr ""
 
-#: models.py:82 templates/proposals/proposal_add.html:132
+#: models.py:82 templates/proposals/proposal_add.html:136
 msgid "Description"
 msgstr ""
 
@@ -70,73 +70,76 @@ msgstr ""
 msgid "Longitude"
 msgstr ""
 
-#: models.py:115
-msgid "Proposal"
+#: models.py:98
+msgid "Votes from"
 msgstr ""
 
 #: models.py:116
+msgid "Proposal"
+msgstr ""
+
+#: models.py:117
 msgid "Proposals"
 msgstr ""
 
 #: templates/proposals/proposal_add.html:5
-#: templates/proposals/proposal_detail.html:51
 #: templates/proposals/proposal_list.html:17
 msgid "Add proposal"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:22
+#: templates/proposals/proposal_add.html:26
 msgid "Add new proposal"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:120
+#: templates/proposals/proposal_add.html:124
 #: templates/proposals/proposal_confirm_delete.html:26
 #: templates/proposals/proposal_edit.html:137
 #: templates/proposals/proposal_list.html:47
 msgid "Go back"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:121
+#: templates/proposals/proposal_add.html:125
 #: templates/proposals/proposal_edit.html:138
 msgid "Publish"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:126
+#: templates/proposals/proposal_add.html:130
 msgid "Admins/moderators read this"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:127
+#: templates/proposals/proposal_add.html:131
 msgid ""
 "There are a lot more options in the proposals but they will appear only when "
 "you edit the proposal."
 msgstr ""
 
-#: templates/proposals/proposal_add.html:129
+#: templates/proposals/proposal_add.html:133
 msgid "How to add new proposals"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:131
+#: templates/proposals/proposal_add.html:135
 msgid "Title resuming the proposal, be concise (50 characters)"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:132
+#: templates/proposals/proposal_add.html:136
 msgid ""
 "Describe here your proposal with detail. You can add images or any other "
 "content."
 msgstr ""
 
-#: templates/proposals/proposal_add.html:133
+#: templates/proposals/proposal_add.html:137
 msgid "Latitude/Longitude"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:133
+#: templates/proposals/proposal_add.html:137
 msgid "You'll have to put this if you want to locate the proposal in a map."
 msgstr ""
 
-#: templates/proposals/proposal_add.html:134
+#: templates/proposals/proposal_add.html:138
 msgid "Tags"
 msgstr ""
 
-#: templates/proposals/proposal_add.html:134
+#: templates/proposals/proposal_add.html:138
 msgid ""
 "Relevant tags for the proposal, p.e. where the proposal is localted, what is "
 "related to it, etc."
@@ -153,7 +156,6 @@ msgid ""
 msgstr ""
 
 #: templates/proposals/proposal_confirm_delete.html:27
-#: templates/proposals/proposal_detail.html:56
 #: templates/proposals/proposal_list.html:22
 msgid "Delete"
 msgstr ""
@@ -162,21 +164,16 @@ msgstr ""
 msgid "View proposal"
 msgstr ""
 
-#: templates/proposals/proposal_detail.html:53
-#: templates/proposals/proposal_list.html:19
-msgid "Edit"
-msgstr ""
-
-#: templates/proposals/proposal_detail.html:64
+#: templates/proposals/proposal_detail.html:56
 msgid "support"
 msgstr ""
 
-#: templates/proposals/proposal_detail.html:70
+#: templates/proposals/proposal_detail.html:61
 #: templates/proposals/proposal_list.html:34
 msgid "proposed by "
 msgstr ""
 
-#: templates/proposals/proposal_detail.html:70
+#: templates/proposals/proposal_detail.html:61
 #: templates/proposals/proposal_list.html:34
 msgid " at "
 msgstr ""
@@ -188,6 +185,10 @@ msgstr ""
 
 #: templates/proposals/proposal_list.html:5
 msgid "View proposals"
+msgstr ""
+
+#: templates/proposals/proposal_list.html:19
+msgid "Edit"
 msgstr ""
 
 #: templates/proposals/proposal_list.html:34

@@ -139,7 +139,9 @@ catalogs, having to rebuild and translate them all.'
 #raw_input('\nPress any key to continue or Ctrl-C to exit...')
 
 lang = Language()
-parser = argparse.ArgumentParser(description='e-cidadania language catalog generator.')
+parser = argparse.ArgumentParser(description='e-cidadania language catalog' \
+    ' generator. This script manages all the .po and .mo files from templates,' \
+    ' python code and javascript i18n (if used).')
 subparser = parser.add_subparsers()
 parser_make = subparser.add_parser('make', help='Create all the language' \
                                                 ' catalogs for translation,'\

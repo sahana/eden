@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 18:08+0100\n"
+"POT-Creation-Date: 2012-01-04 17:33+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -144,7 +144,7 @@ msgid ""
 msgstr ""
 
 #: templates/news/post_confirm_delete.html:38
-#: templates/news/post_detail.html:37
+#: templates/news/post_detail.html:40
 msgid "Delete"
 msgstr ""
 
@@ -152,23 +152,27 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: templates/news/post_detail.html:43
+#: templates/news/post_detail.html:45
 msgid "Written by"
 msgstr ""
 
-#: templates/news/post_detail.html:43
+#: templates/news/post_detail.html:45
 msgid "on"
 msgstr ""
 
-#: templates/news/post_detail.html:50
+#: templates/news/post_detail.html:45
+msgid "comments"
+msgstr ""
+
+#: templates/news/post_detail.html:53
 msgid "Recent posts"
 msgstr ""
 
-#: templates/news/post_detail.html:51
+#: templates/news/post_detail.html:54
 msgid "Related posts"
 msgstr ""
 
-#: templates/news/post_detail.html:52
+#: templates/news/post_detail.html:55
 msgid "Share this post"
 msgstr ""
 
