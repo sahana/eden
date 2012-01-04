@@ -117,7 +117,7 @@ class S3ProjectModel(S3Model):
                                                                          sort=True,
                                                                          multiple=True)),
                                          represent = lambda opt, row=None: \
-                                                     multiref_represent(opt, "project_theme"),
+                                                     self.multiref_represent(opt, "project_theme"),
                                          default = [],
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
@@ -1514,6 +1514,9 @@ def project_rheader(r, tabs=[]):
                                    record.name
                                   )
                                )
+                if record.project_id is not None:
+                    tbl.append(TR(TH("%s: " % table.project_id.label),
+                                  table.project_id.represent(record.project_id)))
                 rheader = DIV(tbl, rheader_tabs)
             elif r.name == "task":
                 tabs = [(T("Details"), None),

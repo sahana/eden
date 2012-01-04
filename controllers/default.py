@@ -144,18 +144,12 @@ def index():
                 #["dec", T("Gap Map"), "project", "gap_map"],
                 #["dec", T("Gap Report"), "project", "gap_report"],
                 ["dec", T("Requests"), "req", "req"],
-                ["res", T("Projects"), "project", "project"]]
-
-    if deployment_settings.get_project_community_activity():
-        menu_btns.append(["res", T("Communities"), "project", "activity"])
-    else:
-        menu_btns.append(["res", T("Activities"), "project", "activity"])
-
-    menu_btns.extend([
-                      ["res", T("Commitments"), "req", "commit"],
-                      ["res", T("Sent Shipments"), "inv", "send"],
-                      ["res", T("Received Shipments"), "inv", "recv"],
-                     ])
+                ["res", T("Projects"), "project", "project"],
+                ["res", T("Activities"), "project", "activity"],
+                ["res", T("Commitments"), "req", "commit"],
+                ["res", T("Sent Shipments"), "inv", "send"],
+                ["res", T("Received Shipments"), "inv", "recv"]
+                ]
 
     # Change to (Mitigation)/Preparedness/Response/Recovery?
     menu_divs = {"facility": DIV( H3(T("Facilities")),

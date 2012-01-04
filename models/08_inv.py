@@ -123,6 +123,7 @@ if deployment_settings.has_module("inv"):
             title_list = LIST_INV_ITEMS,
             title_update = T("Edit Inventory Item"),
             title_search = T("Search Inventory Items"),
+            title_upload = T("Import Stock Level"),
             subtitle_create = ADD_INV_ITEM,
             subtitle_list = T("Inventory Items"),
             label_list_button = LIST_INV_ITEMS,
