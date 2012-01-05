@@ -2037,7 +2037,7 @@ class PyvtTbl(list):
             else:
                 for cs in cnames:
                     query.append('\n  , %s( case when '%agg)
-                    if all(map(_isfloat, zip(*cols)[1])):
+                    if all(map(_isfloat, zip(*cs)[1])):
                         query.append(
                         ' and '.join(('_%s_=%s'%(k, v) for k, v in cs)))
                     else:

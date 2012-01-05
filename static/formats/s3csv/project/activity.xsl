@@ -136,14 +136,16 @@
         <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
         <xsl:variable name="BeneficiaryNumber" select="text()"/>
 
-        <resource name="project_beneficiary">
-            <reference field="bnf_type" resource="project_beneficiary_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
-                </xsl:attribute>
-            </reference>
-            <data field="number"><xsl:value-of select="$BeneficiaryNumber"/></data>
-        </resource>
+        <xsl:if test="$BeneficiaryNumber!=''">
+            <resource name="project_beneficiary">
+                <reference field="bnf_type" resource="project_beneficiary_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="number"><xsl:value-of select="$BeneficiaryNumber"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
