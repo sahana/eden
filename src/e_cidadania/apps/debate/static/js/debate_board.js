@@ -62,14 +62,14 @@ function createNote() {
     });
 
     request.done(function (note) {
-        $("#sortable-dispatcher").append("<div id='" + note.id + "' class='note mine'>" +
-            "<div class='handler'><div class='deletenote hidden'>" +
-            "<a href='#' onclick='deleteNote(this)' id='deletenote'>x</a>" +
-            "</div></div><p class='note-text'>" + note.title + "</p>" +
+        var newNote = $("#sortable-dispatcher").append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
+            "<div class='handler'><div class='deletenote hidden'>" + "<a href='#' onclick='deleteNote(this)'" +
+            " id='deletenote'>x</a></div></div><p class='note-text'>" + note.title + "</p>" +
             "<span id='edit-note' class='label hidden'><a href='#' onclick='editNote(this)'" +
             " data-controls-modal='edit-current-note' data-backdrop='true'" +
             " data-keyboard='true'>" + editString + "</a></span>" +
             "</div>");
+        newNote.show("slow");
         showControls();
     });
 
@@ -151,7 +151,8 @@ function deleteNote(obj) {
     /*
         deleteNote() - Delete a note making an AJAX call. This function is called
         through getClickedNote(). We locate the note ID, and post it to django,
-        after that we remove the note from the board.
+        after that we hide the note from the board and when it's hidden we remove it
+        from the DOM.
     */
     var noteID = $(obj).parents('.note').attr('id');
     var answer = confirm(confirmDelete);
@@ -164,7 +165,9 @@ function deleteNote(obj) {
         });
 
         request.done(function(msg) {
-           $('#' + noteID).remove();
+           $('#' + noteID).hide("normal", function() {
+               $('#' + noteID).remove();
+           });
         });
 
         request.fail(function(jqXHR, textStatus) {

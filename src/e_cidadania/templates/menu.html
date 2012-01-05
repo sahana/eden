@@ -27,8 +27,8 @@
 	        </ul>
         </li>
     </ul>
-    <p class="pull-right"><a href="{% url 'profile_overview' %}">{% trans "Profile" %}</a></p>
 {% endif %}
+
 <form action="/i18n/setlang/" method="post" class="pull-right">{% csrf_token %}
     <input name="next" type="hidden" value="/" />
     <select id="language" name="language" onchange="this.form.submit()">
@@ -37,4 +37,5 @@
             <option value="{{ lang.0 }}">{{ lang.1 }}</option>
         {% endfor %}
     </select>
+    <a href="{% url 'profile_overview' %}">{% trans "Profile" %}</a>
 </form>

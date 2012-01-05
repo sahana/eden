@@ -59,14 +59,14 @@
                                     The th style width is meant to make smaller the th, since most browsers make
                                     the th fill all the space.
                                 {% endcomment %}
-                                <th id="row-{{ row.id }}" style="width:10px;"><div class="debate-ttitle">{{ row.criteria }}</div></th>
+                                <th id="row-{{ row.id }}" width="10" style="width:10px;"><div class="debate-ttitle">{{ row.criteria }}</div></th>
                                 {% for td in columns %}
                                     <td headers="{{ td.id }}-{{ row.id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %}">
                                                     <div class="handler">
-                                                        {% if note.author == request.user and perms.note.delete_note %}
+                                                        {% if note.author == request.user and perms.note.delete_note or request.user.is_staff %}
                                                             <div class="deletenote hidden"><a href="#" onclick="deleteNote(this)" id="deletenote" title="{% trans 'Delete note' %}">x</a></div>
                                                         {% endif %}
                                                     </div>
