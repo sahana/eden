@@ -1328,8 +1328,7 @@ script =
                 else:
                     return None
 
-            s3mgr.load("project_task")
-            task_id = response.s3.project_task_id
+            task_id = s3db.project_task_id
             tablename = "project_task_req"
             table = db.define_table(tablename,
                                     task_id(),
