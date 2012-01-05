@@ -532,14 +532,16 @@ class S3ProjectModel(S3Model):
         # Resource Configuration
         analyze_fields = [(T("Organization"), "organisation"),
                           (T("Project"), "project_id$name"),
-                          "location_id",
                           (T("Activity Type"), "multi_activity_type_id"),
                           (T("Theme"), "project_id$multi_theme_id"),
                           (T("Hazard"), "project_id$multi_hazard_id"),
-                          (T("HFA"), "project_id$hfa"),
-                         ]
+                          (T("HFA"), "project_id$hfa")]
+        lh = self.settings.get_gis_default_location_hierarchy()
+        lh = [(lh[opt], opt) for opt in lh]
+        analyze_fields.extend(lh)
+        analyze_fields.append("location_id")
         if not pca:
-            analyze_fields.append((T("Activity"), "name"))
+            analyze_fields.insert(2, (T("Activity"), "name"))
 
         self.configure(tablename,
                        super_entity="doc_entity",
@@ -1122,7 +1124,7 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def multiref_represent(opt, tablename, represent_string = "%(name)s"):
+    def multiref_represent(opts, tablename, represent_string = "%(name)s"):
         """
             Represent a list of references
 
@@ -1134,23 +1136,21 @@ class S3ProjectModel(S3Model):
         DEFAULT = ""
 
         db = current.db
-        NONE = current.messages.NONE
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         table = S3Model.table(tablename, None)
         if table is None:
             return DEFAULT
 
-        rows = db(table.id > 0).select(table.id, table.name).as_dict()
+        if not isinstance(opts, (list, tuple)):
+            opts = [opts]
 
-        if isinstance(opt, (list, tuple)):
-            opts = opt
-            vals = [represent_string % rows.get(opt)
-                    for opt in opts if opt in rows.keys()]
-        elif isinstance(opt, int):
-            opts = [opt]
-            vals = [represent_string % rows.get(opt)]
-        else:
-            return NONE
+        rows = db(table.id.belongs(opts)).select()
+        rstr = Storage([(str(row.id), row) for row in rows])
+        keys = rstr.keys()
+        represent = lambda o: str(o) in keys and \
+                              represent_string % rstr[str(o)] or UNKNOWN_OPT
+        vals = [represent(o) for o in opts]
 
         if len(opts) > 1:
             vals = ", ".join(vals)
@@ -1333,7 +1333,8 @@ class S3ProjectModel(S3Model):
               form.vars.name and form.vars.location_id:
                 table = S3Model.table("gis_location")
                 query = (table.id == form.vars.location_id)
-                row = db(query).select(table.level, limitby=(0, 1)).first()
+                row = db(query).select(table.id, table.level,
+                                       limitby=(0, 1)).first()
                 if row and not row.level:
                     row.update_record(name=form.vars.name)
         return
@@ -1554,7 +1555,7 @@ def project_rheader(r, tabs=[]):
 class S3ProjectActivityVirtualfields:
     """ Virtual fields for the project_project table """
 
-    extra_fields = ["project_id"]
+    extra_fields = ["project_id", "location_id"]
 
     def organisation(self):
         """ Name of the lead organisation of the project """
@@ -1573,6 +1574,50 @@ class S3ProjectActivityVirtualfields:
                                limitby=(0, 1)).first()
         if org:
             return org.name
+        else:
+            return None
+
+    def L0(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_activity.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L0" in parents:
+            return parents["L0"]
+        else:
+            return None
+
+    def L1(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_activity.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L1" in parents:
+            return parents["L1"]
+        else:
+            return None
+
+    def L2(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_activity.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L2" in parents:
+            return parents["L2"]
+        else:
+            return None
+
+    def L3(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_activity.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L3" in parents:
+            return parents["L3"]
         else:
             return None
 

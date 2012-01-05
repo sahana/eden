@@ -263,8 +263,9 @@ class S3Cube(S3CRUD):
                     frow = self.__extract(row, fields, resource, lfields, fmap)
                 except KeyError:
                     e = sys.exc_info()[1]
+                    msg = T("Could not generate report")
                     if hasattr(e, "message"):
-                        e = e.message
+                        e = "%s: %s" % (msg, e.message)
                     r.error(400, e, next=r.url(vars=[]))
                 frow = self.__expand(frow)
                 for item in frow:
@@ -294,8 +295,11 @@ class S3Cube(S3CRUD):
                 pt = df.pivot(fact, self.rows, self.cols,
                                 aggregate=aggregate)
             except:
-                r.error(400, "Could not generate contingency table",
-                        next=r.url(vars=[]))
+                e = sys.exc_info()[1]
+                msg = T("Could not generate report")
+                if hasattr(e, "message"):
+                    e = "%s: %s" % (msg, e.message)
+                r.error(400, e, next=r.url(vars=[]))
 
             if aggregate == "count" or pt.grand_tot is None:
                 count = len(item_list)
@@ -447,12 +451,16 @@ class S3Cube(S3CRUD):
                     TR(
                         TD(LABEL("Rows:"), _class="w2p_fl"),
                         TD(LABEL("Columns:"), _class="w2p_fl"),
-                        TD(LABEL("Fact:"), _class="w2p_fl"),
-                        TD(LABEL("Aggregation Method:"), _class="w2p_fl")
                     ),
                     TR(
                         TD(select_rows),
                         TD(select_cols),
+                    ),
+                    TR(
+                        TD(LABEL("Fact:"), _class="w2p_fl"),
+                        TD(LABEL("Aggregation Method:"), _class="w2p_fl")
+                    ),
+                    TR(
                         TD(select_fact),
                         TD(select_method)
                     ),
@@ -546,11 +554,12 @@ class S3Cube(S3CRUD):
 
         table = self.table
         lfields, join = self.get_list_fields(table, list_fields)
+
         options = [OPTION(f.label,
-                               _value=f.fieldname,
-                               _selected= value == f.fieldname and "selected" or None)
-                        for f in lfields
-                        if f.field is None or f.field.name != table._id.name]
+                          _value=f.fieldname,
+                          _selected= value == f.fieldname and "selected" or None)
+                   for f in lfields
+                    if (f.field is None or f.field.name != table._id.name) and f.show]
         if len(options) < 2:
             options[0].update(_selected="selected")
         else:
