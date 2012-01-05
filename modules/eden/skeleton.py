@@ -10,11 +10,11 @@
     case "skeleton". Remember to always add an import statement for your module
     to:
 
-    modules/eden/__init__.py
+    models/00_tables.py
 
     like:
 
-    import skeleton
+    import eden.skeleton
 
     (Yeah - not this one of course :P it's just an example)
 """

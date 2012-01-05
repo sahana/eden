@@ -240,6 +240,9 @@ class S3PersonModel(S3Model):
                                         length=64, # Mayon Compatibility
                                         label = T("Last Name"),
                                         requires = last_name_validate),
+                                  Field("initials",
+                                        length=8,
+                                        label = T("Initials")),
                                   Field("preferred_name",
                                         comment = DIV(DIV(_class="tooltip",
                                                           _title="%s|%s" % (T("Preferred Name"),
@@ -605,7 +608,7 @@ class S3PersonModel(S3Model):
             pr_group_represent = pr_group_represent
         )
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onvalidation(form):
         """ Onvalidation callback """
@@ -638,7 +641,7 @@ class S3PersonModel(S3Model):
 
         return True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def person_deduplicate(item):
         """ Import item deduplication """
@@ -655,33 +658,40 @@ class S3PersonModel(S3Model):
             # Match by first name and last name, and if given, by email address
             fname = "first_name" in item.data and item.data.first_name
             lname = "last_name" in item.data and item.data.last_name
-            if not fname or not lname:
-                return
+            if fname and lname:
+                # "LIKE" is inappropriate here:
+                # E.g. "Fran Boon" would overwrite "Frank Boones"
+                #query = (ptable.first_name.lower().like('%%%s%%' % fname.lower())) & \
+                        #(ptable.last_name.lower().like('%%%s%%' % lname.lower()))
 
-            # "LIKE" is inappropriate here:
-            # E.g. "Fran Boon" would overwrite "Frank Boones"
-            #query = (ptable.first_name.lower().like('%%%s%%' % fname.lower())) & \
-                    #(ptable.last_name.lower().like('%%%s%%' % lname.lower()))
+                # But even an exact name match does not necessarily indicate a
+                # duplicate: depending on the scope of the deployment, you could
+                # have thousands of people with exactly the same names (or just
+                # two of them - and it can already go wrong).
+                # We take the email address as additional criterion, however, where
+                # person data do not usually contain email addresses you might need
+                # to add more/other criteria here
+                query = (ptable.first_name.lower() == fname.lower()) & \
+                        (ptable.last_name.lower() == lname.lower())
+                email = False
+                for citem in item.components:
+                    if citem.tablename == "pr_contact":
+                        if "contact_method" in citem.data and \
+                        citem.data.contact_method == "EMAIL":
+                            email = citem.data.value
+                if email != False:
+                    query = query & \
+                            (ptable.pe_id == ctable.pe_id) & \
+                            (ctable.value.lower() == email.lower())
 
-            # But even an exact name match does not necessarily indicate a
-            # duplicate: depending on the scope of the deployment, you could
-            # have thousands of people with exactly the same names (or just
-            # two of them - and it can already go wrong).
-            # We take the email address as additional criterion, however, where
-            # person data do not usually contain email addresses you might need
-            # to add more/other criteria here
-            query = (ptable.first_name.lower() == fname.lower()) & \
-                    (ptable.last_name.lower() == lname.lower())
-            email = False
-            for citem in item.components:
-                if citem.tablename == "pr_contact":
-                    if "contact_method" in citem.data and \
-                    citem.data.contact_method == "EMAIL":
-                        email = citem.data.value
-            if email != False:
-                query = query & \
-                        (ptable.pe_id == ctable.pe_id) & \
-                        (ctable.value.lower() == email.lower())
+            else:
+                # Try Initials (this is a weak test but works well in small teams)
+                initials = "initials" in item.data and item.data.initials
+                if not initials:
+                    # Nothing we can do
+                    return
+                query = (ptable.initials.lower() == initials.lower())
+
             # Look for details on the database
             _duplicate = db(query).select(ptable.id,
                                           limitby=(0, 1)).first()
@@ -692,7 +702,7 @@ class S3PersonModel(S3Model):
                 for citem in item.components:
                     citem.method = citem.METHOD.UPDATE
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def contact_onvalidation(form):
         """ Contact form validation """
@@ -703,7 +713,7 @@ class S3PersonModel(S3Model):
                 form.errors.value = T("Enter a valid email")
         return False
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def contact_deduplicate(item):
         """ Contact information de-duplication """
@@ -1514,7 +1524,7 @@ class S3PersonDescription(S3Model):
         #if deployment_settings.has_module("dvi") or \
            #deployment_settings.has_module("mpr"):
 
-        # -------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Note
         #
         person_status = {
@@ -1587,7 +1597,7 @@ class S3PersonDescription(S3Model):
                        onaccept=self.note_onaccept,
                        ondelete=self.note_onaccept)
 
-        # =========================================================================
+        # =====================================================================
         # Physical Description
         #
         pr_race_opts = {

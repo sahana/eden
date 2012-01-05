@@ -5,14 +5,14 @@
 """
 
 # =============================================================================
-# Import models package
+# Import models
 #
 from s3.s3model import S3Model
 import eden as models
 current.models = models
 current.s3db = s3db = S3Model()
 
-# Import Eden modules:
+# Explicit import statements to have them reload automatically in debug mode
 import eden.pr
 import eden.sit
 import eden.doc
