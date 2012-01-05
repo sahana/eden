@@ -2,210 +2,222 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-04 17:33+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2012-01-05 11:04\n"
+"Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Translated-Using: django-rosetta 0.6.0\n"
 
 #: admin.py:45
 msgid "Location"
-msgstr ""
+msgstr "Localización"
 
 #: admin.py:48
 msgid "Relations"
-msgstr ""
+msgstr "Relaciones"
 
 #: admin.py:51
 msgid "Other"
-msgstr ""
+msgstr "Otros"
 
 #: admin.py:54
 msgid "Options"
-msgstr ""
+msgstr "Opciones"
 
 #: models.py:37
 msgid "Economically not viable"
-msgstr ""
+msgstr "Económicamente no viable"
 
 #: models.py:38
 msgid "Legally not viable"
-msgstr ""
+msgstr "Legalmente no viable"
 
 #: models.py:39
 msgid "Technically not viable"
-msgstr ""
+msgstr "Técnicamente no viable"
 
 #: models.py:40
 msgid "Offtopic"
-msgstr ""
+msgstr "Fuera de tópico"
 
 #: models.py:48 models.py:81 templates/proposals/proposal_add.html:135
 msgid "Title"
-msgstr ""
+msgstr "Título"
 
 #: models.py:79
 msgid "Code"
-msgstr ""
+msgstr "Código"
 
 #: models.py:82 templates/proposals/proposal_add.html:136
 msgid "Description"
-msgstr ""
+msgstr "Descripción"
 
 #: models.py:88
 msgid "Latitude"
-msgstr ""
+msgstr "Latitud"
 
 #: models.py:90
 msgid "Longitude"
-msgstr ""
+msgstr "Longitud"
 
 #: models.py:98
 msgid "Votes from"
-msgstr ""
+msgstr "Votos de"
 
 #: models.py:116
 msgid "Proposal"
-msgstr ""
+msgstr "Propuesta"
 
 #: models.py:117
 msgid "Proposals"
-msgstr ""
+msgstr "Propuestas"
 
 #: templates/proposals/proposal_add.html:5
 #: templates/proposals/proposal_list.html:17
 msgid "Add proposal"
-msgstr ""
+msgstr "Añadir propuesta"
 
 #: templates/proposals/proposal_add.html:26
 msgid "Add new proposal"
-msgstr ""
+msgstr "Añadir nueva propuesta"
 
 #: templates/proposals/proposal_add.html:124
 #: templates/proposals/proposal_confirm_delete.html:26
 #: templates/proposals/proposal_edit.html:137
 #: templates/proposals/proposal_list.html:47
 msgid "Go back"
-msgstr ""
+msgstr "Volver"
 
 #: templates/proposals/proposal_add.html:125
 #: templates/proposals/proposal_edit.html:138
 msgid "Publish"
-msgstr ""
+msgstr "Publicar"
 
 #: templates/proposals/proposal_add.html:130
 msgid "Admins/moderators read this"
-msgstr ""
+msgstr "Admins/Moderadores leed esto"
 
 #: templates/proposals/proposal_add.html:131
 msgid ""
-"There are a lot more options in the proposals but they will appear only when "
-"you edit the proposal."
+"There are a lot more options in the proposals but they will appear only"
+" when you edit the proposal."
 msgstr ""
+"Hay muchas más opciones en las propuestas pero sólo aparecerán cuando "
+"se edite la propuesta."
 
 #: templates/proposals/proposal_add.html:133
 msgid "How to add new proposals"
-msgstr ""
+msgstr "Cómo añadir nuevas propuestas"
 
 #: templates/proposals/proposal_add.html:135
 msgid "Title resuming the proposal, be concise (50 characters)"
-msgstr ""
+msgstr "Título resumiendo la propuesta, sé conciso (50 caracteres)"
 
 #: templates/proposals/proposal_add.html:136
 msgid ""
-"Describe here your proposal with detail. You can add images or any other "
-"content."
+"Describe here your proposal with detail. You can add images or any "
+"other content."
 msgstr ""
+"Describe aquí tu propuesta con detalle. Puedes añadir imágenes u otro "
+"contenido."
 
 #: templates/proposals/proposal_add.html:137
 msgid "Latitude/Longitude"
-msgstr ""
+msgstr "Latitud/Longitud"
 
 #: templates/proposals/proposal_add.html:137
 msgid "You'll have to put this if you want to locate the proposal in a map."
 msgstr ""
+"Tendrás que poner estos datos si quieres localizar la propuesta en un "
+"mapa."
 
 #: templates/proposals/proposal_add.html:138
 msgid "Tags"
-msgstr ""
+msgstr "Etiquetas"
 
 #: templates/proposals/proposal_add.html:138
 msgid ""
-"Relevant tags for the proposal, p.e. where the proposal is localted, what is "
-"related to it, etc."
+"Relevant tags for the proposal, p.e. where the proposal is localted, "
+"what is related to it, etc."
 msgstr ""
+"Etiquetas relevantes para la propuesta, ej: dónde está localizada, "
+"cosas ralacionadas, etc."
 
 #: templates/proposals/proposal_confirm_delete.html:4
 #: templates/proposals/proposal_confirm_delete.html:21
 msgid "Delete proposal"
-msgstr ""
+msgstr "Eliminar propuesta"
 
 #: templates/proposals/proposal_confirm_delete.html:23
 msgid ""
-"Are you sure you want to delete this proposal? This action cannot be undone."
+"Are you sure you want to delete this proposal? This action cannot be "
+"undone."
 msgstr ""
+"¿Estás seguro de querer eliminar esta propuesta? Esta acción no se "
+"puede deshacer."
 
 #: templates/proposals/proposal_confirm_delete.html:27
 #: templates/proposals/proposal_list.html:22
 msgid "Delete"
-msgstr ""
+msgstr "Eliminar"
 
 #: templates/proposals/proposal_detail.html:5
 msgid "View proposal"
-msgstr ""
+msgstr "Ver propuesta"
 
 #: templates/proposals/proposal_detail.html:56
 msgid "support"
-msgstr ""
+msgstr "soporte"
 
 #: templates/proposals/proposal_detail.html:61
 #: templates/proposals/proposal_list.html:34
 msgid "proposed by "
-msgstr ""
+msgstr "propuesto por"
 
 #: templates/proposals/proposal_detail.html:61
 #: templates/proposals/proposal_list.html:34
 msgid " at "
-msgstr ""
+msgstr "a las"
 
 #: templates/proposals/proposal_edit.html:5
 #: templates/proposals/proposal_edit.html:22
 msgid "Edit proposal"
-msgstr ""
+msgstr "Editar propuesta"
 
 #: templates/proposals/proposal_list.html:5
 msgid "View proposals"
-msgstr ""
+msgstr "Ver propuestas"
 
 #: templates/proposals/proposal_list.html:19
 msgid "Edit"
-msgstr ""
+msgstr "Editar"
 
 #: templates/proposals/proposal_list.html:34
 msgid "comments"
-msgstr ""
+msgstr "comentarios"
 
 #: templates/proposals/proposal_list.html:43
 msgid "There are no proposals for this space"
-msgstr ""
+msgstr "No hay propuesta para este espacio."
 
 #: templates/proposals/proposal_list.html:53
 msgid "previous"
-msgstr ""
+msgstr "anterior"
 
 #: templates/proposals/proposal_list.html:56
 msgid "of"
-msgstr ""
+msgstr "de"
 
 #: templates/proposals/proposal_list.html:59
 msgid "next"
-msgstr ""
+msgstr "siguiente"
