@@ -396,18 +396,18 @@ tbody td.criteria-title, tbody th.criteria-title {
 .handler {
     float: left;
     height: 10px;
-    width: 100%;
+    width: 80px;
     background-color: #867794;
     margin: -5px 0px 0px -5px;
 }
 
 .deletenote {
-    background: #FFF;
-    border: 1px solid #000;
-    height: 15px;
-    width: 15px;
-    line-height: 15px;
-    padding: -3px 0px 3px 0px;
+    float: right;
+    background: #F00;
+    border: 1px solid #666;
+    height: 8px;
+    width: 8px;
+    line-height: 6px;
 }
 
 .note, .note-alpha {
@@ -431,7 +431,7 @@ tbody td.criteria-title, tbody th.criteria-title {
 }
 
 .mine {
-    background-color: #FFFF99;
+    background-color: #CCC; /*#FFFF99;*/
 }
 
 .note-alpha {

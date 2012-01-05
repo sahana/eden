@@ -65,12 +65,15 @@
                                         {% for note in notes %}
                                             {% if note.column.id == td.id and note.row.id == row.id %}
                                                 <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %}">
-                                                    <div class="handler"></div>
-                                                    {% if perms.note.delete_note %}
-                                                        <div class="deletenote" class="hidden"><a href="#" onclick="deleteNote(this)" id="deletenote">X</a></div>
-                                                    {% endif %}
+                                                    <div class="handler">
+                                                        {% if note.author == request.user and perms.note.delete_note %}
+                                                            <div class="deletenote hidden"><a href="#" onclick="deleteNote(this)" id="deletenote" title="{% trans 'Delete note' %}">x</a></div>
+                                                        {% endif %}
+                                                    </div>
                                                     <p class="note-text">{{ note.title }}</p>
-                                                    <span id="edit-note" class="label hidden"><a href="#" onclick="editNote(this)" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true">{% trans "Edit" %}</a></span>
+                                                    {% if note.author == request.user %}
+                                                        <span id="edit-note" class="label hidden"><a href="#" onclick="editNote(this)" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true">{% trans "Edit" %}</a></span>
+                                                    {% endif %}
                                                 </div>
                                             {% endif %}
                                         {% endfor %}

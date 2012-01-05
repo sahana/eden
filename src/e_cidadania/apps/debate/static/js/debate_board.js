@@ -24,6 +24,22 @@ var confirmDelete = gettext('Are you sure?');
     NOTE FUNCTIONS
 */
 
+function showControls() {
+    /*
+     showControls() - Hides the edit and delete controls from the notes. If the
+     users hovers over a note created by himself, the note shows the controls.
+     */
+    $(".mine").hover(function(){
+            $(this).find(".deletenote").show();
+            $(this).find("#edit-note").show();
+        },
+        function() {
+            $(this).find(".deletenote").hide();
+            $(this).find("#edit-note").hide();
+        }
+    );
+}
+
 function createNote() {
     /*
         createNote() - Creates a new note related with the debate. Frist the
@@ -46,15 +62,15 @@ function createNote() {
     });
 
     request.done(function (note) {
-        $("#sortable-dispatcher").append("<div id='" + note.id + "' class='note'>" +
-            "<div class='handler'></div>" +
-            "<div class='deletenote'>" +
+        $("#sortable-dispatcher").append("<div id='" + note.id + "' class='note mine'>" +
+            "<div class='handler'><div class='deletenote hidden'>" +
             "<a href='#' onclick='deleteNote(this)' id='deletenote'>x</a>" +
-            "</div><p class='note-text'>" + note.title +
-            "</p><span class='label'><a href='#' onclick='editNote(this)'" +
+            "</div></div><p class='note-text'>" + note.title + "</p>" +
+            "<span id='edit-note' class='label hidden'><a href='#' onclick='editNote(this)'" +
             " data-controls-modal='edit-current-note' data-backdrop='true'" +
             " data-keyboard='true'>" + editString + "</a></span>" +
-            "</div>")
+            "</div>");
+        showControls();
     });
 
     request.fail(function (jqXHR, textStatus) {
@@ -64,6 +80,8 @@ function createNote() {
             icon:"alert.png"
         });
     });
+
+    // Activate control show/hide for the new note
 }
 
 function editNote(obj) {
@@ -200,22 +218,6 @@ function makeSortable() {
             });
         }
     }).disableSelection();
-}
-
-function showControls() {
-    /*
-        showControls() - Hides the edit and delete controls from the notes. If the
-        users hovers over a note created by himself, the note shows the controls.
-    */
-    $(".mine").hover(function(){
-            $(this).find(".deletenote").show();
-            $(this).find("#edit-note").show();
-        },
-        function() {
-            $(this).find(".deletenote").hide();
-            $(this).find("#edit-note").hide();
-        }
-    );
 }
 
 /* DEBATE CREATION */
