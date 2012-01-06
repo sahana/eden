@@ -3720,13 +3720,13 @@ class S3RoleManager(S3Method):
 
             # System roles
             query = ((table.deleted != True) & \
-                     (table.system is True))
+                     (table.system == True))
             rows = db(query).select(table.id)
             system_roles = [row.id for row in rows]
 
             # Protected roles
             query = ((table.deleted != True) & \
-                     (table.protected is True))
+                     (table.protected == True))
             rows = db(query).select(table.id)
             protected_roles = [row.id for row in rows]
 

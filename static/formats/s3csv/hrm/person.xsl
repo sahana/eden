@@ -18,7 +18,9 @@
          Office City....................optional.....office city
          Office Post code...............optional.....office post code
          First Name.....................required.....person first name
+         Middle Name....................optional.....person middle name
          Last Name......................required.....person last name
+         Initials.......................optional.....person initials
          DOB............................optional.....person date of birth
          Skills.........................optional.....comma-separated list of skills
          Email..........................required.....person email address
@@ -188,7 +190,9 @@
 
             <!-- Person record -->
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
+            <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
             <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+            <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
             <xsl:if test="col[@field='DOB']">
                 <data field="date_of_birth"><xsl:value-of select="col[@field='DOB']"/></data>
             </xsl:if>
