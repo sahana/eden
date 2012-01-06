@@ -31,6 +31,10 @@ def update_check(environment):
     except(ImportError):
         warnings.append("S3GIS unresolved dependency: shapely required for GIS support")
     try:
+        import xlrd
+    except(ImportError):
+        warnings.append("S3XLS unresolved dependency: xlrd required for XLS export")
+    try:
         import xlwt
     except(ImportError):
         warnings.append("S3XLS unresolved dependency: xlwt required for XLS export")
