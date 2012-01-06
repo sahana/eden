@@ -337,6 +337,8 @@ def organisation_represent(id, showlink=False, acronym=True):
 
     return represent
 
+response.s3.org_organisation_represent = organisation_represent
+
 organisation_popup_url = URL(c="org", f="organisation",
                              args="create",
                              vars=dict(format="popup"))
@@ -463,6 +465,38 @@ s3mgr.model.add_component("doc_document", org_organisation="organisation_id")
 
 # Images
 s3mgr.model.add_component("doc_image", org_organisation="organisation_id")
+
+# -----------------------------------------------------------------------------
+def org_organisation_deduplicate(item):
+    """
+        Import item deduplication, match by name
+        NB: usually, this is only needed to catch cases where the
+            import item is misspelled (case mismatch), otherwise the
+            org name is a primary key and matches automatically.
+            However, if there's a spelling mistake, we would want to
+            retain the original spelling *because* the name is a
+            primary key.
+
+        @param item: the S3ImportItem instance
+    """
+
+    if item.id:
+        return
+    if item.tablename == "org_organisation":
+        table = item.table
+        name = "name" in item.data and item.data.name
+        query = (table.name.lower() == name.lower())
+        duplicate = db(query).select(table.id,
+                                     table.name,
+                                     limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            # Retain the correct spelling of the name
+            item.data.name = duplicate.name
+            item.method = item.METHOD.UPDATE
+
+s3mgr.configure(tablename,
+                deduplicate=org_organisation_deduplicate)
 
 # -----------------------------------------------------------------------------
 def organisation_rheader(r, tabs=[]):

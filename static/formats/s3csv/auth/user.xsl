@@ -13,7 +13,7 @@
          Email...................auth_user
          Password................auth_user
          Role....................auth_role
-         Organisation............org_organisation
+         Organisation............org_organisation (Doesn't work as not a real Reference)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -65,11 +65,11 @@
 
             <!-- Link to Organisation -->
             <xsl:if test="$OrgName!=''">
-                <reference field="organisation_id" resource="org_organisation">
+                <data field="organisation_id">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$OrgName"/>
                     </xsl:attribute>
-                </reference>
+                </data>
             </xsl:if>
         </resource>
     </xsl:template>
