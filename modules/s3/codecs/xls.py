@@ -73,6 +73,7 @@ class S3XLS(S3Codec):
         # Error codes
         T = current.T
         self.ERROR = Storage(
+            XLRD_ERROR = T("ERROR: Running Python needs the xlrd module installed for XLS export"),
             XLWT_ERROR = T("ERROR: Running Python needs the xlwt module installed for XLS export")
         )
 
@@ -118,7 +119,16 @@ class S3XLS(S3Codec):
         title = str(crud_strings.get(name, not_found))
 
         headers = [f.label for f in lfields if f.show]
-        types = [f.field.type for f in lfields if f.show]
+        # Doesn't work with Virtual Fields
+        #types = [f.field.type for f in lfields if f.show]
+        types = []
+        for f in lfields:
+            if f.show:
+                try:
+                    types.append(f.field.type)
+                except:
+                    # Virtual Field
+                    types.append("string")
 
         items = crud.sqltable(fields=list_fields,
                               start=None,
@@ -150,29 +160,34 @@ class S3XLS(S3Codec):
                                    or a string which matches a value in the heading
                  * use_colour:     True to add colour to the cells. default True
         """
-        # Try import xlwt
         import datetime
         try:
-            from xlrd.xldate import xldate_from_date_tuple, \
-                               xldate_from_time_tuple, \
-                               xldate_from_datetime_tuple
             import xlwt
         except ImportError:
             current.session.error = self.ERROR.XLWT_ERROR
+            redirect(URL(extension=""))
+        try:
+            from xlrd.xldate import xldate_from_date_tuple, \
+                                    xldate_from_time_tuple, \
+                                    xldate_from_datetime_tuple
+        except ImportError:
+            current.session.error = self.ERROR.XLRD_ERROR
             redirect(URL(extension=""))
 
         # Get the attributes
         title = attr.get("title") 
         list_fields = attr.get("list_fields") 
         report_groupby = attr.get("report_groupby")
-        use_colour = attr.get("use_colour",True)
+        use_colour = attr.get("use_colour", True)
         # Extract the data from the data_source
-        if isinstance(data_source, (list,tuple)):
+        if isinstance(data_source, (list, tuple)):
             headers = data_source[0]
             types = data_source[1]
             items = data_source[2:]
         else:
-            (title, types, headers, items) = self.extractResource(data_source, list_fields, report_groupby)
+            (title, types, headers, items) = self.extractResource(data_source,
+                                                                  list_fields,
+                                                                  report_groupby)
 
         if report_groupby != None:
             if isinstance(report_groupby, Field):
@@ -268,7 +283,7 @@ class S3XLS(S3Codec):
             colCnt += 1
 
         # fix the size of the last column to display the date
-        if 16*S3XLS.COL_WIDTH_MULTIPLIER > width:
+        if 16 * S3XLS.COL_WIDTH_MULTIPLIER > width:
             sheet1.col(totalCols).width = 16 * S3XLS.COL_WIDTH_MULTIPLIER
 
         subheading = None
@@ -277,7 +292,7 @@ class S3XLS(S3Codec):
             rowCnt += 1
             currentRow = sheet1.row(rowCnt)
             colCnt = 0
-            if rowCnt%2 == 0:
+            if rowCnt % 2 == 0:
                 style = styleEven
             else:
                 style = styleOdd
@@ -302,7 +317,7 @@ class S3XLS(S3Codec):
                                                represent, styleSubHeader)
                             rowCnt += 1
                             currentRow = sheet1.row(rowCnt)
-                            if rowCnt%2 == 0:
+                            if rowCnt % 2 == 0:
                                 style = styleEven
                             else:
                                 style = styleOdd
@@ -318,7 +333,7 @@ class S3XLS(S3Codec):
                                       cell_datetime.month,
                                       cell_datetime.day
                                      )
-                        value = xldate_from_date_tuple(date_tuple,0)
+                        value = xldate_from_date_tuple(date_tuple, 0)
                         style.num_format_str = date_format
                     except:
                         pass
@@ -334,7 +349,7 @@ class S3XLS(S3Codec):
                                       cell_datetime.minute,
                                       cell_datetime.second,
                                      )
-                        value = xldate_from_datetime_tuple(date_tuple,0)
+                        value = xldate_from_datetime_tuple(date_tuple, 0)
                         style.num_format_str = datetime_format
                     except:
                         pass
