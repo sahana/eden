@@ -1,66 +1,74 @@
 {{extend "layout.html"}}
 <h2>{{=deployment_settings.get_system_name()}} - {{=T("About")}}</h2>
-<div class='item-container'>
-<table>
-    <tr>
-        <td><strong>Core Components</strong></td>
-        <td><strong>Version</strong></td>
-    </tr>
-    <tr>
-        <td>{{=deployment_settings.get_system_name_short()}}</td>
-        <td>{{=sahana_version}}</td>
-    </tr>
-    <tr>
-        <td>Web Server</td>
-        <td>{{=request.env.server_software}}</td>
-    </tr>
-    <tr>
-        <td>Web2Py</td>
-        <td>{{=web2py_version}}</td>
-    </tr>
-    <tr>
-        <td>Python</td>
-        <td>{{=python_version}}</td>
-    </tr>
-    <tr>
-        <td><strong>Database</strong></td>
-        <td></td>
-    </tr>
-  {{if sqlite_version:}}
-    <tr>
-        <td>SQLite</td>
-        <td>{{=sqlite_version}}</td>
-    </tr>
-  {{elif mysql_version:}}
-    <tr>
-        <td>MySQL</td>
-        <td>{{=mysql_version}}</td>
-    </tr>
-    <tr>
-        <td>MySQLdb python driver</td>
-        <td>{{=mysqldb_version}}</td>
-    </tr>
-  {{else:}}
-    <tr>
-        <td>PostgreSQL</td>
-        <td>{{=pgsql_version}}</td>
-    </tr>
-    <tr>
-        <td>psycopg2 python driver</td>
-        <td>{{=mysqldb_version}}</td>
-    </tr>
-  {{pass}}
-    <tr>
-        <td><strong>Other Components</strong></td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>ReportLab</td>
-        <td>{{=reportlab_version}}</td>
-    </tr>
-    <tr>
-        <td>xlwt</td>
-        <td>{{=xlwt_version}}</td>
-    </tr>
-</table>
+<div class='table-container'>
+    <table id="list" class="dataTable display">
+        <thead>
+            <tr>
+                <th class="sorting_disabled">Core Components</td>
+                <th class="sorting_disabled">Version</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="odd">
+                <td>{{=deployment_settings.get_system_name_short()}}</td>
+                <td>{{=sahana_version}}</td>
+            </tr>
+            <tr>
+                <td>Web Server</td>
+                <td>{{=request.env.server_software}}</td>
+            </tr>
+            <tr class="odd">
+                <td>Web2Py</td>
+                <td>{{=web2py_version}}</td>
+            </tr>
+            <tr>
+                <td>Python</td>
+                <td>{{=python_version}}</td>
+            </tr>
+            <tr class="odd">
+                <td><strong>Database</strong></td>
+                <td></td>
+            </tr>
+        {{if sqlite_version:}}
+            <tr>
+                <td>SQLite</td>
+                <td>{{=sqlite_version}}</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td></td>
+            </tr>
+        {{elif mysql_version:}}
+            <tr>
+                <td>MySQL</td>
+                <td>{{=mysql_version}}</td>
+            </tr>
+            <tr>
+                <td>MySQLdb python driver</td>
+                <td>{{=mysqldb_version}}</td>
+            </tr>
+        {{else:}}
+            <tr>
+                <td>PostgreSQL</td>
+                <td>{{=pgsql_version}}</td>
+            </tr>
+            <tr>
+                <td>psycopg2 python driver</td>
+                <td>{{=mysqldb_version}}</td>
+            </tr>
+        {{pass}}
+            <tr class="odd">
+                <td><strong>Other Components</strong></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>ReportLab</td>
+                <td>{{=reportlab_version}}</td>
+            </tr>
+            <tr class="odd">
+                <td>xlwt</td>
+                <td>{{=xlwt_version}}</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
