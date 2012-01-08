@@ -132,7 +132,7 @@ deployment_settings.frontpage.rss = [
 ]
 
 # Enable Social Media shareicons
-deployment_settings.frontpage.share_icons = True
+deployment_settings.ui.social_buttons = True
 
 # L10n settings
 #deployment_settings.L10n.default_country_code = 1
