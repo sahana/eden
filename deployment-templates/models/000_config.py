@@ -131,9 +131,6 @@ deployment_settings.frontpage.rss = [
     }
 ]
 
-# Enable Social Media shareicons
-deployment_settings.ui.social_buttons = True
-
 # L10n settings
 #deployment_settings.L10n.default_country_code = 1
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -354,6 +351,8 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.ui.label_mobile_phone = T("Cell Phone")
 # Enable this to change the label for 'Postcode'
 #deployment_settings.ui.label_postcode = T("ZIP Code")
+# Enable Social Media share buttons
+#deployment_settings.ui.social_buttons = True
 
 # Request
 #deployment_settings.req.type_inv_label = T("Donations")

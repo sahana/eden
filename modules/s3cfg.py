@@ -418,10 +418,10 @@ class S3Config(Storage):
         # May need this form for Web Setup
         #return T(label)
         return label
-    
+
     def get_ui_social_buttons(self):
         """ Display social media Buttons in the footer? """
-        return self.ui.get("social_buttons", True)
+        return self.ui.get("social_buttons", False)
     # -------------------------------------------------------------------------
     # Modules
     # -------------------------------------------------------------------------
