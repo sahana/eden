@@ -78,6 +78,7 @@ if deployment_settings.has_module(module):
 
         s3mgr.load("gis_config")
         config_id = response.s3.gis_config_id
+        site_id = s3db.org_site_id
 
         # -------------------------------------------------------------------------
         # Scenarios

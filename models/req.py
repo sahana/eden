@@ -80,6 +80,10 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
 
         module = "req"
 
+        organisation_id = s3db.org_organisation_id
+        organisation_represent = s3db.org_organisation_represent
+        org_site_represent = s3db.org_site_represent
+
         if deployment_settings.has_module("inv"):
             s3mgr.load("supply_item")
             item_id = response.s3.item_id

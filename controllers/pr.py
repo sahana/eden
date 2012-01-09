@@ -44,7 +44,6 @@ s3_menu(module, s3_menu_postp)
 
 # -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
     try:
@@ -104,7 +103,6 @@ def index():
 
 # -----------------------------------------------------------------------------
 def person():
-
     """ RESTful CRUD controller """
 
     # Load Model
@@ -112,9 +110,6 @@ def person():
     if deployment_settings.get_save_search_widget():
         s3mgr.load("pr_save_search")
         s3mgr.load("msg_subscription")
-
-    # Handle Personalised Map Configs
-    gis_config_form_setup()
 
     # Enable this to allow migration of users between instances
     #response.s3.filter = (db.pr_person.uuid == db.auth_user.person_uuid) & (db.auth_user.registration_key != "disabled")
@@ -135,6 +130,7 @@ def person():
 
             if r.component_name == "config":
                 _config = s3db.gis_config
+                response.s3.gis_config_form_setup()
                 # Name will be generated from person's name.
                 _config.name.readable = _config.name.writable = False
                 # Hide region fields
@@ -153,10 +149,11 @@ def person():
                 r.table.volunteer.writable = True
 
         return True
+    response.s3.prep = prep
 
     def postp(r, output):
         if r.component_name == "save_search":
-            stable = db.pr_save_search
+            stable = s3db.pr_save_search
             # Handle Subscribe/Unsubscribe requests
             if "subscribe" in r.get_vars:
                 save_search_id = r.get_vars.get("subscribe", None)
@@ -201,8 +198,6 @@ def person():
                                         )
 
         return output
-
-    response.s3.prep = prep
     response.s3.postp = postp
 
     s3mgr.configure("pr_group_membership",
@@ -255,13 +250,12 @@ def person():
 
 # -----------------------------------------------------------------------------
 def group():
-
     """ RESTful CRUD controller """
 
     tablename = "pr_group"
     table = db[tablename]
 
-    response.s3.filter = (db.pr_group.system == False) # do not show system groups
+    response.s3.filter = (table.system == False) # do not show system groups
 
     s3mgr.configure("pr_group_membership",
                     list_fields=["id",
@@ -270,30 +264,27 @@ def group():
                                  "description"
                                 ])
 
-    output = s3_rest_controller(prefix, resourcename,
-                rheader=lambda r: pr_rheader(r,
-                    tabs = [(T("Group Details"), None),
-                            (T("Address"), "address"),
-                            (T("Contact Data"), "contact"),
-                            (T("Members"), "group_membership")]))
+    rheader = lambda r: pr_rheader(r, tabs = [(T("Group Details"), None),
+                                              (T("Address"), "address"),
+                                              (T("Contact Data"), "contact"),
+                                              (T("Members"), "group_membership")
+                                            ])
+
+    output = s3_rest_controller(rheader=rheader)
 
     return output
 
-
 # -----------------------------------------------------------------------------
 def pimage():
-
     """ RESTful CRUD controller """
 
     # Load Model
     s3mgr.load("pr_address")
 
-    return s3_rest_controller(prefix, resourcename)
-
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def contact():
-
     """ RESTful CRUD controller """
 
     # Load Model
@@ -305,12 +296,10 @@ def contact():
     table.pe_id.readable = True
     table.pe_id.writable = True
 
-    return s3_rest_controller(prefix, resourcename)
-
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def presence():
-
     """
         RESTful CRUD controller
         - needed for Map Popups (no Menu entry for direct access)
@@ -318,10 +307,7 @@ def presence():
         @deprecated - People now use Base Location pr_person.location_id
     """
 
-    # Load Model
-    s3mgr.load("pr_presence")
-
-    table = db.pr_presence
+    table = s3db.pr_presence
 
     # Settings suitable for use in Map Popups
 
@@ -332,41 +318,19 @@ def presence():
     table.presence_condition.readable = False
     # @ToDo: Add Skills
 
-    return s3_rest_controller(prefix, resourcename)
-
-# -----------------------------------------------------------------------------
-#def group_membership():
-
-    #""" RESTful CRUD controller """
-
-    #return s3_rest_controller(prefix, resourcename)
-
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def pentity():
-
     """ RESTful CRUD controller """
 
     # Load Model
     s3mgr.load("pr_address")
 
-    return s3_rest_controller(prefix, resourcename)
-
-
-# -----------------------------------------------------------------------------
-def download():
-
-    """
-        Download a file.
-        @todo: deprecate? (individual download handler probably not needed)
-    """
-
-    return response.download(request, db)
-
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def tooltip():
-
     """ Ajax tooltips """
 
     if "formfield" in request.vars:
@@ -388,7 +352,7 @@ def person_duplicates():
     """
 
     # Shortcut
-    persons = db.pr_person
+    persons = s3db.pr_person
 
     table_header = THEAD(TR(TH(T("Person 1")),
                             TH(T("Person 2")),
@@ -528,7 +492,6 @@ def person_duplicates():
 
 # -----------------------------------------------------------------------------
 def delete_person():
-
     """
         To delete references to the old record and replace it with the new one.
 
@@ -556,7 +519,6 @@ def delete_person():
 
 # -----------------------------------------------------------------------------
 def person_resolve():
-
     """
         This opens a popup screen where the de-duplication process takes place.
 
@@ -571,7 +533,7 @@ def person_resolve():
     perID2 = request.vars.perID2
 
     # Shortcut
-    persons = db.pr_person
+    persons = s3db.pr_person
 
     count = 0
     for field in persons:
@@ -594,13 +556,13 @@ def person_resolve():
 
 
 #------------------------------------------------------------------------------
-#Function to redirect for loading the search
+# Function to redirect for loading the search
 #
 def load_search():
     var = {}
     var["load"] = request.args[0]
-    s3mgr.load("pr_save_search")
-    rows = db(db.pr_save_search.id == request.args[0]).select(db.pr_save_search.ALL)
+    table = s3db.pr_save_search
+    rows = db(table.id == request.args[0]).select(table.ALL)
     import cPickle
     for row in rows:
         search_vars = cPickle.loads(row.search_vars)

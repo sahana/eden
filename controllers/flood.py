@@ -8,6 +8,7 @@
 """
 
 module = request.controller
+resourcename = request.function
 
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -28,26 +29,21 @@ def river():
 
     """ Rivers, RESTful controller """
 
-    resource = request.function
-
     # Post-processor
     def user_postp(r, output):
         s3_action_buttons(r, deletable=False)
         return output
     response.s3.postp = user_postp
 
-    output = s3_rest_controller(module, resource)
+    output = s3_rest_controller()
     return output
 
 
 def freport():
 
     """ Flood Reports, RESTful controller """
-    resource = request.function
-    tablename = "%s_%s" % (module, resource)
+    tablename = "%s_%s" % (module, resourcename)
     table = db[tablename]
-
-    resource = request.function
 
     # Disable legacy fields, unless updating, so the data can be manually transferred to new fields
     #if "update" not in request.args:
@@ -60,18 +56,10 @@ def freport():
     response.s3.postp = postp
 
     rheader = lambda r: flood_rheader(r, tabs = [(T("Basic Details"), None),
-                                                     (T("Locations"), "freport_location")
-                                                    ])
-    output = s3_rest_controller(module, resource, rheader=rheader)
+                                                 (T("Locations"), "freport_location")
+                                                ])
+    output = s3_rest_controller(module, resourcename, rheader=rheader)
     return output
-
-# -----------------------------------------------------------------------------
-def download():
-
-    """ Download a file """
-
-    return response.download(request, db)
-
 
 # -----------------------------------------------------------------------------
 def flood_rheader(r, tabs=[]):
@@ -85,7 +73,7 @@ def flood_rheader(r, tabs=[]):
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 location = report.location_id
                 if location:
-                    location = gis_location_represent(location)
+                    location = s3db.gis_location_represent(location)
                 rheader = DIV(TABLE(
                                 TR(
                                     TH(T("Location") + ": "), location,

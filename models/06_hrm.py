@@ -12,6 +12,8 @@ if deployment_settings.has_module(module):
 
     person_id = s3db.pr_person_id
     location_id = s3db.gis_location_id
+    organisation_id = s3db.org_organisation_id
+    site_id = s3db.org_site_id
 
     # =========================================================================
     # Job Roles (Mayon: StaffResourceType)
@@ -1616,7 +1618,7 @@ S3FilterFieldChange({
                                        #readable=False,
                                        #writable=False,
                                        #sort=True,
-                                       #represent=org_site_represent),
+                                       #represent=s3db.org_site_represent),
                             #Field("type", "integer",
                                   #requires = IS_IN_SET(hrm_type_opts, zero=None),
                                   #default = 1,

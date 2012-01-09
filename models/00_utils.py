@@ -183,10 +183,6 @@ def comments_represent(text, showlink=True):
         return represent
 
 # -----------------------------------------------------------------------------
-# Make URLs clickable
-s3_url_represent = lambda url: (url and [A(url, _href=url, _target="blank")] or [""])[0]
-
-# -----------------------------------------------------------------------------
 # Date/Time representation functions
 s3_date_represent = S3DateTime.date_represent
 s3_time_represent = S3DateTime.time_represent
@@ -299,27 +295,6 @@ def s3_table_links(reference):
                 count += 1
 
     return tables
-
-# -----------------------------------------------------------------------------
-def s3_rheader_resource(r):
-    """
-        Identify the tablename and record ID for the rheader
-
-        @param r: the current S3Request
-
-    """
-
-    _vars = r.get_vars
-
-    if "viewing" in _vars:
-        tablename, record_id = _vars.viewing.rsplit(".", 1)
-        record = db[tablename][record_id]
-    else:
-        tablename = r.tablename
-        record = r.record
-
-    return (tablename, record)
-
 
 # -----------------------------------------------------------------------------
 # CRUD functions

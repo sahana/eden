@@ -25,11 +25,11 @@ def org_filter():
         i.e. they have the organisation access role or a site access role
     """
 
-    table = db.org_organisation
+    table = s3db.org_organisation
     orgs = db(table.owned_by_organisation.belongs(roles)).select(table.id)
     orgs = [org.id for org in orgs]
 
-    stable = db.org_site
+    stable = s3db.org_site
     siteorgs = db(stable.owned_by_facility.belongs(roles)).select(stable.organisation_id)
     for org in siteorgs:
         if org.organisation_id not in orgs:
@@ -149,7 +149,7 @@ def human_resource():
 
     tablename = "hrm_human_resource"
     table = db[tablename]
-    ptable = db.pr_person
+    ptable = s3db.pr_person
 
     # Configure CRUD strings
     s3.crud_strings[tablename] = Storage(
@@ -311,7 +311,7 @@ def human_resource():
         return output
     response.s3.postp = postp
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -342,7 +342,7 @@ def hrm_map_popup(r):
                          TD(r.record.job_title)))
 
     # Organization (better with just name rather than Represent)
-    table = db.org_organisation
+    table = s3db.org_organisation
     query = (table.id == r.record.organisation_id)
     name = db(query).select(table.name,
                             limitby=(0, 1)).first().name
@@ -380,7 +380,7 @@ def hrm_map_popup(r):
                          TD(mobile_phone)))
     # Office number
     if r.record.site_id:
-        table = db.org_office
+        table = s3db.org_office
         query = (table.site_id == r.record.site_id)
         office = db(query).select(table.phone1,
                                   limitby=(0, 1)).first()
@@ -444,7 +444,7 @@ def person():
         table.organisation_id.writable = False
         table.site_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                     "org_site.%s" % super_key(db.org_site),
-                                    org_site_represent,
+                                    s3db.org_site_represent,
                                     filterby="organisation_id",
                                     filter_opts=[session.s3.hrm.org]))
     table.type.readable = True
@@ -631,9 +631,11 @@ def person():
                         except:
                             pass
                     if org_name:
-                        query = (db.org_organisation.name == org_name) & \
-                                (db.hrm_human_resource.organisation_id == db.org_organisation.id) & \
-                                (db.hrm_human_resource.type == group)
+                        htable = db.hrm_human_resource
+                        otable = s3db.org_organisation
+                        query = (otable.name == org_name) & \
+                                (htable.organisation_id == otable.id) & \
+                                (htable.type == group)
                         resource = s3mgr.define_resource("hrm", "human_resource", filter=query)
                         ondelete = s3mgr.model.get_config("hrm_human_resource", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
@@ -836,7 +838,7 @@ def job_role():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # =============================================================================
@@ -853,7 +855,7 @@ def skill():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 
@@ -868,7 +870,7 @@ def skill_type():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -883,7 +885,7 @@ def competency_rating():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -921,7 +923,7 @@ def skill_provision():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -936,7 +938,7 @@ def course():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -951,7 +953,7 @@ def course_certificate():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -968,7 +970,7 @@ def certificate():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -983,7 +985,7 @@ def certificate_skill():
     # Load Models
     s3mgr.load("hrm_skill")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -1002,13 +1004,13 @@ def training():
        EDITOR not in session.s3.roles:
         ttable = db.hrm_training
         hrtable = db.hrm_human_resource
-        orgtable = db.org_organisation
+        orgtable = s3db.org_organisation
         query = (ttable.person_id == hrtable.person_id) & \
                 (hrtable.organisation_id == orgtable.id) & \
                 (orgtable.owned_by_organisation.belongs(session.s3.roles))
         response.s3.filter = query
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # =============================================================================
@@ -1018,7 +1020,7 @@ def staff_org_site_json():
     """
 
     table = db.hrm_human_resource
-    otable = db.org_organisation
+    otable = s3db.org_organisation
     #db.req_commit.date.represent = lambda dt: dt[:10]
     query = (table.person_id == request.args[0]) & \
             (table.organisation_id == otable.id)

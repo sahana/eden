@@ -184,7 +184,7 @@ def parameter():
         title_display = T("Parameters"))
 
     s3mgr.configure(tablename, deletable=False)
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 def item():
     """ RESTful CRUD controller """
@@ -220,7 +220,7 @@ def item():
                     extra="description",
                     orderby=db.budget_item.category_type)
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 def item_export_pdf():
     """
@@ -355,7 +355,7 @@ def kit():
         s3mgr.configure(tablename,
             update_next=URL(f="kit_item", args=request.args[1]))
 
-    return s3_rest_controller(module, resourcename, main="code")
+    return s3_rest_controller(main="code")
 
 def kit_item():
     """ Many to Many CRUD Controller """
@@ -798,7 +798,7 @@ def bundle():
         s3mgr.configure(tablename,
             update_next=URL(f="bundle_kit_item", args=request.args[1]))
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 def bundle_kit_item():
     """ Many to Many CRUD Controller """
@@ -1100,7 +1100,7 @@ def staff():
         msg_record_deleted = T("Staff Type deleted"),
         msg_list_empty = T("No Staff Types currently registered"))
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # This should be deprecated & replaced with a link to gis_location
 def location():
@@ -1129,7 +1129,7 @@ def location():
         msg_record_deleted = T("Location deleted"),
         msg_list_empty = T("No Locations currently registered"))
 
-    return s3_rest_controller(module, resourcename, main="code")
+    return s3_rest_controller(main="code")
 
 def project():
     """ RESTful CRUD controller """
@@ -1177,7 +1177,7 @@ def budget():
         msg_record_deleted = T("Budget deleted"),
         msg_list_empty = T("No Budgets currently registered"))
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 def budget_staff_bundle():
     """ Many to Many CRUD Controller """

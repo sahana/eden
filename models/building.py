@@ -27,6 +27,7 @@ if deployment_settings.has_module(module):
 
     person_id = s3db.pr_person_id
     location_id = s3db.gis_location_id
+    organisation_id = s3db.org_organisation_id
 
     # Options
     building_area_inspected = {

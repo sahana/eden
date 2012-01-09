@@ -23,6 +23,8 @@ if deployment_settings.has_module(module):
 
     def survey_tables():
 
+        organisation_id = s3db.org_organisation_id
+
         import sys
         sys.path.append("applications/%s/modules/s3" % request.application)
 

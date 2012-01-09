@@ -60,6 +60,9 @@ if deployment_settings.has_module("inv"):
 
         person_id = s3db.pr_person_id
         #location_id = s3db.gis_location_id
+        #organisation_id = s3db.org_organisation_id
+        #organisation_represent = s3db.org_organisation_represent
+        org_site_represent = s3db.org_site_represent
 
         # Inventory depends on Supply Items/Packs
         s3mgr.load("supply_item")

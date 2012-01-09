@@ -39,10 +39,7 @@ def icategory():
         The full list of hard-coded categories are visible to admins & should remain unchanged for sync
     """
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
-
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -51,7 +48,7 @@ def ireport():
     """ Incident Reports, RESTful controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # Filter out Closed Reports
     response.s3.filter = (table.closed == False)

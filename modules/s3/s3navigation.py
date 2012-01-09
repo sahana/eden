@@ -31,7 +31,10 @@
 
 """
 
-__all__ = ["S3Menu", "s3_rheader_tabs", "s3_popup_comment"]
+__all__ = ["S3Menu",
+           "s3_rheader_tabs",
+           "s3_rheader_resource",
+           "s3_popup_comment"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -192,6 +195,27 @@ def s3_popup_comment(c=None,
 
     comment = DIV(popup, ttip)
     return comment
+
+# =============================================================================
+def s3_rheader_resource(r):
+    """
+        Identify the tablename and record ID for the rheader
+
+        @param r: the current S3Request
+
+    """
+
+    _vars = r.get_vars
+
+    if "viewing" in _vars:
+        tablename, record_id = _vars.viewing.rsplit(".", 1)
+        db = current.db
+        record = db[tablename][record_id]
+    else:
+        tablename = r.tablename
+        record = r.record
+
+    return (tablename, record)
 
 # =============================================================================
 def s3_rheader_tabs(r, tabs=[]):

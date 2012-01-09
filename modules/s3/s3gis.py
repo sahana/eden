@@ -4585,7 +4585,7 @@ class Layer(object):
     """
     def __init__(self):
         s3db = current.s3db
-        self.table = s3db[tablename]
+        self.table = s3db[self.table_name]
 
     def as_json(self):
         """
@@ -5033,11 +5033,11 @@ class GPXLayer(MultiRecordLayer):
     def __init__(self):
         super(GPXLayer, self).__init__()
 
-#        if record:
-#            self.url = "%s/%s" % (URL(c="default", f="download"),
-#                                  record.track)
-#        else:
-#            self.url = None
+        # if record:
+            # self.url = "%s/%s" % (URL(c="default", f="download"),
+                                  # record.track)
+        # else:
+            # self.url = None
 
     class SubLayer(MultiRecordLayer.SubLayer):
         def as_dict(self):

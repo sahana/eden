@@ -282,12 +282,12 @@ def places():
 
 # =============================================================================
 def sample_table_spec():
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # =============================================================================
 def station_parameter():
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # =============================================================================
@@ -311,11 +311,11 @@ def purchase():
     
     response.s3.prep = prep
     
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     output["addheader"] = T("Please enter the details of the data you wish to purchase")
     return output
 
 # =============================================================================
 def save_query():
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output

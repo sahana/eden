@@ -34,8 +34,7 @@ def document():
 
     rheader = lambda r: document_rheader(r)
 
-    output = s3_rest_controller(module, resourcename,
-                                rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
 
     return output
 
@@ -46,7 +45,7 @@ def document_rheader(r):
         if doc_document:
             #rheader_tabs = s3_rheader_tabs(r, document_tabs(r))
             table = db.doc_document
-            rheader = DIV(B("%s: " % T("Name")),doc_document.name,
+            rheader = DIV(B("%s: " % T("Name")), doc_document.name,
                         TABLE(TR(
                                 TH("%s: " % T("File")), table.file.represent( doc_document.file ),
                                 TH("%s: " % T("URL")), table.url.represent( doc_document.url ),
@@ -116,9 +115,9 @@ def image():
     resourcename = request.function
 
     # Load Models
-    s3mgr.load("doc_document")
+    s3mgr.load("doc_image")
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
 
     return output
 # =============================================================================
@@ -143,11 +142,8 @@ def upload_bulk():
         @ToDo: Read EXIF headers to geolocate the Photos
     """
 
-    # Load Models
-    s3mgr.load("doc_document")
-
     tablename = "doc_image"
-    table = db[tablename]
+    table = s3db[tablename]
 
     import cgi
 
@@ -198,4 +194,3 @@ def upload_bulk():
     return json.dumps(msg)
 
 # END =========================================================================
-

@@ -37,6 +37,9 @@ if deployment_settings.has_module("inv") or \
 
         module = "supply"
 
+        organisation_id = s3db.org_organisation_id
+        organisation_represent = s3db.org_organisation_represent
+
         # =====================================================================
         # Brand
         #
@@ -1387,7 +1390,7 @@ S3FilterFieldChange({
                         # @ToDo: Assets and req_items
                         return NONE
 
-                    #site = org_site_represent(record.site_id)
+                    #site = s3db.org_site_represent(record.site_id)
                     #return site
                     otable = db.org_office
                     record = db(otable.site_id == record.site_id).select(otable.id,

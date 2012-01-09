@@ -95,6 +95,7 @@ if deployment_settings.has_module(module):
             s3mgr.load("scenario_scenario")
         scenario_id = response.s3.scenario_id
         config_id = response.s3.gis_config_id
+        site_id = s3db.org_site_id
 
         # ---------------------------------------------------------------------
         # Events

@@ -48,6 +48,7 @@ __all__ = ["URL2",
            "s3_fullname",
            "s3_represent_facilities",
            "s3_represent_multiref",
+           "s3_url_represent",
            "sort_dict_by_values",
            "jaro_winkler",
            "jaro_winkler_distance_row",
@@ -596,6 +597,15 @@ def s3_represent_multiref(table, opt, represent=None, separator=", "):
 
     else:
         return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+def s3_url_represent(url):
+    """ Make URLs clickable """
+
+    if not url:
+        return ""
+
+    return A(url, _href=url, _target="blank")
 
 # =============================================================================
 def sort_dict_by_values(adict):

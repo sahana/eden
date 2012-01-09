@@ -16,6 +16,8 @@ current.s3db = s3db = S3Model()
 import eden.pr
 import eden.gis
 import eden.sit
+import eden.org
+import eden.auth
 import eden.doc
 import eden.project
 import eden.dvi
@@ -172,6 +174,7 @@ def s3_ownerstamp():
             s3_meta_owned_by_role(),
             s3_meta_owned_by_organisation(),
             s3_meta_owned_by_facility())
+s3.ownerstamp = s3_ownerstamp
 
 # =============================================================================
 # Common meta-fields
@@ -371,6 +374,7 @@ def address_hide(table):
     table.L0.readable = False
     table.postcode.readable = False
     return
+s3.address_hide = address_hide
 
 def address_onvalidation(form):
     """

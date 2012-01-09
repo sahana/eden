@@ -45,8 +45,7 @@ def shelter_type():
                                                     tabs=tabs)
 
     # @ToDo: Shelters per type display is broken -- always returns none.
-    output = s3_rest_controller(module, resourcename,
-                                rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -63,8 +62,7 @@ def shelter_service():
     rheader = lambda r: response.s3.shelter_rheader(r,
                                                     tabs=tabs)
 
-    output = s3_rest_controller(module, resourcename,
-                                rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
     return output
 
 # =============================================================================
@@ -173,7 +171,7 @@ def shelter():
     response.s3.prep = cr_shelter_prep
 
     rheader = response.s3.shelter_rheader
-    output = s3_rest_controller(module, resourcename, rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
 
     return output
 

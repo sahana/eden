@@ -1260,7 +1260,7 @@ def answer():
     s3mgr.load(tablename)
     table = db[tablename]
 
-    output = s3_rest_controller(prefix, resourcename)
+    output = s3_rest_controller()
     return output
 
 def analysis():

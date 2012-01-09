@@ -108,13 +108,13 @@ def project():
 def theme():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def hazard():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def organisation():
@@ -139,7 +139,7 @@ def organisation():
 def beneficiary_type():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def beneficiary():
@@ -164,7 +164,7 @@ def beneficiary():
 def activity_type():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def activity():
@@ -494,13 +494,13 @@ def site():
 def need():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def need_type():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def gap_report():
@@ -637,6 +637,8 @@ def gap_report():
             gap_str = "%d%%" % min((gap_row.total_bnf / gap_row.value) * 100, 100)
         else:
             gap_str = "0%"
+
+        organisation_represent = s3db.org_organisation_represent
 
         gap_table.append(TR( gis_location_represent(gap_row.location_id),
                              need_str,

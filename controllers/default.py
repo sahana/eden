@@ -93,6 +93,7 @@ else:
 
 # Organisation widget for use in Registration Screen
 # NB User Profile is only editable by Admin - using User Management
+organisation_represent = s3db.org_organisation_represent
 org_widget = IS_ONE_OF(db, "org_organisation.id",
                        organisation_represent,
                        orderby="org_organisation.name",
@@ -112,6 +113,7 @@ _table_user.organisation_id.comment = DIV(_class="tooltip",
                                                                T("The default Organization for whom you are acting."),
                                                                T("This setting can only be controlled by the Administrator.")))
 
+org_site_represent = s3db.org_site_represent
 _table_user.site_id.represent = org_site_represent
 _table_user.site_id.comment = DIV(_class="tooltip",
                                   _title="%s|%s|%s" % (T("Facility"),
@@ -640,7 +642,7 @@ def contact():
             return True
         response.s3.prep = prep
 
-        output = s3_rest_controller(prefix, resourcename)
+        output = s3_rest_controller()
         return output
     else:
         # Default: Simple Custom View

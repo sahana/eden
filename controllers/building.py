@@ -67,8 +67,7 @@ def nzseel1():
 
     rheader = nzseel1_rheader
 
-    output = s3_rest_controller(module, resourcename,
-                                rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -146,8 +145,7 @@ def nzseel2():
 
     rheader = nzseel2_rheader
 
-    output = s3_rest_controller(module, resourcename,
-                                rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
     return output
 
 # -----------------------------------------------------------------------------

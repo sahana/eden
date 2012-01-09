@@ -53,7 +53,7 @@ def warehouse():
     module = "org"
     resourcename = "office"
     tablename = "org_office"
-    table = db[tablename]
+    table = s3db[tablename]
 
     if "viewing" in request.get_vars:
         viewing = request.get_vars.viewing
@@ -61,17 +61,17 @@ def warehouse():
         if tn == "org_office":
             request.args.insert(0, record)
 
-    s3.crud_strings[tablename] = s3_warehouse_crud_strings
+    s3.crud_strings[tablename] = s3.org_warehouse_crud_strings
 
     # Type is Warehouse
     table.type.default = 5 # Warehouse
     table.type.writable = False
 
     # Only show warehouses
-    response.s3.filter = (db.org_office.type == 5)
+    response.s3.filter = (table.type == 5)
 
     # Remove type from list_fields
-    list_fields = s3mgr.model.get_config("org_office", "list_fields")
+    list_fields = s3mgr.model.get_config(tablename, "list_fields")
     try:
         list_fields.remove("type")
     except:
@@ -149,7 +149,7 @@ def warehouse():
         return True
     response.s3.prep = prep
 
-    rheader = office_rheader
+    rheader = s3db.org_office_rheader
 
     if "extra_data" in request.get_vars:
         csv_template = "inv_item"
@@ -268,7 +268,7 @@ def recv():
 def recv_item():
     """ RESTful CRUD controller """
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # =============================================================================

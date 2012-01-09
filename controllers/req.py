@@ -95,7 +95,7 @@ def req_item():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
 
     if response.s3.actions:
         response.s3.actions += [req_item_inv_item_btn]
@@ -144,7 +144,7 @@ def req_item_inv_item():
 
     output["req_item"] = TABLE( TR(
                                     TH( "%s: " % T("Requested By") ),
-                                    org_site_represent(req.site_id),
+                                    s3db.org_site_represent(req.site_id),
                                     TH( "%s: " % T("Item")),
                                     response.s3.inv_item_represent(req_item.item_id),
                                    ),
@@ -313,7 +313,7 @@ def commit_rheader(r):
                                           response.s3.req_represent(record.req_id),
                                          ),
                                       TR( TH( "%s: " % T("Committing Inventory")),
-                                          org_site_represent(record.site_id),
+                                          s3db.org_site_represent(record.site_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),
                                           ),
@@ -343,6 +343,7 @@ def commit_rheader(r):
 
                 #req_record = db.req_req[record.req_id]
                 #req_date = req_record.date
+                organisation_represent = s3db.org_organisation_represent
                 rheader = DIV( TABLE( TR( TH( "%s: " % T("Request")),
                                           response.s3.req_represent(record.req_id),
                                          ),
@@ -383,7 +384,7 @@ def commit_rheader(r):
 def commit_item():
     """ REST Controller """
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
     return output
 
 # =============================================================================

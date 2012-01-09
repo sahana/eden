@@ -132,7 +132,7 @@ def log():
         msg_list_empty = T("No messages in the system"))
 
     s3mgr.configure(tablename, listadd=False)
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 # =============================================================================
@@ -309,7 +309,7 @@ def parserdooth(message):
 def twitter_search():
     """ Controller to modify Twitter search queries """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def twitter_search_results():
@@ -322,7 +322,7 @@ def twitter_search_results():
         session.error = T("Need to configure Twitter Authentication")
         redirect(URL(f="twitter_settings", args=[1, "update"]))
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -373,7 +373,7 @@ def setting():
                     deletable=False,
                     listadd=False)
     response.menu_options = admin_menu_options
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 # -----------------------------------------------------------------------------
@@ -414,7 +414,7 @@ def email_settings():
 
     response.menu_options = admin_menu_options
     s3mgr.configure(tablename, listadd=False, deletable=False)
-    return s3_rest_controller(module, "email_settings")
+    return s3_rest_controller()
 
 
 # -----------------------------------------------------------------------------
@@ -473,7 +473,7 @@ def modem_settings():
                     #update_next = URL(args=[1, "update"])
                     )
     response.menu_options = admin_menu_options
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 #------------------------------------------------------------------------------
@@ -513,7 +513,7 @@ def smtp_to_sms_settings():
                     listadd=False,
                     update_next = URL(args=[1, "update"]))
     response.menu_options = admin_menu_options
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 #------------------------------------------------------------------------------
@@ -560,7 +560,7 @@ def api_settings():
                     listadd=False,
                     update_next = URL(args=[1, "update"]))
     response.menu_options = admin_menu_options
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 # -----------------------------------------------------------------------------
@@ -593,7 +593,7 @@ def tropo_settings():
                     listadd=False,
                     update_next = URL(args=[1, "update"]))
     response.menu_options = admin_menu_options
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 # -----------------------------------------------------------------------------
@@ -664,7 +664,7 @@ def twitter_settings():
 
     response.menu_options = admin_menu_options
     s3mgr.configure(tablename, listadd=False, deletable=False)
-    return s3_rest_controller(module, "twitter_settings")
+    return s3_rest_controller()
 
 
 # =============================================================================
@@ -887,10 +887,8 @@ def person_search(value, type=None):
 
 # -----------------------------------------------------------------------------
 def subscription():
-    resourcename = "subscription"
-    #form for the subscrption preferences of the user
-    return s3_rest_controller(module, resourcename)
 
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def load_search(id):
@@ -1026,13 +1024,12 @@ def tag():
     # Load all models
     s3mgr.model.load_all_models()
 
-    resourcename = "tag"
     tablename = "%s_%s" % (module, resourcename)
     table = db[tablename]
     table.resource.requires = IS_IN_SET(db.tables)
 
     s3mgr.configure(tablename, listadd=False)
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 
 # END ================================================================================

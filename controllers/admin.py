@@ -41,7 +41,7 @@ def role():
         @ToDo: Prevent (or warn?) users from renaming Staff Roles
     """
 
-    prefix = "auth"
+    module = "auth"
     name = "group"
 
     # ACLs as component of roles
@@ -68,7 +68,7 @@ def role():
     response.s3.prep = prep
 
     response.s3.stylesheets.append( "S3/role.css" )
-    output = s3_rest_controller(prefix, name)
+    output = s3_rest_controller(module, name)
     return output
 
 
@@ -154,10 +154,10 @@ def user():
     org = table.organisation_id
     org.writable = True
     org.requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                        organisation_represent,
+                                        s3db.org_organisation_represent,
                                         orderby="org_organisation.name",
                                         sort=True))
-    org.represent = organisation_represent
+    org.represent = s3db.org_organisation_represent
     org.widget = S3OrganisationAutocompleteWidget()
     org.comment = DIV(_class="tooltip",
                       _title="%s|%s|%s" % (T("Organization"),
@@ -167,10 +167,10 @@ def user():
     site = table.site_id
     site.writable = True
     site.requires = IS_NULL_OR(IS_ONE_OF(db, "org_site.id",
-                                         org_site_represent,
+                                         s3db.org_site_represent,
                                          orderby="org_site.name",
                                          sort=True))
-    site.represent = org_site_represent
+    site.represent = s3db.org_site_represent
     site.widget = S3SiteAutocompleteWidget()
     site.comment = DIV(_class="tooltip",
                        _title="%s|%s|%s" % (T("Facility"),
@@ -285,7 +285,7 @@ def organisation():
 
     module = "auth"
     tablename = "auth_organisation"
-    #table = db[tablename]
+    table = s3db[tablename]
 
     s3.crud_strings[tablename] = Storage(
         title_create = T("Add Organization Domain"),
@@ -357,7 +357,7 @@ def acl():
         for testing purposes, not for production use!
     """
 
-    prefix = "s3"
+    module = "s3"
     name = "permission"
 
     table = auth.permission.table
@@ -397,7 +397,7 @@ def acl():
         next = request.vars._next
         s3mgr.configure(tablename, delete_next=next)
 
-    output = s3_rest_controller(prefix, name)
+    output = s3_rest_controller(module, name)
     return output
 
 

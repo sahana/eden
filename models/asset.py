@@ -39,6 +39,10 @@ if deployment_settings.has_module("asset"):
 
         person_id = s3db.pr_person_id
         location_id = s3db.gis_location_id
+        organisation_id = s3db.org_organisation_id
+        organisation_represent = s3db.org_organisation_represent
+        site_id = s3db.org_site_id
+        room_id = s3db.org_room_id
 
         asset_type_opts = { s3.asset.ASSET_TYPE_VEHICLE    : T("Vehicle"),
                             #s3.asset.ASSET_TYPE_RADIO      : T("Radio"),

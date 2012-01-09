@@ -128,7 +128,7 @@ if deployment_settings.has_module("proc"):
                                            #comment = DIV(_class="tooltip",
                                            #              _title="%s|%s" % (T("Inventory"),
                                            #                                T("Enter some characters to bring up a list of possible matches"))),
-                                           represent=org_site_represent),
+                                           represent=s3db.org_site_represent),
                                 # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
                                 #project_id(),
                                 Field("order_date",
@@ -191,7 +191,7 @@ if deployment_settings.has_module("proc"):
                            ]
                     rheader_tabs = s3_rheader_tabs(r, tabs)
                     rheader = DIV(TABLE(TR( TH("%s: " % T("Facility")),
-                                            org_site_represent(plan.site_id),
+                                            s3db.org_site_represent(plan.site_id),
                                           ),
                                         TR( TH("%s: " % T("Order Date")),
                                             s3_date_represent(plan.order_date),
@@ -218,7 +218,7 @@ if deployment_settings.has_module("proc"):
                                       table.order_date,
                                       limitby=(0, 1)).first()
             if record:
-                return "%s (%s)" % (org_site_represent(record.site_id),
+                return "%s (%s)" % (s3db.org_site_represent(record.site_id),
                                     record.order_date)
             else:
                 return UNKNOWN

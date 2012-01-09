@@ -1321,7 +1321,7 @@ class S3GISConfigModel(S3Model):
 
 # =============================================================================
 class S3MapModel(S3Model):
-    """ Map Model """
+    """ Models for Maps """
 
     names = ["gis_cache",
              "gis_cache2",

@@ -50,6 +50,7 @@ def catalog_rheader(r):
                     (T("Items"), "catalog_item"),
                    ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
+            organisation_represent = s3db.org_organisation_represent
             rheader = DIV(TABLE(TR( TH("%s: " % T("Name")), catalog.name,
                                   ),
                                 TR( TH("%s: " % T("Organization")),
@@ -66,7 +67,7 @@ def catalog_rheader(r):
 def item_category():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def item_pack():
@@ -76,13 +77,13 @@ def item_pack():
 
     s3mgr.configure(tablename,
                     listadd=False)
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def brand():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def item():
@@ -99,7 +100,7 @@ def item():
 def catalog_item():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def item_entity():

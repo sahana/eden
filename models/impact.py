@@ -22,6 +22,8 @@ if deployment_settings.has_module("assess"):
     def impact_tables():
         """ Load the Impact tables as-needed """
 
+        sector_id = s3db.org_sector_id
+
         # Load the models we depend on
         if deployment_settings.has_module("assess"):
             s3mgr.load("assess_assess")

@@ -7,25 +7,25 @@
     @date-created: 2010-10-12
 """
 
-prefix = request.controller
+module = request.controller
 resourcename = request.function
 
-if prefix not in deployment_settings.modules:
-    raise HTTP(404, body="Module disabled: %s" % prefix)
+if module not in deployment_settings.modules:
+    raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
 def type():
 
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(prefix, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def impact():
 
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(prefix, resourcename)
+    return s3_rest_controller()
 
 # END =========================================================================
 

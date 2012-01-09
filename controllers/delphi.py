@@ -157,8 +157,7 @@ def group():
     response.s3.prep = prep
 
     rheader = group_rheader
-    return s3_rest_controller(module, resourcename,
-                              rheader=rheader)
+    return s3_rest_controller(rheader=rheader)
 
 # =============================================================================
 # Problems
@@ -292,8 +291,7 @@ def problem():
     response.s3.dataTableResize = True
 
     rheader = problem_rheader
-    return s3_rest_controller(module, resourcename,
-                              rheader=rheader)
+    return s3_rest_controller(rheader=rheader)
 
 # =============================================================================
 # Voting

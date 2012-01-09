@@ -31,7 +31,7 @@ def sector():
     #tablename = "%s_%s" % (module, resourcename)
     #table = db[tablename]
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def subsector():
@@ -40,18 +40,18 @@ def subsector():
     #tablename = "%s_%s" % (module, resourcename)
     #table = db[tablename]
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def site():
     """ RESTful CRUD controller """
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def site_org_json():
 
-    table = db.org_site
-    otable = db.org_organisation
+    table = s3db.org_site
+    otable = s3db.org_organisation
     response.headers["Content-Type"] = "application/json"
     #db.req_commit.date.represent = lambda dt: dt[:10]
     query = (table.site_id == request.args[0]) & \
@@ -65,11 +65,12 @@ def organisation():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    #return response.s3.organisation_controller()
-    return organisation_controller()
+    return org_organisation_controller()
 
 # -----------------------------------------------------------------------------
 def organisation_list_represent(l):
+
+    organisation_represent = s3db.org_organisation_represent
     if l:
         max = 4
         if len(l) > max:
@@ -92,8 +93,7 @@ def office():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    #return response.s3.office_controller()
-    return office_controller()
+    return org_office_controller()
 
 # =============================================================================
 def person():
@@ -114,7 +114,7 @@ def person():
 def room():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller()
 
 # =============================================================================
 def incoming():
@@ -135,7 +135,7 @@ def donor():
     """ RESTful CRUD controller """
 
     tablename = "org_donor"
-    table = db[tablename]
+    table = s3db[tablename]
 
     tablename = "org_donor"
     s3.crud_strings[tablename] = Storage(
@@ -155,7 +155,7 @@ def donor():
         msg_list_empty = T("No Donors currently registered"))
 
     s3mgr.configure(tablename, listadd=False)
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
 
     return output
 
