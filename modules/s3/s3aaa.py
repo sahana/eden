@@ -2722,7 +2722,10 @@ class S3Permission(object):
                 default = (self.READ, self.READ)
 
         # Already loaded?
-        tablename = table._tablename
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
         table_acl = self.table_acls.get((tablename,
                                          require_org,
                                          require_fac), None)
@@ -2939,6 +2942,7 @@ class S3Permission(object):
                        c=None,
                        f=None,
                        p=None,
+                       t=None,
                        a=None,
                        args=[],
                        vars={},
@@ -2947,6 +2951,17 @@ class S3Permission(object):
                        env=None):
         """
             Return a URL only if accessible by the user, otherwise False
+
+            @param c: the controller
+            @param f: the function
+            @param p: the permission (defaults to READ)
+            @param t: the tablename (defaults to <c>_<f>)
+            @param a: the application name
+            @param args: the URL arguments
+            @param vars: the URL variables
+            @param anchor: the anchor (#) of the URL
+            @param extension: the request format extension
+            @param env: the environment
         """
 
         required = self.METHODS
@@ -2959,6 +2974,10 @@ class S3Permission(object):
             c = self.controller
         if not f:
             f = self.function
+        if t is None:
+            tablename = "%s_%s" % (c, f)
+        else:
+            tablename = t
 
         # Hide disabled modules
         if self.modules and c not in self.modules:
@@ -2966,9 +2985,8 @@ class S3Permission(object):
 
         permitted = True
         if self.use_cacls:
-            acl = self.page_acl(c=c, f=f)
-            acl = ((acl[0] & ~self.CREATE) | acl[1]) & permission
-            if acl != permission:
+            acl = self(c=c, f=f, table=tablename)
+            if acl & permission != permission:
                 permitted = False
         else:
             if permission != self.READ:
@@ -3492,9 +3510,9 @@ class S3Permission(object):
         else:
             # non-HTML request => raise proper HTTP error
             if self.auth.s3_logged_in():
-                raise HTTP(403)
+                raise HTTP(403, body=self.INSUFFICIENT_PRIVILEGES)
             else:
-                raise HTTP(401)
+                raise HTTP(401, body=self.AUTHENTICATION_REQUIRED)
 
 # =============================================================================
 
@@ -4165,12 +4183,14 @@ class S3RoleManager(S3Method):
 
                 # Row to enter a new table ACL
                 _class = i % 2 and "even" or "odd"
-                all_tables = [t._tablename for t in current.db]
+                # @todo: find a better way to provide a selection of tables
+                #all_tables = [t._tablename for t in current.db]
                 form_rows.append(TR(
-                    TD(INPUT(_type="text", _name="new_table",
-                            requires=IS_EMPTY_OR(IS_IN_SET(all_tables,
-                                                           zero=None,
-                                        error_message=T("Undefined Table"))))),
+                    TD(INPUT(_type="text", _name="new_table")),
+                            # @todo: doesn't work with conditional models
+                            #requires=IS_EMPTY_OR(IS_IN_SET(all_tables,
+                                                           #zero=None,
+                                        #error_message=T("Undefined Table"))))),
                     TD(acl_widget("uacl", "new_t_uacl", auth.permission.NONE)),
                     TD(acl_widget("oacl", "new_t_oacl", auth.permission.NONE)),
                     TD(new_acl), _class=_class))
