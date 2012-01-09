@@ -144,12 +144,12 @@ def compare_analysis(expression_string, expected_analysis):
 
 def test_analysis():
     compare_analysis(
-        """Average("Observed Rainfall", FromDate(1960, 1, 1), ToDate(1, 1,1)) - 2""",
+        """Average("Observed Rainfall", From(1960, 1, 1), To(1, 1,1)) - 2""",
         """(
     Average(
         "Observed Rainfall",
-        FromDate(1960, 1, 1)
-        ToDate(1, 1, 1)
+        From(1960, 1, 1)
+        To(1, 1, 1)
         # ^ Year should be in range 1900 to 2500
     )
     -
@@ -164,19 +164,19 @@ def compare_expression_units(expression_string, expected_units):
 
 def test_parsing_expressions_1():
     compare_expression_units(
-        """Average("Observed Rainfall", FromDate(1960, 1, 1), ToDate(1961, 1,1)) - 2 mm""", 
+        """Average("Observed Rainfall", From(1960, 1, 1), To(1961, 1,1)) - 2 mm""", 
         Units.parsed_from("delta mm")
     )
 
 def test_parsing_expressions_1b():
     compare_expression_units(
-        """Average("Observed Rainfall", FromDate(1960, 1, 1), ToDate(1961, 1,1)) - 2 delta mm""", 
+        """Average("Observed Rainfall", From(1960, 1, 1), To(1961, 1,1)) - 2 delta mm""", 
         Units.parsed_from("mm")
     )
 
 def test_parsing_expressions_2():
     compare_expression_units(
-    """Average("Observed Rainfall", FromDate(1960, 1, 1), ToDate(1961, 1,1)) ** 2""",
+    """Average("Observed Rainfall", From(1960, 1, 1), To(1961, 1,1)) ** 2""",
         Units.parsed_from("mm^2"))
     
 def test_parsing_expressions_3():
@@ -184,15 +184,15 @@ def test_parsing_expressions_3():
     """
             Average(
                 "Gridded Rainfall",
-                FromDate(1980, 1, 1),
-                ToDate(2000, 12, 31),
+                From(1980, 1, 1),
+                To(2000, 12, 31),
                 Months(Jul, Aug, Sep, Oct, Nov, December, Jan, Feb, Mar, April)
             )
             / 
             Average(
                 "Gridded Rainfall",
-                FromDate(1990, 1, 1),
-                ToDate(2010, 12, 31)
+                From(1990, 1, 1),
+                To(2010, 12, 31)
             )
         """, Units.parsed_from("")
     )
@@ -202,15 +202,15 @@ def test_parsing_expressions_4():
         """
             Average(
                 "Gridded Rainfall",
-                FromDate(1980, 1, 1),
-                ToDate(2000, 12, 31),
+                From(1980, 1, 1),
+                To(2000, 12, 31),
                 Months(Jul, Aug, Sep, Oct, Nov, December, Jan, Feb, Mar, April)
             )
             - 
             Average(
                 "Gridded Rainfall",
-                FromDate(1990, 1, 1),
-                ToDate(2010, 12, 31)
+                From(1990, 1, 1),
+                To(2010, 12, 31)
             )
         """, Units.parsed_from("delta mm")
     )
@@ -220,8 +220,8 @@ def test_parsing_expressions_5():
         """
         Maximum(
             "Observed Max Temp",
-            FromDate(1950, Jan),
-            ToDate(2011, Jul)
+            From(1950, Jan),
+            To(2011, Jul)
         )
         """, Units.parsed_from("Kelvin")
     )
@@ -230,6 +230,7 @@ def test_compare_months_for_two_different_years():
     raise NotImplementedError
     
 
+"""Maximum("Observed Temp Max", From(1950), To(2100 ))"""
 
 failures = 0
 for name, function in dict(globals()).iteritems():

@@ -1,34 +1,17 @@
 
 ClimateDataPortal = local_import("ClimateDataPortal")
-
-def add_table(
-    sample_type_name,
-    parameter_name,
-    units_name,
-    value_type
-):
-    def write_message(sample_table_name):
-        print "Added", sample_table_name, sample_type_name, parameter_name
-        print "  containing", units_name, "values of type", value_type
-    
-    ClimateDataPortal.SampleTable(
-        parameter_name = parameter_name,
-        sample_type_name = sample_type_name,
-        units_name = units_name,
-        value_type = value_type,
-        db = db
-    ).create(write_message)
     
 def show_usage():
     sys.stderr.write("""Usage:
-    %(command)s sample_type parameter_name units value_type
+    %(command)s sample_type parameter_name units field_type date_mapping
     
 parameter_name: a unique name for the table e.g. "Rainfall" "Max Temp"
-value_type: any postgres numeric field type e.g. real, integer, "double precision".
+field_type: any postgres numeric field type e.g. real, integer, "double precision".
 units: mm, Kelvin (displayed units may be different)
 sample_type: Observed, Gridded or Projected
+date_mapping: daily or monthly
 
-e.g. .../add_table.py Observed "Min Temp" Kelvin real
+e.g. .../add_table.py Observed "Min Temp" Kelvin real daily
 
 """ % dict(
     command = "... add_table.py",
@@ -37,22 +20,29 @@ e.g. .../add_table.py Observed "Min Temp" Kelvin real
 import sys
 
 try:
-    sample_type = sys.argv[1]
+    sample_type_name = sys.argv[1]
     parameter_name = sys.argv[2]
-    units = sys.argv[3]
-    value_type = sys.argv[4]
-    assert sys.argv[5:] == [], sys.argv
+    units_name = sys.argv[3]
+    field_type = sys.argv[4]
+    date_mapping_name = sys.argv[5]
+    assert sys.argv[6:] == [], "%s ??" % sys.argv
 except:
     show_usage()
     #raise
 else:
-    try:
-        add_table(
-            sample_type,
-            parameter_name,
-            units,
-            value_type
-        )
+    def write_message(sample_table_name):
+        print "Added", sample_table_name, sample_type_name, parameter_name
+        print "  containing", units_name, "values of type", field_type
+        
+    try:       
+        ClimateDataPortal.SampleTable(
+            name = parameter_name,
+            sample_type = getattr(ClimateDataPortal, sample_type_name),
+            units_name = units_name,
+            field_type = field_type,
+            date_mapping_name = date_mapping_name,
+            db = db
+        ).create(write_message)
     except:
         show_usage()
         raise

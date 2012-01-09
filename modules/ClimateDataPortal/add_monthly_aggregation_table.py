@@ -142,3 +142,23 @@ def combine_stddev3(x, y, z, ddof = 1):
             - ((x.count + y.count + z.count)*(mu_x_u_y_u_z**2))
         )
     )
+
+# aggregate daily into monthly
+
+"""
+INSERT INTO "climate_sample_table_11" 
+SELECT sub.place_id as place_id, 
+(
+   ((sub.year-2011) * 12) + 
+   ((sub.month-1) - 10)
+) as time_period,
+sub.value as value
+FROM (
+    SELECT place_id, 
+    Extract('month' from DATE('2011-11-11') + time_period) as month, 
+    Extract('year' from DATE('2011-11-11') + time_period) as year,
+    AVG(value) as value
+    FROM climate_sample_table_1 
+    GROUP BY place_id, year, month
+) AS sub
+"""

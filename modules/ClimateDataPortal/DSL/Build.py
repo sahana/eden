@@ -10,11 +10,11 @@ def build(month_filter, dsl_aggregation_node):
     month_numbers.sort()
     dsl_aggregation_node.set_months(month_numbers)
 
-@Build.implementation(FromDate)
+@Build.implementation(From)
 def build(from_date, dsl_aggregation_node):
     dsl_aggregation_node.set_from_date(from_date.date)
 
-@Build.implementation(ToDate)
+@Build.implementation(To)
 def build(to_date, dsl_aggregation_node):
     dsl_aggregation_node.set_to_date(to_date.date)
 
@@ -42,12 +42,12 @@ def set_months(aggregation, month_numbers):
 AggregationNode.set_months = set_months
 
 def set_to_date(aggregation, to_date):
-    assert aggregation.to_date is None, "ToDate was specified twice."
+    assert aggregation.to_date is None, "To was specified twice."
     aggregation.to_date = to_date
 AggregationNode.set_to_date = set_to_date
 
 def set_from_date(aggregation, from_date):
-    assert aggregation.from_date is None, "FromDate was specified twice."
+    assert aggregation.from_date is None, "From was specified twice."
     aggregation.from_date = from_date
 AggregationNode.set_from_date = set_from_date
 

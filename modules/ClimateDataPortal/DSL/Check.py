@@ -31,13 +31,19 @@ def Months_check(month_filter):
         month_filter.month_numbers.append(month_number)
     return month_filter.errors
 
-@check.implementation(FromDate)
-def FromDate_check(from_date):
+@check.implementation(From)
+def From_check(from_date):
     from_date.errors = []
     error = from_date.errors.append
     year = from_date.year
-    month = from_date.month or 1
-    day = from_date.day or 1
+    if from_date.month is None:
+        month = 1
+    else:
+        month = from_date.month
+    if from_date.day is None:
+        day = 1
+    else:
+        day = from_date.day
     month_number = month_number_from_arg(month, error)
     if not isinstance(year, int):
         error("Year should be a whole number")
@@ -53,13 +59,19 @@ def FromDate_check(from_date):
 
 import calendar
 
-@check.implementation(ToDate)
-def ToDate_check(to_date):
+@check.implementation(To)
+def To_check(to_date):
     to_date.errors = []
     error = to_date.errors.append
     year = to_date.year
-    month = to_date.month or 1
-    day = to_date.day or -1
+    if to_date.month is None:
+        month = 12
+    else:
+        month = to_date.month
+    if to_date.day is None:
+        day = -1
+    else:
+        day = to_date.day
     if not isinstance(year, int):
         error("Year should be a whole number")
     if not isinstance(day, int):
@@ -70,8 +82,6 @@ def ToDate_check(to_date):
     if day is -1:
         # use last day of month
         _, day = calendar.monthrange(year, month_number)
-    else:
-        day = to_date.day
     try:
         to_date.date = datetime.date(year, month_number, day)
     except ValueError:
@@ -99,7 +109,7 @@ def Aggregation_check(aggregation):
     aggregation.errors = []
     def error(message):
         aggregation.errors.append(message)
-    allowed_specifications = (ToDate, FromDate, Months)
+    allowed_specifications = (To, From, Months)
     specification_errors = False
     if not isinstance(aggregation.dataset_name, str):
         error("First argument should be the name of a data set enclosed in "
@@ -146,8 +156,8 @@ def Number_check_analysis(number, out):
     if number.errors:
         out("# ^ ", ", ".join(number.errors))
 
-@check_analysis.implementation(FromDate, ToDate)
-def FromDate_check_analysis(date_spec, out):
+@check_analysis.implementation(From, To)
+def Date_check_analysis(date_spec, out):
     out(date_spec)
     if date_spec.errors:
         out("# ^ ", ", ".join(date_spec.errors))

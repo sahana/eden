@@ -32,6 +32,9 @@ from gluon.languages import read_dict, write_dict
 from s3survey import S3AnalysisPriority, \
                      survey_question_type, \
                      survey_analysis_type, \
+                     getMatrix, \
+                     DEBUG, \
+                     LayoutBlocks, \
                      DataMatrix, MatrixElement, \
                      S3QuestionTypeOptionWidget, \
                      survey_T
@@ -425,6 +428,9 @@ def series_export_formatted():
                                     resourcename,
                                     rheader=s3.survey_series_rheader)
         return output
+
+    # Get the translation dictionary
+    langDict = dict()
     if "translationLanguage" in request.post_vars:
         lang = request.post_vars.translationLanguage
         if lang == "Default":
@@ -435,16 +441,69 @@ def series_export_formatted():
                 langDict = read_dict(lang_fileName)
             except:
                 langDict = dict()
-    series_id = request.args[0]
-    sectionList = response.s3.survey_getAllSectionsForSeries(series_id)
-    layout = {}
-    for section in sectionList:
-        sectionName = section["name"]
-        rules =  response.s3.survey_getQstnLayoutRules(section["template_id"],
-                                                       section["section_id"]
-                                                      )
-        layout[sectionName] = rules
 
+    series_id = request.args[0]
+    template = s3.survey_getTemplateFromSeries(series_id)
+    template_id = template.id
+    series = s3.survey_getSeries(series_id)
+    sectionList = s3.survey_getAllSectionsForSeries(series_id)
+    title = "%s (%s)" % (series.name, template.name)
+    title = survey_T(title, langDict)
+    layout = []
+    for section in sectionList:
+        sectionName = survey_T(section["name"], langDict)
+        rules =  s3.survey_getQstnLayoutRules(template_id,
+                                              section["section_id"])
+        layoutRules = [sectionName, rules]
+        layout.append(layoutRules)
+    logo = os.path.join(request.folder,
+                        "static",
+                        "img",
+                        "logo",
+                        series.logo
+                        )
+    if not os.path.exists(logo) or not os.path.isfile(logo):
+        logo = None
+    widgetList = response.s3.survey_getAllWidgetsForTemplate(template_id)
+    layoutBlocks = LayoutBlocks()
+
+    preliminaryMatrix = getMatrix(title,
+                                  logo,
+                                  series,
+                                  layout,
+                                  widgetList,
+                                  False,
+                                  langDict,
+                                  showSectionLabels = False,
+                                  layoutBlocks = layoutBlocks
+                                 )
+    if DEBUG:
+        #print >> sys.stdout, preliminaryMatrix
+        print >> sys.stdout, "preliminaryMatrix layoutBlocks"
+        print >> sys.stdout, layoutBlocks
+    layoutBlocks.align()
+    if DEBUG:
+        print >> sys.stdout, "Aligned layoutBlocks"
+        print >> sys.stdout, layoutBlocks
+    layoutBlocks = LayoutBlocks()
+    (matrix1, matrix2) = getMatrix(title,
+                                   logo,
+                                   series,
+                                   layout,
+                                   widgetList,
+                                   True,
+                                   langDict,
+                                   showSectionLabels = False,
+                                   #layoutBlocks = layoutBlocks
+                                  )
+    # if DEBUG:
+        # print >> sys.stdout, "formattedMatrix"
+        # print >> sys.stdout, formattedMatrix
+        # print >> sys.stdout, "formattedMatrix layoutBlocks"
+        # print >> sys.stdout, layoutBlocks
+
+    matrix = matrix1
+    matrixAnswers = matrix2
     ######################################################################
     #
     # Store the questions into a matrix based on the layout and the space
@@ -453,140 +512,135 @@ def series_export_formatted():
     # then the position needs to be recorded carefully...
     #
     ######################################################################
-    def processRule(series_id, rules, row, col,
-                    matrix, matrixAnswer, action="rows"):
-        startcol = col
-        startrow = row
-        endcol = col
-        endrow = row
-        nextrow = row
-        nextcol = col
-        for element in rules:
-            if action == "rows":
-                row = endrow
-                col = startcol
-            elif action == "columns":
-                row = startrow
-                if endcol == 0:
-                    col = 0
-                else:
-                    col = endcol+1
-            # If the rule is a list then step through each element
-            if isinstance(element,list):
-                if action == "rows":
-                    tempAction = "columns"
-                else:
-                    tempAction = "rows"
-                (endrow, endcol) = processRule(series_id, element, row, col,
-                                               matrix, matrixAnswer, tempAction)
-            elif isinstance(element,dict):
-                (endrow, endcol) = processDict(series_id, element, row, col,
-                                               matrix, matrixAnswer, action)
-            else:
-                (endrow, endcol) = addData(element, row, col,
-                                           matrix, matrixAnswer)
-            if endrow > nextrow:
-                nextrow = endrow
-            if endcol > nextcol:
-                nextcol = endcol
-        return (nextrow, nextcol)
-
-    def processDict(series_id, rules, row, col,
-                    matrix, matrixAnswer, action="rows"):
-        startcol = col
-        startrow = row
-        nextrow = row
-        nextcol = col
-        for (key, value) in rules.items():
-            if (key == "heading"):
-                cell = MatrixElement(row,col,value, style="styleSubHeader")
-                cell.merge(horizontal=1)
-                try:
-                    matrix.addElement(cell)
-                except Exception as msg:
-                    print msg
-                    return (row,col)
-                endrow = row + 1
-                endcol = col + 2
-            elif (key == "rows") or (key == "columns"):
-                (endrow, endcol) = processRule(series_id, value, row, col,
-                                               matrix, matrixAnswer, action=key)
-            else:
-                ## Unknown key
-                continue
-            if action == "rows":
-                row = startrow
-                col = endcol + 1 # Add a blank column
-            elif action == "columns":
-                row = endrow
-                col = startcol
-            if endrow > nextrow:
-                nextrow = endrow
-            if endcol > nextcol:
-                nextcol = endcol
-        return (nextrow, nextcol)
-
-    def addData(qstn, row, col, matrix, matrixAnswer):
-        question = response.s3.survey_getQuestionFromCode(qstn, series_id)
-        if question == {}:
-            return (row,col)
-        widgetObj = survey_question_type[question["type"]](question_id = question["qstn_id"])
-        try:
-            (endrow, endcol) = widgetObj.writeToMatrix(matrix,
-                                                       row,
-                                                       col,
-                                                       answerMatrix=matrixAnswer,
-                                                       langDict = langDict
-                                                      )
-        except Exception as msg:
-            print >> sys.stderr, msg
-            return (row,col)
-        if question["type"] == "Grid":
-            matrix.boxRange(row, col, endrow-1, endcol-1)
-        return (endrow, endcol)
-
-    row = 0
-    col = 0
-    matrix = DataMatrix()
-    matrixAnswers = DataMatrix()
-    template = response.s3.survey_getTemplateFromSeries(series_id)
-    series = response.s3.survey_getSeries(series_id)
-    logo = os.path.join(request.folder,
-                        "static",
-                        "img",
-                        "logo",
-                        series.logo
-                        )
-    if os.path.exists(logo) and os.path.isfile(logo):
-        cell = MatrixElement(0, col, "", style=["styleText"])
-        cell.merge(vertical=2)
-        matrix.addElement(cell)
-        col = 2
-        row += 1
-    else:
-        logo = None
-    title = "%s (%s)" % (series.name, template.name)
-    title = survey_T(title, langDict)
-    cell = MatrixElement(0, col, title, style="styleHeader")
-    cell.merge(vertical=1, horizontal=len(title))
-    matrix.addElement(cell)
-    row += 2
-
-    for section in sectionList:
-        col = 0
-        row += 1
-        rules =  layout[section["name"]]
-        cell = MatrixElement(row, col, survey_T(section["name"], langDict),
-                             style="styleHeader")
-        try:
-            matrix.addElement(cell)
-        except Exception as msg:
-            print >> sys.stderr, msg
-        row += 1
-        startrow = row
-        (row, col) = processRule(series_id, rules, row, col, matrix, matrixAnswers)
-        matrix.boxRange(startrow, 0, row, col-1)
-
+#    def processRule(rules, row, col,
+#                    matrix, matrixAnswer, action="rows"):
+#        startcol = col
+#        startrow = row
+#        endcol = col
+#        endrow = row
+#        nextrow = row
+#        nextcol = col
+#        for element in rules:
+#            if action == "rows":
+#                row = endrow
+#                col = startcol
+#            elif action == "columns":
+#                row = startrow
+#                if endcol == 0:
+#                    col = 0
+#                else:
+#                    col = endcol+1
+#            # If the rule is a list then step through each element
+#            if isinstance(element,list):
+#                if action == "rows":
+#                    tempAction = "columns"
+#                else:
+#                    tempAction = "rows"
+#                (endrow, endcol) = processRule(element, row, col,
+#                                               matrix, matrixAnswer, tempAction)
+#            elif isinstance(element,dict):
+#                (endrow, endcol) = processDict(element, row, col,
+#                                               matrix, matrixAnswer, action)
+#            else:
+#                (endrow, endcol) = addData(element, row, col,
+#                                           matrix, matrixAnswer)
+#            if endrow > nextrow:
+#                nextrow = endrow
+#            if endcol > nextcol:
+#                nextcol = endcol
+#        return (nextrow, nextcol)
+#
+#    def processDict(rules, row, col,
+#                    matrix, matrixAnswer, action="rows"):
+#        startcol = col
+#        startrow = row
+#        nextrow = row
+#        nextcol = col
+#        for (key, value) in rules.items():
+#            if (key == "heading"):
+#                cell = MatrixElement(row,col,value, style="styleSubHeader")
+#                cell.merge(horizontal=1)
+#                try:
+#                    matrix.addElement(cell)
+#                except Exception as msg:
+#                    print msg
+#                    return (row,col)
+#                endrow = row + 1
+#                endcol = col + 2
+#            elif (key == "rows") or (key == "columns"):
+#                (endrow, endcol) = processRule(value, row, col,
+#                                               matrix, matrixAnswer, action=key)
+#            else:
+#                ## Unknown key
+#                continue
+#            if action == "rows":
+#                row = startrow
+#                col = endcol + 1 # Add a blank column
+#            elif action == "columns":
+#                row = endrow
+#                col = startcol
+#            if endrow > nextrow:
+#                nextrow = endrow
+#            if endcol > nextcol:
+#                nextcol = endcol
+#        return (nextrow, nextcol)
+#
+#    def addData(qstn, row, col, matrix, matrixAnswer):
+#        question = response.s3.survey_getQuestionFromCode(qstn, series_id)
+#        if question == {}:
+#            return (row,col)
+#        widgetObj = survey_question_type[question["type"]](question_id = question["qstn_id"])
+#        try:
+#            (endrow, endcol) = widgetObj.writeToMatrix(matrix,
+#                                                       row,
+#                                                       col,
+#                                                       answerMatrix=matrixAnswer,
+#                                                       langDict = langDict
+#                                                      )
+#        except Exception as msg:
+#            print >> sys.stderr, msg
+#            return (row,col)
+#        if question["type"] == "Grid":
+#            matrix.boxRange(row, col, endrow-1, endcol-1)
+#        return (endrow, endcol)
+#    matrix = DataMatrix()
+#    matrixAnswers = DataMatrix()
+#    template = response.s3.survey_getTemplateFromSeries(series_id)
+#    series = response.s3.survey_getSeries(series_id)
+#    logo = os.path.join(request.folder,
+#                        "static",
+#                        "img",
+#                        "logo",
+#                        series.logo
+#                        )
+#    if os.path.exists(logo) and os.path.isfile(logo):
+#        cell = MatrixElement(0,col,"", style=["styleText"])
+#        cell.merge(vertical=2)
+#        matrix.addElement(cell)
+#        col = 2
+#        row += 1
+#    else:
+#        logo = None
+#    title = "%s (%s)" % (series.name, template.name)
+#    title = survey_T(title, langDict)
+#    cell = MatrixElement(0, col, title, style="styleHeader")
+#    cell.merge(vertical=1, horizontal=len(title))
+#    matrix.addElement(cell)
+#    row += 2
+#    for section in sectionList:
+#        col = 0
+#        row += 1
+#        rules =  layout[section["name"]]
+#        cell = MatrixElement(row, col, survey_T(section["name"], langDict),
+#                             style="styleHeader")
+#        try:
+#            matrix.addElement(cell)
+#        except Exception as msg:
+#            print >> sys.stderr, msg
+#        row += 1
+#        startrow = row
+#        (row, col) = processRule(rules, row, col, matrix, matrixAnswers)
+#        matrix.boxRange(startrow, 0, row, col-1)
     ######################################################################
     #
     # Now take the matrix data type and generate a spreadsheet from it
@@ -677,17 +731,25 @@ def series_export_formatted():
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
 
-    borderT = xlwt.Borders()
-    borderT.top = xlwt.Borders.MEDIUM
+    borderT1 = xlwt.Borders()
+    borderT1.top = xlwt.Borders.THIN
+    borderT2 = xlwt.Borders()
+    borderT2.top = xlwt.Borders.MEDIUM
 
-    borderL = xlwt.Borders()
-    borderL.left = xlwt.Borders.MEDIUM
+    borderL1 = xlwt.Borders()
+    borderL1.left = xlwt.Borders.THIN
+    borderL2 = xlwt.Borders()
+    borderL2.left = xlwt.Borders.MEDIUM
 
-    borderR = xlwt.Borders()
-    borderR.right = xlwt.Borders.MEDIUM
+    borderR1 = xlwt.Borders()
+    borderR1.right = xlwt.Borders.THIN
+    borderR2 = xlwt.Borders()
+    borderR2.right = xlwt.Borders.MEDIUM
 
-    borderB = xlwt.Borders()
-    borderB.bottom = xlwt.Borders.MEDIUM
+    borderB1 = xlwt.Borders()
+    borderB1.bottom = xlwt.Borders.THIN
+    borderB2 = xlwt.Borders()
+    borderB2.bottom = xlwt.Borders.MEDIUM
 
     alignBase = xlwt.Alignment()
     alignBase.horz = xlwt.Alignment.HORZ_LEFT
@@ -714,6 +776,11 @@ def series_export_formatted():
     styleSubHeader = xlwt.XFStyle()
     styleSubHeader.font.bold = True
     styleSubHeader.alignment = alignWrap
+    styleHint = xlwt.XFStyle()
+    styleHint.protection = protection
+    styleHint.font.height = 160 # 160 twips, 8 points
+    styleHint.font.italic = True
+    styleHint.alignment = alignWrap
     styleText = xlwt.XFStyle()
     styleText.protection = protection
     styleText.alignment = alignWrap
@@ -729,25 +796,38 @@ def series_export_formatted():
     styleInput.borders = borders
     styleInput.protection = noProtection
     styleInput.pattern = shadedFill
-    boxL = xlwt.XFStyle()
-    boxL.borders = borderL
-    boxT = xlwt.XFStyle()
-    boxT.borders = borderT
-    boxR = xlwt.XFStyle()
-    boxR.borders = borderR
-    boxB = xlwt.XFStyle()
-    boxB.borders = borderB
+    boxL1 = xlwt.XFStyle()
+    boxL1.borders = borderL1
+    boxL2 = xlwt.XFStyle()
+    boxL2.borders = borderL2
+    boxT1 = xlwt.XFStyle()
+    boxT1.borders = borderT1
+    boxT2 = xlwt.XFStyle()
+    boxT2.borders = borderT2
+    boxR1 = xlwt.XFStyle()
+    boxR1.borders = borderR1
+    boxR2 = xlwt.XFStyle()
+    boxR2.borders = borderR2
+    boxB1 = xlwt.XFStyle()
+    boxB1.borders = borderB1
+    boxB2 = xlwt.XFStyle()
+    boxB2.borders = borderB2
     styleList = {}
     styleList["styleTitle"] = styleTitle
     styleList["styleHeader"] = styleHeader
     styleList["styleSubHeader"] = styleSubHeader
+    styleList["styleHint"] = styleHint
     styleList["styleText"] = styleText
     styleList["styleInstructions"] = styleInstructions
     styleList["styleInput"] = styleInput
-    styleList["boxL"] = boxL
-    styleList["boxT"] = boxT
-    styleList["boxR"] = boxR
-    styleList["boxB"] = boxB
+    styleList["boxL1"] = boxL1
+    styleList["boxL2"] = boxL2
+    styleList["boxT1"] = boxT1
+    styleList["boxT2"] = boxT2
+    styleList["boxR1"] = boxR1
+    styleList["boxR2"] = boxR2
+    styleList["boxB1"] = boxB1
+    styleList["boxB2"] = boxB2
 
     sheet1 = book.add_sheet(T("Assessment"))
     sheetA = book.add_sheet(T("Metadata"))

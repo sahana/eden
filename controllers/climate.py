@@ -1,6 +1,15 @@
 # coding: utf8
 
 module = "climate"
+resourcename = request.function
+
+#s3_menu(module)
+
+response.menu = s3_menu_dict[module]["menu"]
+response.menu.append(s3.menu_help)
+response.menu.append(s3.menu_auth)
+if s3.menu_admin:
+    response.menu.append(s3.menu_admin)
 
 ClimateDataPortal = local_import("ClimateDataPortal")
 SampleTable = ClimateDataPortal.SampleTable
@@ -35,8 +44,10 @@ def index():
     catalogue_layers = False
 
     if config.wmsbrowser_url:
-        wms_browser = {"name" : config.wmsbrowser_name,
-                       "url" : config.wmsbrowser_url}
+        wms_browser = {
+            "name" : config.wmsbrowser_name,
+            "url" : config.wmsbrowser_url
+        }
     else:
         wms_browser = None
 
@@ -145,6 +156,7 @@ def climate_overlay_data():
         try:
             data_path = map_plugin().get_overlay_data(**arguments)
         except SyntaxError, exception:
+            #raise
             import gluon.contrib.simplejson as JSON
             raise HTTP(400, JSON.dumps({
                 "error": "SyntaxError",
@@ -262,50 +274,48 @@ def stations():
     return "[%s]" % ",".join(stations_strings)
 
 def places():
-    "return all place data in JSON format"
-    places_strings = []
-    append = places_strings.append
-    extend = places_strings.extend
-    
-    for place_row in db().select(
-        db.climate_place.id,
-        db.climate_place.longitude,
-        db.climate_place.latitude,
-        db.climate_place_elevation.elevation_metres,
-        db.climate_place_station_id.station_id,
-        db.climate_place_station_name.name,
-        db.climate_place_region.region_id,
-        left = (
-            db.climate_place_region.on(
-                db.climate_place.id == db.climate_place_region.id
-            ),
-            db.climate_place_elevation.on(
-                (db.climate_place.id == db.climate_place_elevation.id)
-            ),
-            db.climate_place_station_id.on(
-                (db.climate_place.id == db.climate_place_station_id.id)
-            ),
-            db.climate_place_station_name.on(
-                (db.climate_place.id == db.climate_place_station_name.id)
-            )
-        )
-    ):
-        append(
-            "".join((
-                "[", str(place_row.climate_place.id), ",{",
-                    '"longitude":', str(place_row.climate_place.longitude),
-                    ',"latitude":', str(place_row.climate_place.latitude),
-                    ',"elevation":', str(place_row.climate_place_elevation.elevation_metres or "null"),
-                    ',"station_id":', str(place_row.climate_place_station_id.station_id or "null"),
-                    ',"name":"', (
-                        place_row.climate_place_station_name.name or "%sN %sE" % (
-                            place_row.climate_place.latitude,
-                            place_row.climate_place.longitude
-                        )
-                    ).replace('"', '\\"'),'"'
-                    ',"region_id":', str(place_row.climate_place_region.region_id or "null"),
-                "}]"
-            ))
-        )
-    return "[%s]" % ",".join(places_strings)
+    response.headers["Expires"] = "Sat, 25 Dec 2011 20:00:00 GMT"
+    return response.stream(
+        open(map_plugin().place_data(),"rb"),
+        chunk_size=4096
+    )
 
+# =============================================================================
+def sample_table_spec():
+    output = s3_rest_controller(module, resourcename)
+    return output
+
+# =============================================================================
+def station_parameter():
+    output = s3_rest_controller(module, resourcename)
+    return output
+
+# =============================================================================
+def purchase():
+
+    def prep(r):
+        if r.method == "read":
+            response.s3.rfooter = DIV(
+                T("Please make your payment in person at the DHM office, or by bank Transfer to:"),
+                TABLE(
+                    TR("Bank Name","Nepal Rastra Bank"),
+                    TR("Branch Address","Kathmandu Banking Office"),
+                    TR("Branch City","Kathmandu"),
+                    TR("A/c Holder","Dept. of Hydrology and Meteorology"),
+                    TR("Office Code No","27-61-04"),
+                    TR("Office A/c No","KA 1-1-199"),
+                    TR("Revenue Heading No","1-1-07-70")
+                )
+            )
+        return True
+    
+    response.s3.prep = prep
+    
+    output = s3_rest_controller(module, resourcename)
+    output["addheader"] = T("Please enter the details of the data you wish to purchase")
+    return output
+
+# =============================================================================
+def save_query():
+    output = s3_rest_controller(module, resourcename)
+    return output

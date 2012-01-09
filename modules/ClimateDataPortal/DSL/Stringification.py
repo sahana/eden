@@ -13,25 +13,28 @@ def Months__str__(month_filter):
 Months.__str__ = Months__str__
 
 
-def FromDate__str__(from_date):
+def From__str__(from_date):
     original_args = [from_date.year]
     if from_date.month is not None:
         original_args.append(from_date.month)
     if from_date.day is not None:
         original_args.append(from_date.day)
-    return "FromDate(%s)" % ", ".join(map(str,original_args))
-FromDate.__str__ = FromDate__str__
+    return "From(%s)" % ", ".join(map(str,original_args))
+From.__str__ = From__str__
     
 
-def ToDate__str__(to_date):
+def To__str__(to_date):
     original_args = [to_date.year]
     if to_date.month is not None:
         original_args.append(to_date.month)
     if to_date.day is not None:
         original_args.append(to_date.day)
-    return "ToDate(%s)" % ", ".join(map(str,original_args))
-ToDate.__str__ = ToDate__str__
+    return "To(%s)" % ", ".join(map(str,original_args))
+To.__str__ = To__str__
 
+def Number__str__(number):
+    return "%s %s" % (number.value, number.units)
+Number.__str__ = Number__str__
 
 def AggregationNode__str__(aggregation):
     return "".join((

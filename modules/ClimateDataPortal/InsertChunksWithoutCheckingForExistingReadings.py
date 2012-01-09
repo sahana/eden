@@ -2,13 +2,16 @@
 class InsertChunksWithoutCheckingForExistingReadings(object):
     """Insert chunks of 1000 records at a time, bypassing web2py's OR/M.
     
-    This is much faster but not as safe.
+    This is much faster but not as safe, depending on the constraint 
+    checking of the database.
+    
+    * should take names of fields
     """
     def __init__(self, sample_table):
         self.chunk = []
         self.sample_table = sample_table
     
-    def write_chunk(self, chunk):
+    def write_chunk(self):
         self.sample_table.insert_values(self.chunk)
         self.chunk = []
     
@@ -20,9 +23,9 @@ class InsertChunksWithoutCheckingForExistingReadings(object):
     ):
         self.chunk.append("".join((
             "(",
-                time_period.__str__(),",",
-                place_id.__str__(),",",
-                value.__str__(),
+                str(time_period),",",
+                str(place_id),",",
+                str(value),
             ")"
         )))
         if len(self.chunk) >= 1000:
