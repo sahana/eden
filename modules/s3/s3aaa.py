@@ -3510,9 +3510,9 @@ class S3Permission(object):
         else:
             # non-HTML request => raise proper HTTP error
             if self.auth.s3_logged_in():
-                raise HTTP(403)
+                raise HTTP(403, body=self.INSUFFICIENT_PRIVILEGES)
             else:
-                raise HTTP(401)
+                raise HTTP(401, body=self.AUTHENTICATION_REQUIRED)
 
 # =============================================================================
 
