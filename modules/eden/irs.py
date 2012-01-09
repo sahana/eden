@@ -56,7 +56,7 @@ class S3IRSModel(S3Model):
         settings = current.deployment_settings
 
         human_resource_id = s3.human_resource_id
-        location_id = s3.location_id
+        location_id = self.gis_location_id
         person_id = self.pr_person_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT

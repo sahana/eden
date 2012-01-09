@@ -9,6 +9,9 @@
 module = "hms"
 if deployment_settings.has_module(module):
 
+    person_id = s3db.pr_person_id
+    location_id = s3db.gis_location_id
+
     # -------------------------------------------------------------------------
     # Hospitals
     #
@@ -282,6 +285,7 @@ if deployment_settings.has_module(module):
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
                 table = db.hms_hospital
+                ltable = s3db.gis_location
 
                 rheader = DIV(TABLE(
 
@@ -291,8 +295,8 @@ if deployment_settings.has_module(module):
                         table.ems_status.represent(hospital.ems_status)),
 
                     TR(TH("%s: " % T("Location")),
-                        db.gis_location[hospital.location_id] and \
-                            db.gis_location[hospital.location_id].name or "unknown",
+                        ltable[hospital.location_id] and \
+                            ltable[hospital.location_id].name or "unknown",
                         TH("%s: " % T("Facility Status")),
                         table.facility_status.represent(hospital.facility_status)),
 

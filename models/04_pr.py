@@ -15,7 +15,6 @@ module = "pr"
 #
 pe_label = s3db.pr_pe_label
 
-person_id = s3db.pr_person_id
 person_represent = s3db.pr_person_represent
 pr_gender_opts = s3db.pr_gender_opts
 pr_age_group_opts = s3db.pr_age_group_opts

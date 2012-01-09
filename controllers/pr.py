@@ -134,14 +134,14 @@ def person():
                 r.table.missing.writable = False
 
             if r.component_name == "config":
-                _config = db.gis_config
+                _config = s3db.gis_config
                 # Name will be generated from person's name.
                 _config.name.readable = _config.name.writable = False
                 # Hide region fields
                 _config.region_location_id.readable = _config.region_location_id.writable = False
                 _config.show_in_menu.readable = _config.show_in_menu.writable = False
                 # Common prep shared with gis config controller function.
-                response.s3.gis.config_prep_helper(r, r.component_id)
+                response.s3.gis_config_prep_helper(r, r.component_id)
 
             #elif r.component_name == "pe_subscription":
             #    # Load all Tables

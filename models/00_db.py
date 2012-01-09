@@ -23,7 +23,7 @@ import md5
 import re
 import time
 
-from gluon.sql import Row
+from gluon.dal import Row
 from gluon.sqlhtml import RadioWidget
 
 import gluon.contrib.simplejson as json

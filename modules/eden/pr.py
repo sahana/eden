@@ -141,6 +141,8 @@ class S3PersonModel(S3Model):
 
         pe_label = self.pr_pe_label
 
+        location_id = self.gis_location_id
+
         messages = current.messages
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
@@ -209,8 +211,8 @@ class S3PersonModel(S3Model):
         table = self.define_table(tablename,
                                   self.super_link("pe_id", "pr_pentity"),
                                   self.super_link("track_id", "sit_trackable"),
-                                  s3.location_id(readable=False,
-                                                 writable=False),       # base location
+                                  location_id(readable=False,
+                                              writable=False),       # base location
                                   pe_label(comment = DIV(DIV(_class="tooltip",
                                                              _title="%s|%s" % (T("ID Tag Number"),
                                                                                T("Number or Label on the identification tag this person is wearing (if any)."))))),
@@ -758,6 +760,7 @@ class S3PersonComponents(S3Model):
         s3 = current.response.s3
 
         person_id = self.pr_person_id
+        location_id = self.gis_location_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
@@ -782,7 +785,7 @@ class S3PersonComponents(S3Model):
                                         label = T("Address Type"),
                                         represent = lambda opt: \
                                                     pr_address_type_opts.get(opt, UNKNOWN_OPT)),
-                                  s3.location_id(),
+                                  location_id(),
                                   s3.comments(),
                                   *(s3.address_fields() + s3.meta_fields()))
 
@@ -1168,6 +1171,7 @@ class S3PersonPresence(S3Model):
         s3 = current.response.s3
 
         person_id = self.pr_person_id
+        location_id = self.gis_location_id
 
         ADD_LOCATION = current.messages.ADD_LOCATION
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
@@ -1236,17 +1240,17 @@ class S3PersonPresence(S3Model):
                                   Field("shelter_id", "integer",
                                         readable = False,
                                         writable = False),
-                                  s3.location_id(widget = S3LocationAutocompleteWidget(),
-                                                 comment = DIV(A(ADD_LOCATION,
-                                                                 _class="colorbox",
-                                                                 _target="top",
-                                                                 _title=ADD_LOCATION,
-                                                                 _href=URL(c="gis", f="location",
-                                                                           args="create",
-                                                                           vars=dict(format="popup"))),
-                                                               DIV(_class="tooltip",
-                                                                   _title="%s|%s" % (T("Current Location"),
-                                                                                     T("The Current Location of the Person/Group, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
+                                  location_id(widget = S3LocationAutocompleteWidget(),
+                                              comment = DIV(A(ADD_LOCATION,
+                                                              _class="colorbox",
+                                                              _target="top",
+                                                              _title=ADD_LOCATION,
+                                                              _href=URL(c="gis", f="location",
+                                                                        args="create",
+                                                                        vars=dict(format="popup"))),
+                                                            DIV(_class="tooltip",
+                                                                _title="%s|%s" % (T("Current Location"),
+                                                                                  T("The Current Location of the Person/Group, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
                                   Field("location_details",
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Location Details"),
@@ -1269,32 +1273,32 @@ class S3PersonPresence(S3Model):
                                          comment = DIV(DIV(_class="tooltip",
                                                            _title="%s|%s" % (T("Procedure"),
                                                                              T('Describe the procedure which this record relates to (e.g. "medical examination")'))))),
-                                   s3.location_id("orig_id",
-                                                  label=T("Origin"),
-                                                  widget = S3LocationAutocompleteWidget(),
-                                                  comment = DIV(A(ADD_LOCATION,
-                                                                  _class="colorbox",
-                                                                  _target="top",
-                                                                  _title=ADD_LOCATION,
-                                                                  _href=URL(c="gis", f="location",
-                                                                            args="create",
-                                                                            vars=dict(format="popup"))),
-                                                                DIV(_class="tooltip",
-                                                                    _title="%s|%s" % (T("Origin"),
-                                                                                      T("The Location the Person has come from, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
-                                   s3.location_id("dest_id",
-                                                  label=T("Destination"),
-                                                  widget = S3LocationAutocompleteWidget(),
-                                                  comment = DIV(A(ADD_LOCATION,
-                                                                  _class="colorbox",
-                                                                  _target="top",
-                                                                  _title=ADD_LOCATION,
-                                                                  _href=URL(c="gis", f="location",
-                                                                            args="create",
-                                                                            vars=dict(format="popup"))),
-                                                                DIV(_class="tooltip",
-                                                                    _title="%s|%s" % (T("Destination"),
-                                                                                      T("The Location the Person is going to, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
+                                   location_id("orig_id",
+                                               label=T("Origin"),
+                                               widget = S3LocationAutocompleteWidget(),
+                                               comment = DIV(A(ADD_LOCATION,
+                                                               _class="colorbox",
+                                                               _target="top",
+                                                               _title=ADD_LOCATION,
+                                                               _href=URL(c="gis", f="location",
+                                                                         args="create",
+                                                                         vars=dict(format="popup"))),
+                                                             DIV(_class="tooltip",
+                                                                 _title="%s|%s" % (T("Origin"),
+                                                                                   T("The Location the Person has come from, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
+                                   location_id("dest_id",
+                                               label=T("Destination"),
+                                               widget = S3LocationAutocompleteWidget(),
+                                               comment = DIV(A(ADD_LOCATION,
+                                                               _class="colorbox",
+                                                               _target="top",
+                                                               _title=ADD_LOCATION,
+                                                               _href=URL(c="gis", f="location",
+                                                                         args="create",
+                                                                         vars=dict(format="popup"))),
+                                                             DIV(_class="tooltip",
+                                                                 _title="%s|%s" % (T("Destination"),
+                                                                                   T("The Location the Person is going to, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
                                    Field("comment"),
                                    Field("closed", "boolean",
                                          default=False,
@@ -1519,6 +1523,7 @@ class S3PersonDescription(S3Model):
         s3 = current.response.s3
 
         person_id = self.pr_person_id
+        location_id = self.gis_location_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         #if deployment_settings.has_module("dvi") or \
@@ -1540,34 +1545,34 @@ class S3PersonDescription(S3Model):
                                   self.super_link("pe_id", "pr_pentity"),
                                   # Reporter
                                   #person_id("reporter"),
-                                   Field("confirmed", "boolean",
-                                         default=False,
-                                         readable=False,
-                                         writable=False),
-                                   Field("closed", "boolean",
-                                         default=False,
-                                         readable=False,
-                                         writable=False),
-                                   Field("status", "integer",
-                                         requires=IS_IN_SET(person_status,
-                                                            zero=None),
-                                         default=9,
-                                         label=T("Status"),
-                                         represent=lambda opt: \
-                                                   person_status.get(opt, UNKNOWN_OPT)),
-                                   Field("timestmp", "datetime",
-                                         label=T("Date/Time"),
-                                         requires=[IS_EMPTY_OR(IS_UTC_DATETIME_IN_RANGE())],
-                                         widget = S3DateTimeWidget(),
-                                         default=request.utcnow),
-                                   Field("note_text", "text",
-                                         label=T("Text")),
-                                   Field("note_contact", "text",
-                                         label=T("Contact Info"),
-                                         readable=False,
-                                         writable=False),
-                                   s3.location_id(label=T("Last known location")),
-                                   *s3.meta_fields())
+                                  Field("confirmed", "boolean",
+                                        default=False,
+                                        readable=False,
+                                        writable=False),
+                                  Field("closed", "boolean",
+                                        default=False,
+                                        readable=False,
+                                        writable=False),
+                                  Field("status", "integer",
+                                        requires=IS_IN_SET(person_status,
+                                                           zero=None),
+                                        default=9,
+                                        label=T("Status"),
+                                        represent=lambda opt: \
+                                                  person_status.get(opt, UNKNOWN_OPT)),
+                                  Field("timestmp", "datetime",
+                                        label=T("Date/Time"),
+                                        requires=[IS_EMPTY_OR(IS_UTC_DATETIME_IN_RANGE())],
+                                        widget = S3DateTimeWidget(),
+                                        default=request.utcnow),
+                                  Field("note_text", "text",
+                                        label=T("Text")),
+                                  Field("note_contact", "text",
+                                        label=T("Contact Info"),
+                                        readable=False,
+                                        writable=False),
+                                  location_id(label=T("Last known location")),
+                                  *s3.meta_fields())
 
         # CRUD strings
         ADD_NOTE = T("New Entry")

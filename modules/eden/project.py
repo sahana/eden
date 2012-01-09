@@ -82,6 +82,8 @@ class S3ProjectModel(S3Model):
         drr = self.settings.get_project_drr()
         pca = self.settings.get_project_community_activity()
 
+        location_id = self.gis_location_id
+
         NONE = current.messages.NONE
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
@@ -464,7 +466,7 @@ class S3ProjectModel(S3Model):
                                   Field("name",
                                         label = T("Short Description"),
                                         requires=IS_NOT_EMPTY()),
-                                  s3.location_id(widget = S3LocationSelectorWidget(hide_address=True)),
+                                  location_id(widget = S3LocationSelectorWidget(hide_address=True)),
                                   multi_activity_type_id(),
                                   s3.comments(),
                                   format="%(name)s",
@@ -602,7 +604,7 @@ class S3ProjectModel(S3Model):
                                   Field("name", notnull=True,
                                         length=64, # Mayon Compatibility
                                         label = T("Name")),
-                                  s3.location_id(),
+                                  location_id(),
                                   multi_activity_type_id(),
                                   *(s3.address_fields() + s3.meta_fields()))
 
@@ -890,7 +892,7 @@ class S3ProjectModel(S3Model):
                                         label = "%s (%s)" % (T("Time Taken"),
                                                              T("hours"))),
                                   s3.org_site_id,
-                                  s3.location_id(label=T("Deployment Location"),
+                                  location_id(label=T("Deployment Location"),
                                               #readable=False, writable=False
                                               ),
                                   *s3.meta_fields())

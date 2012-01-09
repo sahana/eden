@@ -55,8 +55,11 @@ class S3DocumentLibrary(S3Model):
 
         person_comment = self.pr_person_comment
 
-        NONE = current.messages.NONE
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        location_id = self.gis_location_id
+
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # Document-referencing entities
@@ -96,7 +99,7 @@ class S3DocumentLibrary(S3Model):
                                                                          T("The Author of this Document (optional)"))),
                                   s3.org_organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                   Field("date", "date", label = T("Date Published")),
-                                  s3.location_id(),
+                                  location_id(),
                                   s3.comments(),
                                   #Field("entered", "boolean", label=T("Entered")),
                                   Field("checksum", readable=False, writable=False),
@@ -193,7 +196,7 @@ class S3DocumentLibrary(S3Model):
                                         represent = lambda opt: doc_image_type_opts.get(opt, UNKNOWN_OPT)),
                                   s3.pr_person_id(label=T("Author")),
                                   s3.org_organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  s3.location_id(),
+                                  location_id(),
                                   Field("date", "date"),
                                   s3.comments(),
                                   Field("checksum", readable=False, writable=False),
@@ -248,7 +251,9 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return Storage(document_id = document_id)
+        return Storage(
+                    document_id = document_id
+                )
 
     # -------------------------------------------------------------------------
     def defaults(self):

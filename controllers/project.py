@@ -88,7 +88,7 @@ def project():
                     # Default the Location Selector list of countries to those found in the project
                     countries = r.record.countries_id
                     if countries:
-                        ltable = db.gis_location
+                        ltable = s3db.gis_location
                         query = (ltable.id.belongs(countries))
                         countries = db(query).select(ltable.code)
                         deployment_settings.gis.countries = [c.code for c in countries]
@@ -679,9 +679,9 @@ def gap_map():
                                   3:"#FF0000", # red
                                   }
 
-    atable = db.project_activity
-    ntable = db.project_need
-    ltable = db.gis_location
+    atable = s3db.project_activity
+    ntable = s3db.project_need
+    ltable = s3db.gis_location
     astable = db.assess_assess
     feature_queries = []
 

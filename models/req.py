@@ -561,7 +561,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
             output["rheader"] = req_rheader(r, check_page = True)
 
             stable = db.org_site
-            ltable = db.gis_location
+            ltable = s3db.gis_location
             query = (stable.id == site_id ) & \
                     (stable.location_id == ltable.id)
             location_r = db(query).select(ltable.lat,

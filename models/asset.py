@@ -37,6 +37,9 @@ if deployment_settings.has_module("asset"):
     def asset_tables():
         """ Load the Assets Tables when needed """
 
+        person_id = s3db.pr_person_id
+        location_id = s3db.gis_location_id
+
         asset_type_opts = { s3.asset.ASSET_TYPE_VEHICLE    : T("Vehicle"),
                             #s3.asset.ASSET_TYPE_RADIO      : T("Radio"),
                             #s3.asset.ASSET_TYPE_TELEPHONE  : T("Telephone"),

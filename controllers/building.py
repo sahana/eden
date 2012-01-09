@@ -329,10 +329,10 @@ def adminLevel():
     # raw SQL command
     # select parent, `path`, estimated_damage FROM building_nzseel1, gis_location WHERE building_nzseel1.deleted = "F" and (gis_location.id = building_nzseel1.location_id)
     tableNZ1 = db.building_nzseel1
-    tableGIS = db.gis_location
-    query = (tableNZ1.location_id == tableGIS.id) & (tableNZ1.deleted == False)
-    dbresult = db(query).select(tableGIS.path,
-                                tableGIS.parent,
+    ltable = s3db.gis_location
+    query = (tableNZ1.location_id == ltable.id) & (tableNZ1.deleted == False)
+    dbresult = db(query).select(ltable.path,
+                                ltable.parent,
                                 tableNZ1.estimated_damage
                                )
 
@@ -348,24 +348,24 @@ def adminLevel():
         if temp.has_key(parent):
             temp[parent][7] += 1
         else:
-            temp[parent]=[0, 0, 0, 0, 0, 0, 0, 1]
+            temp[parent] = [0, 0, 0, 0, 0, 0, 0, 1]
         temp[parent][damage - 1] += 1
     gis = {}
     for (key) in temp.keys():
         # raw SQL command
         # "select name, parent FROM gis_location WHERE gis_location.id = '%s'" % key
-        row = tableGIS(key)
+        row = ltable(key)
         if row == None:
             gis[key] = T("Unknown")
         else:
             gis[key] = row.name
 
-    for (key,item) in temp.items():
+    for (key, item) in temp.items():
         if gis.has_key(key):
             name = gis[key]
         else:
             name = T("Unknown")
-        result.append((name,item))
+        result.append((name, item))
     return dict(report=result,
                 )
 

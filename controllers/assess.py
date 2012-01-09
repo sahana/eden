@@ -567,7 +567,7 @@ def custom_assess(custom_assess_fields, location_id=None):
             if "gis_location_lon" in request.vars:
                 location_dict["lon"] = request.vars["gis_location_lon"]
             location_dict["name"] = request.vars["custom_assess_location_id"]
-            record_dict["location_id"] = db.gis_location.insert(**location_dict)
+            record_dict["location_id"] = s3db.gis_location.insert(**location_dict)
 
         if "location_id" in request.vars:
             # Location Selector

@@ -55,9 +55,9 @@ if deployment_settings.get_gis_menu():
                       False,
                       URL(args=request.args,
                           vars={"_config":1})])
-    ctable = db.gis_config
+    ctable = s3db.gis_config
     if auth.user:
-        ptable = db.pr_person
+        ptable = s3db.pr_person
         query = (ptable.uuid == auth.user.person_uuid) & \
                 (ctable.pe_id == ptable.pe_id)
         personal_config = db(query).select(ctable.id,

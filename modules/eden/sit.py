@@ -43,8 +43,7 @@ class S3SituationModel(S3Model):
         T = current.T
         s3 = current.response.s3
 
-        # Load gis_location
-        self.table("gis_location")
+        location_id = self.gis_location_id
 
         # Situation Super-Entity ----------------------------------------------
         #
@@ -57,7 +56,7 @@ class S3SituationModel(S3Model):
         tablename = "sit_situation"
         table = self.super_entity(tablename, "sit_id", situation_types,
                                   Field("datetime", "datetime"),
-                                  s3.location_id())
+                                  location_id())
 
         self.configure(tablename,
                        editable=False, deletable=False, listadd=False)
@@ -75,7 +74,8 @@ class S3SituationModel(S3Model):
         )
 
         tablename = "sit_trackable"
-        sit_trackable = self.super_entity(tablename, "track_id", trackable_types,
+        sit_trackable = self.super_entity(tablename, "track_id",
+                                          trackable_types,
                                           Field("track_timestmp", "datetime",
                                                 readable=False,
                                                 writable=False))
@@ -93,7 +93,7 @@ class S3SituationModel(S3Model):
                                   self.super_link("track_id", sit_trackable),
                                   Field("timestmp", "datetime",
                                         label=T("Date/Time")),
-                                  s3.location_id(),
+                                  location_id(),
                                   Field("interlock",
                                         readable=False,
                                         writable=False),

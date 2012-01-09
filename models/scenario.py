@@ -76,6 +76,9 @@ if deployment_settings.has_module(module):
     def scenario_tables():
         """ Load the Scenario Tables when required """
 
+        s3mgr.load("gis_config")
+        config_id = response.s3.gis_config_id
+
         # -------------------------------------------------------------------------
         # Scenarios
         #

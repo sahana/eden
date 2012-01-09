@@ -30,6 +30,8 @@ if deployment_settings.has_module("proc"):
 
         module = "proc"
 
+        location_id = s3db.gis_location_id
+
         # Procurement depends on Supply Items/Packs
         s3mgr.load("supply_item")
         item_id = response.s3.item_id

@@ -12,6 +12,9 @@
 module = "vol"
 if deployment_settings.has_module(module):
 
+    person_id = s3db.pr_person_id
+    location_id = s3db.gis_location_id
+
     # -------------------------------------------------------------------------
     # vol_volunteer (Component of pr_person)
     #   describes a person's availability as a volunteer
@@ -280,10 +283,11 @@ if deployment_settings.has_module(module):
             subtitle = T("Matching Records")
 
             # Select form:
-            query = (db.gis_location.deleted == False)
+            table = s3db.gis_location
+            query = (table.deleted == False)
             l_opts = [OPTION(_value="")]
             l_opts += [OPTION(location.name, _value=location.id)
-                       for location in db(query).select(db.gis_location.ALL,
+                       for location in db(query).select(table.ALL,
                                                         cache=(cache.ram, 3600))]
             form = FORM(TABLE(
                     TR("%s: " % T("Location"),
@@ -299,7 +303,7 @@ if deployment_settings.has_module(module):
             items = None
             if form.accepts(request.vars, session):
 
-                table = db.project_project
+                table = s3db.project_project
                 query = (table.deleted == False)
 
                 if form.vars.location is None:

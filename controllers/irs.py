@@ -69,8 +69,8 @@ def ireport():
         if r.method == "ushahidi":
             auth.settings.on_failed_authorization = r.url(method="", vars=None)
             # Allow the 'XX' levels
-            db.gis_location.level.requires = IS_NULL_OR(IS_IN_SET(
-                gis.get_all_current_levels()))
+            s3db.gis_location.level.requires = IS_NULL_OR(IS_IN_SET(
+                                                gis.get_all_current_levels()))
         elif r.interactive:
             if r.method == "update":
                 table.dispatch.writable = True
@@ -81,12 +81,13 @@ def ireport():
                 #table.person_id.default = s3_logged_in_person()
             if r.component:
                 if r.component_name == "image":
-                    db.doc_image.date.default = r.record.datetime.date()
-                    db.doc_image.location_id.default = r.record.location_id
-                    db.doc_image.location_id.readable = db.doc_image.location_id.writable = False
-                    db.doc_image.organisation_id.readable = db.doc_image.organisation_id.writable = False
-                    db.doc_image.url.readable = db.doc_image.url.writable = False
-                    db.doc_image.person_id.readable = db.doc_image.person_id.writable = False
+                    itable = s3db.doc_image
+                    itable.date.default = r.record.datetime.date()
+                    itable.location_id.default = r.record.location_id
+                    itable.location_id.readable = itable.location_id.writable = False
+                    itable.organisation_id.readable = db.doc_image.organisation_id.writable = False
+                    itable.url.readable = itable.url.writable = False
+                    itable.person_id.readable = itable.person_id.writable = False
                 elif r.component_name == "human_resource":
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_human_resource"] = Storage(

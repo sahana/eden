@@ -277,46 +277,6 @@ def s3_include_debug():
     return XML(include)
 
 # -----------------------------------------------------------------------------
-def s3_represent_multiref(table, opt, represent=None, separator=", "):
-    """ Produce a representation for a list:reference field. """
-
-    if represent is None:
-        if "name" in table.fields:
-            represent = lambda r: r and r.name or UNKNOWN_OPT
-
-    if isinstance(opt, (int, long, str)):
-        query = (table.id == opt)
-    else:
-        query = (table.id.belongs(opt))
-    if "deleted" in table.fields:
-        query = query & (table.deleted == False)
-
-    records = db(query).select()
-
-    if records:
-        try:
-            first = represent(records[0])
-            rep_function = represent
-        except TypeError:
-            first = represent % records[0]
-            rep_function = lambda r: represent % r
-
-        # NB join only operates on strings, and some callers provide A().
-        results = [first]
-        for record in records[1:]:
-            results.append(separator)
-            results.append(rep_function(record))
-
-        # Wrap in XML to allow showing anchors on read-only pages, else
-        # Web2py will escape the angle brackets, etc. The single-record
-        # location represent produces A() (unless told not to), and we
-        # want to show links if we can.
-        return XML(DIV(*results))
-
-    else:
-        return UNKNOWN_OPT
-
-# -----------------------------------------------------------------------------
 def s3_table_links(reference):
     """
         Return a dict of tables & their fields which have references to the
@@ -325,6 +285,8 @@ def s3_table_links(reference):
         @deprecated: to be replaced by db[tablename]._referenced_by
         - used by controllers/gis.py & pr.py
     """
+
+    s3mgr.model.load_all_models()
 
     tables = {}
     for table in db.tables:

@@ -181,7 +181,7 @@ if deployment_settings.has_module("vehicle"):
                 else:
                     name = "vehicle_%i" % form.vars.id
                 # Insert a record into the locations table
-                ltable = db.gis_location
+                ltable = s3db.gis_location
                 location = ltable.insert(name=name, lat=lat, lon=lon)
                 # Set the Current Location of the Asset to this Location
                 # @ToDo: Currently we set the Base Location as Mapping doesn't support S3Track!

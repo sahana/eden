@@ -350,7 +350,7 @@ def hrm_map_popup(r):
                      TD(name)))
 
     if r.record.location_id:
-        table = db.gis_location
+        table = s3db.gis_location
         query = (table.id == r.record.location_id)
         location = db(query).select(table.path,
                                     table.addr_street,

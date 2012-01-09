@@ -14,6 +14,7 @@ current.s3db = s3db = S3Model()
 
 # Explicit import statements to have them reload automatically in debug mode
 import eden.pr
+import eden.gis
 import eden.sit
 import eden.doc
 import eden.project
@@ -254,6 +255,10 @@ roles_permitted = S3ReusableField("roles_permitted", db.auth_group,
                                                                   T("If this record should be restricted then select which role(s) are permitted to access the record here."))),
                                   ondelete = "RESTRICT")
 
+# Make available for S3Models
+s3.role_required = role_required
+s3.roles_permitted = roles_permitted
+
 # =============================================================================
 # Other reusable fields
 
@@ -261,6 +266,9 @@ roles_permitted = S3ReusableField("roles_permitted", db.auth_group,
 # Reusable name field to include in other table definitions
 name_field = S3ReusableField("name", length=64,
                              label=T("Name"), required=IS_NOT_EMPTY())
+
+# Make available for S3Models
+s3.name_field = name_field
 
 # -----------------------------------------------------------------------------
 # Reusable comments field to include in other table definitions
@@ -374,7 +382,7 @@ def address_onvalidation(form):
     """
 
     if "location_id" in form.vars:
-        table = db.gis_location
+        table = s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == form.vars.location_id)
         location = db(query).select(table.addr_street,
@@ -419,7 +427,7 @@ def address_update(table, record_id):
 
     if "location_id" in table:
 
-        locations = db.gis_location
+        locations = s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == record_id) & \
                 (locations.id == table.location_id)

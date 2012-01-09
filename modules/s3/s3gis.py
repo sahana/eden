@@ -2039,6 +2039,37 @@ class GIS(object):
         return projection
 
     # -------------------------------------------------------------------------
+    def get_popup(self):
+
+        """
+            Returns the popup_fields & popup_label for a Map Layer
+            - called by S3REST: S3Resource.export_tree()
+        """
+
+        db = current.db
+        s3db = current.s3db
+        request = current.request
+
+        popup_label = None
+        popup_fields = None
+        if "layer" in request.vars:
+            # This is a Map Layer
+            layer_id = request.vars.layer
+            ltable = s3db.gis_layer_feature
+            query = (ltable.id == layer_id)
+            layer = db(query).select(ltable.popup_label,
+                                     ltable.popup_fields,
+                                     limitby=(0, 1)).first()
+            if layer:
+                popup_label = layer.popup_label
+                popup_fields = layer.popup_fields
+            else:
+                popup_label = ""
+                popup_fields = "name"
+        
+        return (popup_label, popup_fields)
+
+    # -------------------------------------------------------------------------
     def greatCircleDistance(self, lat1, lon1, lat2, lon2, quick=True):
 
         """
@@ -2128,7 +2159,8 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         layer = {
             "url" : "http://gadm.org/data/gadm_v1_lev0_shp.zip",
@@ -2242,7 +2274,8 @@ class GIS(object):
 
         cache = self.cache
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         if level == "L1":
             layer = {
@@ -2591,7 +2624,8 @@ class GIS(object):
 
         cache = self.cache
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         csv.field_size_limit(2**20 * 30)  # 30 megs
 
@@ -2852,9 +2886,10 @@ class GIS(object):
 
         cache = self.cache
         db = current.db
+        s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
-        table = db.gis_location
+        table = s3db.gis_location
 
         url = "http://download.geonames.org/export/dump/" + country + ".zip"
 
@@ -3106,7 +3141,8 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         if location_id:
             if parent_id:
@@ -3243,8 +3279,8 @@ class GIS(object):
         """
             Returns a query of all Locations inside the given bounding box
         """
-        db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
         query = (table.lat_min <= lat_max) & \
                 (table.lat_max >= lat_min) & \
                 (table.lon_min <= lon_max) & \
@@ -3272,8 +3308,10 @@ class GIS(object):
         """
 
         db = current.db
+        s3db = current.s3db
+        table = s3db.gis_location
         in_bbox = self.query_features_by_bbox(*shape.bounds)
-        has_wkt = (db.gis_location.wkt != None) & (db.gis_location.wkt != "")
+        has_wkt = (table.wkt != None) & (table.wkt != "")
 
         for loc in db(in_bbox & has_wkt).select():
             try:
@@ -3321,7 +3359,8 @@ class GIS(object):
             are used.  Otherwise, the (lat, lon) are used as bounds.
         """
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         # Query to find all locations without bounds set
         no_bounds = (table.lon_min == None) & \
@@ -3466,12 +3505,12 @@ class GIS(object):
         session = current.session
         T = current.T
         db = current.db
-        auth = self.auth
+        s3db = current.s3db
+        auth = current.auth
         cache = self.cache
         settings = current.deployment_settings
         s3mgr = current.manager
-        s3mgr.load("gis_cache")
-        cachetable = db.gis_cache
+        cachetable = s3db.gis_cache
 
         # Defaults
         # http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
@@ -3544,7 +3583,7 @@ class GIS(object):
                                            args=["markers", config.marker_image]))
         symbology = config.symbology_id
 
-        mtable = db.gis_marker
+        mtable = s3db.gis_marker
         markers = {}
 
         if session.s3.gis_config_id == 1:
@@ -4154,8 +4193,7 @@ function addJSLayers() {
         #
         if feature_queries:
             # Load Model
-            s3mgr.load("gis_feature_query")
-            fqtable = db.gis_feature_query
+            fqtable = s3db.gis_feature_query
             layers_feature_queries = """
 S3.gis.layers_feature_queries = new Array();"""
             counter = -1
@@ -4340,7 +4378,7 @@ S3.gis.layers_feature_queries[%i] = {
             # Coordinate Grid - only one possible
             # @ToDo: Migrate to CoordinateGridLayer() class
             # -----------------------------------------------------------------
-            table = db.gis_layer_coordinate
+            table = s3db.gis_layer_coordinate
             query = (table.enabled == True)
             coordinate_enabled = db(query).select(table.name,
                                                   table.visible,
@@ -4472,12 +4510,9 @@ class Marker(object):
         gis = current.gis
         cache = gis.cache
         db = current.db
+        s3db = current.s3db
         tablename = "gis_marker"
-        try:
-            table = db[tablename]
-        except:
-            current.manager.load(tablename)
-            table = db[tablename]
+        table = s3db[tablename]
         if id:
             query = (table.id == id)
             marker = db(query).select(table.image,
@@ -4513,12 +4548,9 @@ class Projection(object):
         gis = current.gis
         cache = gis.cache
         db = current.db
+        s3db = current.s3db
         tablename = "gis_projection"
-        try:
-            table = db[tablename]
-        except:
-            current.manager.load(tablename)
-            table = db[tablename]
+        table = s3db[tablename]
         if id:
             query = (table.id == id)
             projection = db(query).select(table.epsg,
@@ -4552,12 +4584,8 @@ class Layer(object):
         Abstract Base Class for Layers
     """
     def __init__(self):
-        db = current.db
-        try:
-            self.table = db[self.table_name]
-        except:
-            current.manager.load(self.table_name)
-            self.table = db[tablename]
+        s3db = current.s3db
+        self.table = s3db[tablename]
 
     def as_json(self):
         """
@@ -5219,8 +5247,9 @@ class S3MAP(S3Method):
     """
         Class to generate a Map
 
-        A typical implementation would be as follows:
+        Currently unused
 
+        A typical implementation would be as follows:
             exporter = s3base.S3MAP()
             return exporter(xrequest, **attr)
 
@@ -5251,7 +5280,7 @@ class S3MAP(S3Method):
             @returns: output object to send to the view
         """
 
-        gis = current.manager.gis
+        gis = current.gis
 
         # @ToDo: Deprecate gis controller's display_feature() & display_features()
         # @ToDo: Build feature query
@@ -5270,14 +5299,13 @@ class Geocoder(object):
         Base class for all Geocoders
     """
 
-    def __init__(self, gis):
+    def __init__(self):
         " Initializes the page content object "
-        self.gis = gis
         self.api_key = self.get_api_key(type=None)
 
     def get_api_key(self, type):
         " Acquire API key from the database "
-        gis = self.gis
+        gis = current.gis
         if type:
             return gis.get_api_key(type)
 
@@ -5289,9 +5317,9 @@ class GoogleGeocoder(Geocoder):
         Should convert this to be a thin wrapper for modules.geopy.geocoders.google
     """
 
-    def __init__(self, gis, location):
+    def __init__(self, location):
         " Initialise parent class & make any necessary modifications "
-        Geocoder.__init__(self, gis)
+        Geocoder.__init__(self)
         params = {"q": location, "key": self.get_api_key("google")}
         self.url = "http://maps.google.com/maps/geo?%s" % urllib.urlencode(params)
 
@@ -5308,9 +5336,9 @@ class YahooGeocoder(Geocoder):
         Should convert this to be a thin wrapper for modules.geopy.geocoders.`
     """
 
-    def __init__(self, gis, location):
+    def __init__(self, location):
         " Initialise parent class & make any necessary modifications "
-        Geocoder.__init__(self, gis)
+        Geocoder.__init__(self)
         params = {"location": location, "appid": self.get_api_key("yahoo")}
         self.url = "http://local.yahooapis.com/MapsService/V1/geocode?%s" % urllib.urlencode(params)
 

@@ -10,6 +10,8 @@
 module = "flood"
 if deployment_settings.has_module(module):
 
+    location_id = s3db.gis_location_id
+
     # -----------------------------------------------------------------------------
     # Rivers
     resourcename = "river"

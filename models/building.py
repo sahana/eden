@@ -25,6 +25,9 @@ if deployment_settings.has_module(module):
 
     from gluon.sql import SQLCustomType
 
+    person_id = s3db.pr_person_id
+    location_id = s3db.gis_location_id
+
     # Options
     building_area_inspected = {
         1:T("Exterior and Interior"),

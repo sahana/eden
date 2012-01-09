@@ -6,6 +6,8 @@
 
 module = "org"
 
+location_id = s3db.gis_location_id
+
 # -----------------------------------------------------------------------------
 # Sector
 # (Cluster in UN-style terminology)
