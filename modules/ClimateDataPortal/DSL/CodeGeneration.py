@@ -35,13 +35,13 @@ def Aggregation_can_be_SQL(aggregation):
 generate_code = Method("generate_code")
 
 @generate_code.implementation(*operations)
-def Binop_generate_code(binop, parent_node_id, key, pre, out, extra_filter):
-    if can_be_SQL(binop):
-        out('dbGetQuery(con, "')
-        SQL(aggregation, key, out)
-        out('")')
-    else:
-        R(binop, key, out)
+def Binop_generate_code(binop, parent_node_id, key, pre, out, post, extra_filter):
+    #if can_be_SQL(binop):
+    #    out('dbGetQuery(con, "')
+    #    SQL(aggregation, key, out)
+    #    out('")')
+    #else:
+    R(binop, parent_node_id, key, pre, out, post, extra_filter)
 
 SQL = Method("SQL")
 R = Method("R")
@@ -318,6 +318,7 @@ def DSLAggregationNode_R(aggregation, parent_node_id, key, pre, out, post, extra
     
     out("query_results[[toString(processID(", node_id, "))]]")
 
+from .. import start_month_0_indexed
 @SQL.implementation(*aggregations)
 def DSLAggregationNode_SQL(aggregation, key, out, extra_filter):
     """From this we are going to get back a result set with key and value.
@@ -350,7 +351,10 @@ def DSLAggregationNode_SQL(aggregation, key, out, extra_filter):
     month_numbers = aggregation.month_numbers
     if month_numbers and len(month_numbers) < 12:
         add_filter(
-            "((time_period+65536) %% 12) IN (%s)" % ",".join(map(str, month_numbers))
+            "((time_period + 65532 + %(month_offset)i) %% 12) IN (%(month_list)s)" % dict(
+                month_offset = start_month_0_indexed,
+                month_list = ",".join(map(str, month_numbers))
+            )
         )
     if filter_strings:
         out(
@@ -398,5 +402,6 @@ def R_Code_for_values(expression, attribute, extra_filter = None):
             )
         )
     )
-    #print result
+    #import sys
+    #sys.stderr.write( result)
     return result

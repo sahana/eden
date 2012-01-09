@@ -46,12 +46,12 @@ class DateMapping(object):
         date_mapper.year_month_day_to_time_period = from_year_month_day
         date_mapper.date_to_time_period = from_date
 
-#def date_to_month_number(date):
-#    """This function converts a date to a month number.
-#    
-#    See also year_month_to_month_number(year, month)
-#    """
-#    return year_month_to_month_number(date.year, date.month)
+def date_to_month_number(date):
+    """This function converts a date to a month number.
+    
+    See also year_month_to_month_number(year, month)
+    """
+    return year_month_to_month_number(date.year, date.month)
  
 def year_month_to_month_number(year, month, day=None):
     """Time periods are integers representing months in years, 
@@ -81,10 +81,10 @@ def rounded_date_to_month_number(date):
     month0 = floor(((day_of_year / 365.0) * 12) + 0.5)
     return ((year-start_year) * 12) + (month0) - start_month_0_indexed
 
-
+print "WARNING: NetCDF imports using unusual date semantics might not work"
 monthly = DateMapping(
     from_year_month_day = year_month_to_month_number,
-    from_date = rounded_date_to_month_number,
+    from_date = date_to_month_number, # Different for different data sets!
 )
 
 def date_to_day_number(date):
@@ -176,30 +176,36 @@ class SampleTable(object):
     def __init__(
         sample_table, 
         db, 
-        name,
+        name, # please change to parameter_name
         sample_type,
-        date_mapper,
+        date_mapping_name,
         field_type,
-        units,
+        units_name,
         id = None
     ):
+        assert sample_type in SampleTableTypes
         sample_table.type = sample_type
         sample_table.db = db
-        sample_table.name = name
-        sample_table.date_mapper = date_mapper
+        sample_table.parameter_name = name
+        sample_table.date_mapping_name = date_mapping_name
+        sample_table.date_mapper = SampleTable.__date_mapper[date_mapping_name]
         sample_table.field_type = field_type
-        assert units in units_in_out.keys(), \
+        assert units_name in units_in_out.keys(), \
             "units must be one of %s" % units_in_out.keys()
-        sample_table.units = units
+        sample_table.units_name = units_name
         if id is not None:
             sample_table.set_id(id)
     
     def __str__(sample_table):
-        return '"%s %s"' % (sample_table.type.__name__, sample_table.name)
-            
+        return '"%s %s"' % (sample_table.type.__name__, sample_table.parameter_name)
+    
+    @staticmethod
+    def table_name(id):
+        return "climate_sample_table_%i" % id
+    
     def set_id(sample_table,id):
         sample_table.id = id
-        sample_table.table_name = "climate_sample_table_%i" % id
+        sample_table.table_name = SampleTable.table_name(id)
 
     def find(
         sample_table,
@@ -209,7 +215,7 @@ class SampleTable(object):
         db = sample_table.db
         existing_table_query = db(
             (db.climate_sample_table_spec.name == sample_table.parameter_name) &
-            (db.climate_sample_table_spec.sample_type_code == sample_type_code)      
+            (db.climate_sample_table_spec.sample_type_code == sample_table.type.code)      
         )
         existing_table = existing_table_query.select().first()
         if existing_table is None:
@@ -217,18 +223,21 @@ class SampleTable(object):
         else:
             found(
                 existing_table_query,
-                sample_table_id(existing_table.id),
+                SampleTable.table_name(existing_table.id),
             )
     
     def create(sample_table, use_table_name):
         def create_table():
             db = sample_table.db
-            sample_table.set_id(db.climate_sample_table_spec.insert(
-                sample_type_code = sample_table.sample_type_code,
-                name = sample_table.parameter_name,
-                units = sample_table.units_name,
-                field_type = sample_table.value_type
-            ))
+            sample_table.set_id(
+                db.climate_sample_table_spec.insert(
+                    sample_type_code = sample_table.type.code,
+                    name = sample_table.parameter_name,
+                    units = sample_table.units_name,
+                    field_type = sample_table.field_type,
+                    date_mapping = sample_table.date_mapping_name
+                )
+            )
             db.executesql(
                 """
                 CREATE TABLE %(table_name)s
@@ -265,7 +274,7 @@ class SampleTable(object):
         ):
             raise Exception(
                 "Table for %s %s already exists as '%s'" % (
-                    sample_table.sample_type_name,
+                    sample_table.sample_type.__name__,
                     sample_table.parameter_name, 
                     existing_table_name
                 )
@@ -314,32 +323,34 @@ class SampleTable(object):
             )
         )
 
-for SampleTableType in SampleTableTypes:
-    for sample_table_spec in db(
-        db.climate_sample_table_spec.sample_type_code == SampleTableType.code
-    ).select(
-        orderby = db.climate_sample_table_spec.name
-    ):
-        sample_type_code = sample_table_spec.sample_type_code
-        parameter_name = sample_table_spec.name
-        sample_table_types = SampleTable._SampleTable__types
-        sample_type = sample_table_types[sample_table_spec.sample_type_code]
-        date_mapper = SampleTable._SampleTable__date_mapper
-        sample_table = SampleTable(
-            name = sample_table_spec.name,
-            id = sample_table_spec.id,
-            units = sample_table_spec.units,
-            field_type = sample_table_spec.field_type,
-            date_mapper = date_mapper[sample_table_spec.date_mapping],
-            sample_type = sample_type, 
-            db=db
-        )
-        SampleTable._SampleTable__objects[
-            (parameter_name, sample_type_code)
-        ] = sample_table
-        SampleTable._SampleTable__names["%s %s" % (
-            sample_type.__name__, 
-            parameter_name
-        )] = sample_table
+def init_SampleTable():
+    for SampleTableType in SampleTableTypes:
+        for sample_table_spec in db(
+            db.climate_sample_table_spec.sample_type_code == SampleTableType.code
+        ).select(
+            orderby = db.climate_sample_table_spec.name
+        ):
+            sample_type_code = sample_table_spec.sample_type_code
+            parameter_name = sample_table_spec.name
+            sample_table_types = SampleTable._SampleTable__types
+            sample_type = sample_table_types[sample_table_spec.sample_type_code]
+            date_mapper = SampleTable._SampleTable__date_mapper
+            sample_table = SampleTable(
+                name = sample_table_spec.name,
+                id = sample_table_spec.id,
+                units_name = sample_table_spec.units,
+                field_type = sample_table_spec.field_type,
+                date_mapping_name = sample_table_spec.date_mapping,
+                sample_type = sample_type, 
+                db=db
+            )
+            SampleTable._SampleTable__objects[
+                (parameter_name, sample_type_code)
+            ] = sample_table
+            SampleTable._SampleTable__names["%s %s" % (
+                sample_type.__name__, 
+                parameter_name
+            )] = sample_table
+init_SampleTable()
 
 from MapPlugin import MapPlugin

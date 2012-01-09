@@ -17,7 +17,8 @@ The DSL needs to be:
 + can provide friendly syntax
 + easy to modify
 + can use python parser
-! make sure the DSL is checked. only allow what is recognised.
+! make sure the DSL is checked. only allow what is recognised. 
+  This is done by passing everything through a lexer (scanner)
 
 
 As of November 2011, there are two use-cases:
@@ -92,6 +93,8 @@ class ASTNode(object):
         return Multiplication(node, right)
 
     def __div__(node, right):
+        if isinstance(right, int):
+            right = Number(right, "")
         return Division(node, right)
 
     def __pow__(node, exponent):
@@ -161,13 +164,13 @@ class Months(object):
     def __init__(month_filter, *months):
         month_filter.months = months
 
-class FromDate(object):
+class From(object):
     def __init__(from_date, year, month = None, day = None):
         from_date.year = year
         from_date.month = month
         from_date.day = day
         
-class ToDate(object):
+class To(object):
     def __init__(to_date, year, month = None, day = None):
         to_date.year = year
         to_date.month = month
@@ -208,74 +211,134 @@ def parse(expression_string):
     import re
     
     tokens = []
-    out = tokens.append
+    remainder = []
+    current_position = [0] #, 0] # 2D coords
+    
+    def move(chars):
+        current_position[0] += chars
+    
+    def linefeed():
+        move(1)
+        #current_position[1] += 1
+        #current_position[0] = 0
+    
+    def out(token):
+        tokens.append(token)
+    
     def out_all(*pieces):
         tokens.extend(pieces)
     
     def write_table_name(scanner, table_name):
         out(table_name)
+        move(len(table_name))
 
     def allowed_identifier(scanner, token):
         out(token)
+        move(len(token))
     
     def operator(scanner, token):
         if token == "^":
             out("**")
         else:
             out(token)
+        move(len(token))
 
     def write_number(scanner, number):
         out(number)
+        move(len(number))
     
     def number_with_units(scanner, token):
-        number, units = token.split(None, 1)
-        out_all("Number(", number, ",'", units, "')")
+        pieces = token.split(None, 1)
+        if len(pieces) == 1:
+            out_all("Number(", pieces[0], ")")
+        else:
+            number, units = pieces
+            out_all("Number(", number, ",'", units, "')")
+        move(len(token))
     
     def whitespace(scanner, token):
-        out(token)
+        out(" ")
+        move(len(token))
+        
+    def newline(scanner, token):
+        linefeed()
+
+    def comment(scanner, token):
+        out("")
+        move(len(token))
+        #linefeed()
 
     def parenthesis(scanner, token):
         out(token)
+        move(len(token))
     
     def comma(scanner, token):
         out(token)
+        move(len(token))
+    
+    def anything_else(scanner, token):
+        remainder.append((tuple(current_position), token))
+        move(len(token))
     
     allowed_names = {}
     for name in (
         "Sum Average StandardDeviation Minimum Maximum Count "
-        "Months FromDate ToDate Number".split()
+        "Months From To Number".split()
     ):
+        # can't guarantee the __name__, use our name
         allowed_names[name] = globals()[name]
     for month_name in Months.options.keys():
         if not isinstance(month_name, int):
             allowed_names[month_name] = month_name
     scanner_spec = (
-        (r"#.*?\n", whitespace),
-        (r'"('+"|".join(SampleTable._SampleTable__names.keys())+')"', write_table_name),
+        (r"\#[^\n]*(?:\n|$)", comment),
+        (
+            r'"(%(sample_table_names)s)"' % dict(
+                sample_table_names = "|".join(
+                    SampleTable._SampleTable__names.keys()
+                )
+            ),
+            write_table_name
+        ),
         (r"(%s)(?=\W)" % "|".join(allowed_names.keys()), allowed_identifier),
         (r"\+|\-|\/|\*|\=|\^", operator),
         (r"\(|\)", parenthesis),
         (r",", comma),
+        (r"\n", newline),
         (r"\s+", whitespace),
         (
-            r"-?[0-9]+(?:\.[0-9]+)?\s+(?:(?:delta|Δ)\s+)?(?: *(?:%(units)s)(?:\^[0-9])?)* *(?:\/(?: *(?:%(units)s)(?:\^[0-9])?)*)?" % dict(
-                units = "|".join(units_in_out.keys())
+            r"-?[0-9]+(?:\.[0-9]+)?\s+"
+            r"(?:(?:delta|Δ)\s+)?"
+            r"(?:"
+                r"(?:%(unit)s+\s*)\/(?:\s*%(unit)s+)|" 
+                r"(?:%(unit)s+\s*)|"
+                r"(?:\/(?:\s*%(unit)s+))"
+            r")"
+            % dict(
+                # e.g. mm^2, mm
+                unit = "(?:(?:%s)(?:\^[0-9])?)" % "|".join(units_in_out.keys())
             ),
             number_with_units
         ),
-        (r"-?[0-9]*(\.[0-9]+)?", write_number),
+        (r"-?[0-9]+(\.[0-9]+)?", write_number),
+        (r"\S+", anything_else),
     )
     scanner = re.Scanner(scanner_spec)
     #print scanner_spec
     #print expression_string
-    _, remainder = scanner.scan(expression_string)
+    scanner.scan(expression_string)
 
     if remainder:
-        raise SyntaxError(
-            "Syntax error near: '"+("".join(remainder))+"'"
+        #print remainder
+        position, string = remainder[0]
+        exception = SyntaxError(
+            "Syntax error near: '"+("".join(string))+"'"
         )
+        #exception.offset, exception.lineno = position
+        exception.offset, exception.lineno = position[0], 0
+        raise exception
     else:
-        cleaned_expression_string = "("+("".join(tokens))+")"
+        cleaned_expression_string = ("("+("".join(tokens))+")")
         #print cleaned_expression_string
         expression = eval(
             cleaned_expression_string,

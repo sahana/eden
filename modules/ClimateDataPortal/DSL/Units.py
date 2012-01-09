@@ -232,7 +232,7 @@ def subtract_units(operation):
     def determine_units(left_units, right_units):
         if not left_units.match_dimensions_of(right_units):
             operation.units_error = (
-                "Mismatched units: %(left_units)s != %(right_units)s" % locals()
+                "Incompatible units: %(left_units)s and %(right_units)s" % locals()
             )
             operation.units = None
         else:
@@ -274,7 +274,7 @@ def raise_units_to_power(operation):
 def aggregation_units(aggregation):
     aggregation.units = Units(
         {
-            aggregation.sample_table.units:1
+            aggregation.sample_table.units_name:1
         },
         True # affine
     )
@@ -284,7 +284,7 @@ def aggregation_units(aggregation):
 def stddev_determine_units(aggregation):
     aggregation.units = Units(
         {
-            aggregation.sample_table.units:1
+            aggregation.sample_table.units_name:1
         },
         False # displacement
     )

@@ -23,7 +23,6 @@ s3.menu_help = [ T("Help"), True, "#",
     ]
 
 # Auth Menu (available in all screens)
-
 if not auth.is_logged_in():
 
     login_next = URL(args=request.args, vars=request.vars)
@@ -453,6 +452,17 @@ s3_menu_dict = {
              ]
             ]
         ]
+    },
+
+    # CLIMATE Controller
+    # -------------------------------------------------------------------------
+    "climate": {
+        "menu": [
+            [T("Home"), False, aURL(f="index")],
+            [T("Station Parameters"), False, aURL(f="station_parameter")],
+            [T("Saved Queries"), False, aURL(f="save_query")],
+            [T("Purchase Data"), False, aURL(f="purchase")],
+        ],
     },
 
     # CR / Shelter Registry Controller

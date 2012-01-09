@@ -114,6 +114,41 @@ if deployment_settings.has_module("climate"):
         )
     )
 
+    def station_represent(id):
+        row_id = db(climate_station_id.id == id).select(
+            climate_station_id.station_id,
+            limitby=(0,1)
+        ).first()
+        row_name = db(climate_station_name.id == id).select(
+            climate_station_name.name,
+            limitby=(0,1)
+        ).first()
+                                                            
+        if row_id and row_id.station_id:
+            represent = "(%s) " % row_id.station_id
+        else:
+            represent = ""
+        if row_name and row_name.name:
+            represent = "%s%s" % (represent, row_name.name)
+        
+        return represent or NONE
+            
+                                                    
+    station_id = S3ReusableField(
+        "station_id", 
+        climate_station_name, 
+        sortby="name",
+        requires = IS_ONE_OF(
+            db,
+            "climate_place_station_name.id",
+            station_represent,
+            orderby="climate_place_station_name.name",
+            sort=True
+        ),
+        represent = station_represent,
+        label = "Station",
+        ondelete = "RESTRICT"
+    )
 
     climate_region = place_attribute_table(
         "region",
@@ -128,11 +163,16 @@ if deployment_settings.has_module("climate"):
     )
 
     # coefficient of variance is meaningless for C but Ok for Kelvin
-    # internally all scales must be ratio scales if coefficient of variations is to
-    # be used
+    # internally all scales must be ratio scales if coefficient 
+    # of variations is to be allowed, (which it is)
     # rainfall (mm), temp (K) are ok
     # output units
 
+    sample_type_code_opts = {"O":"Observed Station",
+                             "G":"Observed Gridded",
+                             "P":"Projected"
+                             }
+    
     climate_sample_table_spec = climate_define_table(
         "sample_table_spec",
         (
@@ -172,12 +212,47 @@ if deployment_settings.has_module("climate"):
             )
         ),
     )
+    
+    def sample_table_spec_represent(id):
+        table = db.climate_sample_table_spec
+        row = db(table.id == id).select(table.name,
+                                        table.sample_type_code,
+                                        limitby=(0, 1) ).first()
+        if row:
+            return "%s %s" % (
+                sample_type_code_opts.get(row.sample_type_code), 
+                row.name
+            )
+        else:
+            return NONE
+    
+    parameter_id = S3ReusableField(
+        "parameter_id", 
+        db.climate_sample_table_spec, 
+        sortby="name",
+        requires = IS_ONE_OF_EMPTY_SELECT(
+            db,
+            "climate_sample_table_spec.id",
+            sample_table_spec_represent,
+            sort=True
+        ),
+        represent = sample_table_spec_represent,
+        label = "Parameter",
+        script = SCRIPT(
+"""
+S3FilterFieldChange({
+    'FilterField':    'sample_type_code',
+    'Field':        'parameter_id',
+    'FieldResource':'sample_table_spec',
+    'FieldPrefix':    'climate',
+});"""),
+                                           ondelete = "RESTRICT")
+
     climate_first_run_sql.append(
         "ALTER TABLE climate_sample_table_spec"
         "    ADD CONSTRAINT climate_sample_table_name_sample_type_unique"
         "    UNIQUE (name, sample_type_code);"
     )
-
 
     climate_monthly_aggregation_table_spec = climate_define_table(
         "monthly_aggregation",
@@ -198,3 +273,221 @@ if deployment_settings.has_module("climate"):
             )
         )
     )
+
+    # =====================================================================
+    # Station Parameters
+    #
+    resourcename = "station_parameter"
+    tablename = "climate_station_parameter"
+    table = db.define_table(
+        tablename,
+        station_id(),
+        parameter_id(
+            requires = IS_ONE_OF(
+                db,
+                "climate_sample_table_spec.id",
+                sample_table_spec_represent,
+                sort=True
+            ),
+            script = None
+        ),
+    )
+    
+    # Add virtual fields for range: from - to
+                            
+                            
+
+    # CRUD strings
+    ADD_STATION_PARAMETER = T("Add Station Parameter")
+    LIST_STATION_PARAMETER = T("List Station Parameters")
+    s3.crud_strings[tablename] = Storage(
+        title_create = ADD_STATION_PARAMETER,
+        title_display = T("Station Parameter Details"),
+        title_list = LIST_STATION_PARAMETER,
+        title_update = T("Edit Station Parameter"),
+        title_search = T("Search Station Parameters"),
+        subtitle_create = ADD_STATION_PARAMETER,
+        subtitle_list = T("Station Parameters"),
+        label_list_button = LIST_STATION_PARAMETER,
+        label_create_button = ADD_STATION_PARAMETER,
+        label_delete_button = T("Remove Station Parameter"),
+        msg_record_created = T("Station Parameter Added"),
+        msg_record_modified = T("Station Parameter updated"),
+        msg_record_deleted = T("Station Parameter removed"),
+        msg_list_empty = T("No Station Parameter currently registered"))
+    
+
+    # Virtual Field for pack_quantity
+    class station_parameters_virtualfields(dict, object):
+        def range_from(self):
+            query = (
+                "SELECT MIN(time_period) "
+                "from climate_sample_table_%(parameter_id)i "
+                "WHERE place_id = %(station_id)i;"
+            ) % dict(
+                parameter_id = self.climate_station_parameter.parameter_id,
+                station_id = self.climate_station_parameter.station_id,
+            )
+            date  = db.executesql(query)[0][0]
+            if date is not None:
+                year,month = ClimateDataPortal.month_number_to_year_month(date)
+                return "%s-%s" % (month, year)
+            else:
+                return NONE
+            
+            
+        
+        #"Now station_id=%s parameter_id=%s" % (
+        #    self.climate_station_parameter.station_id,
+        #    self.climate_station_parameter.parameter_id)
+        def range_to(self):
+            query = (
+                "SELECT MAX(time_period) "
+                "from climate_sample_table_%(parameter_id)i "
+                "WHERE place_id = %(station_id)i;"
+            ) % dict(
+                parameter_id = self.climate_station_parameter.parameter_id,
+                station_id = self.climate_station_parameter.station_id,
+            )
+            date  = db.executesql(query)[0][0]
+            if date is not None:
+                year,month = ClimateDataPortal.month_number_to_year_month(date)
+                return "%s-%s" % (month, year)
+            else:
+                return NONE
+    
+    table.virtualfields.append(station_parameters_virtualfields())
+    
+    s3mgr.configure(
+        tablename,
+        insertable = False,
+        list_fields = [
+            "station_id",
+            "parameter_id",
+            (T("Range From"), "range_from"),
+            (T("Range To"), "range_to"),
+        ]
+    )
+    
+    # Load all stations and parameters
+    if not db(table.id > 0).count():
+        station_rows = db(
+            climate_station_name.id > 0
+        ).select(
+            climate_station_name.id
+        )
+        for station_row in station_rows:
+            parameter_rows = db(
+                climate_sample_table_spec.sample_type_code == "O"
+            ).select(climate_sample_table_spec.id)
+            for parameter_row in parameter_rows:
+                table.insert(
+                    station_id = station_row.id,
+                    parameter_id = parameter_row.id
+                )
+            
+    
+    # =====================================================================
+    # Purchase Data
+    #
+    
+    resourcename = "purchase"
+    tablename = "climate_purchase"
+    table = db.define_table(
+        tablename,
+        Field("paid",
+              "boolean"
+        ),
+        #user_id(),
+        Field("sample_type_code",
+              "string",
+              requires = IS_IN_SET(sample_type_code_opts),
+              represent = lambda code: sample_type_code_opts.get(code, NONE)
+        ),
+        parameter_id(),
+        station_id(),
+        Field("date_from",
+              "date",
+              requires = IS_DATE(format = s3_date_format),
+              widget = S3DateWidget(),
+              default = request.utcnow,
+        ),
+        Field("date_to",
+              "date",
+              requires = IS_DATE(format = s3_date_format),
+              widget = S3DateWidget(),
+              default = request.utcnow,
+        ),
+        Field("price", 
+              "double"
+        ),
+        Field("purpose",
+              "text"
+        )
+    )
+    
+    if not s3_has_role(ADMIN):
+        db.climate_purchase.paid.writeable = False
+    
+    # CRUD strings
+    ADD_CLIMATE_PURCHASE = T("Purchase New Data")
+    LIST_CLIMATE_PURCHASE = T("All Purchased Data")
+    s3.crud_strings[tablename] = Storage(
+        title_create = ADD_CLIMATE_PURCHASE,
+        title_display = T("Purchased Data Details"),
+        title_list = LIST_CLIMATE_PURCHASE,
+        title_update = T("Edit Purchased Data Details"),
+        title_search = T("Search Purchased Data"),
+        subtitle_create = ADD_CLIMATE_PURCHASE,
+        subtitle_list = T("Purchased Data"),
+        label_list_button = LIST_CLIMATE_PURCHASE,
+        label_create_button = ADD_CLIMATE_PURCHASE,
+        label_delete_button = T("Remove Purchased Data"),
+        msg_record_created = T("Data Purchase In Process"),
+        msg_record_modified = T("Data Purchase Processed"),
+        msg_record_deleted = T("Data Purchase removed"),
+        msg_list_empty = T("No Data Purchased"))
+    
+    s3mgr.configure(
+        tablename,
+        create_next = aURL( args = ["[id]","read"]),
+        #listadd = listadd
+    )
+    
+    # =====================================================================
+    # Saved Queries
+    #
+    resourcename = "save_query"
+    tablename = "climate_save_query"
+    table = db.define_table(
+        tablename,
+        #user_id(),
+        Field("description", "string"),
+        Field("query_definition", "text"),
+    )
+
+    # CRUD strings
+    ADD_SAVE_QUERY = T("Save Query")
+    LIST_SAVE_QUERY = T("Saved Queries")
+    s3.crud_strings[tablename] = Storage(
+        title_create = ADD_SAVE_QUERY,
+        title_display = T("Saved Query Details"),
+        title_list = LIST_SAVE_QUERY,
+        title_update = T("Edit Saved Query"),
+        title_search = T("Search Saved Queries"),
+        subtitle_create = ADD_SAVE_QUERY,
+        subtitle_list = T("Saved Queries"),
+        label_list_button = LIST_SAVE_QUERY,
+        label_create_button = ADD_SAVE_QUERY,
+        label_delete_button = T("Remove Saved Query"),
+        msg_record_created = T("Query Saved"),
+        msg_record_modified = T("Saved Query updated"),
+        msg_record_deleted = T("Saved Query removed"),
+        msg_list_empty = T("No Queries Saved"))
+    
+    s3mgr.configure(
+        tablename,
+        listadd = False
+    )
+    
+    # =====================================================================

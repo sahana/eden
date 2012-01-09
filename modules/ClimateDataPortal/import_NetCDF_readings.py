@@ -171,18 +171,6 @@ import sys
 
 from Scientific.IO import NetCDF
 
-climate_sample_tables = {}
-for database_table_row in db(climate_sample_table_spec).select():
-    climate_sample_tables[
-        "%s %s" % (
-            ClimateDataPortal.sample_types[database_table_row.sample_type_code],
-            database_table_row.name
-        )
-    ] = (
-        ClimateDataPortal.sample_table_id(database_table_row.id),
-        database_table_row.units
-    )
-
 def main(argv):
     import argparse
     import os
@@ -210,7 +198,7 @@ python ./run.py %(prog)s --field_name rr --style quickly --parameter_name "Gridd
     parser.add_argument(
         "--parameter_name",
         required = True,
-        choices = climate_sample_tables.keys(),
+        choices = ClimateDataPortal.SampleTable._SampleTable__names.keys(),
         help="Parameter name, which corresponds to an added table."
     )
     parser.add_argument(

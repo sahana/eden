@@ -1,5 +1,6 @@
 
 # this gets ported to javascript in s3.gis.climate.js
+# look for "sensible"
 
 import math
 def sensible_range(min_value, max_value, significant_digits = 2):
