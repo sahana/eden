@@ -48,7 +48,7 @@ class S3DVIModel(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        location_id = s3.location_id
+        location_id = self.gis_location_id
 
         pe_label = self.pr_pe_label
         person_id = self.pr_person_id
