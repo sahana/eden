@@ -70,7 +70,8 @@ class S3Model(object):
         self.prefix = module
         self.settings = current.deployment_settings
 
-        mandatory_models = ("sync",
+        mandatory_models = ("auth",
+                            "sync",
                             "gis",
                             "pr",
                             "sit",

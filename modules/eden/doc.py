@@ -32,6 +32,8 @@
 __all__ = ["S3DocumentLibrary",
            "doc_image_represent"]
 
+import os
+
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
@@ -45,16 +47,12 @@ class S3DocumentLibrary(S3Model):
 
     def model(self):
 
-        import os
-
         db = current.db
         T = current.T
         request = current.request
-
         s3 = current.response.s3
 
         person_comment = self.pr_person_comment
-
         location_id = self.gis_location_id
 
         messages = current.messages

@@ -29,8 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AuthModel",
-           ]
+__all__ = ["S3AuthModel"]
 
 from gluon import *
 from gluon.storage import Storage

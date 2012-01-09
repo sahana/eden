@@ -955,7 +955,8 @@ class AuthS3(Auth):
             return None
 
         db = current.db
-        table = db.org_organisation
+        s3db = current.s3db 
+        table = s3db.org_organisation
         query = (table.id == organisation_id)
         org = db(query).select(table.owned_by_organisation).first()
         if org:
@@ -973,7 +974,8 @@ class AuthS3(Auth):
             return None
 
         db = current.db
-        table = db.org_site
+        s3db = current.s3db 
+        table = s3db.org_site
         query = (table.id == site_id)
         site = db(query).select(table.instance_type).first()
         if site:
@@ -1131,14 +1133,14 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        s3db = current.s3db
         utable = self.settings.table_user
-        ptable = db.pr_person
-        ctable = db.pr_contact
-        current.manager.load("pr_address")
-        atable = db.pr_address
-        etable = db.pr_pentity
-        ttable = db.sit_trackable
-        gtable = db.gis_config
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+        atable = s3db.pr_address
+        etable = s3db.pr_pentity
+        ttable = s3db.sit_trackable
+        gtable = s3db.gis_config
 
         if user is None:
             users = db(utable.person_uuid == None).select(utable.ALL)
@@ -1259,13 +1261,14 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        s3db = current.s3db 
         deployment_settings = self.deployment_settings
 
         # Default Approver
         approver = deployment_settings.get_mail_approver()
         organisation_id = None
         # Check for Domain: Whitelist or specific Approver
-        table = db.auth_organisation
+        table = s3db.auth_organisation
         address, domain = user.email.split("@", 1)
         query = (table.domain == domain)
         record = db(query).select(table.organisation_id,
@@ -1815,7 +1818,8 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        ptable = db.pr_person
+        s3db = current.s3db 
+        ptable = s3db.pr_person
         utable = self.settings.table_user
         query = (utable.id == user_id) & \
                 (utable.person_uuid == ptable.uuid)
@@ -1838,7 +1842,8 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        ptable = db.pr_person
+        s3db = current.s3db 
+        ptable = s3db.pr_person
         utable = self.settings.table_user
         query = (ptable.id == person_id) & \
                 (ptable.uuid == utable.person_uuid)
@@ -1856,7 +1861,8 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        ptable = db.pr_person
+        s3db = current.s3db 
+        ptable = s3db.pr_person
 
         if self.s3_logged_in():
             try:
@@ -1879,7 +1885,8 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        ptable = db.pr_person
+        s3db = current.s3db 
+        ptable = s3db.pr_person
         hrtable = db.hrm_human_resource
 
         if self.s3_logged_in():
@@ -1915,6 +1922,7 @@ class AuthS3(Auth):
         session = current.session
 
         if not hasattr(table, "_tablename"):
+            current.manager.load(table)
             table = db[table]
 
         if session.s3.security_policy == 1:
