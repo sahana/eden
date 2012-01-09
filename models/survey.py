@@ -449,7 +449,9 @@ if deployment_settings.has_module(module):
                 record = qstntable[form.vars.id]
             else:
                 return
-            if form.vars.metadata != "":
+            if form.vars.metadata \
+            and form.vars.metadata != "" \
+            and form.vars.metadata != "None":
                 updateMetaData(record,
                                form.vars.type,
                                form.vars.metadata)
@@ -465,6 +467,7 @@ if deployment_settings.has_module(module):
             # the metadata can either be passed in as a JSON string
             # or as a parsed map. If it is a string load the map.
             if isinstance(metadata, str):
+                metadata = unescape(metadata, {"'": '"'})
                 metadataList = json.loads(metadata)
             else:
                 metadataList = metadata
@@ -1689,6 +1692,32 @@ $("#chart_btn").click(function(){
                 questions.append(question)
             return questions
 
+        def getAllWidgetsForTemplate(template_id):
+            """
+                function to return the widgets for each question for the given
+                template. The widgets are returned in a dict with the key being
+                the question code.
+            """
+            q_ltable = db.survey_question_list
+            qsntable = db.survey_question
+            query = db((q_ltable.template_id == template_id) & \
+                       (q_ltable.question_id == qsntable.id)
+                      )
+            rows = query.select(qsntable.id,
+                                qsntable.code,
+                                qsntable.type,
+                                )
+            widgets = {}
+            for row in rows:
+                qstnType = row.type
+                qstn_id = row.id
+                qstn_code = row.code
+                widgetObj = survey_question_type[qstnType](qstn_id)
+                widgets[qstn_code] = widgetObj
+                question = {}
+            return widgets
+
+
         def getAllSectionsForTemplate(template_id):
             """
                 function to return the list of sections for the given template
@@ -2662,6 +2691,7 @@ $("#chart_btn").click(function(){
             survey_getAllTranslationsForSeries = getAllTranslationsForSeries,
             survey_getAllTemplates = getAllTemplates,
             survey_getAllSeries = getAllSeries,
+            survey_getAllWidgetsForTemplate = getAllWidgetsForTemplate,
             survey_getAllSectionsForTemplate = getAllSectionsForTemplate,
             survey_getAllSectionsForSeries = getAllSectionsForSeries,
             survey_getAllQuestionsForTemplate = getAllQuestionsForTemplate,
