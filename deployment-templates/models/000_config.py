@@ -351,6 +351,8 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.ui.label_mobile_phone = T("Cell Phone")
 # Enable this to change the label for 'Postcode'
 #deployment_settings.ui.label_postcode = T("ZIP Code")
+# Enable Social Media share buttons
+#deployment_settings.ui.social_buttons = True
 
 # Request
 #deployment_settings.req.type_inv_label = T("Donations")
