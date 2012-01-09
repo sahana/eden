@@ -31,7 +31,7 @@
 
 """
 
-__all__ = ["S3Menu", "s3_rheader_tabs"]
+__all__ = ["S3Menu", "s3_rheader_tabs", "s3_popup_comment"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -140,6 +140,58 @@ class S3Menu(DIV):
 
     def xml(self):
         return self.serialize(self.data, 0).xml()
+
+# =============================================================================
+def s3_popup_comment(c=None,
+                     f=None,
+                     t=None,
+                     vars=None,
+                     title=None,
+                     tooltip=None):
+
+    """
+        Generate a ADD-popup comment, return an empty DIV if the user
+        is not permitted to add records to the referenced table
+
+        @param c: the target controller
+        @param f: the target function
+        @param t: the target table (defaults to c_f)
+        @param vars: the request vars (format="popup" will be added automatically)
+        @param title: the tooltip title
+        @param tooltip: the tooltip text
+
+        @todo: replace by S3NavigationItem
+    """
+
+    auth = current.auth
+
+    if title is None:
+        return None
+
+    if vars is not None:
+        _vars = Storage(vars)
+    else:
+        _vars = Storage()
+    _vars.update(format="popup")
+
+    popup = ""
+    ttip = ""
+    if c and f and auth is not None:
+        _href = auth.permission.accessible_url(c=c, f=f, t=t,
+                                               p="create",
+                                               args="create", vars=_vars)
+        if _href is not False:
+            popup = A(title,
+                      _class="colorbox",
+                      _href=_href,
+                      _target="top",
+                      _title=title)
+            if tooltip is not None:
+                ttip = DIV(_class="tooltip",
+                        _title="%s|%s" % (title, tooltip))
+
+    comment = DIV(popup, ttip)
+    return comment
 
 # =============================================================================
 def s3_rheader_tabs(r, tabs=[]):
