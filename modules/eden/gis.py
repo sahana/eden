@@ -47,8 +47,8 @@ class S3LocationModel(S3Model):
     """ Locations Model """
 
     names = ["gis_location",
-             "gis_location_id",
-             "gis_marker_id"]
+             "gis_location_name",
+             "gis_location_id"]
 
     def model(self):
 
@@ -1194,7 +1194,7 @@ class S3GISConfigModel(S3Model):
         db = current.db
         gis = current.gis
         s3 = current.response.s3
-        session.current.session
+        session = current.session
 
         system_roles = session.s3.system_roles
         MAP_ADMIN = system_roles.MAP_ADMIN
