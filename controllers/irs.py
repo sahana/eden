@@ -132,8 +132,7 @@ def ireport():
         return output
     response.s3.postp = user_postp
 
-    output = s3_rest_controller(module, resourcename,
-                                rheader=response.s3.irs_rheader)
+    output = s3_rest_controller(rheader=response.s3.irs_rheader)
 
     # @ToDo: Add 'Dispatch' button to send OpenGeoSMS
     #try:

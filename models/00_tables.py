@@ -19,6 +19,7 @@ import eden.sit
 import eden.org
 import eden.auth
 import eden.doc
+import eden.hrm
 import eden.project
 import eden.dvi
 import eden.irs

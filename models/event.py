@@ -403,6 +403,7 @@ if deployment_settings.has_module(module):
         # @ToDo: Use Positions, not individual HRs
         # @ToDo: Search Widget
         if deployment_settings.has_module("hrm"):
+            human_resource_id = s3db.hrm_human_resource_id
             tablename = "event_human_resource"
             table = db.define_table(tablename,
                                     event_id(),

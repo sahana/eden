@@ -2111,8 +2111,9 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
 
     T = current.T
     db = current.db
-    cache = current.cache
+    s3db = current.s3db
     request = current.request
+    cache = current.response.s3.cache
     gis = current.gis
 
     def lat_lon_represent(location):
@@ -2133,10 +2134,10 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
             return text
 
     def parent_represent(location):
-        table = S3Model.table("gis_location")
+        table = s3db.gis_location
         query = (table.id == location.parent)
         parent = db(query).select(table.name,
-                                  cache=(cache.ram, 60),
+                                  cache=cache,
                                   limitby=(0, 1)).first()
         if parent:
             return parent.name
@@ -2175,14 +2176,14 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
                         if ancestor.level == "L0":
                             L0 = ancestor.id
                 if L0:
-                    table = S3Model.table("gis_config")
+                    table = s3db.gis_config
                     query = (table.region_location_id == L0)
                     config = db(query).select(table.L1,
                                               table.L2,
                                               table.L3,
                                               table.L4,
                                               table.L5,
-                                              cache=(cache.ram, 60),
+                                              cache=cache,
                                               limitby=(0, 1)).first()
                     if config:
                         level_name = config[location.level]
@@ -2247,8 +2248,9 @@ def gis_location_represent(record, showlink=True, simpletext=False):
         location = record
     else:
         db = current.db
+        s3db = current.s3db
         s3 = current.response.s3
-        table = S3Model.table("gis_location")
+        table = s3db.gis_location
         location = db(table.id == record).select(table.id,
                                                  table.name,
                                                  table.level,

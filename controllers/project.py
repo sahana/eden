@@ -12,6 +12,8 @@ if module not in deployment_settings.modules:
 
 s3_menu(module)
 
+drr = deployment_settings.get_project_drr()
+
 # =============================================================================
 def index():
     """ Module's Home Page """
@@ -33,21 +35,55 @@ def project():
     """ RESTful CRUD controller """
 
     resourcename = "project"
-    db.hrm_human_resource.person_id.comment = DIV(_class="tooltip",
-                                                  _title="%s|%s" % (T("Person"),
-                                                                    T("Select the person assigned to this role for this project.")))
+
+    if "tasks" in request.get_vars:
+        # Return simplified controller to pick a Project for which to list the Open Tasks
+        s3mgr.load("project_project")
+        s3.crud_strings["project_project"].title_list = T("Open Tasks for Project")
+        s3.crud_strings["project_project"].subtitle_list = T("Select Project")
+        s3mgr.LABEL.READ = "Select"
+        s3mgr.LABEL.UPDATE = "Select"
+        s3mgr.configure("project_project",
+                        deletable=False,
+                        listadd=False)
+        # Post-process
+        def postp(r, output):
+            if r.interactive:
+                read_url = URL(f="task", vars={"project":"[id]"})
+                update_url = URL(f="task", vars={"project":"[id]"})
+                s3mgr.crud.action_buttons(r, deletable=False,
+                                          read_url=read_url,
+                                          update_url=update_url)
+            return output
+        response.s3.postp = postp
+        return s3_rest_controller()
+
+    table = s3db.hrm_human_resource
+    table.person_id.comment = DIV(_class="tooltip",
+                                  _title="%s|%s" % (T("Person"),
+                                                    T("Select the person assigned to this role for this project.")))
 
     if deployment_settings.get_project_community_activity():
         activity_label = T("Communities")
     else:
         activity_label = T("Activities")
 
-    tabs = [(T("Basic Details"), None),
-            (T("Organizations"), "organisation"),
-            (activity_label, "activity"),
-            (T("Tasks"), "task"),
-            (T("Documents"), "document"),
-           ]
+    tabs = [(T("Basic Details"), None)]
+    if drr:
+        tabs.append((T("Organizations"), "organisation"))
+    admin = auth.s3_has_role(ADMIN)
+    #staff = auth.s3_has_role("STAFF")
+    staff = True
+    if admin or drr:
+        tabs.append((activity_label, "activity"))
+    if staff:
+        tabs.append((T("Milestones"), "milestone"))
+    if not drr:
+        tabs.append((T("Tasks"), "task"))
+    if drr:
+        tabs.append((T("Documents"), "document"))
+    elif admin:
+        tabs.append((T("Attachments"), "document"))
 
     doc_table = s3db.table("doc_document", None)
     if doc_table is not None:
@@ -59,8 +95,7 @@ def project():
         doc_table.location_id.writable = False
 
     def prep(r):
-        s3mgr.load("project_beneficiary")
-        btable = db.project_beneficiary
+        btable = s3db.project_beneficiary
         btable.activity_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                     "project_activity.id",
                                                     "%(name)s",
@@ -92,11 +127,35 @@ def project():
                         query = (ltable.id.belongs(countries))
                         countries = db(query).select(ltable.code)
                         deployment_settings.gis.countries = [c.code for c in countries]
+                elif r.component_name == "task":
+                    r.component.table.milestone_id.requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                "project_milestone.id",
+                                                                "%(name)s",
+                                                                filterby="project_id",
+                                                                filter_opts=(r.id,),
+                                                                ))
+                    if "open" in request.get_vars:
+                        # Show only the Open Tasks for this Project
+                        statuses = response.s3.project_task_active_statuses
+                        filter = (r.component.table.status.belongs(statuses))
+                        r.resource.add_component_filter("task", filter)
+
             elif not r.id and r.function == "index":
                 r.method = "search"
+                # If just a few Projects, then a List is sufficient
+                #r.method = "list"
 
         return True
     response.s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.interactive and not deployment_settings.get_project_drr():
+            update_url = URL(args=["[id]", "task"])
+            s3mgr.crud.action_buttons(r,
+                                      update_url=update_url)
+        return output
+    response.s3.postp = postp
 
     rheader = lambda r: response.s3.project_rheader(r, tabs)
     return s3_rest_controller(module, resourcename,
@@ -120,20 +179,29 @@ def hazard():
 def organisation():
     """ RESTful CRUD controller """
 
-    s3mgr.configure("project_organisation",
-                    insertable=False,
-                    editable=False,
-                    deletable=False)
+    if drr:
+        s3mgr.configure("project_organisation",
+                        insertable=False,
+                        editable=False,
+                        deletable=False)
 
-    list_btn = A(T("Funding Report"),
-                 _href=URL(c="project", f="organisation",
-                           args="analyze", vars=request.get_vars),
-                 _class="action-btn")
+        list_btn = A(T("Funding Report"),
+                     _href=URL(c="project", f="organisation",
+                               args="analyze", vars=request.get_vars),
+                     _class="action-btn")
 
-    return s3_rest_controller(module, resourcename,
-                              list_btn=list_btn,
-                              interactive_report=True,
-                              csv_template="organisation")
+        return s3_rest_controller(list_btn=list_btn,
+                                  interactive_report=True,
+                                  csv_template="organisation")
+    else:
+        tabs = [
+                (T("Basic Details"), None),
+                (T("Projects"), "project"),
+                (T("Contacts"), "human_resource"),
+               ]
+        rheader = lambda r: eden.org.org_organisation_rheader(r, tabs)
+        return s3_rest_controller("org", resourcename,
+                                  rheader=rheader)
 
 # =============================================================================
 def beneficiary_type():
@@ -157,8 +225,7 @@ def beneficiary():
                            args="analyze", vars=request.get_vars),
                  _class="action-btn")
 
-    return s3_rest_controller(module, resourcename,
-                              interactive_report=True)
+    return s3_rest_controller(interactive_report=True)
 
 # =============================================================================
 def activity_type():
@@ -171,15 +238,15 @@ def activity():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
+    table = s3db[tablename]
 
-    tabs = [(T("Details"), None),
-            (T("Beneficiaries"), "beneficiary"),
-            (T("Tasks"), "task"),
-            (T("Documents"), "document"),
-           ]
-
+    tabs = [(T("Details"), None)]
+    if drr:
+        tabs.append((T("Beneficiaries"), "beneficiary"))
+        tabs.append((T("Documents"), "document"))
+    else:
+        tabs.append((T("Tasks"), "task"))
+        tabs.append((T("Attachments"), "document"))
 
     doc_table = s3db.table("doc_document", None)
     if doc_table is not None:
@@ -191,8 +258,7 @@ def activity():
         doc_table.location_id.writable = False
 
     rheader = lambda r: response.s3.project_rheader(r, tabs)
-    return s3_rest_controller(module, resourcename,
-                              interactive_report=True,
+    return s3_rest_controller(interactive_report=True,
                               rheader=rheader,
                               csv_template="activity")
 
@@ -204,19 +270,60 @@ def report():
         @ToDo: Why is this needed? To have no rheader?
     """
 
-    resourcename = "activity"
-
-    return s3_rest_controller(module, resourcename)
+    return s3_rest_controller(module, "activity")
 
 # =============================================================================
 def task():
     """ RESTful CRUD controller """
 
-    s3mgr.load("project_task")
-    # Discussion can also be done at the Solution component level
+    tablename = "project_task"
+    table = s3db[tablename]
+    # Custom Method to add Comments
     s3mgr.model.set_method(module, resourcename,
                            method="discuss",
                            action=discuss)
+
+    statuses = response.s3.project_task_active_statuses
+    if "mine" in request.get_vars:
+        # Show the Open Tasks for this User
+        s3.crud_strings["project_task"].title_list = T("My Open Tasks")
+        s3mgr.configure("project_task",
+                        copyable=False,
+                        listadd=False)
+        try:
+            list_fields = s3mgr.model.get_config(tablename,
+                                                 "list_fields")
+            # Hide the Assignee column (always us)
+            list_fields.remove("pe_id")
+            # Move the status column to the End
+            list_fields.remove("status")
+            list_fields.append("status")
+            s3mgr.configure(tablename,
+                            list_fields=list_fields)
+        except:
+            pass
+        ptable = s3db.pr_person
+        query = (ptable.uuid == auth.user.person_uuid)
+        row = db(query).select(ptable.pe_id).first()
+        if row:
+            pe_id = row.pe_id
+            response.s3.filter = (table.pe_id == pe_id) & \
+                                 (table.status.belongs(statuses))
+    elif "project" in request.get_vars:
+        # Show Open Tasks for this Project
+        project = request.get_vars.project
+        s3.crud_strings["project_task"].title_list = T("Open Tasks for Project")
+        s3mgr.configure("project_task",
+                        deletable=False,
+                        copyable=False,
+                        listadd=False)
+        ltable = s3db.project_task_project
+        response.s3.filter = (ltable.project_id == project) & \
+                             (ltable.task_id == table.id) & \
+                             (table.status.belongs(statuses))
+    elif "open" in request.get_vars:
+        # Show All Open Tasks
+        response.s3.filter = (table.status.belongs(statuses))
 
     # Pre-process
     def prep(r):
@@ -234,8 +341,47 @@ def task():
         return True
     response.s3.prep = prep
 
-    return s3_rest_controller(module, resourcename,
-                              rheader=response.s3.project_rheader)
+    return s3_rest_controller(rheader=response.s3.project_rheader)
+
+# =============================================================================
+def milestone():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
+def time():
+    """ RESTful CRUD controller """
+
+    tablename = "project_time"
+    table = s3db[tablename]
+    if "mine" in request.get_vars:
+        # Show the Logged Time for this User
+        s3mgr.load("project_time")
+        s3.crud_strings["project_time"].title_list = T("My Logged Hours")
+        s3mgr.configure("project_time",
+                        listadd=False)
+        ptable = db.pr_person
+        query = (ptable.uuid == auth.user.person_uuid)
+        row = db(query).select(ptable.id).first()
+        if row:
+            person_id = row.id
+            response.s3.filter = (table.person_id == person_id)
+        try:
+            list_fields = s3mgr.model.get_config(tablename,
+                                                 "list_fields")
+            list_fields.remove("person_id")
+            s3mgr.configure(tablename,
+                            list_fields=list_fields)
+        except:
+            pass
+
+    elif "week" in request.get_vars:
+        now = request.utcnow
+        week = datetime.timedelta(days=7)
+        response.s3.filter = (table.date > (now - week))
+    
+    return s3_rest_controller()
 
 # =============================================================================
 def person():
@@ -250,7 +396,7 @@ def person():
         return True
     response.s3.prep = prep
 
-    return s3_rest_controller("pr", "person")
+    return s3_rest_controller("pr", resourcename)
 
 # =============================================================================
 # Comments
@@ -313,12 +459,12 @@ def comment_parse(comment, comments, task_id=None):
     """
 
     if comment.created_by:
-        utable = db.auth_user
+        utable = s3db.auth_user
         query = (utable.id == comment.created_by)
         user = db(query).select(utable.email,
                                 utable.person_uuid,
                                 limitby=(0, 1)).first()
-        ptable = db.pr_person
+        ptable = s3db.pr_person
         query = (ptable.uuid == user.person_uuid)
         person = db(query).select(ptable.first_name,
                                   ptable.middle_name,
@@ -389,8 +535,7 @@ def comments():
     else:
         raise HTTP(400)
 
-    s3mgr.load("project_comment")
-    table = db.project_comment
+    table = s3db.project_comment
     if task_id:
         table.task_id.default = task_id
         table.task_id.writable = table.task_id.readable = False
@@ -421,7 +566,6 @@ def comments():
                                                              table.created_by,
                                                              table.created_on)
 
-    _user_table = db.auth_user
     output = UL(_id="comments")
     for comment in comments:
         if not comment.parent:
@@ -466,7 +610,7 @@ def site_rheader(r):
             tabs = [(T("Details"), None),
                     #(T("Activities"), "activity"),
                     (T("Beneficiaries"), "beneficiary"),
-                    #(T("Documents"), "document"),
+                    #(T("Attachments"), "document"),
                     #(T("Photos"), "image"),
                     #(T("Shipments To"), "rms_req"),
                    ]
@@ -487,8 +631,7 @@ def site_rheader(r):
 def site():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(module, resourcename,
-                              rheader = site_rheader)
+    return s3_rest_controller(rheader = site_rheader)
 
 # =============================================================================
 def need():

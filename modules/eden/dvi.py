@@ -439,7 +439,9 @@ class S3DVIModel(S3Model):
     def morgue_represent(id):
 
         db = current.db
-        table = S3Model.table("dvi_morgue")
+        s3db = current.s3db
+
+        table = s3db.dvi_morgue
         row = db(table.id == id).select(table.name,
                                         limitby=(0, 1)).first()
         if row:

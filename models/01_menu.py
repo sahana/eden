@@ -322,6 +322,115 @@ else:
     list_activities_label = T("List All Activities")
     import_activities_label = T("Import Project Activities")
 
+if deployment_settings.get_project_drr():
+    project_menu = {
+        "menu": [
+            [T("Projects"), False, aURL(f="project"),[
+                [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
+                [T("List All Projects"), False, aURL(f="project")],
+                [list_activities_label, False, aURL(f="activity")],
+                [T("Search"), False, aURL(f="project", args="search")],
+            ]],
+            [T("Reports"), False, aURL(f="report"),[
+                [T("Who is doing What Where"), False, aURL(f="activity", args="analyze")],
+                [T("Beneficiaries"),
+                 False, aURL(f="beneficiary",
+                             args="analyze",
+                             vars=Storage(rows="project_id",
+                                          cols="bnf_type$name",
+                                          fact="number",
+                                          aggregate="sum"))],
+                [T("Funding"), False, aURL(f="organisation", args="analyze")],
+            ]],
+            [T("Import"), False, aURL(f="index"),[
+                [T("Import Projects"), False, aURL(p="create", f="project",
+                                                   args="import")],
+                [T("Import Project Organisations"), False, aURL(p="create", f="organisation",
+                                                                args="import")],
+                [import_activities_label, False, aURL(p="create", f="activity",
+                                                             args="import")],
+            ]],
+            [T("Activity Types"), False, aURL(f="activity_type"),[
+                [T("Add New Activity Type"), False, aURL(p="create", f="activity_type", args="create")],
+                [T("List All Activity Types"), False, aURL(f="activity_type")],
+                #[T("Search"), False, aURL(f="activity_type", args="search")]
+            ]],
+            [T("Hazards"), False, aURL(f="hazard"),[
+                [T("Add New Hazard"), False, aURL(p="create", f="hazard", args="create")],
+                [T("List All Hazards"), False, aURL(f="hazard")],
+            ]],
+            [T("Project Themes"), False, aURL(f="theme"),[
+                [T("Add New Theme"), False, aURL(p="create", f="theme", args="create")],
+                [T("List All Themes"), False, aURL(f="theme")],
+            ]],
+            [T("Beneficiary Types"), False, aURL(f="beneficiary_type"),[
+                [T("Add New Type"), False, aURL(p="create", f="beneficiary_type", args="create")],
+                [T("List All Types"), False, aURL(f="beneficiary_type")],
+            ]],
+        ],
+
+    }
+    
+elif s3_has_role("STAFF"):
+    project_menu = {
+        "menu": [
+            [T("Projects"), False, aURL(f="project"),[
+                #[T("Add New Project"), False, aURL(p="create", f="project", args="create")],
+                [T("List Projects"), False, aURL(f="project")],
+                [T("Open Tasks for Project"), False, aURL(f="project", vars={"tasks":1})],
+            ]],
+            #[T("Tasks"), False, aURL(f="task"),[
+                #[T("Add New Task"), False, aURL(p="create", f="task", args="create")],
+                #[T("List All Tasks"), False, aURL(f="task")],
+                #[T("Search"), False, aURL(f="task", args="search")],
+            #]],
+            [T("Daily Work"), False, aURL(f="time"),[
+                [T("My Logged Hours"), False, aURL(f="time", vars={"mine":1})],
+                [T("Last Week's Work"),
+                 False, aURL(f="time",
+                             args="analyze",
+                             vars={"rows":"person_id",
+                                   "cols":"day",
+                                   "fact":"hours",
+                                   "aggregate":"sum",
+                                   "week":1})],
+                [T("My Open Tasks"), False, aURL(f="task", vars={"mine":1})],
+            ]],
+        ],
+        "on_admin": [
+            [T("Admin"), False, None,[
+                [T("Activity Types"), False, aURL(f="activity_type")],
+                [T("Organizations"), False, aURL(f="organisation")],
+                [T("Import Tasks"), False, aURL(p="create", f="task",
+                                                args="import")],
+            ]],
+            [T("Reports"), False, aURL(f="report"),[
+                [T("Activity Report"),
+                 False, aURL(f="activity",
+                             args="analyze",
+                             vars=Storage(rows="project_id",
+                                          cols="name",
+                                          fact="time_actual",
+                                          aggregate="sum"))],
+                [T("Project Time Report"),
+                 False, aURL(f="time",
+                             args="analyze",
+                             vars=Storage(rows="project",
+                                          cols="person_id",
+                                          fact="hours",
+                                          aggregate="sum"))],
+            ]],
+        ]
+    }
+else:
+    project_menu = {
+        "menu": [
+            [T("Projects"), False, aURL(f="project"),[
+                [T("List All Projects"), False, aURL(f="project")],
+            ]],
+        ],
+    }
+    
 # =============================================================================
 # Default Menu Configurations for Controllers
 # =============================================================================
@@ -1056,63 +1165,7 @@ s3_menu_dict = {
 
     # PROJECT / Project Tracking & Management
     # -------------------------------------------------------------------------
-    "project": {
-        "menu": [
-            #[T("Home"), False, aURL(f="index")],
-            [T("Projects"), False, aURL(f="project"),[
-                [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
-                [T("List All Projects"), False, aURL(f="project")],
-                [list_activities_label, False, aURL(f="activity")],
-                [T("Search"), False, aURL(f="project", args="search")],
-            ]],
-            [T("Tasks"), False, aURL(f="task"),[
-                [T("Add New Task"), False, aURL(p="create", f="task", args="create")],
-                [T("List All Tasks"), False, aURL(f="task")],
-                #[T("Search"), False, aURL(f="task", args="search")],
-            ]],
-            [T("Reports"), False, aURL(f="report"),[
-                [T("Who is doing What Where"), False, aURL(f="activity", args="analyze")],
-                [T("Beneficiaries"),
-                 False, aURL(f="beneficiary",
-                             args="analyze",
-                             vars=Storage(rows="project_id",
-                                          cols="bnf_type$name",
-                                          fact="number",
-                                          aggregate="sum"))],
-                [T("Funding"), False, aURL(f="organisation", args="analyze")],
-            ]],
-            [T("Import"), False, aURL(f="index"),[
-                [T("Import Projects"), False, aURL(p="create", f="project",
-                                                   args="import")],
-                [T("Import Project Organisations"), False, aURL(p="create", f="organisation",
-                                                                args="import")],
-                [import_activities_label, False, aURL(p="create", f="activity",
-                                                             args="import")],
-            ]],
-            [T("Activity Types"), False, aURL(f="activity_type"),[
-                [T("Add New Activity Type"), False, aURL(p="create", f="activity_type", args="create")],
-                [T("List All Activity Types"), False, aURL(f="activity_type")],
-                #[T("Search"), False, aURL(f="activity_type", args="search")]
-            ]],
-        ],
-
-        "condition1": lambda: deployment_settings.get_project_drr(),
-        "conditional1": [
-            [T("Hazards"), False, aURL(f="hazard"),[
-                [T("Add New Hazard"), False, aURL(p="create", f="hazard", args="create")],
-                [T("List All Hazards"), False, aURL(f="hazard")],
-            ]],
-            [T("Project Themes"), False, aURL(f="theme"),[
-                [T("Add New Theme"), False, aURL(p="create", f="theme", args="create")],
-                [T("List All Themes"), False, aURL(f="theme")],
-            ]],
-            [T("Beneficiary Types"), False, aURL(f="beneficiary_type"),[
-                [T("Add New Type"), False, aURL(p="create", f="beneficiary_type", args="create")],
-                [T("List All Types"), False, aURL(f="beneficiary_type")],
-            ]],
-        ],
-
-    },
+    "project": project_menu,
 
     # REQ / Request Management
     # -------------------------------------------------------------------------

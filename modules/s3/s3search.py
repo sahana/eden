@@ -952,10 +952,10 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
     # -------------------------------------------------------------------------
     def query(self, resource, value):
         if value:
-            db = current.db
-            htable = db.hrm_human_resource
-            ptable = db.pr_person
-            ctable = db.hrm_competency
+            s3db = current.s3db
+            htable = s3db.hrm_human_resource
+            ptable = s3db.pr_person
+            ctable = s3db.hrm_competency
             query = (htable.person_id == ptable.id) & \
                     (htable.deleted != True) & \
                     (ctable.person_id == ptable.id) & \

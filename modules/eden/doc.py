@@ -47,8 +47,8 @@ class S3DocumentLibrary(S3Model):
 
     def model(self):
 
-        db = current.db
         T = current.T
+        db = current.db
         request = current.request
         s3 = current.response.s3
 
@@ -294,6 +294,7 @@ class S3DocumentLibrary(S3Model):
 
         T = current.T
         db = current.db
+        s3db = current.s3db
         request = current.request
 
         if document:
@@ -303,7 +304,7 @@ class S3DocumentLibrary(S3Model):
             tablename = "doc_image"
             msg = T("Either file upload or image URL required.")
 
-        table = S3Model.table(tablename)
+        table = s3db["tablename"]
 
         doc = form.vars.file
         url = form.vars.url

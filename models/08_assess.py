@@ -56,6 +56,7 @@ if deployment_settings.has_module(module):
         organisation_id = s3db.org_organisation_id
         organisation_represent = s3db.org_organisation_represent
         sector_id = s3db.org_sector_id
+        human_resource_id = s3db.hrm_human_resource_id
 
         # =========================================================================
         # Flexible Impact Assessments

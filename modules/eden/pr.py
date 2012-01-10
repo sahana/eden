@@ -367,6 +367,16 @@ class S3PersonModel(S3Model):
         self.add_component("pr_identity", pr_person="person_id")
         self.add_component("pr_save_search", pr_person="person_id")
 
+        # Add HR Record as component of Persons
+        self.add_component("hrm_human_resource", pr_person="person_id")
+
+        # Add Skills as components of Persons
+        self.add_component("hrm_credential", pr_person="person_id")
+        self.add_component("hrm_certification", pr_person="person_id")
+        self.add_component("hrm_competency", pr_person="person_id")
+        self.add_component("hrm_training", pr_person="person_id")
+        self.add_component("hrm_experience", pr_person="person_id")
+
         # ---------------------------------------------------------------------
         # Group
         #
@@ -649,13 +659,14 @@ class S3PersonModel(S3Model):
         """ Import item deduplication """
 
         db = current.db
+        s3db = current.s3db
 
         # Ignore this processing if the id is set
         if item.id:
             return
         if item.tablename == "pr_person":
-            ptable = S3Model.table("pr_person")
-            ctable = S3Model.table("pr_contact")
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
 
             # Match by first name and last name, and if given, by email address
             fname = "first_name" in item.data and item.data.first_name
@@ -1003,9 +1014,11 @@ class S3PersonComponents(S3Model):
             specific parts of the workflow
         """
 
+        s3db = current.s3db
+
         request = current.request
         tracker = S3Tracker()
-        pe_table = S3Model.table("pe_pentity")
+        pe_table = s3db.pe_pentity
 
         if "location_id" in form.vars and \
            "base_location" in request.vars and \
@@ -1021,9 +1034,10 @@ class S3PersonComponents(S3Model):
         """ Image form validation """
 
         db = current.db
+        s3db = current.s3db
         request = current.request
 
-        table = S3Model.table("pr_pimage")
+        table = s3db.pr_pimage
         image = form.vars.image
 
         if not hasattr(image, "file"):
@@ -1357,11 +1371,12 @@ class S3PersonPresence(S3Model):
         """ Presence record validation """
 
         db = current.db
+        s3db = current.s3db
         s3 = current.response.s3
 
-        table = S3Model.table("pr_presence")
+        table = s3db.pr_presence
         popts = s3.pr_presence_opts
-        shelter_table = S3Model.table("cr_shelter")
+        shelter_table = s3db.cr_shelter
 
         location = form.vars.location_id
         shelter = form.vars.shelter_id
@@ -1422,8 +1437,10 @@ class S3PersonPresence(S3Model):
         """
 
         db = current.db
+        s3db = current.s3db
         s3 = current.response.s3
-        table = S3Model.table("pr_presence")
+
+        table = s3db.pr_presence
         popts = s3.pr_presence_opts
 
         if isinstance(form, (int, long, str)):
@@ -1831,10 +1848,11 @@ class S3PersonDescription(S3Model):
         """ Update missing status for person """
 
         db = current.db
+        s3db = current.s3db
 
-        pe_table = S3Model.table("pr_pentity")
-        ntable = S3Model.table("pr_note")
-        ptable = S3Model.table("pr_person")
+        pe_table = s3db.pr_pentity
+        ntable = s3db.pr_note
+        ptable = s3db.pr_person
 
         if isinstance(form, (int, long, str)):
             _id = form
@@ -1870,7 +1888,7 @@ class S3PersonDescription(S3Model):
             except:
                 pass
             else:
-                ttable = S3Model.table("sit_presence")
+                ttable = s3db.sit_presence
                 query = (ptable.pe_id == note.pe_id) & \
                         (ttable.uuid == ptable.uuid) & \
                         (ttable.location_id == location_id) & \
@@ -1887,13 +1905,14 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
 
     T = current.T
     db = current.db
+    s3db = current.s3db
 
     if not id:
         return current.messages.NONE
 
     pe_str = T("None (no such record)")
 
-    pe_table = S3Model.table("pr_pentity")
+    pe_table = s3db.pr_pentity
     pe = db(pe_table.pe_id == id).select(pe_table.instance_type,
                                          pe_table.pe_label,
                                          limitby=(0, 1)).first()
@@ -1903,7 +1922,7 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     instance_type = pe.instance_type
     instance_type_nice = pe_table.instance_type.represent(instance_type)
 
-    table = S3Model.table(instance_type, None)
+    table = s3db.table(instance_type, None)
     if not table:
         return pe_str
 
@@ -1945,9 +1964,10 @@ def pr_person_represent(id):
     """ Representation """
 
     db = current.db
+    s3db = current.s3db
     cache = current.cache
 
-    table = S3Model.table("pr_person")
+    table = s3db.pr_person
 
     def _represent(id):
         if isinstance(id, Row):
@@ -2016,7 +2036,7 @@ def pr_rheader(r, tabs=[]):
         elif tablename == "pr_group":
             group = record
             if group:
-                table = S3Model.table("pr_group_membership")
+                table = s3db.pr_group_membership
                 query = (table.group_id == record.id) & \
                         (table.group_head == True)
                 leader = db(query).select(table.person_id,
