@@ -16,6 +16,9 @@ def org_organisation_controller():
     s3 = current.response.s3
     manager = current.manager
 
+    tablename = "org_office"
+    table = s3db[tablename]
+
     # Pre-process
     def prep(r):
         if r.interactive:
@@ -30,7 +33,7 @@ def org_organisation_controller():
                 # Don't want to see in Create forms
                 # inc list_create (list_fields over-rides)
                 table = r.component.table
-                address_hide(table)
+                s3.address_hide(table)
                 # Process Base Location
                 #manager.configure(table._tablename,
                 #                  onaccept=s3.address_onaccept)

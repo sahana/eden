@@ -169,7 +169,7 @@ class S3LocationModel(S3Model):
                                   Field("source", length=32,
                                         requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                                   s3.comments(),
-                                  format=gis_location_represent_row,
+                                  format=gis_location_represent,
                                   *s3.meta_fields())
 
         # Default the owning role to Authenticated. This can be used to allow the site
@@ -2237,31 +2237,28 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
     return represent
 
 # -------------------------------------------------------------------------
-def gis_location_represent(id, showlink=True, simpletext=False):
-    """ Represent a location given its id """
+def gis_location_represent(record, showlink=True, simpletext=False):
+    """ Represent a location given wither its id or full Row """
 
-    db = current.db
-    cache = current.cache
-    table = S3Model.table("gis_location")
-
-    if not id:
+    if not record:
         return current.messages.NONE
-    # @ToDo: Do not call this if the location record is already available.
-    # That is what gis_location_represent_row is for.
-    if isinstance(id, Row):
+    if isinstance(record, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
-        location = id
+        location = record
     else:
-        location = db(table.id == id).select(table.id,
-                                             table.name,
-                                             table.level,
-                                             table.parent,
-                                             table.addr_street,
-                                             table.lat,
-                                             table.lon,
-                                             table.osm_id,
-                                             cache=(cache.ram, 60),
-                                             limitby=(0, 1)).first()
+        db = current.db
+        s3 = current.response.s3
+        table = S3Model.table("gis_location")
+        location = db(table.id == record).select(table.id,
+                                                 table.name,
+                                                 table.level,
+                                                 table.parent,
+                                                 table.addr_street,
+                                                 table.lat,
+                                                 table.lon,
+                                                 table.osm_id,
+                                                 cache=s3.cache,
+                                                 limitby=(0, 1)).first()
 
     return gis_location_represent_row(location, showlink, simpletext)
 

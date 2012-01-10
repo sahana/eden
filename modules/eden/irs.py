@@ -722,18 +722,18 @@ class S3IRSModel(S3Model):
 def irs_rheader(r, tabs=[]):
     """ Resource component page header """
 
-    T = current.T
-    db = current.db
-    settings = current.deployment_settings
-    table = db.irs_ireport
-
-    datetime_represent = S3DateTime.datetime_represent
-    gis_location_represent = current.response.s3.gis_location_represent
-
     if r.representation == "html":
         if r.record is None:
             # List or Create form: rheader makes no sense here
             return None
+
+        T = current.T
+        #s3 = current.response.s3
+        settings = current.deployment_settings
+        table = S3Model.table("irs_ireport")
+
+        datetime_represent = S3DateTime.datetime_represent
+        gis_location_represent = S3Model.get("gis_location_represent")
 
         tabs = [(T("Report Details"), None),
                 (T("Photos"), "image")
