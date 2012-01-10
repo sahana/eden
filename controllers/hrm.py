@@ -820,7 +820,7 @@ def group():
             (T("Members"), "group_membership")]
 
     output = s3_rest_controller("pr", resourcename,
-                                rheader=lambda r: pr_rheader(r, tabs = tabs))
+                                rheader=lambda r: s3db.pr_rheader(r, tabs = tabs))
 
     return output
 

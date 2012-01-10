@@ -243,6 +243,7 @@ def assess_rheader(r, tabs=[]):
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         assess = r.record
+        person_represent = s3db.pr_person_represent
 
         if assess:
             rheader = DIV(TABLE(TR(

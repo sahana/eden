@@ -328,7 +328,7 @@ if deployment_settings.has_module(module):
                             hospital_id(),
                             person_id(label = T("Contact"),
                                       requires = IS_ONE_OF(db, "pr_person.id",
-                                                           person_represent,
+                                                           s3db.pr_person_represent,
                                                            orderby="pr_person.first_name",
                                                            sort=True)),
                             Field("title", label = T("Job Title")),

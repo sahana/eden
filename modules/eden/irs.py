@@ -401,7 +401,7 @@ class S3IRSModel(S3Model):
             # Populated from fire_station_vehicle
             #table.site_id.writable = True
 
-            
+
 
             self.configure("irs_ireport",
                            # Porto-specific currently
@@ -754,7 +754,7 @@ def irs_rheader(r, tabs=[]):
 
         if r.name == "ireport":
             report = r.record
-            
+
             datetime = datetime_represent(report.datetime, utc=True)
             location = gis_location_represent(report.location_id)
 

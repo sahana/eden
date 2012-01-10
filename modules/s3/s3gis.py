@@ -1001,7 +1001,7 @@ class GIS(object):
             _projection = db.gis_projection
             have_tables = _config and _projection
         except Exception, exception:
-            self.debug(exception)
+            self.debug(str(exception))
             have_tables = False
 
         row = None
@@ -2066,7 +2066,7 @@ class GIS(object):
             else:
                 popup_label = ""
                 popup_fields = "name"
-        
+
         return (popup_label, popup_fields)
 
     # -------------------------------------------------------------------------

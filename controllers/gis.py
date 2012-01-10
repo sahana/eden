@@ -2134,7 +2134,7 @@ def display_feature():
     feature_id = request.args[0]
 
     table = s3db.gis_location
-    
+
     # Check user is authorised to access record
     if not s3_has_permission("read", table, feature_id):
         session.error = T("No access to this record!")

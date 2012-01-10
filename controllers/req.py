@@ -150,7 +150,7 @@ def req_item_inv_item():
                                    ),
                                 TR(
                                     TH( "%s: " % T("Requester") ),
-                                    person_represent(req.requester_id),
+                                    s3db.pr_person_represent(req.requester_id),
                                     TH( "%s: " % T("Quantity")),
                                     req_item.quantity,
                                    ),
@@ -363,7 +363,7 @@ def commit_rheader(r):
                                           response.s3.req_represent(record.req_id),
                                          ),
                                       TR( TH( "%s: " % T("Committing Person")),
-                                          person_represent(record.committer_id),
+                                          s3db.pr_person_represent(record.committer_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),
                                           ),

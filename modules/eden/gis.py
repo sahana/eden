@@ -60,7 +60,7 @@ class S3LocationModel(S3Model):
 
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
-        
+
         system_roles = session.s3.system_roles
         AUTHENTICATED = system_roles.AUTHENTICATED
 
@@ -293,7 +293,7 @@ class S3LocationModel(S3Model):
         return Storage(
                     gis_location_id = location_id
                 )
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_location_onaccept(form):
@@ -1357,7 +1357,7 @@ class S3MapModel(S3Model):
         #location_id = self.gis_location_id
         marker_id = self.gis_marker_id
         projection_id = self.gis_projection_id
-        
+
         name_field = s3.name_field
         role_required = s3.role_required
         #roles_permitted = s3.roles_permitted

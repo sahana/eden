@@ -444,7 +444,7 @@ SCRIPT("""
                     s3.crud_strings.asset_log.subtitle_create = T("Assign to Person")
                     s3.crud_strings.asset_log.msg_record_created = T("Assigned to Person")
                     table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
-                                                            person_represent,
+                                                            s3db.pr_person_represent,
                                                             orderby="pr_person.first_name",
                                                             sort=True,
                                                             error_message="Person must be specified!")

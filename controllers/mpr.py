@@ -135,7 +135,7 @@ def person():
         if r.interactive and not r.id:
             r.resource.add_filter(db.pr_person.missing == True)
         if r.component_name == "config":
-            _config = db.gis_config
+            _config = s3db.gis_config
             defaults = db(_config.id == 1).select(limitby=(0, 1)).first()
             for key in defaults.keys():
                 if key not in ["id",
@@ -206,7 +206,7 @@ def person():
                 (T("Address"), "address"),
                 (T("Contact Data"), "contact"),
                 (T("Journal"), "note")]
-    rheader = lambda r: pr_rheader(r, tabs=mpr_tabs)
+    rheader = lambda r: s3db.pr_rheader(r, tabs=mpr_tabs)
 
     output = s3_rest_controller("pr", resourcename, rheader=rheader)
     s3_menu(module)

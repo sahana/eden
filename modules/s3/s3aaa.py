@@ -955,7 +955,7 @@ class AuthS3(Auth):
             return None
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         table = s3db.org_organisation
         query = (table.id == organisation_id)
         org = db(query).select(table.owned_by_organisation).first()
@@ -974,7 +974,7 @@ class AuthS3(Auth):
             return None
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         table = s3db.org_site
         query = (table.id == site_id)
         site = db(query).select(table.instance_type).first()
@@ -1261,7 +1261,7 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         deployment_settings = self.deployment_settings
 
         # Default Approver
@@ -1818,7 +1818,7 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         ptable = s3db.pr_person
         utable = self.settings.table_user
         query = (utable.id == user_id) & \
@@ -1842,7 +1842,7 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         ptable = s3db.pr_person
         utable = self.settings.table_user
         query = (ptable.id == person_id) & \
@@ -1861,7 +1861,7 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         ptable = s3db.pr_person
 
         if self.s3_logged_in():
@@ -1885,7 +1885,7 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        s3db = current.s3db 
+        s3db = current.s3db
         ptable = s3db.pr_person
         hrtable = db.hrm_human_resource
 

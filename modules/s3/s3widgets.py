@@ -1232,7 +1232,9 @@ class S3LocationSelectorWidget(FormWidget):
         response = current.response
         manager = current.manager
         T = current.T
-        locations = db.gis_location
+        s3db = current.s3db
+        locations = s3db.gis_location
+        gis_config = s3db.gis_config
 
         requires = field.requires
 
@@ -1334,8 +1336,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         # the labels we should use for that location
         config_L0 = None
         if default_L0:
-            query = (db.gis_config.region_location_id == default_L0.id)
-            config_L0 = db(query).select(db.gis_config.id,
+            query = (gis_config.region_location_id == default_L0.id)
+            config_L0 = db(query).select(gis_config.id,
                                          limitby=(0, 1),
                                          cache=cache).first()
             if config_L0:

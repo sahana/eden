@@ -40,6 +40,7 @@ def s3_menu_postp():
         query = (person.id == person_id)
         record = db(query).select(person.id, limitby=(0, 1)).first()
         if record:
+            person_represent = s3db.pr_person_represent
             name = person_represent(record.id)
             menu_selected.append(
                 ["%s: %s" % (T("Person"), name),
@@ -217,7 +218,7 @@ def person():
                 (T("Journal"), "note"),
                ]
 
-    rheader = lambda r: pr_rheader(r, tabs=mpr_tabs)
+    rheader = lambda r: s3db.pr_rheader(r, tabs=mpr_tabs)
 
     output = s3_rest_controller("pr", "person",
                                 main="first_name",

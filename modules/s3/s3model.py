@@ -64,6 +64,8 @@ class S3Model(object):
     def __init__(self, module=None):
         """ Constructor """
 
+        self.cache = (current.cache.ram, 60)
+
         response = current.response
         if "s3" not in response:
             response.s3 = Storage()
@@ -218,6 +220,49 @@ class S3Model(object):
             return db[tablename]
         elif tablename in response.s3:
             return response.s3[tablename]
+        elif isinstance(default, Exception):
+            raise default
+        else:
+            return default
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get(name, default=None):
+        """
+            Helper function to load a response.s3 variable from models
+        """
+        response = current.response
+        if "s3" not in response:
+            response.s3 = Storage()
+
+        if name in response.s3:
+            return response.s3[name]
+        elif "_" in name:
+            prefix = name.split("_", 1)[0]
+            models = current.models
+            if hasattr(models, prefix):
+                module = models.__dict__[prefix]
+                loaded = False
+                generic = []
+                for n in module.__all__:
+                    model = module.__dict__[n]
+                    if type(model).__name__ == "type":
+                        if loaded:
+                            continue
+                        if hasattr(model, "names"):
+                            if name in model.names:
+                                model(prefix)
+                                loaded = True
+                                generic = []
+                            else:
+                                continue
+                        else:
+                            generic.append(n)
+                    elif n.startswith("%s_" % prefix):
+                        response.s3.update({n:model})
+                [module.__dict__[n](prefix) for n in generic]
+        if name in response.s3:
+            return response.s3[name]
         elif isinstance(default, Exception):
             raise default
         else:
