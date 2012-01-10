@@ -76,8 +76,7 @@ if deployment_settings.has_module(module):
     def scenario_tables():
         """ Load the Scenario Tables when required """
 
-        s3mgr.load("gis_config")
-        config_id = response.s3.gis_config_id
+        config_id = s3db.gis_config_id
         site_id = s3db.org_site_id
 
         # -------------------------------------------------------------------------
@@ -101,7 +100,7 @@ if deployment_settings.has_module(module):
 
                 @ToDo: Clone the Region or Org config
             """
-            table = db.gis_config
+            table = s3db.gis_config
 
             # Read the Map Config
             # Currently this is the Default one

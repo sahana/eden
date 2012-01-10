@@ -88,8 +88,6 @@ from gluon import current
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-current.cache = cache
-
 # Keep all S3 framework-level elements stored in response.s3, so as to avoid
 # polluting global namespace & to make it clear which part of the framework is
 # being interacted with.
@@ -98,6 +96,9 @@ current.cache = cache
 response.s3 = Storage()
 s3 = response.s3
 response.s3.gis = Storage()  # Defined early for use by S3Config.
+
+current.cache = cache
+response.s3.cache = (current.cache.ram, 60)
 
 # Import S3Config
 import s3cfg

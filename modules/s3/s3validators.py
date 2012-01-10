@@ -743,12 +743,13 @@ class IS_LOCATION_SELECTOR(Validator):
         """
 
         db = current.db
+        s3db = current.s3db
         auth = current.auth
         gis = current.gis
         request = current.request
         response = current.response
         session = current.session
-        table = db.gis_location
+        table = s3db.gis_location
 
         L0 = request.vars.get("gis_location_L0", None)
 
@@ -765,7 +766,7 @@ class IS_LOCATION_SELECTOR(Validator):
             L5_allowed = True
         else:
             if L0:
-                ctable = db.gis_config
+                ctable = s3db.gis_config
                 query = (ctable.region_location_id == L0)
                 config = db(query).select(ctable.edit_L1,
                                           ctable.edit_L2,

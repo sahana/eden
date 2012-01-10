@@ -249,7 +249,7 @@ class GIS(object):
         self.public_url = settings.get_base_public_url()
         if not current.db is not None:
             raise RuntimeError, "Database must not be None"
-        self.cache = (current.cache.ram, 60)
+        self.cache = current.response.s3.cache
         if not current.auth is not None:
             raise RuntimeError, "Undefined authentication controller"
         self.auth = current.auth
@@ -320,7 +320,7 @@ class GIS(object):
             output = u"S3 Debug: %s" % unicode(message)
             if value:
                 output += u": %s" % unicode(value)
-            sys.stderr.write(output+"\n")
+            sys.stderr.write(output + "\n")
             session.error = current.T(message)
 
     # -------------------------------------------------------------------------
@@ -990,15 +990,16 @@ class GIS(object):
                     self.update_gis_config_dependent_options()
                 return
 
-        auth = self.auth
         db = current.db
+        s3db = current.s3db
+        auth = current.auth
 
         # This may be called on the first run with a new database before the
         # gis_config table is created.
         try:
-            _config = db.gis_config
-            _marker = db.gis_marker
-            _projection = db.gis_projection
+            _config = s3db.gis_config
+            _marker = s3db.gis_marker
+            _projection = s3db.gis_projection
             have_tables = _config and _projection
         except Exception, exception:
             self.debug(exception)
@@ -1018,8 +1019,9 @@ class GIS(object):
             if not row:
                 if auth.is_logged_in():
                     # Read personalised config, if available.
-                    query = (db.pr_person.uuid == auth.user.person_uuid) & \
-                            (_config.pe_id == db.pr_person.pe_id) & \
+                    ptable = s3db.pr_person
+                    query = (ptable.uuid == auth.user.person_uuid) & \
+                            (_config.pe_id == ptable.pe_id) & \
                             (_marker.id == _config.marker_id) & \
                             (_projection.id == _config.projection_id)
                     row = db(query).select(limitby=(0, 1)).first()

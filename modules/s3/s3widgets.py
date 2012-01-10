@@ -1222,17 +1222,21 @@ class S3LocationSelectorWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
+        T = current.T
         db = current.db
+        s3db = current.s3db
         gis = current.gis
-        cache = gis.cache
 
         auth = current.auth
-        deployment_settings = current.deployment_settings
+        settings = current.deployment_settings
         request = current.request
         response = current.response
+        s3 = current.response.s3
         manager = current.manager
-        T = current.T
-        locations = db.gis_location
+        cache = s3.cache
+
+        locations = s3db.gis_location
+        ctable = s3db.gis_config
 
         requires = field.requires
 
@@ -1251,7 +1255,7 @@ class S3LocationSelectorWidget(FormWidget):
             #site_value = value
             #site_field = field
             # Ensure that we have a name for the Location visible
-            deployment_settings.gis.building_name = True
+            settings.gis.building_name = True
             # Set the variables to what they would be for a Location
             stable = db[self.site_type]
             field = stable.location_id
@@ -1306,15 +1310,15 @@ class S3LocationSelectorWidget(FormWidget):
                     gis.get_default_country(key_type="code")
 
         # Should we use a Map-based selector?
-        map_selector = deployment_settings.get_gis_map_selector()
+        map_selector = settings.get_gis_map_selector()
         if map_selector:
             no_map = ""
         else:
             no_map = "S3.gis.no_map = true;\n"
         # Should we display LatLon boxes?
-        latlon_selector = deployment_settings.get_gis_latlon_selector()
+        latlon_selector = settings.get_gis_latlon_selector()
         # Navigate Away Confirm?
-        if deployment_settings.get_ui_navigate_away_confirm():
+        if settings.get_ui_navigate_away_confirm():
             navigate_away_confirm = """
 S3.navigate_away_confirm = true;"""
         else:
@@ -1334,8 +1338,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         # the labels we should use for that location
         config_L0 = None
         if default_L0:
-            query = (db.gis_config.region_location_id == default_L0.id)
-            config_L0 = db(query).select(db.gis_config.id,
+            query = (ctable.region_location_id == default_L0.id)
+            config_L0 = db(query).select(ctable.id,
                                          limitby=(0, 1),
                                          cache=cache).first()
             if config_L0:
@@ -1587,7 +1591,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         else:
             NAME_LABEL = T("Building Name")
         STREET_LABEL = T("Street Address")
-        POSTCODE_LABEL = deployment_settings.get_ui_label_postcode()
+        POSTCODE_LABEL = settings.get_ui_label_postcode()
         LAT_LABEL = T("Latitude")
         LON_LABEL = T("Longitude")
         AUTOCOMPLETE_HELP = T("Enter some characters to bring up a list of possible matches")
@@ -1721,7 +1725,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                 Lx_rows.append(row)
 
         hide_address = self.hide_address
-        if deployment_settings.get_gis_building_name():
+        if settings.get_gis_building_name():
             hidden = ""
             if hide_address:
                 hidden = "hidden"
