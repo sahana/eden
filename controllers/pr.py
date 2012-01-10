@@ -32,6 +32,7 @@ def s3_menu_postp():
         query = (person.id == person_id)
         record = db(query).select(person.id, limitby=(0, 1)).first()
         if record:
+            person_represent = s3db.pr_person_represent
             name = person_represent(record.id)
             menu_selected.append(["%s: %s" % (T("Person"), name), False,
                                   URL(f="person",
@@ -65,6 +66,8 @@ def index():
 
     def postp(r, output):
         if isinstance(output, dict):
+            pr_gender_opts = s3db.pr_gender_opts
+            pr_age_group_opts = s3db.pr_age_group_opts
             table = db.pr_person
             gender = []
             for g_opt in pr_gender_opts:
@@ -243,7 +246,7 @@ def person():
                                 main="first_name",
                                 extra="last_name",
                                 rheader=lambda r: \
-                                        pr_rheader(r, tabs=tabs))
+                                        s3db.pr_rheader(r, tabs=tabs))
 
     return output
 
@@ -264,11 +267,11 @@ def group():
                                  "description"
                                 ])
 
-    rheader = lambda r: pr_rheader(r, tabs = [(T("Group Details"), None),
-                                              (T("Address"), "address"),
-                                              (T("Contact Data"), "contact"),
-                                              (T("Members"), "group_membership")
-                                            ])
+    rheader = lambda r: s3db.pr_rheader(r, tabs = [(T("Group Details"), None),
+                                                   (T("Address"), "address"),
+                                                   (T("Contact Data"), "contact"),
+                                                   (T("Members"), "group_membership")
+                                                  ])
 
     output = s3_rest_controller(rheader=rheader)
 
@@ -313,7 +316,7 @@ def presence():
 
     table.pe_id.readable = True
     table.pe_id.label = "Name"
-    table.pe_id.represent = person_represent
+    table.pe_id.represent = s3db.pr_person_represent
     table.observer.readable = False
     table.presence_condition.readable = False
     # @ToDo: Add Skills

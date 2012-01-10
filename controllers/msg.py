@@ -690,7 +690,7 @@ def group():
     # Do not show system groups
     response.s3.filter = (table.system == False)
 
-    return s3_rest_controller(module, resourcename, rheader=pr_rheader)
+    return s3_rest_controller(module, resourcename, rheader=s3db.pr_rheader)
 
 
 # -----------------------------------------------------------------------------

@@ -401,8 +401,6 @@ class S3IRSModel(S3Model):
             # Populated from fire_station_vehicle
             #table.site_id.writable = True
 
-            
-
             self.configure("irs_ireport",
                            # Porto-specific currently
                            #create_onaccept=self.ireport_onaccept,

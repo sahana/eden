@@ -232,7 +232,7 @@ def cr_shelter_prep(r):
                 db.pr_presence.proc_desc.readable = db.pr_presence.proc_desc.writable = False
                 # AT: Add Person
                 db.pr_presence.pe_id.comment = \
-                    DIV(pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
+                    DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
                         DIV(A(s3.crud_strings.pr_group.label_create_button,
                               _class="colorbox",
                               _href=URL(c="pr", f="group", args="create",
