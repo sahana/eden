@@ -193,6 +193,8 @@ class S3ProjectModel(S3Model):
 
         sector_id = s3.org_sector_id
 
+        human_resource_id = self.hrm_human_resource_id
+
         countries_id = S3ReusableField("countries_id", "list:reference gis_location",
                                        label = T("Countries"),
                                        requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -270,6 +272,7 @@ class S3ProjectModel(S3Model):
                                         readable = drr,
                                         writable = drr,
                                         label = T("Objectives")),
+                                  human_resource_id(label=T("Contact Person")),
                                   format="%(name)s",
                                   *s3.meta_fields())
 
@@ -943,7 +946,7 @@ class S3ProjectModel(S3Model):
         }
 
         project_task_active_statuses = [2, 3, 5, 7]
-        
+
         project_task_priority_opts = {
             1:T("Urgent"),
             2:T("High"),
@@ -1784,7 +1787,7 @@ class S3ProjectModel(S3Model):
         hours = 0
         for row in rows:
             hours += row.hours
-        
+
         # Update the Task
         query = (ttable.id == task_id)
         db(query).update(time_actual=hours)
@@ -1808,7 +1811,7 @@ class S3ProjectModel(S3Model):
             hours = 0
             for task in tasks:
                 hours += task.time_actual
-            
+
             # Update the Activity
             query = (atable.id == activity_id)
             db(query).update(time_actual=hours)
@@ -1851,7 +1854,7 @@ def project_rheader(r, tabs=[]):
                         TH("%s: " % table.end_date.label),
                         record.end_date
                         )
-            
+
                 rheader = DIV(TABLE(
                     TR(
                        TH("%s: " % table.name.label),
