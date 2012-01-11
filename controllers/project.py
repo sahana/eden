@@ -50,8 +50,10 @@ def project():
         # Post-process
         def postp(r, output):
             if r.interactive:
-                read_url = URL(f="task", vars={"project":"[id]"})
-                update_url = URL(f="task", vars={"project":"[id]"})
+                read_url = URL(f="task", args="search",
+                               vars={"project":"[id]"})
+                update_url = URL(f="task", args="search",
+                                 vars={"project":"[id]"})
                 s3mgr.crud.action_buttons(r, deletable=False,
                                           read_url=read_url,
                                           update_url=update_url)
@@ -287,8 +289,8 @@ def task():
     statuses = response.s3.project_task_active_statuses
     if "mine" in request.get_vars:
         # Show the Open Tasks for this User
-        s3.crud_strings["project_task"].title_list = T("My Open Tasks")
-        s3mgr.configure("project_task",
+        s3.crud_strings[tablename].title_list = T("My Open Tasks")
+        s3mgr.configure(tablename,
                         copyable=False,
                         listadd=False)
         try:
@@ -310,45 +312,117 @@ def task():
     elif "project" in request.get_vars:
         # Show Open Tasks for this Project
         project = request.get_vars.project
-        s3.crud_strings["project_task"].title_list = T("Open Tasks for Project")
-        s3mgr.configure("project_task",
+        ptable = s3db.project_project
+        try:
+            name = db(ptable.id == project).select(ptable.name,
+                                                   limitby=(0, 1)).first().name
+        except:
+            session.error = T("Project not Found")
+            redirect(URL(args=None, vars=None))
+        s3.crud_strings[tablename].title_list = T("Open Tasks for %(project)s") % dict(project=name)
+        s3.crud_strings[tablename].title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
+        # Add Virtual Fields
+        table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
+        list_fields = s3mgr.model.get_config(tablename,
+                                             "list_fields")
+        list_fields.insert(2, (T("Activity"), "activity"))
+        # task_search = s3base.S3Search(
+                # advanced = (s3base.S3SearchSimpleWidget(
+                    # name = "task_search_text_advanced",
+                    # label = T("Search"),
+                    # comment = T("Search for a Task by description."),
+                    # field = [ "name",
+                              # "description",
+                            # ]
+                    # ),
+                    # s3base.S3SearchOptionsWidget(
+                        # name = "task_search_activity",
+                        # label = T("Activity"),
+                        # field = ["activity"],
+                        # cols = 2
+                    # ),
+                    # s3base.S3SearchOptionsWidget(
+                        # name = "task_search_assignee",
+                        # label = T("Assigned To"),
+                        # field = ["pe_id"],
+                        # cols = 2
+                    # ),
+                    # s3base.S3SearchMinMaxWidget(
+                        # name="task_search_date_due",
+                        # method="range",
+                        # label=T("Date Due"),
+                        # field=["date_due"]
+                    # )
+                # )
+            # )
+        s3mgr.configure(tablename,
+                        # Block Add until we get the injectable component lookups
+                        insertable=False,
                         deletable=False,
                         copyable=False,
-                        listadd=False)
+                        #search_method=task_search,
+                        list_fields=list_fields)
         ltable = s3db.project_task_project
         response.s3.filter = (ltable.project_id == project) & \
                              (ltable.task_id == table.id) & \
                              (table.status.belongs(statuses))
     else:
-        s3.crud_strings["project_task"].title_list = T("All Tasks")
+        s3.crud_strings[tablename].title_list = T("All Tasks")
+        s3.crud_strings[tablename].title_search = T("All Tasks")
         # Add Virtual Fields
         table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
-        search = s3mgr.model.get_config(tablename,
-                                        "search_method")
-        search.insert(-1, s3base.S3SearchOptionsWidget(
-                        name = "org_search_project",
-                        label = T("Project"),
-                        field = ["project"],
-                        cols = 2
-                    ))
-        search.insert(-1, s3base.S3SearchOptionsWidget(
-                        name = "org_search_activity",
-                        label = T("Activity"),
-                        field = ["activity"],
-                        cols = 2
-                    ))
+        # task_search = s3base.S3Search(
+                # advanced = (s3base.S3SearchSimpleWidget(
+                    # name = "task_search_text_advanced",
+                    # label = T("Search"),
+                    # comment = T("Search for a Task by description."),
+                    # field = [ "name",
+                              # "description",
+                            # ]
+                    # ),
+                    # s3base.S3SearchOptionsWidget(
+                        # name = "task_search_project",
+                        # label = T("Project"),
+                        # field = ["project"],
+                        # cols = 2
+                    # ),
+                    # s3base.S3SearchOptionsWidget(
+                        # name = "task_search_activity",
+                        # label = T("Activity"),
+                        # field = ["activity"],
+                        # cols = 2
+                    # ),
+                    # s3base.S3SearchOptionsWidget(
+                        # name = "task_search_assignee",
+                        # label = T("Assigned To"),
+                        # field = ["pe_id"],
+                        # cols = 2
+                    # ),
+                    # s3base.S3SearchMinMaxWidget(
+                        # name="task_search_date_due",
+                        # method="range",
+                        # label=T("Date Due"),
+                        # field=["date_due"]
+                    # )
+                # )
+            # )
         s3mgr.configure(tablename,
                         # Block Add until we get the injectable component lookups
                         insertable=False,
-                        search_method=search,
+                        analyze_filter=[
+                            s3base.S3SearchOptionsWidget(field=["project"],
+                                                         name="project",
+                                                         label=T("Project"))
+                        ],
+                        #search_method=search,
                         list_fields=list_fields)
         if "open" in request.get_vars:
             # Show Only Open Tasks
-            s3.crud_strings["project_task"].title_list = T("All Open Tasks")
+            s3.crud_strings[tablename].title_list = T("All Open Tasks")
             response.s3.filter = (table.status.belongs(statuses))
 
     # Pre-process

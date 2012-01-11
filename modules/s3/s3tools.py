@@ -54,7 +54,6 @@ from gluon.storage import Storage, Messages
 from gluon.sql import Field, Row, Query
 from gluon.sqlhtml import SQLFORM, SQLTABLE
 from gluon.tools import Crud
-from gluon import current
 
 from s3validators import IS_UTC_OFFSET
 
@@ -532,21 +531,24 @@ class S3DateTime(object):
         Toolkit for date+time parsing/representation
     """
 
-    NONE = "-"
-
     # -----------------------------------------------------------------------------
     @staticmethod
-    def date_represent(date, utc=False):
+    def date_represent(date, utc=False, short=False):
         """
             Represent the date according to deployment settings &/or T()
 
             @param date: the date
             @param utc: the date is given in UTC
+            @param short: the date should be shown as simple Month/Day
         """
 
         session = current.session
         settings = current.deployment_settings
-        format = settings.get_L10n_date_format()
+
+        if short:
+            format = "%B %d"
+        else:
+            format = settings.get_L10n_date_format()
 
         if date and isinstance(date, datetime.datetime) and utc:
             offset = IS_UTC_OFFSET.get_offset_value(session.s3.utc_offset)
@@ -556,7 +558,7 @@ class S3DateTime(object):
         if date:
             return date.strftime(str(format))
         else:
-            return S3DateTime.NONE
+            return current.messages.NONE
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -580,7 +582,7 @@ class S3DateTime(object):
         if time:
             return time.strftime(str(format))
         else:
-            return S3DateTime.NONE
+            return current.messages.NONE
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -603,7 +605,7 @@ class S3DateTime(object):
         if dt:
             return xml.encode_local_datetime(dt)
         else:
-            return S3DateTime.NONE
+            return current.messages.NONE
 
 # =============================================================================
 
