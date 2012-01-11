@@ -634,6 +634,7 @@ class S3GISConfigModel(S3Model):
              "gis_marker",
              "gis_projection",
              "gis_symbology",
+             "gis_feature_class",
              "gis_marker_id",
              "gis_projection_id"
             ]

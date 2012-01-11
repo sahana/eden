@@ -977,15 +977,15 @@ class GIS(object):
         """
 
         session = current.session
-        response = current.response
+        s3 = current.response.s3
 
         # If an id has been supplied, try it first. If it matches what's in
         # session / response, there's no work to do.
         if config_id and not force_update_cache:
             if session.s3.gis_config_id and \
                session.s3.gis_config_id == config_id and \
-               response.s3.gis.config and \
-               response.s3.gis.config.id == config_id:
+               s3.gis.config and \
+               s3.gis.config.id == config_id:
                 if force_update_dependencies:
                     self.update_gis_config_dependent_options()
                 return
@@ -1042,7 +1042,7 @@ class GIS(object):
             projection = row["gis_projection"]
             marker = row["gis_marker"]
             non_hierarchy_fields = filter(
-                lambda key: key not in response.s3.all_meta_field_names
+                lambda key: key not in s3.all_meta_field_names
                                 and not self.is_level_key(key),
                 config)
             for key in non_hierarchy_fields:
@@ -1089,7 +1089,7 @@ class GIS(object):
 
         # Store the values if they were found.
         if cache:
-            response.s3.gis.config = cache
+            s3.gis.config = cache
             self.update_gis_config_dependent_options()
             if set_in_session:
                 session.s3.gis_config_id = config_id

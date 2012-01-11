@@ -588,5 +588,4 @@ s3.crud_strings["setting"] = Storage(
     msg_record_deleted = T("Setting deleted"),
     msg_list_empty = T("No Settings currently defined"))
 
-# =============================================================================
-
+# END =========================================================================

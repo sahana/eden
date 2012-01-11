@@ -299,7 +299,7 @@ class S3Model(object):
 
         models = current.models
 
-        # Backward compatiblity: load conventional models first
+        # Backward compatibility: load conventional models first
         manager = current.manager
         manager.model.load_all_models()
 
