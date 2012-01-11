@@ -415,7 +415,7 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.hrm.skill_types = True
 
 # Project Tracking
-# Uncomment this to show DRR-related categories
+# Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #deployment_settings.project.drr = True
 
 # Save Search Widget

@@ -82,7 +82,9 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
 
         organisation_id = s3db.org_organisation_id
         organisation_represent = s3db.org_organisation_represent
+        site_id = s3db.org_site_id
         org_site_represent = s3db.org_site_represent
+        human_resource_id = s3db.hrm_human_resource_id
 
         if deployment_settings.has_module("inv"):
             s3mgr.load("supply_item")
@@ -92,8 +94,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
             item_pack_virtualfields = response.s3.item_pack_virtualfields
 
         if deployment_settings.has_module("hrm"):
-            s3mgr.load("hrm_skill")
-            multi_skill_id = response.s3.multi_skill_id
+            multi_skill_id = s3db.hrm_multi_skill_id
 
         if deployment_settings.has_module("event"):
             s3mgr.load("event_event")

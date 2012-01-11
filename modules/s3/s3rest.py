@@ -2419,6 +2419,7 @@ class S3Resource(object):
         # DB and manager
         manager = current.manager
         db = current.db
+        s3db = current.s3db
 
         self.ERROR = manager.ERROR
 
@@ -2443,7 +2444,7 @@ class S3Resource(object):
         self.tablename = "%s_%s" % (self.prefix, self.name)
         model.load(self.tablename)
         try:
-            self.table = db[self.tablename]
+            self.table = s3db[self.tablename]
         except:
             manager.error = "Undefined table: %s" % self.tablename
             raise KeyError(manager.error)

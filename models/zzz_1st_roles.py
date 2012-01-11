@@ -132,6 +132,19 @@ if populate > 0:
     create_role("DelphiAdmin", "Permission to administer the Delphi Decision Maker module",
                 dict(c="delphi", uacl=acl.ALL, oacl=acl.ALL))
 
+    create_role("STAFF", "Role for Staff of the main organisation",
+                dict(c="project", uacl=acl.ALL, oacl=acl.ALL),
+                # General Delegation
+                dict(t="project_project", uacl=acl.READ, oacl=acl.READ, organisation="all"),
+                dict(t="project_activity", uacl=acl.READ, oacl=acl.READ),
+                dict(t="project_milestone", uacl=acl.READ, oacl=acl.READ),
+                dict(c="default", f="project", uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=acl.READ|acl.UPDATE),
+                dict(c="project", f="project", uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=acl.READ|acl.UPDATE),
+                dict(c="project", f="time", uacl=acl.READ|acl.CREATE, oacl=acl.READ|acl.UPDATE|acl.DELETE),
+                #dict(c="project", f="task", uacl=acl.ALL, oacl=acl.ALL),
+                uid="STAFF"
+                )
+
     # @ToDo: Replace with OrgAuth roles
     create_role("Hospital Staff", "Hospital Staff - permission to add/update own records in the HMS",
                 dict(c="hms", uacl=acl.READ|acl.CREATE, oacl=acl.READ|acl.UPDATE),

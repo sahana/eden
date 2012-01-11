@@ -31,7 +31,7 @@
 #   if their names start with the module prefix plus underscore
 #
 __all__ = ["SkeletonDataModel",
-           "skeleton_function"]
+           "skeleton_example_represent"]
 
 # The folloing import statements are needed in every model
 # (you may need more than this in your particular case). To
@@ -77,7 +77,7 @@ class SkeletonDataModel(S3Model):
         tablename = "skeleton_example"
         table = self.define_table(tablename,
                                   Field("name"),
-                                 *s3.meta_fields())
+                                  *s3.meta_fields())
 
         # Use self.configure to configure your model (not s3mgr.configure!)
         self.configure(tablename,
@@ -139,19 +139,47 @@ class SkeletonDataModel(S3Model):
         )
 
 
+    # ---------------------------------------------------------------------
+    # Static so that calling it doesn't require loading the models
+    @staticmethod
+    def skeleton_example_onvalidation(form):
+        """ Form validation """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.skeleton_example
+
+        query = (table.id == form.vars.id)
+        record = db(query).select(table.name,
+                                  limitby=(0, 1)).first()
+
+        return
+
 # =============================================================================
 # Module-global functions will automatically be added to response.s3 if
-# they use the module prefix and are listed in __all__:
+# they use the module prefix and are listed in __all__
 #
-def skeleton_function():
+# Represents are good to put here as they can be put places without loading the
+# models at that time
+#
+def skeleton_example_represent(id):
 
     # Your function may need to access tables. If a table isn't defined
     # at the point when this function gets called, then this:
-    skeleton_table = S3Model.table("skeleton_table")
+    s3db = current.s3db
+    skeleton_table = s3db.skeleton_table
     # will load the table. This is the same function as self.table described in
     # the model class except that "self" is not available here, so you need to
-    # use the class as reference instead
+    # use the class instance as reference instead
 
-    return None
+    db = current.db
+    query = (table.id == id)
+    record = db(query).select(table.name,
+                              limitby=(0, 1)).first()
+    if record:
+        return record.name
+    else:
+        return current.messages.NONE
 
 # END =========================================================================

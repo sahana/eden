@@ -275,26 +275,6 @@ class S3OrganisationModel(S3Model):
             msg_record_deleted = T("Organization deleted"),
             msg_list_empty = T("No Organizations currently registered"))
 
-        self.configure(tablename,
-                       super_entity = "pr_pentity",
-                       list_fields = ["id",
-                                      "name",
-                                      "acronym",
-                                      "type",
-                                      "sector_id",
-                                      "country",
-                                      "website"
-                                    ])
-
-        self.add_component("project_project",
-                           org_organisation=Storage(
-                                link="project_organisation",
-                                joinby="organisation_id",
-                                key="project_id",
-                                actuate="embed",
-                                autocomplete="name",
-                                autodelete=False))
-
         organisation_popup_url = URL(c="org", f="organisation",
                                      args="create",
                                      vars=dict(format="popup"))
@@ -384,17 +364,41 @@ class S3OrganisationModel(S3Model):
             )
 
         self.configure(tablename,
-                       search_method=organisation_search)
+                       super_entity = "pr_pentity",
+                       search_method=organisation_search,
+                       deduplicate=self.organisation_deduplicate,
+                       list_fields = ["id",
+                                      "name",
+                                      "acronym",
+                                      "type",
+                                      "sector_id",
+                                      "country",
+                                      "website"
+                                    ])
 
-        # Components of organisations
+        # Components
+        
+        # Staff
+        self.add_component("hrm_human_resource",
+                           org_organisation="organisation_id")
+
+        # Projects
+        if settings.get_project_drr():
+            self.add_component("project_project",
+                               org_organisation=Storage(
+                                    link="project_organisation",
+                                    joinby="organisation_id",
+                                    key="project_id",
+                                    actuate="embed",
+                                    autocomplete="name",
+                                    autodelete=False))
+        else:
+            self.add_component("project_project",
+                               org_organisation="organisation_id")
+
         # Documents
         self.add_component("doc_document", org_organisation="organisation_id")
-
-        # Images
         self.add_component("doc_image", org_organisation="organisation_id")
-
-        self.configure(tablename,
-                       deduplicate=self.organisation_deduplicate)
 
         # -----------------------------------------------------------------------------
         # Enable this to allow migration of users between instances
@@ -678,13 +682,17 @@ class S3SiteModel(S3Model):
                                                                   T("Enter some characters to bring up a list of possible matches")))
                                 )
 
-        # Components of sites
+        # Components
 
+        # Sites
+        self.add_component("hrm_human_resource",
+                           org_site=self.super_key(db.org_site))
+        
         # Documents
-        self.add_component("doc_document", org_site=self.super_key(db.org_site))
-
-        # Images
-        self.add_component("doc_image", org_site=self.super_key(db.org_site))
+        self.add_component("doc_document",
+                           org_site=self.super_key(db.org_site))
+        self.add_component("doc_image",
+                           org_site=self.super_key(db.org_site))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -1047,13 +1055,14 @@ def org_organisation_represent(id, showlink=False, acronym=True):
     """ Represent an Organisation in option fields or list views """
 
     db = current.db
+    s3db = current.s3db
     NONE = current.messages.NONE
 
     if isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
         org = id
     else:
-        table = S3Model.table("org_organisation")
+        table = s3db.org_organisation
         query = (table.id == id)
         org = db(query).select(table.name,
                                table.acronym,
@@ -1076,8 +1085,10 @@ def org_site_represent(id, default_label="[no label]", link = True):
     """ Represent a Facility in option fields or list views """
 
     db = current.db
+    s3db = current.s3db
     site_str = current.messages.NONE
-    stable = S3Model.table("org_site")
+
+    stable = s3db.org_site
 
     if not id:
         return site_str
@@ -1092,6 +1103,7 @@ def org_site_represent(id, default_label="[no label]", link = True):
             return site_str
 
     instance_type = site.instance_type
+    table = s3db[instance_type]
     try:
         table = db[instance_type]
     except:
@@ -1213,11 +1225,12 @@ def org_office_rheader(r, tabs=[]):
             T = current.T
             db = current.db
             s3 = current.response.s3
+            settings = current.deployment_settings
 
             tabs = [(T("Basic Details"), None),
                     #(T("Contact Data"), "contact"),
                     ]
-            if deployment_settings.has_module("hrm"):
+            if settings.has_module("hrm"):
                 tabs.append((T("Staff"), "human_resource"))
             try:
                 tabs = tabs + s3.req_tabs(r)
@@ -1230,7 +1243,7 @@ def org_office_rheader(r, tabs=[]):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            table = db.org_organisation
+            table = s3db.org_organisation
             query = (table.id == office.organisation_id)
             organisation = db(query).select(table.name,
                                             limitby=(0, 1)).first()
@@ -1251,7 +1264,7 @@ def org_office_rheader(r, tabs=[]):
                              TH("%s: " % table.organisation_id.label),
                              org_name,
                              TH("%s: " % table.location_id.label),
-                             gis_location_represent(office.location_id),
+                             s3db.gis_location_represent(office.location_id),
                              ),
                           TR(
                              TH("%s: " % table.email.label),
