@@ -1594,9 +1594,9 @@ class S3ProjectTaskModel(S3Model):
                                     "priority",
                                     "name",
                                     "pe_id",
-                                    "created_on",
                                     "date_due",
                                     "time_estimated",
+                                    "created_on",
                                     "status",
                                     #"site_id"
                                     ],

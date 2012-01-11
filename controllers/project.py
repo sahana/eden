@@ -294,10 +294,15 @@ def task():
                         copyable=False,
                         listadd=False)
         try:
+            # Add Virtual Fields
+            table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
             list_fields = s3mgr.model.get_config(tablename,
                                                  "list_fields")
+            list_fields.insert(3, (T("Project"), "project"))
             # Hide the Assignee column (always us)
             list_fields.remove("pe_id")
+            # Hide the Status column
+            list_fields.remove("status")
             s3mgr.configure(tablename,
                             list_fields=list_fields)
         except:
@@ -440,6 +445,15 @@ def task():
 
         return True
     response.s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.interactive:
+            update_url = URL(args=["[id]"], vars=request.get_vars)
+            s3mgr.crud.action_buttons(r,
+                                      update_url=update_url)
+        return output
+    response.s3.postp = postp
 
     return s3_rest_controller(rheader=response.s3.project_rheader)
 
