@@ -662,7 +662,7 @@ class S3HRJobModel(S3Model):
                     hrm_job_role_id = job_role_id,
                     #hrm_position_id = position_id
                 )
-    
+
 
 # =============================================================================
 class S3HRSkillModel(S3Model):
@@ -697,7 +697,7 @@ class S3HRSkillModel(S3Model):
 
         messages = current.messages
         NONE = messages.NONE
-        
+
         system_roles = session.s3.system_roles
         ADMIN = system_roles.ADMIN
 
@@ -1393,7 +1393,7 @@ class S3HRSkillModel(S3Model):
             msg_record_deleted = T("Mission deleted"),
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no Missions registered"))
-            
+
         # De-duplication
         self.configure("hrm_competency",
                        deduplicate=self.hrm_competency_duplicate)
@@ -1602,7 +1602,7 @@ S3FilterFieldChange({
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case and skill_type
         """
-        
+
         db = current.db
         s3db = current.s3db
 
@@ -1738,7 +1738,7 @@ def hrm_multi_skill_represent(opt):
 
 # -------------------------------------------------------------------------
 def hrm_certificate_represent(id):
-    
+
     db = current.db
     s3db = current.s3db
 

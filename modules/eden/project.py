@@ -30,7 +30,8 @@
 """
 
 __all__ = ["S3ProjectModel",
-           "project_rheader"]
+           "project_rheader",
+           "S3ProjectTaskVirtualfields"]
 
 import datetime
 
@@ -45,7 +46,16 @@ class S3ProjectModel(S3Model):
     """
         Project Model
 
-        @ToDo: break into multiple Classes
+        Note: This module operates in 2 quite different modes:
+         - 'drr':   suitable for use by multinational organisations tracking
+                    projects at a a high level
+         - non-drr: suitable for use by a smaller organsiation tracking tasks
+                    at a detailed level
+
+        @ToDo: Break into multiple Classes:
+            Common
+            drr
+            non-drr
     """
 
     names = ["project_theme",
@@ -94,7 +104,6 @@ class S3ProjectModel(S3Model):
         s3_date_format = self.settings.get_L10n_date_format()
         s3_datetime_represent = S3DateTime.datetime_represent
         s3_utc_represent = lambda dt: s3_datetime_represent(dt, utc=True)
-
 
         # Enable DRR extensions?
         drr = settings.get_project_drr()
@@ -191,7 +200,8 @@ class S3ProjectModel(S3Model):
             5: "HFA5: Strengthen disaster preparedness for effective response at all levels.",
         }
 
-        sector_id = s3.org_sector_id
+        sector_id = self.org_sector_id
+        human_resource_id = self.hrm_human_resource_id
 
         countries_id = S3ReusableField("countries_id", "list:reference gis_location",
                                        label = T("Countries"),
@@ -242,8 +252,8 @@ class S3ProjectModel(S3Model):
                                   Field("budget", "double",
                                         label = T("Budget")),
                                   sector_id(
-                                            #readable=False,
-                                            #writable=False,
+                                            readable=False,
+                                            writable=False,
                                             widget=lambda f, v: \
                                             CheckboxesWidget.widget(f, v, cols=3)),
 
@@ -270,6 +280,7 @@ class S3ProjectModel(S3Model):
                                         readable = drr,
                                         writable = drr,
                                         label = T("Objectives")),
+                                  human_resource_id(label=T("Contact Person")),
                                   format="%(name)s",
                                   *s3.meta_fields())
 
@@ -572,7 +583,8 @@ class S3ProjectModel(S3Model):
             )
 
         # Virtual Fields
-        table.virtualfields.append(S3ProjectActivityVirtualfields())
+        if drr:
+            table.virtualfields.append(S3ProjectActivityVirtualfields())
 
         # Search Method
         if pca:
@@ -943,7 +955,7 @@ class S3ProjectModel(S3Model):
         }
 
         project_task_active_statuses = [2, 3, 5, 7]
-        
+
         project_task_priority_opts = {
             1:T("Urgent"),
             2:T("High"),
@@ -976,13 +988,13 @@ class S3ProjectModel(S3Model):
                                         length=100,
                                         notnull=True,
                                         requires = IS_NOT_EMPTY()),
-                                  Field("source",
-                                        label = T("Source")),
                                   Field("description", "text",
                                         label = T("Detailed Description/URL"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Detailed Description/URL"),
                                                                         T("Please provide as much detail as you can, including the URL(s) where the bug occurs or you'd like the new feature to go.")))),
+                                  Field("source",
+                                        label = T("Source")),
                                   Field("priority", "integer",
                                         requires = IS_IN_SET(project_task_priority_opts,
                                                              zero=None),
@@ -997,7 +1009,7 @@ class S3ProjectModel(S3Model):
                                                   writable = staff,
                                                   label = T("Assigned to"),
                                                   represent = lambda id, row=None: \
-                                                              s3.pr_pentity_represent(id, show_label=False),
+                                                              project_assignee_represent(id),
                                                   # @ToDo: Widget
                                                   #widget = S3PentityWidget(),
                                                   #comment = DIV(_class="tooltip",
@@ -1062,7 +1074,50 @@ class S3ProjectModel(S3Model):
             msg_record_deleted = T("Task deleted"),
             msg_list_empty = T("No tasks currently registered"))
 
-        # Search Method?
+        # Virtual Fields
+        # Do just for the common report
+        #table.virtualfields.append(S3ProjectTaskVirtualfields())
+
+        # Search Method
+        task_search = S3Search(
+                # simple = (S3SearchSimpleWidget(
+                    # name="task_search_text_simple",
+                    # label = T("Search"),
+                    # comment = T("Search for a Task by description."),
+                    # field = [ "name",
+                              # "description",
+                            # ]
+                    # )
+                # ),
+                advanced = (S3SearchSimpleWidget(
+                    name = "task_search_text_advanced",
+                    label = T("Search"),
+                    comment = T("Search for a Task by description."),
+                    field = [ "name",
+                              "description",
+                            ]
+                    ),
+                    # These require the Virtual Fields which are added only in Controller
+                    # S3SearchOptionsWidget(
+                        # name = "org_search_project",
+                        # label = T("Project"),
+                        # field = ["project"],
+                        # cols = 2
+                    # ),
+                    # S3SearchOptionsWidget(
+                        # name = "org_search_activity",
+                        # label = T("Activity"),
+                        # field = ["activity"],
+                        # cols = 2
+                    # ),
+                    S3SearchOptionsWidget(
+                        name = "org_search_assignee",
+                        label = T("Assigned To"),
+                        field = ["pe_id"],
+                        cols = 2
+                    ),
+                )
+            )
 
         # Resource Configuration
         self.configure(tablename,
@@ -1072,13 +1127,13 @@ class S3ProjectModel(S3Model):
                        onvalidation=self.task_onvalidation,
                        create_onaccept=self.task_create_onaccept,
                        list_fields=["id",
-                                    #"urgent",
                                     "priority",
-                                    "status",
                                     "name",
                                     "pe_id",
                                     "created_on",
                                     "date_due",
+                                    "time_estimated",
+                                    "status",
                                     #"site_id"
                                     ],
                        extra="description")
@@ -1784,7 +1839,7 @@ class S3ProjectModel(S3Model):
         hours = 0
         for row in rows:
             hours += row.hours
-        
+
         # Update the Task
         query = (ttable.id == task_id)
         db(query).update(time_actual=hours)
@@ -1808,12 +1863,51 @@ class S3ProjectModel(S3Model):
             hours = 0
             for task in tasks:
                 hours += task.time_actual
-            
+
             # Update the Activity
             query = (atable.id == activity_id)
             db(query).update(time_actual=hours)
 
         return
+
+# -----------------------------------------------------------------------------
+def project_assignee_represent(id):
+    """ Represent the Person a Task is assigned-to or list views """
+
+    db = current.db
+    s3db = current.s3db
+    cache = current.response.s3.cache
+    output = current.messages.NONE
+
+    if not id:
+        return output
+
+    etable = s3db.pr_pentity
+    query = (etable.id == id)
+    record = db(query).select(etable.instance_type,
+                              cache=cache,
+                              limitby=(0, 1)).first()
+    if not record:
+        return output
+
+    table = s3db[record.instance_type]
+    query = (table.pe_id == id)
+    if record.instance_type == "pr_person":
+        record = db(query).select(table.first_name,
+                                  table.initials,
+                                  cache=cache,
+                                  limitby=(0, 1)).first()
+        if record:
+            output = record.initials or record.first_name
+    else:
+        # Team or Organisation
+        record = db(query).select(table.name,
+                                  cache=cache,
+                                  limitby=(0, 1)).first()
+        if record:
+            output = record.name
+
+    return output
 
 # =============================================================================
 def project_rheader(r, tabs=[]):
@@ -1851,7 +1945,7 @@ def project_rheader(r, tabs=[]):
                         TH("%s: " % table.end_date.label),
                         record.end_date
                         )
-            
+
                 rheader = DIV(TABLE(
                     TR(
                        TH("%s: " % table.name.label),
@@ -2010,6 +2104,52 @@ class S3ProjectActivityVirtualfields:
             return None
 
 # =============================================================================
+class S3ProjectTaskVirtualfields:
+    """ Virtual fields for the project_task table """
+
+    extra_fields = []
+
+    def project(self):
+        """
+            Project associated with this task
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
+        query = (ltable.deleted != True) & \
+                (ltable.task_id == self.project_task.id) & \
+                (ltable.project_id == ptable.id)
+        project = db(query).select(ptable.name,
+                                   limitby=(0, 1)).first()
+        if project:
+            return project.name
+        else:
+            return None
+
+    def activity(self):
+        """
+            Activity associated with this task
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        atable = s3db.project_project
+        ltable = s3db.project_task_activity
+        query = (ltable.deleted != True) & \
+                (ltable.task_id == self.project_task.id) & \
+                (ltable.activity_id == atable.id)
+        project = db(query).select(atable.name,
+                                   limitby=(0, 1)).first()
+        if project:
+            return project.name
+        else:
+            return None
+
+# =============================================================================
 class S3ProjectTimeVirtualfields:
     """ Virtual fields for the project_time table """
 
@@ -2018,7 +2158,7 @@ class S3ProjectTimeVirtualfields:
     def project(self):
         """
             Project associated with this time entry
-            - used by the 'Project Income Allocation' report
+            - used by the 'Project Time' report
         """
 
         db = current.db
