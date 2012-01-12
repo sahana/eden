@@ -642,7 +642,7 @@ def contact():
             return True
         response.s3.prep = prep
 
-        output = s3_rest_controller()
+        output = s3_rest_controller(prefix, resourcename)
         return output
     else:
         # Default: Simple Custom View

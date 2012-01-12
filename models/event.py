@@ -25,6 +25,9 @@ if deployment_settings.has_module(module):
     # Incidents as a component of Events
     s3mgr.model.add_component("event_incident", event_event="event_id")
 
+    # Requests as a component of Events
+    s3mgr.model.add_component("req_req", event_event="event_id")
+
     # Tasks as a component of Events
     s3mgr.model.add_component("project_task",
                               event_event=Storage(

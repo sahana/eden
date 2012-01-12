@@ -4012,7 +4012,7 @@ S3.gis.lon = %s;
         # Base Layers
         #
 
-        layers_openstreetmap = ""
+        layers_osm = ""
 
         # ---------------------------------------------------------------------
         # OpenStreetMap
@@ -4021,52 +4021,56 @@ S3.gis.lon = %s;
         #        in static & can just have name over-ridden, as well as
         #        fully-custom layers.
         # ---------------------------------------------------------------------
-        query = (db.gis_layer_openstreetmap.enabled == True)
-        openstreetmap_enabled = db(query).select()
-        if openstreetmap_enabled:
-            layers_osm = """
-S3.gis.layers_osm = new Array();"""
-            counter = -1
+        if Projection(id=config.projection_id).epsg != 900913:
+            error = "%s\n" % T("Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection")
+            response.warning += error
         else:
-            layers_osm = ""
-        for layer in openstreetmap_enabled:
-            if layer.role_required and not auth.s3_has_role(layer.role_required):
-                continue
-            counter = counter + 1
-            name_safe = re.sub("'", "", layer.name)
-            if layer.url2:
-                url2 = """,
+            query = (db.gis_layer_openstreetmap.enabled == True)
+            openstreetmap_enabled = db(query).select()
+            if openstreetmap_enabled:
+                layers_osm = """
+S3.gis.layers_osm = new Array();"""
+                counter = -1
+            else:
+                layers_osm = ""
+            for layer in openstreetmap_enabled:
+                if layer.role_required and not auth.s3_has_role(layer.role_required):
+                    continue
+                counter = counter + 1
+                name_safe = re.sub("'", "", layer.name)
+                if layer.url2:
+                    url2 = """,
     "url2": "%s\"""" % layer.url2
-            else:
-                url2 = ""
-            if layer.url3:
-                url3 = """,
+                else:
+                    url2 = ""
+                if layer.url3:
+                    url3 = """,
     "url3": "%s\"""" % layer.url3
-            else:
-                url3 = ""
-            if layer.base:
-                base = ""
-            else:
-                base = """,
+                else:
+                    url3 = ""
+                if layer.base:
+                    base = ""
+                else:
+                    base = """,
     "isBaseLayer": false"""
-            if layer.visible:
-                visibility = ""
-            else:
-                visibility = """,
+                if layer.visible:
+                    visibility = ""
+                else:
+                    visibility = """,
     "visibility": false"""
-            if layer.attribution:
-                attribution = """,
-    "attribution": %s""" % repr(layer.attribution)
-            else:
-                attribution = ""
-            if layer.zoom_levels is not None and layer.zoom_levels != 19:
-                zoomLevels = """,
+                if layer.attribution:
+                    attribution = """,
+        "attribution": %s""" % repr(layer.attribution)
+                else:
+                    attribution = ""
+                if layer.zoom_levels is not None and layer.zoom_levels != 19:
+                    zoomLevels = """,
     "zoomLevels": %i""" % layer.zoom_levels
-            else:
-                zoomLevels = ""
+                else:
+                    zoomLevels = ""
 
-            # Generate JS snippet to pass to static
-            layers_osm += """
+                # Generate JS snippet to pass to static
+                layers_osm += """
 S3.gis.layers_osm[%i] = {
     "name": "%s",
     "url1": "%s"%s%s%s%s%s%s
@@ -4661,7 +4665,7 @@ class BingLayer(SingleRecordLayer):
         if record is not None:
             config = gis.get_config()
             if Projection(id=config.projection_id).epsg != 900913:
-                raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection")
+                raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection\n")
             else:
                 # Mandatory attributes
                 output = {
@@ -4954,6 +4958,8 @@ class GeoRSSLayer(MultiRecordLayer):
             gis = current.gis
             db = current.db
             request = current.request
+            response = current.response
+            session = current.session
             public_url = gis.public_url
             cachetable = self.cachetable
 
@@ -4983,15 +4989,20 @@ class GeoRSSLayer(MultiRecordLayer):
                                                              URL(c="gis", f="cache_feed"),
                                                              url,
                                                              fields)
+                # Keep Session for local URLs
+                cookie = Cookie.SimpleCookie()
+                cookie[response.session_id_name] = response.session_id
+                session._unlock(response)
                 try:
                     # @ToDo: Need to commit to not have DB locked with SQLite?
-                    fetch(_url)
+                    fetch(_url, cookie=cookie)
                     if existing_cached_copy:
                         # Clear old selfs which are no longer active
                         query = (cachetable.source == url) & \
                                 (cachetable.modified_on < cutoff)
                         db(query).delete()
-                except:
+                except Exception, exception:
+                    s3_debug("GeoRSS %s download error" % url, exception)
                     # Feed down
                     if existing_cached_copy:
                         # Use cached copy

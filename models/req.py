@@ -34,52 +34,41 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                        }
 
     # Component definitions should be outside conditional model loads
-    s3mgr.model.add_component("req_req",
-                              org_site=super_key(db.org_site))
-                              #org_organisation = "donated_by_id")
 
-    if deployment_settings.has_module("event"):
-        s3mgr.model.add_component("req_req", event_event="event_id")
-
-    if deployment_settings.has_module("doc"):
-        s3mgr.model.add_component("req_document", req_req="req_id")
+    # Documents as a component of Requests
+    s3mgr.model.add_component("req_document", req_req="req_id")
 
     # Should we have multiple Items/Skills per Request?
     multiple_req_items = deployment_settings.get_req_multiple_req_items()
 
-    if deployment_settings.has_module("inv"):
-        # Request Items as component of Request & Items
-        s3mgr.model.add_component("req_req_item",
-                                  req_req=dict(joinby="req_id",
-                                               multiple=multiple_req_items),
-                                  supply_item="item_id")
+    # Request Items as component of Requests
+    s3mgr.model.add_component("req_req_item",
+                              req_req=dict(joinby="req_id",
+                                           multiple=multiple_req_items))
 
-    # Request Skills as component of Request & Skills
+    # Request Skills as component of Requests
     s3mgr.model.add_component("req_req_skill",
                               req_req=dict(joinby="req_id",
-                                           multiple=multiple_req_items),
-                              hrm_skill="skill_id")
+                                           multiple=multiple_req_items))
 
-    # Commitment as a component of Requests & Sites
+    # Commitment as a component of Requests
     s3mgr.model.add_component("req_commit",
-                              req_req="req_id",
-                              org_site=super_key(db.org_site))
+                              req_req="req_id")
 
-    if deployment_settings.has_module("inv"):
-        # Commitment Items as component of Commitment
-        s3mgr.model.add_component("req_commit_item",
-                                  req_commit="commit_id")
+    # Commitment Items as component of Commitment
+    s3mgr.model.add_component("req_commit_item",
+                              req_commit="commit_id")
 
-    if deployment_settings.has_module("hrm"):
-        # Commitment Persons as component of Commitment
-        s3mgr.model.add_component("req_commit_person",
-                                  req_commit="commit_id")
+    # Commitment Persons as component of Commitment
+    s3mgr.model.add_component("req_commit_person",
+                              req_commit="commit_id")
 
     def req_tables():
         """ Load the Request Tables when needed """
 
         module = "req"
 
+        person_id = s3db.pr_person_id
         organisation_id = s3db.org_organisation_id
         organisation_represent = s3db.org_organisation_represent
         site_id = s3db.org_site_id

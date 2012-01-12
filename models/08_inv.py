@@ -32,21 +32,12 @@ if deployment_settings.has_module("inv"):
 
     # Component definitions should be outside conditional model loads
     s3mgr.model.add_component("inv_inv_item",
-                              org_site=super_key(db.org_site),
                               supply_item="item_id",
                               supply_item_pack="item_pack_id")
-
-    # Recv as a component of Sites
-    s3mgr.model.add_component("inv_recv",
-                              org_site=super_key(db.org_site))
 
     s3mgr.model.add_component("inv_recv_item",
                               inv_recv="recv_id",
                               supply_item="item_id")
-
-    # Inv Send added as a component of Facilities
-    s3mgr.model.add_component("inv_send",
-                              org_site=super_key(db.org_site))
 
     s3mgr.model.add_component("inv_send_item",
                               inv_send="send_id",

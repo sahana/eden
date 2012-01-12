@@ -323,6 +323,7 @@ class S3IRSModel(S3Model):
                                       "message",
                                     ])
 
+        # Tasks as component of Incident Reports
         self.add_component("project_task",
                            irs_ireport=Storage(link="project_task_ireport",
                                                joinby="ireport_id",
@@ -330,6 +331,18 @@ class S3IRSModel(S3Model):
                                                actuate="replace",
                                                autocomplete="name",
                                                autodelete=False))
+
+        # Vehicles as component of Incident Reports
+        self.add_component("asset_asset",
+                           irs_ireport=Storage(
+                                link="irs_ireport_vehicle",
+                                joinby="ireport_id",
+                                key="asset_id",
+                                name="vehicle",
+                                # Dispatcher doesn't need to Add/Edit records, just Link
+                                actuate="link",
+                                autocomplete="name",
+                                autodelete=False))
 
         ireport_id = S3ReusableField("ireport_id", table,
                                      requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -343,12 +356,16 @@ class S3IRSModel(S3Model):
         # ---------------------------------------------------------------------
         # Custom Methods
         self.set_method("irs_ireport",
-                        method="ushahidi",
-                        action=self.irs_ushahidi_import)
-
-        self.set_method("irs_ireport",
                         method="dispatch",
                         action=self.irs_dispatch)
+
+        self.set_method("irs_ireport",
+                        method="timeline",
+                        action=self.irs_timeline)
+
+        self.set_method("irs_ireport",
+                        method="ushahidi",
+                        action=self.irs_ushahidi_import)
 
         # ---------------------------------------------------------------------
         # Link Tables for iReports
@@ -578,6 +595,7 @@ class S3IRSModel(S3Model):
             - this will be formatted as an OpenGeoSMS
         """
 
+        T = current.T
         msg = current.msg
         response = current.response
         s3 = response.s3
@@ -624,6 +642,129 @@ class S3IRSModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def irs_timeline(r, **attr):
+        """
+            Display the Incidents on a Simile Timeline
+
+            http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
+
+            @ToDo: Longer-term we'd like to load the Incidents dynamically via
+                   JSON with pagination, so we shouldn't be a custom method
+                   as we don't want to parse the request twice?
+        """
+
+        T = current.T
+        request = current.request
+        response = current.response
+        session = current.session
+        s3 = response.s3
+
+        if r.representation == "html" and r.name == "ireport":
+
+            output = dict()
+
+            if r.id:
+                # Maintain RHeader for consistency
+                rheader = irs_rheader(r)
+                output.update(rheader=rheader)
+
+            # Add core Simile Code
+            #s3.scripts.append("http://api.simile-widgets.org/timeline/2.3.1/timeline-api.js?bundle=true")
+            #s3.scripts.append("http://trunk.simile-widgets.org/timeline/api/timeline-api.js?bundle=true")
+            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
+
+            # Create the DIV
+            item = DIV(_id="s3timeline", _style="height: 150px; border: 1px solid #aaa")
+
+            # Add our code to instantiate Simile
+            s3.js_global.append("""
+S3.timeline = Object();
+var timeline_data = {  // save as a global variable
+'dateTimeFormat': 'iso8601',
+'events' : [
+        {'start': '2011-02-03',
+        'title': 'Cyclone Yasi',
+        'caption': 'Queensland Australia',
+        'description': 'Queensland Australia',
+        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg/220px-Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg',
+        'link': 'http://en.wikipedia.org/wiki/Cyclone_Yasi',
+        'color' : 'red'
+        },
+
+        {'start': '2011-12-17',
+        'title': 'Tropical Storm Washi',
+        'caption': 'Philippines',
+        'description': 'Philippines',
+        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg/220px-Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg',
+        'link': 'http://en.wikipedia.org/wiki/Tropical_Storm_Washi_(2011)',
+        'color' : 'red'
+        },
+
+        {'start': '2011-07',
+        'end': '2011-12',
+        'title': 'Thailand Floods',
+        'caption': 'Queensland Australia',
+        'description': 'Provinces located in the Chao Phraya and Mekong River basin, including Bangkok and surrounding neighborhoods were most severely affected directly or indirectly by inundation.',
+        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/2011_Thailand_floods-MODIS_2011-10-19.jpg/180px-2011_Thailand_floods-MODIS_2011-10-19.jpg',
+        'link': 'http://en.wikipedia.org/wiki/2011_Thailand_floods',
+        'color' : 'blue'
+        },
+]}
+S3.timeline.onLoad = function() {
+    var tl_el = document.getElementById("s3timeline");
+    var eventSource = new Timeline.DefaultEventSource();
+    var theme = Timeline.ClassicTheme.create();
+    theme.autoWidth = true;
+    theme.timeline_start = new Date(Date.UTC(2011, 0, 1));
+    theme.timeline_stop  = new Date(Date.UTC(2013, 0, 1));
+    var d = Timeline.DateTime.parseGregorianDateTime("2011-10")
+    var bandInfos = [
+        Timeline.createBandInfo({
+            width:          45, // set to a minimum, autoWidth will then adjust
+            intervalUnit:   Timeline.DateTime.MONTH, 
+            intervalPixels: 200,
+            eventSource:    eventSource,
+            date:           d,
+            theme:          theme,
+            layout:         'original'  // original, overview, detailed
+        })
+    ];
+    // create the Timeline
+    tl = Timeline.create(tl_el, bandInfos, Timeline.HORIZONTAL);
+    // load the events
+    var url = '.';
+    eventSource.loadJSON(timeline_data, url);
+    tl.layout();
+}
+S3.timeline.resizeTimerID = null;
+S3.timeline.onResize = function() {
+    if (S3.timeline.resizeTimerID == null) {
+        S3.timeline.resizeTimerID = window.setTimeout(function() {
+            S3.timeline.resizeTimerID = null;
+            S3.timeline.tl.layout();
+        }, 500);
+    }
+}""")
+            s3.jquery_ready.append("""
+$(window).load(function() {
+    S3.timeline.onLoad();
+});
+$(window).resize(function() {
+    S3.timeline.onResize();
+});
+""")
+
+            title = T("Incident Timeline")
+
+            output.update(title=title, item=item)
+            response.view = "timeline.html"
+            return output
+
+        else:
+            raise HTTP(501, BADMETHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def irs_ushahidi_import(r, **attr):
         """
             Import Incident Reports from Ushahidi
@@ -631,6 +772,7 @@ class S3IRSModel(S3Model):
             @ToDo: Deployment setting for Ushahidi instance URL
         """
 
+        T = current.T
         auth = current.auth
         request = current.request
         response = current.response

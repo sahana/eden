@@ -46,7 +46,7 @@ organisation_id: '""", str(T("Enter your organization")), """',
         table = auth.settings.table_user
         table.organisation_id
 
-        table = db.auth_organisation
+        table = s3db.auth_organisation
         query = (table.organisation_id != None) & \
                 (table.domain != None)
         whitelists = db(query).select(table.organisation_id,

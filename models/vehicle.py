@@ -13,27 +13,6 @@
 
 if deployment_settings.has_module("vehicle"):
 
-    # Vehicles as component of Assets
-    s3mgr.model.add_component("vehicle_vehicle",
-                              asset_asset=dict(joinby="asset_id",
-                                               multiple=False))
-
-    # GPS as a component of Assets
-    s3mgr.model.add_component("vehicle_gps",
-                              asset_asset="asset_id")
-
-    # Vehicles as component of Incident Reports
-    s3mgr.model.add_component("asset_asset",
-                              irs_ireport=Storage(
-                                    link="irs_ireport_vehicle",
-                                    joinby="ireport_id",
-                                    key="asset_id",
-                                    name="vehicle",
-                                    # Dispatcher doesn't need to Add/Edit records, just Link
-                                    actuate="link",
-                                    autocomplete="name",
-                                    autodelete=False))
-
     # =========================================================================
     # Vehicles
     #

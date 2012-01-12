@@ -32,6 +32,14 @@ if deployment_settings.has_module("inv") or \
     s3mgr.model.add_component("supply_item_alt",
                               supply_item="item_id")
 
+    # Prcurement Plan Items as component of Items
+    s3mgr.model.add_component("proc_plan_item",
+                              supply_item="item_id")
+
+    # Request Items as component of Items
+    s3mgr.model.add_component("req_req_item",
+                              supply_item="item_id")
+
     def supply_tables():
         """ Load the Supply Tables when needed """
 

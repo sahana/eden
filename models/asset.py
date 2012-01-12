@@ -21,13 +21,17 @@ if deployment_settings.has_module("asset"):
     #s3.asset.ASSET_TYPE_TELEPHONE  = 2 # => Extra Tab(s) for Contact Details & Airtime Billing
     s3.asset.ASSET_TYPE_OTHER      = 9 # => No extra Tabs
 
-    # @ToDo: Join components (No organisation or site field in primary resource)
-    # asset as component of organisation and site
-    #s3mgr.model.add_component("asset_asset",
-    #                          org_organisation="organisation_id")
-
-    # log as component of asset
+    # Log as component of Assets
     s3mgr.model.add_component("asset_log", asset_asset="asset_id")
+
+    # Vehicles as component of Assets
+    s3mgr.model.add_component("vehicle_vehicle",
+                              asset_asset=dict(joinby="asset_id",
+                                               multiple=False))
+
+    # GPS as a component of Assets
+    s3mgr.model.add_component("vehicle_gps",
+                              asset_asset="asset_id")
 
     # =========================================================================
     # Assets

@@ -400,6 +400,15 @@ class S3OrganisationModel(S3Model):
         self.add_component("doc_document", org_organisation="organisation_id")
         self.add_component("doc_image", org_organisation="organisation_id")
 
+        # Assets
+        # @ToDo
+        #self.add_component("asset_asset",
+                           #org_organisation = "donated_by_id")
+
+        # Requests
+        #self.add_component("req_req",
+                           #org_organisation = "donated_by_id")
+
         # -----------------------------------------------------------------------------
         # Enable this to allow migration of users between instances
         #self.add_component(db.auth_user,
@@ -684,15 +693,33 @@ class S3SiteModel(S3Model):
 
         # Components
 
-        # Sites
+        # Human Resources
         self.add_component("hrm_human_resource",
-                           org_site=self.super_key(db.org_site))
+                           org_site=self.super_key(table))
         
         # Documents
         self.add_component("doc_document",
-                           org_site=self.super_key(db.org_site))
+                           org_site=self.super_key(table))
         self.add_component("doc_image",
-                           org_site=self.super_key(db.org_site))
+                           org_site=self.super_key(table))
+
+        # Inventory
+        self.add_component("inv_inv_item",
+                           org_site=self.super_key(table))
+        self.add_component("inv_recv",
+                           org_site=self.super_key(table))
+        self.add_component("inv_send",
+                           org_site=self.super_key(table))
+
+        # Procurement Plans
+        self.add_component("proc_plan",
+                           org_site=self.super_key(table))
+
+        # Requests
+        self.add_component("req_req",
+                           org_site=self.super_key(table))
+        self.add_component("req_commit",
+                           org_site=self.super_key(table))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)

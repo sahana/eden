@@ -53,7 +53,8 @@ def ireport():
     # Non-Editors should only see a limited set of options
     if not s3_has_role(EDITOR):
         irs_incident_type_opts = response.s3.irs_incident_type_opts
-        allowed_opts = [irs_incident_type_opts.get(opt.code, opt.code) for opt in db().select(db.irs_icategory.code)]
+        ctable = s3db.irs_icategory
+        allowed_opts = [irs_incident_type_opts.get(opt.code, opt.code) for opt in db().select(ctable.code)]
         allowed_opts.sort()
         table.category.requires = IS_NULL_OR(IS_IN_SET(allowed_opts))
 

@@ -23,6 +23,7 @@ if deployment_settings.has_module(module):
 
     def survey_tables():
 
+        person_id = s3db.pr_person_id
         organisation_id = s3db.org_organisation_id
 
         import sys
