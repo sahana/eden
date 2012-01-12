@@ -1015,6 +1015,7 @@ s3_menu_dict = {
             [T("Incident Reports"), False, aURL(f="ireport"),[
                 [T("New"), False, aURL(p="create", f="ireport", args="create")],
                 [T("List All"), False, aURL(f="ireport")],
+                [T("Timeline"), False, aURL(f="ireport", args="timeline")],
                 #[T("Search"), False, aURL(f="ireport", args="search")]
             ]],
         ],

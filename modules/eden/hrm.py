@@ -833,6 +833,10 @@ class S3HRSkillModel(S3Model):
                         widget = S3MultiSelectWidget()
                         )
 
+        # Components
+        self.add_component("req_req_skill",
+                           hrm_skill="skill_id")
+
         # =====================================================================
         # Competency Ratings
         #

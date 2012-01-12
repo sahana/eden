@@ -294,7 +294,7 @@ class S3Cube(S3CRUD):
             try:
                 pt = df.pivot(fact, self.rows, self.cols,
                                 aggregate=aggregate)
-            except:
+            except KeyError:
                 e = sys.exc_info()[1]
                 msg = T("Could not generate report")
                 if hasattr(e, "message"):

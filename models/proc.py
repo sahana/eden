@@ -17,12 +17,10 @@ if deployment_settings.has_module("proc"):
 
     # Component definitions should be outside conditional model loads
     s3mgr.model.add_component("proc_plan",
-                              org_site=super_key(db.org_site),
                               proc_supplier="supplier_id")
 
     s3mgr.model.add_component("proc_plan_item",
-                              proc_plan="plan_id",
-                              supply_item="item_id")
+                              proc_plan="plan_id")
 
     # ---------------------------------------------------------------------
     def proc_tables():
