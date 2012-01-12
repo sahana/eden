@@ -660,7 +660,7 @@ class S3Importer(S3CRUD):
                                *fields)
 
         args = ["s3csv"]
-        template = attr.get(TEMPLATE, None)
+        template = attr.get(TEMPLATE, True)
         if template is True:
             args.extend([self.controller, "%s.csv" % self.function])
         elif isinstance(template, basestring):

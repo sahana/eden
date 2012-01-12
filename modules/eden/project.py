@@ -44,6 +44,12 @@ from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from ..s3 import *
 
+try:
+    from lxml import etree
+except ImportError:
+    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+    raise
+
 # =============================================================================
 class S3ProjectModel(S3Model):
     """
@@ -226,8 +232,14 @@ class S3ProjectModel(S3Model):
                                         writable=False,
                                         label = T("Duration")),
 
-                                  currency_type(),
+                                  currency_type(
+                                            readable=False if drr else True,
+                                            writable=False if drr else True,
+                                            ),
                                   Field("budget", "double",
+                                        # DRR handles on the Organisations Tab
+                                        readable=False if drr else True,
+                                        writable=False if drr else True,
                                         label = T("Budget")),
                                   sector_id(
                                             readable=False,
@@ -311,16 +323,10 @@ class S3ProjectModel(S3Model):
                                      requires = IS_NULL_OR(IS_ONE_OF(db, "project_project.id",
                                                                      "%(name)s")),
                                      represent = self.project_represent,
-                                     comment = DIV(A(ADD_PROJECT,
-                                                     _class="colorbox",
-                                                     _href=URL(c="project", f="project",
-                                                               args="create",
-                                                               vars=dict(format="popup")),
-                                                     _target="top",
-                                                     _title=ADD_PROJECT),
-                                                   DIV(_class="tooltip",
-                                                       _title="%s|%s" % (ADD_PROJECT,
-                                                                         T("Add new project.")))),
+                                     comment = s3_popup_comment(c="project",
+                                                                f="project",
+                                                                title=ADD_PROJECT,
+                                                                tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
                                      label = T("Project"),
                                      ondelete = "CASCADE")
 
@@ -398,7 +404,10 @@ class S3ProjectModel(S3Model):
                                                                              fieldname = "name",
                                                                              look_up_value = id),
                                            label = T("Activity Type"),
-                                           comment = self.activity_type_comment(ADD_ACTIVITY_TYPE),
+                                           comment = s3_popup_comment(c="project",
+                                                                      f="activity_type",
+                                                                      title=ADD_ACTIVITY_TYPE,
+                                                                      tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Activity Type'.")),
                                            ondelete = "RESTRICT")
 
         multi_activity_type_id = S3ReusableField("multi_activity_type_id",
@@ -556,13 +565,10 @@ class S3ProjectModel(S3Model):
                                                                         fieldname = "name",
                                                                         look_up_value = id),
                                       label = T("Activity"),
-                                      comment = DIV(A(ADD_ACTIVITY,
-                                                      _class="colorbox",
-                                                      _href=URL(c="project", f="activity",
-                                                                args="create",
-                                                                vars=dict(format="popup")),
-                                                      _target="top",
-                                                      _title=ADD_ACTIVITY)),
+                                      comment = s3_popup_comment(c="project",
+                                                                 f="activity",
+                                                                 title=ADD_ACTIVITY,
+                                                                 tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")),
                                       ondelete = "CASCADE")
 
         # Components
@@ -623,7 +629,7 @@ class S3ProjectModel(S3Model):
         s3db = current.s3db
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        table = s3db[tablename]
+        table = s3db.table(tablename, None)
         if table is None:
             return DEFAULT
 
@@ -752,27 +758,6 @@ class S3ProjectModel(S3Model):
             return NONE
         vals = [project_hfa_opts.get(o, NONE) for o in opts]
         return ", ".join(vals)
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def activity_type_comment(label):
-        """ Re-usable field comment """
-
-        auth = current.auth
-
-        # @todo: should not use a group ID here => use a UUID!
-        if auth.has_membership(auth.id_group(1)):
-            return DIV(A(label,
-                            _class="colorbox",
-                            _href=URL(c="project", f="activity_type",
-                                    args="create",
-                                    vars=dict(format="popup")),
-                            _target="top",
-                            _title=label
-                            )
-                        )
-        else:
-            return None
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -971,22 +956,6 @@ class S3ProjectDRRModel(S3Model):
             # msg_record_deleted = T("Project Site deleted"),
             # msg_list_empty = T("No Project Sites currently registered"))
 
-        # Reusable field for other tables to reference
-        # project_site_comment = DIV(A(ADD_PROJECT_SITE,
-                                     # _class="colorbox",
-                                     # _href=URL(c="project", f="site",
-                                               # args="create",
-                                               # vars=dict(format="popup")),
-                                     # _target="top",
-                                     # _title=ADD_PROJECT_SITE),
-                                   # DIV( _class="tooltip",
-                                        # _title="%s|%s" % (
-                                            # ADD_PROJECT_SITE,
-                                            # T("If you don't see the site in the list, you can add a new one by clicking link 'Add Project Site'.")
-                                            # )
-                                       # )
-                                   # )
-
         # project_site_id = S3ReusableField("project_site_id", db.project_site,
                                           # #sortby="default/indexname",
                                           # requires = IS_NULL_OR(IS_ONE_OF(db, "project_site.id", "%(name)s")),
@@ -994,7 +963,10 @@ class S3ProjectDRRModel(S3Model):
                                                       # (id and [db(db.project_site.id == id).select(db.project_site.name,
                                                                                                    # limitby=(0, 1)).first().name] or [NONE])[0],
                                           # label = T("Project Site"),
-                                          # comment = s3.org_office_comment,
+                                          # comment = s3_popup_comment(c="project",
+                                                                     # f="site",
+                                                                     # title=ADD_PROJECT_SITE,
+                                                                     # tooltip=T("If you don't see the site in the list, you can add a new one by clicking link 'Add Project Site'.")),,
                                           # ondelete = "CASCADE")
 
         # self.configure(tablename,
@@ -1045,17 +1017,10 @@ class S3ProjectDRRModel(S3Model):
                                                                    self.beneficiary_type_represent)),
                                    represent = self.beneficiary_type_represent,
                                    label = T("Beneficiary Type"),
-                                   comment = DIV(A(ADD_BNF_TYPE,
-                                                   _class="colorbox",
-                                                   _href=URL(c="project", f="beneficiary_type",
-                                                             args="create",
-                                                             vars=dict(format="popup",
-                                                                       child="bnf_type")),
-                                                   _target="top",
-                                                   _title=ADD_BNF_TYPE),
-                                                 DIV(_class="tooltip",
-                                                     _title="%s|%s" % (ADD_BNF_TYPE,
-                                                                       T("Add a new beneficiary type")))),
+                                   comment = s3_popup_comment(c="project",
+                                                              f="beneficiary_type",
+                                                              title=ADD_BNF_TYPE,
+                                                              tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Beneficiary Type'.")),
                                    ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
@@ -1131,14 +1096,10 @@ class S3ProjectDRRModel(S3Model):
                                                                            fieldname = "type",
                                                                            look_up_value = id),
                                          label = T("Beneficiaries"),
-                                         comment = DIV(A(ADD_BNF,
-                                                         _class="colorbox",
-                                                         _href=URL(c="project",
-                                                                   f="beneficiary",
-                                                                   args="create",
-                                                                   vars=dict(format="popup")),
-                                                         _target="top",
-                                                         _title=ADD_BNF)),
+                                         comment = s3_popup_comment(c="project",
+                                                                    f="beneficiary",
+                                                                    title=ADD_BNF,
+                                                                    tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
                                          ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
@@ -1292,15 +1253,14 @@ class S3ProjectTaskModel(S3Model):
     """
 
     names = ["project_milestone",
-             "project_comment",
              "project_task",
              "project_time",
+             "project_comment",
+             "project_task_project",
+             "project_task_activity",
              "project_task_ireport",
              "project_task_job_role",
              "project_task_human_resource",
-             "project_task_document",
-             "project_task_project",
-             "project_task_activity",
              "project_task_id",
              ]
 
@@ -1372,16 +1332,10 @@ class S3ProjectTaskModel(S3Model):
                                        requires = IS_NULL_OR(IS_ONE_OF(db, "project_milestone.id",
                                                                        "%(name)s")),
                                        represent = self.milestone_represent,
-                                       comment = DIV(A(ADD_MILESTONE,
-                                                       _class="colorbox",
-                                                       _href=URL(c="project", f="milestone",
-                                                                 args="create",
-                                                                 vars=dict(format="popup")),
-                                                       _target="top",
-                                                       _title=ADD_MILESTONE),
-                                                     DIV(_class="tooltip",
-                                                         _title="%s|%s" % (ADD_MILESTONE,
-                                                                           T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")))),
+                                       comment = s3_popup_comment(c="project",
+                                                                  f="milestone",
+                                                                  title=ADD_MILESTONE,
+                                                                  tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
                                        label = T("Milestone"),
                                        ondelete = "RESTRICT")
 
@@ -1397,16 +1351,17 @@ class S3ProjectTaskModel(S3Model):
             1: T("Draft"),
             2: T("New"),
             3: T("Assigned"),
-            4: T("On Hold"),
-            5: T("Feedback"),
-            6: T("Cancelled"),
-            7: T("Blocked"),
-            8: T("Completed"),
-            9: T("Verified"),
+            4: T("Feedback"),
+            5: T("Blocked"),
+            6: T("On Hold"),
+            7: T("Cancelled"),
+            8: T("Duplicate"),
+            9: T("Completed"),
+            10: T("Verified"),
             #99: T("unspecified")
         }
 
-        project_task_active_statuses = [2, 3, 5, 7]
+        project_task_active_statuses = [2, 3, 4, 5]
         project_task_priority_opts = {
             1:T("Urgent"),
             2:T("High"),
@@ -1424,16 +1379,6 @@ class S3ProjectTaskModel(S3Model):
                                         default=False,
                                         readable=False,
                                         writable=False),
-                                  Field("status", "integer",
-                                        requires = IS_IN_SET(project_task_status_opts,
-                                                             zero=None),
-                                        default = 2,
-                                        readable = staff,
-                                        writable = staff,
-                                        label = T("Status"),
-                                        represent = lambda opt, row=None: \
-                                                    project_task_status_opts.get(opt,
-                                                                                 UNKNOWN_OPT)),
                                   Field("name",
                                         label = T("Short Description"),
                                         length=100,
@@ -1444,6 +1389,11 @@ class S3ProjectTaskModel(S3Model):
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Detailed Description/URL"),
                                                                         T("Please provide as much detail as you can, including the URL(s) where the bug occurs or you'd like the new feature to go.")))),
+                                  site_id,
+                                  location_id(label=T("Deployment Location"),
+                                              readable=False,
+                                              writable=False
+                                              ),
                                   Field("source",
                                         label = T("Source")),
                                   Field("priority", "integer",
@@ -1495,11 +1445,16 @@ class S3ProjectTaskModel(S3Model):
                                         writable=False,
                                         label = "%s (%s)" % (T("Time Taken"),
                                                              T("hours"))),
-                                  site_id,
-                                  location_id(label=T("Deployment Location"),
-                                              readable=False,
-                                              writable=False
-                                              ),
+                                  Field("status", "integer",
+                                        requires = IS_IN_SET(project_task_status_opts,
+                                                             zero=None),
+                                        default = 2,
+                                        readable = staff,
+                                        writable = staff,
+                                        label = T("Status"),
+                                        represent = lambda opt, row=None: \
+                                                    project_task_status_opts.get(opt,
+                                                                                 UNKNOWN_OPT)),
                                   *s3.meta_fields())
 
         # Field configurations
@@ -1594,6 +1549,7 @@ class S3ProjectTaskModel(S3Model):
                                     "priority",
                                     "name",
                                     "pe_id",
+                                    "milestone_id",
                                     "date_due",
                                     "time_estimated",
                                     "created_on",
@@ -1609,16 +1565,10 @@ class S3ProjectTaskModel(S3Model):
                                   requires = IS_NULL_OR(IS_ONE_OF(db, "project_task.id", "%(name)s")),
                                   represent = lambda id, row=None: \
                                                 (id and [db.project_task[id].name] or [NONE])[0],
-                                  comment = DIV(A(ADD_TASK,
-                                                  _class="colorbox",
-                                                  _href=URL(c="project", f="task",
-                                                            args="create",
-                                                            vars=dict(format="popup")),
-                                                  _target="top",
-                                                  _title=ADD_TASK),
-                                                DIV(_class="tooltip",
-                                                    _title="%s|%s" % (ADD_TASK,
-                                                                      T("A task is a piece of work that an individual or team can do in 1-2 days")))),
+                                  comment = s3_popup_comment(c="project",
+                                                             f="task",
+                                                             title=ADD_TASK,
+                                                             tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
                                   ondelete = "CASCADE")
 
         # Components
@@ -1628,6 +1578,16 @@ class S3ProjectTaskModel(S3Model):
                                 link="project_task_project",
                                 joinby="task_id",
                                 key="project_id",
+                                actuate="embed",
+                                autocomplete="name",
+                                autodelete=False))
+
+        # Activities (for imports)
+        self.add_component("project_activity",
+                           project_task=Storage(
+                                link="project_task_activity",
+                                joinby="task_id",
+                                key="activity_id",
                                 actuate="embed",
                                 autocomplete="name",
                                 autodelete=False))
@@ -1664,6 +1624,9 @@ class S3ProjectTaskModel(S3Model):
 
         # Time
         self.add_component("project_time", project_task="task_id")
+
+        # Comments (for imports))
+        self.add_component("project_comment", project_task="task_id")
 
         # ---------------------------------------------------------------------
         # Link Tasks <-> Projects
@@ -1722,7 +1685,7 @@ class S3ProjectTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Link tasks <-> incident reports
         #
-        itable = self.table("irg_ireport", None)
+        itable = self.table("irs_ireport", None)
         if itable is not None:
 
             ireport_id = s3.ireport_id
@@ -2023,10 +1986,9 @@ def project_rheader(r, tabs=[]):
     rheader = None
 
     if r.representation == "html":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-        table = r.table
         record = r.record
         if record:
+            table = r.table
             T = current.T
             db = current.db
             s3db = current.s3db
@@ -2037,6 +1999,8 @@ def project_rheader(r, tabs=[]):
             pca = settings.get_project_community_activity()
 
             if r.name == "project":
+                # @ToDo: integrate tabs?
+                rheader_tabs = s3_rheader_tabs(r, tabs)
                 if drr:
                     row2 = TR(
                         TH("%s: " % table.countries_id.label),
@@ -2046,11 +2010,11 @@ def project_rheader(r, tabs=[]):
                 else:
                     row2 = TR(
                         TH("%s: " % table.organisation_id.label),
-                        s3db.org_organisation_represent(record.organisation_id)
+                        table.organisation_id.represent(record.organisation_id)
                         )
                     row3 = TR(
                         TH("%s: " % table.end_date.label),
-                        record.end_date
+                        record.end_date or ""
                         )
 
                 rheader = DIV(TABLE(
@@ -2063,26 +2027,34 @@ def project_rheader(r, tabs=[]):
                     ), rheader_tabs)
 
             elif r.name == "activity":
-                # @todo: integrate tabs?
+                # @ToDo: integrate tabs?
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+                tbl = TABLE()
+                if record.project_id is not None:
+                    tbl.append(
+                                TR(
+                                    TH("%s: " % table.project_id.label),
+                                    table.project_id.represent(record.project_id))
+                                )
                 if pca:
-                    tbl = TABLE(
+                    tbl.append(
+
                                 TR(
                                    TH("%s: " % table.location_id.label),
-                                   s3.gis_location_represent(record.location_id)
+                                   table.location_id.represent(record.location_id)
                                   )
                                )
                 else:
-                    tbl = TABLE(
+                    tbl.append(
+
                                 TR(
                                    TH("%s: " % table.name.label),
                                    record.name
                                   )
                                )
-                if record.project_id is not None:
-                    tbl.append(TR(TH("%s: " % table.project_id.label),
-                                  table.project_id.represent(record.project_id)))
                 rheader = DIV(tbl, rheader_tabs)
             elif r.name == "task":
+                # Tabs
                 tabs = [(T("Details"), None)]
                 staff = auth.s3_has_role("STAFF")
                 if staff:
@@ -2095,45 +2067,125 @@ def project_rheader(r, tabs=[]):
 
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
-                ctable = s3db.project_comment
-                query = (ctable.deleted == False) & \
-                        (ctable.task_id == r.id)
-                comments = db(query).count()
-                if comments:
-                    comments = TR(
-                                    TH("%s: " % T("Comments")),
-                                    A(comments,
-                                      _href=URL(args=[r.id, "discuss"]))
+                # RHeader
+                ptable = s3db.project_project
+                ltable = s3db.project_task_project
+                query = (ltable.deleted == False) & \
+                        (ltable.task_id == r.id) & \
+                        (ltable.project_id == ptable.id)
+                project = db(query).select(ptable.name,
+                                           limitby=(0, 1)).first()
+                if project:
+                    project = TR(
+                                    TH("%s: " % T("Project")),
+                                    project.name
                                 )
                 else:
+                    project = ""
+
+                atable = s3db.project_activity
+                ltable = s3db.project_task_activity
+                query = (ltable.deleted == False) & \
+                        (ltable.task_id == r.id) & \
+                        (ltable.activity_id == atable.id)
+                activity = db(query).select(atable.name,
+                                            limitby=(0, 1)).first()
+                if activity:
+                    activity = TR(
+                                    TH("%s: " % T("Activity")),
+                                    activity.name
+                                )
+                else:
+                    activity = ""
+
+                if record.description:
+                    description = TR(
+                                    TH("%s: " % table.description.label),
+                                    record.description
+                                )
+                else:
+                    description = ""
+
+                if record.site_id:
+                    facility = TR(
+                                    TH("%s: " % table.site_id.label),
+                                    table.site_id.represent(record.site_id),
+                                )
+                else:
+                    facility = ""
+
+                if record.location_id:
+                    location = TR(
+                                    TH("%s: " % table.location_id.label),
+                                    table.location_id.represent(record.location_id),
+                                )
+                else:
+                    location = ""
+
+                if record.pe_id:
+                    assignee = TR(
+                                    TH("%s: " % table.pe_id.label),
+                                    s3.pr_pentity_represent(record.pe_id,
+                                                            show_label=False),
+                                )
+                else:
+                    assignee = ""
+
+                if record.time_estimated:
+                    time_estimated = TR(
+                                    TH("%s: " % table.time_estimated.label),
+                                    record.time_estimated
+                                )
+                else:
+                    time_estimated = ""
+
+                if record.time_actual:
+                    time_actual = TR(
+                                    TH("%s: " % table.time_actual.label),
+                                    record.time_actual
+                                )
+                else:
+                    time_actual = ""
+
+                # Comments
+                if r.method == "discuss":
                     comments = ""
+                else:
+                    ctable = s3db.project_comment
+                    query = (ctable.deleted == False) & \
+                            (ctable.task_id == r.id)
+                    comments = db(query).select(ctable.body).last()
+                    if comments:
+                        try:
+                            markup = etree.XML(comments.body)
+                            text = markup.xpath(".//text()")
+                            if text:
+                                text = " ".join(text)
+                            else:
+                                text = ""
+                        except etree.XMLSyntaxError:
+                            text = comments.body.replace("<", "<!-- <").replace(">", "> -->")
+                        comments = TR(
+                                        TH("%s: " % T("Lastet Comment")),
+                                        A(text,
+                                          _href=URL(args=[r.id, "discuss"]))
+                                    )
+                    else:
+                        comments = ""
 
                 rheader = DIV(TABLE(
+                    project,
+                    activity,
                     TR(
                         TH("%s: " % table.name.label),
                         record.name,
-                        #TH("%s: " % table.site_id.label),
-                        #s3.org_site_represent(record.site_id),
                         ),
-                    TR(
-                        TH("%s: " % table.pe_id.label),
-                        s3.pr_pentity_represent(record.pe_id,
-                                                show_label=False),
-                        #TH("%s: " % table.location_id.label),
-                        #s3db.gis_location_represent(record.location_id),
-                        ),
-                    TR(
-                        TH("%s: " % table.description.label),
-                        record.description
-                        ),
-                    TR(
-                        TH("%s: " % table.time_estimated.label),
-                        record.time_estimated or ""
-                        ),
-                    TR(
-                        TH("%s: " % table.time_actual.label),
-                        record.time_actual or ""
-                        ),
+                    description,
+                    facility,
+                    location,
+                    assignee,
+                    time_estimated,
+                    time_actual,
                     comments,
                     ), rheader_tabs)
 
