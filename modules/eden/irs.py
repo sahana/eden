@@ -686,7 +686,7 @@ var timeline_data = {  // save as a global variable
         'title': 'Cyclone Yasi',
         'caption': 'Queensland Australia',
         'description': 'Queensland Australia',
-        //'image': 'http://upload.wikimedia.org/wikipedia/commons/8/8c/Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg',
+        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg/220px-Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg',
         'link': 'http://en.wikipedia.org/wiki/Cyclone_Yasi',
         'color' : 'red'
         },
@@ -695,7 +695,7 @@ var timeline_data = {  // save as a global variable
         'title': 'Tropical Storm Washi',
         'caption': 'Philippines',
         'description': 'Philippines',
-        //'image': 'http://upload.wikimedia.org/wikipedia/commons/3/3a/Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg',
+        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg/220px-Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg',
         'link': 'http://en.wikipedia.org/wiki/Tropical_Storm_Washi_(2011)',
         'color' : 'red'
         },
@@ -705,7 +705,7 @@ var timeline_data = {  // save as a global variable
         'title': 'Thailand Floods',
         'caption': 'Queensland Australia',
         'description': 'Provinces located in the Chao Phraya and Mekong River basin, including Bangkok and surrounding neighborhoods were most severely affected directly or indirectly by inundation.',
-        //'image': 'http://upload.wikimedia.org/wikipedia/commons/b/bf/2011_Thailand_floods-MODIS_2011-10-19.jpg',
+        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/2011_Thailand_floods-MODIS_2011-10-19.jpg/180px-2011_Thailand_floods-MODIS_2011-10-19.jpg',
         'link': 'http://en.wikipedia.org/wiki/2011_Thailand_floods',
         'color' : 'blue'
         },
