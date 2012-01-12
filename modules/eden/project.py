@@ -1688,7 +1688,7 @@ class S3ProjectTaskModel(S3Model):
         itable = self.table("irs_ireport", None)
         if itable is not None:
 
-            ireport_id = s3.ireport_id
+            ireport_id = self.irs_ireport_id
 
             tablename = "project_task_ireport"
             table = self.define_table(tablename,

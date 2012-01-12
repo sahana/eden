@@ -16,6 +16,7 @@
            URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
 
            You can add a third argument &ignore_errors
+
          CSV fields:
          Name............................hrm_certificate.name
          Organisation....................hrm_certificate.organisation

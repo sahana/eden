@@ -30,10 +30,8 @@
 """
 
 __all__ = ["S3IRSModel",
+           "S3IRSResponseModel",
            "irs_rheader"]
-
-import os
-import sys
 
 from gluon import *
 from gluon.storage import Storage
@@ -44,8 +42,7 @@ class S3IRSModel(S3Model):
 
     names = ["irs_icategory",
              "irs_ireport",
-             # @ToDo: Move this to a separate class
-             "irs_ireport_vehicle"]
+             "irs_ireport_id"]
 
     def model(self):
 
@@ -55,11 +52,8 @@ class S3IRSModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        human_resource_id = self.hrm_human_resource_id
         location_id = self.gis_location_id
-        person_id = self.pr_person_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         datetime_represent = S3DateTime.datetime_represent
 
         # ---------------------------------------------------------------------
@@ -247,42 +241,56 @@ class S3IRSModel(S3Model):
                                         represent = lambda opt: \
                                             irs_incident_type_opts.get(opt, opt)),
                                   # Better to use a plain text field than to clutter the PR
-                                  Field("person", label = T("Reporter Name"),
+                                  Field("person",
+                                        readable = False,
+                                        writable = False,
+                                        label = T("Reporter Name"),
                                         comment = (T("At/Visited Location (not virtual)"))),
-                                  #person_id(label = T("Reporter Name"),
-                                  #          comment = (T("At/Visited Location (not virtual)"),
-                                  #                     pr_person_comment(T("Reporter Name"),
-                                  #                                       T("The person at the location who is reporting this incident (optional)")))),
-                                  Field("contact", label = T("Contact Details")),
-                                  #organisation_id(label = T("Assign to Org.")),
+                                  Field("contact",
+                                        readable = False,
+                                        writable = False,
+                                        label = T("Contact Details")),
                                   Field("datetime", "datetime",
+                                        default = request.utcnow,
                                         label = T("Date/Time of Alert"),
                                         widget = S3DateTimeWidget(future=0),
                                         represent = lambda val: datetime_represent(val, utc=True),
                                         requires = [IS_NOT_EMPTY(),
                                                     IS_UTC_DATETIME(allow_future=False)]),
+                                  Field("expiry", "datetime",
+                                        #readable = False,
+                                        #writable = False,
+                                        label = T("Expiry Date/Time"),
+                                        widget = S3DateTimeWidget(past=0),
+                                        represent = lambda val: datetime_represent(val, utc=True),
+                                        requires = IS_NULL_OR(IS_UTC_DATETIME())
+                                       ),
                                   location_id(),
-                                  human_resource_id(label=T("Incident Commander")),
-                                  Field("dispatch", "datetime",
-                                        # We don't want these visible in Create forms
-                                        # (we override in Update forms in controller)
-                                        writable = False, readable = False,
-                                        label = T("Date/Time of Dispatch"),
-                                        widget = S3DateTimeWidget(future=0),
-                                        requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False))),
                                   Field("verified", "boolean",    # Ushahidi-compatibility
                                         # We don't want these visible in Create forms
                                         # (we override in Update forms in controller)
-                                        writable = False, readable = False,
+                                        readable = False,
+                                        writable = False,
                                         label = T("Verified?"),
                                         represent = lambda verified: \
                                               (T("No"),
                                                T("Yes"))[verified == True]),
+                                  # @ToDo: Move this to Events?
+                                  # Then display here as a Virtual Field
+                                  Field("dispatch", "datetime",
+                                        # We don't want these visible in Create forms
+                                        # (we override in Update forms in controller)
+                                        readable = False,
+                                        writable = False,
+                                        label = T("Date/Time of Dispatch"),
+                                        widget = S3DateTimeWidget(future=0),
+                                        requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False))),
                                   Field("closed", "boolean",
                                         # We don't want these visible in Create forms
                                         # (we override in Update forms in controller)
                                         default = False,
-                                        writable = False, readable = False,
+                                        readable = False,
+                                        writable = False,
                                         label = T("Closed?"),
                                         represent = lambda closed: \
                                               (T("No"),
@@ -317,13 +325,15 @@ class S3IRSModel(S3Model):
                        list_fields = ["id",
                                       "name",
                                       "category",
+                                      "datetime",
                                       "location_id",
                                       #"organisation_id",
                                       "verified",
                                       "message",
                                     ])
 
-        # Tasks as component of Incident Reports
+        # Components
+        # Tasks
         self.add_component("project_task",
                            irs_ireport=Storage(link="project_task_ireport",
                                                joinby="ireport_id",
@@ -332,7 +342,7 @@ class S3IRSModel(S3Model):
                                                autocomplete="name",
                                                autodelete=False))
 
-        # Vehicles as component of Incident Reports
+        # Vehicles
         self.add_component("asset_asset",
                            irs_ireport=Storage(
                                 link="irs_ireport_vehicle",
@@ -343,6 +353,22 @@ class S3IRSModel(S3Model):
                                 actuate="link",
                                 autocomplete="name",
                                 autodelete=False))
+
+        if settings.has_module("vehicle"):
+            link_table = "irs_ireport_vehicle_human_resource"
+        else:
+            link_table = "irs_ireport_human_resource"
+        self.add_component("hrm_human_resource",
+                           irs_ireport=Storage(
+                                    link=link_table,
+                                    joinby="ireport_id",
+                                    key="human_resource_id",
+                                    # Dispatcher doesn't need to Add/Edit records, just Link
+                                    actuate="link",
+                                    autocomplete="name",
+                                    autodelete=False
+                                )
+                            )
 
         ireport_id = S3ReusableField("ireport_id", table,
                                      requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -367,105 +393,18 @@ class S3IRSModel(S3Model):
                         method="ushahidi",
                         action=self.irs_ushahidi_import)
 
-        # ---------------------------------------------------------------------
-        # Link Tables for iReports
-        # @ToDo: Make these conditional on Event not being activated?
-        # ---------------------------------------------------------------------
-        if settings.has_module("hrm"):
-            tablename = "irs_ireport_human_resource"
-            table = self.define_table(tablename,
-                                      ireport_id(),
-                                      # Simple dropdown is faster for a small team
-                                      human_resource_id(widget=None),
-                                      *s3.meta_fields())
-
-        if settings.has_module("vehicle"):
-            current.manager.load("asset_asset")
-            asset_id = s3.asset_id
-            asset_represent = s3.asset_represent
-            tablename = "irs_ireport_vehicle"
-            table = self.define_table(tablename,
-                                      ireport_id(),
-                                      asset_id(label = T("Vehicle")),
-                                      Field("datetime", "datetime",
-                                            label=T("Dispatch Time"),
-                                            widget = S3DateTimeWidget(future=0),
-                                            requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
-                                            default = request.utcnow),
-                                      self.super_link("site_id", "org_site"),
-                                      location_id(label=T("Destination")),
-                                      Field("closed",
-                                            # @ToDo: Close all assignments when Incident closed
-                                            readable=False,
-                                            writable=False),
-                                      s3.comments(),
-                                      *s3.meta_fields())
-
-            atable = db.asset_asset
-            query = (atable.type == s3.asset.ASSET_TYPE_VEHICLE) & \
-                    (atable.deleted == False) & \
-                    ((table.id == None) | \
-                     (table.closed == True) | \
-                     (table.deleted == True))
-            left = table.on(atable.id == table.asset_id)
-            table.asset_id.requires = IS_NULL_OR(IS_ONE_OF(db(query),
-                                                           "asset_asset.id",
-                                                           asset_represent,
-                                                           left=left,
-                                                           sort=True))
-            table.site_id.label = T("Fire Station")
-            table.site_id.readable = True
-            # Populated from fire_station_vehicle
-            #table.site_id.writable = True
-
-            self.configure("irs_ireport",
-                           # Porto-specific currently
-                           #create_onaccept=self.ireport_onaccept,
-                           #create_next=URL(args=["[id]", "human_resource"]),
-                           update_next=URL(args=["[id]", "update"]))
-
-            if settings.has_module("hrm"):
-                hr_represent = self.hrm_hr_represent
-                tablename = "irs_ireport_vehicle_human_resource"
-                table = self.define_table(tablename,
-                                          ireport_id(),
-                                          # Simple dropdown is faster for a small team
-                                          human_resource_id(represent=hr_represent,
-                                                            requires = IS_ONE_OF(db,
-                                                                                 "hrm_human_resource.id",
-                                                                                 hr_represent,
-                                                                                 #orderby="pr_person.first_name"
-                                                                                 ),
-                                                            widget=None),
-                                          asset_id(label = T("Vehicle")),
-                                          Field("closed",
-                                                # @ToDo: Close all assignments when Incident closed
-                                                readable=False,
-                                                writable=False),
-                                          *s3.meta_fields())
-
-        # Components
-        if settings.has_module("vehicle"):
-            link_table = "irs_ireport_vehicle_human_resource"
-        else:
-            link_table = "irs_ireport_human_resource"
-        self.add_component("hrm_human_resource",
-                           irs_ireport=Storage(
-                                    link=link_table,
-                                    joinby="ireport_id",
-                                    key="human_resource_id",
-                                    # Dispatcher doesn't need to Add/Edit records, just Link
-                                    actuate="link",
-                                    autocomplete="name",
-                                    autodelete=False
-                                )
-                            )
+        self.configure("irs_ireport",
+                       # Porto-specific currently
+                       #create_onaccept=self.ireport_onaccept,
+                       #create_next=URL(args=["[id]", "human_resource"]),
+                       update_next=URL(args=["[id]", "update"])
+                       )
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
         return Storage(
-            ireport_id = ireport_id,
+            irs_ireport_id = ireport_id,
             irs_incident_type_opts = irs_incident_type_opts
             )
 
@@ -505,10 +444,11 @@ class S3IRSModel(S3Model):
         """
             Assign the appropriate vehicle & on-shift team to the incident
             @ToDo: Specialist teams
-            @ToDo: Make more generic
+            @ToDo: Make more generic (currently Porto-specific)
         """
 
         db = current.db
+        s3db = current.s3db
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -527,13 +467,13 @@ class S3IRSModel(S3Model):
         else:
             types = ["VLCI"]
 
-        # 1st unassigned vehicle
+        # 1st unassigned vehicle of the matching type
         # @ToDo: Filter by Org/Base
         # @ToDo: Filter by those which are under repair (asset_log)
         current.manager.load("fire_station_vehicle")
-        table = db.irs_ireport_vehicle
-        atable = db.asset_asset
-        vtable = db.vehicle_vehicle
+        table = s3db.irs_ireport_vehicle
+        atable = s3db.asset_asset
+        vtable = s3db.vehicle_vehicle
         for type in types:
             query = (atable.type == s3.asset.ASSET_TYPE_VEHICLE) & \
                     (vtable.type == type) & \
@@ -557,16 +497,16 @@ class S3IRSModel(S3Model):
                                         limitby=(0, 1)).first()
                 if site:
                     site = site.id
-                db.irs_ireport_vehicle.insert(ireport_id=ireport,
-                                              asset_id=vehicle,
-                                              site_id=site)
+                table.insert(ireport_id=ireport,
+                             asset_id=vehicle,
+                             site_id=site)
                 if settings.has_module("hrm"):
                     # Assign 1st 5 human resources on-shift
                     # @ToDo: We shouldn't assign people to vehicles automatically - this is done as people are ready
                     #        - instead we should simply assign people to the incident & then use a drag'n'drop interface to link people to vehicles
                     # @ToDo: Filter by Base
-                    table = db.irs_ireport_vehicle_human_resource
-                    htable = db.hrm_human_resource
+                    table = s3db.irs_ireport_vehicle_human_resource
+                    htable = s3db.hrm_human_resource
                     on_shift = response.s3.fire_staff_on_duty()
                     query = on_shift & \
                             ((table.id == None) | \
@@ -576,16 +516,20 @@ class S3IRSModel(S3Model):
                     people = db(query).select(htable.id,
                                               left=left,
                                               limitby=(0, 5))
-                    # @ToDo: Find Ranking person to be team leader
+                    # @ToDo: Find Ranking person to be incident commander
                     leader = people.first()
                     if leader:
                         leader = leader.id
-                    query = (db.irs_ireport.id == ireport)
-                    db(query).update(human_resource_id=leader)
                     for person in people:
-                        table.insert(ireport_id=ireport,
-                                     asset_id=vehicle,
-                                     human_resource_id=person.id)
+                        if person.id == leader.id:
+                            table.insert(ireport_id=ireport,
+                                         asset_id=vehicle,
+                                         human_resource_id=person.id,
+                                         incident_commander=True)
+                        else:
+                            table.insert(ireport_id=ireport,
+                                         asset_id=vehicle,
+                                         human_resource_id=person.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -648,18 +592,25 @@ class S3IRSModel(S3Model):
 
             http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
 
-            @ToDo: Longer-term we'd like to load the Incidents dynamically via
-                   JSON with pagination, so we shouldn't be a custom method
-                   as we don't want to parse the request twice?
+            @ToDo: Play button
+            http://www.simile-widgets.org/wiki/Timeline_Moving_the_Timeline_via_Javascript
         """
 
-        T = current.T
-        request = current.request
-        response = current.response
-        session = current.session
-        s3 = response.s3
-
         if r.representation == "html" and r.name == "ireport":
+
+            import gluon.contrib.simplejson as json
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+            request = current.request
+            response = current.response
+            session = current.session
+            s3 = response.s3
+            now = request.utcnow
+
+            itable = s3db.doc_image
+            dtable = s3db.doc_document
 
             output = dict()
 
@@ -668,73 +619,110 @@ class S3IRSModel(S3Model):
                 rheader = irs_rheader(r)
                 output.update(rheader=rheader)
 
+            # Create the DIV
+            item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")
+
+            # Add our data
+            # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
+            # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
+            if r.record:
+                # Single record
+                rows = [r.record]
+            else:
+                # Multiple records
+                # @ToDo: Load all records & sort to closest in time
+                # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
+                r.resource.load(limit=2000)
+                rows = r.resource._rows
+
+            data = {'dateTimeFormat': 'iso8601',
+                    'events': []
+                    }
+
+            tl_start = now
+            tl_end = now
+            events = []
+            for row in rows:
+                # Dates
+                start = row.datetime or ""
+                if start:
+                    if start < tl_start:
+                        tl_start = start
+                    if start > tl_end:
+                        tl_end = start
+                    start = start.isoformat()
+                end = row.expiry or ""
+                if end:
+                    if end > tl_end:
+                        tl_end = end
+                    end = end.isoformat()
+                # Image
+                # Just grab the first one for now
+                query = (itable.deleted == False) & \
+                        (itable.doc_id == row.doc_id)
+                image = db(query).select(itable.url,
+                                         limitby=(0, 1)).first()
+                if image:
+                    image = image.url or ""
+                # URL
+                link = URL(args=[row.id])
+                events.append({'start': start,
+                                       'end': end,
+                                       'title': row.name,
+                                       'caption': row.message or "",
+                                       'description': row.message or "",
+                                       'image': image or "",
+                                       'link': link or ""
+                                       # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                                       #'color' : 'blue'
+                                    })
+            data["events"] = events
+            data = json.dumps(data)
+
+            data = """
+S3.timeline = Object();
+S3.timeline.data = %s;""" % data
+            s3.js_global.append(data)
+
             # Add core Simile Code
-            #s3.scripts.append("http://api.simile-widgets.org/timeline/2.3.1/timeline-api.js?bundle=true")
-            #s3.scripts.append("http://trunk.simile-widgets.org/timeline/api/timeline-api.js?bundle=true")
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
 
-            # Create the DIV
-            item = DIV(_id="s3timeline", _style="height: 150px; border: 1px solid #aaa")
-
             # Add our code to instantiate Simile
-            s3.js_global.append("""
-S3.timeline = Object();
-var timeline_data = {  // save as a global variable
-'dateTimeFormat': 'iso8601',
-'events' : [
-        {'start': '2011-02-03',
-        'title': 'Cyclone Yasi',
-        'caption': 'Queensland Australia',
-        'description': 'Queensland Australia',
-        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg/220px-Cyclone_Yasi_2_February_2011_approaching_Queensland.jpg',
-        'link': 'http://en.wikipedia.org/wiki/Cyclone_Yasi',
-        'color' : 'red'
-        },
-
-        {'start': '2011-12-17',
-        'title': 'Tropical Storm Washi',
-        'caption': 'Philippines',
-        'description': 'Philippines',
-        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg/220px-Tropical_Storm_Washi_2011_Estimated_Rainfall.jpg',
-        'link': 'http://en.wikipedia.org/wiki/Tropical_Storm_Washi_(2011)',
-        'color' : 'red'
-        },
-
-        {'start': '2011-07',
-        'end': '2011-12',
-        'title': 'Thailand Floods',
-        'caption': 'Queensland Australia',
-        'description': 'Provinces located in the Chao Phraya and Mekong River basin, including Bangkok and surrounding neighborhoods were most severely affected directly or indirectly by inundation.',
-        'image': 'http://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/2011_Thailand_floods-MODIS_2011-10-19.jpg/180px-2011_Thailand_floods-MODIS_2011-10-19.jpg',
-        'link': 'http://en.wikipedia.org/wiki/2011_Thailand_floods',
-        'color' : 'blue'
-        },
-]}
+            # //theme.autoWidth = true;
+            code = "".join(("""
 S3.timeline.onLoad = function() {
     var tl_el = document.getElementById("s3timeline");
-    var eventSource = new Timeline.DefaultEventSource();
+    S3.timeline.eventSource = new Timeline.DefaultEventSource();
     var theme = Timeline.ClassicTheme.create();
-    theme.autoWidth = true;
-    theme.timeline_start = new Date(Date.UTC(2011, 0, 1));
-    theme.timeline_stop  = new Date(Date.UTC(2013, 0, 1));
-    var d = Timeline.DateTime.parseGregorianDateTime("2011-10")
+    theme.timeline_start = new Date('""", tl_start.isoformat(), """');
+    theme.timeline_stop  = new Date('""", tl_end.isoformat(), """');
+    theme.event.bubble.width = 320;
+    theme.event.bubble.height = 180;
+    var now = Timeline.DateTime.parseIso8601DateTime('""", now.isoformat(), """')
     var bandInfos = [
         Timeline.createBandInfo({
-            width:          45, // set to a minimum, autoWidth will then adjust
+            width:          '90%',
             intervalUnit:   Timeline.DateTime.MONTH, 
+            intervalPixels: 140,
+            eventSource:    S3.timeline.eventSource,
+            date:           now,
+            theme:          theme
+        }),
+        Timeline.createBandInfo({
+            overview:       true,
+            width:          '10%', 
+            intervalUnit:   Timeline.DateTime.YEAR, 
             intervalPixels: 200,
-            eventSource:    eventSource,
-            date:           d,
-            theme:          theme,
-            layout:         'original'  // original, overview, detailed
-        })
+            eventSource:    S3.timeline.eventSource,
+            date:           now
+     })
     ];
-    // create the Timeline
-    tl = Timeline.create(tl_el, bandInfos, Timeline.HORIZONTAL);
-    // load the events
+    bandInfos[1].syncWith = 0;
+    bandInfos[1].highlight = true;
+    S3.timeline.tl = Timeline.create(tl_el, bandInfos, Timeline.HORIZONTAL);
     var url = '.';
-    eventSource.loadJSON(timeline_data, url);
-    tl.layout();
+    S3.timeline.eventSource.loadJSON(S3.timeline.data, url);
+    S3.timeline.tl.layout();
 }
 S3.timeline.resizeTimerID = null;
 S3.timeline.onResize = function() {
@@ -744,7 +732,8 @@ S3.timeline.onResize = function() {
             S3.timeline.tl.layout();
         }, 500);
     }
-}""")
+}"""))
+            s3.js_global.append(code)
             s3.jquery_ready.append("""
 $(window).load(function() {
     S3.timeline.onLoad();
@@ -771,6 +760,8 @@ $(window).resize(function() {
 
             @ToDo: Deployment setting for Ushahidi instance URL
         """
+
+        import os
 
         T = current.T
         auth = current.auth
@@ -838,6 +829,7 @@ $(window).resize(function() {
                                                       stylesheet=stylesheet,
                                                       ignore_errors=ignore_errors)
                     except:
+                        import sys
                         e = sys.exc_info()[1]
                         response.error = e
                     else:
@@ -859,6 +851,146 @@ $(window).resize(function() {
             raise HTTP(501, BADMETHOD)
 
 # =============================================================================
+class S3IRSResponseModel(S3Model):
+    """
+        Tables used when responding to Incident Reports
+        - with HRMs &/or Vehicles
+
+        Currently this has code specific to Porto Firefighters
+
+        @ToDo: Move these to Events module?
+               - the response shouldn't live within the reporting system?
+    """
+
+    names = ["irs_ireport_human_resource",
+             "irs_ireport_vehicle",
+             "irs_ireport_vehicle_human_resource"]
+
+    def model(self):
+
+        db = current.db
+        T = current.T
+        request = current.request
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        human_resource_id = self.hrm_human_resource_id
+        location_id = self.gis_location_id
+        ireport_id = self.irs_ireport_id
+
+        # ---------------------------------------------------------------------
+        # Staff assigned to an Incident
+        #
+        if settings.has_module("hrm"):
+            tablename = "irs_ireport_human_resource"
+            table = self.define_table(tablename,
+                                      ireport_id(),
+                                      # Simple dropdown is faster for a small team
+                                      human_resource_id(widget=None),
+                                      Field("incident_commander", "boolean",
+                                            default = False,
+                                            label = T("Incident Commander"),
+                                            represent = lambda incident_commander: \
+                                                    (T("No"),
+                                                     T("Yes"))[incident_commander == True]),
+                                     *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Vehicles assigned to an Incident
+        #
+        if settings.has_module("vehicle"):
+            table = self.asset_asset
+            asset_id = s3.asset_id
+            asset_represent = s3.asset_represent
+            tablename = "irs_ireport_vehicle"
+            table = self.define_table(tablename,
+                                      ireport_id(),
+                                      asset_id(
+                                            label = T("Vehicle"),
+                                            requires=self.irs_vehicle_requires
+                                        ),
+                                      Field("datetime", "datetime",
+                                            label=T("Dispatch Time"),
+                                            widget = S3DateTimeWidget(future=0),
+                                            requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
+                                            default = request.utcnow),
+                                      self.super_link("site_id", "org_site"),
+                                      location_id(label=T("Destination")),
+                                      Field("closed",
+                                            # @ToDo: Close all assignments when Incident closed
+                                            readable=False,
+                                            writable=False),
+                                      s3.comments(),
+                                      *s3.meta_fields())
+
+            # Field options
+            table.site_id.label = T("Fire Station")
+            table.site_id.readable = True
+            # Populated from fire_station_vehicle
+            #table.site_id.writable = True
+
+            # ---------------------------------------------------------------------
+            # Which Staff are assigned to which Vehicle?
+            #
+            if settings.has_module("hrm"):
+                hr_represent = self.hrm_hr_represent
+                tablename = "irs_ireport_vehicle_human_resource"
+                table = self.define_table(tablename,
+                                          ireport_id(),
+                                          # Simple dropdown is faster for a small team
+                                          human_resource_id(represent=hr_represent,
+                                                            requires = IS_ONE_OF(db,
+                                                                                 "hrm_human_resource.id",
+                                                                                 hr_represent,
+                                                                                 #orderby="pr_person.first_name"
+                                                                                 ),
+                                                            widget=None),
+                                          asset_id(label = T("Vehicle")),
+                                          Field("closed",
+                                                # @ToDo: Close all assignments when Incident closed
+                                                readable=False,
+                                                writable=False),
+                                          *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to response.s3
+        #
+        return Storage(
+                )
+                
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def irs_vehicle_requires():
+        """
+            Populate the dropdown widget for responding to an Incident Report
+            based on those vehicles which aren't already on-call
+        """
+
+        db = current.db
+        s3db = current.s3db
+        s3 = response = current.response.s3
+        
+        # Vehicles are a type of Asset
+        table = s3db.asset_asset
+        ltable = s3db.irs_ireport_vehicle
+
+        # Filter to Vehicles which aren't already on a call
+        # @ToDo: Filter by Org/Base
+        # @ToDo: Filter out those which are under repair
+        query = (table.type == s3.asset.ASSET_TYPE_VEHICLE) & \
+                (table.deleted == False) & \
+                ((ltable.id == None) | \
+                 (ltable.closed == True) | \
+                 (ltable.deleted == True))
+        left = ltable.on(table.id == ltable.asset_id)
+        requires = IS_NULL_OR(IS_ONE_OF(db(query),
+                                        "asset_asset.id",
+                                        asset_represent,
+                                        left=left,
+                                        sort=True))
+        return requires
+
+# =============================================================================
 def irs_rheader(r, tabs=[]):
     """ Resource component page header """
 
@@ -872,23 +1004,14 @@ def irs_rheader(r, tabs=[]):
         #s3 = current.response.s3
         settings = current.deployment_settings
 
-        datetime_represent = S3DateTime.datetime_represent
-        gis_location_represent = s3db.gis_location_represent
-
         tabs = [(T("Report Details"), None),
-                (T("Photos"), "image")
-                #(T("Documents"), "document"),
+                (T("Photos"), "image"),
+                (T("Documents"), "document"),
+                (T("Vehicles"), "vehicle"),
+                (T("Staff"), "human_resource"),
+                (T("Tasks"), "task"),
+                (T("Dispatch"), "dispatch"),
                ]
-        if settings.has_module("vehicle"):
-            tabs.append((T("Vehicles"), "vehicle"))
-
-        if settings.has_module("hrm"):
-            tabs.append((T("Staff"), "human_resource"))
-
-        if settings.has_module("project"):
-            tabs.append((T("Tasks"), "task"))
-
-        tabs.append((T("Dispatch"), "dispatch"))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -897,14 +1020,18 @@ def irs_rheader(r, tabs=[]):
 
             table = r.table
 
-            datetime = datetime_represent(report.datetime, utc=True)
-            location = gis_location_represent(report.location_id)
-
-            reporter = report.person
-            # If Reporter is made a person_id instead of a plain text field
-            #reporter = report.person_id
-            #if reporter:
-            #    reporter = person_represent(reporter)
+            datetime = table.datetime.represent(report.datetime)
+            expiry = table.datetime.represent(report.expiry)
+            location = table.location_id.represent(report.location_id)
+            category = table.category.represent(report.category)
+            contact = ""
+            if report.person:
+                if report.contact:
+                    contact = "%s (%s)" % (report.person, report.contact)
+                else:
+                    contact = report.person
+            elif report.contact:
+                contact = report.contact
 
             #create_request = A(T("Create Request"),
             #                   _class="action-btn colorbox",
@@ -925,16 +1052,16 @@ def irs_rheader(r, tabs=[]):
                                 TH("%s: " % table.name.label), report.name,
                                 TH("%s: " % table.datetime.label), datetime,
                             TR(
-                                TH("%s: " % table.category.label), report.category,
-                                TH("%s: " % table.person.label), reporter),
+                                TH("%s: " % table.category.label), category,
+                                TH("%s: " % table.expiry.label), expiry,
                                 ),
                             TR(
                                 TH("%s: " % table.location_id.label), location,
-                                TH("%s: " % table.contact.label), report.contact,
+                                TH("%s: " % T("Contact")), contact),
                                 ),
                             TR(
-                                TH("%s: " % table.message.label), TD(report.message,
-                                                                     _rowspan=3),
+                                TH("%s: " % table.message.label), TD(report.message or "",
+                                                                     _colspan=3),
                                 )
                             ),
                           #DIV(P(), create_request, " ", create_task, P()),

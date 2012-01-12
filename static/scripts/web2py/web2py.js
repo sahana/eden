@@ -27,6 +27,7 @@ function web2py_ajax_init() {
     jQuery('.flash').click(function() { jQuery(this).fadeOut('slow'); return false; });
     jQuery('input.string').attr('size', 62);
     jQuery('input.upload').attr('size', 50);
+    jQuery('#login_box input.upload').attr('size', 36);
     jQuery('textarea.text').attr('cols', 50).attr('rows', 10);
     if (S3.i18n.language == 'ja') {
         // For Japanese IME

@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          Project Tasks (Requirements) - CSV Import Stylesheet
 
-         2012-01-05 / Fran Boon <fran[AT]aidiq[DOT]com>
-
          CSV column...........Format..........Content
 
          Organisation.........string..........Project Organisation

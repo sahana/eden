@@ -3,7 +3,7 @@
 """
     GIS Module
 
-    @version: 0.1.0
+    @version: 0.9.0
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
