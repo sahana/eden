@@ -47,8 +47,12 @@ def ireport():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
-    # Filter out Closed Reports
-    response.s3.filter = (table.closed == False)
+    if "open" in request.get_vars:
+        # Filter out Reports that are closed or Expired
+        s3.crud_strings[tablename].title_list = T("Open Incidents")
+        response.s3.filter = (table.closed == False) & \
+                             ((table.expiry == None) | \
+                              (table.expiry > request.utcnow))
 
     # Non-Editors should only see a limited set of options
     if not s3_has_role(EDITOR):
@@ -66,23 +70,28 @@ def ireport():
             # Allow the 'XX' levels
             s3db.gis_location.level.requires = IS_NULL_OR(IS_IN_SET(
                                                 gis.get_all_current_levels()))
-        elif r.interactive:
+        elif r.interactive or r.representation == "aadata":
             if r.method == "update":
                 table.dispatch.writable = True
                 table.verified.writable = True
                 table.closed.writable = True
-            elif r.method == "create" or r.method == None:
-                table.datetime.default = request.utcnow
-                #table.person_id.default = s3_logged_in_person()
             if r.component:
                 if r.component_name == "image":
                     itable = s3db.doc_image
                     itable.date.default = r.record.datetime.date()
                     itable.location_id.default = r.record.location_id
                     itable.location_id.readable = itable.location_id.writable = False
-                    itable.organisation_id.readable = db.doc_image.organisation_id.writable = False
-                    itable.url.readable = itable.url.writable = False
+                    itable.organisation_id.readable = itable.organisation_id.writable = False
+                    #itable.url.readable = itable.url.writable = False
                     itable.person_id.readable = itable.person_id.writable = False
+                elif r.component_name == "document":
+                    dtable = s3db.doc_document
+                    dtable.date.default = r.record.datetime.date()
+                    dtable.location_id.default = r.record.location_id
+                    dtable.location_id.readable = dtable.location_id.writable = False
+                    dtable.organisation_id.readable = dtable.organisation_id.writable = False
+                    #dtable.url.readable = dtable.url.writable = False
+                    dtable.person_id.readable = dtable.person_id.writable = False
                 elif r.component_name == "human_resource":
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_human_resource"] = Storage(
@@ -125,11 +134,11 @@ def ireport():
     def user_postp(r, output):
         if not r.component:
             s3_action_buttons(r, deletable=False)
-            if deployment_settings.has_module("assess"):
-                response.s3.actions.append({"url" : URL(c="assess", f="basic_assess",
-                                                        vars = {"ireport_id":"[id]"}),
-                                            "_class" : "action-btn",
-                                            "label" : "Assess"})
+            # if deployment_settings.has_module("assess"):
+                # response.s3.actions.append({"url" : URL(c="assess", f="basic_assess",
+                                                        # vars = {"ireport_id":"[id]"}),
+                                            # "_class" : "action-btn",
+                                            # "label" : "Assess"})
         return output
     response.s3.postp = user_postp
 

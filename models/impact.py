@@ -12,17 +12,14 @@
 
 if deployment_settings.has_module("assess"):
 
-    if deployment_settings.has_module("irs"):
-        # Impact as component of incident reports
-        s3mgr.model.add_component("impact_impact", irs_ireport="ireport_id")
-    if deployment_settings.has_module("assess"):
-        # Impact as component of assessments
-        s3mgr.model.add_component("impact_impact", assess_assess="assess_id")
+    # Impact as component of incident reports
+    s3mgr.model.add_component("impact_impact", irs_ireport="ireport_id")
 
     def impact_tables():
         """ Load the Impact tables as-needed """
 
         sector_id = s3db.org_sector_id
+        ireport_id = s3db.ireport_id
 
         # Load the models we depend on
         if deployment_settings.has_module("assess"):

@@ -270,7 +270,35 @@
         </xsl:choose>
 
     </xsl:template>
+    
+    <!-- ****************************************************************** -->
+    <!-- substringAfterLast
 
+         Parameter input: the input string ( e.g. a URL )
+         Parameter sep: the separator ( e.g. '/')
+         Output: the substring after the last occurrence of the separator
+    -->
+
+    <xsl:template name="substringAfterLast">
+
+        <xsl:param name="input"/>
+        <xsl:param name="sep"/>
+        <xsl:choose>
+            <xsl:when test="contains($input, $sep)">
+                <xsl:call-template name="substringAfterLast">
+                    <xsl:with-param name="input" select="substring-after($input, $sep)"/>
+                    <xsl:with-param name="sep" select="$sep"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$input"/>
+            </xsl:otherwise>
+        </xsl:choose>
+
+
+    </xsl:template>
+
+    
     <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

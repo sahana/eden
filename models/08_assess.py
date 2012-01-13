@@ -46,6 +46,10 @@ if deployment_settings.has_module(module) or deployment_settings.has_module("irs
             return NONE
 
 if deployment_settings.has_module(module):
+
+    # Impact as component of assessments
+    s3mgr.model.add_component("impact_impact", assess_assess="assess_id")
+
     def assess_tables():
         """ Load the Assess Tables when needed """
 
@@ -57,6 +61,7 @@ if deployment_settings.has_module(module):
         organisation_represent = s3db.org_organisation_represent
         sector_id = s3db.org_sector_id
         human_resource_id = s3db.hrm_human_resource_id
+        ireport_id = s3db.ireport_id
 
         # =========================================================================
         # Flexible Impact Assessments

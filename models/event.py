@@ -148,10 +148,10 @@ if deployment_settings.has_module(module):
                 # copy all resources from the Scenario to the Event
 
                 # Read the source resource tables
-                table = db.scenario_scenario
-                htable = db.scenario_human_resource # @ToDo: Change to Positions
-                ftable = db.scenario_site
-                mtable = db.scenario_config
+                table = s3db.scenario_scenario
+                htable = s3db.scenario_human_resource # @ToDo: Change to Positions
+                ftable = s3db.scenario_site
+                mtable = s3db.scenario_config
                 query = (table.id == form.vars.scenario_id)
                 hquery = query & (htable.scenario_id == table.id)
                 fquery = query & (ftable.scenario_id == table.id)
@@ -375,7 +375,7 @@ if deployment_settings.has_module(module):
         if deployment_settings.has_module("irs"):
             # Load model
             s3mgr.load("irs_ireport")
-            ireport_id = response.s3.ireport_id
+            ireport_id = response.s3.irs_ireport_id
 
             tablename = "event_ireport"
             table = db.define_table(tablename,

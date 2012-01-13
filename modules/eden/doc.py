@@ -83,7 +83,7 @@ class S3DocumentLibrary(S3Model):
                                   self.super_link("site_id", "org_site"),
                                   self.super_link("doc_id", doc_entity),
                                   Field("name", length=128,
-                                        notnull=True, unique=True,
+                                        notnull=True,
                                         label=T("Name")),
                                   Field("file", "upload", autodelete=True),
                                   Field("url", label=T("URL"),
@@ -137,7 +137,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         self.configure(tablename,
-                       mark_required=["file"],
+                       #mark_required=["file"],
                        onvalidation=self.document_onvalidation)
 
         # Reusable Field
@@ -177,10 +177,10 @@ class S3DocumentLibrary(S3Model):
                                   self.super_link("pe_id", "pr_pentity"),
                                   self.super_link("doc_id", doc_entity),
                                   Field("name", length=128,
-                                        notnull=True, unique=True,
+                                        notnull=True,
                                         label=T("Name")),
                                   Field("file", "upload", autodelete=True,
-                                        requires = IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                        requires = IS_NULL_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))),
                                         # upload folder needs to be visible to the download() function as well as the upload
                                         uploadfolder = os.path.join(request.folder,
                                                                     "uploads",
@@ -195,7 +195,7 @@ class S3DocumentLibrary(S3Model):
                                   s3.pr_person_id(label=T("Author")),
                                   s3.org_organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                   location_id(),
-                                  Field("date", "date"),
+                                  Field("date", "date", label = T("Date Taken")),
                                   s3.comments(),
                                   Field("checksum", readable=False, writable=False),
                                   *s3.meta_fields())
@@ -304,7 +304,7 @@ class S3DocumentLibrary(S3Model):
             tablename = "doc_image"
             msg = T("Either file upload or image URL required.")
 
-        table = s3db["tablename"]
+        table = s3db[tablename]
 
         doc = form.vars.file
         url = form.vars.url

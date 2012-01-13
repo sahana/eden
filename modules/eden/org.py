@@ -39,8 +39,6 @@ __all__ = ["S3OrganisationModel",
            "org_office_rheader",
            ]
 
-import copy
-
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
@@ -74,6 +72,8 @@ class S3OrganisationModel(S3Model):
             ]
 
     def model(self):
+
+        import copy
 
         T = current.T
         db = current.db
@@ -1056,6 +1056,7 @@ class S3OfficeModel(S3Model):
             table = item.table
             name = "name" in item.data and item.data.name
             query = (table.name.lower() == name.lower())
+            location_id = None
             if "location_id" in item.data:
                 location_id = item.data.location_id
                 # This doesn't find deleted records:

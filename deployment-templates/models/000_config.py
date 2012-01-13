@@ -646,42 +646,23 @@ deployment_settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 1,
     #   )),
-    #("ocr", Storage(
-    #       name_nice = T("Optical Character Recognition"),
-    #       description = T("Optical Character Recognition for reading the scanned handwritten paper forms."),
-    #       restricted = False,
-    #       module_type = 10
-    #   )),
     #("patient", Storage(
     #        name_nice = T("Patient Tracking"),
     #        description = T("Tracking of Patients"),
     #        restricted = True,
     #        module_type = 10
     #    )),
-    # These modules have very limited functionality
-    #("dvr", Storage(
-    #        name_nice = T("Disaster Victim Registry"),
-    #        description = T("Traces internally displaced people (IDPs) and their needs"),
-    #        module_type = 10
-    #    )),
+    #("ocr", Storage(
+    #       name_nice = T("Optical Character Recognition"),
+    #       description = T("Optical Character Recognition for reading the scanned handwritten paper forms."),
+    #       restricted = False,
+    #       module_type = 10
+    #   )),
+    # This module has very limited functionality
     #("flood", Storage(
     #        name_nice = T("Flood Alerts"),
     #        description = T("Flood Alerts show water levels in various parts of the country"),
     #        restricted = False,
     #        module_type = 10
-    #    )),
-    # @Deprecated by S3Import
-    #("importer", Storage(
-    #        name_nice = T("Spreadsheet Importer"),
-    #        description = T("Used to import data from spreadsheets into the database"),
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
-    # Vol depends on HRM
-    #("vol", Storage(
-    #        name_nice = T("Volunteers"),
-    #        description = T("A portal for volunteers allowing them to amend their own data & view assigned tasks."),
-    #        restricted = True,
-    #        module_type = 10,
     #    )),
 ])

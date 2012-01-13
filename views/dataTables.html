@@ -31,10 +31,10 @@ S3.dataTables = new Array();
   S3.dataTables.SelectURL = "?";{{pass}}
 {{if response.s3.actions:}}
   S3.dataTables.Actions = {{=XML(response.s3.actions)}};
-  {{if "_jqclick" in response.s3.actions[0]:}}
+  {{if "_jqclick" in response.s3.actions[-1]:}}
     function S3ActionCallBack(event){
         id = this.id;
-        {{=XML(response.s3.actions[0]["_jqclick"])}} ;
+        {{=XML(response.s3.actions[-1]["_jqclick"])}} ;
         event.stopPropagation();
         return false;
     }
