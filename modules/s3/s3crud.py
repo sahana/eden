@@ -2160,7 +2160,8 @@ class S3CRUD(S3Method):
         return ", ".join(orderby)
 
     # -------------------------------------------------------------------------
-    def get_list_fields(self, table, fields):
+    @staticmethod
+    def get_list_fields(table, fields):
         """
             Helper to resolve list_fields
 

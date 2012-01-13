@@ -660,7 +660,7 @@ class S3Importer(S3CRUD):
                                *fields)
 
         args = ["s3csv"]
-        template = attr.get(TEMPLATE, None)
+        template = attr.get(TEMPLATE, True)
         if template is True:
             args.extend([self.controller, "%s.csv" % self.function])
         elif isinstance(template, basestring):
@@ -1422,7 +1422,7 @@ class S3Importer(S3CRUD):
             except:
                 pass
             if value:
-                value = S3XML.xml_encode(str(value))
+                value = S3XML.xml_encode(unicode(value))
             else:
                 value = ""
             if f != None and value != None:
