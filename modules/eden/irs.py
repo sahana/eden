@@ -715,7 +715,7 @@ S3.timeline.onLoad = function() {
             intervalPixels: 200,
             eventSource:    S3.timeline.eventSource,
             date:           now
-     })
+        })
     ];
     bandInfos[1].syncWith = 0;
     bandInfos[1].highlight = true;
@@ -736,12 +736,12 @@ S3.timeline.onResize = function() {
             s3.js_global.append(code)
             s3.jquery_ready.append("""
 $(window).load(function() {
+    SimileAjax.History.enabled = false;
     S3.timeline.onLoad();
 });
 $(window).resize(function() {
     S3.timeline.onResize();
-});
-""")
+});""")
 
             title = T("Incident Timeline")
 
