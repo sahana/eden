@@ -160,7 +160,7 @@ class S3Cube(S3CRUD):
         _hide = "%s"
 
         # Apply method
-        if self.method == "analyze":
+        if self.method == "report":
             output = self.pivot(r, **attr)
             response.s3.dataTable_iDisplayLength = 50
             response.s3.no_formats = True

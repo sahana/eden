@@ -92,7 +92,7 @@ class S3XLS(S3Codec):
         request = current.request
         response = current.response
         s3 = response.s3
-        
+
 
         # List fields
         if not list_fields:
@@ -175,8 +175,8 @@ class S3XLS(S3Codec):
             redirect(URL(extension=""))
 
         # Get the attributes
-        title = attr.get("title") 
-        list_fields = attr.get("list_fields") 
+        title = attr.get("title")
+        list_fields = attr.get("list_fields")
         report_groupby = attr.get("report_groupby")
         use_colour = attr.get("use_colour", True)
         # Extract the data from the data_source
