@@ -33,27 +33,25 @@ import pystaggrelite3
 from dictset import DictSet
 from texttable import Texttable as TextTable
 from stats import jsci, stats, pstat
-from qsturng import qsturng, psturng
-from anova import Anova
 
 # check for third party packages
-try:
-    import pylab
-    HAS_PYLAB = True
-except:
-    HAS_PYLAB = False
+#try:
+    #import pylab
+    #HAS_PYLAB = True
+#except:
+HAS_PYLAB = False
 
-try:
-    import numpy as np
-    HAS_NUMPY = True
-except:
-    HAS_NUMPY = False
+#try:
+    #import numpy as np
+    #HAS_NUMPY = True
+#except:
+HAS_NUMPY = False
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except:
-    HAS_SCIPY = False
+#try:
+    #import scipy
+    #HAS_SCIPY = True
+#except:
+HAS_SCIPY = False
 
 __version__ = '0.3.6.1'
 
@@ -1209,6 +1207,7 @@ class DataFrame(OrderedDict):
 
 # conditionally load plot methods
     if HAS_NUMPY and HAS_PYLAB and HAS_SCIPY:
+        from anova import Anova
         def anova(self, dv, sub='SUBJECT', wfactors=None, bfactors=None,
                   measure='', transform='', alpha=0.05):
             aov=Anova()
@@ -2809,6 +2808,7 @@ class Anova1way(OrderedDict):
             self._snk()
 
     def _tukey(self):
+        from qsturng import qsturng, psturng
         # http://www.utdallas.edu/~herve/abdi-NewmanKeuls2010-pretty.pdf
         # put means into a dict
         d = dict([(k,v) for k,v in zip(self.conditions_list, self['mus'])])
@@ -2850,6 +2850,7 @@ class Anova1way(OrderedDict):
         self.multtest = multtest
 
     def _snk(self):
+        from qsturng import qsturng, psturng
         # http://www.utdallas.edu/~herve/abdi-NewmanKeuls2010-pretty.pdf
         # put means into a dict
         d = dict([(k,v) for k,v in zip(self.conditions_list, self['mus'])])

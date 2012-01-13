@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-    S3 RESTful Data Analysis Toolkit
+    S3 Reporting Framework
 
     @author: Dominic König <dominic[at]aidiq[dot]com>
 
-    @copyright: 2011 (c) Sahana Software Foundation
+    @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 
     @status: work in progress
@@ -61,25 +61,12 @@ class S3Cube(S3CRUD):
 
             @param r: the S3Request instance
             @param attr: controller attributes for the request
-
-            @todo: documentation
-            @todo: support automatic generation of dimension classes
-            @todo: add form generator for interactive pivoting
-            @todo: add search form to interactive pivoting form
-            @todo: support JSON output
-            @todo: support XLS output (requires extension of the codec)
-            @todo: support PDF output
-            @todo: support client-side representation as graphs
-            @todo: support server-side chart generation
         """
 
         manager = current.manager
 
         if r.http in ("GET", "POST"):
-            if r.interactive:
-                output = self.analyze(r, **attr)
-            else:
-                r.error(501, manager.ERROR.BAD_FORMAT)
+            output = self.analyze(r, **attr)
         else:
             r.error(405, manager.ERROR.BAD_METHOD)
 
@@ -101,6 +88,8 @@ class S3Cube(S3CRUD):
 
         table = self.table
 
+        # Dependency check ----------------------------------------------------
+        # @todo: remove this? Do in S3Report?
         try:
             from pyvttbl import DataFrame
             PYVTTBL = True
@@ -113,9 +102,12 @@ class S3Cube(S3CRUD):
 
         _vars = r.get_vars
 
+        # Generate form -------------------------------------------------------
+        #
+        # @todo: do this only in interactive formats
+        #
         show_form = attr.get("interactive_report", False)
         if show_form:
-            # Generate form
             form = self._create_form()
             if form.accepts(r.post_vars, session,
                             formname="analyze",
@@ -127,284 +119,132 @@ class S3Cube(S3CRUD):
         else:
             form = None
 
-        # Get rows, cols, fact and aggregate
+        # Get rows, cols, fact and aggregate ----------------------------------
+        #
         rows = _vars.get("rows", None)
         cols = _vars.get("cols", None)
         fact = _vars.get("fact", None)
         aggregate = _vars.get("aggregate", None)
 
-        if rows:
-            self.rows = [rows]
-        else:
+        if not rows:
             self.method = "list"
+        print "rows=%s" % rows
 
-        if cols:
-            self.cols = [cols]
-        else:
-            self.cols = []
+        if not cols:
+            cols = None
+        print "cols=%s" % cols
 
-        if fact:
-            self.fact = fact
-        else:
+        if not aggregate:
+            aggregate = "list"
+        print "aggregate=%s" % aggregate
+
+        layers = []
+        if not fact:
             if "name" in table:
-                self.fact = "name"
+                fact = "name"
             else:
-                self.fact = table._id.name
+                fact = table._id.name
+        if fact:
+            if not isinstance(fact, list):
+                fact = [fact]
+            for f in fact:
+                f = f.split(",")
+                for l in f:
+                    if ":" in l:
+                        method, layer = l.split(":", 1)
+                    else:
+                        method = aggregate
+                        layer = l
+                    layers.append((layer, method))
 
-        if aggregate:
-            self.aggregate = aggregate
-        else:
-            self.aggregate = "list"
+        print "layers=%s" % layers
 
+        # Apply method --------------------------------------------------------
+        #
         _show = "%s hide"
         _hide = "%s"
 
-        # Apply method
-        if self.method == "report":
-            output = self.pivot(r, **attr)
-            response.s3.dataTable_iDisplayLength = 50
-            response.s3.no_formats = True
-            response.s3.no_sspag = True
-            if r.http == "GET":
-                _show = "%s"
-                _hide = "%s hide"
-            response.s3.actions = []
-            output.update(sortby=[[0,'asc']])
-        else:
-            manager.configure(self.tablename, insertable=False)
-            output = self.select(r, **attr)
-            response.s3.actions = [
-                    dict(url=r.url(method="", id="[id]", vars=r.get_vars),
-                         _class="action-btn",
-                         label = str(T("Details")))
-                ]
-
-        title = self.crud_string(self.tablename, "title_report")
-        if not title:
-            title = self.crud_string(self.tablename, "title_list")
-
-        subtitle = self.crud_string(self.tablename, "subtitle_report")
-        if not subtitle:
-            subtitle = self.crud_string(self.tablename, "subtitle_list")
-
-        if form is not None:
-            show_link = A(T("Show Report Options"),
-                        _href="#",
-                        _class=_show % "action-lnk",
-                        _id = "show-opts-btn",
-                        _onclick="""$('#analyzeform').removeClass('hide'); $('#show-opts-btn').addClass('hide'); $('#hide-opts-btn').removeClass('hide');""")
-            hide_link = A(T("Hide Report Options"),
-                        _href="#",
-                        _class=_hide % "action-lnk",
-                        _id = "hide-opts-btn",
-                        _onclick="""$('#analyzeform').addClass('hide'); $('#show-opts-btn').removeClass('hide'); $('#hide-opts-btn').addClass('hide');""")
-            form = DIV(DIV(show_link, hide_link),
-                       DIV(form, _class=_hide % "analyzeform", _id="analyzeform"))
-        else:
-            form = ""
-
-        output.update(title=title, subtitle=subtitle, form=form)
-
-        response.view = self._view(r, "list_create.html")
-        return output
-
-    # -------------------------------------------------------------------------
-    def pivot(self, r, **attr):
-        """
-            Method to generate contingency tables
-
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
-
-            @todo: warn if dimension/fact doesn't belong to table
-            @todo: support component fields
-            @todo: support automatic generation of dimension classes
-            @todo: optimize inner loops
-            @todo: make facts inline-expandable
-        """
-
-        db = current.db
-        T = current.T
-
-        response = current.response
-
         resource = self.resource
-        table = resource.table
-        pkey = table._id.name
+        representation = r.representation
 
-        # Get the fields
-        fields = []
-        if self.rows:
-            fields.extend([f for f in self.rows if f not in fields])
-        if self.cols:
-            fields.extend([f for f in self.cols if f not in fields])
-        if self.fact and self.fact not in fields:
-            fields.append(self.fact)
-        list_fields = list(fields)
-        if pkey not in list_fields:
-            list_fields.append(pkey)
-        lfields, join = resource.get_list_fields(table, list_fields)
-        lfields = Storage([(f.fieldname, f) for f in lfields])
+        if self.method == "report":
 
-        # Get the items
-        items = resource.sqltable(list_fields,
-                                  as_list=True, start=None, limit=None)
-        count = None
-        if items:
-            # Generate the data frame
-            aggregate = self.aggregate == "list" and "group_concat" or \
-                        self.aggregate
-            from pyvttbl import DataFrame
-            df = DataFrame()
-            fmap = Storage()
-            item_list = []
-            for row in items:
-                try:
-                    frow = self.__extract(row, fields, resource, lfields, fmap)
-                except KeyError:
-                    e = sys.exc_info()[1]
-                    msg = T("Could not generate report")
-                    if hasattr(e, "message"):
-                        e = "%s: %s" % (msg, e.message)
-                    r.error(400, e, next=r.url(vars=[]))
-                frow = self.__expand(frow)
-                for item in frow:
-                    if aggregate in ("group_concat", "count"):
-                        i = Storage(item)
-                        if self.fact != pkey:
-                            del i[pkey]
-                        # De-duplicate
-                        if i not in item_list:
-                            item_list.append(i)
-                            df.insert(aggregate == "count" and i or item)
-                    else:
-                        df.insert(item)
+            # Generate the report ---------------------------------------------
+            #
+            report = S3Report(resource, rows, cols, layers)
 
-            # In group_concat, always group primary keys, and then use
-            # fmap to link individual fact values to their corresponding
-            # records
-            if aggregate == "group_concat" and fmap:
-                fact = pkey
-            else:
-                # Otherwise group the fact value, and delete fmap
-                fact = self.fact
-                fmap = None
+            # Represent the report --------------------------------------------
+            #
+            if representation == "html":
+                if report is not None:
+                    items = S3ContingencyTable(report,
+                                               _id="list",
+                                               _class="dataTable display")
 
-            # Pivoting
-            try:
-                pt = df.pivot(fact, self.rows, self.cols,
-                                aggregate=aggregate)
-            except KeyError:
-                e = sys.exc_info()[1]
-                msg = T("Could not generate report")
-                if hasattr(e, "message"):
-                    e = "%s: %s" % (msg, e.message)
-                r.error(400, e, next=r.url(vars=[]))
-
-            if aggregate == "count" or pt.grand_tot is None:
-                count = len(item_list)
-
-            # Generate output table
-            items = S3ContingencyTable(r,
-                                       self.resource,
-                                       pt,
-                                       rows=self.rows,
-                                       cols=self.cols,
-                                       fact=self.fact,
-                                       lfields=lfields,
-                                       fmap=fmap,
-                                       count=count,
-                                       _id="list",
-                                       _class="dataTable display")
-
-        else:
-            # No items to analyze
-            items = self.crud_string(self.tablename, "msg_no_match")
-
-        return dict(items=items)
-
-    # -------------------------------------------------------------------------
-    def __extract(self, row, fields, resource, lfields, fmap):
-        """
-            Helper method to extract data from a Row
-
-            @param row: the Row
-            @param fields: the fields for the contingency table
-            @param resource: the S3Resource
-            @param lfields: the list fields
-            @param fmap: the id/fact map for the rows (Storage)
-        """
-
-        table = resource.table
-        tname = resource.tablename
-        pkey = table._id.name
-
-        if pkey in row:
-            pk = row[pkey]
-        elif tname in row and pkey in row[tname]:
-            pk = row[tname][pkey]
-        else:
-            pk = None
-
-        frow = Storage()
-        for field in fields:
-            if field not in lfields:
-                raise KeyError("Invalid field name: %s" % field)
-            lfield = lfields[field]
-            tname = lfield.tname
-            fname = lfield.fname
-            if fname in row:
-                value = row[fname]
-            elif tname in row and fname in row[tname]:
-                value = row[tname][fname]
-            else:
-                value = None
-            if value is None:
-                if field != self.fact:
-                    value = "__NONE__"
-            frow[field] = value
-
-            # Add entry to the fact map (fmap)
-            if field == self.fact and pk:
-                fmap[str(pk)] = value
-
-        # Add the primary key to the row
-        frow[pkey] = pk
-
-        return frow
-
-    # -------------------------------------------------------------------------
-    def __expand(self, row, field=None):
-        """
-            Helper method to expand a single row for multiple list:type values
-
-            @param row: the row
-            @param field: the field to expand for
-
-            @todo: optimize inner loops
-        """
-
-        if field is None:
-            rows = [row]
-            for field in row:
-                rows = self.__expand(rows, field=field)
-            return rows
-        else:
-            results = []
-            rows = row
-            for r in rows:
-                value = r[field]
-                if isinstance(value, (list, tuple)):
-                    if not len(value):
-                        # Always have at least a None-entry
-                        value.append(None)
-                    for v in value:
-                        result = Storage(r)
-                        result[field] = v
-                        results.append(result)
                 else:
-                    results.append(r)
-            return results
+                    items = self.crud_string(self.tablename, "msg_no_match")
+                output = dict(items=items)
+
+                # Other output options ----------------------------------------
+                #
+                response.s3.dataTable_iDisplayLength = 50
+                response.s3.no_formats = True
+                response.s3.no_sspag = True
+                if r.http == "GET":
+                    _show = "%s"
+                    _hide = "%s hide"
+                response.s3.actions = []
+                output.update(sortby=[[0,'asc']])
+
+            else:
+                r.error(501, manager.ERROR.BAD_FORMAT)
+
+        elif representation == "html":
+
+                # Fallback to list view ---------------------------------------
+                #
+                manager.configure(self.tablename, insertable=False)
+                output = self.select(r, **attr)
+                response.s3.actions = [
+                        dict(url=r.url(method="", id="[id]", vars=r.get_vars),
+                            _class="action-btn",
+                            label = str(T("Details")))
+                    ]
+        else:
+            # @todo: raise a non-interactive SyntaxError here for missing parameters
+            r.error(501, manager.ERROR.BAD_FORMAT)
+
+        # Complete the page ---------------------------------------------------
+        #
+        if representation == "html":
+            title = self.crud_string(self.tablename, "title_report")
+            if not title:
+                title = self.crud_string(self.tablename, "title_list")
+
+            subtitle = self.crud_string(self.tablename, "subtitle_report")
+            if not subtitle:
+                subtitle = self.crud_string(self.tablename, "subtitle_list")
+
+            if form is not None:
+                show_link = A(T("Show Report Options"),
+                            _href="#",
+                            _class=_show % "action-lnk",
+                            _id = "show-opts-btn",
+                            _onclick="""$('#analyzeform').removeClass('hide'); $('#show-opts-btn').addClass('hide'); $('#hide-opts-btn').removeClass('hide');""")
+                hide_link = A(T("Hide Report Options"),
+                            _href="#",
+                            _class=_hide % "action-lnk",
+                            _id = "hide-opts-btn",
+                            _onclick="""$('#analyzeform').addClass('hide'); $('#show-opts-btn').removeClass('hide'); $('#hide-opts-btn').addClass('hide');""")
+                form = DIV(DIV(show_link, hide_link),
+                        DIV(form, _class=_hide % "analyzeform", _id="analyzeform"))
+            else:
+                form = ""
+
+            output.update(title=title, subtitle=subtitle, form=form)
+            response.view = self._view(r, "list_create.html")
+
+        return output
 
     # -------------------------------------------------------------------------
     def _create_form(self):
@@ -544,6 +384,7 @@ class S3Cube(S3CRUD):
         """
 
         request = current.request
+        resource = self.resource
         value = None
         disable = False
         if request.env.request_method == "GET":
@@ -894,3 +735,306 @@ class S3ContingencyTable(TABLE):
         return unicode(v)
 
 # =============================================================================
+# =============================================================================
+
+class S3Report:
+
+    def __init__(self, resource, rows, cols, layers):
+
+        manager = current.manager
+        model = manager.model
+
+        self.resource = resource
+
+        self.rows = rows
+        self.cols = cols
+        self.layers = layers
+
+        self.rheaders = None
+        self.cheaders = None
+        self.array = None
+
+        # Get the fields ------------------------------------------------------
+        #
+        fields = model.get_config(resource.tablename, "list_fields")
+        self._get_fields(fields=fields)
+
+        # Retrieve the records --------------------------------------------------
+        #
+        records = resource.sqltable(self.rfields,
+                                    as_list=True, start=None, limit=None)
+        table = resource.table
+        pkey = table._id.name
+        self.imap = Storage([(str(i[pkey]), i) for i in records])
+
+        print self.imap
+
+        # Generate the report -------------------------------------------------
+        #
+        if records:
+
+            # Generate the data frame -----------------------------------------
+            # @todo: catch exceptions in the caller
+            #
+            from pyvttbl import DataFrame
+            df = DataFrame()
+            insert = df.insert
+
+            item_list = []
+            seen = item_list.append
+
+            flatten = self._flatten
+            expand = self._expand
+
+            for row in records:
+                item = expand(flatten(row))
+                for i in item:
+                    if i not in item_list:
+                        seen(i)
+                        insert(i)
+
+            print df
+
+            # Group the items -------------------------------------------------
+            #
+            rows = self.rows and [self.rows] or []
+            cols = self.cols and [self.cols] or []
+            pt = df.pivot(pkey, rows, cols, aggregate="group_concat")
+
+            print pt
+
+            # Add the layers --------------------------------------------------
+            #
+            self.colhdrs = [{"value": v != "__NONE__" and v or None}
+                            for v in [n[0][1] for n in pt.cnames]]
+            self.rowhdrs = [{"value": v != "__NONE__" and v or None}
+                            for v in [n[0][1] for n in pt.rnames]]
+            add_layer = self._add_layer
+            add_layer(pt, None, None)
+            for f, m in self.layers:
+                add_layer(pt, f, m)
+
+            print "Col Headers: %s" % self.colhdrs
+            print "Row Headers: %s" % self.rowhdrs
+            print "Array: %s" % str(self.array)
+
+            raise NotImplementedError
+
+        else:
+            # No items to report on -------------------------------------------
+            #
+            pass
+
+    # -------------------------------------------------------------------------
+    def _get_fields(self, fields=None):
+        """
+            @todo: complete docstring
+
+            @param fields: fields to include in the report (all fields)
+
+        """
+
+        resource = self.resource
+        table = resource.table
+
+        pkey = table._id.name
+        rows = self.rows
+        cols = self.cols
+
+        # dfields: fields to generate the pivot table
+        dfields = [rows]
+        if cols not in dfields:
+            dfields.append(cols)
+        if pkey not in dfields:
+            dfields.append(pkey)
+        self.dfields = dfields
+
+        # rfields: all fields in the report
+        rfields = list(fields)
+        if rows not in rfields:
+            rfields.append(rows)
+        if cols not in rfields:
+            rfields.append(cols)
+        if pkey not in rfields:
+            rfields.append(pkey)
+        for f, m in self.layers:
+            if f not in rfields:
+                rfields.append(f)
+        self.rfields = rfields
+
+        # lfields: rfields resolved into SQL list fields
+        lfields, join = resource.get_list_fields(table, rfields)
+        lfields = Storage([(f.fieldname, f) for f in lfields])
+        self.lfields = lfields
+
+        return
+
+    # -------------------------------------------------------------------------
+    def _flatten(self, row):
+        """
+            @todo: docstring
+        """
+
+        fields = self.dfields
+        resource = self.resource
+        table = resource.table
+        pkey = table._id.name
+        item = Storage()
+        extract = self._extract
+        pk = extract(row, pkey)
+        for field in fields:
+            value = extract(row, field)
+            if value is None and field != pkey:
+                value = "__NONE__"
+            item[field] = value
+        item[pkey] = pk
+        return item
+
+    # -------------------------------------------------------------------------
+    def _extract(self, row, field):
+        """
+            @todo: docstring
+        """
+
+        lfields = self.lfields
+        if field not in lfields:
+            raise KeyError("Invalid field name: %s" % field)
+        lfield = lfields[field]
+        tname = lfield.tname
+        fname = lfield.fname
+        if fname in row:
+            value = row[fname]
+        elif tname in row and fname in row[tname]:
+            value = row[tname][fname]
+        else:
+            value = None
+        return value
+
+    # -------------------------------------------------------------------------
+    def _expand(self, row, field=None):
+        """
+            @todo: docstring
+        """
+
+        if field is None:
+            rows = [row]
+            for field in row:
+                rows = self._expand(rows, field=field)
+            return rows
+        else:
+            results = []
+            rows = row
+            for r in rows:
+                value = r[field]
+                if isinstance(value, (list, tuple)):
+                    if not len(value):
+                        # Always have at least a None-entry
+                        value.append(None)
+                    for v in value:
+                        result = Storage(r)
+                        result[field] = v
+                        results.append(result)
+                else:
+                    results.append(r)
+            return results
+
+    # -------------------------------------------------------------------------
+    def _add_layer(self, pt, fact, method):
+        """
+            Compute a new layer from the base layer (pt+imap)
+
+            @param pt: the pivot table of item IDs
+            @param imap: the item map (item ID <-> item)
+            @param lfields: the list fields map
+            @param fact: the fact field for the layer
+            @param method: the aggregation method of the layer
+        """
+
+        return
+
+        imap = self.imap
+        lfields = self.lfields
+
+        def compute(cell):
+            if cell is None:
+                return None
+            else:
+                ids = cell.split(",")
+                items = []
+                for i in ids:
+                    value = self._extract(imap[i], fact, lfields)
+                    if value is None:
+                        continue
+                    items.append(value)
+                if len(items) and isinstance(items[0], list):
+                    # Flatten list of lists
+                    items = reduce(lambda x, y: x.extend(y) or x, items)
+                if method in ("list", "count"):
+                    items =  list(set(items))
+                return self.aggregate(items, method)
+        layer = map(lambda row: map(compute, row), pt)
+
+        self.array[(fact, method)] = layer
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def aggregate(values, method):
+        """
+            Compute an aggregation of atomic values
+
+            @param values: the values
+            @param method: the aggregation method
+        """
+
+        if values is None:
+            return None
+
+        if method == "list":
+            if values:
+                return values
+            else:
+                return None
+
+        elif method == "count":
+            return len(values)
+
+        elif method == "min":
+            try:
+                return min(values)
+            except TypeError:
+                return None
+
+        elif method == "max":
+            try:
+                return max(values)
+            except TypeError:
+                return None
+
+        elif method == "sum":
+            try:
+                return sum(values)
+            except TypeError:
+                return None
+
+        elif method in ("avg", "mean"):
+            try:
+                if len(values):
+                    return sum(values) / float(len(values))
+                else:
+                    return 0.0
+            except TypeError:
+                return None
+
+        elif method == "std":
+            import numpy
+            if not values:
+                return 0.0
+            try:
+                return numpy.std(values)
+            except TypeError:
+                return None
+
+        else:
+            return None
+
+# END =========================================================================

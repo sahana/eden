@@ -210,7 +210,7 @@ class S3Model(object):
                         else:
                             generic.append(n)
                     elif n.startswith("%s_" % prefix):
-                        response.s3.update({n:model})
+                        response.s3[n] = model
                 [module.__dict__[n](prefix) for n in generic]
         if tablename not in db:
             # Backward compatiblity
@@ -259,7 +259,7 @@ class S3Model(object):
                         else:
                             generic.append(n)
                     elif n.startswith("%s_" % prefix):
-                        response.s3.update({n:model})
+                        response.s3[n] = model
                 [module.__dict__[n](prefix) for n in generic]
         if name in response.s3:
             return response.s3[name]
@@ -287,7 +287,7 @@ class S3Model(object):
                 if type(model).__name__ == "type":
                     model(name)
                 elif n.startswith("%s_" % name):
-                    response.s3.update({n:model})
+                    response.s3[n] = model
         return
 
     # -------------------------------------------------------------------------
@@ -559,6 +559,7 @@ class S3ModelExtensions(object):
                                     autocomplete=autocomplete,
                                     values=values,
                                     multiple=multiple)
+
                 hooks[alias] = component
             self.components[primary] = hooks
         return
@@ -671,7 +672,7 @@ class S3ModelExtensions(object):
                 component.actuate = None
                 component.autocomplete = None
                 component.autodelete = None
-            components.update({alias:component})
+            components[alias] = component
         return components
 
     # -------------------------------------------------------------------------
@@ -729,8 +730,8 @@ class S3ModelExtensions(object):
             if names is not None and alias not in names:
                 continue
             hook = hooks[alias]
-            hook.update(supertable=supertable)
-            components.update({alias:hook})
+            hook["supertable"] = supertable
+            components[alias] = hook
 
     # -------------------------------------------------------------------------
     # Resource Methods

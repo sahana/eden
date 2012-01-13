@@ -1,1 +1,16 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 r3128 (2012-01-15 17:41:58)
+=======
+vita-0.5.5-devel-71-g2d78553 (2012-01-13 15:01:33)
+>>>>>>> 316ee4e... Change method name "analyze" => "report"
+=======
+vita-0.5.5-devel-82-g53ca8ae (2012-01-15 22:01:56)
+>>>>>>> 22a08b0... Update method name "analyze"=>"report", various bug fixes, minor
+=======
+vita-0.5.5-devel-83-g22a08b0 (2012-01-15 23:01:36)
+>>>>>>> 8586f84... Bug fix, increase pre-caching of dataTables to 50 rows.
+=======
+>>>>>>> b5c769f... Missing files

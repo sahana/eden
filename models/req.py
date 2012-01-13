@@ -524,7 +524,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                         )
                                    ]
 
-            rheader_dict = dict(org_office = office_rheader)
+            rheader_dict = dict(org_office = s3db.org_office_rheader)
             if deployment_settings.has_module("cr"):
                 rheader_dict["cr_shelter"] = response.s3.shelter_rheader
             if deployment_settings.has_module("hms"):

@@ -360,15 +360,31 @@ class S3ComponentTab:
         manager = current.manager
         model = manager.model
 
+        get_vars = r.get_vars
+        tablename = None
+        if "viewing" in get_vars:
+            try:
+                tablename, record_id = get_vars["viewing"].split(".", 1)
+            except:
+                pass
+
         resource = r.resource
         component = self.component
         if component:
             clist = model.get_components(resource.table, names=[component])
             if component in clist:
                 return True
+            elif tablename:
+                clist = model.get_components(tablename, names=[component])
+                if component in clist:
+                    return True
             handler = model.get_method(resource.prefix,
                                        resource.name,
                                        method=component)
+            if handler is None and tablename:
+                prefix, name = tablename.split("_", 1)
+                handler = model.get_method(prefix, name,
+                                           method=component)
             if handler is None:
                 handler = r.get_handler(component)
             if handler is None:

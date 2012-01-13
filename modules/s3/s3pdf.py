@@ -2954,26 +2954,23 @@ class S3PDFDataSource:
         orderby = self.report_groupby
 
         # Retrieve the resource contents
-        crud = resource.crud
         table = resource.table
-        lfields, joins = crud.get_list_fields(table, list_fields)
+        lfields, joins = resource.get_list_fields(table, list_fields)
         fields = [f for f in lfields if f.show]
         headers = [f.label for f in lfields if f.show]
         # @ToDo: make consistent with XLS
-        # items = crud.sqltable(fields=list_fields,
-                              # start=None,
-                              # limit=None,
-                              # orderby=orderby,
-                              # no_ids=True,
-                              # as_page=True)
+        # items = resource.sqltable(fields=list_fields,
+                                    #start=None,
+                                    #limit=None,
+                                    #orderby=orderby,
+                                    #no_ids=True,
+                                    #as_page=True)
         if orderby != None:
-            self.records = self.resource.select(self.resource.table.ALL,
-                                                orderby=orderby
-                                               )
+            self.records = resource.select(table.ALL,
+                                           orderby=orderby)
         else:
-            self.records = self.resource.select(self.resource.table.ALL,
-                                                orderby=fields[0].field
-                                               )
+            self.records = resource.select(table.ALL,
+                                           orderby=fields[0].field)
         # Pass to getLabels
         self.labels = headers
         # Pass to getData

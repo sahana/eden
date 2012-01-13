@@ -61,6 +61,7 @@ from gluon.tools import callback
 import gluon.contrib.simplejson as json
 
 from s3validators import IS_ONE_OF
+from s3tools import SQLTABLES3
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions, S3RecordLinker
 from s3export import S3Exporter
@@ -2945,8 +2946,8 @@ class S3Resource(object):
                             if record[f] is not None and \
                                 (ftype[:9] == "reference" or \
                                  ftype[:14] == "list:reference"):
-                                fk.update({f:record[f]})
-                                fields.update({f: None})
+                                fk[f] = record[f]
+                                fields[f] = None
                             else:
                                 continue
                         if fk:
@@ -4211,6 +4212,81 @@ class S3Resource(object):
                     if table[f].readable and f != fkey]
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_list_fields(table, fields):
+        """
+            Helper to resolve list_fields
+
+            @param table: the table
+            @param fields: the list_fields array
+        """
+
+        db = current.db
+        tablename = table._tablename
+
+        joins = dict()
+        lfields = []
+
+        # Collect the extra fields
+        flist = list(fields)
+        for vtable in table.virtualfields:
+            try:
+                extra_fields = vtable.extra_fields
+                for ef in extra_fields:
+                    if ef not in flist:
+                        flist.append(ef)
+            except:
+                continue
+
+        for f in flist:
+            # Allow to override the field label
+            if isinstance(f, tuple):
+                label, fieldname = f
+            else:
+                label, fieldname = None, f
+            field = None
+            tname = tablename
+            fname = fieldname
+            if "$" in fieldname:
+                # Field in referenced table
+                fk, fname = fieldname.split("$", 1)
+                if fk in table.fields:
+                    ftype = str(table[fk].type)
+                    if ftype[:9] == "reference":
+                        tname = ftype[10:]
+                        ftable = db[tname]
+                        if fname in ftable.fields:
+                            field = ftable[fname]
+                            if fk not in joins:
+                                join = (table[fk] == ftable._id)
+                                if "deleted" in ftable.fields:
+                                    join &= (ftable.deleted != True)
+                                joins[fk] = join
+                if field is None:
+                    continue
+                if label is None:
+                    label = field.label
+            elif fieldname in table.fields:
+                # Field in this table
+                field = table[fieldname]
+                if label is None:
+                    label = field.label
+            else:
+                # Virtual field?
+                if label is None:
+                    label = fname.capitalize()
+            colname = "%s.%s" % (tname, fname)
+            lfields.append(Storage(fieldname = fieldname,
+                                   tname = tname,
+                                   fname = fname,
+                                   colname = colname,
+                                   field = field,
+                                   label = label,
+                                   show = f in fields))
+
+        return (lfields, joins)
+
+    # -------------------------------------------------------------------------
     def split_fields(self, skip=[]):
         """
             Split the readable fields in the resource table into
@@ -4408,5 +4484,152 @@ class S3Resource(object):
         else:
             link_id = row[ltable._id.name]
         return link_id
+
+    # -------------------------------------------------------------------------
+    def sqltable(self,
+                 fields=None,
+                 start=0,
+                 limit=None,
+                 left=None,
+                 orderby=None,
+                 distinct=False,
+                 linkto=None,
+                 download_url=None,
+                 no_ids=False,
+                 as_page=False,
+                 as_list=False,
+                 format=None):
+        """
+            DRY helper function for SQLTABLEs in CRUD
+
+            @param fields: list of fieldnames to display
+            @param start: index of the first record to display
+            @param limit: maximum number of records to display
+            @param left: left outer joins
+            @param orderby: orderby for the query
+            @param distinct: distinct for the query
+            @param linkto: hook to link record IDs
+            @param download_url: the default download URL of the application
+            @param as_page: return the list as JSON page
+            @param as_list: return the list as Python list
+            @param format: the representation format
+        """
+
+        db = current.db
+        manager = current.manager
+        table = self.table
+
+        if fields is None:
+            fields = [f.name for f in self.readable_fields()]
+        if table._id.name not in fields and not no_ids:
+            fields.insert(0, table._id.name)
+        lfields, joins = self.get_list_fields(table, fields)
+
+        colnames = [f.colname for f in lfields]
+        headers = dict(map(lambda f: (f.colname, f.label), lfields))
+
+        attributes = dict(distinct=distinct)
+        # Orderby
+        if orderby is not None:
+            attributes.update(orderby=orderby)
+        # Slice
+        limitby = self.limitby(start=start, limit=limit)
+        if limitby is not None:
+            attributes.update(limitby=limitby)
+        # Joins
+        query = self.get_query()
+        for j in joins.values():
+            query &= j
+        # Left outer joins
+        if left is not None:
+            attributes.update(left=left)
+
+        # Fields in the query
+        qfields = [f.field for f in lfields if f.field is not None]
+        if no_ids:
+            qfields.insert(0, table._id)
+
+        # Add orderby fields which are not in qfields
+        if distinct and orderby is not None:
+            qf = [str(f) for f in qfields]
+            if isinstance(orderby, str):
+                of = orderby.split(",")
+            elif not isinstance(orderby, (list, tuple)):
+                of = [orderby]
+            else:
+                of = orderby
+            for e in of:
+                if isinstance(e, Field) and str(e) not in qf:
+                    qfields.append(e)
+                    qf.append(str(e))
+                elif isinstance(e, str):
+                    fn = e.strip().split()[0].split(".", 1)
+                    tn, fn = ([table._tablename] + fn)[-2:]
+                    try:
+                        t = db[tn]
+                        f = t[fn]
+                    except:
+                        continue
+                    if str(f) not in qf:
+                        qfields.append(f)
+                        qf.append(str(e))
+
+        # Retrieve the rows
+        rows = db(query).select(*qfields, **attributes)
+        if not rows:
+            return None
+
+        # Fields to show
+        row = rows.first()
+        def __expand(tablename, row, lfields=lfields):
+            columns = []
+            for f in lfields:
+                tname = f.tname
+                fname = f.fname
+                if tname in row and isinstance(row[tname], Row):
+                    columns += __expand(tname, lfields)
+                elif (tname, fname) not in columns and fname in row:
+                    columns.append((tname, fname))
+            return columns
+        columns = __expand(table._tablename, row)
+        lfields = [lf for lf in lfields
+                   if lf.show and (lf.tname, lf.fname) in columns]
+        colnames = [f.colname for f in lfields]
+        rows.colnames = colnames
+
+        # Representation
+        def __represent(f, row, columns=columns):
+            field = f.field
+            if field:
+                return manager.represent(field, record=row, linkto=linkto)
+            else:
+                tname = f.tname
+                fname = f.fname
+                if (tname, fname) in columns:
+                    if tname in row and fname in row[tname]:
+                        return str(row[tname][fname])
+                    elif fname in row:
+                        return str(row[fname])
+                    else:
+                        return None
+                else:
+                    return None
+
+        # Render as...
+        if as_page:
+            # ...JSON page (for pagination)
+            items = [[__represent(f, row) for f in lfields] for row in rows]
+        elif as_list:
+            # ...Python list
+            items = rows.as_list()
+        else:
+            # ...SQLTABLE
+            items = SQLTABLES3(rows,
+                               headers=headers,
+                               linkto=linkto,
+                               upload=download_url,
+                               _id="list",
+                               _class="dataTable display")
+        return items
 
 # END =========================================================================

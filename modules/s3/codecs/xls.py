@@ -92,7 +92,7 @@ class S3XLS(S3Codec):
         request = current.request
         response = current.response
         s3 = response.s3
-        
+
 
         # List fields
         if not list_fields:
@@ -107,9 +107,8 @@ class S3XLS(S3Codec):
         orderby = report_groupby
 
         # Retrieve the resource contents
-        crud = resource.crud
         table = resource.table
-        lfields, joins = crud.get_list_fields(table, list_fields)
+        lfields, joins = resource.get_list_fields(table, list_fields)
 
         # Use the title_list CRUD string for the title
         name = "title_list"
@@ -130,12 +129,12 @@ class S3XLS(S3Codec):
                     # Virtual Field
                     types.append("string")
 
-        items = crud.sqltable(fields=list_fields,
-                              start=None,
-                              limit=None,
-                              orderby=orderby,
-                              no_ids=True,
-                              as_page=True)
+        items = resource.sqltable(fields=list_fields,
+                                  start=None,
+                                  limit=None,
+                                  orderby=orderby,
+                                  no_ids=True,
+                                  as_page=True)
 
         if items is None:
             items = []
@@ -175,8 +174,8 @@ class S3XLS(S3Codec):
             redirect(URL(extension=""))
 
         # Get the attributes
-        title = attr.get("title") 
-        list_fields = attr.get("list_fields") 
+        title = attr.get("title")
+        list_fields = attr.get("list_fields")
         report_groupby = attr.get("report_groupby")
         use_colour = attr.get("use_colour", True)
         # Extract the data from the data_source
