@@ -1024,6 +1024,12 @@ class S3XML(S3Codec):
                 if filename and filename in files:
                     upload = files[filename]
                 elif download_url:
+                    if not filename:
+                        try:
+                            filename = download_url.split("?")[0]
+                        except:
+                            # Fake filename as fallback
+                            filename = "upload.bin"
                     import urllib2
                     try:
                         upload = urllib2.urlopen(download_url)

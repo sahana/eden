@@ -468,13 +468,9 @@ class S3BulkImporter(object):
                                       name=name,
                                       args=["create.s3csv"],
                                       vars=vars)
-#            # New back-end
-#            r = manager.parse_request(prefix=prefix,
-#                                      name=name,
-#                                      args=["import"],
-#                                      vars=vars)
-#            from s3import import S3Importer
-#            r.set_handler("import", S3Importer(), transform=True)
+            # @todo: attach files for upload like:
+            #resource = r.resource
+            #resource.files = {filename:open(filename, "rb")}
             # Execute the request
             output = r()
             # If it doesn't import - use this to check the

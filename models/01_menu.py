@@ -370,7 +370,7 @@ if deployment_settings.get_project_drr():
         ],
 
     }
-    
+
 elif s3_has_role("STAFF"):
     project_menu = {
         "menu": [
@@ -430,7 +430,7 @@ else:
             ]],
         ],
     }
-    
+
 # =============================================================================
 # Default Menu Configurations for Controllers
 # =============================================================================

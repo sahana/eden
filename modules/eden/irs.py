@@ -702,7 +702,7 @@ S3.timeline.onLoad = function() {
     var bandInfos = [
         Timeline.createBandInfo({
             width:          '90%',
-            intervalUnit:   Timeline.DateTime.MONTH, 
+            intervalUnit:   Timeline.DateTime.MONTH,
             intervalPixels: 140,
             eventSource:    S3.timeline.eventSource,
             date:           now,
@@ -710,8 +710,8 @@ S3.timeline.onLoad = function() {
         }),
         Timeline.createBandInfo({
             overview:       true,
-            width:          '10%', 
-            intervalUnit:   Timeline.DateTime.YEAR, 
+            width:          '10%',
+            intervalUnit:   Timeline.DateTime.YEAR,
             intervalPixels: 200,
             eventSource:    S3.timeline.eventSource,
             date:           now
@@ -957,7 +957,7 @@ class S3IRSResponseModel(S3Model):
         #
         return Storage(
                 )
-                
+
     # -------------------------------------------------------------------------
     @staticmethod
     def irs_vehicle_requires():
@@ -969,7 +969,7 @@ class S3IRSResponseModel(S3Model):
         db = current.db
         s3db = current.s3db
         s3 = response = current.response.s3
-        
+
         # Vehicles are a type of Asset
         table = s3db.asset_asset
         ltable = s3db.irs_ireport_vehicle
