@@ -1,4 +1,4 @@
-# coding: utf8
+﻿# -*- coding: utf-8 -*-
 
 module = "climate"
 resourcename = request.function
@@ -18,12 +18,13 @@ DSL = local_import("ClimateDataPortal.DSL")
 sample_types = SampleTable._SampleTable__types.values()
 variable_names = SampleTable._SampleTable__names.keys()
 
-def map_plugin():
+def map_plugin(**client_config):
     return ClimateDataPortal.MapPlugin(
         env = Storage(globals()),
         year_max = 2100,
         year_min = 1950,
-        place_table = climate_place
+        place_table = climate_place,
+        client_config = client_config
     )
 
 def index():
@@ -65,7 +66,9 @@ def index():
 #        catalogue_toolbar=catalogue_toolbar, # T/F, top tabs toolbar
         wms_browser = wms_browser, # dict
         plugins = [
-            map_plugin()
+            map_plugin(
+                **request.vars
+            )
         ]
     )
 
@@ -153,20 +156,19 @@ def climate_overlay_data():
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
+        import gluon.contrib.simplejson as JSON
         try:
             data_path = map_plugin().get_overlay_data(**arguments)
-        except SyntaxError, exception:
-            #raise
-            import gluon.contrib.simplejson as JSON
+        except SyntaxError, syntax_error:
             raise HTTP(400, JSON.dumps({
                 "error": "SyntaxError",
-                "lineno": exception.lineno,
-                "offset": exception.offset
+                "lineno": syntax_error.lineno,
+                "offset": syntax_error.offset,
+                "understood_expression": syntax_error.understood_expression
             }))
-        except DSL.MeaninglessUnitsException, exception:
-            import gluon.contrib.simplejson as JSON
+        except (DSL.MeaninglessUnitsException, TypeError), exception:
             raise HTTP(400, JSON.dumps({
-                "error": "MeaninglessUnits",
+                "error": exception.__class__.__name__,
                 "analysis": str(exception)
             }))
         else:
@@ -319,3 +321,50 @@ def purchase():
 def save_query():
     output = s3_rest_controller()
     return output
+
+def request_image():
+    vars = request.vars
+    import subprocess
+    #screenshot_renderer_stdout = StringIO.StringIO()
+    url = (
+        "http://%(http_host)s/%(application_name)s/%(controller)s"
+        "?expression=%(expression)s"
+        "&filter=%(filter)s"
+        "&display_mode=print"
+    ) % dict(
+        vars,
+        controller = request.controller,
+        application_name = request.application,
+        http_host = request.env.http_host,
+        server_port = request.env.server_port,
+    )
+    width = int(vars["width"])
+    height = int(vars["height"])
+    
+    # PyQT4 signals don't like not being run in the main thread
+    # run in a subprocess to give it it's own thread
+    subprocess_args = (
+        request.env.applications_parent+"/applications/"+
+        request.application+"/modules/webkit_url2png.py",
+        url,
+        str(width),
+        str(height)
+    )
+    stdoutdata, stderrdata = subprocess.Popen(
+        subprocess_args,
+        bufsize = 4096,
+        stdout = subprocess.PIPE, # StringIO doesn't work
+        stderr = subprocess.PIPE
+    ).communicate()
+#    if stderrdata:
+#        raise Exception(stderrdata)
+#    else:
+    response.headers["Content-Type"] = "application/force-download"
+    response.headers["Content-disposition"] = (
+        "attachment; filename=MapScreenshot.png"
+    )
+    import StringIO
+    return response.stream(
+        StringIO.StringIO(stdoutdata),
+        chunk_size=4096
+    )

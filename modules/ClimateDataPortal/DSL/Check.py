@@ -140,13 +140,24 @@ def Aggregation_check(aggregation):
         specification_errors |= bool(check(specification))
     return aggregation.errors or specification_errors
 
+
+def Units_check_number(units, value, error):
+    if units._positive and value < 0:
+        error(
+            "Can't guess whether negative numbers without 'delta' are deltas. "
+            "Specify the number as a delta e.g. '%s delta mm' "
+            "or make it positive." % value
+        )
+Units.check_number = WhateverUnitsAreNeeded.check_number = Units_check_number
+
 @check.implementation(Number)
-def Number_check(positive_number):
-    if positive_number.units._positive and positive_number.value < 0:
-        positive_number.errors = ["Affine Numbers must be positive"]
-    else:
-        positive_number.errors = []
-    return positive_number.errors
+def Number_check(number):
+    number.errors = []
+    number.units.check_number(
+        number.value,
+        number.errors.append
+    )
+    return number.errors
 
 check_analysis = Method("check_analysis")
 
@@ -158,7 +169,7 @@ def Number_check_analysis(number, out):
 
 @check_analysis.implementation(From, To)
 def Date_check_analysis(date_spec, out):
-    out(date_spec)
+    out("%s," % date_spec)
     if date_spec.errors:
         out("# ^ ", ", ".join(date_spec.errors))
 

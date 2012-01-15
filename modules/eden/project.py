@@ -1347,6 +1347,9 @@ class S3ProjectTaskModel(S3Model):
         #
         # @ToDo: Recurring tasks
         #
+        # These Statuses can be customised, although doing so limits the ability to do synchronization
+        # - best bet is simply to comment statuses that you don't wish to use
+        #
         project_task_status_opts = {
             1: T("Draft"),
             2: T("New"),

@@ -320,13 +320,16 @@ class S3DocumentLibrary(S3Model):
             form.errors.file = msg
             form.errors.url = msg
 
+        # Do a checksum on the file to see if it's a duplicate
         if isinstance(doc, cgi.FieldStorage) and doc.filename:
             f = doc.file
             form.vars.checksum = doc_checksum(f.read())
             f.seek(0)
 
         if form.vars.checksum is not None:
-            query = (table.checksum == form.vars.checksum)
+            # Duplicate allowed if original version is deleted
+            query = ((table.checksum == form.vars.checksum) & \
+                     (table.deleted == False))
             result = db(query).select(table.name,
                                       limitby=(0, 1)).first()
             if result:

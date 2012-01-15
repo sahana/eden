@@ -11,15 +11,16 @@ class Units(object):
     __slots__ = ("_dimensions", "_positive")
     delta_strings = ("delta ", "Δ ")
     @staticmethod
-    def parsed_from(unit_string):
+    def parsed_from(unit_string, positive = None):
         "format example: m Kg^2 / s^2"
         
-        positive = True
-        for delta_string in Units.delta_strings:
-            if unit_string.startswith(delta_string):
-                unit_string = unit_string[len(delta_string):]
-                positive = False
-                break
+        if positive is None:
+            positive = True
+            for delta_string in Units.delta_strings:
+                if unit_string.startswith(delta_string):
+                    unit_string = unit_string[len(delta_string):]
+                    positive = False
+                    break
         
         dimensions = {}
         for factor, dimension_counts in zip((1,-1), unit_string.split("/")):
@@ -99,7 +100,7 @@ class Units(object):
     
     def match_dimensions_of(units, other_units):
         return (
-            other_units is whatever_units_are_needed or
+            isinstance(other_units, WhateverUnitsAreNeeded) or
             units._dimensions == other_units._dimensions
         )
     
@@ -135,10 +136,11 @@ class Units(object):
     def _mul(units, other_units, multiplier):
         result = units._dimensions.copy()
         get = units._dimensions.get
-        for dimension, count in other_units.iteritems():
-            result[dimension] = get(dimension, 0) + multiplier * count
-            if result[dimension] == 0:
-                del result[dimension]
+        if not isinstance(other_units, WhateverUnitsAreNeeded):
+            for dimension, count in other_units.iteritems():
+                result[dimension] = get(dimension, 0) + multiplier * count
+                if result[dimension] == 0:
+                    del result[dimension]
         return Units(
             result, 
             units._positive and other_units._positive     
@@ -178,9 +180,13 @@ class Units(object):
         )
 
 class WhateverUnitsAreNeeded(object):
+    def __init__(units, positive = None):
+        if positive is None:
+            positive = True
+        units._positive = positive
+    
     def __repr__(units):
         return "(Whatever units are needed)"
-    _positive = True
      
     def __str__(units):
         return ""
@@ -190,9 +196,11 @@ class WhateverUnitsAreNeeded(object):
     
     __add__ = __sub__= __mul__ = __div__= __pow__ = \
         lambda units, other_units: other_units
+        
+    def __eq__(units, other_units):
+        return True
 
 Dimensionless = Units({}, positive = True)
-whatever_units_are_needed = WhateverUnitsAreNeeded()
 
 from . import Method
 units = Method("units")

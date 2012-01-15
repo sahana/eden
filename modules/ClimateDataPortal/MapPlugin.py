@@ -5,18 +5,35 @@ from gluon.dal import Expression
 
 from Cache import *
 import gluon.contrib.simplejson as JSON
-from . import SampleTable, month_number_to_year_month, units_in_out, start_month_0_indexed
+from . import (
+    SampleTable,
+    month_number_to_year_month,
+    units_in_out,
+    start_month_0_indexed
+)
 from DSL.Units import MeaninglessUnitsException
 from DSL import aggregations
 
+from math import log10, floor
+def round_to_4_sd(x):
+    if x == 0:
+        return 0.0
+    else:
+        return round(x, -int(floor(log10(abs(x)))-3))
+                    
+
 class MapPlugin(object):
     def __init__(
-        self,
+        map_plugin,
         env,
         year_min,
         year_max,
         place_table,
+        client_config = {}
     ):
+        """client_config (optional) passes configuration dict 
+        through to the client-side map plugin.
+        """
         try:
             import rpy2
             import rpy2.robjects as robjects
@@ -36,37 +53,45 @@ class MapPlugin(object):
         """)
             raise
 
-        self.env = env
-        self.year_min = year_min 
-        self.year_max = year_max
-        self.place_table = place_table
-        self.robjects = robjects
-        R = self.R = robjects.r
+        map_plugin.env = env
+        map_plugin.year_min = year_min 
+        map_plugin.year_max = year_max
+        map_plugin.place_table = place_table
+        map_plugin.robjects = robjects
+        R = map_plugin.R = robjects.r
         env.DSL.init_R_interpreter(R, env.deployment_settings.database)
+        map_plugin.client_config = client_config
 
-    def extend_gis_map(self, add_javascript, add_configuration):
+    def extend_gis_map(map_plugin, add_javascript, add_configuration):
         add_javascript("scripts/S3/s3.gis.climate.js")
-        env = self.env
+        env = map_plugin.env
         SCRIPT = env.SCRIPT
         T = env.T
         import json
         application_name = env.request.application
+        
+        def climate_URL(url):
+            return "/%s/climate/%s" % (application_name, url)
+        
         config_dict = dict(
-            year_min = self.year_min,
-            year_max = self.year_max,
-            overlay_data_URL = "/%s/climate/climate_overlay_data" % application_name,
-            chart_URL = "/%s/climate/climate_chart" % application_name,
-            places_URL = "/%s/climate/places" % application_name,
-            chart_popup_URL = "/%s/climate/chart_popup.html" % application_name,
-            buy_data_popup_URL = "/%s/climate/buy_data.html" % application_name,
-            data_URL = "/%s/climate/data" % application_name,
+            map_plugin.client_config,
+            
+            year_min = map_plugin.year_min,
+            year_max = map_plugin.year_max,
+            overlay_data_URL = climate_URL("climate_overlay_data"),
+            chart_URL = climate_URL("climate_chart"),
+            places_URL = climate_URL("places"),
+            chart_popup_URL = climate_URL("chart_popup.html"),
+            buy_data_popup_URL = climate_URL("buy_data.html"),
+            request_image_URL = climate_URL("request_image"),
+            data_URL = climate_URL("data"),
             data_type_label = str(T("Data Type")),
             projected_option_type_label = str(
                 T("Projection Type")
             ),
             aggregation_names = [
                 Aggregation.__name__ for Aggregation in aggregations
-            ]
+            ],
         )
         SampleTable.add_to_client_config_dict(config_dict)
         add_configuration(
@@ -80,13 +105,14 @@ class MapPlugin(object):
                             )+
                         ")",
                     ")",
-                ))
+                )),
+                _type="text/javascript"
             )
         )
 
-    def get_places(self, place_ids):
+    def get_places(map_plugin, place_ids):
         db = env.db
-        place_table = self.place_table
+        place_table = map_plugin.place_table
 
         place_data = db(place_table).select(
             place_table.id,
@@ -95,10 +121,10 @@ class MapPlugin(object):
         )
             
     def get_overlay_data(
-        self,
+        map_plugin,
         query_expression,
     ):
-        env = self.env
+        env = map_plugin.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
         understood_expression_string = str(expression)        
@@ -113,12 +139,15 @@ class MapPlugin(object):
             )                
         
         def generate_map_overlay_data(file_path):
-            R = self.R
+            R = map_plugin.R
             code = DSL.R_Code_for_values(expression, "place_id")
             values_by_place_data_frame = R(code)()
             # R willfully removes empty data frame columns 
             # which is ridiculous behaviour
-            if isinstance(values_by_place_data_frame, self.robjects.vectors.StrVector):
+            if isinstance(
+                values_by_place_data_frame,
+                map_plugin.robjects.vectors.StrVector
+            ):
                 raise Exception(str(values_by_place_data_frame))
             elif values_by_place_data_frame.ncol == 0:
                 keys = []
@@ -132,20 +161,17 @@ class MapPlugin(object):
                 write = overlay_data_file.write
                 write('{')
                 # sent back for acknowledgement:
-                write('"understood_expression":"%s",' % understood_expression_string.replace('"','\\"'))
+                write(
+                    '"understood_expression":"%s",'.__mod__(
+                        understood_expression_string.replace('"','\\"')
+                    )
+                )
                 write('"units":"%s",' % units)
                 
                 write('"keys":[')
                 write(",".join(map(str, keys)))
                 write('],')
                 
-                from math import log10, floor
-                def round_to_4_sd(x):
-                    if x == 0:
-                        return 0.0
-                    else:
-                        return round(x, -int(floor(log10(abs(x)))-3))
-                    
                 write('"values":[')
                 write(",".
                     join(
@@ -172,17 +198,21 @@ class MapPlugin(object):
         )
     
     def render_plots(
-        self,
+        map_plugin,
         specs,
         width,
         height
     ):
-        env = self.env
+        env = map_plugin.env
         DSL = env.DSL
         
         def generate_chart(file_path):
             time_serieses = []
-            R = self.R
+            
+            from scipy import stats
+            regression_lines = []
+            
+            R = map_plugin.R
             c = R("c")
             spec_names = []
             starts = []
@@ -216,26 +246,16 @@ class MapPlugin(object):
                 #print code
                 values_by_time_period_data_frame = R(code)()
                 data = {}
-                if isinstance(values_by_time_period_data_frame, self.robjects.vectors.StrVector):
+                if isinstance(
+                    values_by_time_period_data_frame,
+                    map_plugin.robjects.vectors.StrVector
+                ):
                     raise Exception(str(values_by_time_period_data_frame))
                 elif values_by_time_period_data_frame.ncol == 0:
                     pass
                 else:
-                    add = data.__setitem__
-                    for key, value in zip(
-                        values_by_time_period_data_frame.rx2("key"),
-                        values_by_time_period_data_frame.rx2("value")
-                    ):
-                        add(key, value)
-                    # assume monthly values and monthly time_period
-                    start_month_number = min(data.iterkeys())
-                    starts.append(start_month_number)
-                    start_year, start_month = month_number_to_year_month(start_month_number)
-
-                    end_month_number = max(data.iterkeys())
-                    ends.append(end_month_number)
-                    end_year, end_month = month_number_to_year_month(end_month_number)
-                    
+                    keys = values_by_time_period_data_frame.rx2("key")
+                    values = values_by_time_period_data_frame.rx2("value")
                     try:
                         display_units = {
                             "Kelvin": "Celsius",
@@ -245,6 +265,34 @@ class MapPlugin(object):
                         display_units = unit_string
                     else:
                         converter = units_in_out[display_units]["out"]
+                                        
+                    linear_regression = R("{}")
+                    
+                    def month_number_to_float_year(month_number):
+                        year, month = month_number_to_year_month(month_number)
+                        return year + (float(month-1) / 12)
+                        
+                    converted_keys = map(month_number_to_float_year, keys)
+                    converted_values = map(converter, values) 
+                    regression_lines.append(
+                        stats.linregress(converted_keys, converted_values)
+                    )
+                    
+                    add = data.__setitem__
+                    for key, value in zip(keys, values):
+                        add(key, value)
+                    # assume monthly values and monthly time_period
+                    start_month_number = min(data.iterkeys())
+                    starts.append(start_month_number)
+                    start_year, start_month = month_number_to_year_month(
+                        start_month_number
+                    )
+
+                    end_month_number = max(data.iterkeys())
+                    ends.append(end_month_number)
+                    end_year, end_month = month_number_to_year_month(
+                        end_month_number
+                    )
                     
                     values = []
                     for month_number in range(
@@ -257,12 +305,10 @@ class MapPlugin(object):
                         else:
                             values.append(converter(data[month_number]))
                     
-                    #print values
-                    
                     if is_yearly_values:
                         time_serieses.append(
                             R("ts")(
-                                self.robjects.FloatVector(values),
+                                map_plugin.robjects.FloatVector(values),
                                 start = c(start_year),
                                 end = c(end_year),
                                 frequency = 1
@@ -271,62 +317,12 @@ class MapPlugin(object):
                     else:
                         time_serieses.append(
                             R("ts")(
-                                self.robjects.FloatVector(values),
+                                map_plugin.robjects.FloatVector(values),
                                 start = c(start_year, start_month),
                                 end = c(end_year, end_month),
                                 frequency = 12
                             )
                         )
-            R((
-                "png(filename = '%(file_path)s', "
-                    "width = %(width)i, "
-                    "height = %(height)i"
-                ")"
-            ) % dict(
-                file_path = file_path,
-                width = width,
-                height = height
-            ))
-            plot_chart = R(
-                "function (xlab, ylab, n, names, axis_points, axis_labels, axis_orientation, ...) {"
-                    "par(xpd = T, mar=par()$mar+c(0,0, length(names)/1.5, 0))\n"
-                    "ts.plot(...,"
-                        "gpars = list("
-                            "xlab = xlab,"
-                            "ylab = ylab,"
-                            "col = c(1:n),"
-                            "pch = c(21:25),"
-                            "type = '%(plot_type)s',"
-                            "xaxt = 'n'"
-                        ")"
-                    ")\n"
-                    "axis("
-                        "1, "
-                        "at = axis_points,"
-                        "labels = axis_labels,"
-                        "las = axis_orientation"
-                    ")\n"
-                    "legend("
-                        "par()$usr[1],"
-                        "par()$usr[4] + ((par()$usr[4] - par()$usr[3]) / ((%(height)i - %(total_margin_height)i)/(%(line_height_factor)i * length(names)))) ,"
-                        "names,"
-                        "cex = 0.8,"
-                        "pt.bg = c(1:n),"
-                        "pch = c(21:25),"
-                        "bty = 'n'"
-                    ")\n"
-                "}" % dict(
-                    plot_type= "lo"[is_yearly_values],
-                    width = width,
-                    height = height,
-                    # R uses Normalised Display coordinates.
-                    # these have been found by recursive improvement 
-                    # they place the legend legibly. tested up to 8 lines
-                    total_margin_height = 150,
-                    line_height_factor = 17,
-                )
-            )
-            
             min_start = min(starts)
             max_end = max(ends)
             show_months = any(not is_yearly for is_yearly in yearly)
@@ -347,7 +343,10 @@ class MapPlugin(object):
 
                 axis_points = []
                 axis_labels = []
-                month_names = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")
+                month_names = (
+                    "Jan Feb Mar Apr May Jun "
+                    "Jul Aug Sep Oct Nov Dec"
+                ).split(" ")
                 for month_number in range(min_start, max_end+1, step):
                     year, month = month_number_to_year_month(month_number)
                     month -= 1
@@ -367,18 +366,129 @@ class MapPlugin(object):
                     axis_points.append(year)
                     axis_labels.append(year)
             
-            if display_units == "Celsius":
-                display_units = "\xc2\xb0 Celsius"
+            display_units = display_units.replace("Celsius", "\xc2\xb0Celsius")
+
+            R.png(
+                filename = file_path,
+                width = width,
+                height = height
+            )
+            
+            plot_chart = R("""
+function (
+    xlab, ylab, n, names, axis_points, 
+    axis_labels, axis_orientation, 
+    plot_type,
+    width, height, 
+    total_margin_height,
+    line_interspacing,
+    ...
+) {
+    split_names <- lapply(
+        names,
+        strwrap, width=(width - 100)/5
+    )
+    wrapped_names <- lapply(
+        split_names,
+        paste, collapse='\n'
+    )
+    legend_line_count = sum(sapply(split_names, length))
+    legend_height_inches <- grconvertY(
+        -(
+            (legend_line_count * 11) + 
+            (length(wrapped_names) * 6)
+        ),
+        "device",
+        "inches"
+    ) - grconvertY(0, "device", "inches")
+    par(
+        xpd = T,
+        mai = (par()$mai + c(legend_height_inches, 0, 0, 0))
+    )
+    ts.plot(...,
+        gpars = list(
+            xlab = xlab,
+            ylab = ylab,
+            col = c(1:n),
+            pch = c(21:25),
+            type = plot_type,
+            xaxt = 'n'
+        )
+    )
+    axis(
+        1, 
+        at = axis_points,
+        labels = axis_labels,
+        las = axis_orientation
+    )
+    legend(
+        par()$usr[1],
+        par()$usr[3] - (
+            grconvertY(0, "device", "user") -
+            grconvertY(40, "device", "user")
+        ),
+        wrapped_names,
+        cex = 0.8,
+        pt.bg = c(1:n),
+        pch = c(21:25),
+        bty = 'n',
+        y.intersp = line_interspacing,
+        text.width = 3
+    )
+}""" )
+            from math import log10, floor
+            for regression_line, i in zip(
+                regression_lines,
+                range(len(time_serieses))
+            ):
+                slope, intercept, r, p, stderr = map(
+                    str,
+                    map(round_to_4_sd, regression_line)
+                )
+                
+                spec_names[i] += (
+                    "   {"
+                        "y=%(slope)s\xc3\x97year %(add)s%(intercept)s, "
+                        "r= %(r)s, "
+                        "p= %(p)s, "
+                        "S.E.= %(stderr)s"
+                    "}"
+                ) % dict(
+                    locals(),
+                    add = ["+ ",""][intercept.startswith("-")]
+                )
+                
             plot_chart(
-                "",
-                display_units,
-                len(time_serieses),
-                spec_names,
-                axis_points,
-                axis_labels,
-                axis_orientation = [0,2][show_months],
+                xlab = "",
+                ylab = display_units,
+                n = len(time_serieses),
+                names = spec_names,
+                axis_points = axis_points,
+                axis_labels = axis_labels,
+                axis_orientation = [0,2][show_months], 
+                plot_type= "lo"[is_yearly_values],               
+                width = width,
+                height = height,
+                # R uses Normalised Display coordinates.
+                # these have been found by recursive improvement 
+                # they place the legend legibly. tested up to 8 lines
+                total_margin_height = 150,
+                line_interspacing = 1.8,
                 *time_serieses
             )
+            
+            for regression_line, colour_number in zip(
+                regression_lines,
+                range(len(time_serieses))
+            ):
+                slope = regression_line[0]
+                intercept = regression_line[1]
+                R.par(xpd = False)
+                R.abline(
+                    intercept,
+                    slope,
+                    col = colour_number+1
+                )
             R("dev.off()")
 
         import md5
@@ -460,7 +570,9 @@ class MapPlugin(object):
                                     place_row.climate_place.longitude
                                 )
                             ).replace('"', '\\"'),'"'
-                            ',"region_id":', str(place_row.climate_place_region.region_id or "null"),
+                            ',"region_id":', str(
+                                place_row.climate_place_region.region_id or "null"
+                            ),
                         "}]"
                     ))
                 )
