@@ -23,6 +23,7 @@ import eden.hrm
 import eden.project
 import eden.dvi
 import eden.irs
+import eden.support
 
 # =============================================================================
 # Import S3 meta fields into global namespace

@@ -77,25 +77,39 @@ class Method(object):
     def implemented_by(method, target):
         return type(target) in method.implementations
 
-
+def normalised(value):
+    if isinstance(value, (int, float)):
+        return Number(value)
+    else:
+        return value
 
 class ASTNode(object):
-    # don't allow the __r<op>__ forms - everything must be a ASTNode
     def __add__(node, right):
-        return Addition(node, right)
+        return Addition(node, normalised(right))
+        
+    def __radd__(node, left):
+        return Addition(normalised(left), node)
         
     def __sub__(node, right):
-        if isinstance(right, int):
-            right = Number(right)
-        return Subtraction(node, right)
+        return Subtraction(node, normalised(right))
+        
+    def __rsub__(node, left):
+        return Subtraction(normalised(left), node)
         
     def __mul__(node, right):
-        return Multiplication(node, right)
+        return Multiplication(node, normalised(right))
+
+    def __rmul__(node, left):
+        return Multiplication(normalised(left), node)
+
+    def __neg__(node):
+        return Multiplication(node, Number(-1))
 
     def __div__(node, right):
-        if isinstance(right, int):
-            right = Number(right, "")
-        return Division(node, right)
+        return Division(node, normalised(right))
+
+    def __rdiv__(node, left):
+        return Division(normalised(left), node)
 
     def __pow__(node, exponent):
         return Pow(node, exponent)
@@ -104,9 +118,9 @@ class Number(ASTNode):
     def __init__(number, value, units_name = None):
         number.value = float(value)
         if units_name is None:
-            number.units = whatever_units_are_needed
+            number.units = WhateverUnitsAreNeeded()#value >= 0)
         else:
-            number.units = Units.parsed_from(units_name)
+            number.units = Units.parsed_from(units_name)#, value >= 0)
     
     def __cmp__(number, other_number):
         return number.value - other_number
@@ -338,32 +352,37 @@ def parse(expression_string):
         exception.offset, exception.lineno = position[0], 0
         raise exception
     else:
-        cleaned_expression_string = ("("+("".join(tokens))+")")
+        cleaned_expression_string = ("".join(tokens))
         #print cleaned_expression_string
-        expression = eval(
-            cleaned_expression_string,
-            allowed_names
-        )
-        if check(expression):
-            check_analysis_out = []
-            def analysis_out(*things):
-                check_analysis_out.append("".join(map(str, things)))
-            check_analysis(expression, analysis_out)
-            raise TypeError(
-                "\n".join(check_analysis_out)
+        try:
+            expression = eval(
+                cleaned_expression_string,
+                allowed_names
             )
+        except SyntaxError, syntax_error:
+            syntax_error.understood_expression = cleaned_expression_string
+            raise
         else:
-            Build(expression)
-            return expression
+            if check(expression):
+                check_analysis_out = []
+                def analysis_out(*things):
+                    check_analysis_out.append("".join(map(str, things)))
+                check_analysis(expression, analysis_out)
+                raise TypeError(
+                    "\n".join(check_analysis_out)
+                )
+            else:
+                Build(expression)
+                return expression
 
-from Check import check, check_analysis
-from Build import Build
 from Units import (
     Units,
     units,
     analysis, 
-    whatever_units_are_needed,
+    WhateverUnitsAreNeeded,
     MeaninglessUnitsException
 )
+from Check import check, check_analysis
+from Build import Build
 from CodeGeneration import R_Code_for_values, init_R_interpreter
 import Stringification
