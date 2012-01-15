@@ -871,7 +871,7 @@ class S3CRUD(S3Method):
                     if response.s3.dataTable_iDisplayLength:
                         limit = 2 * response.s3.dataTable_iDisplayLength
                     else:
-                        limit = 20
+                        limit = 50
                     sqltable =  resource.sqltable(left=left,
                                                   fields=list_fields,
                                                   start=0,

@@ -361,11 +361,12 @@ class S3ComponentTab:
         model = manager.model
 
         get_vars = r.get_vars
+        tablename = None
         if "viewing" in get_vars:
             try:
                 tablename, record_id = get_vars["viewing"].split(".", 1)
             except:
-                tablename = None
+                pass
 
         resource = r.resource
         component = self.component

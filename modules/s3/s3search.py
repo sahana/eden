@@ -1356,9 +1356,13 @@ class S3Search(S3CRUD):
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
                 totalrows = resource.count(distinct=True)
                 if totalrows:
+                    if response.s3.dataTable_iDisplayLength:
+                        limit = 2 * response.s3.dataTable_iDisplayLength
+                    else:
+                        limit = 50
                     sqltable = resource.sqltable(fields=list_fields,
                                                  start=0,
-                                                 limit=20,
+                                                 limit=limit,
                                                  orderby=orderby,
                                                  distinct=True,
                                                  linkto=linkto,
@@ -1370,7 +1374,7 @@ class S3Search(S3CRUD):
                                   iTotalDisplayRecords=totalrows)
                     response.aadata = json(aadata)
                     response.s3.start = 0
-                    response.s3.limit = 20
+                    response.s3.limit = limit
 
             if r.http == "POST" and not errors:
                 query = None
