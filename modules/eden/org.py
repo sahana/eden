@@ -377,7 +377,7 @@ class S3OrganisationModel(S3Model):
                                     ])
 
         # Components
-        
+
         # Staff
         self.add_component("hrm_human_resource",
                            org_organisation="organisation_id")
@@ -531,7 +531,7 @@ class S3OrganisationModel(S3Model):
         db = current.db
         table = db.org_sector
         NONE = current.messages.NONE
-        
+
         if record:
             query = (table.id == record.sector_id)
             sector_record = db(query).select(table.abrv,
@@ -630,7 +630,7 @@ class S3OrganisationModel(S3Model):
 # =============================================================================
 class S3SiteModel(S3Model):
 
-    
+
     names = ["org_site",
              "org_site_id",
             ]
@@ -696,7 +696,7 @@ class S3SiteModel(S3Model):
         # Human Resources
         self.add_component("hrm_human_resource",
                            org_site=self.super_key(table))
-        
+
         # Documents
         self.add_component("doc_document",
                            org_site=self.super_key(table))
@@ -734,7 +734,7 @@ class S3RoomModel(S3Model):
         Rooms are a location within a Site
         - used by Asset module
     """
-    
+
     names = ["org_room",
              "org_room_id"
             ]
@@ -747,7 +747,7 @@ class S3RoomModel(S3Model):
 
         site_id = self.org_site_id
 
-        
+
         # =============================================================================
         # Rooms (for Sites)
         # @ToDo: Validate to ensure that rooms are unique per facility
@@ -822,10 +822,10 @@ class S3RoomModel(S3Model):
 
         if not id:
             return NONE
-        
+
         db = current.db
         table = db.org_room
-        
+
         record = db(table.id == id).select(table.name,
                                            limitby=(0, 1)).first()
         if not record:
@@ -1187,17 +1187,13 @@ def org_organisation_rheader(r, tabs=[]):
         settings = current.deployment_settings
 
         # Tabs
-        tabs = [(T("Basic Details"), None)]
-        if settings.has_module("hrm"):
-            tabs.append((T("Staff & Volunteers"), "human_resource"))
-        tabs.append((T("Offices"), "office"))
-        #tabs.append((T("Facilities"), "site")) # Ticket 195
-        if settings.has_module("assess"):
-            s3mgr.load("assess_assess")
-            tabs.append((T("Assessments"), "assess"))
-        tabs.append((T("Projects"), "project"))
-        # @ToDo
-        #tabs.append((T("Tasks"), "task"))
+        tabs = [(T("Basic Details"), None),
+                (T("Staff & Volunteers"), "human_resource"),
+                (T("Offices"), "office"),
+                (T("Assessments"), "assess"),
+                (T("Projects"), "project"),
+                #(T("Tasks"), "task"),
+               ]
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -1244,6 +1240,8 @@ def org_office_rheader(r, tabs=[]):
 
     """ Office/Warehouse page headers """
 
+    s3db = current.s3db
+
     if r.representation == "html":
 
         tablename, record = s3_rheader_resource(r)
@@ -1255,11 +1253,12 @@ def org_office_rheader(r, tabs=[]):
             s3 = current.response.s3
             settings = current.deployment_settings
 
+            UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
             tabs = [(T("Basic Details"), None),
                     #(T("Contact Data"), "contact"),
-                    ]
-            if settings.has_module("hrm"):
-                tabs.append((T("Staff"), "human_resource"))
+                    (T("Staff"), "human_resource"),
+                   ]
             try:
                 tabs = tabs + s3.req_tabs(r)
             except:
@@ -1280,6 +1279,7 @@ def org_office_rheader(r, tabs=[]):
             else:
                 org_name = None
 
+            table = s3db.org_office
             rheader = DIV(TABLE(
                           TR(
                              TH("%s: " % table.name.label),
@@ -1311,8 +1311,8 @@ def org_office_rheader(r, tabs=[]):
             if r.component and r.component.name == "req":
                 # Inject the helptext script
                 rheader.append(s3.req_helptext_script)
-
             return rheader
+
     return None
 
 # END =========================================================================

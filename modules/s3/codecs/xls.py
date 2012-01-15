@@ -107,9 +107,8 @@ class S3XLS(S3Codec):
         orderby = report_groupby
 
         # Retrieve the resource contents
-        crud = resource.crud
         table = resource.table
-        lfields, joins = crud.get_list_fields(table, list_fields)
+        lfields, joins = resource.get_list_fields(table, list_fields)
 
         # Use the title_list CRUD string for the title
         name = "title_list"
@@ -130,12 +129,12 @@ class S3XLS(S3Codec):
                     # Virtual Field
                     types.append("string")
 
-        items = crud.sqltable(fields=list_fields,
-                              start=None,
-                              limit=None,
-                              orderby=orderby,
-                              no_ids=True,
-                              as_page=True)
+        items = resource.sqltable(fields=list_fields,
+                                  start=None,
+                                  limit=None,
+                                  orderby=orderby,
+                                  no_ids=True,
+                                  as_page=True)
 
         if items is None:
             items = []

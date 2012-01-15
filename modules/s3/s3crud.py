@@ -48,7 +48,6 @@ from s3method import S3Method
 from s3export import S3Exporter
 #from s3gis import S3MAP
 from s3pdf import S3PDF
-from s3tools import SQLTABLES3
 from s3utils import s3_mark_required
 from s3widgets import S3EmbedComponentWidget
 
@@ -59,7 +58,7 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
-# *****************************************************************************
+# =============================================================================
 
 class S3CRUD(S3Method):
     """
@@ -735,6 +734,7 @@ class S3CRUD(S3Method):
         response = current.response
         manager = current.manager
 
+        resource = self.resource
         table = self.table
         tablename = self.tablename
 
@@ -782,7 +782,7 @@ class S3CRUD(S3Method):
 
         # List fields
         if not list_fields:
-            fields = self.resource.readable_fields()
+            fields = resource.readable_fields()
             list_fields = [f.name for f in fields]
         else:
             fields = [table[f] for f in list_fields if f in table.fields]
@@ -802,7 +802,7 @@ class S3CRUD(S3Method):
 
         # Filter
         if response.s3.filter is not None:
-            self.resource.add_filter(response.s3.filter)
+            resource.add_filter(response.s3.filter)
 
         if r.interactive:
 
@@ -853,35 +853,35 @@ class S3CRUD(S3Method):
                         output.update(buttons)
 
             # Get the list
-            items = self.sqltable(fields=list_fields,
-                                  left=left,
-                                  start=start,
-                                  limit=limit,
-                                  orderby=orderby,
-                                  linkto=linkto,
-                                  download_url=self.download_url,
-                                  format=representation)
+            items = resource.sqltable(fields=list_fields,
+                                      left=left,
+                                      start=start,
+                                      limit=limit,
+                                      orderby=orderby,
+                                      linkto=linkto,
+                                      download_url=self.download_url,
+                                      format=representation)
 
             # In SSPag, send the first 20 records together with the initial
             # response (avoids the dataTables Ajax request unless the user
             # tries nagivating around)
             if not response.s3.no_sspag and items:
-                totalrows = self.resource.count()
+                totalrows = resource.count()
                 if totalrows:
                     if response.s3.dataTable_iDisplayLength:
                         limit = 2 * response.s3.dataTable_iDisplayLength
                     else:
                         limit = 20
-                    aadata = dict(aaData = self.sqltable(
-                                                left=left,
-                                                fields=list_fields,
-                                                start=0,
-                                                limit=limit,
-                                                orderby=orderby,
-                                                linkto=linkto,
-                                                download_url=self.download_url,
-                                                as_page=True,
-                                                format=representation) or [])
+                    sqltable =  resource.sqltable(left=left,
+                                                  fields=list_fields,
+                                                  start=0,
+                                                  limit=limit,
+                                                  orderby=orderby,
+                                                  linkto=linkto,
+                                                  download_url=self.download_url,
+                                                  as_page=True,
+                                                  format=representation)
+                    aadata = dict(aaData = sqltable or [])
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
                     response.aadata = json(aadata)
@@ -926,10 +926,10 @@ class S3CRUD(S3Method):
 
             # Get the master query for SSPag
             if session.s3.filter is not None:
-                self.resource.build_query(filter=response.s3.filter,
-                                          vars=session.s3.filter)
+                resource.build_query(filter=response.s3.filter,
+                                     vars=session.s3.filter)
 
-            displayrows = totalrows = self.resource.count(distinct=distinct)
+            displayrows = totalrows = resource.count(distinct=distinct)
 
             # SSPag dynamic filter?
             if vars.sSearch:
@@ -937,9 +937,9 @@ class S3CRUD(S3Method):
                                          fields=list_fields,
                                          left=left)
                 if squery is not None:
-                    self.resource.add_filter(squery)
-                    displayrows = self.resource.count(left=left,
-                                                      distinct=distinct)
+                    resource.add_filter(squery)
+                    displayrows = resource.count(left=left,
+                                                 distinct=distinct)
 
             # SSPag sorting
             if vars.iSortingCols:
@@ -953,16 +953,16 @@ class S3CRUD(S3Method):
             sEcho = int(vars.sEcho or 0)
 
             # Get the list
-            items = self.sqltable(fields=list_fields,
-                                  left=left,
-                                  distinct=distinct,
-                                  start=start,
-                                  limit=limit,
-                                  orderby=orderby,
-                                  linkto=linkto,
-                                  download_url=self.download_url,
-                                  as_page=True,
-                                  format=representation) or []
+            items = resource.sqltable(fields=list_fields,
+                                      left=left,
+                                      distinct=distinct,
+                                      start=start,
+                                      limit=limit,
+                                      orderby=orderby,
+                                      linkto=linkto,
+                                      download_url=self.download_url,
+                                      as_page=True,
+                                      format=representation) or []
 
             result = dict(sEcho = sEcho,
                           iTotalRecords = totalrows,
@@ -972,14 +972,14 @@ class S3CRUD(S3Method):
             output = json(result)
 
         elif representation == "plain":
-            items = self.sqltable(fields=list_fields,
-                                  as_list=True)
+            items = resource.sqltable(fields=list_fields,
+                                      as_list=True)
             response.view = "plain.html"
             return dict(item=items)
 
         elif representation == "csv":
             exporter = S3Exporter()
-            return exporter.csv(self.resource)
+            return exporter.csv(resource)
 
         #elif representation == "map":
         #    exporter = S3MAP()
@@ -991,14 +991,14 @@ class S3CRUD(S3Method):
 
         elif representation == "xls":
             exporter = S3Exporter()
-            return exporter.xls(self.resource,
+            return exporter.xls(resource,
                                 list_fields=list_fields,
                                 report_groupby=report_groupby,
                                 **attr)
 
         elif representation == "json":
             exporter = S3Exporter()
-            return exporter.json(self.resource,
+            return exporter.json(resource,
                                  start=start,
                                  limit=limit,
                                  fields=fields,
@@ -1011,150 +1011,6 @@ class S3CRUD(S3Method):
 
     # -------------------------------------------------------------------------
     # Utility functions
-    # -------------------------------------------------------------------------
-    def sqltable(self,
-                 fields=None,
-                 start=0,
-                 limit=None,
-                 left=None,
-                 orderby=None,
-                 distinct=False,
-                 linkto=None,
-                 download_url=None,
-                 no_ids=False,
-                 as_page=False,
-                 as_list=False,
-                 format=None):
-        """
-            DRY helper function for SQLTABLEs in CRUD
-
-            @param fields: list of fieldnames to display
-            @param start: index of the first record to display
-            @param limit: maximum number of records to display
-            @param left: left outer joins
-            @param orderby: orderby for the query
-            @param distinct: distinct for the query
-            @param linkto: hook to link record IDs
-            @param download_url: the default download URL of the application
-            @param as_page: return the list as JSON page
-            @param as_list: return the list as Python list
-            @param format: the representation format
-        """
-
-        db = current.db
-        manager = current.manager
-        resource = self.resource
-        table = resource.table
-
-        if fields is None:
-            fields = [f.name for f in resource.readable_fields()]
-        if table._id.name not in fields and not no_ids:
-            fields.insert(0, table._id.name)
-        lfields, joins = self.get_list_fields(table, fields)
-
-        colnames = [f.colname for f in lfields]
-        headers = dict(map(lambda f: (f.colname, f.label), lfields))
-
-        attributes = dict(distinct=distinct)
-        # Orderby
-        if orderby is not None:
-            attributes.update(orderby=orderby)
-        # Slice
-        limitby = resource.limitby(start=start, limit=limit)
-        if limitby is not None:
-            attributes.update(limitby=limitby)
-        # Joins
-        query = resource.get_query()
-        for j in joins.values():
-            query &= j
-        # Left outer joins
-        if left is not None:
-            attributes.update(left=left)
-
-        # Fields in the query
-        qfields = [f.field for f in lfields if f.field is not None]
-        if no_ids:
-            qfields.insert(0, table._id)
-
-        # Add orderby fields which are not in qfields
-        if distinct and orderby is not None:
-            qf = [str(f) for f in qfields]
-            if isinstance(orderby, str):
-                of = orderby.split(",")
-            elif not isinstance(orderby, (list, tuple)):
-                of = [orderby]
-            else:
-                of = orderby
-            for e in of:
-                if isinstance(e, Field) and str(e) not in qf:
-                    qfields.append(e)
-                    qf.append(str(e))
-                elif isinstance(e, str):
-                    fn = e.strip().split()[0].split(".", 1)
-                    tn, fn = ([table._tablename] + fn)[-2:]
-                    try:
-                        t = db[tn]
-                        f = t[fn]
-                    except:
-                        continue
-                    if str(f) not in qf:
-                        qfields.append(f)
-                        qf.append(str(e))
-
-        # Retrieve the rows
-        rows = db(query).select(*qfields, **attributes)
-        if not rows:
-            return None
-
-        # Fields to show
-        row = rows.first()
-        def __expand(tablename, row, lfields=lfields):
-            columns = []
-            for f in lfields:
-                if f.tname in row and isinstance(row[f.tname], Row):
-                    columns += __expand(f.tname, lfields)
-                elif (f.tname, f.fname) not in columns and f.fname in row:
-                    columns.append((f.tname, f.fname))
-            return columns
-        columns = __expand(table._tablename, row)
-        lfields = [lf for lf in lfields
-                   if lf.show and (lf.tname, lf.fname) in columns]
-        colnames = [f.colname for f in lfields]
-        rows.colnames = colnames
-
-        # Representation
-        def __represent(f, row, columns=columns):
-            if f.field:
-                return manager.represent(f.field,
-                                         record=row, linkto=linkto)
-            else:
-                if (f.tname, f.fname) in columns:
-                    if f.tname in row and f.fname in row[f.tname]:
-                        return str(row[f.tname][f.fname])
-                    elif f.fname in row:
-                        return str(row[f.fname])
-                    else:
-                        return None
-                else:
-                    return None
-
-        # Render as...
-        if as_page:
-            # ...JSON page (for pagination)
-            items = [[__represent(f, row) for f in lfields] for row in rows]
-        elif as_list:
-            # ...Python list
-            items = rows.as_list()
-        else:
-            # ...SQLTABLE
-            items = SQLTABLES3(rows,
-                               headers=headers,
-                               linkto=linkto,
-                               upload=download_url,
-                               _id="list",
-                               _class="dataTable display")
-        return items
-
     # -------------------------------------------------------------------------
     def sqlform(self,
                 record_id=None,
@@ -2025,6 +1881,7 @@ class S3CRUD(S3Method):
         """
 
         vars = self.request.get_vars
+        resource = self.resource
 
         context = str(vars.sSearch).lower()
         columns = int(vars.iColumns)
@@ -2032,7 +1889,7 @@ class S3CRUD(S3Method):
         wildcard = "%%%s%%" % context
 
         # Retrieve the list of search fields
-        lfields, joins = self.get_list_fields(table, fields)
+        lfields, joins = resource.get_list_fields(table, fields)
         flist = []
         for i in xrange(0, columns):
             field = lfields[i].field
@@ -2112,6 +1969,7 @@ class S3CRUD(S3Method):
         """
 
         vars = self.request.get_vars
+        resource = self.resource
         tablename = table._tablename
 
         iSortingCols = int(vars["iSortingCols"])
@@ -2122,7 +1980,7 @@ class S3CRUD(S3Method):
 
         orderby = []
 
-        lfields, joins = self.get_list_fields(table, fields)
+        lfields, joins = resource.get_list_fields(table, fields)
         columns = [lfields[int(vars["iSortCol_%s" % str(i)])].field
                    for i in xrange(iSortingCols)]
         for i in xrange(len(columns)):
@@ -2159,81 +2017,5 @@ class S3CRUD(S3Method):
 
         return ", ".join(orderby)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_list_fields(table, fields):
-        """
-            Helper to resolve list_fields
-
-            @param table: the table
-            @param fields: the list_fields array
-        """
-
-        db = current.db
-        tablename = table._tablename
-
-        joins = dict()
-        lfields = []
-
-        # Collect the extra fields
-        flist = list(fields)
-        for vtable in table.virtualfields:
-            try:
-                extra_fields = vtable.extra_fields
-                for ef in extra_fields:
-                    if ef not in flist:
-                        flist.append(ef)
-            except:
-                continue
-
-        for f in flist:
-            # Allow to override the field label
-            if isinstance(f, tuple):
-                label, fieldname = f
-            else:
-                label, fieldname = None, f
-            field = None
-            tname = tablename
-            fname = fieldname
-            if "$" in fieldname:
-                # Field in referenced table
-                fk, fname = fieldname.split("$", 1)
-                if fk in table.fields:
-                    ftype = str(table[fk].type)
-                    if ftype[:9] == "reference":
-                        tname = ftype[10:]
-                        ftable = db[tname]
-                        if fname in ftable.fields:
-                            field = ftable[fname]
-                            if fk not in joins:
-                                join = (table[fk] == ftable._id)
-                                if "deleted" in ftable.fields:
-                                    join &= (ftable.deleted != True)
-                                joins[fk] = join
-                if field is None:
-                    continue
-                if label is None:
-                    label = field.label
-            elif fieldname in table.fields:
-                # Field in this table
-                field = table[fieldname]
-                if label is None:
-                    label = field.label
-            else:
-                # Virtual field?
-                if label is None:
-                    label = fname.capitalize()
-            colname = "%s.%s" % (tname, fname)
-            lfields.append(Storage(fieldname = fieldname,
-                                   tname = tname,
-                                   fname = fname,
-                                   colname = colname,
-                                   field = field,
-                                   label = label,
-                                   show = f in fields))
-
-        return (lfields, joins)
-
-# END
-# *****************************************************************************
+# END =========================================================================
 

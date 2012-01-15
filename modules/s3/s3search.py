@@ -1320,7 +1320,7 @@ class S3Search(S3CRUD):
         # List fields
         linkto = self._linkto(r)
         if not list_fields:
-            fields = self.resource.readable_fields()
+            fields = resource.readable_fields()
             list_fields = [f.name for f in fields]
         else:
             fields = [table[f] for f in list_fields if f in table.fields]
@@ -1335,18 +1335,18 @@ class S3Search(S3CRUD):
 
         # Truncate long texts
         if r.interactive or r.representation == "aadata":
-            for f in self.table:
+            for f in table:
                 if str(f.type) == "text" and not f.represent:
                     f.represent = self.truncate
 
         # Get the result table
-        items = self.sqltable(fields=list_fields,
-                              limit=limit,
-                              orderby=orderby,
-                              distinct=True,
-                              linkto=linkto,
-                              download_url=self.download_url,
-                              format=representation)
+        items = resource.sqltable(fields=list_fields,
+                                  limit=limit,
+                                  orderby=orderby,
+                                  distinct=True,
+                                  linkto=linkto,
+                                  download_url=self.download_url,
+                                  format=representation)
 
         # Remove the dataTables search box to avoid confusion
         response.s3.dataTable_NobFilter = True
@@ -1354,18 +1354,18 @@ class S3Search(S3CRUD):
         if items:
             if not response.s3.no_sspag:
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
-                totalrows = self.resource.count(distinct=True)
+                totalrows = resource.count(distinct=True)
                 if totalrows:
-                    aadata = dict(aaData =
-                                  self.sqltable(fields=list_fields,
-                                                start=0,
-                                                limit=20,
-                                                orderby=orderby,
-                                                distinct=True,
-                                                linkto=linkto,
-                                                download_url=self.download_url,
-                                                as_page=True,
-                                                format=representation) or [])
+                    sqltable = resource.sqltable(fields=list_fields,
+                                                 start=0,
+                                                 limit=20,
+                                                 orderby=orderby,
+                                                 distinct=True,
+                                                 linkto=linkto,
+                                                 download_url=self.download_url,
+                                                 as_page=True,
+                                                 format=representation)
+                    aadata = dict(aaData = sqltable or [])
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
                     response.aadata = json(aadata)
