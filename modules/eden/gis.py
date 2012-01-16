@@ -974,16 +974,16 @@ class S3GISConfigModel(S3Model):
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
     def gis_config_form_setup():
         """ Prepare the gis_config form """
 
         T = current.T
         db = current.db
+        s3db = current.s3db
         gis = current.gis
         settings = current.deployment_settings
 
-        table = db.gis_config
+        table = s3db.gis_config
 
         # Defined here since Component (of Persons)
         # @ToDo: Need tooltips for projection, symbology, geocoder, zoom levels,
@@ -1192,6 +1192,7 @@ class S3GISConfigModel(S3Model):
         """
 
         db = current.db
+        s3db = current.s3db
         gis = current.gis
         s3 = current.response.s3
         session = current.session
@@ -1217,7 +1218,8 @@ class S3GISConfigModel(S3Model):
         # That makes Authenticated no longer an owner, so they only get whatever
         # is permitted by uacl (currently that is set to READ).
         if "region_location_id" in form.vars and form.vars.region_location_id:
-            query = (db.gis_location.id == form.vars.region_location_id)
+            table = s3db.gis_location
+            query = (table.id == form.vars.region_location_id)
             db(query).update(owned_by_role = MAP_ADMIN)
 
     # -------------------------------------------------------------------------
@@ -1229,6 +1231,7 @@ class S3GISConfigModel(S3Model):
         """
 
         db = current.db
+        s3db = current.s3db
         gis = current.gis
         auth = current.auth
         session = current.session
@@ -1236,7 +1239,7 @@ class S3GISConfigModel(S3Model):
         try:
             update = False
             if (form.request_vars.pe_id and form.vars.id):
-                table = db.pr_person
+                table = s3db.pr_person
                 query = (table.uuid == auth.user.person_uuid)
                 pentity = db(query).select(table.pe_id, limitby=(0, 1)).first()
                 if pentity and pentity.pe_id == form.request_vars.pe_id:
@@ -1281,10 +1284,11 @@ class S3GISConfigModel(S3Model):
         """
 
         db = current.db
+        s3db = current.s3db
         gis = current.gis
         s3 = current.response.s3
 
-        table = db.gis_config
+        table = s3db.gis_config
 
         if gis.gis_config_table_max_level_num > gis.max_allowed_level_num:
             for n in range(gis.max_allowed_level_num + 1,
@@ -1310,7 +1314,7 @@ class S3GISConfigModel(S3Model):
         # applies to any other use of country configs that relies on getting the
         # official set (e.g. looking up hierarchy labels).
         if id:
-            _location = db.gis_location
+            _location = s3db.gis_location
             query = (table.id == id) & (table.region_location_id == _location.id)
             location = db(query).select(_location.level, limitby=(0, 1)).first()
             if not location or location.level != "L0":

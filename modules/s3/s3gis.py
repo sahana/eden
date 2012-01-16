@@ -854,7 +854,7 @@ class GIS(object):
 
         # If necessary, adjust allowed hierarchy levels.
         limit = int(settings.get_gis_max_allowed_hierarchy_level()[1:])
-        table = s3db.table("gis_config")
+        table = s3db.table("gis_config", None)
         if table:
             level_keys = filter(self.is_level_key, table.fields)
             self.gis_config_table_max_level_num = int(level_keys[-1][1:])
@@ -868,7 +868,7 @@ class GIS(object):
             self.allowed_region_level_keys.extend(self.group_level.keys())
 
         # gis_location
-        table = s3db.table("gis_location")
+        table = s3db.table("gis_location", None)
         if table:
             table.level.requires = \
                 IS_NULL_OR(IS_IN_SET(self.get_all_current_levels()))
@@ -896,7 +896,7 @@ class GIS(object):
 
 
         for tablename in tables_with_levels:
-            table = s3db.table(tablename)
+            table = s3db.table(tablename, None)
             if table:
                 for field in filter(self.is_level_key, table.fields):
                     table[field].label = self.get_location_hierarchy(field)

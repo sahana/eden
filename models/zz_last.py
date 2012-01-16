@@ -42,7 +42,8 @@ if session.s3.gis_config_id != _gis.old_config:
 # -----------------------------------------------------------------------------
 # GIS menu
 # -----------------------------------------------------------------------------
-if deployment_settings.get_gis_menu():
+if deployment_settings.get_gis_menu() and \
+   auth.permission.format in ("html"):
     # Substitute the real menu for the placeholder
     gis_index = response.menu.index(s3.gis_menu_placeholder)
     response.menu.pop(gis_index)
