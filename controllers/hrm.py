@@ -992,10 +992,7 @@ def staff_org_site_json():
 # Messaging
 # =============================================================================
 def compose():
-
     """ Send message to people/teams """
-
-    mtable = s3db.msg_outbox
 
     if "hrm_id" in request.vars:
         id = request.vars.hrm_id
@@ -1028,14 +1025,14 @@ def compose():
                                                    orderby="priority",
                                                    limitby=(0, 1)).first()
         if contact:
-            mtable.pr_message_method.default = contact.contact_method
+            s3db.msg_outbox.pr_message_method.default = contact.contact_method
         else:
             session.error = T("No contact method found")
             redirect(URL(f="index"))
 
-    return response.s3.msg_compose(redirect_module = module,
-                                   redirect_function = "compose",
-                                   redirect_vars = {fieldname: id},
-                                   title_name = title)
+    return eden.msg.msg_compose(redirect_module = module,
+                                redirect_function = "compose",
+                                redirect_vars = {fieldname: id},
+                                title_name = title)
 
 # END =========================================================================

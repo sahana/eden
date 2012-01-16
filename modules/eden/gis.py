@@ -319,7 +319,6 @@ class S3LocationModel(S3Model):
         db = current.db
         gis = current.gis
         auth = current.auth
-        cache = current.cache
         request = current.request
         response = current.response
         s3 = response.s3
@@ -427,7 +426,7 @@ class S3LocationModel(S3Model):
                                        table.lon_max,
                                        #table.level,
                                        limitby=(0, 1),
-                                       cache=(cache.ram, 3600)).first()
+                                       cache=s3.cache).first()
 
         # Don't allow a group as parent
         # (Check not needed here -- enforced in requires validator.)

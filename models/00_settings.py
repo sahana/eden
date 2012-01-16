@@ -148,41 +148,42 @@ def s3_populate_browser_compatibility(request):
 # Interactive view formats
 s3.interactive_view_formats = ("html", "popup", "iframe")
 
-from gluon.storage import Messages
-current.messages = Messages(T)
-current.messages.update(
-    UNAUTHORISED = "Not authorised!",
-    BADFORMAT = "Unsupported data format!",
-    BADMETHOD = "Unsupported method!",
-    BADRECORD = "Record not found!",
-    INVALIDREQUEST = "Invalid request!",
-    XLWT_ERROR = "xlwt module not available within the running Python - this needs installing for XLS output!",
-    REPORTLAB_ERROR = "ReportLab module not available within the running Python - this needs installing for PDF output!",
-
-    # Common Labels
-    #BREADCRUMB = ">> ",
-    UNKNOWN_OPT = "Unknown",
-    NONE = "-",
-    #READ = "Open",
-    READ = "Details",
-    UPDATE = deployment_settings.get_ui_update_label(),
-    DELETE = "Delete",
-    COPY = "Copy",
-    NOT_APPLICABLE = "N/A",
-    ADD_PERSON = "Add Person",
-    ADD_LOCATION = "Add Location",
-    SELECT_LOCATION = "Select a location"
-)
-globals().update([(u, T(current.messages[u]))
-                  for u in current.messages
-                  if isinstance(current.messages[u], str)])
+# Strings
+messages["UNAUTHORISED"] = "Not authorised!"
+messages["BADFORMAT"] = "Unsupported data format!"
+messages["BADMETHOD"] = "Unsupported method!"
+messages["BADRECORD"] = "Record not found!"
+messages["INVALIDREQUEST"] = "Invalid request!"
+messages["XLWT_ERROR"] = "xlwt module not available within the running Python - this needs installing for XLS output!"
+messages["REPORTLAB_ERROR"] = "ReportLab module not available within the running Python - this needs installing for PDF output!"
+# Common Labels
+#messages["BREADCRUMB"] = ">> "
+messages["UNKNOWN_OPT"] = "Unknown"
+messages["NONE"] = "-"
+#messages["READ"] = "Open"
+messages["READ"] = "Details"
+messages["UPDATE"] = deployment_settings.get_ui_update_label()
+messages["DELETE"] = "Delete"
+messages["COPY"] = "Copy"
+messages["NOT_APPLICABLE"] = "N/A"
+messages["ADD_PERSON"] = "Add Person"
+messages["ADD_LOCATION"] = "Add Location"
+messages["SELECT_LOCATION"] = "Select a location"
+    
+for u in messages:
+    if isinstance(messages[u], str):
+        globals()[u] = T(messages[u])
 try:
     UPDATE
 except:
     # 000_config needs updating to so that deployment_settings.ui.update_label is a str not a T()
-    UPDATE = str(current.messages["UPDATE"])
+    UPDATE = str(messages["UPDATE"])
 
-s3mgr.LABEL.update(READ=READ, UPDATE=UPDATE, DELETE=DELETE, COPY=COPY)
+# Pass to CRUD
+s3mgr.LABEL["READ"] = READ
+s3mgr.LABEL["UPDATE"] = UPDATE
+s3mgr.LABEL["DELETE"] = DELETE
+s3mgr.LABEL["COPY"] = COPY
 
 # Data Export Settings
 ROWSPERPAGE = 20

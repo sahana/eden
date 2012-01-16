@@ -72,18 +72,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3method import S3Method
 from s3track import S3Trackable
-from s3utils import s3_fullname
-
-def s3_debug(message, value=None):
-    """
-        Provide an easy, safe, systematic way of handling Debug output
-        (print to stdout doesn't work with WSGI deployments)
-    """
-    # should be using python's built-in logging module
-    output = u"S3 Debug: %s" % unicode(message)
-    if value:
-        output += u": %s" % unicode(value)
-    sys.stderr.write(output+"\n")
+from s3utils import s3_debug, s3_fullname
 
 SHAPELY = False
 try:
@@ -231,8 +220,6 @@ GPS_SYMBOLS = [
     "Zoo"
     ]
 
-NONE = "-"
-
 # http://docs.python.org/library/tempfile.html
 import tempfile
 TEMP = tempfile.gettempdir()
@@ -246,25 +233,20 @@ class GIS(object):
 
     def __init__(self):
         settings = current.deployment_settings
-        self.public_url = settings.get_base_public_url()
         if not current.db is not None:
             raise RuntimeError, "Database must not be None"
-        self.cache = current.response.s3.cache
         if not current.auth is not None:
             raise RuntimeError, "Undefined authentication controller"
-        self.auth = current.auth
-        self.messages = Messages(None)
-        #self.messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
-        self.messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"
-        self.messages.unknown_type = "Unknown Type!"
-        self.messages.invalid_wkt_point = "Invalid WKT: Must be like POINT(3 4)!"
-        self.messages.invalid_wkt_linestring = "Invalid WKT: Must be like LINESTRING(3 4,10 50,20 25)!"
-        self.messages.invalid_wkt_polygon = "Invalid WKT: Must be like POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))!"
-        self.messages.lon_empty = "Invalid: Longitude can't be empty if Latitude specified!"
-        self.messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
-        self.messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
-        self.messages["T"] = current.T
-        self.messages.lock_keys = True
+        messages = current.messages
+        #messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
+        messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"
+        messages.unknown_type = "Unknown Type!"
+        messages.invalid_wkt_point = "Invalid WKT: Must be like POINT(3 4)!"
+        messages.invalid_wkt_linestring = "Invalid WKT: Must be like LINESTRING(3 4,10 50,20 25)!"
+        messages.invalid_wkt_polygon = "Invalid WKT: Must be like POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))!"
+        messages.lon_empty = "Invalid: Longitude can't be empty if Latitude specified!"
+        messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
+        messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
         self.gps_symbols = GPS_SYMBOLS
         self.group_level = {"GR": current.T("Location Group")}
         # @ToDo: "Level" XX interferes with actual levels (and so does GR to
@@ -302,7 +284,8 @@ class GIS(object):
         self.site_countries_by_code = None
 
     # -------------------------------------------------------------------------
-    def abbreviate_wkt(self, wkt, max_length=30):
+    @staticmethod
+    def abbreviate_wkt(wkt, max_length=30):
         if not wkt:
             # Blank WKT field
             return None
@@ -310,18 +293,6 @@ class GIS(object):
             return "%s(...)" % wkt[0:wkt.index("(")]
         else:
             return wkt
-
-    def debug(self, message, value=None):
-        # should be using python's built-in logging module
-        session = current.session
-        if session.s3.debug:
-            raise Exception(message)
-        else:
-            output = u"S3 Debug: %s" % unicode(message)
-            if value:
-                output += u": %s" % unicode(value)
-            sys.stderr.write(output + "\n")
-            session.error = current.T(message)
 
     # -------------------------------------------------------------------------
     def download_kml(self, record_id, filename):
@@ -408,7 +379,7 @@ class GIS(object):
 
         response = current.response
         session = current.session
-        public_url = self.public_url
+        public_url = current.deployment_settings.get_base_public_url()
 
         warning = ""
 
@@ -480,24 +451,26 @@ class GIS(object):
         return warning
 
     # -------------------------------------------------------------------------
-    def get_api_key(self, layer="google"):
+    @staticmethod
+    def get_api_key(layer="google"):
         """
             Acquire API key from the database
         """
 
         if layer == "google":
-            apikey = Google(self).apikey
+            apikey = Google().apikey
         elif layer == "bing":
-            apikey = Bing(self).apikey
+            apikey = Bing().apikey
         elif layer == "yahoo":
-            apikey = Yahoo(self).apikey
+            apikey = Yahoo().apikey
         else:
             return None
 
         return apikey
 
     # -------------------------------------------------------------------------
-    def get_bearing(self, lat_start, lon_start, lat_end, lon_end):
+    @staticmethod
+    def get_bearing(lat_start, lon_start, lat_end, lon_end):
         """
             Given a Start & End set of Coordinates, return a Bearing
             Formula from: http://www.movable-type.co.uk/scripts/latlong.html
@@ -604,7 +577,8 @@ class GIS(object):
         return dict(min_lon=min_lon, min_lat=min_lat, max_lon=max_lon, max_lat=max_lat)
 
     # -------------------------------------------------------------------------
-    def _lookup_parent_path(self, feature_id):
+    @staticmethod
+    def _lookup_parent_path(feature_id):
         """
             Helper that gets parent and path for a location.
         """
@@ -620,7 +594,8 @@ class GIS(object):
         return feature
 
     # -------------------------------------------------------------------------
-    def get_children(self, id, level=None):
+    @staticmethod
+    def get_children(id, level=None):
         """
             Return a list of IDs of all GIS Features which are children of
             the requested feature, using Materialized path for retrieving
@@ -672,9 +647,9 @@ class GIS(object):
             update_location_tree to get the path.
         """
 
-        cache = self.cache
         db = current.db
         table = db.gis_location
+        cache = current.response.s3.cache
 
         if not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
@@ -899,7 +874,7 @@ class GIS(object):
                 IS_NULL_OR(IS_IN_SET(self.get_all_current_levels()))
             # Represent needs to vary per record not per region
             #table.level.represent = lambda level: \
-            #    level and self.get_all_current_levels(level) or NONE
+            #    level and self.get_all_current_levels(level) or current.messages.NONE
         # @ToDon't: Change only filter_opts, since we can't easily get at the
         # gis_location_represent_row represent function. Or rather, don't
         # bother adjusting this -- see comment in 03_gis where this is set.
@@ -1002,7 +977,7 @@ class GIS(object):
             _projection = s3db.gis_projection
             have_tables = _config and _projection
         except Exception, exception:
-            self.debug(str(exception))
+            s3_debug(exception)
             have_tables = False
 
         row = None
@@ -1153,7 +1128,8 @@ class GIS(object):
         return response.s3.gis.config
 
     # -------------------------------------------------------------------------
-    def set_default_location(self, location, level=None):
+    @staticmethod
+    def set_default_location(location, level=None):
         """
             Set the default location
 
@@ -1278,7 +1254,8 @@ class GIS(object):
     # with lowest id if there are more than one per country. This same issue
     # applies to any other use of country configs that relies on getting the
     # official set (e.g. looking up hierarchy labels).
-    def get_edit_level(self, level, id, row=None):
+    @staticmethod
+    def get_edit_level(level, id, row=None):
         """
             Returns the edit_<level> value from the parent country config.
 
@@ -1418,7 +1395,7 @@ class GIS(object):
         """
 
         db = current.db
-        cache = self.cache
+        cache = current.response.s3.cache
         table = db.gis_location
 
         try:
@@ -1468,20 +1445,21 @@ class GIS(object):
         return None
 
     # -------------------------------------------------------------------------
-    def get_representation(self,
-                           field,
+    @staticmethod
+    def get_representation(field,
                            value):
         """
             Return the representation for a Field based on it's value
             Used by s3xml's gis_encode()
         """
 
-        db = current.db
-        cache = self.cache
         T = current.T
+        db = current.db
+        s3db = current.s3db
+        cache = current.response.s3.cache
         fieldname = field.name
         tablename = field.tablename
-        table = db[tablename]
+        table = s3db[tablename]
 
         # Fallback representation is the value itself
         represent = value
@@ -1568,7 +1546,7 @@ class GIS(object):
                     lat_max = location.lat_max
 
                 else:
-                    self.debug("Location searched within isn't a Polygon!")
+                    s3_debug("Location searched within isn't a Polygon!")
                     return None
         except: # @ToDo: need specific exception
             wkt = location
@@ -1576,20 +1554,20 @@ class GIS(object):
                 # ok
                 lon_min = None
             else:
-                self.debug("This isn't a Polygon!")
+                s3_debug("This isn't a Polygon!")
                 return None
 
         try:
             polygon = wkt_loads(wkt)
         except: # @ToDo: need specific exception
-            self.debug("Invalid Polygon!")
+            s3_debug("Invalid Polygon!")
             return None
 
         table = db[tablename]
 
         if "location_id" not in table.fields():
             # @ToDo: Add any special cases to be able to find the linked location
-            self.debug("This table doesn't have a location_id!")
+            s3_debug("This table doesn't have a location_id!")
             return None
 
         query = (table.location_id == locations.id)
@@ -1622,7 +1600,7 @@ class GIS(object):
                         # Save Record
                         output.records.append(row)
                 except shapely.geos.ReadingError:
-                    self.debug(
+                    s3_debug(
                         "Error reading wkt of location with id",
                         value=row.id
                     )
@@ -1651,7 +1629,7 @@ class GIS(object):
                         # Save Record
                         output.records.append(row)
                 except shapely.geos.ReadingError:
-                    self.debug(
+                    s3_debug(
                         "Error reading wkt of location with id",
                         value = row.id,
                     )
@@ -1927,10 +1905,11 @@ class GIS(object):
             config = self.get_config()
 
         if tablename is not None:
-            cache = self.cache
             db = current.db
-            table_marker = db.gis_marker
-            table_fclass = db.gis_feature_class
+            s3db = current.s3db
+            cache = current.response.s3.cache
+            table_marker = s3db.gis_marker
+            table_fclass = s3db.gis_feature_class
 
             symbology = config.symbology_id
             marker = None
@@ -1972,7 +1951,8 @@ class GIS(object):
         return marker_default
 
     # -------------------------------------------------------------------------
-    def get_gps_marker(self, tablename, record):
+    @staticmethod
+    def get_gps_marker(tablename, record):
 
         """
             Returns the GPS Marker (Symbol) for a Feature
@@ -1983,9 +1963,10 @@ class GIS(object):
             @param record
         """
 
-        cache = self.cache
         db = current.db
-        table_fclass = db.gis_feature_class
+        s3db = current.s3db
+        cache = current.response.s3.cache
+        table_fclass = s3db.gis_feature_class
 
         # 1st choice for a Symbol is the Feature Class's
         query = (table_fclass.resource == tablename)
@@ -2010,7 +1991,8 @@ class GIS(object):
         return gps_marker
 
     # -------------------------------------------------------------------------
-    def get_projection(self, config=None, id=None):
+    @staticmethod
+    def get_projection(config=None, id=None):
 
         """
             Returns the Projection
@@ -2024,8 +2006,9 @@ class GIS(object):
         """
 
         if id:
-            cache = self.cache
             db = current.db
+            s3db = current.s3db
+            cache = current.response.s3.cache
             table = db.gis_projection
             query = (table.id == id)
             projection = db(query).select(table.epsg,
@@ -2041,7 +2024,8 @@ class GIS(object):
         return projection
 
     # -------------------------------------------------------------------------
-    def get_popup(self):
+    @staticmethod
+    def get_popup():
 
         """
             Returns the popup_fields & popup_label for a Map Layer
@@ -2072,7 +2056,8 @@ class GIS(object):
         return (popup_label, popup_fields)
 
     # -------------------------------------------------------------------------
-    def greatCircleDistance(self, lat1, lon1, lat2, lon2, quick=True):
+    @staticmethod
+    def greatCircleDistance(lat1, lon1, lat2, lon2, quick=True):
 
         """
             Calculate the shortest distance (in km) over the earth's sphere between 2 points
@@ -2149,7 +2134,8 @@ class GIS(object):
         return
 
     # -------------------------------------------------------------------------
-    def import_gadm_L0(self, ogr, countries=[]):
+    @staticmethod
+    def import_gadm_L0(ogr, countries=[]):
         """
            Import L0 Admin Boundaries into the Locations table from GADM
            - designed to be called from import_admin_areas()
@@ -2274,9 +2260,9 @@ class GIS(object):
                                defaults to all countries
         """
 
-        cache = self.cache
         db = current.db
         s3db = current.s3db
+        cache = current.response.s3.cache
         table = s3db.gis_location
 
         if level == "L1":
@@ -2595,7 +2581,8 @@ class GIS(object):
         return
 
     # -------------------------------------------------------------------------
-    def import_csv(self, filename, domain=None, check_duplicates=True):
+    @staticmethod
+    def import_csv(filename, domain=None, check_duplicates=True):
         """
             Import a CSV file of Admin Boundaries into the Locations table
 
@@ -2624,9 +2611,9 @@ class GIS(object):
 
         import csv
 
-        cache = self.cache
         db = current.db
         s3db = current.s3db
+        cache = current.response.s3.cache
         table = s3db.gis_location
 
         csv.field_size_limit(2**20 * 30)  # 30 megs
@@ -2886,9 +2873,9 @@ class GIS(object):
 
         import codecs
 
-        cache = self.cache
         db = current.db
         s3db = current.s3db
+        cache = current.response.s3.cache
         request = current.request
         settings = current.deployment_settings
         table = s3db.gis_location
@@ -2903,7 +2890,7 @@ class GIS(object):
         else:
             cached = False
             if not os.access(cachepath, os.W_OK):
-                self.debug("Folder not writable", cachepath)
+                s3_debug("Folder not writable", cachepath)
                 return
 
         if not cached:
@@ -2912,11 +2899,11 @@ class GIS(object):
                 f = fetch(url)
             except (urllib2.URLError,):
                 e = sys.exc_info()[1]
-                self.debug("URL Error", e)
+                s3_debug("URL Error", e)
                 return
             except (urllib2.HTTPError,):
                 e = sys.exc_info()[1]
-                self.debug("HTTP Error", e)
+                s3_debug("HTTP Error", e)
                 return
 
             # Unzip File
@@ -2930,7 +2917,7 @@ class GIS(object):
                     myfile.extract(filename, cachepath)
                     myfile.close()
                 except IOError:
-                    self.debug("Zipfile contents don't seem correct!")
+                    s3_debug("Zipfile contents don't seem correct!")
                     myfile.close()
                     return
 
@@ -3047,7 +3034,7 @@ class GIS(object):
                             # Should be just a single parent
                             break
                     except shapely.geos.ReadingError:
-                        self.debug("Error reading wkt of location with id", row.id)
+                        s3_debug("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
                 table.insert(uuid=uuid,
@@ -3067,11 +3054,12 @@ class GIS(object):
             else:
                 continue
 
-        self.debug("All done!")
+        s3_debug("All done!")
         return
 
     # -------------------------------------------------------------------------
-    def latlon_to_wkt(self, lat, lon):
+    @staticmethod
+    def latlon_to_wkt(lat, lon):
         """
             Convert a LatLon to a WKT string
 
@@ -3082,7 +3070,8 @@ class GIS(object):
         return WKT
 
     # -------------------------------------------------------------------------
-    def layer_subtypes(self, layer="google"):
+    @staticmethod
+    def layer_subtypes(layer="google"):
         """ Return a lit of the subtypes available for a Layer """
 
         if layer == "google":
@@ -3097,7 +3086,8 @@ class GIS(object):
 
 
     # -------------------------------------------------------------------------
-    def parse_location(self, wkt, lon=None, lat=None):
+    @staticmethod
+    def parse_location(wkt, lon=None, lat=None):
         """
             Parses a location from wkt, returning wkt, lat, lon, bounding box and type.
             For points, wkt may be None if lat and lon are provided; wkt will be generated.
@@ -3201,7 +3191,8 @@ class GIS(object):
                                                       lon_max = _vars.lon_max)
 
     # -------------------------------------------------------------------------
-    def wkt_centroid(self, form):
+    @staticmethod
+    def wkt_centroid(form):
         """
             OnValidation callback:
             If a Point has LonLat defined: calculate the WKT.
@@ -3215,69 +3206,73 @@ class GIS(object):
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
-        if not "gis_feature_type" in form.vars:
-            # Default to point
-            form.vars.gis_feature_type = "1"
-        elif not form.vars.gis_feature_type:
-            # Default to point
-            form.vars.gis_feature_type = "1"
+        messages = current.messages
+        vars = form.vars
 
-        if form.vars.gis_feature_type == "1" or \
-           form.vars.gis_feature_type == 1:
+        if not "gis_feature_type" in vars:
+            # Default to point
+            vars.gis_feature_type = "1"
+        elif not vars.gis_feature_type:
+            # Default to point
+            vars.gis_feature_type = "1"
+
+        if vars.gis_feature_type == "1" or \
+           vars.gis_feature_type == 1:
             # Point
-            if (form.vars.lon is None and form.vars.lat is None) or \
-               (form.vars.lon == "" and form.vars.lat == ""):
+            if (vars.lon is None and vars.lat is None) or \
+               (vars.lon == "" and vars.lat == ""):
                 # No geo to create WKT from, so skip
                 return
-            elif form.vars.lat is None or form.vars.lat == "":
-                form.errors["lat"] = self.messages.lat_empty
+            elif vars.lat is None or vars.lat == "":
+                form.errors["lat"] = messages.lat_empty
                 return
-            elif form.vars.lon is None or form.vars.lon == "":
-                form.errors["lon"] = self.messages.lon_empty
+            elif vars.lon is None or vars.lon == "":
+                form.errors["lon"] = messages.lon_empty
                 return
             else:
-                form.vars.wkt = "POINT(%(lon)s %(lat)s)" % form.vars
-                form.vars.lon_min = form.vars.lon_max = form.vars.lon
-                form.vars.lat_min = form.vars.lat_max = form.vars.lat
+                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
+                vars.lon_min = vars.lon_max = vars.lon
+                vars.lat_min = vars.lat_max = vars.lat
                 return
 
-        elif form.vars.gis_feature_type in ("2", "3", 2, 3):
+        elif vars.gis_feature_type in ("2", "3", 2, 3):
             # Parse WKT for LineString, Polygon
             try:
                 try:
-                    shape = wkt_loads(form.vars.wkt)
+                    shape = wkt_loads(vars.wkt)
                 except:
-                    if form.vars.gis_feature_type  == "3":
+                    if vars.gis_feature_type  == "3":
                         # POLYGON
                         try:
                             # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                            linestring = "LINESTRING%s" % form.vars.wkt[8:-1]
+                            linestring = "LINESTRING%s" % vars.wkt[8:-1]
                             shape = wkt_loads(linestring)
-                            form.vars.gis_feature_type = 2
-                            form.vars.wkt = linestring
+                            vars.gis_feature_type = 2
+                            vars.wkt = linestring
                         except:
-                            form.errors["wkt"] = self.messages.invalid_wkt_polygon
+                            form.errors["wkt"] = messages.invalid_wkt_polygon
                     else:
                         # "2"
-                        form.errors["wkt"] = self.messages.invalid_wkt_linestring
+                        form.errors["wkt"] = messages.invalid_wkt_linestring
                     return
                 centroid_point = shape.centroid
-                form.vars.lon = centroid_point.x
-                form.vars.lat = centroid_point.y
+                vars.lon = centroid_point.x
+                vars.lat = centroid_point.y
                 bounds = shape.bounds
-                form.vars.lon_min = bounds[0]
-                form.vars.lat_min = bounds[1]
-                form.vars.lon_max = bounds[2]
-                form.vars.lat_max = bounds[3]
+                vars.lon_min = bounds[0]
+                vars.lat_min = bounds[1]
+                vars.lon_max = bounds[2]
+                vars.lat_max = bounds[3]
             except:
-                form.errors.gis_feature_type = self.messages.centroid_error
+                form.errors.gis_feature_type = messages.centroid_error
         else:
-            form.errors.gis_feature_type = self.messages.unknown_type
+            form.errors.gis_feature_type = messages.unknown_type
 
         return
 
     # -------------------------------------------------------------------------
-    def query_features_by_bbox(self, lon_min, lat_min, lon_max, lat_max):
+    @staticmethod
+    def query_features_by_bbox(lon_min, lat_min, lon_max, lat_max):
         """
             Returns a query of all Locations inside the given bounding box
         """
@@ -3321,7 +3316,7 @@ class GIS(object):
                 if location_shape.intersects(shape):
                     yield loc
             except shapely.geos.ReadingError:
-                self.debug("Error reading wkt of location with id", loc.id)
+                s3_debug("Error reading wkt of location with id", loc.id)
 
     # -------------------------------------------------------------------------
     def _get_features_by_latlon(self, lat, lon):
@@ -3353,7 +3348,8 @@ class GIS(object):
         get_features_by_feature = _get_features_by_feature
 
     # -------------------------------------------------------------------------
-    def set_all_bounds(self):
+    @staticmethod
+    def set_all_bounds():
         """
             Sets bounds for all locations without them.
 
@@ -3378,7 +3374,7 @@ class GIS(object):
                 try :
                     shape = wkt_loads(location.wkt)
                 except:
-                    self.debug("Error reading WKT", location.wkt)
+                    s3_debug("Error reading WKT", location.wkt)
                     continue
                 bounds = shape.bounds
                 table[location.id] = dict(
@@ -3509,10 +3505,15 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         auth = current.auth
-        cache = self.cache
+        cache = current.response.s3.cache
         settings = current.deployment_settings
+        public_url = settings.get_base_public_url()
         s3mgr = current.manager
+
         cachetable = s3db.gis_cache
+        MAP_ADMIN = session.s3.system_roles.MAP_ADMIN
+
+        s3_has_role = auth.s3_has_role
 
         # Defaults
         # http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
@@ -3727,7 +3728,7 @@ class GIS(object):
             draw_polygon = ""
 
         # Toolbar
-        if auth.s3_has_role(session.s3.system_roles.MAP_ADMIN):
+        if s3_has_role(MAP_ADMIN):
         #if auth.is_logged_in():
             # Provide a way to save the viewport
             # @ToDo Extend to personalised Map Views
@@ -4025,7 +4026,7 @@ S3.gis.lon = %s;
             error = "%s\n" % T("Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection")
             response.warning += error
         else:
-            query = (db.gis_layer_openstreetmap.enabled == True)
+            query = (s3db.gis_layer_openstreetmap.enabled == True)
             openstreetmap_enabled = db(query).select()
             if openstreetmap_enabled:
                 layers_osm = """
@@ -4034,7 +4035,7 @@ S3.gis.layers_osm = new Array();"""
             else:
                 layers_osm = ""
             for layer in openstreetmap_enabled:
-                if layer.role_required and not auth.s3_has_role(layer.role_required):
+                if layer.role_required and not s3_has_role(layer.role_required):
                     continue
                 counter = counter + 1
                 name_safe = re.sub("'", "", layer.name)
@@ -4096,7 +4097,7 @@ S3.gis.layers_osm[%i] = {
         #    layers_xyz = """
 #function addXYZLayers() {"""
         #    for layer in xyz_enabled:
-        #        if layer.role_required and not auth.s3_has_role(layer.role_required):
+        #        if layer.role_required and not s3_has_role(layer.role_required):
         #            continue
         #        name = layer.name
         #        name_safe = re.sub("\W", "_", name)
@@ -4145,13 +4146,13 @@ S3.gis.layers_osm[%i] = {
 
         # JS
         layers_js = ""
-        js_enabled = db(db.gis_layer_js.enabled == True).select()
+        js_enabled = db(s3db.gis_layer_js.enabled == True).select()
         if js_enabled:
             layers_js = """
 function addJSLayers() {
 """
             for layer in js_enabled:
-                if layer.role_required and not auth.s3_has_role(layer.role_required):
+                if layer.role_required and not s3_has_role(layer.role_required):
                     continue
                 layers_js  += layer.code
             layers_js  += """
@@ -4393,7 +4394,7 @@ S3.gis.layers_feature_queries[%i] = {
                 # Note that database can be ambiguous about coordinate layer
                 # consider adding constraint to only have one such layer
                 layer = coordinate_enabled.first()
-                if layer.role_required and not auth.s3_has_role(layer.role_required):
+                if layer.role_required and not s3_has_role(layer.role_required):
                     pass
                 else:
                     name = layer["name"]
@@ -4420,7 +4421,7 @@ S3.gis.layers_feature_queries[%i] = {
         # Configure settings to pass through to Static script
         # @ToDo: Consider passing this as JSON Objects to allow it to be done dynamically
         html.append(SCRIPT("".join((
-            "S3.public_url = '%s';\n" % self.public_url,  # Needed just for GoogleEarthPanel
+            "S3.public_url = '%s';\n" % public_url,  # Needed just for GoogleEarthPanel
             mapAdmin,
             region,
             s3_gis_window,
@@ -4514,7 +4515,7 @@ class Marker(object):
     """ Represents a Map Marker """
     def __init__(self, id=None):
         gis = current.gis
-        cache = gis.cache
+        cache = current.response.s3.cache
         db = current.db
         s3db = current.s3db
         tablename = "gis_marker"
@@ -4541,18 +4542,16 @@ class Marker(object):
         #               args=["markers", marker.image])
 
     def add_attributes_to_output(self, output):
-        output.update(
-            marker_image = self.image,
-            marker_height = self.height,
-            marker_width = self.width,
-        )
+        output["marker_image"] = self.image
+        output["marker_height"] = self.height
+        output["marker_width"] = self.width
 
 # -----------------------------------------------------------------------------
 class Projection(object):
     """ Represents a Map Projection """
     def __init__(self, id=None):
         gis = current.gis
-        cache = gis.cache
+        cache = current.response.s3.cache
         db = current.db
         s3db = current.s3db
         tablename = "gis_projection"
@@ -4579,10 +4578,9 @@ def config_dict(mandatory, defaulted):
 
 
 # -----------------------------------------------------------------------------
-# the layer code only needs to do:
-# any database lookups to get extra data
-# security checks.
-
+# The layer code only needs to do:
+# - any database lookups to get extra data
+# - security checks.
 # then it generates appropriate JSON strings.
 
 class Layer(object):
@@ -4951,16 +4949,15 @@ class GeoRSSLayer(MultiRecordLayer):
 
     def __init__(self):
         super(GeoRSSLayer, self).__init__()
-        GeoRSSLayer.SubLayer.cachetable = current.db.gis_cache
+        GeoRSSLayer.SubLayer.cachetable = current.s3db.gis_cache
 
     class SubLayer(MultiRecordLayer.SubLayer):
         def as_dict(self):
-            gis = current.gis
             db = current.db
             request = current.request
             response = current.response
             session = current.session
-            public_url = gis.public_url
+            public_url = current.deployment_settings.get_base_public_url()
             cachetable = self.cachetable
 
             url = self.url
@@ -5087,7 +5084,9 @@ class KMLLayer(MultiRecordLayer):
         # Needed for unzipping & filtering as well
         # @ToDo: Should we move this folder to static to speed up access to cached content?
         #           Do we need to secure it?
-        cachepath = os.path.join(current.request.folder, "uploads", "gis_cache")
+        cachepath = os.path.join(current.request.folder,
+                                 "uploads",
+                                 "gis_cache")
 
         if os.path.exists(cachepath):
             cacheable = os.access(cachepath, os.W_OK)
@@ -5095,7 +5094,7 @@ class KMLLayer(MultiRecordLayer):
             try:
                 os.mkdir(cachepath)
             except OSError, os_error:
-                self.gis.debug(
+                s3_debug(
                     "GIS: KML layers cannot be cached: %s %s" % (
                         cachepath,
                         os_error
@@ -5105,17 +5104,15 @@ class KMLLayer(MultiRecordLayer):
             else:
                 cacheable = True
         # @ToDo: Migrate to gis_cache
-        KMLLayer.cachetable = current.db.gis_cache2
+        KMLLayer.cachetable = current.s3db.gis_cache2
         KMLLayer.cacheable = cacheable
         KMLLayer.cachepath = cachepath
 
 
     class SubLayer(MultiRecordLayer.SubLayer):
         def as_dict(self):
-            gis = current.gis
             db = current.db
             request = current.request
-            public_url = gis.public_url
 
             cachetable = KMLLayer.cachetable
             cacheable = KMLLayer.cacheable
@@ -5316,7 +5313,9 @@ class Geocoder(object):
         " Initializes the page content object "
         self.api_key = self.get_api_key(type=None)
 
-    def get_api_key(self, type):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_api_key(type):
         " Acquire API key from the database "
         gis = current.gis
         if type:

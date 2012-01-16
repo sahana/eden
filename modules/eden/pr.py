@@ -366,6 +366,7 @@ class S3PersonModel(S3Model):
         self.add_component("pr_group_membership", pr_person="person_id")
         self.add_component("pr_identity", pr_person="person_id")
         self.add_component("pr_save_search", pr_person="person_id")
+        self.add_component("msg_subscription", pr_person="person_id")
 
         # Add HR Record as component of Persons
         self.add_component("hrm_human_resource", pr_person="person_id")

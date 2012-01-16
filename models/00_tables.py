@@ -18,6 +18,7 @@ import eden.gis
 import eden.sit
 import eden.org
 import eden.auth
+import eden.msg
 import eden.doc
 import eden.hrm
 import eden.project
@@ -176,7 +177,18 @@ def s3_ownerstamp():
             s3_meta_owned_by_role(),
             s3_meta_owned_by_organisation(),
             s3_meta_owned_by_facility())
+
+# Make available for S3Models
 s3.ownerstamp = s3_ownerstamp
+
+# =============================================================================
+def s3_timestamp():
+    return (s3_meta_created_on(),
+            s3_meta_modified_on(),
+            )
+
+# Make available for S3Models
+s3.timestamp = s3_timestamp
 
 # =============================================================================
 # Common meta-fields

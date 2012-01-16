@@ -191,13 +191,11 @@ def compose():
 
     """ Send message to people/teams """
 
-    s3mgr.load("msg_outbox")
-
     if "hrm_id" in request.vars:
         id = request.vars.hrm_id
         fieldname = "hrm_id"
-        table = db.pr_person
-        htable = db.hrm_human_resource
+        table = s3db.pr_person
+        htable = s3db.hrm_human_resource
         pe_id_query = (htable.id == id) & \
                       (htable.person_id == table.id)
         title = T("Send a message to this person")
@@ -212,20 +210,20 @@ def compose():
     request.vars.pe_id = pe_id
 
     # Get the individual's communications options & preference
-    table = db.pr_contact
+    table = s3db.pr_contact
     contact = db(table.pe_id == pe_id).select(table.contact_method,
                                               orderby="priority",
                                               limitby=(0, 1)).first()
     if contact:
-        db.msg_outbox.pr_message_method.default = contact.contact_method
+        s3db.msg_outbox.pr_message_method.default = contact.contact_method
     else:
         session.error = T("No contact method found")
         redirect(URL(f="index"))
 
-    return response.s3.msg_compose(redirect_module = module,
-                                   redirect_function = "compose",
-                                   redirect_vars = {fieldname: id},
-                                   title_name = title)
+    return eden.msg.msg_compose(redirect_module = module,
+                                redirect_function = "compose",
+                                redirect_vars = {fieldname: id},
+                                title_name = title)
 
 # =============================================================================
 # Components - no longer needed with new link-table support?

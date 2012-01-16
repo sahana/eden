@@ -235,7 +235,7 @@ if deployment_settings.has_module("inv") or \
                                      table.parent_item_category_id,
                                      # left = table.on(table.id == table.parent_item_category_id), Doesn't work
                                      limitby=(0, 1),
-                                     cache=(cache.ram, 60)).first()
+                                     cache=s3.cache).first()
 
                 if r.code and use_code:
                     represent_append = r.code

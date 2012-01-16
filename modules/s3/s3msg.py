@@ -40,8 +40,8 @@
 
 __all__ = ["S3Msg"]
 
-import sys
 import datetime
+import difflib
 import string
 import urllib
 from urllib2 import urlopen
@@ -51,7 +51,8 @@ from gluon import current
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
 NOTPHONECHARS = ALLCHARS.translate(IDENTITYTRANS, string.digits)
-NOTTWITTERCHARS = ALLCHARS.translate(IDENTITYTRANS, string.digits + string.letters + "_")
+NOTTWITTERCHARS = ALLCHARS.translate(IDENTITYTRANS,
+                                     "%s%s_" % (string.digits, string.letters))
 
 TWITTER_MAX_CHARS = 140
 TWITTER_HAS_NEXT_SUFFIX = u' \u2026'
@@ -120,7 +121,8 @@ class S3Msg(object):
             }
 
     # -------------------------------------------------------------------------
-    def sanitise_phone(self, phone):
+    @staticmethod
+    def sanitise_phone(phone):
         """
             Strip out unnecessary characters from the string:
             +()- & space
@@ -136,17 +138,18 @@ class S3Msg(object):
             # Add default country code
             if default_country_code == 39:
                 # Italy keeps 0 after country code
-                clean = str(default_country_code) + clean
+                clean = "%s%s" % (default_country_code, clean)
             else:
-                clean = str(default_country_code) + string.lstrip(clean, "0")
+                clean = "%s%s" % (default_country_code,
+                                  string.lstrip(clean, "0"))
 
         return clean
 
     # =========================================================================
     # Inbound Messages
     # =========================================================================
-    def receive_msg(self,
-                    subject="",
+    @staticmethod
+    def receive_msg(subject="",
                     message="",
                     sender="",
                     fromaddress="",
@@ -158,20 +161,21 @@ class S3Msg(object):
         """
 
         db = current.db
+        s3db = current.s3db
 
         try:
-            message_log_id = db.msg_log.insert(inbound = True,
-                                               subject = subject,
-                                               message = message,
-                                               sender  = sender,
-                                               fromaddress = fromaddress,
-                                               )
+            message_log_id = s3db.msg_log.insert(inbound = True,
+                                                 subject = subject,
+                                                 message = message,
+                                                 sender  = sender,
+                                                 fromaddress = fromaddress,
+                                                )
         except:
             return False
             #2) This is not transaction safe - power failure in the middle will cause no message in the outbox
         try:
-            db.msg_channel.insert(message_id = message_log_id,
-                                  pr_message_method = pr_message_method)
+            s3db.msg_channel.insert(message_id = message_log_id,
+                                    pr_message_method = pr_message_method)
         except:
             return False
         # Explicitly commit DB operations when running from Cron
@@ -179,26 +183,134 @@ class S3Msg(object):
         return True
 
     # -------------------------------------------------------------------------
-    def parse_message(self, message=""):
+    # Parser for inbound messages
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def parse_message(message=""):
         """
-            Parse Incoming Message
+            Parse Incoming Message according to keyword
 
-            Check for OpenGeoSMS
-                route SI to IRS
-
-            @ToDo: Move Parserdooth here from controllers/msg.py?
+            @ToDo: Check for OpenGeoSMS
+                    - route SI to IRS
+                    
+            @ToDo: Allow this to be more easily customised by moving the
+                   routing logic to a separate file (ideally web configurable)
         """
 
         if not message:
             return None
 
-        return
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        s3mgr = current.manager
+
+        primary_keywords = ["get", "give", "show"] # Equivalent keywords in one list
+        contact_keywords = ["email", "mobile", "facility", "clinical",
+                            "security", "phone", "status", "hospital",
+                            "person", "organisation"]
+
+        keywords = string.split(message)
+        query = []
+        name = ""
+        reply = ""
+        for word in keywords:
+            match = difflib.get_close_matches(word, primary_keywords + contact_keywords)
+            if match:
+                query.append(match[0])
+            else:
+                name = word
+
+        # ---------------------------------------------------------------------
+        # Person Search [get name person phone email]
+        if "person" in query:
+            result = person_search(name)
+
+            if len(result) > 1:
+                return T("Multiple Matches")
+            if len(result) == 1:
+                if "Person" in result[0]["name"]:
+                    reply = result[0]["name"]
+                    table = s3db.pr_contact
+                    if "email" in query:
+                        query = (table.pe_id == result[0]["id"]) & \
+                                (table.contact_method == "EMAIL")
+                        recipient = db(query).select(table.value,
+                                                     orderby = table.priority,
+                                                     limitby=(0, 1)).first()
+                        reply = "%s Email->%s" % (reply, recipient.value)
+                    if "mobile" in query:
+                        query = (table.pe_id == result[0]["id"]) & \
+                                (table.contact_method == "SMS")
+                        recipient = db(query).select(table.value,
+                                                     orderby = table.priority,
+                                                     limitby=(0, 1)).first()
+                        reply = "%s Mobile->%s" % (reply,
+                                                   recipient.value)
+
+            if len(reply) == 0:
+                return T("No Match")
+
+            return reply
+
+        # ---------------------------------------------------------------------
+        #  Hospital Search [example: get name hospital facility status ]
+        if "hospital" in query:
+            table = s3db.hms_hospital
+            resource = s3mgr.define_resource("hms", "hospital")
+            result = resource.search_simple(fields=["name"], label = str(name))
+            if len(result) > 1:
+                return T("Multiple Matches")
+
+            if len(result) == 1:
+                hospital = db(table.id == result[0]).select().first()
+                reply = "%s %s (%s) " % (reply, hospital.name,
+                                         T("Hospital"))
+                if "phone" in query:
+                    reply = reply + "Phone->" + str(hospital.phone_emergency)
+                if "facility" in query:
+                    reply = reply + "Facility status " + str(table.facility_status.represent(hospital.facility_status))
+                if "clinical" in query:
+                    reply = reply + "Clinical status " + str(table.clinical_status.represent(hospital.clinical_status))
+                if "security" in query:
+                    reply = reply + "Security status " + str(table.security_status.represent(hospital.security_status))
+
+            if len(reply) == 0:
+                return T("No Match")
+
+            return reply
+
+        # ---------------------------------------------------------------------
+        # Organization search [example: get name organisation phone]
+        if "organisation" in query:
+            table = s3db.org_organisation
+            resource = s3mgr.define_resource("org", "organisation")
+            result = resource.search_simple(fields=["name"], label = str(name))
+            if len(result) > 1:
+                return T("Multiple Matches")
+
+            if len(result) == 1:
+                organisation = db(table.id == result[0]).select().first()
+                reply = "%s %s (%s) " % (reply, organisation.name,
+                                         T("Organization"))
+                if "phone" in query:
+                    reply = reply + "Phone->" + str(organisation.donation_phone)
+                if "office" in query:
+                    reply = reply + "Address->" + s3_get_db_field_value(tablename = "org_office",
+                                                                        fieldname = "address",
+                                                                        look_up_value = organisation.id)
+            if len(reply) == 0:
+                return T("No Match")
+
+            return reply
+
+        return "Please provide one of the keywords - person, hospital, organisation"
 
     # =========================================================================
     # Outbound Messages
     # =========================================================================
-    def send_by_pe_id(self,
-                      pe_id,
+    @staticmethod
+    def send_by_pe_id(pe_id,
                       subject="",
                       message="",
                       sender_pe_id = None,
@@ -217,10 +329,10 @@ class S3Msg(object):
         """
 
         db = current.db
-        current.manager.load("msg_log")
+        s3db = current.s3db
 
         # Put the Message in the Log
-        table = db.msg_log
+        table = s3db.msg_log
         try:
             message_log_id = table.insert(pe_id = sender_pe_id,
                                           subject = subject,
@@ -231,7 +343,7 @@ class S3Msg(object):
             return False
 
         # Place the Message in the OutBox
-        table = db.msg_outbox
+        table = s3db.msg_outbox
         if isinstance(pe_id, list):
             listindex = 0
             for prpeid in pe_id:
@@ -271,10 +383,10 @@ class S3Msg(object):
         """
 
         db = current.db
-        current.manager.load("msg_outbox")
+        s3db = current.s3db
 
         if contact_method == "SMS":
-            table = db.msg_setting
+            table = s3db.msg_setting
             settings = db(table.id > 0).select(table.outgoing_sms_handler,
                                                limitby=(0, 1)).first()
             if not settings:
@@ -282,7 +394,7 @@ class S3Msg(object):
             outgoing_sms_handler = settings.outgoing_sms_handler
 
         def dispatch_to_pe_id(pe_id):
-            table = db.pr_contact
+            table = s3db.pr_contact
             query = (table.pe_id == pe_id) & \
                     (table.contact_method == contact_method) & \
                     (table.deleted == False)
@@ -318,10 +430,10 @@ class S3Msg(object):
                                                       message)
             return False
 
-        table = db.msg_outbox
-        ltable = db.msg_log
-        ptable = db.pr_person
-        petable = db.pr_pentity
+        table = s3db.msg_outbox
+        ltable = s3db.msg_log
+        ptable = s3db.pr_person
+        petable = s3db.pr_pentity
 
         query = (table.status == 1) & \
                 (table.pr_message_method == contact_method)
@@ -353,11 +465,11 @@ class S3Msg(object):
                 # Take the entities of it and add in the messaging queue - with
                 # sender as the original sender and marks group email processed
                 # Set system generated = True
-                table3 = db.pr_group
+                table3 = s3db.pr_group
                 query = (table3.pe_id == entity)
                 group_id = db(query).select(table3.id,
                                             limitby=(0, 1)).first().id
-                table4 = db.pr_group_membership
+                table4 = s3db.pr_group_membership
                 query = (table4.group_id == group_id)
                 recipients = db(query).select(table4.person_id)
                 for recipient in recipients:
@@ -376,10 +488,11 @@ class S3Msg(object):
                 # Take the entities of it and add in the messaging queue - with
                 # sender as the original sender and marks group email processed
                 # Set system generated = True
-                table3 = db.org_organisation
+                table3 = s3db.org_organisation
                 query = (table3.pe_id == entity)
-                org_id = db(query).select(table3.id, limitby=(0, 1)).first().id
-                table4 = db.hrm_human_resource
+                org_id = db(query).select(table3.id,
+                                          limitby=(0, 1)).first().id
+                table4 = s3db.hrm_human_resource
                 query = (table4.organisation_id == org_id)
                 recipients = db(query).select(table4.person_id)
                 for recipient in recipients:
@@ -435,9 +548,9 @@ class S3Msg(object):
         limit = current.deployment_settings.get_mail_limit()
 
         if limit:
-            current.manager.load("msg_outbox")
             db = current.db
-            table = db.msg_limit
+            s3db = current.db
+            table = s3db.msg_limit
             # Check whether we've reached our daily limit
             day = datetime.timedelta(hours=24)
             cutoff = current.request.utcnow - day
@@ -489,7 +602,8 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     # OpenGeoSMS
     # -------------------------------------------------------------------------
-    def prepare_opengeosms(self, location_id, code="S", map="google", text=""):
+    @staticmethod
+    def prepare_opengeosms(location_id, code="S", map="google", text=""):
         """
             Function to create an OpenGeoSMS
 
@@ -505,7 +619,8 @@ class S3Msg(object):
                 an appropriate location
         """
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
         query = (table.id == location_id)
         location = db(query).select(table.lat,
                                     table.lon,
@@ -560,8 +675,8 @@ class S3Msg(object):
         """
 
         db = current.db
-        current.manager.load("msg_api_settings")
-        table = db.msg_api_settings
+        s3db = current.s3db
+        table = s3db.msg_api_settings
 
         # Get Configuration
         query = (table.enabled == True)
@@ -600,8 +715,8 @@ class S3Msg(object):
         """
 
         db = current.db
-        current.manager.load("msg_smtp_to_sms_settings")
-        table = db.msg_smtp_to_sms_settings
+        s3db = current.s3db
+        table = s3db.msg_smtp_to_sms_settings
 
         query = (table.enabled == True)
         settings = db(query).select(limitby=(0, 1)).first()
@@ -633,8 +748,8 @@ class S3Msg(object):
         """
 
         db = current.db
-        current.manager.load("msg_tropo_settings")
-        table = db.msg_tropo_settings
+        s3db = current.s3db
+        table = s3db.msg_tropo_settings
 
         base_url = "http://api.tropo.com/1.0/sessions"
         action = "create"
@@ -652,11 +767,11 @@ class S3Msg(object):
             recipient = self.sanitise_phone(recipient)
 
         try:
-            db.msg_tropo_scratch.insert(row_id = row_id,
-                                        message_id = message_id,
-                                        recipient = recipient,
-                                        message = message,
-                                        network = network)
+            s3db.msg_tropo_scratch.insert(row_id = row_id,
+                                          message_id = message_id,
+                                          recipient = recipient,
+                                          message = message,
+                                          network = network)
             params = urllib.urlencode([("action", action),
                                        ("token", tropo_token_messaging),
                                        ("outgoing", "1"),
@@ -701,7 +816,8 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     # Twitter
     # -------------------------------------------------------------------------
-    def sanitise_twitter_account(self, account):
+    @staticmethod
+    def sanitise_twitter_account(account):
         """
             Only keep characters that are legal for a twitter account:
             letters, digits, and _
@@ -710,7 +826,8 @@ class S3Msg(object):
         return account.translate(IDENTITYTRANS, NOTTWITTERCHARS)
 
     # -------------------------------------------------------------------------
-    def break_to_chunks(self, text,
+    @staticmethod
+    def break_to_chunks(text,
                         chunk_size=TWITTER_MAX_CHARS,
                         suffix = TWITTER_HAS_NEXT_SUFFIX,
                         prefix = TWITTER_HAS_PREV_PREFIX):
@@ -736,6 +853,7 @@ class S3Msg(object):
                 current_prefix = prefix # from now on, we want a prefix
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def get_twitter_api():
         """
             Initialize Twitter API
@@ -750,11 +868,11 @@ class S3Msg(object):
             self.tweepy = tweepy
 
         db = current.db
-        manager = current.manager
+        s3db = current.db
         settings = current.deployment_settings
 
-        manager.load("msg_twitter_settings")
-        query = (db.msg_twitter_settings.id > 0)
+        table = s3db.msg_twitter_settings
+        query = (table.id > 0)
         twitter_settings = db(query).select(limitby=(0, 1)).first()
         if twitter_settings and twitter_settings.twitter_account:
             try:
@@ -838,11 +956,11 @@ class S3Msg(object):
             return False
 
         db = current.db
-        current.manager.load("msg_twitter_search")
-        table = db.msg_twitter_search
+        s3db = current.s3db
+        table = s3db.msg_twitter_search
         rows = db().select(table.ALL)
 
-        results_table = db.msg_twitter_search_results
+        results_table = s3db.msg_twitter_search_results
 
         # Get the latest updated post time to use it as since_id in twitter search
         recent_time = results_table.posted_by.max()

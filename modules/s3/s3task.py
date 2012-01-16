@@ -54,23 +54,7 @@ import gluon.contrib.simplejson as json
 
 from s3widgets import S3TimeIntervalWidget
 from s3validators import IS_TIME_INTERVAL_WIDGET
-
-def s3_debug(message, value=None):
-    """
-        Provide an easy, safe, systematic way of handling Debug output
-        (print to stdout doesn't work with WSGI deployments)
-    """
-    try:
-        output = "S3 Debug: %s" % str(message)
-        if value:
-            output += ": %s" % str(value)
-    except:
-        output = "S3 Debug: %s" % unicode(message)
-        if value:
-            output += ": %s" % unicode(value)
-
-    import sys
-    print >> sys.stderr, output
+from s3utils import s3_debug
 
 # -----------------------------------------------------------------------------
 class S3Task(object):
@@ -397,7 +381,7 @@ class S3Task(object):
         #    return False
 
         db = current.db
-        gis = current.gis
+        cache = current.response.s3.cache
         now = datetime.datetime.now()
 
         offset = datetime.timedelta(minutes=1)
@@ -405,7 +389,7 @@ class S3Task(object):
         query = (table.last_heartbeat > (now - offset))
         worker_alive = db(query).select(table.id,
                                         limitby=(0, 1),
-                                        cache=gis.cache).first()
+                                        cache=cache).first()
         if worker_alive:
             return True
         else:
