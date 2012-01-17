@@ -219,8 +219,8 @@
                 <xsl:with-param name="skill_list" select="col[@field='Skills']"/>
             </xsl:call-template>
 
-            <!-- Trainings -->
-            <xsl:call-template name="Trainings"/>
+            <!-- Trainings
+            <xsl:call-template name="Trainings"/> -->
         </resource>
 
     </xsl:template>
@@ -365,6 +365,7 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <!-- Pull this in from training_event.xsl if-required
     <xsl:template name="Course">
 
         <xsl:variable name="CourseName" select="normalize-space(substring-after(@name, ':'))"/>
@@ -373,9 +374,10 @@
             <data field="name"><xsl:value-of select="$CourseName"/></data>
         </resource>
 
-    </xsl:template>
+    </xsl:template> -->
 
     <!-- ****************************************************************** -->
+    <!-- Pull this in from training_event.xsl if-required
     <xsl:template name="Trainings">
 
         <xsl:for-each select="col[starts-with(@name, 'Course')]">
@@ -435,7 +437,7 @@
             </xsl:if>
         </xsl:for-each>
 
-    </xsl:template>
+    </xsl:template> -->
 
     <!-- ****************************************************************** -->
 </xsl:stylesheet>

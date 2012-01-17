@@ -402,9 +402,6 @@ def person():
         @ToDo: Volunteers should be redirected to vol/person?
     """
 
-    s3mgr.model.add_component("hrm_human_resource",
-                              pr_person="person_id")
-
     if deployment_settings.has_module("asset"):
         # Assets as component of people
         s3mgr.model.add_component("asset_asset",
@@ -692,12 +689,12 @@ def hrm_rheader(r, tabs=[]):
     """ Resource headers for component views """
 
     rheader = None
-    rheader_tabs = s3_rheader_tabs(r, tabs)
 
     if r.representation == "html":
 
         if r.name == "person":
-            # Person Controller
+            # Tabs defined in controller
+            rheader_tabs = s3_rheader_tabs(r, tabs)
             person = r.record
             if person:
                 rheader = DIV(s3_avatar_represent(person.id,
@@ -707,14 +704,30 @@ def hrm_rheader(r, tabs=[]):
                     TR(TH(s3_fullname(person))),
                     ), rheader_tabs)
 
+        elif r.name == "training_event":
+            # Tabs
+            tabs = [(T("Training Event Details"), None),
+                    (T("Participants"), "participant")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            table = r.table
+            event = r.record
+            if event:
+                rheader = DIV(TABLE(
+                                    TR(TH("%s: " % table.course_id.label),
+                                       table.course_id.represent(event.course_id)),
+                                    TR(TH("%s: " % table.site_id.label),
+                                       table.site_id.represent(event.site_id)),
+                                    TR(TH("%s: " % table.start_date.label),
+                                       table.start_date.represent(event.start_date)),
+                                    ),
+                              rheader_tabs)
+
         elif r.name == "human_resource":
-            # Human Resource Controller
             hr = r.record
             if hr:
                 pass
 
         elif r.name == "organisation":
-            # Organisation Controller
             org = r.record
             if org:
                 pass
@@ -976,6 +989,18 @@ def training():
         response.s3.filter = query
 
     output = s3_rest_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def training_event():
+    """ Training Events Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller(rheader=hrm_rheader)
     return output
 
 # =============================================================================

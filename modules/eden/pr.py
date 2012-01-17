@@ -376,11 +376,12 @@ class S3PersonModel(S3Model):
         self.add_component("hrm_human_resource", pr_person="person_id")
 
         # Add Skills as components of Persons
-        self.add_component("hrm_credential", pr_person="person_id")
         self.add_component("hrm_certification", pr_person="person_id")
         self.add_component("hrm_competency", pr_person="person_id")
-        self.add_component("hrm_training", pr_person="person_id")
+        self.add_component("hrm_credential", pr_person="person_id")
         self.add_component("hrm_experience", pr_person="person_id")
+        # @ToDo: Double link table to show the Courses attended?
+        self.add_component("hrm_training", pr_person="person_id")
 
         # ---------------------------------------------------------------------
         # Group

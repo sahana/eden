@@ -672,6 +672,7 @@ class S3HRSkillModel(S3Model):
              "hrm_competency",
              "hrm_credential",
              "hrm_training",
+             "hrm_training_event",
              "hrm_certificate",
              "hrm_certification",
              "hrm_certificate_skill",
@@ -693,13 +694,17 @@ class S3HRSkillModel(S3Model):
 
         person_id = self.pr_person_id
         organisation_id = self.org_organisation_id
+        site_id = self.org_site_id
         job_role_id = self.hrm_job_role_id
 
         messages = current.messages
         NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         system_roles = session.s3.system_roles
         ADMIN = system_roles.ADMIN
+
+        s3_date_represent = S3DateTime.date_represent
 
         s3_has_role = auth.s3_has_role
 
@@ -852,8 +857,10 @@ class S3HRSkillModel(S3Model):
         table = self.define_table(tablename,
                                   skill_type_id(empty=False),
                                   Field("name",
+                                        label = T("Name"),
                                         length=64),       # Mayon Compatibility
                                   Field("priority", "integer",
+                                        label = T("Priority"),
                                         requires = IS_INT_IN_RANGE(1, 9),
                                         widget = S3SliderWidget(minval=1, maxval=9, steprange=1, value=1),
                                         comment = DIV(_class="tooltip",
@@ -1047,8 +1054,10 @@ class S3HRSkillModel(S3Model):
                                             hrm_performance_opts.get(opt,
                                                                      UNKNOWN_OPT)),
                                   Field("date_received", "date",
+                                        represent = s3_date_represent,
                                         label = T("Date Received")),
                                   Field("date_expires", "date",   # @ToDo: Widget to make this process easier (date received + 6/12 months)
+                                        represent = s3_date_represent,
                                         label = T("Expiry Date")),
                                   *s3.meta_fields())
 
@@ -1100,17 +1109,18 @@ class S3HRSkillModel(S3Model):
         if auth.s3_has_role(ADMIN):
             label_create = s3.crud_strings[tablename].label_create_button
             course_help = DIV(A(label_create,
-                               _class="colorbox",
-                               _href=URL(c="hrm",
-                                         f="course",
-                                         args="create",
-                                        vars=dict(format="popup")),
-                               _target="top",
-                               _title=label_create))
+                                _class="colorbox",
+                                _href=URL(c="hrm",
+                                          f="course",
+                                          args="create",
+                                          vars=dict(format="popup")),
+                                _target="top",
+                                _title=label_create))
         else:
             course_help = DIV(_class="tooltip",
-                             _title="%s|%s" % (T("Course"),
-                             T("Enter some characters to bring up a list of possible matches")))
+                              _title="%s|%s" % (T("Course"),
+                              T("Enter some characters to bring up a list of possible matches")))
+
         course_id = S3ReusableField("course_id", db.hrm_course,
                                     sortby = "name",
                                     label = T("Course"),
@@ -1126,29 +1136,99 @@ class S3HRSkillModel(S3Model):
                                                                   "course")
                                 )
 
+        # =========================================================================
+        # Training Events
+        #
+        tablename = "hrm_training_event"
+        table = self.define_table(tablename,
+                                  course_id(),
+                                  site_id,
+                                  Field("start_date", "datetime",
+                                        represent = s3_date_represent,
+                                        label=T("Start Date")),
+                                  Field("end_date", "datetime",
+                                        represent = s3_date_represent,
+                                        label=T("End Date")),
+                                  Field("hours", "integer",
+                                        label=T("Hours")),
+                                  # human_resource_id?
+                                  #Field("instructor",
+                                  #      label=T("Instructor")),
+                                  *s3.meta_fields())
+
+        # Field Options
+        table.site_id.readable = True
+        table.site_id.writable = True
+
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Training Event"),
+            title_display = T("Training Event Details"),
+            title_list = T("Training Events"),
+            title_update = T("Edit Training Event"),
+            title_search = T("Search Training Events"),
+            title_upload = T("Import Training Events"),
+            subtitle_create = T("Add Training Event"),
+            subtitle_list = T("Training Events"),
+            label_list_button = T("List Training Events"),
+            label_create_button = T("Add New Training Event"),
+            label_delete_button = T("Delete Training Event"),
+            msg_record_created = T("Training Event added"),
+            msg_record_modified = T("Training Event updated"),
+            msg_record_deleted = T("Training Event deleted"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no training events registered"))
+
+        if auth.s3_has_role(ADMIN):
+            label_create = s3.crud_strings[tablename].label_create_button
+            course_help = DIV(A(label_create,
+                                _class="colorbox",
+                                _href=URL(c="hrm",
+                                          f="training_event",
+                                          args="create",
+                                          vars=dict(format="popup")),
+                                _target="top",
+                                _title=label_create))
+        else:
+            course_help = DIV(_class="tooltip",
+                              _title="%s|%s" % (T("Training Event"),
+                              T("Enter some characters to bring up a list of possible matches")))
+
+        training_event_id = S3ReusableField("training_event_id", db.hrm_training_event,
+                                            sortby = "~start_date",
+                                            label = T("Training Event"),
+                                            requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                            "hrm_training_event.id",
+                                                                            hrm_training_event_represent)),
+                                            represent = hrm_training_event_represent,
+                                            comment = course_help,
+                                            ondelete = "RESTRICT",
+                                            # Comment this to use a Dropdown & not an Autocomplete
+                                            widget = S3AutocompleteWidget("hrm",
+                                                                          "training_event")
+                                            )
+
+        # Participants of events
+        self.add_component("pr_person",
+                           hrm_training_event=Storage(
+                                name="participant",
+                                link="hrm_training",
+                                joinby="training_event_id",
+                                key="person_id",
+                                actuate="hide"))
+
         # =====================================================================
-        # Trainings
+        # Training Participations
         #
         # These are an element of credentials:
         # - a minimum number of hours of training need to be done each year
         #
         # Users can add their own but these are confirmed only by specific roles
         #
-        # Component added in the hrm person() controller
-        #
 
         tablename = "hrm_training"
         table = self.define_table(tablename,
                                   person_id(),
-                                  course_id(),
-                                  Field("start_date", "date",
-                                        label=T("Start Date")),
-                                  Field("end_date", "date",
-                                        label=T("End Date")),
-                                  Field("hours", "integer",
-                                        label=T("Hours")),
-                                  Field("place",
-                                        label=T("Place")),
+                                  training_event_id(),
                                   # This field can only be filled-out by specific roles
                                   # Once this has been filled-out then the other fields are locked
                                   Field("grade", "integer",
@@ -1157,7 +1237,7 @@ class S3HRSkillModel(S3Model):
                                                              zero=None),
                                         represent = lambda opt: \
                                             hrm_performance_opts.get(opt,
-                                                                     UNKNOWN_OPT),
+                                                                     NONE),
                                         writable=False),
                                   s3.comments(),
                                   *s3.meta_fields())
@@ -1168,6 +1248,7 @@ class S3HRSkillModel(S3Model):
             title_list = T("Trainings"),
             title_update = T("Edit Training"),
             title_search = T("Search Trainings"),
+            title_upload = T("Import Training Participants"),
             subtitle_create = T("Add Training"),
             subtitle_list = T("Trainings"),
             label_list_button = T("List Trainings"),
@@ -1190,15 +1271,15 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_certificate"
         table = self.define_table(tablename,
-                                Field("name",
-                                      length=128,   # Mayon Compatibility
-                                      notnull=True,
-                                      label=T("Name")),
-                                organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True),
-                                                label=T("Certifying Organization")),
-                                Field("expiry", "integer",
-                                      label = T("Expiry (months)")),
-                                *s3.meta_fields())
+                                  Field("name",
+                                        length=128,   # Mayon Compatibility
+                                        notnull=True,
+                                        label=T("Name")),
+                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True),
+                                                  label=T("Certifying Organization")),
+                                  Field("expiry", "integer",
+                                        label = T("Expiry (months)")),
+                                  *s3.meta_fields())
 
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Certificate"),
@@ -1244,8 +1325,6 @@ class S3HRSkillModel(S3Model):
         # Link table between Persons & Certificates
         #
         # These are an element of credentials
-        #
-        # Component added in the hrm person() controller
         #
 
         tablename = "hrm_certification"
@@ -1364,8 +1443,6 @@ class S3HRSkillModel(S3Model):
         # This should be auto-populated out of Events
         # - as well as being updateable manually for off-system Events
         #
-        # Component added in the hrm person() controller
-        #
 
         tablename = "hrm_experience"
         table = self.define_table(tablename,
@@ -1402,14 +1479,20 @@ class S3HRSkillModel(S3Model):
         self.configure("hrm_competency",
                        deduplicate=self.hrm_competency_duplicate)
 
+        self.configure("hrm_competency_rating",
+                       deduplicate=self.hrm_competency_rating_duplicate)
+
+        self.configure("hrm_course",
+                       deduplicate=self.hrm_course_duplicate)
+
         self.configure("hrm_skill",
                        deduplicate=self.hrm_skill_duplicate)
 
         self.configure("hrm_skill_type",
                        deduplicate=self.hrm_skill_type_duplicate)
 
-        self.configure("hrm_competency_rating",
-                       deduplicate=self.hrm_competency_rating_duplicate)
+        self.configure("hrm_training_event",
+                       deduplicate=self.hrm_training_event_duplicate)
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -1490,7 +1573,7 @@ S3FilterFieldChange({
 });""")
         return comment
 
-        # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def hrm_competency_duplicate(job):
         """
@@ -1518,6 +1601,39 @@ S3FilterFieldChange({
             query = (table.person_id == person) & \
                     (table.skill_id == skill)
 
+            _duplicate = db(query).select(table.id,
+                                          limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.data.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_course_duplicate(job):
+        """
+          This callback will be called when importing records
+          it will look to see if the record being imported is a duplicate.
+
+          @param job: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+
+          Rules for finding a duplicate:
+           - Look for a record with the same name, ignoring case
+        """
+
+        db = current.db
+
+        # ignore this processing if the id is set
+        if job.id:
+            return
+        if job.tablename == "hrm_course":
+            table = job.table
+            name = "name" in job.data and job.data.name
+
+            query = (table.name.lower().like('%%%s%%' % name.lower()))
             _duplicate = db(query).select(table.id,
                                           limitby=(0, 1)).first()
             if _duplicate:
@@ -1584,6 +1700,45 @@ S3FilterFieldChange({
             name = "name" in job.data and job.data.name
 
             query = (table.name.lower().like('%%%s%%' % name.lower()))
+            _duplicate = db(query).select(table.id,
+                                          limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.data.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_training_event_duplicate(job):
+        """
+          This callback will be called when importing records
+          it will look to see if the record being imported is a duplicate.
+
+          @param job: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+
+          Rules for finding a duplicate:
+           - Look for a record with the same course name & date (& site, if-present)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # ignore this processing if the id is set
+        if job.id:
+            return
+        if job.tablename == "hrm_training_event":
+            table = job.table
+            course_id = "course_id" in job.data and job.data.course_id
+            site_id = "site_id" in job.data and job.data.site_id
+            start_date = "start_date" in job.data and job.data.start_date
+
+            query = (table.course_id == course_id) & \
+                    (table.start_date == start_date)
+            if site_id:
+                query = query & (table.site_id == site_id)
             _duplicate = db(query).select(table.id,
                                           limitby=(0, 1)).first()
             if _duplicate:
@@ -1763,6 +1918,32 @@ def hrm_certificate_represent(id):
                             limitby = (0, 1)).first()
     if cert:
         represent = cert.name
+    else:
+        represent = current.messages.NONE
+
+    return represent
+
+# -------------------------------------------------------------------------
+def hrm_training_event_represent(id):
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.hrm_training_event
+    ctable = s3db.hrm_course
+    query = (table.id == id) & \
+            (table.course_id == ctable.id)
+    event = db(query).select(ctable.name,
+                             table.site_id,
+                             table.start_date,
+                             #table.instructor,
+                             limitby = (0, 1)).first()
+    if event:
+        site = table.site_id.represent(event.hrm_training_event.site_id)
+        start_date = table.start_date.represent(event.hrm_training_event.start_date)
+        represent = "%s (%s, %s)" % (event.hrm_course.name,
+                                     site,
+                                     start_date)
     else:
         represent = current.messages.NONE
 
