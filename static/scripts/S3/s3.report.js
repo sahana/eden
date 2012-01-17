@@ -34,5 +34,17 @@
 */
 
 $(document).ready(function() {
-    alert("here");
-}
+  var plot = jQuery.jqplot ('chart', [data],
+    {
+      //title: 'Persons by Gender',
+      seriesDefaults: {
+        renderer: $.jqplot.PieRenderer,
+        rendererOptions: {
+          showDataLabels: true,
+          diameter:200
+        }
+      },
+      legend: { show:true, location: 'e', escapeHtml:true }
+    }
+  );
+});

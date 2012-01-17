@@ -236,7 +236,7 @@ class S3Cube(S3CRUD):
                 form = ""
 
             output.update(title=title, subtitle=subtitle, form=form)
-            response.view = self._view(r, "list_create.html")
+            response.view = self._view(r, "report.html")
 
         return output
 
@@ -902,6 +902,7 @@ class S3ContingencyTable(TABLE):
 
         T = current.T
         TOTAL = T("Total")
+        CHARTS = ""
 
         TABLE.__init__(self, **attributes)
         components = self.components = []
@@ -943,13 +944,17 @@ class S3ContingencyTable(TABLE):
             _colspan = numcols
         cols_title = TD(label, _style=_style, _colspan=_colspan)
 
-        titles = TR(layers_title, cols_title)
+        titles = TR(layers_title, TD(), cols_title)
+
+        # @todo: charts row
+        charts = TR(TD(), TD())
+        add_charts = charts.append
 
         # Rows field title
         label = get_label(lfields, rows, tablename, "report_rows")
         rows_title = TH(label, _style=_style)
 
-        headers = TR(rows_title)
+        headers = TR(rows_title, TD())
         add_header = headers.append
 
         # Column headers
@@ -958,13 +963,15 @@ class S3ContingencyTable(TABLE):
             value = values[i].value
             v = represent(cols, value)
             colhdr = TH(v, _style=_style)
+            add_charts(TD("charts"))
             add_header(colhdr)
 
         # Row totals header
         if cols is not None:
+            add_charts(TD("tcharts"))
             add_header(TH(TOTAL, _class="totals_header rtotal"))
 
-        thead = THEAD(titles, headers)
+        thead = THEAD(titles, headers, charts)
 
         # Table body ----------------------------------------------------------
         #
@@ -985,6 +992,7 @@ class S3ContingencyTable(TABLE):
             v = represent(rows, row.value)
             rowhdr = TD(DIV(v))
             add_cell(rowhdr)
+            add_cell(TD("charts")) # Chart column
 
             # Result cells
             for j in xrange(numcols):
@@ -1020,9 +1028,10 @@ class S3ContingencyTable(TABLE):
         _class = i % 2 and "odd" or "even"
         _class = "%s %s" % (_class, "totals_row")
 
-        tr = TR(_class=_class)
-        add_total = tr.append
+        col_total = TR(_class=_class)
+        add_total = col_total.append
         add_total(TD(TOTAL, _class="totals_header"))
+        add_total(TD("tcharts"))
 
         # Column totals
         for j in xrange(numcols):
@@ -1035,7 +1044,24 @@ class S3ContingencyTable(TABLE):
             grand_totals = get_total(report.totals, layers)
             add_total(TD(DIV(grand_totals)))
 
-        tfoot = TFOOT(tr)
+        # Charts
+        #col_charts = TR(_class=_class)
+        #add_charts = col_charts.append
+        #add_charts(TD(CHARTS, _class="charts_header"))
+
+        # Column charts
+        #request = current.request
+        #app = request.application
+        #pchart = IMG(_src="/%s/static/img/report/pie.png" % app)
+        #hchart = IMG(_src="/%s/static/img/report/hbars.png" % app)
+        #for j in xrange(numcols):
+            #add_charts(TD(DIV(pchart, hchart)))
+
+        # Grand total charts
+        #if cols is not None:
+            #add_charts(TD(DIV()))
+
+        tfoot = TFOOT(col_total)
 
         # Wrap up -------------------------------------------------------------
         #
@@ -1043,9 +1069,6 @@ class S3ContingencyTable(TABLE):
         append(thead)
         append(tbody)
         append(tfoot)
-
-        self._load_script()
-
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1121,20 +1144,5 @@ class S3ContingencyTable(TABLE):
             return lf.label
         else:
             return DEFAULT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _load_script():
-        """ Append the JavaScript for reports to the response scripts """
-
-        session = current.session
-        if session.s3.debug:
-            script = "s3.report.js"
-        else:
-            #script = "s3.report.min.js"
-            script = "s3.report.js"
-        response = current.response
-        response.s3.scripts.append("%s/%s" % (response.s3.script_dir, script))
-        return
 
 # END =========================================================================
