@@ -98,9 +98,11 @@ class LayoutBlocks():
             self.growToHeight = self.endPosn[0] + height
 
     def setPosn(self, start, end):
-        if start[0] > self.startPosn[0]:
+        if self.startPosn[0] == 0 \
+        or start[0] < self.startPosn[0]:
             self.startPosn[0] = start[0]
-        if start[1] > self.startPosn[1]:
+        if self.startPosn[1] == 0 \
+        or start[1] > self.startPosn[1]:
             self.startPosn[1] = start[1]
         if end[0] > self.endPosn[0]:
             self.endPosn[0] = end[0]
@@ -664,7 +666,7 @@ class DataMatrixBuilder():
         if "heading" in rules:
             text = rules["heading"]
             if len(parent) == 1:
-                width = max(len(text),matrix.lastCol)
+                width = max(len(text),matrix.lastCol)+1
                 height = 1
                 styleName = "styleSectionHeading"
             else:
@@ -695,17 +697,20 @@ class DataMatrixBuilder():
             self.labelLeft = rules["labelLeft"]
         if "columns" in rules:
             value = rules["columns"]
+            maxrow = startrow
             for rules in value:
                 row = startrow
+                self.nextrow = startrow
                 col = endcol
                 if isinstance(rules,list):
                     (endrow, endcol) = self.processList(rules, row, col, matrix, "columns")
                 elif isinstance(rules,dict):
                     (endrow, endcol) = self.processDict(rules, value, row, col, matrix, "columns")
-                if endrow > self.nextrow:
-                    self.nextrow = endrow
+                if endrow > maxrow:
+                    maxrow = endrow
                 if endcol > self.nextcol:
                     self.nextcol = endcol
+            self.nextrow = maxrow
             endrow = self.nextrow
             endcol = self.nextcol
         return (endrow, endcol)
@@ -716,7 +721,7 @@ class DataMatrixBuilder():
         endcol = col
         endrow = row
         headingrow = row
-        self.addToLayout(startrow, startcol, postpone=True)
+        self.addToLayout(startrow, startcol, andThenPostpone = True)
         if "heading" in rules:
             row += 1
         if "data" in rules:
@@ -728,17 +733,20 @@ class DataMatrixBuilder():
             value = rules["heading"]
             (row, endcol) = self.addLabel(value, headingrow, col, endcol - col, 1)
         self.matrix.boxRange(startrow, startcol, endrow, endcol-1)
-        self.addToLayout(startrow, startcol)
+        self.addToLayout(startrow, startcol, endPostpone = True)
         return (endrow, endcol)
 
-    def addToLayout(self, startrow, startcol, postpone=False):
+    def addToLayout(self, startrow, startcol, andThenPostpone = None, endPostpone = None):
+        if endPostpone != None:
+            self.postponeLayoutUpdate = not endPostpone
         if not self.postponeLayoutUpdate \
         and self.layout != None \
         and (startrow != self.nextrow or startcol != self.nextcol):
             if self.widgetsInList != []:
                 self.layout.addTempBlock((startrow, startcol), (self.nextrow, self.nextcol), self.widgetsInList)
                 self.widgetsInList = []
-        self.postponeLayoutUpdate = postpone
+        if andThenPostpone != None:
+            self.postponeLayoutUpdate = andThenPostpone
 
     def addArea(self, element, row, col):
         widgetObj = self.widgetList[element]
@@ -1173,8 +1181,11 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         """
         labelSize = (0,0)
         if self.label:
+            labelWidth = maxWidth/2
+            if not self.labelLeft:
+                labelWidth = self.xlsWidgetSize[0] + 1
             _TQstn = self._Tquestion(self.langDict)
-            labelSize = (maxWidth/2, len(_TQstn)/(2 * maxWidth / 3) + 1)
+            labelSize = (labelWidth, len(_TQstn)/(4 * labelWidth / 3) + 1)
         return labelSize
         
     def getWidgetSize(self, maxWidth = 20):
@@ -1258,7 +1269,6 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             cellPadding = MatrixElement(endrow,startcol,"", style="styleText")
             cellPadding.merge(endcol-startcol+self.xlsMargin[0]-1,self.xlsMargin[1]-1)
             matrix.addElement(cellPadding)
-        pass
 
     def writeToMatrix(self,
                       matrix,
@@ -1340,12 +1350,29 @@ class S3QuestionTypeAbstractWidget(FormWidget):
                                  self.rowcol_to_cell(row, col),
                                  style="styleText")
             answerMatrix.addElement(cell)
-        return (startrow+height, startcol+width)
+        endcol = startcol+width
+        endrow = startrow+height
+        # Only for debugging purposes
+        self.verifyCoords(endrow, endcol)
+        return (endrow, endcol)
 #        if self.labelLeft:
 #            return (row+self.xlsMargin[1]+height, col+self.xlsMargin[0]+mergeWH)
 #        else:
 #            return (row+self.xlsMargin[1]+mergeLV+mergeWV, col+self.xlsMargin[0]+max(mergeLH,mergeWH))
 
+    def verifyCoords(self, endrow, endcol):
+        (width, height) = self.getMatrixSize()
+        calcrow = self.startPosn[1] + width
+        calccol = self.startPosn[0] + height
+        error = False
+        if calcrow != endrow:
+            error = True
+        if calccol != endcol:
+            error = True
+        if error:
+            w_code = self.question["code"]
+            msg = "Coord Verification Error for widget %s, startPosn:(%s, %s), expected:(%s, %s), observed:(%s, %s)" % (w_code, self.startPosn[1], self.startPosn[0], endrow, endcol, calcrow, calccol)
+            print >> sys.stdout, msg
     ######################################################################
     # Functions not fully implemented or used
     ######################################################################
@@ -1700,6 +1727,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Option")
         self.labelLeft = False
         self.singleRow = False
+        self.xlsWidgetSize = [10,0]
 
     def display(self, **attr):
         S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
@@ -1823,8 +1851,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             else:
                 row += oheight
         if self.singleRow:
-            if endrow < row + oheight:
-                endrow = row + oheight
+            endrow = row + 1
             if endcol < col:
                 endcol = col
         else:
@@ -1834,7 +1861,11 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                 endcol = col + 1 + mergeLH
         self.addPaddingAroundWidget(matrix, startrow, startcol, lwidth, lheight, wwidth, iheight+wheight)
         self.addPaddingToCell(matrix, startrow, startcol, endrow, endcol)
-        return (endrow + self.xlsMargin[1], endcol + self.xlsMargin[0])
+        endrow += self.xlsMargin[1]
+        endcol += self.xlsMargin[0]
+        # Only for debugging purposes
+        self.verifyCoords(endrow, endcol)
+        return (endrow, endcol)
 
 
     ######################################################################

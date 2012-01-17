@@ -78,7 +78,7 @@ class S3HRModel(S3Model):
 
         # NB These numbers are hardcoded into KML Export stylesheet
         hrm_type_opts = {
-            1: T("staff"),
+            1: T("Staff"),
             2: T("Volunteer"),
             #3: T("Member")
         }

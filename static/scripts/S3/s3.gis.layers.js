@@ -10,6 +10,7 @@
 // Layers
 S3.gis.layers_all = new Array();
 S3.gis.format_geojson = new OpenLayers.Format.GeoJSON();
+S3.gis.dirs = new Array();
 
 // Add Layers from the Catalogue
 function addLayers() {
@@ -212,6 +213,16 @@ function addGeoJSONLayer(layer) {
         var refresh = layer.refresh;
     } else {
         var refresh = 900; // seconds (so 15 mins)
+    }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
     }
     if (undefined != layer.visibility) {
         var visibility = layer.visibility;
@@ -420,6 +431,7 @@ function addGeoJSONLayer(layer) {
     });
     var geojsonLayer = new OpenLayers.Layer.Vector(
         name, {
+            dir: dir,
             projection: projection,
             strategies: [
                 // Need to be uniquely instantiated
@@ -589,6 +601,16 @@ function addGPXLayer(layer) {
     } else {
         var visibility = true;
     }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
+    }
     if (undefined != layer.opacity) {
         var opacity = layer.opacity;
     } else {
@@ -623,6 +645,7 @@ function addGPXLayer(layer) {
 
     var gpxLayer = new OpenLayers.Layer.Vector(
         name, {
+            dir: dir,
             projection: S3.gis.proj4326,
             strategies: [
                 // Need to be uniquely instantiated
@@ -682,6 +705,16 @@ function addKMLLayer(layer) {
         // Default to visible
         var visibility = true;
     }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
+    }
     if (undefined != layer.opacity) {
         var opacity = layer.opacity;
     } else {
@@ -713,6 +746,7 @@ function addKMLLayer(layer) {
     style_marker.externalGraphic = marker_url;
     var kmlLayer = new OpenLayers.Layer.Vector(
         name, {
+            dir: dir,
             projection: S3.gis.proj4326,
             // Need to be uniquely instantiated
             strategies: [
@@ -777,6 +811,16 @@ function addOSMLayer(layer) {
         // Default to visible
         var visibility = true;
     }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
+    }
     if (undefined != layer.base) {
         var isBaseLayer = layer.base;
     } else {
@@ -791,6 +835,7 @@ function addOSMLayer(layer) {
     var osmLayer = new OpenLayers.Layer.TMS(
         name,
         url, {
+            dir: dir,
             type: 'png',
             getURL: osm_getTileURL,
             displayOutsideMaxExtent: true,
@@ -841,6 +886,16 @@ function addTMSLayer(layer) {
     } else {
         var numZoomLevels = 9;
     }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
+    }
     if (undefined != layer.format) {
         var format = layer.format;
     } else {
@@ -849,6 +904,7 @@ function addTMSLayer(layer) {
 
     var tmsLayer = new OpenLayers.Layer.TMS(
         name, url, {
+            dir: dir,
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels
@@ -895,6 +951,16 @@ function addWFSLayer(layer) {
     } else {
         // Default to visible
         var visibility = true;
+    }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
     }
     if (undefined != layer.opacity) {
         var opacity = layer.opacity;
@@ -1070,6 +1136,7 @@ function addWFSLayer(layer) {
             // if Editable
             //saveStrategy
         ],
+        dir: dir,
         projection: projection,
         //outputFormat: "json",
         //readFormat: new OpenLayers.Format.GeoJSON(),
@@ -1097,6 +1164,16 @@ function addWMSLayer(layer) {
         var visibility = layer.visibility;
     } else {
         var visibility = true;
+    }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if (!(dir in S3.gis.dirs)) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
     }
     if (undefined != layer.base) {
         var isBaseLayer = layer.base;
@@ -1151,6 +1228,7 @@ function addWMSLayer(layer) {
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
+            dir: dir,
             layers: layers
         },
         {
@@ -1192,7 +1270,7 @@ function addWMSLayer(layer) {
     map.addLayer(wmsLayer);
 }
 
-// Yahoo
+// Yahoo - deprecated
 function addYahooLayers() {
     var yahoo = S3.gis.Yahoo;
     // None of the dynamic script loading seems to work as YAHOO_MAP_SAT isn't set
