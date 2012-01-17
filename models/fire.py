@@ -166,14 +166,14 @@ if deployment_settings.has_module(module):
                 )
 
                 req = s3mgr.parse_request("irs", "ireport_vehicle",
-                                          args=["analyze"],
+                                          args=["report"],
                                           vars=Storage(
                                             rows = "asset_id",
                                             cols = "ireport_id",
                                             fact = "minutes",
                                             aggregate = "sum"
                                           ))
-                req.set_handler("analyze", s3base.S3Cube())
+                req.set_handler("report", s3base.S3Cube())
                 req.resource.add_filter(query)
                 return req(rheader=rheader)
 

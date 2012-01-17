@@ -519,24 +519,24 @@ class S3ProjectModel(S3Model):
             project_activity_search = S3Search(field="name")
 
         # Resource Configuration
-        analyze_fields = []
+        report_fields = []
         if drr:
-            analyze_fields.append((T("Organization"), "organisation"))
-        analyze_fields.append((T("Project"), "project_id"))
+            report_fields.append((T("Organization"), "organisation"))
+        report_fields.append((T("Project"), "project_id"))
         if not pca:
-            analyze_fields.append((T("Activity"), "name"))
-        analyze_fields.append((T("Activity Type"), "multi_activity_type_id"))
+            report_fields.append((T("Activity"), "name"))
+        report_fields.append((T("Activity Type"), "multi_activity_type_id"))
         if drr:
-            analyze_fields.append((T("Theme"), "project_id$multi_theme_id"))
-            analyze_fields.append((T("Hazard"), "project_id$multi_hazard_id"))
-            analyze_fields.append((T("HFA"), "project_id$hfa"))
+            report_fields.append((T("Theme"), "project_id$multi_theme_id"))
+            report_fields.append((T("Hazard"), "project_id$multi_hazard_id"))
+            report_fields.append((T("HFA"), "project_id$hfa"))
             lh = settings.get_gis_default_location_hierarchy()
             lh = [(lh[opt], opt) for opt in lh]
-            analyze_fields.extend(lh)
-            analyze_fields.append("location_id")
+            report_fields.extend(lh)
+            report_fields.append("location_id")
         else:
-            analyze_fields.append((T("Time Estimated"), "time_estimated"))
-            analyze_fields.append((T("Time Actual"), "time_actual"))
+            report_fields.append((T("Time Estimated"), "time_estimated"))
+            report_fields.append((T("Time Actual"), "time_actual"))
 
         if drr:
             next = "beneficiary"
@@ -549,9 +549,9 @@ class S3ProjectModel(S3Model):
                        search_method=project_activity_search,
                        onaccept=self.project_activity_onaccept,
                        deduplicate=self.project_activity_deduplicate,
-                       analyze_rows=analyze_fields,
-                       analyze_cols=analyze_fields,
-                       analyze_fact=analyze_fields)
+                       report_rows=report_fields,
+                       report_cols=report_fields,
+                       report_fact=report_fields)
 
         # Reusable Field
         activity_id = S3ReusableField("activity_id", db.project_activity,
@@ -1067,23 +1067,23 @@ class S3ProjectDRRModel(S3Model):
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,
-                        #analyze_filter=[
+                        #report_filter=[
                             #S3SearchOptionsWidget(field=["project_id"],
                                                   #name="project",
                                                   #label=T("Project"))
                         #],
-                        analyze_rows=[
+                        report_rows=[
                                       "activity_id",
                                       "project_id",
                                       "project_id$multi_hazard_id",
                                       "project_id$multi_theme_id",
                                       "activity_id$multi_activity_type_id"
                                      ],
-                        analyze_cols=[
+                        report_cols=[
                                       "bnf_type",
                                      ],
-                        analyze_fact=["number"],
-                        analyze_method=["sum"])
+                        report_fact=["number"],
+                        report_method=["sum"])
 
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", db.project_beneficiary,
@@ -1413,6 +1413,8 @@ class S3ProjectTaskModel(S3Model):
                                                   readable = staff,
                                                   writable = staff,
                                                   label = T("Assigned to"),
+                                                  filterby = "instance_type",
+                                                  filter_opts = ["pr_person", "pr_group", "org_organisation"],
                                                   represent = lambda id, row=None: \
                                                               project_assignee_represent(id),
                                                   # @ToDo: Widget
@@ -1963,23 +1965,29 @@ def project_assignee_represent(id):
                               limitby=(0, 1)).first()
     if not record:
         return output
+    instance_type = record.instance_type
 
-    table = s3db[record.instance_type]
+    table = s3db[instance_type]
     query = (table.pe_id == id)
-    if record.instance_type == "pr_person":
+    if instance_type == "pr_person":
         record = db(query).select(table.first_name,
+                                  table.middle_name,
+                                  table.last_name,
                                   table.initials,
                                   cache=cache,
                                   limitby=(0, 1)).first()
         if record:
-            output = record.initials or record.first_name
-    else:
+            output = record.initials or s3_fullname(record)
+    elif instance_type in ("pr_group", "org_organisation"):
         # Team or Organisation
         record = db(query).select(table.name,
                                   cache=cache,
                                   limitby=(0, 1)).first()
         if record:
             output = record.name
+    else:
+        # Should not happen of correctly filtered, return default
+        pass
 
     return output
 

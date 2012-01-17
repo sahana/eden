@@ -194,7 +194,7 @@ def organisation():
 
         list_btn = A(T("Funding Report"),
                      _href=URL(c="project", f="organisation",
-                               args="analyze", vars=request.get_vars),
+                               args="report", vars=request.get_vars),
                      _class="action-btn")
 
         return s3_rest_controller(list_btn=list_btn,
@@ -229,7 +229,7 @@ def beneficiary():
 
     list_btn = A(T("Beneficiary Report"),
                  _href=URL(c="project", f="beneficiary",
-                           args="analyze", vars=request.get_vars),
+                           args="report", vars=request.get_vars),
                  _class="action-btn")
 
     return s3_rest_controller(interactive_report=True)
@@ -424,7 +424,7 @@ def task():
         s3mgr.configure(tablename,
                         # Block Add until we get the injectable component lookups
                         insertable=False,
-                        analyze_filter=[
+                        report_filter=[
                             s3base.S3SearchOptionsWidget(field=["project"],
                                                          name="project",
                                                          label=T("Project"))
@@ -501,7 +501,7 @@ def time():
         now = request.utcnow
         week = datetime.timedelta(days=7)
         response.s3.filter = (table.date > (now - week))
-    
+
     return s3_rest_controller()
 
 # =============================================================================

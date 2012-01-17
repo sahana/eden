@@ -482,7 +482,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Execute the request
     output = r(**attr)
 
-    if isinstance(output, dict) and (not r.method or r.method in ("analyze", "search")):
+    if isinstance(output, dict) and (not r.method or r.method in ("report", "search")):
         if response.s3.actions is None:
 
             # Add default action buttons

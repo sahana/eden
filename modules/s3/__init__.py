@@ -70,7 +70,7 @@ from s3method import *
 # Method Handlers
 from s3crud import *
 from s3search import *
-from s3cube import *
+from s3report import *
 from s3pdf import S3PDF
 from s3import import *
 
