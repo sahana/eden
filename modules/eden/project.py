@@ -1034,6 +1034,7 @@ class S3ProjectDRRModel(S3Model):
                                   activity_id(comment=None),
                                   bnf_type(),
                                   Field("number", "integer",
+                                        label = T("Quantity"),
                                         requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999))),
                                   s3.comments(),
                                   *s3.meta_fields())

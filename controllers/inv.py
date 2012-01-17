@@ -163,7 +163,7 @@ def warehouse():
                                 # Extra fields for CSV uploads:
                                 csv_extra_fields = [
                                     dict(label="Organisation",
-                                         field=organisation_id(comment=None)),
+                                         field=s3db.org_organisation_id(comment=None)),
                                     dict(label="Test",
                                          value="MyTest")
                                 ])
