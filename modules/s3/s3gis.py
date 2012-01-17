@@ -4059,9 +4059,14 @@ S3.gis.layers_osm = new Array();"""
                 else:
                     visibility = """,
     "visibility": false"""
+                if layer.dir:
+                    dir = """,
+    "dir": "%s\"""" % layer.dir
+                else:
+                    dir = ""
                 if layer.attribution:
                     attribution = """,
-        "attribution": %s""" % repr(layer.attribution)
+    "attribution": %s""" % repr(layer.attribution)
                 else:
                     attribution = ""
                 if layer.zoom_levels is not None and layer.zoom_levels != 19:
@@ -4074,7 +4079,7 @@ S3.gis.layers_osm = new Array();"""
                 layers_osm += """
 S3.gis.layers_osm[%i] = {
     "name": "%s",
-    "url1": "%s"%s%s%s%s%s%s
+    "url1": "%s"%s%s%s%s%s%s%s
 }
 """ % (counter,
        name_safe,
@@ -4082,6 +4087,7 @@ S3.gis.layers_osm[%i] = {
        url2,
        url3,
        visibility,
+       dir,
        base,
        attribution,
        zoomLevels)
@@ -4858,7 +4864,12 @@ class MultiRecordLayer(Layer):
             if self.opacity != 1:
                 output["opacity"] = "%.1f" % self.opacity
 
-        def add_attributes_if_not_default(self, output, **values_and_defaults):
+        def setup_folder(self, output):
+            if self.dir:
+                output["dir"] = self.dir
+ 
+        @staticmethod 
+        def add_attributes_if_not_default(output, **values_and_defaults):
             # could also write values in debug mode, to check if defaults ignored.
             # could also check values are not being overwritten.
             for key, (value, defaults) in values_and_defaults.iteritems():
@@ -4912,6 +4923,7 @@ class FeatureLayer(MultiRecordLayer):
             }
             #
             self.marker.add_attributes_to_output(output)
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             self.setup_clustering(output)
 
@@ -4936,6 +4948,7 @@ class GeoJSONLayer(MultiRecordLayer):
             projection = self.projection
             if projection.epsg != 4326:
                 output["projection"] = projection.epsg
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             self.setup_clustering(output)
 
@@ -5028,6 +5041,7 @@ class GeoRSSLayer(MultiRecordLayer):
             # Attributes which are defaulted client-side if not set
             if self.refresh != 900:
                 output["refresh"] = self.refresh
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             self.setup_clustering(output)
 
@@ -5066,6 +5080,7 @@ class GPXLayer(MultiRecordLayer):
                 tracks = (self.tracks, (True,)),
                 routes = (self.routes, (True,)),
             )
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             self.setup_clustering(output)
             return output
@@ -5164,6 +5179,7 @@ class KMLLayer(MultiRecordLayer):
                 body = (self.body, ("description", None)),
                 refresh = (self.refresh, (900,)),
             )
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             self.setup_clustering(output)
             self.marker.add_attributes_to_output(output)
@@ -5218,6 +5234,7 @@ class WFSLayer(MultiRecordLayer):
                 projection = (self.projection.epsg, (4326,)),
                 #editable
             )
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             self.setup_clustering(output)
             return output
@@ -5248,6 +5265,7 @@ class WMSLayer(MultiRecordLayer):
                 bgcolor = (self.bgcolor, (None,)),
                 tiled = (self.tiled, (False, )),
             )
+            self.setup_folder(output)
             self.setup_visibility_and_opacity(output)
             return output
 

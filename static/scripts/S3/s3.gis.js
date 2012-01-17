@@ -296,40 +296,68 @@ function addMapWindow(items) {
 // Add LayerTree (to be called after the layers are added)
 function addLayerTree() {
 
+    // Default Folder for Base Layers
     var layerTreeBase = {
         text: S3.i18n.gis_base_layers,
         nodeType: 'gx_baselayercontainer',
         layerStore: S3.gis.mapPanel.layers,
+        loader: {
+            filter: function(record) {                
+                var layer = record.getLayer();
+                return layer.displayInLayerSwitcher === true &&
+                       layer.isBaseLayer === true &&
+                       (layer.dir === undefined || layer.dir == '');
+            }
+        },
         leaf: false,
         expanded: true
     };
 
-    //var layerTreeFeaturesExternal = {
-    //    text: 'External Features',
-    //    nodeType: 'gx_overlaylayercontainer',
-    //    layerStore: S3.gis.mapPanel.layers,
-    //    leaf: false,
-    //    expanded: true
-    //};
-
-    var layerTreeFeaturesInternal = {
-        //text: 'Internal Features',
+    // Default Folder for Overlays
+    var layerTreeOverlays = {
         text: S3.i18n.gis_overlays,
         nodeType: 'gx_overlaylayercontainer',
         layerStore: S3.gis.mapPanel.layers,
+        loader: {
+            filter: function(record) {                
+                var layer = record.getLayer();
+                return layer.displayInLayerSwitcher === true &&
+                       layer.isBaseLayer === false &&
+                       (layer.dir === undefined || layer.dir == '');
+            }
+        },
         leaf: false,
         expanded: true
     };
 
-    var treeRoot = new Ext.tree.AsyncTreeNode({
-        expanded: true,
-        children: [
-            layerTreeBase,
-            layerTreeFeaturesInternal
-        ]
-    });
+    var nodesArr = [ layerTreeBase, layerTreeOverlays ];
 
-    //treeRoot.appendChild(layerTreeFeaturesExternal);
+    // User-specified Folders
+    var dirs = S3.gis.dirs;
+    for (i = 0; i < dirs.length; i++) {
+        var folder = dirs[i];
+        var child = {  
+            text: dirs[i],
+            nodeType: 'gx_layercontainer',
+            layerStore: S3.gis.mapPanel.layers,
+            loader: {
+                filter: (function(folder) {
+                    return function(read) {                        
+                        if (read.data.layer.dir !== 'undefined')
+                            return read.data.layer.dir === folder;
+                    }
+                })(folder)
+            },
+            leaf: false,
+           expanded: true
+        }
+        nodesArr.push(child);
+    }
+
+     var treeRoot = new Ext.tree.AsyncTreeNode({
+        expanded: true,
+        children: nodesArr
+    });
 
     S3.gis.layerTree = new Ext.tree.TreePanel({
         id: 'treepanel',

@@ -246,11 +246,13 @@ class S3PersonModel(S3Model):
                                         length=8,
                                         label = T("Initials")),
                                   Field("preferred_name",
+                                        label = T("Preferred Name"),
                                         comment = DIV(DIV(_class="tooltip",
                                                           _title="%s|%s" % (T("Preferred Name"),
                                                                             T("The name to be used when calling for or directly addressing the person (optional).")))),
                                         length=64), # Mayon Compatibility
-                                  Field("local_name", label = T("Local Name"),
+                                  Field("local_name",
+                                        label = T("Local Name"),
                                         comment = DIV(DIV(_class="tooltip",
                                                           _title="%s|%s" % (T("Local Name"),
                                                                             T("Name of the person in local language and script (optional)."))))),
@@ -276,9 +278,11 @@ class S3PersonModel(S3Model):
                                         represent = lambda code: \
                                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT),
                                   Field("occupation",
+                                        label = T("Profession"),
                                         length=128), # Mayon Compatibility
                                   Field("picture", "upload",
                                         autodelete=True,
+                                        label = T("Picture"),
                                         requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
                                                                error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 300x300 pixels!"))),
                                         represent = lambda image: image and \
@@ -451,7 +455,8 @@ class S3PersonModel(S3Model):
                                       comment = \
                                         DIV(A(s3.crud_strings.pr_group.label_create_button,
                                               _class="colorbox",
-                                              _href=URL(c="pr", f="group", args="create", vars=dict(format="popup")),
+                                              _href=URL(c="pr", f="group", args="create",
+                                                        vars=dict(format="popup")),
                                               _target="top",
                                               _title=s3.crud_strings.pr_group.label_create_button),
                                             DIV(DIV(_class="tooltip",
@@ -471,8 +476,10 @@ class S3PersonModel(S3Model):
                                   pr_group_id(label = T("Group")),
                                   pr_person_id(label = T("Person")),
                                   Field("group_head", "boolean",
+                                        label = T("Group Head"),
                                         default=False),
-                                  Field("description"),
+                                  Field("description",
+                                        label = T("Description")),
                                   s3.comments(),
                                   *s3.meta_fields())
 

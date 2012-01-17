@@ -183,12 +183,17 @@ def human_resource():
         elif groupCode == "1":
             group = "staff"
     if group == "volunteer":
-        table.type.default = 2
-        response.s3.filter = (table.type == 2)
-        table.location_id.writable = True
-        table.location_id.readable = True
-        table.location_id.label = T("Home Address")
+        _type = table.type
+        _type.default = 2
+        response.s3.filter = (_type == 2)
+        _type.readable = False
+        _type.writable = False
+        _location = table.location_id
+        _location.writable = True
+        _location.readable = True
+        _location.label = T("Home Address")
         list_fields.pop(4)
+        table.job_title.label = T("Volunteer Role")
         s3.crud_strings[tablename].update(
             title_create = T("Add Volunteer"),
             title_display = T("Volunteer Information"),
@@ -220,8 +225,11 @@ def human_resource():
     elif group == "staff":
         #s3mgr.configure(table._tablename, insertable=False)
         # Default to Staff
-        table.type.default = 1
-        response.s3.filter = (table.type == 1)
+        _type = table.type
+        _type.default = 1
+        response.s3.filter = (_type == 1)
+        _type.readable = False
+        _type.writable = False
         table.site_id.writable = True
         table.site_id.readable = True
         list_fields.pop(5)
@@ -325,7 +333,7 @@ def hrm_map_popup(r):
     output.append(TR(TD(B("%s:" % T("Name"))),
                      TD(s3_fullname(r.record.person_id))))
 
-    # Occupation (Job Title?)
+    # Job Title
     if r.record.job_title:
         output.append(TR(TD(B("%s:" % r.table.job_title.label)),
                          TD(r.record.job_title)))
