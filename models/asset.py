@@ -179,7 +179,6 @@ if deployment_settings.has_module("asset"):
                             ]
                       ),
                     s3base.S3SearchLocationHierarchyWidget(
-                        gis,
                         name="asset_search_location",
                         comment=T("Search for asset by location."),
                         represent ="%(name)s",

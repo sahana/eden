@@ -44,6 +44,7 @@ from gluon.serializers import json
 
 from s3crud import S3CRUD
 from s3validators import *
+from s3utils import s3_debug
 from s3widgets import CheckboxesWidgetS3
 
 __all__ = ["S3SearchWidget",
@@ -61,23 +62,6 @@ __all__ = ["S3SearchWidget",
 
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
-
-def s3_debug(message, value=None):
-    """
-        Provide an easy, safe, systematic way of handling Debug output
-        (print to stdout doesn't work with WSGI deployments)
-    """
-    try:
-        output = "S3 Debug: %s" % str(message)
-        if value:
-            output += ": %s" % str(value)
-    except:
-        output = "S3 Debug: %s" % unicode(message)
-        if value:
-            output += ": %s" % unicode(value)
-
-    import sys
-    print >> sys.stderr, output
 
 SHAPELY = False
 try:
@@ -132,7 +116,8 @@ class S3SearchWidget(object):
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
-    def query(self, resource, value):
+    @staticmethod
+    def query(resource, value):
         """
             Returns a sub-query for this search option
 
@@ -753,7 +738,7 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
         by selecting a location from a specified level in the hierarchy.
     """
 
-    def __init__(self, gis, name=None, **attr):
+    def __init__(self, name=None, **attr):
         """
             Configures the search option
 
@@ -761,6 +746,8 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
 
             @keyword comment: a comment for the search widget
         """
+
+        gis = current.gis
 
         self.other = None
 
@@ -816,7 +803,6 @@ class S3SearchLocationWidget(S3SearchWidget):
         if not SHAPELY:
             return None
 
-        gis = current.gis
         T = current.T
 
         # Components
@@ -862,10 +848,10 @@ class S3SearchLocationWidget(S3SearchWidget):
             @param value: the value returned from the widget: WKT format
         """
 
-        gis = current.gis
+        #gis = current.gis
         table = resource.table
-        db = current.db
-        locations = db.gis_location
+        s3db = current.s3db
+        locations = s3db.gis_location
 
         # Get master query and search fields
         #self.build_master_query(resource)
@@ -916,7 +902,8 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
-    def query(self, resource, value):
+    @staticmethod
+    def query(resource, value):
         if value:
             db = current.db
             htable = db.hrm_human_resource
@@ -950,7 +937,8 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
-    def query(self, resource, value):
+    @staticmethod
+    def query(resource, value):
         if value:
             s3db = current.s3db
             htable = s3db.hrm_human_resource
@@ -1117,6 +1105,10 @@ class S3Search(S3CRUD):
         """
 
         request = self.request
+
+        db = current.db
+        s3db = current.s3db
+
         user_id = current.session.auth.user.id
         save_search_btn_id = "save_my_filter_btn_%s" % str(request.utcnow.microsecond)
         save_search_processing_id = "save_search_processing_%s" % str(request.utcnow.microsecond)
@@ -1133,10 +1125,8 @@ class S3Search(S3CRUD):
                         )
         search_vars["prefix"] = r.prefix
         search_vars["function"] = r.function
-        s3mgr = current.manager
-        s3mgr.load("pr_save_search")
-        db = current.db
-        table = db.pr_save_search
+
+        table = s3db.pr_save_search
         if len (db(table.user_id == user_id).select(table.id,
                                                     limitby = (0,1))):
             rows = db(table.user_id == user_id).select(table.ALL)
@@ -1223,9 +1213,11 @@ class S3Search(S3CRUD):
         session = current.session
         request = self.request
         response = current.response
+        s3 = response.s3
         resource = self.resource
         settings = current.deployment_settings
         db = current.db
+        s3db = current.s3db
         manager = current.manager
         table = self.table
         tablename = self.tablename
@@ -1262,7 +1254,7 @@ class S3Search(S3CRUD):
                 r.error(400, manager.ERROR.BAD_RECORD)
             r.post_vars = r.vars
             manager.load("pr_save_search")
-            search_table = db.pr_save_search
+            search_table = s3db.pr_save_search
             _query = (search_table.id == search_id)
             record = db(_query).select(limitby=(0, 1)).first()
             if not record:
@@ -1283,7 +1275,7 @@ class S3Search(S3CRUD):
         else:
             search_vars = dict()
 
-        if response.s3.simple_search:
+        if s3.simple_search:
             form.append(DIV(_id="search-mode", _mode="simple"))
         else:
             form.append(DIV(_id="search-mode", _mode="advanced"))
@@ -1302,10 +1294,10 @@ class S3Search(S3CRUD):
         if advanced_form is not None:
             advanced_form.append(save_search)
             form.append(advanced_form)
-        output.update(form=form)
+        output["form"] = form
 
         # Build session filter (for SSPag)
-        if not response.s3.no_sspag:
+        if not s3.no_sspag:
             limit = 1
             ids = resource.get_id()
             if ids:
@@ -1349,15 +1341,15 @@ class S3Search(S3CRUD):
                                   format=representation)
 
         # Remove the dataTables search box to avoid confusion
-        response.s3.dataTable_NobFilter = True
+        s3.dataTable_NobFilter = True
 
         if items:
-            if not response.s3.no_sspag:
+            if not s3.no_sspag:
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
                 totalrows = resource.count(distinct=True)
                 if totalrows:
-                    if response.s3.dataTable_iDisplayLength:
-                        limit = 2 * response.s3.dataTable_iDisplayLength
+                    if s3.dataTable_iDisplayLength:
+                        limit = 2 * s3.dataTable_iDisplayLength
                     else:
                         limit = 50
                     sqltable = resource.sqltable(fields=list_fields,
@@ -1373,16 +1365,17 @@ class S3Search(S3CRUD):
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
                     response.aadata = json(aadata)
-                    response.s3.start = 0
-                    response.s3.limit = limit
+                    s3.start = 0
+                    s3.limit = limit
 
             if r.http == "POST" and not errors:
                 query = None
                 if "location_id" in r.target()[2]:
-                    query = (table.location_id == db.gis_location.id)
+                    query = (table.location_id == s3db.gis_location.id)
                 elif "site_id" in r.target()[2]:
-                    query = (table.site_id == db.org_site.id) & \
-                            (db.org_site.location_id == db.gis_location.id)
+                    stable = s3db.org_site
+                    query = (table.site_id == stable.id) & \
+                            (stable.location_id == s3db.gis_location.id)
                 if query:
                     resource.add_filter(query)
                     features = resource.select()
@@ -1406,7 +1399,8 @@ class S3Search(S3CRUD):
         elif not items:
             items = self.crud_string(tablename, "msg_no_match")
 
-        output.update(items=items, sortby=sortby)
+        output["items"] = items
+        output["sortby"] = sortby
 
         if "location_id" in r.target()[2] or "site_id" in r.target()[2]:
             # Add a map for search results
@@ -1435,12 +1429,11 @@ class S3Search(S3CRUD):
                                         window = True,
                                         window_hide = True
                                         )
-            response.s3.dataTableMap = map_popup
+            s3.dataTableMap = map_popup
 
         # Title and subtitle
-        title = self.crud_string(tablename, "title_search")
-        subtitle = self.crud_string(tablename, "msg_match")
-        output.update(title=title, subtitle=subtitle)
+        output["title"] = self.crud_string(tablename, "title_search")
+        output["subtitle"] = self.crud_string(tablename, "msg_match")
 
         # View
         response.view = self._view(r, "search.html")
@@ -1743,7 +1736,8 @@ class S3Search(S3CRUD):
         return output
 
     # -------------------------------------------------------------------------
-    def _check_search_autcomplete_search_simple_widget(self, widget):
+    @staticmethod
+    def _check_search_autcomplete_search_simple_widget(widget):
         """
             @todo: docstring
         """
@@ -1958,7 +1952,8 @@ class S3Search(S3CRUD):
         return json(output)
 
     # -------------------------------------------------------------------------
-    def save_search(self, r, **attr):
+    @staticmethod
+    def save_search(r, **attr):
         """
             @todo: docstring
         """
@@ -1968,11 +1963,14 @@ class S3Search(S3CRUD):
         component = r.component_name
         s3mgr = current.manager
         db = current.db
+        s3db = current.s3db
         session = current.session
         auth =  current.auth
+
         user_id = auth.user.id
         search_vars = jsonlib.load(r.body)
         s_vars = {}
+
         for i in search_vars.iterkeys():
             if str(i) == "criteria" :
                 s_dict = {}
@@ -1985,8 +1983,7 @@ class S3Search(S3CRUD):
                 key = str(i)
                 s_vars[key] = str(search_vars[i])
         search_str = cPickle.dumps(s_vars)
-        s3mgr.load("pr_save_search")
-        table = db.pr_save_search
+        table = s3db.pr_save_search
         query = (table.user_id == user_id) & \
                 (table.search_vars == search_str)
         if len (db(query).select(table.id)) == 0:

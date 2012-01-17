@@ -635,7 +635,8 @@ class S3GISConfigModel(S3Model):
              "gis_symbology",
              "gis_feature_class",
              "gis_marker_id",
-             "gis_projection_id"
+             "gis_projection_id",
+             "gis_config_form_setup"
             ]
 
     def model(self):
@@ -970,10 +971,11 @@ class S3GISConfigModel(S3Model):
                 gis_config_prep_helper = self.gis_config_prep_helper,
                 gis_config_id = config_id,
                 gis_marker_id = marker_id,
-                gis_projection_id = projection_id
+                gis_projection_id = projection_id,
                 )
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def gis_config_form_setup():
         """ Prepare the gis_config form """
 

@@ -959,9 +959,7 @@ def config():
 
     """ RESTful CRUD controller """
 
-    # Load Models
-    table = s3db.gis_config
-    response.s3.gis_config_form_setup()
+    s3db.gis_config_form_setup()
 
     # Pre-processor
     def prep(r):
@@ -980,6 +978,7 @@ def config():
         response.view = "gis/" + response.view
 
     if auth.is_logged_in():
+        table = s3db.gis_config
         ptable = s3db.pr_person
         query = (ptable.uuid == auth.user.person_uuid) & \
                 (table.pe_id == ptable.pe_id)

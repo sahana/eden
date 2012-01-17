@@ -125,7 +125,6 @@ def vehicle():
                         ]
                   ),
                 s3base.S3SearchLocationHierarchyWidget(
-                    gis,
                     name="vehicle_search_location",
                     comment=T("Search for vehicle by location."),
                     represent ="%(name)s",

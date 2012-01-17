@@ -1834,8 +1834,8 @@ class S3QueryBuilder(object):
             @param vars: dict of URL vars
         """
 
-        db = current.db
-        locations = db.gis_location
+        s3db = current.s3db
+        locations = s3db.gis_location
         table = resource.table
         bbox_query = None
 
@@ -1956,7 +1956,7 @@ class S3QueryBuilder(object):
             @param vars: dict of URL vars
         """
 
-        db = current.db
+        s3db = current.s3db
         manager = current.manager
         xml = manager.xml
         model = manager.model
@@ -2018,7 +2018,7 @@ class S3QueryBuilder(object):
                     continue
                 model.load(ktablename)
                 try:
-                    ktable = db[ktablename]
+                    ktable = s3db[ktablename]
                 except:
                     continue
                 if multiple:

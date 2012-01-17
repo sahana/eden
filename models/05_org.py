@@ -98,7 +98,6 @@ def org_office_controller():
                     cols = 3
                   ),
                   s3base.S3SearchLocationHierarchyWidget(
-                    gis,
                     name="office_search_location",
                     comment=T("Search for office by location."),
                     represent ="%(name)s",

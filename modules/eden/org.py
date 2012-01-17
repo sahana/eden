@@ -844,6 +844,7 @@ class S3OfficeModel(S3Model):
         settings = current.deployment_settings
 
         messages = current.messages
+        NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         location_id = self.gis_location_id

@@ -161,8 +161,9 @@ def s3_dev_toolbar():
         DIV(BEAUTIFY(current.request), _class="dbg_hidden", _id="request-%s" % u),
         BUTTON("session", _onclick="$('#session-%s').slideToggle()" % u),
         DIV(BEAUTIFY(current.session), _class="dbg_hidden", _id="session-%s" % u),
-        BUTTON("response", _onclick="$('#response-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.response), _class="dbg_hidden", _id="response-%s" % u),
+        # Disabled response as it breaks S3SearchLocationWidget
+        #BUTTON("response", _onclick="$('#response-%s').slideToggle()" % u),
+        #DIV(BEAUTIFY(current.response), _class="dbg_hidden", _id="response-%s" % u),
         BUTTON("db stats", _onclick="$('#db-stats-%s').slideToggle()" % u),
         DIV(BEAUTIFY(dbstats), _class="dbg_hidden", _id="db-stats-%s" % u),
         SCRIPT("$('.dbg_hidden').hide()")

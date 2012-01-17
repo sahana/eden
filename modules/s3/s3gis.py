@@ -3508,7 +3508,6 @@ class GIS(object):
         cache = current.response.s3.cache
         settings = current.deployment_settings
         public_url = settings.get_base_public_url()
-        s3mgr = current.manager
 
         cachetable = s3db.gis_cache
         MAP_ADMIN = session.s3.system_roles.MAP_ADMIN
@@ -3651,13 +3650,11 @@ class GIS(object):
             if type(script) == SCRIPT:
                 html.append(script)
             elif script.startswith("http"):
-                html.append(
-                    SCRIPT(_type="text/javascript",
-                           _src=script))
+                html.append(SCRIPT(_type="text/javascript",
+                                   _src=script))
             else:
-                html.append(
-                    SCRIPT(_type="text/javascript",
-                           _src=URL(c="static", f=script)))
+                html.append(SCRIPT(_type="text/javascript",
+                                   _src=URL(c="static", f=script)))
 
         debug = session.s3.debug
         if debug:
@@ -4988,8 +4985,7 @@ class GeoRSSLayer(MultiRecordLayer):
             if download:
                 # Download layer to the Cache
                 # @ToDo: Call directly without going via HTTP
-                #        s3mgr = current.manager
-                # @ToDo: Make this async by using Celery (also use this for the refresh time)
+                # @ToDo: Make this async by using S3Task (also use this for the refresh time)
                 fields = ""
                 if self.data:
                     fields = "&data_field=%s" % self.data

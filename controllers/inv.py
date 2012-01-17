@@ -95,7 +95,6 @@ def warehouse():
                     cols = 3
                   ),
                   s3base.S3SearchLocationHierarchyWidget(
-                    gis,
                     name="warehouse_search_location",
                     comment=T("Search for warehouse by location."),
                     represent ="%(name)s",
