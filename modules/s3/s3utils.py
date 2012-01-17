@@ -327,16 +327,18 @@ def s3_debug(message, value=None):
 
        Provide an easy, safe, systematic way of handling Debug output
        (print to stdout doesn't work with WSGI deployments)
+       
+       @ToDo: Should be using python's built-in logging module?
     """
 
     try:
-        output = "S3 Debug: " + str(message)
+        output = "S3 Debug: %s" % str(message)
         if value:
-            output += ": " + str(value)
+            "%s: %s" % (output, str(value))
     except:
-        output = "S3 Debug: " + unicode(message)
+        output = u"S3 Debug: %s" % unicode(message)
         if value:
-            output += ": " + unicode(value)
+            u"%s: %s" % (output, unicode(value))
 
     print >> sys.stderr, output
 

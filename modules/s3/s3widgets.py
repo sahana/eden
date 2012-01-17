@@ -1133,11 +1133,14 @@ class S3LocationDropdownWidget(FormWidget):
         empty = self.empty
 
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        cache = current.response.s3.cache
+        table = s3db.gis_location
+
         query = (table.level == level)
         locations = db(query).select(table.name,
                                      table.id,
-                                     cache = current.gis.cache)
+                                     cache = cache)
         opts = []
         for location in locations:
             opts.append(OPTION(location.name, _value=location.id))
@@ -1257,7 +1260,7 @@ class S3LocationSelectorWidget(FormWidget):
             # Ensure that we have a name for the Location visible
             settings.gis.building_name = True
             # Set the variables to what they would be for a Location
-            stable = db[self.site_type]
+            stable = s3db[self.site_type]
             field = stable.location_id
             if value:
                 query = (stable.id == value)

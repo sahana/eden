@@ -8,8 +8,6 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3mgr.load("msg_outbox")
-
 # Options Menu (available in all Functions' Views)
 s3_menu(module)
 
@@ -23,16 +21,14 @@ def index():
 
 # =============================================================================
 def compose():
-
     """ Compose a Message which can be sent to a pentity via a number of different communications channels """
 
-    return response.s3.msg_compose()
+    return eden.msg.msg_compose()
 
 # -----------------------------------------------------------------------------
 # Send Outbound Messages - to be called via cron
 # -----------------------------------------------------------------------------
 def process_email():
-
     """ Controller for Email processing - to be called via cron """
 
     msg.process_outbox(contact_method = "EMAIL")
@@ -40,7 +36,6 @@ def process_email():
 
 # -----------------------------------------------------------------------------
 def process_sms():
-
     """ Controller for SMS processing - to be called via cron """
 
     msg.process_outbox(contact_method = "SMS")
@@ -48,7 +43,6 @@ def process_sms():
 
 # -----------------------------------------------------------------------------
 def process_twitter():
-
     """ Controller for Twitter message processing - to be called via cron """
 
     msg.process_outbox(contact_method = "TWITTER")
@@ -56,7 +50,6 @@ def process_twitter():
 
 # =============================================================================
 def outbox():
-
     """ View the contents of the Outbox """
 
     if not auth.s3_logged_in():
@@ -64,7 +57,7 @@ def outbox():
         redirect(URL(c="default", f="user", args="login"))
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     table.message_id.label = T("Message")
     table.message_id.writable = False
@@ -111,7 +104,7 @@ def log():
         redirect(URL(c="default", f="user", args="login"))
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # CRUD Strings
     ADD_MESSAGE = T("Add Message")
@@ -154,7 +147,7 @@ def tropo():
         try:
             row_id = s.parameters["row_id"]
             # This is an Outbound message which we've requested Tropo to send for us
-            table = db.msg_tropo_scratch
+            table = s3db.msg_tropo_scratch
             query = (table.row_id == row_id)
             row = db(query).select().first()
             # Send the message
@@ -162,9 +155,11 @@ def tropo():
             t.call(to=row.recipient, network=row.network)
             t.say(row.message)
             # Update status to sent in Outbox
-            db(db.msg_outbox.id == row.row_id).update(status=2)
+            outbox = s3db.msg_outbox
+            db(outbox.id == row.row_id).update(status=2)
             # Set message log to actioned
-            db(db.msg_log.id == row.message_id).update(actioned=True)
+            log = s3db.msg_log
+            db(log.id == row.message_id).update(actioned=True)
             # Clear the Scratchpad
             db(query).delete()
             return t.RenderJson()
@@ -181,11 +176,11 @@ def tropo():
                 except:
                     # SyntaxError: s.from => invalid syntax (why!?)
                     fromaddress = ""
-                db.msg_log.insert(uuid=uuid, fromaddress=fromaddress,
-                                  recipient=recipient, message=message,
-                                  inbound=True)
+                s3db.msg_log.insert(uuid=uuid, fromaddress=fromaddress,
+                                    recipient=recipient, message=message,
+                                    inbound=True)
                 # Send the message to the parser
-                reply = parserdooth(message)
+                reply = msg.parse_message(message)
                 t.say([reply])
                 return t.RenderJson()
             except:
@@ -196,114 +191,6 @@ def tropo():
         # GET request or some random POST
         pass
 
-
-# -----------------------------------------------------------------------------
-# Parser for inbound messages
-# -----------------------------------------------------------------------------
-def parserdooth(message):
-
-    """
-        This function hopes to grow into a full fledged page that offers
-        customizable routing with keywords
-            - Dooth = Messenger
-    """
-    import difflib
-    import string
-
-    primary_keywords = ["get", "give", "show"] # Equivalent keywords in one list
-    contact_keywords = ["email", "mobile", "facility", "clinical", "security", "phone", "status", "hospital", "person", "organisation"]
-    keywords = string.split(message)
-    query = []
-    name = ""
-    reply = ""
-    for word in keywords:
-        match = difflib.get_close_matches(word, primary_keywords + contact_keywords)
-        if match:
-            query.append(match[0])
-        else:
-            name = word
-
-#   ------------ Person Search [get name person phone email]------------
-    if "person" in query:
-        result = person_search(name)
-
-        if len(result) > 1:
-            return T("Multiple Matches")
-        if len(result) == 1:
-            if "Person" in result[0]["name"]:
-                reply = result[0]["name"]
-                table3 = db.pr_contact
-                if "email" in query:
-                    query = (table3.pe_id == result[0]["id"]) & \
-                            (table3.contact_method == "EMAIL")
-                    recipient = db(query).select(table3.value,
-                                                 orderby = table3.priority,
-                                                 limitby=(0, 1)).first()
-                    reply = "%s Email->%s" % (reply, recipient.value)
-                if "mobile" in query:
-                    query = (table3.pe_id == result[0]["id"]) & \
-                            (table3.contact_method == "SMS")
-                    recipient = db(query).select(table3.value,
-                                                 orderby = table3.priority,
-                                                 limitby=(0, 1)).first()
-                    reply = "%s Mobile->%s" % (reply,
-                                               recipient.value)
-
-        if len(reply) == 0:
-            return T("No Match")
-
-        return reply
-
-#   -------------Hospital Search [example: get name hospital facility status ] --------------
-    if "hospital" in query:
-        table = db.hms_hospital
-        resource = s3mgr.define_resource("hms", "hospital")
-        result = resource.search_simple(fields=["name"],label = str(name))
-        if len(result) > 1:
-            return T("Multiple Matches")
-
-        if len(result) == 1:
-            hospital = db(table.id == result[0]).select().first()
-            reply = "%s %s (%s) " % (reply, hospital.name,
-                                     T("Hospital"))
-            if "phone" in query:
-                reply = reply + "Phone->" + str(hospital.phone_emergency)
-            if "facility" in query:
-                reply = reply + "Facility status " + str(table.facility_status.represent(hospital.facility_status))
-            if "clinical" in query:
-                reply = reply + "Clinical status " + str(table.facility_status.represent(hospital.clinical_status))
-            if "security" in query:
-                reply = reply + "Security status " + str(table.facility_status.represent(hospital.security_status))
-
-        if len(reply) == 0:
-            return T("No Match")
-
-        return reply
-
-#   -----------------Organization search [example: get name organisation phone]------------------------------
-    if "organisation" in query:
-        table = db.org_organisation
-        resource = s3mgr.define_resource("org", "organisation")
-        result = resource.search_simple(fields=["name"], label = str(name))
-        if len(result) > 1:
-            return T("Multiple Matches")
-
-        if len(result) == 1:
-            organisation = db(table.id == result[0]).select().first()
-            reply = "%s %s (%s) " % (reply, organisation.name,
-                                     T("Organization"))
-            if "phone" in query:
-                reply = reply + "Phone->" + str(organisation.donation_phone)
-            if "office" in query:
-                reply = reply + "Address->" + s3_get_db_field_value(tablename = "org_office",
-                                                                    fieldname = "address",
-                                                                    look_up_value = organisation.id)
-        if len(reply) == 0:
-            return T("No Match")
-
-        return reply
-
-    return "Please provide one of the keywords - person, hospital, organisation"
 
 # =============================================================================
 def twitter_search():
@@ -331,7 +218,7 @@ def setting():
     """ SMS settings for the messaging framework """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
     table.outgoing_sms_handler.label = T("Outgoing SMS handler")
     table.outgoing_sms_handler.comment = DIV(DIV(_class="tooltip",
         _title="%s|%s" % (T("Outgoing SMS Handler"),
@@ -387,7 +274,7 @@ def email_settings():
     """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     table.inbound_mail_server.label = T("Server")
     table.inbound_mail_type.label = T("Type")
@@ -434,7 +321,7 @@ def modem_settings():
         redirect(URL(c="admin", f="index"))
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     table.modem_port.label = T("Port")
     table.modem_baud.label = T("Baud")
@@ -487,7 +374,7 @@ def smtp_to_sms_settings():
     """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     table.address.label = T("Address")
     table.subject.label = T("Subject")
@@ -527,7 +414,7 @@ def api_settings():
     """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     table.url.label = T("URL")
     table.to_variable.label = T("To variable")
@@ -574,7 +461,7 @@ def tropo_settings():
     """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     table.token_messaging.label = T("Tropo Messaging Token")
     table.token_messaging.comment = DIV(DIV(_class="stickytip",
@@ -613,7 +500,7 @@ def twitter_settings():
         redirect(URL(c="admin", f="index"))
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -682,7 +569,7 @@ def group():
 
     module = "pr"
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # Hide unnecessary fields
     table.description.readable = table.description.writable = False
@@ -706,7 +593,7 @@ def group_membership():
 
     module = "pr"
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # Hide unnecessary fields
     table.description.readable = table.description.writable = False
@@ -718,15 +605,11 @@ def group_membership():
 
 # -----------------------------------------------------------------------------
 def contact():
-
     """ Allows the user to add, update and delete their contacts """
 
-    # Load Model
-    s3mgr.load("pr_address")
-
     module = "pr"
-    table = db.pr.contact
-    ptable = db.pr_person
+    table = s3db.pr.contact
+    ptable = s3db.pr_person
 
     if auth.is_logged_in() or auth.basic():
         query = (ptable.uuid == auth.user.person_uuid)
@@ -746,7 +629,7 @@ def contact():
 
     def msg_contact_onvalidation(form):
         """ This onvalidation method adds the person id to the record """
-        ptable = db.pr_person
+        ptable = s3db.pr_person
         query = (ptable.uuid == auth.user.person_uuid)
         person = db(query).select(ptable.pe_id,
                                   limitby=(0, 1)).first().pe_id
@@ -758,8 +641,8 @@ def contact():
     def msg_contact_restrict_access(r):
         """ The following restricts update and delete access to contacts not owned by the user """
         if r.id :
-            table = db.pr.contact
-            ptable = db.pr_person
+            table = s3db.pr.contact
+            ptable = s3db.pr_person
             query = (ptable.uuid == auth.user.person_uuid)
             person = db(query).select(ptable.pe_id,
                                       limitby=(0, 1)).first().pe_id
@@ -808,30 +691,31 @@ def search():
 
 # -----------------------------------------------------------------------------
 def recipient_represent(id, default_label=""):
-            """ Simplified output as-compared to pr_pentity_represent """
-            output = ""
-            table = s3db.pr_pentity
-            pe = db(table.pe_id == id).select(table.instance_type,
+    """ Simplified output as-compared to pr_pentity_represent """
+
+    output = ""
+    table = s3db.pr_pentity
+    pe = db(table.pe_id == id).select(table.instance_type,
+                                      limitby=(0, 1)).first()
+    if not pe:
+        return output
+    instance_type = pe.instance_type
+    table = db.get(instance_type, None)
+    if not table:
+        return output
+    if instance_type == "pr_person":
+        person = db(table.pe_id == id).select(table.first_name,
+                                              table.middle_name,
+                                              table.last_name,
                                               limitby=(0, 1)).first()
-            if not pe:
-                return output
-            instance_type = pe.instance_type
-            table = db.get(instance_type, None)
-            if not table:
-                return output
-            if instance_type == "pr_person":
-                person = db(table.pe_id == id).select(table.first_name,
-                                                      table.middle_name,
-                                                      table.last_name,
-                                                      limitby=(0, 1)).first()
-                if person:
-                    output = s3_fullname(person)
-            elif instance_type == "pr_group":
-                group = db(table.pe_id == id).select(table.name,
-                                                     limitby=(0, 1)).first()
-                if group:
-                    output = group.name
-            return output
+        if person:
+            output = s3_fullname(person)
+    elif instance_type == "pr_group":
+        group = db(table.pe_id == id).select(table.name,
+                                             limitby=(0, 1)).first()
+        if group:
+            output = group.name
+    return output
 
 # -----------------------------------------------------------------------------
 def person_search(value, type=None):
@@ -839,8 +723,8 @@ def person_search(value, type=None):
     """ Search for People & Groups which match a search term """
 
     # Shortcuts
-    groups = db.pr_group
-    persons = db.pr_person
+    groups = s3db.pr_group
+    persons = s3db.pr_person
 
     items = []
 
@@ -894,8 +778,8 @@ def subscription():
 def load_search(id):
     var = {}
     var["load"] = id
-    s3mgr.load("pr_save_search")
-    rows = db(db.pr_save_search.id == id).select(db.pr_save_search.ALL)
+    table = s3db.pr_save_search
+    rows = db(table.id == id).select()
     import cPickle
     for row in rows:
         search_vars = cPickle.loads(row.search_vars)
@@ -923,39 +807,39 @@ def load_search(id):
 
 # -----------------------------------------------------------------------------
 def get_criteria(id):
-        s = ""
-        try:
-            id = id.replace("&apos;","'")
-            search_vars = cPickle.loads(id)
-            s = "<p>"
-            pat = '_'
-            for var in search_vars.iterkeys():
-                if var == "criteria" :
-                    c_dict = search_vars[var]
-                    #s = s + crud_string("pr_save_search", "Search Criteria")
-                    for j in c_dict.iterkeys():
-                        if not re.match(pat,j):
-                            st = str(j)
-                            st = st.replace("_search_"," ")
-                            st = st.replace("_advanced","")
-                            st = st.replace("_simple","")
-                            st = st.replace("text","text matching")
-                            """st = st.replace(search_vars["function"],"")
-                            st = st.replace(search_vars["prefix"],"")"""
-                            st = st.replace("_"," ")
-                            s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
-                elif var == "simple" or var == "advanced":
-                    continue
-                else:
-                    if var == "function":
-                        v1 = "Resource Name"
-                    elif var == "prefix":
-                        v1 = "Module"
-                    s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
-            s = s + "</p>"
-            return s
-        except:
-            return s
+    s = ""
+    try:
+        id = id.replace("&apos;","'")
+        search_vars = cPickle.loads(id)
+        s = "<p>"
+        pat = '_'
+        for var in search_vars.iterkeys():
+            if var == "criteria" :
+                c_dict = search_vars[var]
+                #s = s + crud_string("pr_save_search", "Search Criteria")
+                for j in c_dict.iterkeys():
+                    if not re.match(pat,j):
+                        st = str(j)
+                        st = st.replace("_search_"," ")
+                        st = st.replace("_advanced","")
+                        st = st.replace("_simple","")
+                        st = st.replace("text","text matching")
+                        """st = st.replace(search_vars["function"],"")
+                        st = st.replace(search_vars["prefix"],"")"""
+                        st = st.replace("_"," ")
+                        s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
+            elif var == "simple" or var == "advanced":
+                continue
+            else:
+                if var == "function":
+                    v1 = "Resource Name"
+                elif var == "prefix":
+                    v1 = "Module"
+                s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
+        s = s + "</p>"
+        return s
+    except:
+        return s
 
 
 # -----------------------------------------------------------------------------
@@ -963,8 +847,8 @@ def check_updates(user_id):
     #Check Updates for all the Saved Searches Subscribed by the User
     message = "<h2>Saved Searches' Update</h2>"
     flag = 0
-    s3mgr.load("pr_save_search")
-    rows = db(db.pr_save_search.user_id == user_id).select(db.pr_save_search.ALL)
+    table = s3db.pr_save_search
+    rows = db(table.user_id == user_id).select()
     for row in rows :
         if row.subscribed:
             records = load_search(row.id)
@@ -982,24 +866,23 @@ def check_updates(user_id):
 # -----------------------------------------------------------------------------
 def subscription_messages():
 
+    table = s3db.msg_subscription
     subs = None
     if request.args[0] == "daily":
-        subs = db(db.msg_subscription.subscription_frequency == "daily").select(
-                                                                                db.msg_subscription.ALL)
+        subs = db(table.subscription_frequency == "daily").select()
     if request.args[0] == "weekly":
-        subs = db(db.msg_subscription.subscription_frequency=="weekly").select(
-                                                                               db.msg_subscription.ALL)
+        subs = db(table.subscription_frequency == "weekly").select()
     if request.args[0] == "monthly":
-        subs = db(db.msg_subscription.subscription_frequency=="monthly").select(
-                                                                                db.msg_subscription.ALL)
+        subs = db(table.subscription_frequency == "monthly").select()
     if subs:
         for sub in subs:
-            #check if the message is not empty
+            # Check if the message is not empty
             message = check_updates(sub.user_id)
             if message == None:
                 return
             person_id = auth.s3_user_to_person(sub.user_id)
-            rows = db(db.pr_person.id == person_id).select(db.pr_person.ALL)
+            ptable = s3db.pr_person
+            rows = db(ptable.id == person_id).select()
             for row in rows:
                 pe_id = row.pe_id
                 break
@@ -1018,14 +901,14 @@ def subscription_messages():
 #
 @auth.s3_requires_membership(1)
 def tag():
-
     """ RESTful CRUD controller """
+
+
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
 
     # Load all models
     s3mgr.model.load_all_models()
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
     table.resource.requires = IS_IN_SET(db.tables)
 
     s3mgr.configure(tablename, listadd=False)

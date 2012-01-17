@@ -97,7 +97,6 @@ def template():
                             update_next = URL(c="survey", f="template"),
                             )
         return True
-    response.s3.prep = prep
 
      # Post-processor
     def postp(r, output):
@@ -130,15 +129,15 @@ def template():
 
 
         # Add a button to show what the questionnaire looks like
-        # s3_action_buttons(r)
-        # s3.actions = s3.actions + [
-                               # dict(label=str(T("Display")),
-                                    # _class="action-btn",
-                                    # url=URL(c=module,
-                                            # f="templateRead",
-                                            # args=["[id]"])
-                                   # ),
-                              # ]
+#        s3_action_buttons(r)
+#        s3.actions = s3.actions + [
+#                               dict(label=str(T("Display")),
+#                                    _class="action-btn",
+#                                    url=URL(c=module,
+#                                            f="templateRead",
+#                                            args=["[id]"])
+#                                   ),
+#                              ]
 
         # Add some highlighting to the rows
         query = (r.table.status == 3) # Status of closed
@@ -152,7 +151,6 @@ def template():
         rows = db(query).select(r.table.id)
         s3.dataTableStyleWarning.extend(str(row.id) for row in rows)
         return output
-    response.s3.postp = postp
 
     if request.ajax:
         post = request.post_vars
@@ -168,6 +166,9 @@ def template():
                 print "Failed to insert record"
             return
 
+    response.s3.prep = prep
+
+    response.s3.postp = postp
     rheader = response.s3.survey_template_rheader
     # remove CRUD generated buttons in the tabs
     s3mgr.configure(tablename,
@@ -199,8 +200,7 @@ def templateRead():
             output["form"] = None
             output["item"] = form
             output["title"] = crud_strings.title_question_details
-        return output
-    response.s3.postp = postp
+            return output
 
     # remove CRUD generated buttons in the tabs
     s3mgr.configure(tablename,
@@ -209,6 +209,7 @@ def templateRead():
                     deletable=False,
                    )
 
+    response.s3.postp = postp
     r = s3mgr.parse_request(prefix, resourcename, args=[template_id])
     output  = r(method = "read", rheader=s3.survey_template_rheader)
     del output["list_btn"] # Remove the list button
@@ -234,8 +235,7 @@ def templateSummary():
             output["sortby"] = [[0,"asc"]]
             output["title"] = crud_strings.title_analysis_summary
             output["subtitle"] = crud_strings.subtitle_analysis_summary
-        return output
-    response.s3.postp = postp
+            return output
 
     # remove CRUD generated buttons in the tabs
     s3mgr.configure(tablename,
@@ -243,6 +243,7 @@ def templateSummary():
                     deletable=False,
                    )
 
+    response.s3.postp = postp
     output = s3_rest_controller(prefix,
                                 resourcename,
                                 method = "list",
@@ -362,7 +363,6 @@ def series():
             if r.id and (r.method == "update"):
                 table.template_id.writable = False
         return True
-    response.s3.prep = prep
 
     def postp(r, output):
         if request.ajax == True and r.method == "read":
@@ -385,7 +385,6 @@ def series():
             else:
                 s3.survey_answerlist_dataTable_post(r)
         return output
-    response.s3.postp = postp
 
     # Remove CRUD generated buttons in the tabs
     s3mgr.configure("survey_series",
@@ -393,9 +392,11 @@ def series():
     s3mgr.configure("survey_complete",
                     listadd=False,
                     deletable=False)
+    response.s3.prep = prep
+    response.s3.postp = postp
     output = s3_rest_controller(prefix,
                                 resourcename,
-                                rheader=s3.survey_series_rheader)
+                                rheader=response.s3.survey_series_rheader)
     return output
 
 def series_export_formatted():
@@ -409,8 +410,8 @@ def series_export_formatted():
         import xlwt
     except ImportError:
         output = s3_rest_controller(prefix,
-                                    resourcename,
-                                    rheader=s3.survey_series_rheader)
+                                resourcename,
+                                rheader=response.s3.survey_series_rheader)
         return output
 
     fixedWidth = True
@@ -426,9 +427,9 @@ def series_export_formatted():
     if len(request.args) != 1:
         output = s3_rest_controller(prefix,
                                     resourcename,
-                                    rheader=s3.survey_series_rheader)
+                                    rheader=response.s3.survey_series_rheader)
         return output
-
+    series_id = request.args[0]
     # Get the translation dictionary
     langDict = dict()
     if "translationLanguage" in request.post_vars:
@@ -442,18 +443,18 @@ def series_export_formatted():
             except:
                 langDict = dict()
 
-    series_id = request.args[0]
-    template = s3.survey_getTemplateFromSeries(series_id)
+    template = response.s3.survey_getTemplateFromSeries(series_id)
     template_id = template.id
-    series = s3.survey_getSeries(series_id)
-    sectionList = s3.survey_getAllSectionsForSeries(series_id)
+    series = response.s3.survey_getSeries(series_id)
+    sectionList = response.s3.survey_getAllSectionsForSeries(series_id)
     title = "%s (%s)" % (series.name, template.name)
     title = survey_T(title, langDict)
     layout = []
     for section in sectionList:
         sectionName = survey_T(section["name"], langDict)
-        rules =  s3.survey_getQstnLayoutRules(template_id,
-                                              section["section_id"])
+        rules =  response.s3.survey_getQstnLayoutRules(template_id,
+                                                       section["section_id"]
+                                                      )
         layoutRules = [sectionName, rules]
         layout.append(layoutRules)
     logo = os.path.join(request.folder,
@@ -478,7 +479,7 @@ def series_export_formatted():
                                   layoutBlocks = layoutBlocks
                                  )
     if DEBUG:
-        #print >> sys.stdout, preliminaryMatrix
+#        print >> sys.stdout, preliminaryMatrix
         print >> sys.stdout, "preliminaryMatrix layoutBlocks"
         print >> sys.stdout, layoutBlocks
     layoutBlocks.align()
@@ -494,14 +495,15 @@ def series_export_formatted():
                                    True,
                                    langDict,
                                    showSectionLabels = False,
-                                   #layoutBlocks = layoutBlocks
+#                                   layoutBlocks = layoutBlocks
                                   )
-    # if DEBUG:
-        # print >> sys.stdout, "formattedMatrix"
-        # print >> sys.stdout, formattedMatrix
-        # print >> sys.stdout, "formattedMatrix layoutBlocks"
-        # print >> sys.stdout, layoutBlocks
-
+#    if DEBUG:
+#        print >> sys.stdout, "formattedMatrix"
+#        print >> sys.stdout, formattedMatrix
+#        print >> sys.stdout, "formattedMatrix layoutBlocks"
+#        print >> sys.stdout, layoutBlocks
+    f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
+    print >> f, matrix1
     matrix = matrix1
     matrixAnswers = matrix2
     ######################################################################
@@ -603,6 +605,8 @@ def series_export_formatted():
 #        if question["type"] == "Grid":
 #            matrix.boxRange(row, col, endrow-1, endcol-1)
 #        return (endrow, endcol)
+
+     
 #    matrix = DataMatrix()
 #    matrixAnswers = DataMatrix()
 #    template = response.s3.survey_getTemplateFromSeries(series_id)
@@ -627,6 +631,7 @@ def series_export_formatted():
 #    cell.merge(vertical=1, horizontal=len(title))
 #    matrix.addElement(cell)
 #    row += 2
+
 #    for section in sectionList:
 #        col = 0
 #        row += 1
@@ -641,6 +646,7 @@ def series_export_formatted():
 #        startrow = row
 #        (row, col) = processRule(rules, row, col, matrix, matrixAnswers)
 #        matrix.boxRange(startrow, 0, row, col-1)
+
     ######################################################################
     #
     # Now take the matrix data type and generate a spreadsheet from it
@@ -659,13 +665,20 @@ def series_export_formatted():
         characters_in_cell = float(width-2)
         twips_per_row = 255 #default row height for 10 point font
         if cell.merged():
-            sheet.write_merge(cell.row,
-                              cell.row + cell.mergeV,
-                              cell.col,
-                              cell.col + cell.mergeH,
-                              text,
-                              style
-                             )
+            try:
+                sheet.write_merge(cell.row,
+                                  cell.row + cell.mergeV,
+                                  cell.col,
+                                  cell.col + cell.mergeH,
+                                  text,
+                                  style
+                                 )
+            except Exception as msg:
+                print >> sys.stderr, msg
+                print >> sys.stderr, "row: %s + vert: %s, col: %s + horiz %s" % (cell.row, cell.mergeV, cell.col, cell.mergeH)
+                posn = "%s,%s"%(cell.row, cell.col)
+                if matrix.matrix[posn]:
+                    print >> sys.stderr, matrix.matrix[posn]
             rows = math.ceil((len(text) / characters_in_cell) / (1 + cell.mergeH))
         else:
             sheet.write(cell.row,
@@ -694,7 +707,7 @@ def series_export_formatted():
         else:
             zeroStyle = xlwt.XFStyle()
             finalStyle = xlwt.XFStyle()
-            for i in range(0, len(styleList)):
+            for i in range(0,len(styleList)):
                 finalStyle = mergeObjectDiff(finalStyle,
                                              listTemplate[styleList[i]],
                                              zeroStyle)
@@ -726,10 +739,10 @@ def series_export_formatted():
     noProtection.cell_locked = 0
 
     borders = xlwt.Borders()
-    borders.left = xlwt.Borders.THIN
-    borders.right = xlwt.Borders.THIN
-    borders.top = xlwt.Borders.THIN
-    borders.bottom = xlwt.Borders.THIN
+    borders.left = xlwt.Borders.DOTTED
+    borders.right = xlwt.Borders.DOTTED
+    borders.top = xlwt.Borders.DOTTED
+    borders.bottom = xlwt.Borders.DOTTED
 
     borderT1 = xlwt.Borders()
     borderT1.top = xlwt.Borders.THIN
@@ -765,6 +778,11 @@ def series_export_formatted():
     shadedFill.pattern_fore_colour = 0x16 # 25% Grey
     shadedFill.pattern_back_colour = 0x08 # Black
 
+    headingFill = xlwt.Pattern()
+    headingFill.pattern = xlwt.Pattern.SOLID_PATTERN
+    headingFill.pattern_fore_colour = 0x1F # ice_blue
+    headingFill.pattern_back_colour = 0x08 # Black
+
     styleTitle =  xlwt.XFStyle()
     styleTitle.font.height = 0x0140 # 320 twips, 16 points
     styleTitle.font.bold = True
@@ -776,6 +794,10 @@ def series_export_formatted():
     styleSubHeader = xlwt.XFStyle()
     styleSubHeader.font.bold = True
     styleSubHeader.alignment = alignWrap
+    styleSectionHeading = xlwt.XFStyle()
+    styleSectionHeading.font.bold = True
+    styleSectionHeading.alignment = alignWrap
+    styleSectionHeading.pattern = headingFill
     styleHint = xlwt.XFStyle()
     styleHint.protection = protection
     styleHint.font.height = 160 # 160 twips, 8 points
@@ -816,6 +838,7 @@ def series_export_formatted():
     styleList["styleTitle"] = styleTitle
     styleList["styleHeader"] = styleHeader
     styleList["styleSubHeader"] = styleSubHeader
+    styleList["styleSectionHeading"] = styleSectionHeading
     styleList["styleHint"] = styleHint
     styleList["styleText"] = styleText
     styleList["styleInstructions"] = styleInstructions
@@ -853,13 +876,20 @@ def series_export_formatted():
                 # and merge these styles in.
                 joinedStyles = matrix.joinedElementStyles(cell)
                 joinedStyle =  mergeStyles(styleList, joinedStyles)
-                sheet1.write_merge(cell.row,
-                                   cell.row + cell.mergeV,
-                                   cell.col,
-                                   cell.col + cell.mergeH,
-                                   unicode(cell.text),
-                                   joinedStyle
-                                   )
+                try:
+                    sheet1.write_merge(cell.row,
+                                       cell.row + cell.mergeV,
+                                       cell.col,
+                                       cell.col + cell.mergeH,
+                                       unicode(cell.text),
+                                       joinedStyle
+                                       )
+                except Exception as msg:
+                    print >> sys.stderr, msg
+                    print >> sys.stderr, "row: %s + vert: %s, col: %s + horiz %s" % (cell.row, cell.mergeV, cell.col, cell.mergeH)
+                    posn = "%s,%s"%(cell.row, cell.col)
+                    if matrix.matrix[posn]:
+                        print >> sys.stderr, matrix.matrix[posn]
             else:
                 sheet1.write(cell.row,
                              cell.col,
@@ -867,7 +897,7 @@ def series_export_formatted():
                              style
                              )
     if fixedWidth:
-        for col in range(maxCol + 1):
+        for col in range(maxCol+1):
             sheet1.col(col).width = cellWidth
 
 
@@ -946,10 +976,9 @@ def section():
     def prep(r):
         s3mgr.configure(r.tablename,
                         deletable = False,
-                        orderby = r.tablename + ".posn",
+                        orderby = r.tablename+".posn",
                         )
         return True
-    response.s3.prep = prep
 
      # Post-processor
     def postp(r, output):
@@ -958,14 +987,19 @@ def section():
             template_id = int(request.args[0])
         except:
             template_id = None
-        sectionSelect = s3.survey_section_select_widget(template_id)
+        sectionSelect = response.s3.survey_section_select_widget(template_id)
         output["sectionSelect"] = sectionSelect
         return output
+
+
+    response.s3.prep = prep
     response.s3.postp = postp
 
-    rheader = s3.survey_section_rheader
+    rheader = response.s3.survey_section_rheader
     output = s3_rest_controller(prefix, resourcename, rheader=rheader)
     return output
+
+
 
 def question():
     """ RESTful CRUD controller """
@@ -976,14 +1010,16 @@ def question():
 
     def prep(r):
         s3mgr.configure(r.tablename,
-                        orderby = r.tablename + ".posn",
+                        orderby = r.tablename+".posn",
                         )
         return True
-    response.s3.prep = prep
 
      # Post-processor
     def postp(r, output):
         return output
+
+
+    response.s3.prep = prep
     response.s3.postp = postp
 
     rheader = response.s3.survey_section_rheader
@@ -1051,7 +1087,6 @@ def newAssessment():
                 response.confirmation = \
                     s3.crud_strings["survey_complete"].msg_record_created
         return True
-    response.s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
@@ -1115,8 +1150,9 @@ def newAssessment():
             output["subtitle"] = tranForm
             output["form"] = form
         return output
-    response.s3.postp = postp
 
+    response.s3.prep = prep
+    response.s3.postp = postp
     output = s3_rest_controller(prefix,
                                 resourcename,
                                 method = "create",
@@ -1143,10 +1179,9 @@ def complete():
                 session.confirmation = T("Record created")
                 redirect(URL(c="survey",
                              f="complete",
-                             args=[r.id, "create"],
+                             args=[r.id,"create"],
                              vars = {}))
         return True
-    response.s3.prep = prep
 
     def postp(r, output):
         if r.method == "create" or r.method == "update":
@@ -1157,7 +1192,6 @@ def complete():
         else:
             s3.survey_answerlist_dataTable_post(r)
         return output
-    response.s3.postp = postp
 
     def import_xls(uploadFile):
         if series_id == None:
@@ -1174,8 +1208,8 @@ def complete():
         workbook = xlrd.open_workbook(file_contents=uploadFile)
         sheetR = workbook.sheet_by_name("Assessment")
         sheetM = workbook.sheet_by_name("Metadata")
-        header = ""
-        body = ""
+        header = ''
+        body = ''
         for row in xrange(1, sheetM.nrows):
             header += ',"%s"' % sheetM.cell_value(row, 0)
             code = sheetM.cell_value(row, 0)
@@ -1193,9 +1227,9 @@ def complete():
             elif type == "MultiOption":
                 answerList = []
             else:
-                answerList = ""
+                answerList = ''
             for col in range(count):
-                cell = sheetM.cell_value(row, 3 + col)
+                cell = sheetM.cell_value(row, 3+col)
                 (rowR, colR) = cell_to_rowcol2(cell)
                 try:
                     cellValue = sheetR.cell_value(rowR, colR)
@@ -1213,7 +1247,7 @@ def complete():
                 if cellValue != "":
                     if optionList != None:
                         if type == "Location":
-                            answerList[optionList[col]] = cellValue
+                            answerList[optionList[col]]=cellValue
                         elif type == "MultiOption":
                             answerList.append(optionList[col])
                         else:
@@ -1248,6 +1282,8 @@ def complete():
     s3mgr.configure("survey_complete",
                     listadd=False,
                     deletable=False)
+    response.s3.prep = prep
+    response.s3.postp = postp
     response.s3.xls_parser = import_xls
     output = s3_rest_controller(prefix, resourcename,
                                 csv_extra_fields=csv_extra_fields)
@@ -1260,17 +1296,19 @@ def answer():
     s3mgr.load(tablename)
     table = db[tablename]
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(prefix, resourcename)
     return output
 
 def analysis():
     """ Bespoke controller """
-
+    # Load Model
+#    tablename = "%s_%s" % (prefix, resourcename)
+#    s3mgr.load(tablename)
+#    table = db[tablename]
     try:
         template_id = request.args[0]
     except:
         pass
-
     s3mgr.configure("survey_complete",
                     listadd=False,
                     deletable=False)

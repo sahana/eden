@@ -4,15 +4,10 @@
     GIS
 """
 
-module = "gis"
-
 # Expose settings to views/modules
 _gis = response.s3.gis
 # Store old config to know whether we need to refresh options in zz_last
 _gis.old_config = session.s3.gis_config_id
-# For Bulk Importer
-s3.gis_import_csv = gis.import_csv
-s3.gis_set_default_location = gis.set_default_location
 
 # This is needed for onvalidation
 # The edit_L1..edit_L5 values are per country, and are in the gis_config
@@ -22,6 +17,10 @@ if s3_has_role(MAP_ADMIN):
 else:
     _gis.edit_Lx = deployment_settings.get_gis_edit_lx()
     _gis.edit_GR = deployment_settings.get_gis_edit_group()
+
+# For Bulk Importer
+s3.gis_import_csv = gis.import_csv
+s3.gis_set_default_location = gis.set_default_location
 
 # =============================================================================
 # Tasks to be callable async

@@ -235,7 +235,7 @@ if deployment_settings.has_module("inv") or \
                                      table.parent_item_category_id,
                                      # left = table.on(table.id == table.parent_item_category_id), Doesn't work
                                      limitby=(0, 1),
-                                     cache=(cache.ram, 60)).first()
+                                     cache=s3.cache).first()
 
                 if r.code and use_code:
                     represent_append = r.code
@@ -626,6 +626,17 @@ if deployment_settings.has_module("inv") or \
         def supply_item_controller():
             """ RESTful CRUD controller """
 
+            if "vehicle" in request.get_vars:
+                # Limit the Categories to just those with vehicles in
+                field = s3db.supply_item.item_category_id
+                field.requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                      "supply_item_category.id",
+                                                      "%(name)s",
+                                                      sort=True,
+                                                      filterby = "is_vehicle",
+                                                      filter_opts = [True])
+                                                    )
+            
             # Load models for components
             # Can't be done in prep, because the resource (& components) will
             # already be defined then

@@ -92,12 +92,17 @@ current.db = db
 # - store instances in current to be accessible from other modules #
 ####################################################################
 
-# Import the S3 Framework
-import s3 as s3base
-
 from gluon.tools import Mail
 mail = Mail()
 current.mail = mail
+
+from gluon.storage import Messages
+messages = Messages(T)
+current.messages = messages
+
+# Import the S3 Framework
+import s3 as s3base
+
 # AAA
 auth = s3base.AuthS3()
 current.auth = auth

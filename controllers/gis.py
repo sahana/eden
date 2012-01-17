@@ -34,13 +34,14 @@ def index():
     map = define_map(window=False,
                      toolbar=toolbar)
 
-    # Don't bother with breadcrumbs as thery use up real-estate needlessly
+    # Don't bother with breadcrumbs as they use up real-estate needlessly
     breadcrumbs = []
 
     # Provide access to the Personalised config
     pconfig = ""
+    config_id = session.s3.gis_config_id
     if auth.is_logged_in():
-        if session.s3.gis_config_id == 1:
+        if config_id == 1:
             pconfig = T("You are using the site-wide map configuration. To create or use a personal map configuration, click %(here)s") % \
                         dict(here=A(T("here"),
                                     _class="marron",
@@ -50,7 +51,7 @@ def index():
                                               vars={"person.uid":auth.user.person_uuid})))
         else:
             table = s3db.gis_config
-            query = (table.id == session.s3.gis_config_id)
+            query = (table.id == config_id)
             config = db(query).select(table.pe_id,
                                       limitby=(0, 1)).first()
             if config and config.pe_id:
@@ -767,7 +768,7 @@ def map_service_catalogue():
                                     _class=theclass))
         # Feature Layers
         type = "feature"
-        for row in db(db.gis_layer_feature.id > 0).select():
+        for row in db(s3db.gis_layer_feature.id > 0).select():
             if even:
                 theclass = "even"
                 even = False
@@ -810,7 +811,7 @@ def map_service_catalogue():
     else:
         # Simple List View
         for type in response.s3.gis.layer_types:
-            table = db["gis_layer_%s" % type]
+            table = s3db["gis_layer_%s" % type]
             query = table.id > 0
             sqlrows = db(query).select()
             for row in sqlrows:
@@ -839,7 +840,7 @@ def map_service_catalogue():
                                     _class=theclass))
         # Feature Layers
         type = "feature"
-        table = db["gis_layer_%s" % type]
+        table = s3db["gis_layer_%s" % type]
         query = table.id > 0
         sqlrows = db(query).select()
         for row in sqlrows:
@@ -884,7 +885,7 @@ def layers_enable():
     if authorised:
         for type in response.s3.gis.layer_types:
             resourcename = "gis_layer_%s" % type
-            table = db[resourcename]
+            table = s3db[resourcename]
             query = table.id > 0
             sqlrows = db(query).select()
             for row in sqlrows:
@@ -915,7 +916,7 @@ def layers_enable():
                         # Do nothing
                         pass
         resourcename = "gis_layer_feature"
-        table = db[resourcename]
+        table = s3db[resourcename]
         query = table.id > 0
         sqlrows = db(query).select()
         for row in sqlrows:
@@ -979,8 +980,9 @@ def config():
         response.view = "gis/" + response.view
 
     if auth.is_logged_in():
-        query = (s3db.pr_person.uuid == auth.user.person_uuid) & \
-                (table.pe_id == s3db.pr_person.pe_id)
+        ptable = s3db.pr_person
+        query = (ptable.uuid == auth.user.person_uuid) & \
+                (table.pe_id == ptable.pe_id)
         personalised = db(query).select(table.id,
                                         limitby=(0, 1)).first()
         if personalised:
@@ -1066,7 +1068,7 @@ def layer_feature():
         for table in db.tables:
             if "location_id" in db[table]:
                 tables.append(table)
-        db.gis_layer_feature.resource.requires = IS_IN_SET(tables)
+        s3db.gis_layer_feature.resource.requires = IS_IN_SET(tables)
         return True
     response.s3.prep = prep
 
@@ -1417,7 +1419,7 @@ def layer_bing():
     # This layer should only ever have a single layer, so display this direct
     record = db(table.id > 0).select(table.id,
                                      limitby=(0, 1),
-                                     cache=gis.cache).first()
+                                     cache=s3.cache).first()
     if record:
         args = [str(record.id)]
     else:
@@ -1488,7 +1490,7 @@ def layer_google():
     # This layer should only ever have a single layer, so display this direct
     record = db(table.id > 0).select(table.id,
                                      limitby=(0, 1),
-                                     cache=gis.cache).first()
+                                     cache=s3.cache).first()
     if record:
         args = [str(record.id)]
     else:
@@ -1549,7 +1551,7 @@ def layer_yahoo():
     # This layer should only ever have a single layer, so display this direct
     record = db(table.id > 0).select(table.id,
                                      limitby=(0, 1),
-                                     cache=gis.cache).first()
+                                     cache=s3.cache).first()
     if record:
         args = [str(record.id)]
     else:
@@ -2069,7 +2071,7 @@ def cache_feed():
     resourcename = "cache"
 
     # Load Models
-    s3mgr.load("gis_cache")
+    #s3mgr.load("gis_cache")
 
     #if kml:
         # Unzip & Follow Network Links

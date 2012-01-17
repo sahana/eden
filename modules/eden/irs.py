@@ -540,15 +540,13 @@ class S3IRSModel(S3Model):
         """
 
         T = current.T
+        s3db = current.s3db
         msg = current.msg
         response = current.response
         s3 = response.s3
 
         if r.representation == "html" and \
            r.name == "ireport" and r.id and not r.component:
-
-            current.manager.load("msg_outbox")
-            msg_compose = s3.msg_compose
 
             record = r.record
             text = "%s %s:%s; %s" % (record.name,
@@ -561,12 +559,12 @@ class S3IRSModel(S3Model):
                                              map="google",
                                              text=text)
 
-            output = msg_compose(type="SMS",
-                                 recipient_type = "pr_person",
-                                 message = message,
-                                 redirect_module = "irs",
-                                 redirect_function = "ireport",
-                                 redirect_args = r.id)
+            output = s3db.msg_compose(type="SMS",
+                                      recipient_type = "pr_person",
+                                      message = message,
+                                      redirect_module = "irs",
+                                      redirect_function = "ireport",
+                                      redirect_args = r.id)
 
             # Maintain RHeader for consistency
             rheader = irs_rheader(r)
