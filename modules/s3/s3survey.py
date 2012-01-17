@@ -1310,31 +1310,9 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         if self.labelLeft:
             height = max(height, mergeWV + 1)
             width += mergeWH + 1
-#            # Add padding below the input boxes
-#            if mergeLV > mergeWV:
-#                cellPadding = MatrixElement(row + 1 + mergeWV,col,"", style="styleText")
-#                cellPadding.merge(mergeWH,mergeLV - mergeWV - 1)
-#                matrix.addElement(cellPadding)
-#            # Add padding below the label
-#            if mergeLV < mergeWV:
-#                cellPadding = MatrixElement(row + 1 + mergeLV,col-1-mergeLH,"", style="styleText")
-#                cellPadding.merge(mergeLH,mergeWV - mergeLV - 1)
-#                matrix.addElement(cellPadding)
-#                height = mergeWV + 1
         else:
             height += mergeWV + 1
             width = max(width, mergeWH + 1)
-#            # Add padding to make the widget the same width as the label
-#            if mergeLH > mergeWH:
-#                cellPadding = MatrixElement(row,col+1+mergeWH,"", style="styleText")
-#                cellPadding.merge(mergeLH - mergeWH - 1, mergeLV)
-#                matrix.addElement(cellPadding)
-#            # Add padding to make the label the same width as the widget
-#            if mergeLH < mergeWH:
-#                cellPadding = MatrixElement(row + 1 + mergeLV,col+1+mergeWH,"", style="styleText")
-#                cellPadding.merge(mergeWH - mergeLH - 1, mergeWV)
-#                matrix.addElement(cellPadding)
-
         self.addPaddingAroundWidget(matrix, startrow, startcol, mergeLH+1, mergeLV+1, mergeWH+1, mergeWV+1)
         # Add widget padding
         self.addPaddingToCell(matrix, startrow, startcol, startrow + height, startcol + width)
@@ -1794,8 +1772,8 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                 col += lwidth
             else:
                 row += lheight
-            endrow = row + lheight
-            endcol = col + lwidth
+            endrow = startrow + lheight
+            endcol = startcol + lwidth
             if self.selectionInstructions != None:
                 cell = MatrixElement(row,
                                      col,
@@ -1851,7 +1829,8 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             else:
                 row += oheight
         if self.singleRow:
-            endrow = row + 1
+            if endrow < row + 1:
+                endrow = row + 1
             if endcol < col:
                 endcol = col
         else:
@@ -2018,10 +1997,14 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
 ##########################################################################
 class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     """
+        ***************************************
+        **** MULTIPLE CHANGES HAVE OCCURRED ***
+        **** REALLY NEEDS TO BE REWRITTEN  ****
+        ***************************************
         Location widget: Question Type widget
 
         provides a widget for the survey module that will link to the
-        gis_locaton table, and provide the record if a match exists.
+        gis_location table, and provide the record if a match exists.
 
         Available metadata for this class:
         Help message: A message to help with completing the question
@@ -2056,6 +2039,11 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
 #                                 "Longitude",
 #                                ]
 #        self.locationLabel = self.hierarchyAnswers[0:-2]
+        self.xlsWidgetSize = [12,0]
+
+    def canGrowHorizontal(self):
+        return True
+
 
     def getAnswer(self):
         """

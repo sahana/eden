@@ -218,7 +218,10 @@ if deployment_settings.has_module(module):
                     else:
                         name = backupName
                     code = "STD-%s" % loc
-                    type = "Location"
+                    if loc == "Lat" or loc == "Lon":
+                        type = "Numeric"
+                    else:
+                        type = "Location"
                     posn += 1
                     addQuestion(template_id, name, code, "", type, posn)
 
@@ -2353,6 +2356,8 @@ $("#chart_btn").click(function(){
             for row in rows:
                 locWidget = getdefaultLocationQuestion(row.id)
                 complete_id = locWidget.question["complete_id"]
+                if "answer" not in locWidget.question:
+                    continue
                 answer = locWidget.question["answer"]
                 if locWidget != None:
                     record = locWidget.getLocationRecord(complete_id, answer)

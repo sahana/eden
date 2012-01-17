@@ -1110,24 +1110,25 @@ def newAssessment():
                             args=[series_id]
                             )
             tranForm = FORM(_action=urlexport)
-            tranTable = TABLE()
-            tr = TR()
-            tr.append(INPUT(_type='radio',
-                                _name='translationLanguage',
-                                _value="Default",
-                                _checked=True,
-                               ))
-            tr.append(LABEL("Default"))
-            tranTable.append(tr)
-            for translation in translationList:
+            if len(translationList) > 0:
+                tranTable = TABLE()
                 tr = TR()
                 tr.append(INPUT(_type='radio',
                                     _name='translationLanguage',
-                                    _value=translation["code"],
+                                    _value="Default",
+                                    _checked=True,
                                    ))
-                tr.append(LABEL(translation["language"]))
+                tr.append(LABEL("Default"))
                 tranTable.append(tr)
-            tranForm.append(tranTable)
+                for translation in translationList:
+                    tr = TR()
+                    tr.append(INPUT(_type='radio',
+                                        _name='translationLanguage',
+                                        _value=translation["code"],
+                                       ))
+                    tr.append(LABEL(translation["language"]))
+                    tranTable.append(tr)
+                tranForm.append(tranTable)
             exportBtn = INPUT(_type="submit",
                               _id="export_btn",
                               _name="Export_Spreadsheet",
