@@ -237,7 +237,7 @@ class S3ComponentTabs:
         self.tabs = [S3ComponentTab(t) for t in tabs]
 
     # -------------------------------------------------------------------------
-    def render(self, r, check_active):
+    def render(self, r):
 
         rheader_tabs = []
 
