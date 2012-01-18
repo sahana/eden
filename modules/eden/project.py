@@ -218,7 +218,8 @@ class S3ProjectModel(S3Model):
                                   Field("code",
                                         label = T("Code"),
                                         readable=False,
-                                        writable=False),
+                                        writable=False
+                                        ),
                                   Field("description", "text",
                                         label = T("Description")),
                                   Field("start_date", "date",
@@ -232,6 +233,14 @@ class S3ProjectModel(S3Model):
                                         writable=False,
                                         label = T("Duration")),
 
+                                  Field("calendar",
+                                        readable=False if drr else True,
+                                        writable=False if drr else True,
+                                        label = T("Calendar"),
+                                        requires = IS_NULL_OR(IS_URL()),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Calendar"),
+                                                                        T("URL to a Google Calendar to display on the project timeline.")))),
                                   currency_type(
                                             readable=False if drr else True,
                                             writable=False if drr else True,
@@ -329,6 +338,12 @@ class S3ProjectModel(S3Model):
                                                                 tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
                                      label = T("Project"),
                                      ondelete = "CASCADE")
+
+        # ---------------------------------------------------------------------
+        # Custom Methods
+        self.set_method(tablename,
+                        method="timeline",
+                        action=self.project_timeline)
 
         # Components
         # Organisations
@@ -740,6 +755,55 @@ class S3ProjectModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_timeline(r, **attr):
+        """
+            Display the project on a Simile Timeline
+
+            http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
+
+            Currently this just displays a Google Calendar
+
+            @ToDo: Add Milestones
+            @ToDo: Filters for different 'layers'
+            @ToDo: export milestones/tasks as .ics
+        """
+
+        if r.representation == "html" and r.name == "project":
+
+            T = current.T
+            request = current.request
+            response = current.response
+            s3 = response.s3
+        
+            calendar = r.record.calendar
+
+            # Add core Simile Code
+            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
+
+            # Control our code in static/scripts/S3/s3.timeline.js
+            s3.js_global.append("S3.timeline.calendar = '%s';" % calendar)
+
+            # Create the DIV
+            item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")
+
+            output = dict(item=item)
+
+            output["title"] = T("Project Calendar")
+
+            # Maintain RHeader for consistency
+            if "rheader" in attr:
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
+
+            response.view = "timeline.html"
+            return output
+
+        else:
+            raise HTTP(501, BADMETHOD)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2010,24 +2074,49 @@ def project_rheader(r, tabs=[]):
             drr = settings.get_project_drr()
             pca = settings.get_project_community_activity()
 
+            system_roles = current.session.s3.system_roles
+            ADMIN = system_roles.ADMIN
+
             if r.name == "project":
-                # @ToDo: integrate tabs?
+                # Tabs
+                tabs = [(T("Basic Details"), None)]
+                if drr:
+                    tabs.append((T("Organizations"), "organisation"))
+
+                admin = auth.s3_has_role(ADMIN)
+                #staff = auth.s3_has_role("STAFF")
+                staff = True
+                if admin or drr:
+                    tabs.append((T("Communities") if pca else T("Activities"), "activity"))
+                if staff and not drr:
+                    tabs.append((T("Milestones"), "milestone"))
+                if not drr:
+                    tabs.append((T("Tasks"), "task"))
+                if drr:
+                    tabs.append((T("Documents"), "document"))
+                elif admin:
+                    tabs.append((T("Attachments"), "document"))
+                if record.calendar:
+                    tabs.append((T("Calendar"), "timeline"))
+
                 rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                row3 = ""
                 if drr:
                     row2 = TR(
                         TH("%s: " % table.countries_id.label),
                         table.countries_id.represent(record.countries_id),
                         )
-                    row3 = ""
                 else:
                     row2 = TR(
                         TH("%s: " % table.organisation_id.label),
                         table.organisation_id.represent(record.organisation_id)
                         )
-                    row3 = TR(
-                        TH("%s: " % table.end_date.label),
-                        record.end_date or ""
-                        )
+                    if record.end_date:
+                        row3 = TR(
+                            TH("%s: " % table.end_date.label),
+                            table.end_date.represent(record.end_date)
+                            )
 
                 rheader = DIV(TABLE(
                     TR(

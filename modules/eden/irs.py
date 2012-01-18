@@ -571,7 +571,9 @@ class S3IRSModel(S3Model):
 
             # Maintain RHeader for consistency
             if "rheader" in attr:
-                output["rheader"] = attr["rheader"](r)
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
 
             output["title"] = T("Send Dispatch Update")
             response.view = "msg/compose.html"
@@ -608,8 +610,8 @@ class S3IRSModel(S3Model):
             itable = s3db.doc_image
             dtable = s3db.doc_document
 
-            # Create the DIV
-            item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")
+            # Add core Simile Code
+            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
 
             # Add our data
             # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
@@ -668,78 +670,28 @@ class S3IRSModel(S3Model):
             data["events"] = events
             data = json.dumps(data)
 
-            data = """
-S3.timeline = Object();
-S3.timeline.data = %s;""" % data
-            s3.js_global.append(data)
-
-            # Add core Simile Code
-            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
-
-            # Add our code to instantiate Simile
-            # //theme.autoWidth = true;
             code = "".join(("""
-S3.timeline.onLoad = function() {
-    var tl_el = document.getElementById("s3timeline");
-    S3.timeline.eventSource = new Timeline.DefaultEventSource();
-    var theme = Timeline.ClassicTheme.create();
-    theme.timeline_start = new Date('""", tl_start.isoformat(), """');
-    theme.timeline_stop  = new Date('""", tl_end.isoformat(), """');
-    theme.event.bubble.width = 320;
-    theme.event.bubble.height = 180;
-    var now = Timeline.DateTime.parseIso8601DateTime('""", now.isoformat(), """')
-    var bandInfos = [
-        Timeline.createBandInfo({
-            width:          '90%',
-            intervalUnit:   Timeline.DateTime.MONTH,
-            intervalPixels: 140,
-            eventSource:    S3.timeline.eventSource,
-            date:           now,
-            theme:          theme
-        }),
-        Timeline.createBandInfo({
-            overview:       true,
-            width:          '10%',
-            intervalUnit:   Timeline.DateTime.YEAR,
-            intervalPixels: 200,
-            eventSource:    S3.timeline.eventSource,
-            date:           now
-        })
-    ];
-    bandInfos[1].syncWith = 0;
-    bandInfos[1].highlight = true;
-    S3.timeline.tl = Timeline.create(tl_el, bandInfos, Timeline.HORIZONTAL);
-    var url = '.';
-    S3.timeline.eventSource.loadJSON(S3.timeline.data, url);
-    S3.timeline.tl.layout();
-}
-S3.timeline.resizeTimerID = null;
-S3.timeline.onResize = function() {
-    if (S3.timeline.resizeTimerID == null) {
-        S3.timeline.resizeTimerID = window.setTimeout(function() {
-            S3.timeline.resizeTimerID = null;
-            S3.timeline.tl.layout();
-        }, 500);
-    }
-}"""))
+S3.timeline.data = """, data, """;
+S3.timeline.tl_start = '""", tl_start.isoformat(), """';
+S3.timeline.tl_end = '""", tl_end.isoformat(), """';
+S3.timeline.now = '""", now.isoformat(), """';
+"""))
+    
+            # Control our code in static/scripts/S3/s3.timeline.js
             s3.js_global.append(code)
-            s3.jquery_ready.append("""
-$(window).load(function() {
-    SimileAjax.History.enabled = false;
-    S3.timeline.onLoad();
-});
-$(window).resize(function() {
-    S3.timeline.onResize();
-});""")
+
+            # Create the DIV
+            item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")
 
             output = dict(item = item)
 
             # Maintain RHeader for consistency
             if "rheader" in attr:
-                output["rheader"] = attr["rheader"](r)
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
 
-            title = T("Incident Timeline")
-            output["title"] = title
+            output["title"] = T("Incident Timeline")
             response.view = "timeline.html"
             return output
 

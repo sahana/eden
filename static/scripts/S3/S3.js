@@ -6,6 +6,7 @@
 // Global variable to store all of our variables inside
 var S3 = Object();
 S3.gis = Object();
+S3.timeline = Object();
 S3.JSONRequest = Object(); // Used to store and abort JSON requests
 S3.TimeoutVar = Object(); // Used to store and abort JSON requests
 

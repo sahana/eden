@@ -1293,7 +1293,9 @@ class S3Compose(S3CRUD):
 
             # Maintain RHeader for consistency
             if "rheader" in attr:
-                output["rheader"] = attr["rheader"](r)
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
 
             output["title"] = title
             #output["subtitle"] = subtitle
