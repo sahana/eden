@@ -433,6 +433,7 @@ if auth.permission.format in ("html"):
                 ]],
             ],
         }
+
     # -------------------------------------------------------------------------
     hrm_menu = {
         "menu": [],
@@ -629,17 +630,17 @@ if auth.permission.format in ("html"):
                 [T("Assets"), False, aURL(c="asset", f="asset"),
                 [
                     [T("New"), False, aURL(p="create", c="asset", f="asset",
-                                        args="create")],
+                                           args="create")],
                     [T("List All"), False, aURL(c="asset", f="asset")],
                     [T("Search"), False, aURL(c="asset", f="asset",
-                                            args="search")],
+                                              args="search")],
                     [T("Import"), False, aURL(p="create", c="asset", f="asset",
-                                            args="import")],
+                                              args="import")],
                 ]],
                 [T("Items"), False, aURL(c="asset", f="item"),
                 [
                     [T("New"), False, aURL(p="create", c="asset", f="item",
-                                        args="create")],
+                                           args="create")],
                     [T("List All"), False, aURL(c="asset", f="item")],
                 ]],
             ]
@@ -726,11 +727,9 @@ if auth.permission.format in ("html"):
         "cr": {
             "menu": [
                 [ # @ToDo - Fix s3.crud_strings["cr_shelter"].subtitle_list
-                            T("Camps") if deployment_settings.get_ui_camp() \
-                                    else T("Shelters"),
-                                    False, aURL(f="shelter"), [
-                                            [T("New"), False, aURL(p="create", f="shelter", args="create")],
-                                            [T("List All"), False, aURL(f="shelter")],
+                T("Camps") if deployment_settings.get_ui_camp() else T("Shelters"), False, aURL(f="shelter"), [
+                    [T("New"), False, aURL(p="create", f="shelter", args="create")],
+                    [T("List All"), False, aURL(f="shelter")],
                     # @ToDo Search by type, services, location, available space
                     #[T("Search"), False, URL(f="shelter", args="search")],
                 ]],
@@ -873,7 +872,7 @@ if auth.permission.format in ("html"):
                         ]],
                         [T("Events"), False, aURL(c="event", f="event"), [
                             [T("New Event"), False, aURL(p="create", c="event", f="event",
-                                                        args="create")],
+                                                         args="create")],
                             [T("View All"), False, aURL(c="event", f="event")]
                         ]],
                     ]   \
@@ -881,7 +880,7 @@ if auth.permission.format in ("html"):
                     [
                         [T("Events"), False, aURL(c="event", f="event"), [
                             [T("New Event"), False, aURL(p="create", c="event", f="event",
-                                                        args="create")],
+                                                         args="create")],
                             [T("View All"), False, aURL(c="event", f="event")]
                         ]]
                     ],
@@ -955,12 +954,12 @@ if auth.permission.format in ("html"):
             "menu": [
                 [T("Hospitals"), False, aURL(f="hospital", args="search"), [
                     [T("New"), False, aURL(p="create", f="hospital",
-                                        args="create")],
+                                           args="create")],
                     [T("Search"), False, aURL(f="hospital", args="search")],
                     [T("List All"), False, aURL(f="hospital")],
                     #["----", False, None],
                     #[T("Show Map"), False, URL(c="gis", f="map_viewing_client",
-                                            #vars={"kml_feed" : "%s/hms/hospital.kml" %
+                                               #vars={"kml_feed" : "%s/hms/hospital.kml" %
                                                     #s3.base_url,
                                                     #"kml_name" : "Hospitals_"})],
                 ]],
@@ -979,44 +978,47 @@ if auth.permission.format in ("html"):
                     #[T("Home"), False, aURL(c="inv", f="index")],
                     [T("Warehouses"), False, aURL(c="inv", f="warehouse"), [
                         [T("New"), False, aURL(p="create", c="inv",
-                                            f="warehouse",
-                                            args="create")],
+                                               f="warehouse",
+                                               args="create")],
                         [T("List All"), False, aURL(c="inv", f="warehouse")],
                         [T("Search"), False, aURL(c="inv", f="warehouse",
-                                                args="search")],
-                        [T("Import"), False, aURL(p="create", c="inv", f="warehouse",
-                                                args=["import"])],
+                                                  args="search")],
+                        [T("Import"), False, aURL(p="create", c="inv",
+                                                  f="warehouse",
+                                                  args=["import"])],
                     ]],
                     [T("Inventories"), False, aURL(c="inv", f="warehouse"), [
-                        [T("Search Inventory Items"), False, aURL(c="inv", f="inv_item",
-                                                                args="search")],
+                        [T("Search Inventory Items"), False, aURL(c="inv",
+                                                                  f="inv_item",
+                                                                  args="search")],
                         [s3.crud_strings.inv_recv.title_search, False, aURL(c="inv", f="recv",
                                                                             args="search")],
                         [T("Import"), False, aURL(p="create", c="inv", f="warehouse",
-                                                args=["import"],
-                                                vars={"extra_data":True})],
+                                                  args=["import"],
+                                                  vars={"extra_data":True})],
                     ]],
                     [s3.crud_strings.inv_recv.subtitle_list, False, aURL(c="inv", f="recv"), [
                         [T("New"), False, aURL(p="create", c="inv",
-                                            f="recv",
-                                            args="create")],
+                                               f="recv",
+                                               args="create")],
                         [T("List All"), False, aURL(c="inv", f="recv")],
-                        [s3.crud_strings.inv_recv.title_search, False, aURL(c="inv", f="recv",
+                        [s3.crud_strings.inv_recv.title_search, False, aURL(c="inv",
+                                                                            f="recv",
                                                                             args="search")],
                     ]],
                     [T("Sent Shipments"), False, aURL(c="inv", f="send"), [
                         [T("New"), False, aURL(p="create", c="inv",
-                                            f="send",
-                                            args="create")],
+                                               f="send",
+                                               args="create")],
                         [T("List All"), False, aURL(c="inv", f="send")],
                     ]],
                     [T("Items"), False, aURL(c="supply", f="item"), [
                         [T("New"), False, aURL(p="create", c="supply",
-                                            f="item",
-                                            args="create")],
+                                               f="item",
+                                               args="create")],
                         [T("List All"), False, aURL(c="supply", f="item")],
                         [T("Search"), False, aURL(c="supply", f="catalog_item",
-                                                args="search")],
+                                                  args="search")],
                     ]],
 
                     # Catalog Items moved to be next to the Item Categories
@@ -1030,8 +1032,8 @@ if auth.permission.format in ("html"):
                     #
                     [T("Catalogs"), False, aURL(c="supply", f="catalog"), [
                         [T("New"), False, aURL(p="create", c="supply",
-                                            f="catalog",
-                                            args="create")],
+                                               f="catalog",
+                                               args="create")],
                         [T("List All"), False, aURL(c="supply", f="catalog")],
                         #[T("Search"), False, aURL(c="supply", f="catalog",
                         #                         args="search")],
@@ -1040,9 +1042,9 @@ if auth.permission.format in ("html"):
 
             "on_admin": [[T("Item Categories"), False, aURL(c="supply", f="item_category"), [
                     [T("New Item Category"), False, aURL(p="create",
-                                                        c="supply",
-                                                        f="item_category",
-                                                        args="create")],
+                                                         c="supply",
+                                                         f="item_category",
+                                                         args="create")],
                     [T("List All"), False, aURL(c="supply", f="item_category")]
                 ]]]
         },
@@ -1091,7 +1093,7 @@ if auth.permission.format in ("html"):
                     [T("Import Templates"), False, aURL(f="question_list",
                                                         args="import")],
                     [T("Import Completed Responses"), False, aURL(f="complete",
-                                                                args="import")]
+                                                                  args="import")]
                 ]],
                 ]
         },
@@ -1166,16 +1168,13 @@ if auth.permission.format in ("html"):
         # PATIENT / Patient Tracking Module
         # -------------------------------------------------------------------------
         "patient": {
-            "menu": [[T("Patients"),
-                    False, URL(f="patient"),[
-                        [T("New"), False,
-                        aURL(p="create", f="patient",
-                            args="create")],
-                        [T("List All"), False,
-                        aURL(f="patient")],
-                        [T("Search"), False,
-                        aURL(f="patient",
-                            args="search")]
+            "menu": [
+                    [T("Patients"), False, URL(f="patient"), [
+                        [T("New"), False, aURL(p="create", f="patient",
+                                               args="create")],
+                        [T("List All"), False, aURL(f="patient")],
+                        [T("Search"), False, aURL(f="patient",
+                                                  args="search")]
                     ]]],
         },
 
@@ -1213,7 +1212,7 @@ if auth.permission.format in ("html"):
         "req": {
             "menu": [[T("Requests"), False, aURL(c="req", f="req"), [
                         [T("New"), False, aURL(p="create", c="req", f="req",
-                                            args="create")],
+                                               args="create")],
                         [T("List All"), False, aURL(c="req", f="req")],
                         [T("List All Requested Items"), False, aURL(c="req", f="req_item")],
                         [T("List All Requested Skills"), False, aURL(c="req", f="req_skill")],
@@ -1241,10 +1240,10 @@ if auth.permission.format in ("html"):
                 [T("Vehicles"), False, aURL(c="vehicle", f="vehicle"),
                 [
                     [T("New"), False, aURL(p="create", c="vehicle", f="vehicle",
-                                        args="create")],
+                                           args="create")],
                     [T("List All"), False, aURL(c="vehicle", f="vehicle")],
                     [T("Search"), False, aURL(c="vehicle", f="vehicle",
-                                            args="search")],
+                                              args="search")],
                 ]],
             ]
         },

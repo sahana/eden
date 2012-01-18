@@ -6,4 +6,4 @@
 # python web2py.py -S eden -M -R applications/eden/static/scripts/tools/noop.py
 
 # Load all Models
-s3mgr.model.load_all_models()
+s3db.load_all_models()

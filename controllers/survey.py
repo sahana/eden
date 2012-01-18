@@ -502,8 +502,8 @@ def series_export_formatted():
 #        print >> sys.stdout, formattedMatrix
 #        print >> sys.stdout, "formattedMatrix layoutBlocks"
 #        print >> sys.stdout, layoutBlocks
-    f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
-    print >> f, matrix1
+    #f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
+    #print >> f, matrix1
     matrix = matrix1
     matrixAnswers = matrix2
     ######################################################################

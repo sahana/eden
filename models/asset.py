@@ -463,8 +463,8 @@ SCRIPT("""
                     table.location_id.readable = False
                     table.location_id.writable = False
                 elif type == "organisation":
-                    s3.crud_strings.asset_log.subtitle_create = T("Assign to Organisation")
-                    s3.crud_strings.asset_log.msg_record_created = T("Assigned to Organisation")
+                    s3.crud_strings.asset_log.subtitle_create = T("Assign to Organization")
+                    s3.crud_strings.asset_log.msg_record_created = T("Assigned to Organization")
                     table["organisation_id"].requires = IS_ONE_OF(db, "org_organisation.id",
                                                                   organisation_represent,
                                                                   orderby="org_organisation.name",
