@@ -1237,8 +1237,7 @@ def org_organisation_rheader(r, tabs=[]):
     return None
 
 # -----------------------------------------------------------------------------
-def org_office_rheader(r, tabs=[],
-                       force_show_inv=False):
+def org_office_rheader(r, tabs=[]):
 
     """ Office/Warehouse page headers """
 
@@ -1265,7 +1264,7 @@ def org_office_rheader(r, tabs=[],
             except:
                 pass
             try:
-                tabs = tabs + s3.inv_tabs(r, force_show_inv=force_show_inv)
+                tabs = tabs + s3.inv_tabs(r)
             except:
                 pass
 
