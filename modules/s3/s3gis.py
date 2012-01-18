@@ -452,24 +452,6 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_api_key(layer="google"):
-        """
-            Acquire API key from the database
-        """
-
-        if layer == "google":
-            apikey = Google().apikey
-        elif layer == "bing":
-            apikey = Bing().apikey
-        elif layer == "yahoo":
-            apikey = Yahoo().apikey
-        else:
-            return None
-
-        return apikey
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def get_bearing(lat_start, lon_start, lat_end, lon_end):
         """
             Given a Start & End set of Coordinates, return a Bearing
@@ -5325,15 +5307,13 @@ class Geocoder(object):
 
     def __init__(self):
         " Initializes the page content object "
-        self.api_key = self.get_api_key(type=None)
+        pass
 
     # -------------------------------------------------------------------------
     @staticmethod
     def get_api_key(type):
         " Acquire API key from the database "
-        gis = current.gis
-        if type:
-            return gis.get_api_key(type)
+        pass
 
 # -----------------------------------------------------------------------------
 class GoogleGeocoder(Geocoder):
@@ -5346,9 +5326,16 @@ class GoogleGeocoder(Geocoder):
     def __init__(self, location):
         " Initialise parent class & make any necessary modifications "
         Geocoder.__init__(self)
-        params = {"q": location, "key": self.get_api_key("google")}
+        params = {"q": location, "key": self.get_api_key()}
         self.url = "http://maps.google.com/maps/geo?%s" % urllib.urlencode(params)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_api_key():
+        " Acquire API key from the database "
+        GoogleLayer().apikey
+
+    # -------------------------------------------------------------------------
     def get_json(self):
         " Returns the output in JSON format "
         url = self.url
@@ -5365,9 +5352,16 @@ class YahooGeocoder(Geocoder):
     def __init__(self, location):
         " Initialise parent class & make any necessary modifications "
         Geocoder.__init__(self)
-        params = {"location": location, "appid": self.get_api_key("yahoo")}
+        params = {"location": location, "appid": self.get_api_key()}
         self.url = "http://local.yahooapis.com/MapsService/V1/geocode?%s" % urllib.urlencode(params)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_api_key():
+        " Acquire API key from the database "
+        YahooLayer().apikey
+
+    # -------------------------------------------------------------------------
     def get_xml(self):
         " Return the output in XML format "
         url = self.url

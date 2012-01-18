@@ -570,8 +570,8 @@ class S3IRSModel(S3Model):
                                  url = url)
 
             # Maintain RHeader for consistency
-            rheader = irs_rheader(r)
-            output["rheader"] = rheader
+            if "rheader" in attr:
+                output["rheader"] = attr["rheader"](r)
 
             output["title"] = T("Send Dispatch Update")
             response.view = "msg/compose.html"
@@ -607,13 +607,6 @@ class S3IRSModel(S3Model):
 
             itable = s3db.doc_image
             dtable = s3db.doc_document
-
-            output = dict()
-
-            if r.id:
-                # Maintain RHeader for consistency
-                rheader = irs_rheader(r)
-                output.update(rheader=rheader)
 
             # Create the DIV
             item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")
@@ -739,9 +732,14 @@ $(window).resize(function() {
     S3.timeline.onResize();
 });""")
 
-            title = T("Incident Timeline")
+            output = dict(item = item)
 
-            output.update(title=title, item=item)
+            # Maintain RHeader for consistency
+            if "rheader" in attr:
+                output["rheader"] = attr["rheader"](r)
+
+            title = T("Incident Timeline")
+            output["title"] = title
             response.view = "timeline.html"
             return output
 

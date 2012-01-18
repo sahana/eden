@@ -31,6 +31,8 @@
 
 __all__ = ["S3PersonEntity",
            "S3PersonModel",
+           "S3GroupModel",
+           "S3ContactModel",
            "S3PersonComponents",
            "S3SavedSearch",
            "S3PersonPresence",
@@ -126,10 +128,7 @@ class S3PersonModel(S3Model):
              "pr_age_group",
              "pr_age_group_opts",
              "pr_person_id",
-             "pr_group_id",
-             "pr_group_represent",
-             "pr_group_membership",
-             "pr_contact"]
+            ]
 
     def model(self):
 
@@ -138,6 +137,7 @@ class S3PersonModel(S3Model):
         request = current.request
         s3 = current.response.s3
         gis = current.gis
+        settings = current.deployment_settings
 
         pe_label = self.pr_pe_label
 
@@ -190,7 +190,7 @@ class S3PersonModel(S3Model):
             9:T("other")
         }
 
-        pr_religion_opts = self.settings.get_L10n_religions()
+        pr_religion_opts = settings.get_L10n_religions()
 
         pr_impact_tags = {
             1: T("injured"),
@@ -200,12 +200,12 @@ class S3PersonModel(S3Model):
             3: T("suffered financial losses")
         }
 
-        if self.settings.get_L10n_mandatory_lastname():
+        if settings.get_L10n_mandatory_lastname():
             last_name_validate = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
         else:
             last_name_validate = None
 
-        s3_date_format = self.settings.get_L10n_date_format()
+        s3_date_format = settings.get_L10n_date_format()
 
         tablename = "pr_person"
         table = self.define_table(tablename,
@@ -293,9 +293,9 @@ class S3PersonModel(S3Model):
                                                                             _href=URL(c="default", f="download",
                                                                                       args=image))) or
                                                                   T("No Picture"),
-                                        comment =  DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("Picture"),
-                                                                         T("Upload an image file here.")))),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Picture"),
+                                                                        T("Upload an image file here.")))),
                                   s3.comments(),
                                   *s3.meta_fields())
 
@@ -348,23 +348,23 @@ class S3PersonModel(S3Model):
                        main="first_name",
                        extra="last_name")
 
-        pr_person_id_comment = pr_person_comment(
+        person_id_comment = pr_person_comment(
                                     T("Person"),
                                     T("Type the first few characters of one of the Person's names."))
 
-        pr_person_id = S3ReusableField("person_id", db.pr_person,
-                                       sortby = ["first_name", "middle_name", "last_name"],
-                                       requires = IS_NULL_OR(IS_ONE_OF(db, "pr_person.id",
-                                                                       pr_person_represent,
-                                                                       orderby="pr_person.first_name",
-                                                                       sort=True,
-                                                                       error_message=T("Person must be specified!"))),
-                                       represent = lambda id, row=None: (id and \
+        person_id = S3ReusableField("person_id", db.pr_person,
+                                    sortby = ["first_name", "middle_name", "last_name"],
+                                    requires = IS_NULL_OR(IS_ONE_OF(db, "pr_person.id",
+                                                                    pr_person_represent,
+                                                                    orderby="pr_person.first_name",
+                                                                    sort=True,
+                                                                    error_message=T("Person must be specified!"))),
+                                    represent = lambda id, row=None: (id and \
                                                    [pr_person_represent(id)] or [NONE])[0],
-                                       label = T("Person"),
-                                       comment = pr_person_id_comment,
-                                       ondelete = "RESTRICT",
-                                       widget = S3PersonAutocompleteWidget())
+                                    label = T("Person"),
+                                    comment = person_id_comment,
+                                    ondelete = "RESTRICT",
+                                    widget = S3PersonAutocompleteWidget())
 
         # Components
         self.add_component("pr_group_membership", pr_person="person_id")
@@ -384,239 +384,6 @@ class S3PersonModel(S3Model):
         self.add_component("hrm_training", pr_person="person_id")
 
         # ---------------------------------------------------------------------
-        # Group
-        #
-        pr_group_types = {
-            1:T("Family"),
-            2:T("Tourist Group"),
-            3:T("Relief Team"),
-            4:T("other")
-        }
-
-        tablename = "pr_group"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("group_type", "integer",
-                                        requires = IS_IN_SET(pr_group_types, zero=None),
-                                        default = 4,
-                                        label = T("Group Type"),
-                                        represent = lambda opt: \
-                                                    pr_group_types.get(opt, UNKNOWN_OPT)),
-                                  Field("system", "boolean",
-                                        default=False,
-                                        readable=False,
-                                        writable=False),
-                                  Field("name",
-                                        label=T("Group Name"),
-                                        requires = IS_NOT_EMPTY()),
-                                  Field("description",
-                                        label=T("Group Description")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
-
-        # Field configuration
-        table.description.comment = DIV(DIV(_class="tooltip",
-                                            _title="%s|%s" % (T("Group description"),
-                                                              T("A brief description of the group (optional)"))))
-
-        # CRUD Strings
-        ADD_GROUP = T("Add Group")
-        LIST_GROUPS = T("List Groups")
-        s3.crud_strings[tablename] = Storage(
-            title_create = ADD_GROUP,
-            title_display = T("Group Details"),
-            title_list = LIST_GROUPS,
-            title_update = T("Edit Group"),
-            title_search = T("Search Groups"),
-            subtitle_create = T("Add New Group"),
-            subtitle_list = T("Groups"),
-            label_list_button = LIST_GROUPS,
-            label_create_button = ADD_GROUP,
-            label_delete_button = T("Delete Group"),
-            msg_record_created = T("Group added"),
-            msg_record_modified = T("Group updated"),
-            msg_record_deleted = T("Group deleted"),
-            msg_list_empty = T("No Groups currently registered"))
-
-        # Resource configuration
-        self.configure(tablename,
-                       super_entity="pr_pentity",
-                       main="name",
-                       extra="description")
-
-        # Reusable fields
-        pr_group_represent = lambda id: (id and [db.pr_group[id].name] or [NONE])[0]
-        pr_group_id = S3ReusableField("group_id", db.pr_group,
-                                      sortby="name",
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "pr_group.id",
-                                                                      "%(id)s: %(name)s",
-                                                                      filterby="system",
-                                                                      filter_opts=(False,))),
-                                      represent = pr_group_represent,
-                                      comment = \
-                                        DIV(A(s3.crud_strings.pr_group.label_create_button,
-                                              _class="colorbox",
-                                              _href=URL(c="pr", f="group", args="create",
-                                                        vars=dict(format="popup")),
-                                              _target="top",
-                                              _title=s3.crud_strings.pr_group.label_create_button),
-                                            DIV(DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Create Group Entry"),
-                                                                      T("Create a group entry in the registry."))))),
-                                      ondelete = "RESTRICT")
-
-        # Components
-        self.add_component("pr_group_membership", pr_group="group_id")
-
-        # ---------------------------------------------------------------------
-        # Group membership
-        #
-        resourcename = "group_membership"
-        tablename = "pr_group_membership"
-        table = self.define_table(tablename,
-                                  pr_group_id(label = T("Group")),
-                                  pr_person_id(label = T("Person")),
-                                  Field("group_head", "boolean",
-                                        label = T("Group Head"),
-                                        default=False),
-                                  Field("description",
-                                        label = T("Description")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
-
-        # Field configuration
-        table.group_head.represent = lambda group_head: \
-                                        (group_head and [T("yes")] or [""])[0]
-
-        # CRUD strings
-        request = current.request
-        if request.function in ("person", "group_membership"):
-            s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Membership"),
-                title_display = T("Membership Details"),
-                title_list = T("Memberships"),
-                title_update = T("Edit Membership"),
-                title_search = T("Search Membership"),
-                subtitle_create = T("Add New Membership"),
-                subtitle_list = T("Current Memberships"),
-                label_list_button = T("List All Memberships"),
-                label_create_button = T("Add Membership"),
-                label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Membership added"),
-                msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Memberships currently registered"))
-
-        elif request.function == "group":
-            s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Member"),
-                title_display = T("Membership Details"),
-                title_list = T("Group Members"),
-                title_update = T("Edit Membership"),
-                title_search = T("Search Member"),
-                subtitle_create = T("Add New Member"),
-                subtitle_list = T("Current Group Members"),
-                label_list_button = T("List Members"),
-                label_create_button = T("Add Group Member"),
-                label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Group Member added"),
-                msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Members currently registered"))
-
-        # Resource configuration
-        self.configure(tablename,
-                       list_fields=["id",
-                                    "group_id",
-                                    "person_id",
-                                    "group_head",
-                                    "description"
-                                   ])
-
-        # ---------------------------------------------------------------------
-        # Contact
-        #
-        # @ToDo: Provide widgets which can be dropped into the main person form to have
-        #        the relevant ones for that deployment/context collected on that same
-        #        form
-        #
-        contact_methods = S3Msg().CONTACT_OPTS
-
-        tablename = "pr_contact"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("contact_method",
-                                        length=32,
-                                        requires = IS_IN_SET(contact_methods,
-                                                             zero=None),
-                                        default = "SMS",
-                                        label = T("Contact Method"),
-                                        represent = lambda opt: \
-                                                    contact_methods.get(opt, UNKNOWN_OPT)),
-                                  Field("value",
-                                        label= T("Value"),
-                                        notnull=True,
-                                        requires = IS_NOT_EMPTY()),
-                                  Field("priority", "integer",
-                                        label= T("Priority"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Priority"),
-                                                                        T("What order to be contacted in."))),
-                                        requires = IS_IN_SET(range(1, 10), zero=None)),
-                                  s3.comments(),
-                                  *s3.meta_fields())
-
-        # Field configuration
-        table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                         pr_pentity_represent,
-                                         orderby="instance_type",
-                                         filterby="instance_type",
-                                         filter_opts=("pr_person", "pr_group"))
-
-        # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Contact Information"),
-            title_display = T("Contact Details"),
-            title_list = T("Contact Information"),
-            title_update = T("Edit Contact Information"),
-            title_search = T("Search Contact Information"),
-            subtitle_create = T("Add Contact Information"),
-            subtitle_list = T("Contact Information"),
-            label_list_button = T("List Contact Information"),
-            label_create_button = T("Add Contact Information"),
-            label_delete_button = T("Delete Contact Information"),
-            msg_record_created = T("Contact Information Added"),
-            msg_record_modified = T("Contact Information Updated"),
-            msg_record_deleted = T("Contact Information Deleted"),
-            msg_list_empty = T("No contact information available"))
-
-        # Resource configuration
-        self.configure(tablename,
-                       onvalidation=self.contact_onvalidation,
-                       deduplicate=self.contact_deduplicate,
-                       list_fields=["id",
-                                    "contact_method",
-                                    "value",
-                                    "priority",
-                                   ])
-
-        # ---------------------------------------------------------------------
-        # Emergency Contact Information
-        #
-        tablename = "pr_contact_emergency"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("name",
-                                        label= T("Name")),
-                                  Field("relationship",
-                                        label= T("Relationship")),
-                                  Field("phone",
-                                        label = T("Phone"),
-                                        requires = IS_NULL_OR(s3_phone_requires)),
-                                  s3.comments(),
-                                  *s3.meta_fields())
-
-        # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
         return Storage(
@@ -624,9 +391,7 @@ class S3PersonModel(S3Model):
             pr_gender_opts = pr_gender_opts,
             pr_age_group = pr_age_group,
             pr_age_group_opts = pr_age_group_opts,
-            pr_person_id = pr_person_id,
-            pr_group_id = pr_group_id,
-            pr_group_represent = pr_group_represent
+            pr_person_id = person_id,
         )
 
     # -------------------------------------------------------------------------
@@ -723,6 +488,291 @@ class S3PersonModel(S3Model):
                 item.method = item.METHOD.UPDATE
                 for citem in item.components:
                     citem.method = citem.METHOD.UPDATE
+
+# =============================================================================
+class S3GroupModel(S3Model):
+    """ Groups """
+
+    names = ["pr_group_id",
+             "pr_group_represent",
+             "pr_group_membership"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        request = current.request
+        s3 = current.response.s3
+
+        person_id = self.pr_person_id
+
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Group
+        #
+        pr_group_types = {
+            1:T("Family"),
+            2:T("Tourist Group"),
+            3:T("Relief Team"),
+            4:T("other")
+        }
+
+        tablename = "pr_group"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("group_type", "integer",
+                                        requires = IS_IN_SET(pr_group_types, zero=None),
+                                        default = 4,
+                                        label = T("Group Type"),
+                                        represent = lambda opt: \
+                                                    pr_group_types.get(opt, UNKNOWN_OPT)),
+                                  Field("system", "boolean",
+                                        default=False,
+                                        readable=False,
+                                        writable=False),
+                                  Field("name",
+                                        label=T("Group Name"),
+                                        requires = IS_NOT_EMPTY()),
+                                  Field("description",
+                                        label=T("Group Description")),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # Field configuration
+        table.description.comment = DIV(DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Group description"),
+                                                              T("A brief description of the group (optional)"))))
+
+        # CRUD Strings
+        ADD_GROUP = T("Add Group")
+        LIST_GROUPS = T("List Groups")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_GROUP,
+            title_display = T("Group Details"),
+            title_list = LIST_GROUPS,
+            title_update = T("Edit Group"),
+            title_search = T("Search Groups"),
+            subtitle_create = T("Add New Group"),
+            subtitle_list = T("Groups"),
+            label_list_button = LIST_GROUPS,
+            label_create_button = ADD_GROUP,
+            label_delete_button = T("Delete Group"),
+            msg_record_created = T("Group added"),
+            msg_record_modified = T("Group updated"),
+            msg_record_deleted = T("Group deleted"),
+            msg_list_empty = T("No Groups currently registered"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       super_entity="pr_pentity",
+                       main="name",
+                       extra="description")
+
+        # Reusable fields
+        group_represent = lambda id: (id and [db.pr_group[id].name] or [NONE])[0]
+        group_id = S3ReusableField("group_id", db.pr_group,
+                                   sortby="name",
+                                   requires = IS_NULL_OR(IS_ONE_OF(db, "pr_group.id",
+                                                                   "%(id)s: %(name)s",
+                                                                   filterby="system",
+                                                                   filter_opts=(False,))),
+                                   represent = group_represent,
+                                    comment = \
+                                        DIV(A(s3.crud_strings.pr_group.label_create_button,
+                                              _class="colorbox",
+                                              _href=URL(c="pr", f="group", args="create",
+                                                        vars=dict(format="popup")),
+                                              _target="top",
+                                              _title=s3.crud_strings.pr_group.label_create_button),
+                                            DIV(DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Create Group Entry"),
+                                                                      T("Create a group entry in the registry."))))),
+                                   ondelete = "RESTRICT")
+
+        # Components
+        self.add_component("pr_group_membership", pr_group="group_id")
+
+        # ---------------------------------------------------------------------
+        # Group membership
+        #
+        resourcename = "group_membership"
+        tablename = "pr_group_membership"
+        table = self.define_table(tablename,
+                                  group_id(label = T("Group")),
+                                  person_id(label = T("Person")),
+                                  Field("group_head", "boolean",
+                                        label = T("Group Head"),
+                                        default=False),
+                                  Field("description",
+                                        label = T("Description")),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # Field configuration
+        table.group_head.represent = lambda group_head: \
+                                        (group_head and [T("yes")] or [""])[0]
+
+        # CRUD strings
+        request = current.request
+        if request.function in ("person", "group_membership"):
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Membership"),
+                title_display = T("Membership Details"),
+                title_list = T("Memberships"),
+                title_update = T("Edit Membership"),
+                title_search = T("Search Membership"),
+                subtitle_create = T("Add New Membership"),
+                subtitle_list = T("Current Memberships"),
+                label_list_button = T("List All Memberships"),
+                label_create_button = T("Add Membership"),
+                label_delete_button = T("Delete Membership"),
+                msg_record_created = T("Membership added"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Membership deleted"),
+                msg_list_empty = T("No Memberships currently registered"))
+
+        elif request.function == "group":
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Member"),
+                title_display = T("Membership Details"),
+                title_list = T("Group Members"),
+                title_update = T("Edit Membership"),
+                title_search = T("Search Member"),
+                subtitle_create = T("Add New Member"),
+                subtitle_list = T("Current Group Members"),
+                label_list_button = T("List Members"),
+                label_create_button = T("Add Group Member"),
+                label_delete_button = T("Delete Membership"),
+                msg_record_created = T("Group Member added"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Membership deleted"),
+                msg_list_empty = T("No Members currently registered"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       list_fields=["id",
+                                    "group_id",
+                                    "person_id",
+                                    "group_head",
+                                    "description"
+                                   ])
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to response.s3
+        #
+        return Storage(
+            pr_group_id = group_id,
+            pr_group_represent = group_represent
+        )
+
+# =============================================================================
+class S3ContactModel(S3Model):
+    """ Person Contacts """
+
+    names = ["pr_contact"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        msg = current.msg
+        request = current.request
+        s3 = current.response.s3
+
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Contact
+        #
+        # @ToDo: Provide widgets which can be dropped into the main person form to have
+        #        the relevant ones for that deployment/context collected on that same
+        #        form
+        #
+        contact_methods = msg.CONTACT_OPTS
+
+        tablename = "pr_contact"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("contact_method",
+                                        length=32,
+                                        requires = IS_IN_SET(contact_methods,
+                                                             zero=None),
+                                        default = "SMS",
+                                        label = T("Contact Method"),
+                                        represent = lambda opt: \
+                                                    contact_methods.get(opt, UNKNOWN_OPT)),
+                                  Field("value",
+                                        label= T("Value"),
+                                        notnull=True,
+                                        requires = IS_NOT_EMPTY()),
+                                  Field("priority", "integer",
+                                        label= T("Priority"),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Priority"),
+                                                                        T("What order to be contacted in."))),
+                                        requires = IS_IN_SET(range(1, 10), zero=None)),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # Field configuration
+        table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                         pr_pentity_represent,
+                                         orderby="instance_type",
+                                         filterby="instance_type",
+                                         filter_opts=("pr_person", "pr_group"))
+
+        # CRUD Strings
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Contact Information"),
+            title_display = T("Contact Details"),
+            title_list = T("Contact Information"),
+            title_update = T("Edit Contact Information"),
+            title_search = T("Search Contact Information"),
+            subtitle_create = T("Add Contact Information"),
+            subtitle_list = T("Contact Information"),
+            label_list_button = T("List Contact Information"),
+            label_create_button = T("Add Contact Information"),
+            label_delete_button = T("Delete Contact Information"),
+            msg_record_created = T("Contact Information Added"),
+            msg_record_modified = T("Contact Information Updated"),
+            msg_record_deleted = T("Contact Information Deleted"),
+            msg_list_empty = T("No contact information available"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       onvalidation=self.contact_onvalidation,
+                       deduplicate=self.contact_deduplicate,
+                       list_fields=["id",
+                                    "contact_method",
+                                    "value",
+                                    "priority",
+                                   ])
+
+        # ---------------------------------------------------------------------
+        # Emergency Contact Information
+        #
+        tablename = "pr_contact_emergency"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("name",
+                                        label= T("Name")),
+                                  Field("relationship",
+                                        label= T("Relationship")),
+                                  Field("phone",
+                                        label = T("Phone"),
+                                        requires = IS_NULL_OR(s3_phone_requires)),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to response.s3
+        #
+        return Storage(
+        )
 
     # -------------------------------------------------------------------------
     @staticmethod

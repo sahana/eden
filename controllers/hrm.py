@@ -71,7 +71,9 @@ def index():
     """ Dashboard """
 
     if response.error:
-        return dict(r=None)
+        return dict(r=None,
+                    ns=None,
+                    nv=None)
 
     mode = session.s3.hrm.mode
     if mode is not None:
@@ -117,18 +119,21 @@ def index():
                                         vars={"human_resource.id": "[id]"}))]
 
     if r.interactive:
-        output.update(module_name=response.title)
+        output["module_name"] = response.title
         if session.s3.hrm.orgname:
-            output.update(orgname=session.s3.hrm.orgname)
+            output["orgname"] = session.s3.hrm.orgname
         response.view = "hrm/index.html"
         query = (table.deleted != True) & \
                 (table.status == 1) & org_filter
+        # Staff
         ns = db(query & (table.type == 1)).count()
+        # Volunteers
         nv = db(query & (table.type == 2)).count()
-        output.update(ns=ns, nv=nv)
+        output["ns"] = ns
+        output["nv"] = nv
 
         module_name = deployment_settings.modules[module].name_nice
-        output.update(title=module_name)
+        output["title"] = module_name
 
     return output
 

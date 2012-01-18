@@ -471,8 +471,9 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r = s3mgr.parse_request(prefix, resourcename)
 
     # Set method handlers
-    r.set_handler("copy", s3_copy)
     r.set_handler("barchart", s3_barchart)
+    r.set_handler("compose", s3base.S3Compose())
+    r.set_handler("copy", s3_copy)
     r.set_handler("report", s3base.S3Cube())
     r.set_handler("import", s3base.S3PDF(),
                   http = ["GET", "POST"],

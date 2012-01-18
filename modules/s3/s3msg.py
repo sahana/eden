@@ -38,7 +38,8 @@
 
 """
 
-__all__ = ["S3Msg"]
+__all__ = ["S3Msg",
+           "S3Compose"]
 
 import datetime
 import difflib
@@ -50,6 +51,7 @@ from gluon import current
 from gluon.html import *
 from gluon.http import redirect
 
+from s3crud import S3CRUD
 from s3utils import s3_debug
 from s3validators import IS_ONE_OF, IS_ONE_OF_EMPTY
 
@@ -62,6 +64,7 @@ TWITTER_MAX_CHARS = 140
 TWITTER_HAS_NEXT_SUFFIX = u' \u2026'
 TWITTER_HAS_PREV_PREFIX = u'\u2026 '
 
+# =============================================================================
 class S3Msg(object):
     """ Messaging framework """
 
@@ -333,7 +336,7 @@ class S3Msg(object):
                                 request.vars.group_id
                                 request.vars.hrm_id
             @param message: The default message text
-            @param url: Redirect to the specified url after message sent
+            @param url: Redirect to the specified URL() after message sent
         """
 
         T = current.T
@@ -1205,5 +1208,289 @@ class S3Msg(object):
 
         return True
 
-# END -------------------------------------------------------------------------
+# =============================================================================
+class S3Compose(S3CRUD):
+    """ RESTful method for messaging """
 
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            API entry point
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
+        manager = current.manager
+        if r.http in ("GET", "POST"):
+            output = self.compose(r, **attr)
+        else:
+            r.error(405, manager.ERROR.BAD_METHOD)
+        return output
+
+    # -------------------------------------------------------------------------
+    def compose(self, r, **attr):
+        """
+            Generate a form to send a message
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
+        T = current.T
+        auth = current.auth
+        manager = current.manager
+        session = current.session
+        response = current.response
+
+        url = r.url()
+        self.url = url
+
+        # @ToDo: Use API
+        if auth.is_logged_in() or auth.basic():
+            pass
+        else:
+            redirect(URL(c="default", f="user", args="login",
+                         vars={"_next" : url}))
+
+        #_vars = r.get_vars
+
+        self.recipients = None
+        form = self._compose_form()
+        # @ToDo: A 2nd Filter form
+        # if form.accepts(r.post_vars, session,
+                        # formname="compose",
+                        # keepvalues=True):
+            # query, errors = self._process_filter_options(form)
+            # if r.http == "POST" and not errors:
+                # self.resource.add_filter(query)
+            # _vars = form.vars
+       
+        # Apply method
+        resource = self.resource
+        representation = r.representation
+
+        if self.method == "compose":
+            #output = dict(items=items)
+            output = dict(form=form)
+        else:
+            r.error(501, manager.ERROR.BAD_METHOD)
+
+        # Complete the page
+        if representation == "html":
+            title = self.crud_string(self.tablename, "title_compose")
+            if not title:
+                title = T("Send Message")
+
+            # subtitle = self.crud_string(self.tablename, "subtitle_compose")
+            # if not subtitle:
+                # subtitle = ""
+
+            # Maintain RHeader for consistency
+            if "rheader" in attr:
+                output["rheader"] = attr["rheader"](r)
+
+            output["title"] = title
+            #output["subtitle"] = subtitle
+            #output["form"] = form
+            #response.view = self._view(r, "list_create.html")
+            response.view = self._view(r, "create.html")
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _compose_onvalidation(self, form):
+        """
+            Set the sender
+            Route the message
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+        msg = current.msg
+        session = current.session
+
+        vars = current.request.post_vars
+
+        url = self.url
+
+        recipients = self.recipients
+        if not recipients:
+            if not vars.pe_id:
+                session.error = T("Please enter the recipient(s)")
+                redirect(url)
+            else:
+                recipients = vars.pe_id
+
+        table = s3db.pr_person
+        query = (table.uuid == auth.user.person_uuid)
+        sender_pe_id = db(query).select(table.pe_id,
+                                        limitby=(0, 1)).first().pe_id
+        if msg.send_by_pe_id(recipients,
+                             vars.subject,
+                             vars.message,
+                             sender_pe_id,
+                             vars.pr_message_method):
+            # Trigger a Process Outbox
+            msg.process_outbox(contact_method = vars.pr_message_method)
+            session.confirmation = T("Check outbox for the message status")
+            redirect(url)
+        else:
+            session.error = T("Error in message")
+            redirect(url)
+
+    # -------------------------------------------------------------------------
+    def _compose_form(self):
+        """ Creates the form for composing the message """
+
+        resource = self.resource
+        table = resource.table
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        crud = current.crud
+        session = current.session
+        response = current.response
+        s3 = response.s3
+
+        ltable = s3db.msg_log
+        otable = s3db.msg_outbox
+
+        # @ToDo: read request.get_vars.message?
+        #ltable.message.default = message
+
+        # See if we have defined a custom recipient type for this table
+        # pr_person or pr_group
+        recipient_type = self._config("msg_recipient_type", None)
+
+        # See if we have defined a custom default contact method for this table
+        type = self._config("msg_contact_method", "SMS")
+        otable.pr_message_method.default = type
+
+        ltable.pe_id.writable = ltable.pe_id.readable = False
+        ltable.sender.writable = ltable.sender.readable = False
+        ltable.fromaddress.writable = ltable.fromaddress.readable = False
+        ltable.verified.writable = ltable.verified.readable = False
+        ltable.verified_comments.writable = ltable.verified_comments.readable = False
+        ltable.actioned.writable = ltable.actioned.readable = False
+        ltable.actionable.writable = ltable.actionable.readable = False
+        ltable.actioned_comments.writable = ltable.actioned_comments.readable = False
+
+        ltable.subject.label = T("Subject")
+        ltable.message.label = T("Message")
+        #ltable.priority.label = T("Priority")
+
+        if "pe_id" in table:
+            records = resource.sqltable(as_list=True, start=None, limit=None)
+            recipients = [record["pe_id"] for record in records]
+        elif "person_id" in table:
+            # @ToDo: Optimise through a Join
+            records = resource.sqltable(as_list=True, start=None, limit=None)
+            persons = [record["person_id"] for record in records]
+            table = s3db.pr_person
+            records = db(table.id.belongs(persons)).select(table.pe_id)
+            recipients = [record.pe_id for record in records]
+        elif "group_id" in table:
+            # @ToDo
+            recipients = None
+        else:
+            recipients = None
+
+        if recipients:
+            self.recipients = recipients
+            ltable.pe_id.default = recipients
+            otable.pe_id.default = recipients
+            ltable.pe_id.requires = IS_ONE_OF_EMPTY(db, "pr_pentity.pe_id", multiple=True)
+        else:
+            if recipient_type:
+                # Filter by Recipient Type
+                otable.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                  orderby="instance_type",
+                                                  filterby="instance_type",
+                                                  filter_opts=(recipient_type,))
+            otable.pe_id.comment = DIV(_class="tooltip",
+                                       _title="%s|%s" % \
+                                        (T("Recipients"),
+                                         T("Please enter the first few letters of the Person/Group for the autocomplete.")))
+        otable.pe_id.writable = True
+        otable.pe_id.label = T("Recipient(s)")
+
+        # Source forms
+        logform = crud.create(ltable,
+                              onvalidation = self._compose_onvalidation)
+        outboxform = crud.create(otable)
+
+        # Shortcuts
+        lcustom = logform.custom
+        ocustom = outboxform.custom
+
+        pe_row = TR(TD(LABEL("%s:" % ocustom.label.pe_id)),
+                    _id="msg_outbox_pe_id__row")
+        if recipients:
+            if len(recipients) == 1:
+                represent = s3.pr_pentity_represent(recipients[0],
+                                                    show_label=False)
+            else:
+                # @ToDo: This should be the filter results
+                represent = T("Multiple")
+            pe_row.append(TD(represent))
+        else:
+            # @ToDo: This should be an S3Search form
+            pe_row.append(TD(INPUT(_id="dummy", _class="ac_input", _size="50"),
+                             ocustom.widget.pe_id))
+            pe_row.append(TD(ocustom.comment.pe_id))
+
+        # Build a custom form from the 2 source forms
+        form = DIV( lcustom.begin,
+                    TABLE(
+                        TBODY(
+                            TR(TD(LABEL("%s:" % \
+                                ocustom.label.pr_message_method)),
+                               TD(ocustom.widget.pr_message_method),
+                               TD(ocustom.comment.pr_message_method),
+                               _id="msg_outbox_pr_message_method__row"
+                            ),
+                            pe_row,
+                            TR(TD(LABEL("%s:" % lcustom.label.subject)),
+                               TD(lcustom.widget.subject),
+                               TD(lcustom.comment.subject),
+                               _id="msg_log_subject__row"
+                            ),
+                            TR(TD(LABEL("%s:" % lcustom.label.message)),
+                               TD(lcustom.widget.message),
+                               TD(lcustom.comment.message),
+                               _id="msg_log_message__row"
+                            ),
+                            # TR(TD(LABEL("%s:" % lcustom.label.priority)),
+                               # TD(lcustom.widget.priority),
+                               # TD(lcustom.comment.priority),
+                               # _id="msg_log_priority__row"
+                            # ),
+                            TR(TD(),
+                               TD(INPUT(_type="submit",
+                                        _value=T("Send message"),
+                                        _id="dummy_submit")),
+                               _id="submit_record__row"
+                            ),
+                        )
+                    ),
+                    lcustom.end)
+
+        # Control the Javascript in static/scripts/S3/s3.msg.js
+        if not recipients:
+            if recipient_type:
+                s3.js_global.append("S3.msg_search_url = '%s';" % \
+                                    URL(c="msg", f="search",
+                                        vars={"type":recipient_type}))
+            else:
+                s3.js_global.append("S3.msg_search_url = '%s';" % \
+                                    URL(c="msg", f="search"))
+
+            s3.jquery_ready.append("s3_msg_ac_pe_input();")
+
+        return form
+
+# END =========================================================================

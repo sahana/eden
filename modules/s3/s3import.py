@@ -394,8 +394,13 @@ class S3Importer(S3CRUD):
                     response.warning = self.warning
                 response.flash = ""
                 return self.upload(r, **attr)
-            else:
-                return self.display_job(upload_id)
+#            else:
+#                return self.display_job(upload_id)
+            # redirect rather than call display_job() so that the upload_id
+            # is attached to the URL which is needed for AJAX calls when
+            # populating the dataTable. 
+            redirect(URL(r=self.request, f=self.function,
+                         args=["import"], vars={"job":upload_id}))
         return output
 
     # -------------------------------------------------------------------------

@@ -432,6 +432,143 @@ if auth.permission.format in ("html"):
                 ]],
             ],
         }
+    # -------------------------------------------------------------------------
+    hrm_menu = {
+        "menu": [],
+
+        # NOTE: session.s3.hrm.mode is set by menu pre-processor in controller
+        #       so can't simply make an if/else here :/
+
+        "condition1": lambda: session.s3.hrm.mode is not None,
+        "conditional1": [
+                [T("Profile"),
+                 True, aURL(c="hrm",
+                            f="person",
+                            vars=dict(mode="personal"))
+                ]],
+
+        "condition2": lambda: (session.s3.hrm.mode is not None) and (session.s3.hrm.orgs or ADMIN in session.s3.roles),
+        "conditional2": [[T("Human Resources"),
+                          True, aURL(c="hrm",
+                                     f="index")]],
+
+        "condition3": lambda: session.s3.hrm.mode is None,
+        "conditional3": [
+            [T("Staff"), False, aURL(c="hrm",
+                                     f="human_resource",
+                                     vars=dict(group="staff")), [
+                [T("New Staff Member"), False, aURL(p="create",
+                                                    c="hrm",
+                                                    f="human_resource",
+                                                    args="create",
+                                                    vars=dict(group="staff"))],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="human_resource",
+                                            vars=dict(group="staff"))],
+                [T("Search"), False, aURL(c="hrm",
+                                          f="human_resource",
+                                          args="search",
+                                          vars=dict(group="staff"))],
+                [T("Report Expiring Contracts"), False, aURL(c="hrm",
+                                                             f="human_resource",
+                                                             vars=dict(group="staff",
+                                                                       expiring=1))],
+                [T("Import"), False, aURL(p="create",
+                                          c="hrm",
+                                          f="person",
+                                          args=["import"],
+                                          vars=dict(group="staff"))],
+                #[T("Dashboard"), False, aURL(f="index")],
+            ]],
+            [T("Volunteers"), False, aURL(c="hrm",
+                                          f="human_resource",
+                                          vars=dict(group="volunteer")), [
+                [T("New Volunteer"), False, aURL(p="create",
+                                                 c="hrm",
+                                                 f="human_resource",
+                                                 args="create",
+                                                 vars=dict(group="volunteer"))],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="human_resource",
+                                            vars=dict(group="volunteer"))],
+                [T("Search"), False, aURL(c="hrm",
+                                          f="human_resource",
+                                          args="search",
+                                          vars=dict(group="volunteer"))],
+                [T("Import"), False, aURL(p="create",
+                                          c="hrm",
+                                          f="person",
+                                          args=["import"],
+                                          vars=dict(group="volunteer"))],
+            ]],
+            [T("Teams"), False, aURL(c="hrm",
+                                     f="group"), [
+                [T("New Team"), False, aURL(c="hrm",
+                                            f="group",
+                                            args="create")],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="group")],
+            ]],
+            [T("Job Role Catalog"), False, aURL(c="hrm",
+                                                f="job_role"), [
+                [T("New Job Role"), False, aURL(c="hrm",
+                                                f="job_role",
+                                                args="create")],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="job_role")],
+            ]],
+            [T("Skill Catalog"), False, URL(c="hrm",
+                                            f="skill"), [
+                [T("New Skill"), False, aURL(p="create",
+                                             c="hrm",
+                                             f="skill",
+                                             args="create")],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="skill")],
+                #[T("Skill Provisions"), False, aURL(c="hrm",
+                #                                    f="skill_provision")],
+            ]],
+            [T("Training Events"), False, URL(c="hrm",
+                                              f="training_event"), [
+                [T("New Training Event"), False, aURL(p="create",
+                                                      c="hrm",
+                                                      f="training_event",
+                                                      args="create")],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="training_event")],
+                [T("Import Participant List"), False, aURL(p="create",
+                                                           c="hrm",
+                                                           f="training",
+                                                           args=["import"])],
+            ]],
+            [T("Training Course Catalog"), False, URL(c="hrm",
+                                                      f="course"), [
+                [T("New Training Course"), False, aURL(p="create",
+                                                       c="hrm",
+                                                       f="course",
+                                                       args="create")],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="course")],
+                [T("Course Certificates"), False, aURL(c="hrm",
+                                                       f="course_certificate")],
+            ]],
+            [T("Certificate Catalog"), False, URL(c="hrm",
+                                                  f="certificate"), [
+                [T("New Certificate"), False, aURL(p="create",
+                                                   c="hrm",
+                                                   f="certificate",
+                                                   args="create")],
+                [T("List All"), False, aURL(c="hrm",
+                                            f="certificate")],
+                [T("Skill Equivalence"), False, aURL(c="hrm",
+                                                     f="certificate_skill")],
+            ]],
+            # Add the "personal" section to the menu (right)
+            [T("Personal Profile"), True, aURL(c="hrm",
+                                               f="person",
+                                               vars=dict(mode="personal"))]
+        ],
+    }
 
     # =============================================================================
     # Default Menu Configurations for Controllers
@@ -825,102 +962,7 @@ if auth.permission.format in ("html"):
 
         # HRM
         # -------------------------------------------------------------------------
-        "hrm": {
-            "menu": [],
-
-            # NOTE: session.s3.hrm.mode is set by menu pre-processor in controller
-
-            "condition1": lambda: session.s3.hrm.mode is not None,
-            "conditional1": [
-                    [T("Profile"),
-                     True, aURL(f="person",
-                                vars=dict(mode="personal"))
-                    ]],
-
-            "condition2": lambda: (session.s3.hrm.mode is not None) and (session.s3.hrm.orgs or ADMIN in session.s3.roles),
-            "conditional2": [[T("Human Resources"),
-                              True, aURL(f="index")]],
-
-            "condition3": lambda: session.s3.hrm.mode is None,
-            "conditional3": [
-                [T("Staff"), False, aURL(f="human_resource",
-                                         vars=dict(group="staff")), [
-                    [T("New Staff Member"), False, aURL(p="create",
-                                                        f="human_resource",
-                                                        args="create",
-                                                        vars=dict(group="staff"))],
-                    [T("List All"), False, aURL(f="human_resource",
-                                                vars=dict(group="staff"))],
-                    [T("Search"), False, aURL(f="human_resource",
-                                              args="search",
-                                              vars=dict(group="staff"))],
-                    [T("Report Expiring Contracts"), False, aURL(f="human_resource",
-                                                                 vars=dict(group="staff",
-                                                                           expiring=1))],
-                    [T("Import"), False, aURL(p="create", f="person",
-                                              args=["import"],
-                                              vars=dict(group="staff"))],
-                    #[T("Dashboard"), False, aURL(f="index")],
-                ]],
-                [T("Volunteers"), False, aURL(f="human_resource",
-                                              vars=dict(group="volunteer")), [
-                    [T("New Volunteer"), False, aURL(p="create",
-                                                     f="human_resource",
-                                                     args="create",
-                                                     vars=dict(group="volunteer"))],
-                    [T("List All"), False, aURL(f="human_resource",
-                                                vars=dict(group="volunteer"))],
-                    [T("Search"), False, aURL(f="human_resource",
-                                              args="search",
-                                              vars=dict(group="volunteer"))],
-                    [T("Import"), False, aURL(p="create", f="person",
-                                              args=["import"],
-                                              vars=dict(group="volunteer"))],
-                ]],
-                [T("Teams"), False, aURL(f="group"), [
-                    [T("New Team"), False, aURL(f="group",
-                                                args="create")],
-                    [T("List All"), False, aURL(f="group")],
-                ]],
-                [T("Job Role Catalog"), False, aURL(f="job_role"), [
-                    [T("New Job Role"), False, aURL(f="job_role",
-                                                    args="create")],
-                    [T("List All"), False, aURL(f="job_role")],
-                ]],
-                [T("Skill Catalog"), False, URL(f="skill"), [
-                    [T("New Skill"), False, aURL(p="create", f="skill",
-                                                 args="create")],
-                    [T("List All"), False, aURL(f="skill")],
-                    #[T("Skill Provisions"), False, aURL(f="skill_provision")],
-                ]],
-                [T("Training Events"), False, URL(f="training_event"), [
-                    [T("New Training Event"), False, aURL(p="create",
-                                                          f="training_event",
-                                                          args="create")],
-                    [T("List All"), False, aURL(f="training_event")],
-                    [T("Import Participant List"), False, aURL(p="create",
-                                                               f="training",
-                                                               args=["import"])],
-                ]],
-                [T("Training Course Catalog"), False, URL(f="course"), [
-                    [T("New Training Course"), False, aURL(p="create",
-                                                           f="course",
-                                                           args="create")],
-                    [T("List All"), False, aURL(f="course")],
-                    [T("Course Certificates"), False, aURL(f="course_certificate")],
-                ]],
-                [T("Certificate Catalog"), False, URL(f="certificate"), [
-                    [T("New Certificate"), False, aURL(p="create",
-                                                       f="certificate",
-                                                       args="create")],
-                    [T("List All"), False, aURL(f="certificate")],
-                    [T("Skill Equivalence"), False, aURL(f="certificate_skill")],
-                ]],
-                # Add the "personal" section to the menu (right)
-                [T("Personal Profile"), True, aURL(f="person",
-                                                   vars=dict(mode="personal"))]
-            ],
-        },
+        "hrm": hrm_menu,
 
         # INV / Inventory
         # -------------------------------------------------------------------------
