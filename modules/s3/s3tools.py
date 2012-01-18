@@ -545,7 +545,7 @@ class S3DateTime(object):
         if date and isinstance(date, datetime.datetime) and utc:
             offset = IS_UTC_OFFSET.get_offset_value(session.s3.utc_offset)
             if offset:
-                time = time + datetime.timedelta(seconds=offset)
+                date = date + datetime.timedelta(seconds=offset)
 
         if date:
             return date.strftime(str(format))
