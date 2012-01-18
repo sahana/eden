@@ -347,7 +347,7 @@ if auth.permission.format in ("html"):
                 [T("Import"), False, aURL(f="index"),[
                     [T("Import Projects"), False, aURL(p="create", f="project",
                                                     args="import")],
-                    [T("Import Project Organisations"), False, aURL(p="create", f="organisation",
+                    [T("Import Project Organizations"), False, aURL(p="create", f="organisation",
                                                                     args="import")],
                     [import_activities_label, False, aURL(p="create", f="activity",
                                                                 args="import")],
