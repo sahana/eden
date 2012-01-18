@@ -1183,7 +1183,8 @@ div#component {
 	border-color: #6699CC;
     border-style: solid;
     border-width: 1px;
-    float: left;
+    /* Removed so we can have full width (e.g. for timeline)
+    float: left; */
     overflow: auto;
 }
 
