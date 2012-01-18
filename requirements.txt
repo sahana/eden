@@ -7,4 +7,3 @@ reportlab>=2.4
 pyserial>=2.5
 tweepy>=1.7.1
 xlrd>=0.7.1
-numpy
