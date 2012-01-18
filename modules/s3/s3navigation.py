@@ -397,7 +397,8 @@ class S3ComponentTab:
         if self.vars is None:
             return True
         for k, v in self.vars.iteritems():
-            if k in get_vars and get_vars.get(k) != v:
+            if k not in get_vars or \
+               k in get_vars and get_vars.get(k) != v:
                 return False
         return True
 
