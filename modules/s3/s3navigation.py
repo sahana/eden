@@ -218,19 +218,16 @@ def s3_rheader_resource(r):
     return (tablename, record)
 
 # =============================================================================
-def s3_rheader_tabs(r, tabs=[], check_active=True):
+def s3_rheader_tabs(r, tabs=[]):
     """
         Constructs a DIV of component links for a S3RESTRequest
 
         @param tabs: the tabs as list of tuples (title, component_name, vars),
-            where vars is optional
-        @param paging: add paging buttons previous/next to the tabs
-        # Hack to allow non-resource tabs to display on org_office_rheader
-        @param check_active: Check whether Tabs are active
+                     where vars is optional
     """
 
     rheader_tabs = S3ComponentTabs(tabs)
-    return rheader_tabs.render(r, check_active=check_active)
+    return rheader_tabs.render(r)
 
 # =============================================================================
 class S3ComponentTabs:
@@ -246,7 +243,7 @@ class S3ComponentTabs:
 
         tablist = []
 
-        tabs = [t for t in self.tabs if (not check_active or t.active(r))]
+        tabs = [t for t in self.tabs if t.active(r)]
 
         # Check whether there is a tab for this resource method (no component)
         mtab = r.component is None and \

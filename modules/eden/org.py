@@ -1269,7 +1269,7 @@ def org_office_rheader(r, tabs=[],
             except:
                 pass
 
-            rheader_tabs = s3_rheader_tabs(r, tabs, check_active=False)
+            rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = s3db.org_organisation
             query = (table.id == office.organisation_id)
