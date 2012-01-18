@@ -782,7 +782,7 @@ class S3Report:
         # Compute column total
         for c in xrange(numcols):
             col = cols[c]
-            col[layer] = aggregate(col_values, method)
+            col[layer] = aggregate(col[VALUES], method)
             del col[VALUES]
 
         # Compute overall total
@@ -904,7 +904,10 @@ class S3ContingencyTable(TABLE):
         TOTAL = T("Total")
         CHARTS = ""
 
-        TABLE.__init__(self, **attributes)
+        attr = Storage(attributes)
+        show_chart_opts = attr.pop("show_chart_opts", True)
+
+        TABLE.__init__(self, **attr)
         components = self.components = []
 
         layers = report.layers
@@ -924,7 +927,9 @@ class S3ContingencyTable(TABLE):
 
         # Table header --------------------------------------------------------
         #
+        # @todo: make class and move into CSS:
         _style = "border:1px solid #cccccc; font-weight:bold;"
+        _blank = self._chart_opts(None)
 
         # Layer titles
         labels = []
@@ -944,18 +949,26 @@ class S3ContingencyTable(TABLE):
             _colspan = numcols
         cols_title = TD(label, _style=_style, _colspan=_colspan)
 
-        titles = TR(layers_title, TD(), cols_title)
+        titles = TR(layers_title, cols_title)
+        if cols is not None:
+            # Insert space for row chart options
+            _rowspan = rows is not None and "3" or "2"
+            titles.insert(0, self._chart_opts(None, _rowspan=_rowspan))
 
-        # @todo: charts row
-        charts = TR(TD(), TD())
+        # Horizontal chart options row
+        charts = TR(_blank)
         add_charts = charts.append
+        #if cols is not None:
+            #add_charts(_blank)
 
         # Rows field title
         label = get_label(lfields, rows, tablename, "report_rows")
         rows_title = TH(label, _style=_style)
 
-        headers = TR(rows_title, TD())
+        headers = TR(rows_title)
         add_header = headers.append
+        #if cols is not None:
+            #add_header(_blank)
 
         # Column headers
         values = report.col
@@ -963,15 +976,17 @@ class S3ContingencyTable(TABLE):
             value = values[i].value
             v = represent(cols, value)
             colhdr = TH(v, _style=_style)
-            add_charts(TD("charts"))
+            add_charts(self._chart_opts("col", index=i))
             add_header(colhdr)
 
         # Row totals header
         if cols is not None:
-            add_charts(TD("tcharts"))
+            add_charts(_blank) # @todo: show row totals chart options
             add_header(TH(TOTAL, _class="totals_header rtotal"))
 
-        thead = THEAD(titles, headers, charts)
+        thead = THEAD(titles, headers)
+        if rows is not None:
+            thead.append(charts)
 
         # Table body ----------------------------------------------------------
         #
@@ -991,8 +1006,9 @@ class S3ContingencyTable(TABLE):
             row = rvals[i]
             v = represent(rows, row.value)
             rowhdr = TD(DIV(v))
+            if cols is not None:
+                add_cell(self._chart_opts("row", index=i))
             add_cell(rowhdr)
-            add_cell(TD("charts")) # Chart column
 
             # Result cells
             for j in xrange(numcols):
@@ -1030,8 +1046,10 @@ class S3ContingencyTable(TABLE):
 
         col_total = TR(_class=_class)
         add_total = col_total.append
+        if cols is not None:
+            # Space for row chart options
+            add_total(_blank)
         add_total(TD(TOTAL, _class="totals_header"))
-        add_total(TD("tcharts"))
 
         # Column totals
         for j in xrange(numcols):
@@ -1044,23 +1062,6 @@ class S3ContingencyTable(TABLE):
             grand_totals = get_total(report.totals, layers)
             add_total(TD(DIV(grand_totals)))
 
-        # Charts
-        #col_charts = TR(_class=_class)
-        #add_charts = col_charts.append
-        #add_charts(TD(CHARTS, _class="charts_header"))
-
-        # Column charts
-        #request = current.request
-        #app = request.application
-        #pchart = IMG(_src="/%s/static/img/report/pie.png" % app)
-        #hchart = IMG(_src="/%s/static/img/report/hbars.png" % app)
-        #for j in xrange(numcols):
-            #add_charts(TD(DIV(pchart, hchart)))
-
-        # Grand total charts
-        #if cols is not None:
-            #add_charts(TD(DIV()))
-
         tfoot = TFOOT(col_total)
 
         # Wrap up -------------------------------------------------------------
@@ -1069,6 +1070,44 @@ class S3ContingencyTable(TABLE):
         append(thead)
         append(tbody)
         append(tfoot)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _chart_opts(element, index=None, **attributes):
+
+        # @todo: make class and move into CSS
+        _style = "padding-left: 2px; padding-right: 2px;"
+        app = current.request.application
+        # @todo: append data to A's
+        pchart = A(IMG(_src="/%s/static/img/report/pie.png" % app), _href="#", _style=_style)
+        hchart = A(IMG(_src="/%s/static/img/report/hbars.png" % app), _href="#", _style=_style)
+        vchart = A(IMG(_src="/%s/static/img/report/vbars.png" % app), _href="#", _style=_style)
+
+        CLASS = "chart_opts"
+        attr = Storage(attributes)
+        if "_class" in attr:
+            _class = "%s %s" % (attr.pop("_class"), CLASS)
+        else:
+            _class = CLASS
+
+        # @todo: move into css
+        _style = "border:1px solid #cccccc;"
+
+        if element is not None:
+            _class = "%s %s" % (_class, element)
+            if index:
+                _data = str(index)
+            else:
+                _data = None
+        else:
+            return TD(_class=_class, _style=_style, **attr)
+
+        chart_opts = TD(DIV(pchart, vchart, hchart, _nowrap="nowrap"),
+                        _class=_class,
+                        _style=_style,
+                        _data=_data,
+                        **attr)
+        return chart_opts
 
     # -------------------------------------------------------------------------
     @staticmethod
