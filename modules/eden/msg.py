@@ -35,7 +35,6 @@ __all__ = ["S3MessagingModel",
            "S3TropoModel",
            "S3TwitterModel",
            "S3XFormsModel",
-           "msg_compose"
         ]
 
 from gluon import *
@@ -55,7 +54,6 @@ class S3MessagingModel(S3Model):
              "msg_outbox",
              #"msg_channel",
              "msg_message_id",
-             "msg_compose",
             ]
 
     def model(self):
@@ -221,7 +219,6 @@ class S3MessagingModel(S3Model):
         # Pass variables back to global scope (response.s3.*)
         return Storage(
                 msg_message_id=message_id,
-                msg_compose=msg_compose,
             )
 
     # -------------------------------------------------------------------------
@@ -680,171 +677,5 @@ class S3XFormsModel(S3Model):
 
         # ---------------------------------------------------------------------
         return Storage()
-
-# =====================================================================
-def msg_compose(title_name = "Send Message",
-                type = None,
-                recipient_type = None,
-                recipient = None,
-                message = "",
-                redirect_module = "msg",
-                redirect_function = "compose",
-                redirect_args = None,
-                redirect_vars = None,
-               ):
-    """
-        Form to Compose a Message
-
-        @param title_name: Title of the page
-        @param type: The default message type: None, EMAIL, SMS or TWITTER
-        @param recipient_type: Send to Persons or Groups? (pr_person or pr_group)
-        @param recipient: The pe_id of the person/group to send the message to (Not hiding UI yet)
-        @param message: The default message text
-        @param redirect_module: Redirect to the specified module's url after login.
-        @param redirect_function: Redirect to the specified function
-        @param redirect_args:  List of args to include in redirects
-        @param redirect_vars:  Dict of vars to include in redirects
-    """
-
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-    auth = current.auth
-    crud = current.crud
-    msg = current.msg
-    request = current.request
-    session = current.session
-    s3 = current.response.s3
-
-    ltable = s3db.msg_log
-    otable = s3db.msg_outbox
-
-    url = URL(redirect_module,
-              redirect_function,
-              args=redirect_args,
-              vars=redirect_vars)
-
-    if auth.is_logged_in() or auth.basic():
-        pass
-    else:
-        redirect(URL(c="default", f="user", args="login",
-                     vars={"_next" : url}))
-
-    ltable.message.default = message
-
-    if type:
-        otable.pr_message_method.default = type
-
-    ltable.pe_id.writable = ltable.pe_id.readable = False
-    ltable.sender.writable = ltable.sender.readable = False
-    ltable.fromaddress.writable = ltable.fromaddress.readable = False
-    ltable.verified.writable = ltable.verified.readable = False
-    ltable.verified_comments.writable = ltable.verified_comments.readable = False
-    ltable.actioned.writable = ltable.actioned.readable = False
-    ltable.actionable.writable = ltable.actionable.readable = False
-    ltable.actioned_comments.writable = ltable.actioned_comments.readable = False
-
-    ltable.subject.label = T("Subject")
-    ltable.message.label = T("Message")
-    #ltable.priority.label = T("Priority")
-
-    if recipient:
-        ltable.pe_id.default = recipient
-        otable.pe_id.writable = True
-        otable.pe_id.default = recipient
-        otable.pe_id.requires = IS_ONE_OF_EMPTY(db, "pr_pentity.pe_id")
-    else:
-        if recipient_type:
-            # Filter by Recipient Type
-            otable.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                              orderby="instance_type",
-                                              filterby="instance_type",
-                                              filter_opts=(recipient_type,))
-        otable.pe_id.writable = otable.pe_id.readable = True
-        otable.pe_id.label = T("Recipients")
-        otable.pe_id.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Recipients"),
-                                                     T("Please enter the first few letters of the Person/Group for the autocomplete.")))
-
-    def compose_onvalidation(form):
-        """ Set the sender and use msg.send_by_pe_id to route the message """
-
-        vars = request.post_vars
-        if not vars.pe_id:
-            session.error = T("Please enter the recipient")
-            redirect(url)
-        table = s3db.pr_person
-        query = (table.uuid == auth.user.person_uuid)
-        sender_pe_id = db(query).select(table.pe_id,
-                                        limitby=(0, 1)).first().pe_id
-        if msg.send_by_pe_id(vars.pe_id,
-                             vars.subject,
-                             vars.message,
-                             sender_pe_id,
-                             vars.pr_message_method):
-            # Trigger a Process Outbox
-            msg.process_outbox(contact_method = vars.pr_message_method)
-            session.confirmation = T("Check outbox for the message status")
-            redirect(url)
-        else:
-            session.error = T("Error in message")
-            redirect(URL(url))
-
-    logform = crud.create(ltable,
-                          onvalidation = compose_onvalidation)
-    outboxform = crud.create(otable)
-
-    if recipient_type:
-        s3.js_global.append("S3.msg_search_url = '%s';" % \
-                            URL(c="msg", f="search",
-                                vars={"type":recipient_type}))
-    else:
-        s3.js_global.append("S3.msg_search_url = '%s';" % \
-                            URL(c="msg", f="search"))
-    if recipient:
-        s3.jquery_ready.append("""
-$('#msg_outbox_pe_id__row').hide();""")
-    else:
-        s3.jquery_ready.append("""
-// Hide the real Input Field
-$('#msg_outbox_pe_id').hide();
-// Autocomplete-enable the Dummy Input
-$('#dummy').autocomplete({
-    source: S3.msg_search_url,
-    minLength: 2,
-    focus: function( event, ui ) {
-        $( '#dummy' ).val( ui.item.name );
-        return false;
-    },
-    select: function( event, ui ) {
-        $( '#dummy_input' ).val( ui.item.name );
-        $( '#msg_outbox_pe_id' ).val( ui.item.id );
-        return false;
-    }
-})
-.data( 'autocomplete' )._renderItem = function( ul, item ) {
-    return $( '<li></li>' )
-        .data( 'item.autocomplete', item )
-        .append( '<a>' + item.name + '</a>' )
-        .appendTo( ul );
-};""")
-
-    s3.jquery_ready.append("""
-if ($('#msg_outbox_pr_message_method').val() != 'EMAIL') {
-    // SMS/Tweets don't have subjects
-    $('#msg_log_subject__row').hide();
-}
-$('#msg_outbox_pr_message_method').change(function() {
-    if ($(this).val() == 'EMAIL') {
-        // Emails have a Subject
-        $('#msg_log_subject__row').show();
-    } else {
-        $('#msg_log_subject__row').hide();
-    }
-});""")
-
-    return dict(logform = logform,
-                outboxform = outboxform,
-                title = T(title_name))
 
 # END =========================================================================

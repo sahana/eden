@@ -497,7 +497,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                 tablename, id = viewing.split(".", 1)
             else:
                 return output
-            site_id = db[tablename][id].site_id
+            site_id = s3db[tablename][id].site_id
             response.s3.actions = [dict(url = URL(c = "req",
                                                   f = "req",
                                                   args = ["[id]","check"],
@@ -524,7 +524,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                         )
                                    ]
 
-            rheader_dict = dict(org_office = s3db.org_office_rheader)
+            rheader_dict = dict(org_office = lambda r: s3db.org_office_rheader(r, force_show_inv=True))
             if deployment_settings.has_module("cr"):
                 rheader_dict["cr_shelter"] = response.s3.shelter_rheader
             if deployment_settings.has_module("hms"):
@@ -534,8 +534,9 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
             output = s3_rest_controller("req", "req",
                                         method = "list",
                                         rheader = rheader_dict[tablename])
-            if isinstance(output, dict):
-                output["title"] = s3.crud_strings[tablename]["title_display"]
+
+            if tablename == "org_office" and isinstance(output, dict):
+                output["title"] = T("Warehouse Details")
 
             return output
 

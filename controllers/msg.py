@@ -23,7 +23,7 @@ def index():
 def compose():
     """ Compose a Message which can be sent to a pentity via a number of different communications channels """
 
-    return eden.msg.msg_compose()
+    return msg.compose()
 
 # -----------------------------------------------------------------------------
 # Send Outbound Messages - to be called via cron

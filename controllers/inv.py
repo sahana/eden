@@ -179,7 +179,6 @@ def incoming():
 def req_match():
     """ Match Requests """
 
-    s3.crud_strings.org_office.title_display = T("Warehouse Details")
     return response.s3.req_match()
 
 # =============================================================================

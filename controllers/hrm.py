@@ -1027,8 +1027,10 @@ def staff_org_site_json():
 def compose():
     """ Send message to people/teams """
 
-    if "hrm_id" in request.vars:
-        id = request.vars.hrm_id
+    vars = request.vars
+
+    if "hrm_id" in vars:
+        id = vars.hrm_id
         fieldname = "hrm_id"
         table = s3db.pr_person
         htable = s3db.hrm_human_resource
@@ -1041,6 +1043,9 @@ def compose():
         table = s3db.pr_group
         query = (table.id == id)
         title = T("Send a message to this team")
+    else:
+        session.error = T("Record not found")
+        redirect(URL(f="index"))
 
     pe = db(query).select(table.pe_id,
                           limitby=(0, 1)).first()
@@ -1049,9 +1054,8 @@ def compose():
         redirect(URL(f="index"))
 
     pe_id = pe.pe_id
-    request.vars.pe_id = pe_id
 
-    if "hrm_id" in request.vars:
+    if "hrm_id" in vars:
         # Get the individual's communications options & preference
         ctable = s3db.pr_contact
         contact = db(ctable.pe_id == pe_id).select(ctable.contact_method,
@@ -1063,9 +1067,17 @@ def compose():
             session.error = T("No contact method found")
             redirect(URL(f="index"))
 
-    return eden.msg.msg_compose(redirect_module = module,
-                                redirect_function = "compose",
-                                redirect_vars = {fieldname: id},
-                                title_name = title)
+    # URL to redirect to after message sent
+    url = URL(c=module,
+              f="compose",
+              vars={fieldname: id})
+
+    # Create the form
+    output = msg.compose(recipient = pe_id,
+                         url = url)
+
+    output["title"] = title
+    response.view = "msg/compose.html"
+    return output
 
 # END =========================================================================

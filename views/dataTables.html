@@ -14,18 +14,13 @@ S3.dataTables = new Array();
 {{if response.s3.dataTablePostMethod:}}
   S3.dataTables.UsePostMethod = true;{{else:}}
   S3.dataTables.UsePostMethod = false;{{pass}}
-
 {{if response.s3.dataTableSubmitLabel:}}
   S3.dataTables.PostSubmitLabel = '{{=response.s3.dataTableSubmitLabel}}';
   {{if response.s3.dataTableSubmitLabelPosn:}}
-    S3.dataTables.PostSubmitPosn = '{{=response.s3.dataTableSubmitLabelPosn}}';
-  {{else:}}
-    S3.dataTables.PostSubmitPosn = 'bottom';
-  {{pass}}
+    S3.dataTables.PostSubmitPosn = '{{=response.s3.dataTableSubmitLabelPosn}}';{{else:}}
+    S3.dataTables.PostSubmitPosn = 'bottom';{{pass}}
 {{else:}}
-  S3.dataTables.PostSubmitLabel = '{{=T("Submit")}}';
-{{pass}}
-
+  S3.dataTables.PostSubmitLabel = '{{=T("Submit")}}';{{pass}}
 {{if response.s3.dataTableSelectSubmitURL:}}
   S3.dataTables.SelectURL = '{{=XML(response.s3.dataTableSelectSubmitURL)}}';{{else:}}
   S3.dataTables.SelectURL = "?";{{pass}}
@@ -37,9 +32,7 @@ S3.dataTables = new Array();
         {{=XML(response.s3.actions[-1]["_jqclick"])}} ;
         event.stopPropagation();
         return false;
-    }
-  {{pass}}
-{{pass}}
+    }{{pass}}{{pass}}
 {{if response.s3.dataTableID:}}
   S3.dataTables.id = '{{=response.s3.dataTableID}}';{{pass}}
 {{if response.s3.dataTable_iDisplayLength:}}
@@ -49,15 +42,11 @@ S3.dataTables = new Array();
 {{else:}}
   {{if r:}}
     {{if response.s3.dataTable_Method:}}
-      S3.dataTables.sAjaxSource = '{{=r.url(method="%s"%response.s3.dataTable_Method, representation="aaData")}}';
-    {{else:}}
-      S3.dataTables.sAjaxSource = '{{=r.url(method="", representation="aaData")}}';
-    {{pass}}
-  {{else:}}
-    {{try:}}
+      S3.dataTables.sAjaxSource = '{{=r.url(method="%s"%response.s3.dataTable_Method, representation="aaData")}}';{{else:}}
+      S3.dataTables.sAjaxSource = '{{=r.url(method="", representation="aaData")}}';{{pass}}
+  {{else:}}{{try:}}
       S3.dataTables.sAjaxSource = '{{=datatable_ajax_source}}';
-    {{except:}}
-    {{pass}}
+    {{except:}}{{pass}}
   {{pass}}
 {{pass}}
 {{if response.aadata is not None:}}

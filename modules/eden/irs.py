@@ -540,10 +540,8 @@ class S3IRSModel(S3Model):
         """
 
         T = current.T
-        s3db = current.s3db
         msg = current.msg
         response = current.response
-        s3 = response.s3
 
         if r.representation == "html" and \
            r.name == "ireport" and r.id and not r.component:
@@ -554,28 +552,28 @@ class S3IRSModel(S3Model):
                                      record.contact,
                                      record.message)
 
+            # Encode the message as an OpenGeoSMS
             message = msg.prepare_opengeosms(record.location_id,
                                              code="ST",
                                              map="google",
                                              text=text)
 
-            output = s3db.msg_compose(type="SMS",
-                                      recipient_type = "pr_person",
-                                      message = message,
-                                      redirect_module = "irs",
-                                      redirect_function = "ireport",
-                                      redirect_args = r.id)
+            # URL to redirect to after message sent
+            url = URL(c="irs",
+                      f="ireport",
+                      args=r.id)
+
+            # Create the form
+            output = msg.compose(type="SMS",
+                                 recipient_type = "pr_person",
+                                 message = message,
+                                 url = url)
 
             # Maintain RHeader for consistency
             rheader = irs_rheader(r)
+            output["rheader"] = rheader
 
-            title = T("Send Dispatch Update")
-
-            output.update(title=title,
-                          rheader=rheader)
-
-            #if form.accepts(request.vars, session):
-
+            output["title"] = T("Send Dispatch Update")
             response.view = "msg/compose.html"
             return output
 

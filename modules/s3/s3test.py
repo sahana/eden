@@ -11,7 +11,7 @@ class WSGI_Test(wsgi_intercept.webtest_intercept.WebCase):
     - UnitTests can extend this
     """
     HTTP_CONN = wsgi_intercept.WSGI_HTTPConnection
-    HOST = 'localhost'
+    HOST = "localhost"
     PORT = 8000
 
     def __init__(self, db):

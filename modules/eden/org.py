@@ -1237,11 +1237,10 @@ def org_organisation_rheader(r, tabs=[]):
     return None
 
 # -----------------------------------------------------------------------------
-def org_office_rheader(r, tabs=[]):
+def org_office_rheader(r, tabs=[],
+                       force_show_inv=False):
 
     """ Office/Warehouse page headers """
-
-    s3db = current.s3db
 
     if r.representation == "html":
 
@@ -1251,6 +1250,7 @@ def org_office_rheader(r, tabs=[]):
 
             T = current.T
             db = current.db
+            s3db = current.s3db
             s3 = current.response.s3
             settings = current.deployment_settings
 
@@ -1265,11 +1265,11 @@ def org_office_rheader(r, tabs=[]):
             except:
                 pass
             try:
-                tabs = tabs + s3.inv_tabs(r)
+                tabs = tabs + s3.inv_tabs(r, force_show_inv=force_show_inv)
             except:
                 pass
 
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader_tabs = s3_rheader_tabs(r, tabs, check_active=False)
 
             table = s3db.org_organisation
             query = (table.id == office.organisation_id)

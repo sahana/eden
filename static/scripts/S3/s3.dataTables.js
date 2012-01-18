@@ -423,6 +423,16 @@ $(document).ready(function() {
 
     // Delay in milliseconds to prevent too many AJAX calls
     $('.dataTable').dataTable().fnSetFilteringDelay(450);
+
+    /* Messaging */
+    $('#msg_datatables-btn').click( function(evt) {
+        // @ToDo: Display the Compose form
+
+        // @ToDo: Focus on form
+        //$('#msg_log_message').focus();
+
+        evt.preventDefault();
+    });
 });
 
 Ext.onReady(function(){
