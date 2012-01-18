@@ -2140,7 +2140,13 @@ class GIS(object):
             "code2field" : "ISO"  # This field is used to uniquely identify the L0 for parenting the L1s
         }
 
+        #Copy the current working directory to revert back to later
+        old_working_directory = os.getcwd()
+
         # Create the working directory
+        if os.path.exists(os.path.join(os.getcwd(), 'temp')): # use web2py/temp/GADMv1 as a cache
+                TEMP = os.path.join(os.getcwd(), 'temp')
+
         tempPath = os.path.join(TEMP, GADM)
         try:
             os.mkdir(tempPath)
@@ -2227,6 +2233,9 @@ class GIS(object):
 
         db.commit()
 
+        # Revert back to the working directory as before.
+        os.chdir(old_working_directory)
+
         return
 
     # -------------------------------------------------------------------------
@@ -2295,7 +2304,14 @@ class GIS(object):
             for r in reader:
                 yield dict(zip(headers, r))
 
+        global TEMP
+
+        #Copy the current working directory to revert back to later
+        old_working_directory = os.getcwd()
+
         # Create the working directory
+        if os.path.exists(os.path.join(os.getcwd(), 'temp')): # use web2py/temp/GADMv1 as a cache
+                TEMP = os.path.join(os.getcwd(), 'temp')
         tempPath = os.path.join(TEMP, GADM)
         try:
             os.mkdir(tempPath)
@@ -2325,6 +2341,8 @@ class GIS(object):
                 file = fetch(url)
             except urllib2.URLError, exception:
                 s3_debug(exception)
+                # Revert back to the working directory as before.
+                os.chdir(old_working_directory)
                 return
             fp = StringIO(file)
         else:
@@ -2432,6 +2450,8 @@ class GIS(object):
                         outputLayer.CommitTransaction()
 
                     s3_debug("Unable to translate feature %d from layer %s" % (poFeature.GetFID() , inputFDefn.GetName() ))
+                    # Revert back to the working directory as before.
+                    os.chdir(old_working_directory)
                     return
 
                 poDstGeometry = poDstFeature.GetGeometryRef()
@@ -2446,6 +2466,8 @@ class GIS(object):
                 if outputLayer.CreateFeature( poDstFeature ) != 0 and not bSkipFailures:
                     if nGroupTransactions > 0:
                         outputLayer.RollbackTransaction()
+                    # Revert back to the working directory as before.
+                    os.chdir(old_working_directory)
                     return
 
         if nGroupTransactions > 0:
@@ -2465,6 +2487,8 @@ class GIS(object):
         ds = ogr.Open( "%s.shp" % layerName )
         if ds is None:
             s3_debug("Open failed.\n")
+            # Revert back to the working directory as before.
+            os.chdir(old_working_directory)
             return
 
         lyr = ds.GetLayerByName( layerName )
@@ -2559,6 +2583,9 @@ class GIS(object):
             s3_debug("Memory error when trying to update_location_tree()!")
 
         db.commit()
+
+        # Revert back to the working directory as before.
+        os.chdir(old_working_directory)
 
         return
 
