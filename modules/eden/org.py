@@ -226,13 +226,25 @@ class S3OrganisationModel(S3Model):
                                                       _title="%s|%s" % (T("Acronym"),
                                                                         T("Acronym of the organization's name, eg. IFRC.")))),
                                   Field("type", "integer", label = T("Type"),
+                                        #readable = False,
+                                        #writable = False,
                                         requires = IS_NULL_OR(IS_IN_SET(organisation_type_opts)),
                                         represent = lambda opt: \
                                             organisation_type_opts.get(opt, UNKNOWN_OPT)),
-                                  sector_id(),
+
+                                  sector_id(
+                                            #readable = False,
+                                            #writable = False,
+                                            ),
                                   #Field("registration", label=T("Registration")),    # Registration Number
-                                  Field("region", label=T("Region")),
+
+                                  Field("region",
+                                        #readable = False,
+                                        #writable = False,
+                                        label=T("Region")),
                                   Field("country", "string", length=2,
+                                        #readable = False,
+                                        #writable = False,
                                         label = T("Home Country"),
                                         requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                             lambda: gis.get_countries(key_type="code"),
@@ -247,6 +259,8 @@ class S3OrganisationModel(S3Model):
                                                       _title="%s|%s" % (T("Twitter"),
                                                                         T("Twitter ID or #hashtag")))),
                                   Field("donation_phone", label = T("Donation Phone #"),
+                                        #readable = False,
+                                        #writable = False,
                                         requires = IS_NULL_OR(s3_phone_requires),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Donation Phone #"),
@@ -279,6 +293,15 @@ class S3OrganisationModel(S3Model):
                                      args="create",
                                      vars=dict(format="popup"))
 
+        # @ToDo: Deployment_setting
+        organisation_dropdown_not_ac = False
+        if organisation_dropdown_not_ac:
+            help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")
+            widget = None
+        else:
+            help = T("Enter some characters to bring up a list of possible matches")
+            widget = S3OrganisationAutocompleteWidget()
+        
         organisation_comment = DIV(A(ADD_ORGANIZATION,
                                    _class="colorbox",
                                    _href=organisation_popup_url,
@@ -286,9 +309,7 @@ class S3OrganisationModel(S3Model):
                                    _title=ADD_ORGANIZATION),
                                  DIV(DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Organization"),
-                                                           T("Enter some characters to bring up a list of possible matches")))))
-                                                           # Replace with this one if using dropdowns & not autocompletes
-                                                           #T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")))))
+                                                           help))))
 
         from_organisation_comment = copy.deepcopy(organisation_comment)
         from_organisation_comment[0]["_href"] = organisation_comment[0]["_href"].replace("popup", "popup&child=from_organisation_id")
@@ -303,8 +324,7 @@ class S3OrganisationModel(S3Model):
                                           label = T("Organization"),
                                           comment = organisation_comment,
                                           ondelete = "RESTRICT",
-                                          # Comment this to use a Dropdown & not an Autocomplete
-                                          widget = S3OrganisationAutocompleteWidget()
+                                          widget = widget
                                          )
 
         organisations_id = S3ReusableField("organisations_id",
@@ -1198,36 +1218,38 @@ def org_organisation_rheader(r, tabs=[]):
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        organisation = r.record
-        if organisation.sector_id:
-            _sectors = s3.org_sector_represent(organisation.sector_id)
-        else:
-            _sectors = None
-
-        try:
-            _type = organisation_type_opts[organisation.type]
-        except KeyError:
-            _type = None
-
         table = r.table
+        organisation = r.record
 
-        if settings.get_ui_cluster():
-            sector_label = T("Cluster(s)")
+        if table.sector_id.readable and organisation.sector_id:
+            if settings.get_ui_cluster():
+                sector_label = T("Cluster(s)")
+            else:
+                sector_label = T("Sector(s)")
+            _sectors = DIV(TH("%s: " % sector_label),
+                           s3.org_sector_represent(organisation.sector_id))
         else:
-            sector_label = T("Sector(s)")
+            _sectors = ""
+
+        _type = ""
+        if table.type.readable:
+            try:
+                _type = DIV(TH("%s: " % table.type.label),
+                               organisation_type_opts[organisation.type])
+            except KeyError:
+                pass
 
         rheader = DIV(TABLE(
             TR(
                 TH("%s: " % table.name.label),
                 organisation.name,
-                TH("%s: " % sector_label),
-                _sectors),
+                _sectors
+                ),
             TR(
                 #TH(A(T("Edit Organization"),
                 #    _href=URL(r=request, c="org", f="organisation",
                               #args=[r.id, "update"],
                               #vars={"_next": _next})))
-                TH("%s: " % table.type.label),
                 _type,
                 )
         ), rheader_tabs)
