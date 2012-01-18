@@ -53,7 +53,9 @@ class S3DocumentLibrary(S3Model):
         s3 = current.response.s3
 
         person_comment = self.pr_person_comment
+        person_id = self.pr_person_id
         location_id = self.gis_location_id
+        organisation_id = self.org_organisation_id
 
         messages = current.messages
         NONE = messages.NONE
@@ -92,10 +94,10 @@ class S3DocumentLibrary(S3Model):
                                                                              "%s.url" % tablename))],
                                         represent = lambda url: \
                                                     url and A(url,_href=url) or NONE),
-                                  s3.pr_person_id(label=T("Author"),
+                                  person_id(label=T("Author"),
                                                   comment=person_comment(T("Author"),
                                                                          T("The Author of this Document (optional)"))),
-                                  s3.org_organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                   Field("date", "date", label = T("Date Published")),
                                   location_id(),
                                   s3.comments(),
@@ -192,8 +194,8 @@ class S3DocumentLibrary(S3Model):
                                         default = 1,
                                         label = T("Image Type"),
                                         represent = lambda opt: doc_image_type_opts.get(opt, UNKNOWN_OPT)),
-                                  s3.pr_person_id(label=T("Author")),
-                                  s3.org_organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                                  person_id(label=T("Author")),
+                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                   location_id(),
                                   Field("date", "date", label = T("Date Taken")),
                                   s3.comments(),
