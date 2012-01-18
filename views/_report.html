@@ -51,7 +51,8 @@
 {{pass}}
 {{try:}}
     {{items = items}}
-    <div id='chart-container'>
+    <div id='chart-container' class='hide'>
+        {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
         <div id='chart' style='width:400px; height:300px;'></div>
     </div>
     <div id='table-container'>
@@ -67,10 +68,15 @@
 {{pass}}
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
-var data = [
-    ['Heavy Industry', 12],['Retail', 9], ['Light Industry', 14],
-    ['Out of home', 16],['Commuting', 7], ['Orientation', 9]
-];
+{{try:}}
+{{if response.s3.report_data:}}
+    var data = {{=XML(response.s3.report_data)}};
+{{else:}}
+    var data = {cols:null, rows:null};
+{{pass}}
+{{except:}}
+var data = {cols:null, rows:null};
+{{pass}}
 //]]></script>
 {{if session.s3.debug:}}
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.js"></script>

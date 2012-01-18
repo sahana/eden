@@ -38,6 +38,7 @@
 __all__ = ["S3Cube"]
 
 import sys
+import gluon.contrib.simplejson as json
 
 from gluon import current
 from gluon.storage import Storage
@@ -902,13 +903,12 @@ class S3ContingencyTable(TABLE):
 
         T = current.T
         TOTAL = T("Total")
-        CHARTS = ""
 
-        attr = Storage(attributes)
-        show_chart_opts = attr.pop("show_chart_opts", True)
-
-        TABLE.__init__(self, **attr)
+        TABLE.__init__(self, **attributes)
         components = self.components = []
+
+        app = current.request.application
+        piechart = IMG(_src="/%s/static/img/report/pie.png" % app)
 
         layers = report.layers
         resource = report.resource
@@ -925,11 +925,19 @@ class S3ContingencyTable(TABLE):
         represent = lambda f, v, d="": \
                     self._represent(lfields, f, v, default=d)
 
+        col_titles = []
+        add_col_title = col_titles.append
+        col_totals = []
+        add_col_total = col_totals.append
+        row_titles = []
+        add_row_title = row_titles.append
+        row_totals = []
+        add_row_total = row_totals.append
+
         # Table header --------------------------------------------------------
         #
         # @todo: make class and move into CSS:
         _style = "border:1px solid #cccccc; font-weight:bold;"
-        _blank = self._chart_opts(None)
 
         # Layer titles
         labels = []
@@ -947,46 +955,37 @@ class S3ContingencyTable(TABLE):
         else:
             label = ""
             _colspan = numcols
+        if rows:
+            col_charts = A(piechart, _href="#", _id="pie_chart_cols", _style="padding:2px;")
+            label = [label, col_charts]
         cols_title = TD(label, _style=_style, _colspan=_colspan)
 
         titles = TR(layers_title, cols_title)
-        if cols is not None:
-            # Insert space for row chart options
-            _rowspan = rows is not None and "3" or "2"
-            titles.insert(0, self._chart_opts(None, _rowspan=_rowspan))
-
-        # Horizontal chart options row
-        charts = TR(_blank)
-        add_charts = charts.append
-        #if cols is not None:
-            #add_charts(_blank)
 
         # Rows field title
         label = get_label(lfields, rows, tablename, "report_rows")
+        if cols:
+            row_charts = A(piechart, _href="#", _id="pie_chart_rows", _style="padding:2px;")
+            label = [label, row_charts]
         rows_title = TH(label, _style=_style)
 
         headers = TR(rows_title)
         add_header = headers.append
-        #if cols is not None:
-            #add_header(_blank)
 
         # Column headers
         values = report.col
         for i in xrange(numcols):
             value = values[i].value
             v = represent(cols, value)
+            add_col_title(str(v))
             colhdr = TH(v, _style=_style)
-            add_charts(self._chart_opts("col", index=i))
             add_header(colhdr)
 
         # Row totals header
         if cols is not None:
-            add_charts(_blank) # @todo: show row totals chart options
             add_header(TH(TOTAL, _class="totals_header rtotal"))
 
         thead = THEAD(titles, headers)
-        if rows is not None:
-            thead.append(charts)
 
         # Table body ----------------------------------------------------------
         #
@@ -1005,9 +1004,8 @@ class S3ContingencyTable(TABLE):
             # Row header
             row = rvals[i]
             v = represent(rows, row.value)
+            add_row_title(str(v))
             rowhdr = TD(DIV(v))
-            if cols is not None:
-                add_cell(self._chart_opts("row", index=i))
             add_cell(rowhdr)
 
             # Result cells
@@ -1032,8 +1030,8 @@ class S3ContingencyTable(TABLE):
                 add_cell(TD(DIV(vals)))
 
             # Row total
+            totals = get_total(row, layers, append=add_row_total)
             if cols is not None:
-                totals = get_total(row, layers)
                 add_cell(TD(DIV(totals)))
 
             add_row(tr)
@@ -1046,15 +1044,12 @@ class S3ContingencyTable(TABLE):
 
         col_total = TR(_class=_class)
         add_total = col_total.append
-        if cols is not None:
-            # Space for row chart options
-            add_total(_blank)
         add_total(TD(TOTAL, _class="totals_header"))
 
         # Column totals
         for j in xrange(numcols):
             col = report.col[j]
-            totals = get_total(col, layers)
+            totals = get_total(col, layers, append=add_col_total)
             add_total(TD(DIV(totals)))
 
         # Grand total
@@ -1071,47 +1066,23 @@ class S3ContingencyTable(TABLE):
         append(tbody)
         append(tfoot)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _chart_opts(element, index=None, **attributes):
-
-        # @todo: make class and move into CSS
-        _style = "padding-left: 2px; padding-right: 2px;"
-        app = current.request.application
-        # @todo: append data to A's
-        pchart = A(IMG(_src="/%s/static/img/report/pie.png" % app), _href="#", _style=_style)
-        hchart = A(IMG(_src="/%s/static/img/report/hbars.png" % app), _href="#", _style=_style)
-        vchart = A(IMG(_src="/%s/static/img/report/vbars.png" % app), _href="#", _style=_style)
-
-        CLASS = "chart_opts"
-        attr = Storage(attributes)
-        if "_class" in attr:
-            _class = "%s %s" % (attr.pop("_class"), CLASS)
+        # Chart data ----------------------------------------------------------
+        #
+        response = current.response
+        if rows and row_titles and row_totals:
+            drows = zip(row_titles, row_totals)
         else:
-            _class = CLASS
-
-        # @todo: move into css
-        _style = "border:1px solid #cccccc;"
-
-        if element is not None:
-            _class = "%s %s" % (_class, element)
-            if index:
-                _data = str(index)
-            else:
-                _data = None
+            drows = None
+        if cols and col_titles and col_totals:
+            dcols = zip(col_titles, col_totals)
         else:
-            return TD(_class=_class, _style=_style, **attr)
-
-        chart_opts = TD(DIV(pchart, vchart, hchart, _nowrap="nowrap"),
-                        _class=_class,
-                        _style=_style,
-                        _data=_data,
-                        **attr)
-        return chart_opts
+            dcols = None
+        report_data = Storage(rows=drows, cols=dcols)
+        response.s3.report_data = json.dumps(report_data)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _totals(values, layers):
+    def _totals(values, layers, append=None):
         """
             Get the totals of a row/column/report
 
@@ -1125,6 +1096,8 @@ class S3ContingencyTable(TABLE):
             value = values[layer]
             if m == "list":
                 value = value and len(value) or 0
+            if not len(totals) and append:
+                append(value)
             totals.append(str(value))
         totals = " / ".join(totals)
         return totals
