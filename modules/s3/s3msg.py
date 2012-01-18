@@ -1240,8 +1240,9 @@ class S3Compose(S3CRUD):
         T = current.T
         auth = current.auth
         manager = current.manager
-        session = current.session
         response = current.response
+        session = current.session
+        settings = current.deployment_settings
 
         url = r.url()
         self.url = url
@@ -1253,6 +1254,10 @@ class S3Compose(S3CRUD):
             redirect(URL(c="default", f="user", args="login",
                          vars={"_next" : url}))
 
+        if not settings.has_module("msg"):
+            session.error = T("Cannot send messages if Messaging module disabled")
+            redirect(URL(f="index"))
+                         
         #_vars = r.get_vars
 
         self.recipients = None

@@ -45,7 +45,7 @@ from gluon.sqlhtml import CheckboxesWidget
 from ..s3 import *
 
 try:
-    from lxml import etree
+    from lxml import etree, html
 except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
@@ -1281,9 +1281,8 @@ class S3ProjectTaskModel(S3Model):
         activity_id = self.project_activity_id
 
         s3_date_format = settings.get_L10n_date_format()
-        s3_datetime_represent = S3DateTime.datetime_represent
-        s3_utc_represent = lambda dt: s3_datetime_represent(dt, utc=True)
-        s3_date_simple_represent = lambda dt: S3DateTime.date_represent(dt, short=True)
+        s3_utc_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         messages = current.messages
         NONE = messages.NONE
@@ -1302,6 +1301,7 @@ class S3ProjectTaskModel(S3Model):
                                         requires=IS_NOT_EMPTY()),
                                   Field("date", "date",
                                         label = T("Date"),
+                                        represent = s3_date_represent,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
                                   s3.comments(),
                                   format="%(name)s",
@@ -1434,7 +1434,7 @@ class S3ProjectTaskModel(S3Model):
                                                                       T("Enter a valid future date")))],
                                         widget = S3DateTimeWidget(past=0,
                                                                   future=8760),  # Hours, so 1 year
-                                        represent = s3_date_simple_represent),
+                                        represent = s3_date_represent),
                                   milestone_id(
                                         readable = staff,
                                         writable = staff,
@@ -1467,7 +1467,7 @@ class S3ProjectTaskModel(S3Model):
         # Comment these if you don't need a Site associated with Tasks
         #table.site_id.readable = table.site_id.writable = True
         #table.site_id.label = T("Check-in at Facility") # T("Managing Office")
-        table.created_on.represent = s3_date_simple_represent
+        table.created_on.represent = s3_date_represent
 
         # CRUD Strings
         ADD_TASK = T("Add Task")
@@ -2176,9 +2176,10 @@ def project_rheader(r, tabs=[]):
                             else:
                                 text = ""
                         except etree.XMLSyntaxError:
-                            text = comments.body.replace("<", "<!-- <").replace(">", "> -->")
+                            t = html.fromstring(comments.body)
+                            text = t.text_content()
                         comments = TR(
-                                        TH("%s: " % T("Lastet Comment")),
+                                        TH("%s: " % T("Latest Comment")),
                                         A(text,
                                           _href=URL(args=[r.id, "discuss"]))
                                     )

@@ -2062,12 +2062,12 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
     def __call__(self, field, value, **attributes):
 
-        response = current.response
         T = current.T
+        s3 = current.response.s3
 
         selector = str(field).replace(".", "_")
 
-        response.s3.js_global.append("""
+        s3.js_global.append("""
 S3.i18n.addAll = '%s';
 S3.i18n.removeAll = '%s';
 S3.i18n.itemsCount = '%s';
@@ -2077,7 +2077,7 @@ S3.i18n.search = '%s';
        T("items selected"),
        T("search")))
 
-        response.s3.jquery_ready.append("""
+        s3.jquery_ready.append("""
 $( '#%s' ).removeClass('list');
 $( '#%s' ).addClass('multiselect');
 $( '#%s' ).multiselect({
@@ -2251,8 +2251,9 @@ class S3AddPersonWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
-        db = current.db
         T = current.T
+        db = current.db
+        s3db = current.s3db
 
         request = current.request
         response = current.response
@@ -2318,8 +2319,8 @@ class S3AddPersonWidget(FormWidget):
                     _class="box_top")
 
         # Embedded Form
-        ptable = db.pr_person
-        ctable = db.pr_contact
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
         fields = [ptable.first_name,
                   ptable.middle_name,
                   ptable.last_name,
@@ -2474,8 +2475,9 @@ class S3AddObjectWidget(FormWidget):
         self.on_hide = on_hide
 
     def __call__(self, field, value, **attributes):
-        s3 = current.response.s3
+
         T = current.T
+        s3 = current.response.s3
 
         script_name = "%s/%s" % (
                 s3.script_dir,
@@ -2800,8 +2802,9 @@ class S3EmbedComponentWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
-        db = current.db
         T = current.T
+        db = current.db
+        s3db = current.s3db
 
         request = current.request
         response = current.response
@@ -2809,8 +2812,8 @@ class S3EmbedComponentWidget(FormWidget):
 
         formstyle = response.s3.crud.formstyle
 
-        ltable = db[self.link]
-        ctable = db[self.component]
+        ltable = s3db[self.link]
+        ctable = s3db[self.component]
 
         prefix, resourcename = self.component.split("_", 1)
         if field.name in request.post_vars:

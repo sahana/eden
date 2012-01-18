@@ -32,7 +32,7 @@
   <a href='{{=r.url(method="", representation="kml", vars=session.s3.filter)}}' title='{{=T("Export in KML format")}}'><img src='/{{=request.application}}/static/img/kml_icon.png'/></a>
   <a id='gis_datatables_map-btn' title='{{=T("Show on Map")}}'><img src='/{{=request.application}}/static/img/silk/map.png'/></a>{{pass}}
 {{if "pe_id" in r.target()[2] or "person_id" in r.target()[2]:}}
-  <a href='{{=r.url(method="compose", vars=session.s3.filter)}}' title='{{=T("Send Message")}}'><img src='/{{=request.application}}/static/img/silk/email.png'/>{{pass}}
+  <a href='{{=r.url(method="compose", vars=session.s3.filter)}}' title='{{=T("Send Message")}}'><img src='/{{=request.application}}/static/img/silk/email.png'/></a>{{pass}}
 {{pass}}
 {{except:}}{{pass}}
 </div>

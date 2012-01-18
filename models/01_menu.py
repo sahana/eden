@@ -387,6 +387,7 @@ if auth.permission.format in ("html"):
                     #[T("Search"), False, aURL(f="task", args="search")],
                 #]],
                 [T("Daily Work"), False, aURL(f="time"),[
+                    [T("All Tasks"), False, aURL(f="task", args="search")],
                     [T("My Logged Hours"), False, aURL(f="time", vars={"mine":1})],
                     [T("Last Week's Work"),
                     False, aURL(f="time",
@@ -540,6 +541,13 @@ if auth.permission.format in ("html"):
                                                            c="hrm",
                                                            f="training",
                                                            args=["import"])],
+                [T("Training Report"), False, aURL(c="hrm",
+                                                   f="training",
+                                                   args=["report"],
+                                                   vars=dict(rows="course_id",
+                                                             cols="month",
+                                                             fact="person_id",
+                                                             aggregate="count"))],
             ]],
             [T("Training Course Catalog"), False, URL(c="hrm",
                                                       f="course"), [
