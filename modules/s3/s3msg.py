@@ -199,7 +199,7 @@ class S3Msg(object):
 
             @ToDo: Check for OpenGeoSMS
                     - route SI to IRS
-                    
+
             @ToDo: Allow this to be more easily customised by moving the
                    routing logic to a separate file (ideally web configurable)
         """
@@ -329,7 +329,7 @@ class S3Msg(object):
             @param type: The default message type: None, EMAIL, SMS or TWITTER
             @param recipient_type: Send to Persons or Groups? (pr_person or pr_group)
             @param recipient: The pe_id of the person/group to send the message to
-                              - this can also be set by setting one of 
+                              - this can also be set by setting one of
                                 (in priority order, if multiple found):
                                 request.vars.pe_id
                                 request.vars.person_id
@@ -1257,7 +1257,7 @@ class S3Compose(S3CRUD):
         if not settings.has_module("msg"):
             session.error = T("Cannot send messages if Messaging module disabled")
             redirect(URL(f="index"))
-                         
+
         #_vars = r.get_vars
 
         self.recipients = None
@@ -1270,7 +1270,7 @@ class S3Compose(S3CRUD):
             # if r.http == "POST" and not errors:
                 # self.resource.add_filter(query)
             # _vars = form.vars
-       
+
         # Apply method
         resource = self.resource
         representation = r.representation
