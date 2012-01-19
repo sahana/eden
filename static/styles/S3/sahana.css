@@ -534,7 +534,7 @@ table {
     padding:10px 30px 10px 30px;
    -moz-border-radius: 10px 10px 10px 10px;
    -webkit-border-radius: 10px 10px 10px 10px;
-   overflow: hidden;
+   overflow: auto;
 }
 #content h1,
 #content h2 {
@@ -618,7 +618,7 @@ table {
 #poweredby a{
     color: #2A485D;
     text-decoration: none;
-	
+
 }
 /* Twitter bugfix */
 #twttrHubFrame {
@@ -804,7 +804,12 @@ input[disabled='disabled'] {
 /* Tabular data view */
 div#table-container {
    display: block;
-   overflow: visible;
+   width: 100%;
+   overflow: auto;
+}
+div#table-container table {
+   display: block;
+   overflow: auto;
 }
 div#table-container thead th {
 	text-align: left;
