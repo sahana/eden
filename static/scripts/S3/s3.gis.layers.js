@@ -1228,10 +1228,10 @@ function addWMSLayer(layer) {
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
-            dir: dir,
             layers: layers
         },
         {
+            dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
             visibility: visibility

@@ -3,14 +3,10 @@
 {{else:}}
 <link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-{{try:}}
-    {{=H2(title)}}
-{{except:}}
-{{pass}}
-{{try:}}
-    {{=s3_ocr_buttons(r)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
+{{try:}}{{=s3_ocr_buttons(r)}}
+{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}
     {{=XML(rheader)}}
@@ -24,10 +20,15 @@
 {{except:}}{{pass}}
 </div>
 <div id='map'></div>
+<<<<<<< HEAD
 {{try:}}
     {{=H3(subtitle)}}
 {{except:}}
 {{pass}}
+=======
+{{try:}}{{=H3(subtitle)}}
+{{except:}}{{pass}}
+>>>>>>> a3a16ca04415a299892e18e63dce1743a9e8152b
 {{try:}}
     {{items = items}}
     {{try:}}
@@ -42,8 +43,7 @@
             {{pass}}
         </div>
         {{pass}}
-    {{except:}}
-    {{pass}}
+    {{except:}}{{pass}}
     <div id='chart-container' class='hide'>
         {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
         <div id='chart' style='height:300px;'></div>
@@ -52,8 +52,7 @@
         {{include "formats.html"}}
         {{=items}}
     </div>
-{{except:}}
-{{pass}}
+{{except:}}{{pass}}
 {{if response.s3.rfooter:}}
     <div id='rfooter'>
         {{=XML(response.s3.rfooter)}}
