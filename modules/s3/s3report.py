@@ -38,6 +38,7 @@
 __all__ = ["S3Cube"]
 
 import sys
+import gluon.contrib.simplejson as json
 
 from gluon import current
 from gluon.storage import Storage
@@ -170,13 +171,17 @@ class S3Cube(S3CRUD):
             # Represent the report --------------------------------------------
             #
             if representation == "html":
+                json_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
                                                _id="list",
                                                _class="dataTable display")
+                    json_data = items.json_data
                 else:
                     items = self.crud_string(self.tablename, "msg_no_match")
-                output = dict(items=items)
+
+                output = dict(items=items,
+                              json_data=json_data)
 
                 # Other output options ----------------------------------------
                 #
@@ -236,7 +241,7 @@ class S3Cube(S3CRUD):
                 form = ""
 
             output.update(title=title, subtitle=subtitle, form=form)
-            response.view = self._view(r, "list_create.html")
+            response.view = self._view(r, "report.html")
 
         return output
 
@@ -782,7 +787,7 @@ class S3Report:
         # Compute column total
         for c in xrange(numcols):
             col = cols[c]
-            col[layer] = aggregate(col_values, method)
+            col[layer] = aggregate(col[VALUES], method)
             del col[VALUES]
 
         # Compute overall total
@@ -905,6 +910,7 @@ class S3ContingencyTable(TABLE):
 
         TABLE.__init__(self, **attributes)
         components = self.components = []
+        self.json_data = None
 
         layers = report.layers
         resource = report.resource
@@ -921,8 +927,18 @@ class S3ContingencyTable(TABLE):
         represent = lambda f, v, d="": \
                     self._represent(lfields, f, v, default=d)
 
+        col_titles = []
+        add_col_title = col_titles.append
+        col_totals = []
+        add_col_total = col_totals.append
+        row_titles = []
+        add_row_title = row_titles.append
+        row_totals = []
+        add_row_total = row_totals.append
+
         # Table header --------------------------------------------------------
         #
+        # @todo: make class and move into CSS:
         _style = "border:1px solid #cccccc; font-weight:bold;"
 
         # Layer titles
@@ -957,6 +973,7 @@ class S3ContingencyTable(TABLE):
         for i in xrange(numcols):
             value = values[i].value
             v = represent(cols, value)
+            add_col_title(str(v))
             colhdr = TH(v, _style=_style)
             add_header(colhdr)
 
@@ -983,6 +1000,7 @@ class S3ContingencyTable(TABLE):
             # Row header
             row = rvals[i]
             v = represent(rows, row.value)
+            add_row_title(str(v))
             rowhdr = TD(DIV(v))
             add_cell(rowhdr)
 
@@ -1008,8 +1026,8 @@ class S3ContingencyTable(TABLE):
                 add_cell(TD(DIV(vals)))
 
             # Row total
+            totals = get_total(row, layers, append=add_row_total)
             if cols is not None:
-                totals = get_total(row, layers)
                 add_cell(TD(DIV(totals)))
 
             add_row(tr)
@@ -1020,14 +1038,14 @@ class S3ContingencyTable(TABLE):
         _class = i % 2 and "odd" or "even"
         _class = "%s %s" % (_class, "totals_row")
 
-        tr = TR(_class=_class)
-        add_total = tr.append
+        col_total = TR(_class=_class)
+        add_total = col_total.append
         add_total(TD(TOTAL, _class="totals_header"))
 
         # Column totals
         for j in xrange(numcols):
             col = report.col[j]
-            totals = get_total(col, layers)
+            totals = get_total(col, layers, append=add_col_total)
             add_total(TD(DIV(totals)))
 
         # Grand total
@@ -1035,7 +1053,7 @@ class S3ContingencyTable(TABLE):
             grand_totals = get_total(report.totals, layers)
             add_total(TD(DIV(grand_totals)))
 
-        tfoot = TFOOT(tr)
+        tfoot = TFOOT(col_total)
 
         # Wrap up -------------------------------------------------------------
         #
@@ -1044,17 +1062,26 @@ class S3ContingencyTable(TABLE):
         append(tbody)
         append(tfoot)
 
-        self._load_script()
-
+        # Chart data ----------------------------------------------------------
+        #
+        drows = dcols = None
+        if rows and row_titles and row_totals:
+            drows = zip(row_titles, row_totals)
+        if cols and col_titles and col_totals:
+            dcols = zip(col_titles, col_totals)
+        report_data = Storage(rows=drows, cols=dcols)
+        self.json_data = json.dumps(report_data)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _totals(values, layers):
+    def _totals(values, layers, append=None):
         """
             Get the totals of a row/column/report
 
             @param values: the values dictionary
             @param layers: the layers
+            @param append: callback to collect the totals for JSON data
+                           (currently only collects the first layer)
         """
 
         totals = []
@@ -1063,6 +1090,8 @@ class S3ContingencyTable(TABLE):
             value = values[layer]
             if m == "list":
                 value = value and len(value) or 0
+            if not len(totals) and append is not None:
+                append(value)
             totals.append(str(value))
         totals = " / ".join(totals)
         return totals
@@ -1121,20 +1150,5 @@ class S3ContingencyTable(TABLE):
             return lf.label
         else:
             return DEFAULT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _load_script():
-        """ Append the JavaScript for reports to the response scripts """
-
-        session = current.session
-        if session.s3.debug:
-            script = "s3.report.js"
-        else:
-            #script = "s3.report.min.js"
-            script = "s3.report.js"
-        response = current.response
-        response.s3.scripts.append("%s/%s" % (response.s3.script_dir, script))
-        return
 
 # END =========================================================================

@@ -1,0 +1,93 @@
+{{if session.s3.debug:}}
+<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{else:}}
+<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{try:}}
+    {{=H2(title)}}
+{{except:}}
+{{pass}}
+{{try:}}
+    {{=s3_ocr_buttons(r)}}
+{{except:}}
+{{pass}}
+<div id='rheader'>
+{{try:}}
+    {{=XML(rheader)}}
+</div>
+<div id='component'>
+{{except:}}
+</div>
+{{pass}}
+<div id='map'></div>
+<div id='list-btn-add'>
+    {{try:}}
+        {{=showadd_btn}}
+        {{hide_listadd=True}}
+    {{except:}}
+        {{hide_listadd=False}}
+    {{pass}}
+    <div id='list-add'>
+        {{try:}}
+            {{=H3(addtitle)}}
+        {{except:}}
+        {{pass}}
+        {{try:}}
+            {{=addheader}}
+        {{except:}}
+        {{pass}}
+        {{include "key.html"}}
+        <div class='form-container'>
+            {{try:}}
+                {{=form}}
+            {{except:}}
+            {{pass}}
+        </div>
+    </div>
+</div>
+{{try:}}
+    {{=H3(subtitle)}}
+{{except:}}
+{{pass}}
+{{try:}}
+    {{items = items}}
+    <div id='chart-container' class='hide'>
+        {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
+        <div id='chart' style='width:400px; height:300px;'></div>
+    </div>
+    <div id='table-container'>
+        <div id='chart-opts'>
+            <a href="#" id="pie_chart_rows"><img src="/{{=request.application}}/static/img/report/pchart.png"/></a>
+            <a href="#" id="pie_chart_cols"><img src="/{{=request.application}}/static/img/report/pchart.png"/></a>
+        </div>
+        {{include "formats.html"}}
+        {{=items}}
+    </div>
+{{except:}}
+{{pass}}
+{{if response.s3.rfooter:}}
+    <div id='rfooter'>
+        {{=XML(response.s3.rfooter)}}
+    </div>
+{{pass}}
+{{include "dataTables.html"}}
+<script type="text/javascript">//<![CDATA[
+{{try:}}
+{{if json_data:}}
+    var json_data = {{=XML(json_data)}};
+{{else:}}
+    var json_data = {cols:null, rows:null};
+{{pass}}
+{{except:}}
+var json_data = {cols:null, rows:null};
+{{pass}}
+//]]></script>
+{{if session.s3.debug:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.report.js"></script>
+{{else:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.report.js"></script>
+{{pass}}
