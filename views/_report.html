@@ -51,19 +51,25 @@
 {{pass}}
 {{try:}}
     {{items = items}}
+    {{try:}}
+        {{if report_data is not None:}}
+        {{response.s3.actions=None}}
+        <div id='chart-opts' style='padding-bottom:10px;'>
+            {{if report_data.row_label:}}
+                <a href="#" id="pie_chart_rows"><img src="/{{=request.application}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>{{=report_data.row_label}}
+            {{pass}}
+            {{if report_data.col_label:}}
+                <a href="#" id="pie_chart_cols"><img src="/{{=request.application}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>{{=report_data.col_label}}
+            {{pass}}
+        </div>
+        {{pass}}
+    {{except:}}
+    {{pass}}
     <div id='chart-container' class='hide'>
         {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
-<<<<<<< HEAD
-        <div id='chart' style='width:400px; height:300px;'></div>
-=======
         <div id='chart' style='height:300px;'></div>
->>>>>>> devel
     </div>
     <div id='table-container'>
-        <div id='chart-opts'>
-            <a href="#" id="pie_chart_rows"><img src="/{{=request.application}}/static/img/report/pchart.png"/></a>
-            <a href="#" id="pie_chart_cols"><img src="/{{=request.application}}/static/img/report/pchart.png"/></a>
-        </div>
         {{include "formats.html"}}
         {{=items}}
     </div>
@@ -77,8 +83,8 @@
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
 {{try:}}
-{{if json_data:}}
-    var json_data = {{=XML(json_data)}};
+{{if report_data:}}
+    var json_data = {{=XML(report_data.json_data)}};
 {{else:}}
     var json_data = {cols:null, rows:null};
 {{pass}}

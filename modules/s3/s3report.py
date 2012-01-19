@@ -159,6 +159,7 @@ class S3Cube(S3CRUD):
                 msg = "%s: %s" % (msg, e)
                 r.error(400, msg, next=r.url(vars=[]))
             except:
+                raise
                 msg = T("Could not generate report")
                 e = sys.exc_info()[1]
                 if hasattr(e, "message"):
@@ -171,17 +172,17 @@ class S3Cube(S3CRUD):
             # Represent the report --------------------------------------------
             #
             if representation == "html":
-                json_data = None
+                report_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
                                                _id="list",
                                                _class="dataTable display")
-                    json_data = items.json_data
+                    report_data = items.report_data
                 else:
                     items = self.crud_string(self.tablename, "msg_no_match")
 
                 output = dict(items=items,
-                              json_data=json_data)
+                              report_data=report_data)
 
                 # Other output options ----------------------------------------
                 #
@@ -491,7 +492,12 @@ class S3Report:
         #
         if records:
 
-            self.records = Storage([(i[pkey], i) for i in records])
+            try:
+                extract = self._extract
+                self.records = Storage([(extract(i, pkey), i) for i in records])
+            except KeyError:
+                raise KeyError("Could not retrieve primary key values of %s" %
+                               resource.tablename)
 
             # Generate the data frame -----------------------------------------
             #
@@ -952,18 +958,18 @@ class S3ContingencyTable(TABLE):
 
         # Columns field title
         if cols:
-            label = get_label(lfields, cols, tablename, "report_cols")
+            col_label = get_label(lfields, cols, tablename, "report_cols")
             _colspan = numcols + 1
         else:
-            label = ""
+            col_label = ""
             _colspan = numcols
-        cols_title = TD(label, _style=_style, _colspan=_colspan)
+        cols_title = TD(col_label, _style=_style, _colspan=_colspan)
 
         titles = TR(layers_title, cols_title)
 
         # Rows field title
-        label = get_label(lfields, rows, tablename, "report_rows")
-        rows_title = TH(label, _style=_style)
+        row_label = get_label(lfields, rows, tablename, "report_rows")
+        rows_title = TH(row_label, _style=_style)
 
         headers = TR(rows_title)
         add_header = headers.append
@@ -1069,8 +1075,10 @@ class S3ContingencyTable(TABLE):
             drows = zip(row_titles, row_totals)
         if cols and col_titles and col_totals:
             dcols = zip(col_titles, col_totals)
-        report_data = Storage(rows=drows, cols=dcols)
-        self.json_data = json.dumps(report_data)
+        json_data = json.dumps(dict(rows=drows, cols=dcols))
+        self.report_data = Storage(row_label=str(row_label),
+                                   col_label=str(col_label),
+                                   json_data=json_data)
 
     # -------------------------------------------------------------------------
     @staticmethod
