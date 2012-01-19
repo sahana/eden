@@ -19,32 +19,11 @@
 {{except:}}
 </div>
 {{pass}}
-<div id='map'></div>
-<div id='list-btn-add'>
-    {{try:}}
-        {{=showadd_btn}}
-        {{hide_listadd=True}}
-    {{except:}}
-        {{hide_listadd=False}}
-    {{pass}}
-    <div id='list-add'>
-        {{try:}}
-            {{=H3(addtitle)}}
-        {{except:}}
-        {{pass}}
-        {{try:}}
-            {{=addheader}}
-        {{except:}}
-        {{pass}}
-        {{include "key.html"}}
-        <div class='form-container'>
-            {{try:}}
-                {{=form}}
-            {{except:}}
-            {{pass}}
-        </div>
-    </div>
+<div class='form-container'>
+{{try:}}{{=form}}
+{{except:}}{{pass}}
 </div>
+<div id='map'></div>
 {{try:}}
     {{=H3(subtitle)}}
 {{except:}}
