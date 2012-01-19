@@ -29,10 +29,6 @@ function addLayers() {
     if (S3.gis.Bing) {
         addBingLayers();
     }
-    // Yahoo
-    if (S3.gis.Yahoo) {
-        addYahooLayers();
-    }
     // TMS
     if (S3.gis.layers_tms) {
         for (i = 0; i < S3.gis.layers_tms.length; i++) {
@@ -216,7 +212,7 @@ function addGeoJSONLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -603,7 +599,7 @@ function addGPXLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -707,7 +703,7 @@ function addKMLLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -813,7 +809,7 @@ function addOSMLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -888,7 +884,7 @@ function addTMSLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -954,7 +950,7 @@ function addWFSLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -1167,7 +1163,7 @@ function addWMSLayer(layer) {
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
-        if (!(dir in S3.gis.dirs)) {
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
             // Add this folder to the list of folders
             S3.gis.dirs.push(dir);
         }
@@ -1268,48 +1264,6 @@ function addWMSLayer(layer) {
         }
     }
     map.addLayer(wmsLayer);
-}
-
-// Yahoo - deprecated
-function addYahooLayers() {
-    var yahoo = S3.gis.Yahoo;
-    // None of the dynamic script loading seems to work as YAHOO_MAP_SAT isn't set
-    //var ApiKey = yahoo.ApiKey;
-    //var url = 'http://api.maps.yahoo.com/ajaxymap?v=3.8&appid=' + ApiKey;
-    //var script = document.createElement("script");
-    //script.type = "text/javascript";
-    //script.src = url;
-    /* If we want to OpenLayers.Layer.Bing.processMetadata
-    /* script.id = this._callbackId;
-    */
-    //document.getElementsByTagName("head")[0].appendChild(script);
-    var layer;
-    if (yahoo.Satellite) {
-        layer = new OpenLayers.Layer.Yahoo(
-            yahoo.Satellite, {
-                type: YAHOO_MAP_SAT,
-                sphericalMercator: true
-            }
-        );
-        map.addLayer(layer);
-    }
-    if (yahoo.Maps) {
-        layer = new OpenLayers.Layer.Yahoo(
-            yahoo.Maps, {
-                sphericalMercator: true
-            }
-        );
-        map.addLayer(layer);
-    }
-    if (yahoo.Hybrid) {
-        layer = new OpenLayers.Layer.Yahoo(
-            yahoo.Hybrid, {
-                type: YAHOO_MAP_HYB,
-                sphericalMercator: true
-            }
-        );
-        map.addLayer(layer);
-    }
 }
 
 // Support GeoJSON Layers
