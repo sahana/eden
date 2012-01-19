@@ -1098,7 +1098,7 @@ class S3ContingencyTable(TABLE):
             if len(tl) > length:
                 m = length - 1
                 l = list(tl)
-                l.sort(lambda x, y: y[1]-x[1])
+                l.sort(lambda x, y: int(y[1]-x[1]))
                 if least:
                     l.reverse()
                 ts = (str(T("Others")), reduce(lambda s, t: s+t[1], l[m:], 0))

@@ -42,7 +42,7 @@ $(function() {
                     renderer: $.jqplot.PieRenderer,
                     rendererOptions: {
                         showDataLabels: true,
-                        diameter:200
+                        diameter:250
                     }
                 },
                 legend: { show:true, location: 'e', escapeHtml:true }
