@@ -1809,7 +1809,7 @@ class S3MapModel(S3Model):
                                   name_field(),
                                   Field("description", label=T("Description")),
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
-                                  Field("visible", "boolean", default=True,
+                                  Field("visible", "boolean", default=False,
                                         label=T("On by default? (only applicable to Overlays)")),
                                   gis_layer_folder(),
                                   Field("url", label=T("Location"), requires = IS_NOT_EMPTY(),

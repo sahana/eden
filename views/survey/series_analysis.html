@@ -23,6 +23,12 @@
     {{pass}}
 
 {{try:}}
+  <DIV id="survey_chart_download"/>
+  {{=chartDownload}}
+{{except:}}
+  {{pass}}
+  </DIV>
+{{try:}}
   <DIV id="survey_chart"/>
   {{=chart}}
 {{except:}}

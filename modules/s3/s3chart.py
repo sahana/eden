@@ -180,6 +180,12 @@ class S3Chart(object):
             Draw a Bar Chart
                 - used by the Survey module
         """
+        barColourList = ["#F2D7A0", "#7B77A8", "#69889A", "#9D7B34"]
+        barColourListExt = [(242, 215, 160),
+                            (123, 118, 168),
+                            (105, 136, 154),
+                            (157, 123, 52)
+                           ]
         fig = self.fig
         if not fig:
             return "Matplotlib not installed"
@@ -200,14 +206,26 @@ class S3Chart(object):
         width = 0.9 / dcnt
         offset = 0
         gap = 0.1 / dcnt
-        bcnt = 1
+        bcnt = 0
         bars = []
         height = max(0.2, 0.85 - (0.04 * lcnt))
         rect = [0.08, 0.08, 0.9, height]
         ax = fig.add_axes(rect)
         for data in dataList:
             left = arange(offset, cnt + offset)    # the x locations for the bars
-            colour = (0.2/bcnt, 0.5/bcnt, 1.0/bcnt)
+            if bcnt < 3:
+                colour = barColourList[bcnt]
+            else:
+                colour = []
+                colourpart = barColourListExt[bcnt%4]
+                divisor = 256.0 - (32 * bcnt/4)
+                if divisor < 0.0:
+                    divisor = divisor * -1
+                for part in colourpart:
+                    calc = part/divisor
+                    while calc > 1.0:
+                        calc -= 1
+                    colour.append(calc)
             plot = ax.bar(left, data, width=width, color=colour)
             bars.append(plot[0])
             bcnt += 1

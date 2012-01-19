@@ -216,7 +216,7 @@ if deployment_settings.has_module(module):
                     if loc in hierarchyElements:
                         name = hierarchyElements[loc]
                     else:
-                        name = backupName
+                        continue
                     code = "STD-%s" % loc
                     if loc == "Lat" or loc == "Lon":
                         type = "Numeric"
@@ -964,51 +964,7 @@ if deployment_settings.has_module(module):
                         numQstnList = [numQstnList]
                 debug += "Label: %s<br />Numeric: %s<br />" % (labelQuestion, numQstnList)
                 if (numQstnList != None) and (labelQuestion != None):
-                    getAnswers = response.s3.survey_getAllAnswersForQuestionInSeries
-                    gqstn = response.s3.survey_getQuestionFromName(labelQuestion, series_id)
-                    gqstn_id = gqstn["qstn_id"]
-                    ganswers = getAnswers(gqstn_id, series_id)
-                    dataList = []
-                    legendLabels = []
-                    for numericQuestion in numQstnList:
-                        if numericQuestion == "Count":
-                            # get the count of replies for the label question
-                            gqstn_type = gqstn["type"]
-                            analysisTool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
-                            map = analysisTool.uniqueCount()
-                            debug += "Type: %s<br />Count: %s<br />" % (gqstn_type, map)
-                            label = map.keys()
-                            data = map.values()
-                            legendLabels.append(T("Count of Question"))
-                        else:
-                            qstn = response.s3.survey_getQuestionFromCode(numericQuestion, series_id)
-                            qstn_id = qstn["qstn_id"]
-                            qstn_type = qstn["type"]
-                            answers = getAnswers(qstn_id, series_id)
-                            analysisTool = survey_analysis_type[qstn_type](qstn_id, answers)
-                            label = analysisTool.qstnWidget.question.name
-                            if len(label) > 20:
-                                label = "%s..." % label[0:20]
-                            legendLabels.append(label)
-                            grouped = analysisTool.groupData(ganswers)
-                            aggregate = "Sum"
-                            filtered = analysisTool.filter(aggregate, grouped)
-                            (label, data) = analysisTool.splitGroupedData(filtered)
-                            debug += "Type: %s<br />Grouped: %s<br />Filtered: %s<br />" % (qstn_type, grouped, filtered)
-                        if data != []:
-                            dataList.append(data)
-
-                    if dataList == []:
-                        output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
-                    else:
-                        chart = s3chart(width=7.2)
-                        chart.displayAsIntegers()
-                        chart.survey_bar(labelQuestion,
-                                         dataList,
-                                         label,
-                                         legendLabels)
-                        image = chart.draw()
-                        output["chart"] = image
+                    drawChart(output, series_id, numQstnList, labelQuestion)
                     if request.ajax == True:
                         return output["chart"].xml()
             #output["debug"] = debug
@@ -1065,11 +1021,15 @@ if deployment_settings.has_module(module):
             jurl = URL(r=request, c=r.prefix, f=r.function, args=request.args)
             response.s3.jquery_ready.append("""
 $("#chart_btn").click(function(){
+    var data = $("#mapGraphForm").serialize()
+    var url = "<a class='action-btn' href=series_chart_download?" + data + ">Download Chart</a>"
     $.post('%s',
-           $("#mapGraphForm").serialize(),
+           data,
            function(data) {
                             $("#survey_chart").empty();
                             $("#survey_chart").append(data);
+                            $("#survey_chart_download").empty();
+                            $("#survey_chart_download").append(url);
                           }
           );
 });
@@ -1254,6 +1214,79 @@ $("#chart_btn").click(function(){
             response.view = "survey/series_map.html"
             return output
 
+        def seriesChartDownload(r, **attr):
+            output = dict()
+            series_id = request.args[0]
+            seriesName = response.s3.survey_getSeriesName(series_id)
+            if "labelQuestion" in request.get_vars:
+                labelQuestion = request.get_vars.labelQuestion
+            if "numericQuestion" in request.get_vars:
+                numQstnList = request.get_vars.numericQuestion
+                if not isinstance(numQstnList,(list,tuple)):
+                    numQstnList = [numQstnList]
+            if (numQstnList != None) and (labelQuestion != None):
+                drawChart(output, series_id, numQstnList, labelQuestion, outputFormat="png")
+            response.headers["Content-Type"] = contenttype(".png")
+            filename = "%s_chart.png" % seriesName
+            response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+            return output["chart"]
+
+        def drawChart(output, series_id, numQstnList, labelQuestion, outputFormat=None):
+            getAnswers = response.s3.survey_getAllAnswersForQuestionInSeries
+            gqstn = response.s3.survey_getQuestionFromName(labelQuestion, series_id)
+            gqstn_id = gqstn["qstn_id"]
+            ganswers = getAnswers(gqstn_id, series_id)
+            dataList = []
+            legendLabels = []
+            for numericQuestion in numQstnList:
+                if numericQuestion == "Count":
+                    # get the count of replies for the label question
+                    gqstn_type = gqstn["type"]
+                    analysisTool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
+                    map = analysisTool.uniqueCount()
+                    label = map.keys()
+                    data = map.values()
+                    legendLabels.append(T("Count of Question"))
+                else:
+                    qstn = response.s3.survey_getQuestionFromCode(numericQuestion, series_id)
+                    qstn_id = qstn["qstn_id"]
+                    qstn_type = qstn["type"]
+                    answers = getAnswers(qstn_id, series_id)
+                    analysisTool = survey_analysis_type[qstn_type](qstn_id, answers)
+                    label = analysisTool.qstnWidget.question.name
+                    if len(label) > 20:
+                        label = "%s..." % label[0:20]
+                    legendLabels.append(label)
+                    grouped = analysisTool.groupData(ganswers)
+                    aggregate = "Sum"
+                    filtered = analysisTool.filter(aggregate, grouped)
+                    (label, data) = analysisTool.splitGroupedData(filtered)
+                if data != []:
+                    dataList.append(data)
+
+            if dataList == []:
+                output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
+            else:
+                chart = s3chart(width=7.2)
+                chart.displayAsIntegers()
+                chart.survey_bar(labelQuestion,
+                                 dataList,
+                                 label,
+                                 legendLabels)
+                if outputFormat == None:
+                    image = chart.draw()
+                else:
+                    image = chart.draw(output=outputFormat)
+                output["chart"] = image
+                chartLink = A("Download",
+                             _href=URL(c="survey",
+                                       f="series",
+                                       args=request.args,
+                                       vars=request.vars
+                                      )
+                             )
+                output["chartDownload"] = chartLink
+
         s3mgr.configure(tablename,
                         create_next = URL(f="newAssessment",
                                           vars={"viewing":"survey_series.[id]"}),
@@ -1268,6 +1301,8 @@ $("#chart_btn").click(function(){
                                action=seriesGraph)
         s3mgr.model.set_method("survey", "series", method="map",
                                action=seriesMap)
+        s3mgr.model.set_method("survey", "series", method="series_chart_download",
+                               action=seriesChartDownload)
 
         # ---------------------------------------------------------------------
         # Complete
