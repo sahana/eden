@@ -705,6 +705,7 @@ class S3HRSkillModel(S3Model):
         ADMIN = system_roles.ADMIN
 
         s3_date_represent = S3DateTime.date_represent
+        s3_date_format = settings.get_L10n_date_format()
 
         s3_has_role = auth.s3_has_role
 
@@ -1144,9 +1145,13 @@ class S3HRSkillModel(S3Model):
                                   course_id(),
                                   site_id,
                                   Field("start_date", "datetime",
+                                        widget = S3DateWidget(),
+                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         label=T("Start Date")),
                                   Field("end_date", "datetime",
+                                        widget = S3DateWidget(),
+                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         label=T("End Date")),
                                   Field("hours", "integer",
@@ -1194,11 +1199,13 @@ class S3HRSkillModel(S3Model):
                               T("Enter some characters to bring up a list of possible matches")))
 
         training_event_id = S3ReusableField("training_event_id", db.hrm_training_event,
-                                            sortby = "~start_date",
+                                            sortby = "start_date",
                                             label = T("Training Event"),
                                             requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                             "hrm_training_event.id",
-                                                                            hrm_training_event_represent)),
+                                                                            hrm_training_event_represent,
+                                                                            orderby="~hrm_training_event.start_date",
+                                                                            )),
                                             represent = hrm_training_event_represent,
                                             comment = course_help,
                                             ondelete = "RESTRICT",
@@ -1242,6 +1249,8 @@ class S3HRSkillModel(S3Model):
                                   s3.comments(),
                                   *s3.meta_fields())
 
+        # Suitable for use when adding a Training to a Person
+        # The ones when adding a Participant to an Event are done in the Controller
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Training"),
             title_display = T("Training Details"),
@@ -1449,8 +1458,14 @@ class S3HRSkillModel(S3Model):
                                   person_id(),
                                   organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                   Field("start_date", "date",
+                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget(),
                                         label=T("Start Date")),
                                   Field("end_date", "date",
+                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget(),
                                         label=T("End Date")),
                                   Field("hours", "integer",
                                         label=T("Hours")),
