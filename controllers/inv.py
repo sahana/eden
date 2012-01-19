@@ -108,7 +108,7 @@ def warehouse():
     s3mgr.configure(tablename,
                     search_method = warehouse_search)
     def prep(r):
-        if r.interactive:
+        if r.interactive and r.tablename == "org_office":
 
             if r.method != "read":
                 # Don't want to see in Create forms
@@ -152,6 +152,8 @@ def warehouse():
 
     if "extra_data" in request.get_vars:
         csv_template = "inv_item"
+        module = "inv"
+        resourcename = "inv_item"
     else:
         csv_template = "warehouse"
     csv_stylesheet = "%s.xsl" % csv_template
@@ -162,9 +164,7 @@ def warehouse():
                                 # Extra fields for CSV uploads:
                                 csv_extra_fields = [
                                     dict(label="Organisation",
-                                         field=s3db.org_organisation_id(comment=None)),
-                                    dict(label="Test",
-                                         value="MyTest")
+                                         field=s3db.org_organisation_id(comment=None))
                                 ])
 
     return output
