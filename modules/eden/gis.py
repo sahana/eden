@@ -1844,8 +1844,9 @@ class S3MapModel(S3Model):
                                                                       T("Optional selection of a background color.")))),
                                   Field("tiled", "boolean", label=T("Tiled"), default=False,
                                         comment=DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Tiled"),
-                                                                      T("Tells GeoServer to do MetaTiling which reduces the number of duplicate labels.")))),
+                                                    _title="%s|%s|%s" % (T("Tiled"),
+                                                                         T("Tells GeoServer to do MetaTiling which reduces the number of duplicate labels."),
+                                                                         T("Note that when using geowebcache, this can be set in the GWC config.")))),
                                   Field("buffer", "integer", label=T("Buffer"), default=0,
                                         requires=IS_INT_IN_RANGE(0, 10),
                                         comment=DIV(_class="tooltip",
@@ -2011,7 +2012,7 @@ class S3MapModel(S3Model):
     @staticmethod
     def gis_layer_folder():
         T = current.T
-        return S3ReusableField("dir",
+        return S3ReusableField("dir", length=32,
                                comment = DIV(_class="tooltip",
                                              _title="%s|%s" % (T("Folder"),
                                                                T("If you enter a foldername then the layer will appear in this folder in the Map's layer switcher."))),
@@ -2024,7 +2025,10 @@ class S3MapModel(S3Model):
         return S3ReusableField("opacity", "double", default=1.0,
                                requires = IS_FLOAT_IN_RANGE(0, 1),
                                widget = S3SliderWidget(minval=0, maxval=1, steprange=0.01, value=1),
-                               label = T("Opacity (left-side is fully transparent, right-side is opaque)"))
+                               comment = DIV(_class="tooltip",
+                                             _title="%s|%s" % (T("Opacity"),
+                                                               T("Left-side is fully transparent (0), right-side is opaque (1.0)."))),
+                               label = T("Opacity"))
 
     # -------------------------------------------------------------------------
     @staticmethod

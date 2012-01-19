@@ -4364,7 +4364,6 @@ S3.gis.layers_feature_queries[%i] = {
                 #OSMLayer,
                 BingLayer,
                 GoogleLayer,
-                #YahooLayer,
                 TMSLayer,
                 WMSLayer,
                 FeatureLayer,
