@@ -33,6 +33,34 @@
     OTHER DEALINGS IN THE SOFTWARE.
 */
 
-$(document).ready(function() {
-    alert("here");
-}
+$(function() {
+    var plot;
+    render_pie_chart = function(src) {
+        plot = jQuery.jqplot ('chart', [src],
+            {
+                seriesDefaults: {
+                    renderer: $.jqplot.PieRenderer,
+                    rendererOptions: {
+                        showDataLabels: true,
+                        diameter:200
+                    }
+                },
+                legend: { show:true, location: 'e', escapeHtml:true }
+            }
+        );
+    };
+    $('#pie_chart_rows').click(function() {
+        $('#chart-container').show();
+        $('#chart').empty();
+        render_pie_chart(json_data['rows']);
+    });
+    $('#pie_chart_cols').click(function() {
+        $('#chart-container').show();
+        $('#chart').empty();
+        render_pie_chart(json_data['cols']);
+    });
+//     $('#chart-container').hide();
+    $('#hide-chart').click(function(){
+        $('#chart-container').hide();
+    });
+});

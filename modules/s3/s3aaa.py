@@ -1070,7 +1070,7 @@ class AuthS3(Auth):
 
         if organisation_id and "hrm_human_resource" in db:
             # Create an HRM entry, if one doesn't already exist
-            table = db.hrm_human_resource
+            table = s3db.hrm_human_resource
             query = (table.person_id == person_id) & \
                     (table.organisation_id == organisation_id)
             if not db(query).select(table.id,
@@ -1081,7 +1081,7 @@ class AuthS3(Auth):
                                   owned_by_facility=owned_by_facility
                                 )
                 record = Storage(id=id)
-                current.manager.model.update_super(db.hrm_human_resource, record)
+                current.manager.model.update_super(s3db.hrm_human_resource, record)
             if owned_by_organisation:
                 # Add to the Org Access Role
                 table = self.settings.table_membership
@@ -1887,7 +1887,7 @@ class AuthS3(Auth):
         db = current.db
         s3db = current.s3db
         ptable = s3db.pr_person
-        hrtable = db.hrm_human_resource
+        hrtable = s3db.hrm_human_resource
 
         if self.s3_logged_in():
             try:
@@ -2181,6 +2181,7 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
 
         site_types = self.org_site_types
@@ -2195,14 +2196,13 @@ class AuthS3(Auth):
         FAC_TABLENAME = "org_site"
         NAME = "name"
 
-        org_table = db[ORG_TABLENAME]
-        fac_table = db[FAC_TABLENAME]
+        org_table = s3db[ORG_TABLENAME]
+        fac_table = s3db[FAC_TABLENAME]
         grp_table = self.settings.table_group
 
         # Get the table
-        if not hasattr(table, "_tablename"):
-            manager.load(table)
-            table = db[table]
+        if isinstance(table, str):
+            table = s3db[table]
         tablename = table._tablename
         _id = table._id.name
 
@@ -3473,6 +3473,7 @@ class S3Permission(object):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
         T = current.T
         ERROR = T("You do not have permission for any organization to perform this action.")
@@ -3481,7 +3482,7 @@ class S3Permission(object):
         if not error_msg:
             error_msg = ERROR
 
-        org_table = db.org_organisation
+        org_table = s3db.org_organisation
         query = self.auth.s3_accessible_query("update", org_table)
         query &= (org_table.deleted == False)
         rows = db(query).select(org_table.id)
