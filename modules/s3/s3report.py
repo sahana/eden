@@ -171,13 +171,17 @@ class S3Cube(S3CRUD):
             # Represent the report --------------------------------------------
             #
             if representation == "html":
+                json_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
                                                _id="list",
                                                _class="dataTable display")
+                    json_data = items.json_data
                 else:
                     items = self.crud_string(self.tablename, "msg_no_match")
-                output = dict(items=items)
+
+                output = dict(items=items,
+                              json_data=json_data)
 
                 # Other output options ----------------------------------------
                 #
@@ -906,9 +910,7 @@ class S3ContingencyTable(TABLE):
 
         TABLE.__init__(self, **attributes)
         components = self.components = []
-
-        app = current.request.application
-        piechart = IMG(_src="/%s/static/img/report/pie.png" % app)
+        self.json_data = None
 
         layers = report.layers
         resource = report.resource
@@ -955,18 +957,12 @@ class S3ContingencyTable(TABLE):
         else:
             label = ""
             _colspan = numcols
-        if rows:
-            col_charts = A(piechart, _href="#", _id="pie_chart_cols", _style="padding:2px;")
-            label = [label, col_charts]
         cols_title = TD(label, _style=_style, _colspan=_colspan)
 
         titles = TR(layers_title, cols_title)
 
         # Rows field title
         label = get_label(lfields, rows, tablename, "report_rows")
-        if cols:
-            row_charts = A(piechart, _href="#", _id="pie_chart_rows", _style="padding:2px;")
-            label = [label, row_charts]
         rows_title = TH(label, _style=_style)
 
         headers = TR(rows_title)
@@ -1068,17 +1064,13 @@ class S3ContingencyTable(TABLE):
 
         # Chart data ----------------------------------------------------------
         #
-        response = current.response
+        drows = dcols = None
         if rows and row_titles and row_totals:
             drows = zip(row_titles, row_totals)
-        else:
-            drows = None
         if cols and col_titles and col_totals:
             dcols = zip(col_titles, col_totals)
-        else:
-            dcols = None
         report_data = Storage(rows=drows, cols=dcols)
-        response.s3.report_data = json.dumps(report_data)
+        self.json_data = json.dumps(report_data)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1088,6 +1080,8 @@ class S3ContingencyTable(TABLE):
 
             @param values: the values dictionary
             @param layers: the layers
+            @param append: callback to collect the totals for JSON data
+                           (currently only collects the first layer)
         """
 
         totals = []
@@ -1096,7 +1090,7 @@ class S3ContingencyTable(TABLE):
             value = values[layer]
             if m == "list":
                 value = value and len(value) or 0
-            if not len(totals) and append:
+            if not len(totals) and append is not None:
                 append(value)
             totals.append(str(value))
         totals = " / ".join(totals)

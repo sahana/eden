@@ -56,6 +56,10 @@
         <div id='chart' style='width:400px; height:300px;'></div>
     </div>
     <div id='table-container'>
+        <div id='chart-opts'>
+            <a href="#" id="pie_chart_rows"><img src="/{{=request.application}}/static/img/report/pchart.png"/></a>
+            <a href="#" id="pie_chart_cols"><img src="/{{=request.application}}/static/img/report/pchart.png"/></a>
+        </div>
         {{include "formats.html"}}
         {{=items}}
     </div>
@@ -69,13 +73,13 @@
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
 {{try:}}
-{{if response.s3.report_data:}}
-    var data = {{=XML(response.s3.report_data)}};
+{{if json_data:}}
+    var json_data = {{=XML(json_data)}};
 {{else:}}
-    var data = {cols:null, rows:null};
+    var json_data = {cols:null, rows:null};
 {{pass}}
 {{except:}}
-var data = {cols:null, rows:null};
+var json_data = {cols:null, rows:null};
 {{pass}}
 //]]></script>
 {{if session.s3.debug:}}

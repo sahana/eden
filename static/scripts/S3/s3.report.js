@@ -52,12 +52,12 @@ $(function() {
     $('#pie_chart_rows').click(function() {
         $('#chart-container').show();
         $('#chart').empty();
-        render_pie_chart(data['rows']);
+        render_pie_chart(json_data['rows']);
     });
     $('#pie_chart_cols').click(function() {
         $('#chart-container').show();
         $('#chart').empty();
-        render_pie_chart(data['cols']);
+        render_pie_chart(json_data['cols']);
     });
 //     $('#chart-container').hide();
     $('#hide-chart').click(function(){
