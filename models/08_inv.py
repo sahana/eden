@@ -220,7 +220,10 @@ $(document).ready(function() {
             auth.permission.permitted_facilities(table=table,
                                                  error_msg=T("You do not have permission for any site to add an inventory item."))
 
-            return s3_rest_controller("inv", "inv_item")
+            return s3_rest_controller("inv", "inv_item",
+                                      csv_extra_fields = [
+                                        dict(label="Organisation",
+                                             field=s3db.org_organisation_id(comment=None))])
 
         # =====================================================================
         # Received (In/Receive / Donation / etc)

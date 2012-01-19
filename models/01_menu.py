@@ -993,9 +993,8 @@ if auth.permission.format in ("html"):
                                                                   args="search")],
                         [s3.crud_strings.inv_recv.title_search, False, aURL(c="inv", f="recv",
                                                                             args="search")],
-                        [T("Import"), False, aURL(p="create", c="inv", f="warehouse",
-                                                  args=["import"],
-                                                  vars={"extra_data":True})],
+                        [T("Import"), False, aURL(p="create", c="inv", f="inv_item",
+                                                  args=["import"])],
                     ]],
                     [s3.crud_strings.inv_recv.subtitle_list, False, aURL(c="inv", f="recv"), [
                         [T("New"), False, aURL(p="create", c="inv",
