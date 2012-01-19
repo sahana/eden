@@ -987,8 +987,8 @@ if auth.permission.format in ("html"):
                                                   f="warehouse",
                                                   args=["import"])],
                     ]],
-                    [T("Inventories"), False, aURL(c="inv", f="warehouse"), [
-                        [T("Search Inventory Items"), False, aURL(c="inv",
+                    [T("Warehouse Stock"), False, aURL(c="inv", f="warehouse"), [
+                        [T("Search Warehouse Stock"), False, aURL(c="inv",
                                                                   f="inv_item",
                                                                   args="search")],
                         [s3.crud_strings.inv_recv.title_search, False, aURL(c="inv", f="recv",

@@ -133,7 +133,7 @@ def req_item_inv_item():
 
     output = {}
 
-    output["title"] = T("Request Item from Available Inventory")
+    output["title"] = T("Request Stock from Available Warehouse")
     output["req_btn"] = A( T("Return to Request"),
                            _href = URL( c = "req",
                                         f = "req",
@@ -312,7 +312,7 @@ def commit_rheader(r):
                 rheader = DIV( TABLE( TR( TH( "%s: " % T("Request")),
                                           response.s3.req_represent(record.req_id),
                                          ),
-                                      TR( TH( "%s: " % T("Committing Inventory")),
+                                      TR( TH( "%s: " % T("Committing Warehouse")),
                                           s3db.org_site_represent(record.site_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),

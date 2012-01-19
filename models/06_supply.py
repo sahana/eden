@@ -1078,7 +1078,7 @@ S3FilterFieldChange({
         # - it allows searching/reporting across Item types easily.
         #
         item_types = Storage(
-                            inv_inv_item = T("Inventory Item"),
+                            inv_inv_item = T("Warehouse Stock"),
                             inv_recv_item = T("Order Item"),
                             proc_plan_item = T("Planned Procurement Item"),
                             )

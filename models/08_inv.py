@@ -11,7 +11,7 @@
 if deployment_settings.has_module("inv"):
 
     inv_recv_type = { 0:NONE,
-                      1:"Another Inventory",
+                      1:"Another Warehouse",
                       2:"Donation",
                       3:"Supplier" }
 
@@ -71,7 +71,7 @@ if deployment_settings.has_module("inv"):
         tablename = "inv_inv_item"
         table = db.define_table(tablename,
                                 super_link("site_id", "org_site",
-                                           label = T("Inventory"),
+                                           label = T("Warehouse"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            readable = True,
                                            writable = True,
@@ -111,25 +111,25 @@ if deployment_settings.has_module("inv"):
         table.virtualfields.append(item_pack_virtualfields(tablename = "inv_inv_item"))
 
         # CRUD strings
-        INV_ITEM = T("Inventory Item")
-        ADD_INV_ITEM = T("Add Item to Inventory")
-        LIST_INV_ITEMS = T("List Items in Inventory")
+        INV_ITEM = T("Warehouse Stock")
+        ADD_INV_ITEM = T("Add Stock to Warehouse")
+        LIST_INV_ITEMS = T("List Stock in Warehouse")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_INV_ITEM,
-            title_display = T("Inventory Item Details"),
+            title_display = T("Warehouse Stock Details"),
             title_list = LIST_INV_ITEMS,
-            title_update = T("Edit Inventory Item"),
-            title_search = T("Search Inventory Items"),
-            title_upload = T("Import Stock Level"),
+            title_update = T("Edit Warehouse Stock"),
+            title_search = T("Search Warehouse Stock"),
+            title_upload = T("Import Warehouse Stock"),
             subtitle_create = ADD_INV_ITEM,
-            subtitle_list = T("Inventory Items"),
+            subtitle_list = T("Warehouse Stock"),
             label_list_button = LIST_INV_ITEMS,
             label_create_button = ADD_INV_ITEM,
-            label_delete_button = T("Remove Item from Inventory"),
-            msg_record_created = T("Item added to Inventory"),
-            msg_record_modified = T("Inventory Item updated"),
-            msg_record_deleted = T("Item removed from Inventory"),
-            msg_list_empty = T("No Items currently registered in this Inventory"))
+            label_delete_button = T("Remove Stock from Warehouse"),
+            msg_record_created = T("Stock added to Warehouse"),
+            msg_record_modified = T("Warehouse Stock updated"),
+            msg_record_deleted = T("Stock removed from Warehouse"),
+            msg_list_empty = T("No Stock currently registered in this Warehouse"))
 
         def inv_item_represent(id):
             itable = db.inv_inv_item
@@ -154,7 +154,7 @@ if deployment_settings.has_module("inv"):
                                       label = INV_ITEM,
                                       comment = DIV( _class="tooltip",
                                                      _title="%s|%s" % (INV_ITEM,
-                                                                       T("Select Items from this Inventory"))),
+                                                                       T("Select Stock from this Warehouse"))),
                                       ondelete = "CASCADE",
                                       script =
 SCRIPT("""
@@ -227,7 +227,7 @@ $(document).ready(function() {
         #
         """
         inv_recv_type = { 0:NONE,
-                          1:"Another Inventory",
+                          1:"Another Stock",
                           2:"Donation",
                           3:"Supplier" }
 
@@ -549,7 +549,7 @@ $(document).ready(function() {
                                                 )
 
                                 cancel_btn_confirm = SCRIPT("S3ConfirmClick('#recv_cancel', '%s')"
-                                                             % T("Do you want to cancel this received shipment? The items will be removed from the Inventory. This action CANNOT be undone!") )
+                                                             % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
                                 response.s3.rfooter.append(cancel_btn)
                                 response.s3.rfooter.append(cancel_btn_confirm)
 
@@ -596,7 +596,7 @@ $(document).ready(function() {
             table = db.inv_recv
             table.date.readable = True
             table.site_id.readable = True
-            table.site_id.label = T("By Inventory")
+            table.site_id.label = T("By Warehouse")
             table.site_id.represent = org_site_represent
             return s3_component_form(r,
                                      componentname = "recv_item",
@@ -614,7 +614,7 @@ $(document).ready(function() {
             table.date.readable = True
             table.type.readable = False
             table.site_id.readable = True
-            table.site_id.label = T("By Inventory")
+            table.site_id.label = T("By Warehouse")
             table.site_id.represent = org_site_represent
             return s3_component_form(r,
                                      componentname = "recv_item",
@@ -704,14 +704,14 @@ $(document).ready(function() {
                                           label = T("Sent By"),
                                           default = s3_logged_in_person()),
                                 super_link("site_id", "org_site",
-                                           label = T("From Inventory"),
+                                           label = T("From Warehouse"),
                                            default = auth.user.site_id if auth.is_logged_in() else None,
                                            readable = True,
                                            writable = True,
                                            # Comment these to use a Dropdown & not an Autocomplete
                                            #widget = S3SiteAutocompleteWidget(),
                                            #comment = DIV(_class="tooltip",
-                                           #              _title="%s|%s" % (T("From Inventory"),
+                                           #              _title="%s|%s" % (T("From Warehouse"),
                                            #                                T("Enter some characters to bring up a list of possible matches"))),
                                            represent=org_site_represent),
                                 Field( "delivery_date",
@@ -976,7 +976,7 @@ $(document).ready(function() {
                                                     )
 
                                     cancel_btn_confirm = SCRIPT("S3ConfirmClick('#send_cancel', '%s')"
-                                                                 % T("Do you want to cancel this sent shipment? The items will be returned to the Inventory. This action CANNOT be undone!") )
+                                                                 % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
                                     response.s3.rfooter.append(cancel_btn)
                                     response.s3.rfooter.append(cancel_btn_confirm)
 
@@ -1158,7 +1158,7 @@ $(document).ready(function() {
                         recv_tab = T("Orders")
                     else:
                         recv_tab = T("Receive")
-                    inv_tabs = [(T("Inventory Items"), "inv_item"),
+                    inv_tabs = [(T("Warehouse Stock"), "inv_item"),
                                 (T("Incoming"), "incoming/"),
                                 (recv_tab, "recv"),
                                 (T("Send"), "send", dict(select="sent")),
@@ -1166,10 +1166,10 @@ $(document).ready(function() {
                     if deployment_settings.has_module("proc"):
                         inv_tabs.append((T("Planned Procurements"), "plan"))
                     if show_collapse:
-                        inv_tabs.append(("- %s" % T("Inventory"),
+                        inv_tabs.append(("- %s" % T("Warehouse"),
                                          None, dict(show_inv="False")))
                 else:
-                    inv_tabs = [("+ %s" % T("Inventory"), "inv_item",
+                    inv_tabs = [("+ %s" % T("Warehouse"), "inv_item",
                                 dict(show_inv="True"))]
                 return inv_tabs
             else:

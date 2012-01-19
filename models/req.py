@@ -413,7 +413,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
         req_help_msg_template = T("If the request is for %s, please enter the details on the next screen.")
         types = []
         if deployment_settings.has_module("inv"):
-            types.append(T("Inventory Items"))
+            types.append(T("Warehouse Stock"))
         #if deployment_settings.has_module("asset"):
         #    types.append(T("Assets"))
         if deployment_settings.has_module("hrm"):
@@ -605,7 +605,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                        TH(table.quantity_commit.label),
                                        TH(table.quantity_transit.label),
                                        TH(table.quantity_fulfil.label),
-                                       TH(T("Quantity in %s's Inventory") % site_name),
+                                       TH(T("Quantity in %s's Warehouse") % site_name),
                                        TH(T("Match?"))
                                       )
                                     ),
@@ -632,7 +632,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                         status = SPAN(T("NO"), _class = "req_status_none"),
 
                     items.append(TR( #A(req_item.id),
-                                     response.s3.item_represent(req_item.item_id),
+                                     response.s3.supply_item_represent(req_item.item_id),
                                      req_item.quantity,
                                      response.s3.item_pack_represent(req_item.item_pack_id),
                                      # This requires an action btn to get the req_id

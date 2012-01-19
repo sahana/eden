@@ -457,7 +457,7 @@ def recv_process():
             s3mgr.store_session("req", "req_item", req_item_id)
             req_item_onaccept(None)
 
-    session.confirmation = T("Shipment Items received by Inventory")
+    session.confirmation = T("Shipment Items received by Warehouse")
 
     # Go to the Inventory of the Site which has received these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(db.org_site,
@@ -576,7 +576,7 @@ def recv_cancel():
             s3mgr.store_session("req", "req_item", req_item_id)
             req_item_onaccept(None)
 
-    session.confirmation = T("Received Shipment canceled and items removed from Inventory")
+    session.confirmation = T("Received Shipment canceled and items removed from Warehouse")
 
     redirect(URL(c = "inv",
                  f = "recv",
@@ -665,7 +665,7 @@ def send_process():
         for invalid_send_item_id in invalid_send_item_ids:
             db.inv_send_item[invalid_send_item_id] = dict(status = 1)
 
-        session.error = T("There are insufficient items in the Inventory to send this shipment") #@todo: list the items and the quantities in the error message
+        session.error = T("There is insufficient stock in the Warehouse to send this shipment") #@todo: list the items and the quantities in the error message
         redirect(URL(c = "inv",
                      f = "send",
                      args = [send_id, "send_item"]))
@@ -676,7 +676,7 @@ def send_process():
                                      owned_by_user = None,
                                      owned_by_role = ADMIN
                                      )
-        session.confirmation = T("Shipment Items sent from Inventory")
+        session.confirmation = T("Shipment Items sent from Warehouse")
 
         # Update status_fulfil of the req record(s)
         for req_id, req_item_id in update_req_id:
@@ -814,7 +814,7 @@ def send_cancel():
                 s3mgr.store_session("req", "req_item", req_item_id)
                 req_item_onaccept(None)
 
-    session.confirmation = T("Sent Shipment canceled and items returned to Inventory")
+    session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 
     redirect(URL(c = "inv",
                  f = "send",

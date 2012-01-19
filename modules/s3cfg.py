@@ -427,7 +427,7 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Request Settings
     def get_req_type_inv_label(self):
-        return self.req.get("type_inv_label", current.T("Inventory Items"))
+        return self.req.get("type_inv_label", current.T("Warehouse Stock"))
     def get_req_type_hrm_label(self):
         return self.req.get("type_hrm_label", current.T("People"))
 

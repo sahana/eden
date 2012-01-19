@@ -62,6 +62,7 @@
             <!-- Catalog Items -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('supply_item', col[@field='Item description'])[1])]">
                 <xsl:call-template name="SupplyItem"/>
+                <xsl:call-template name="SupplyItemPack"/>
             </xsl:for-each>
 
             <!-- Inventory Items -->
@@ -79,6 +80,12 @@
         <resource name="inv_inv_item">
             <!-- Link to Supply Item -->
             <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$item"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to Supply Item Pack-->
+            <reference field="item_pack_id" resource="supply_item_pack">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$item"/>
                 </xsl:attribute>
@@ -139,6 +146,32 @@
                     <xsl:value-of select="$category"/>
                 </xsl:attribute>
             </reference>
+            <!-- Link to Supply Item Pack-->
+            <reference field="item_pack_id" resource="supply_item_pack">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$item"/>
+                </xsl:attribute>
+            </reference>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="SupplyItemPack">
+        <xsl:variable name="item" select="col[@field='Item description']/text()"/>
+
+        <resource name="supply_item_pack">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$item"/>
+            </xsl:attribute>
+            <!-- Link to Supply Item -->
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$item"/>
+                </xsl:attribute>
+            </reference>
+            <data field="name"><xsl:value-of select="col[@field='UM']/text()"/></data>
+            <data field="quantity">1</data>
         </resource>
 
     </xsl:template>

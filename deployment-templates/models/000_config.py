@@ -508,7 +508,7 @@ deployment_settings.modules = OrderedDict([
             module_type = None, # Not displayed
         )),
     ("inv", Storage(
-            name_nice = T("Inventory"),
+            name_nice = T("Warehouse"),
             description = T("Receiving and Sending Items"),
             restricted = True,
             module_type = 4
