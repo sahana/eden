@@ -145,11 +145,12 @@ S3.timeline.onResize = function() {
  
 $(document).ready(function() {
     $(window).load(function() {
-        SimileAjax.History.enabled = false;
         if ( S3.timeline.calendar ) {
+            SimileAjax.History.enabled = false;
             // Google Calendar
             S3.timeline.onLoadCalendar();
         } else if ( S3.timeline.tl_start ) {
+            SimileAjax.History.enabled = false;
             // Normal Timeline
             S3.timeline.onLoad();
         }

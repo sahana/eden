@@ -3,14 +3,10 @@
 {{else:}}
 <link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-{{try:}}
-    {{=H2(title)}}
-{{except:}}
-{{pass}}
-{{try:}}
-    {{=s3_ocr_buttons(r)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
+{{try:}}{{=s3_ocr_buttons(r)}}
+{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}
     {{=XML(rheader)}}
@@ -19,36 +15,13 @@
 {{except:}}
 </div>
 {{pass}}
-<div id='map'></div>
-<div id='list-btn-add'>
-    {{try:}}
-        {{=showadd_btn}}
-        {{hide_listadd=True}}
-    {{except:}}
-        {{hide_listadd=False}}
-    {{pass}}
-    <div id='list-add'>
-        {{try:}}
-            {{=H3(addtitle)}}
-        {{except:}}
-        {{pass}}
-        {{try:}}
-            {{=addheader}}
-        {{except:}}
-        {{pass}}
-        {{include "key.html"}}
-        <div class='form-container'>
-            {{try:}}
-                {{=form}}
-            {{except:}}
-            {{pass}}
-        </div>
-    </div>
+<div class='form-container'>
+{{try:}}{{=form}}
+{{except:}}{{pass}}
 </div>
-{{try:}}
-    {{=H3(subtitle)}}
-{{except:}}
-{{pass}}
+<div id='map'></div>
+{{try:}}{{=H3(subtitle)}}
+{{except:}}{{pass}}
 {{try:}}
     {{items = items}}
     {{try:}}
@@ -63,8 +36,7 @@
             {{pass}}
         </div>
         {{pass}}
-    {{except:}}
-    {{pass}}
+    {{except:}}{{pass}}
     <div id='chart-container' class='hide'>
         {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
         <div id='chart' style='height:300px;'></div>
@@ -73,8 +45,7 @@
         {{include "formats.html"}}
         {{=items}}
     </div>
-{{except:}}
-{{pass}}
+{{except:}}{{pass}}
 {{if response.s3.rfooter:}}
     <div id='rfooter'>
         {{=XML(response.s3.rfooter)}}
