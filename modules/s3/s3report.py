@@ -1071,14 +1071,42 @@ class S3ContingencyTable(TABLE):
         # Chart data ----------------------------------------------------------
         #
         drows = dcols = None
+        top = self._top
         if rows and row_titles and row_totals:
-            drows = zip(row_titles, row_totals)
+            drows = top(zip(row_titles, row_totals))
         if cols and col_titles and col_totals:
-            dcols = zip(col_titles, col_totals)
+            dcols = top(zip(col_titles, col_totals))
         json_data = json.dumps(dict(rows=drows, cols=dcols))
         self.report_data = Storage(row_label=str(row_label),
                                    col_label=str(col_label),
                                    json_data=json_data)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _top(tl, length=10, least=False):
+        """
+            From a list of tuples (n, v) containing more than N elements,
+            selects the top (or least) N (by v) and sums up the others as
+            new element "Others".
+
+            @param tl: the tuple list
+            @param length: the maximum length N of the result list
+            @param reverse: select the least N instead
+        """
+        T = current.T
+        try:
+            if len(tl) > length:
+                m = length - 1
+                l = list(tl)
+                l.sort(lambda x, y: y[1]-x[1])
+                if least:
+                    l.reverse()
+                ts = (str(T("Others")), reduce(lambda s, t: s+t[1], l[m:], 0))
+                l = l[:m] + [ts]
+                return l
+        except (TypeError, ValueError):
+            pass
+        return tl
 
     # -------------------------------------------------------------------------
     @staticmethod
