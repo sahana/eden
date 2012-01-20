@@ -238,7 +238,10 @@ class S3Cube(S3CRUD):
                             _id = "hide-opts-btn",
                             _onclick="""$('#reportform').addClass('hide'); $('#show-opts-btn').removeClass('hide'); $('#hide-opts-btn').addClass('hide');""")
                 form = DIV(DIV(show_link, hide_link),
-                        DIV(form, _class=_hide % "reportform", _id="reportform"))
+                           DIV(form,
+                               _class=_hide % "reportform",
+                               _id="reportform"),
+                               _style="margin-bottom: 5px;")
             else:
                 form = ""
 
