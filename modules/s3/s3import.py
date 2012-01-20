@@ -1773,6 +1773,7 @@ class S3ImportItem(object):
 
         # Data elements
         self.table = None
+        self.tablename = None
         self.element = None
         self.data = None
         self.original = None
@@ -1839,15 +1840,14 @@ class S3ImportItem(object):
         manager = current.manager
         db = current.db
         xml = manager.xml
-        model = manager.model
         validate = manager.validate
+        s3db = current.s3db
 
         self.element = element
         if table is None:
             tablename = element.get(xml.ATTRIBUTE.name, None)
             try:
-                model.load(tablename)
-                table = db[tablename]
+                table = s3db[tablename]
             except:
                 self.error = self.ERROR.BAD_RESOURCE
                 element.set(xml.ATTRIBUTE.error, self.error)
@@ -1901,6 +1901,8 @@ class S3ImportItem(object):
         xml = manager.xml
         table = self.table
 
+        if table is None:
+            return
         if self.original is not None:
             original = self.original
         else:
@@ -1932,7 +1934,7 @@ class S3ImportItem(object):
 
         self.permitted = False
 
-        if not self.tablename:
+        if not self.table:
             return False
 
         prefix = self.tablename.split("_", 1)[0]
@@ -1978,7 +1980,8 @@ class S3ImportItem(object):
 
         if self.accepted is not None:
             return self.accepted
-        if self.data is None:
+        if self.data is None or not self.table:
+            self.accepted = False
             return False
 
         form = Storage()
@@ -2051,8 +2054,11 @@ class S3ImportItem(object):
         elif self.components:
             for component in self.components:
                 if not component.validate():
-                    _debug("Validation error, component=%s" %
-                            component.tablename)
+                    if hasattr(component, "tablename"):
+                        tn = component.tablename
+                    else:
+                        tn = None
+                    _debug("Validation error, component=%s" % tn)
                     component.skip = True
                     # Skip this item on any component validation errors
                     # unless ignore_errors is True
@@ -2338,8 +2344,11 @@ class S3ImportItem(object):
         """
 
         manager = current.manager
-        model = manager.model
         db = current.db
+        s3db = current.s3db
+
+        if not self.table:
+            return
 
         items = self.job.items
         for reference in self.references:
@@ -2372,8 +2381,7 @@ class S3ImportItem(object):
             if entry.tablename:
                 ktablename = entry.tablename
             try:
-                model.load(ktablename)
-                ktable = db[ktablename]
+                ktable = s3db[ktablename]
             except:
                 continue
 
@@ -2420,7 +2428,7 @@ class S3ImportItem(object):
         """
 
         db = current.db
-        if not value:
+        if not value or not self.table:
             return
         if self.id and self.permitted:
             fieldtype = str(self.table[field].type)
@@ -2518,9 +2526,9 @@ class S3ImportItem(object):
         """
 
         manager = current.manager
-        model = manager.model
         xml = manager.xml
         db = current.db
+        s3db = current.s3db
 
         self.item_id = row.item_id
         self.accepted = None
@@ -2547,8 +2555,7 @@ class S3ImportItem(object):
             self.load_references = [simplejson.loads(ritem) for ritem in row.ritems]
         self.load_parent = row.parent
         try:
-            model.load(tablename)
-            table = db[tablename]
+            table = s3db[tablename]
         except:
             self.error = self.ERROR.BAD_RESOURCE
             return False
@@ -2602,6 +2609,7 @@ class S3ImportJob():
         """
 
         db = current.db
+        s3db = current.s3db
 
         xml = manager.xml
 
@@ -2656,8 +2664,7 @@ class S3ImportJob():
             if not self.table:
                 tablename = row.tablename
                 try:
-                    model.load(tablename)
-                    table = db[tablename]
+                    table = s3db[tablename]
                 except:
                     pass
         else:
@@ -2814,8 +2821,8 @@ class S3ImportJob():
 
         manager = current.manager
         db = current.db
+        s3db = current.s3db
         xml = manager.xml
-        model = manager.model
         reference_list = []
 
         root = None
@@ -2842,8 +2849,7 @@ class S3ImportJob():
                 # ignore if the field is not a reference type
                 continue
             try:
-                model.load(ktablename)
-                ktable = db[ktablename]
+                ktable = s3db[ktablename]
             except:
                 # Invalid tablename - skip
                 continue
@@ -3008,7 +3014,6 @@ class S3ImportJob():
         """
 
         manager = current.manager
-        model = manager.model
         xml = manager.xml
 
         # Resolve references

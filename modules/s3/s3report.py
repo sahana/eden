@@ -45,6 +45,7 @@ from gluon.storage import Storage
 from gluon.html import *
 from s3crud import S3CRUD
 from s3search import S3Search
+from s3utils import s3_truncate
 
 # =============================================================================
 
@@ -237,7 +238,10 @@ class S3Cube(S3CRUD):
                             _id = "hide-opts-btn",
                             _onclick="""$('#reportform').addClass('hide'); $('#show-opts-btn').removeClass('hide'); $('#hide-opts-btn').addClass('hide');""")
                 form = DIV(DIV(show_link, hide_link),
-                        DIV(form, _class=_hide % "reportform", _id="reportform"))
+                           DIV(form,
+                               _class=_hide % "reportform",
+                               _id="reportform"),
+                               _style="margin-bottom: 5px;")
             else:
                 form = ""
 
@@ -933,6 +937,7 @@ class S3ContingencyTable(TABLE):
         represent = lambda f, v, d="": \
                     self._represent(lfields, f, v, default=d)
 
+        layer_label = None
         col_titles = []
         add_col_title = col_titles.append
         col_totals = []
@@ -953,6 +958,9 @@ class S3ContingencyTable(TABLE):
         for field, method in layers:
             label = get_label(lfields, field, tablename, "report_fact")
             mname = get_mname(method)
+            if not labels:
+                m = method == "list" and get_mname("count") or mname
+                layer_label = "%s (%s)" % (label, m)
             labels.append("%s (%s)" % (label, mname))
         layers_title = TD(" / ".join(labels), _style=_style)
 
@@ -979,7 +987,7 @@ class S3ContingencyTable(TABLE):
         for i in xrange(numcols):
             value = values[i].value
             v = represent(cols, value)
-            add_col_title(str(v))
+            add_col_title(s3_truncate(str(v)))
             colhdr = TH(v, _style=_style)
             add_header(colhdr)
 
@@ -1006,7 +1014,7 @@ class S3ContingencyTable(TABLE):
             # Row header
             row = rvals[i]
             v = represent(rows, row.value)
-            add_row_title(str(v))
+            add_row_title(s3_truncate(str(v)))
             rowhdr = TD(DIV(v))
             add_cell(rowhdr)
 
@@ -1071,14 +1079,24 @@ class S3ContingencyTable(TABLE):
         # Chart data ----------------------------------------------------------
         #
         drows = dcols = None
+        BY = T("by")
         top = self._top
         if rows and row_titles and row_totals:
             drows = top(zip(row_titles, row_totals))
         if cols and col_titles and col_totals:
             dcols = top(zip(col_titles, col_totals))
-        json_data = json.dumps(dict(rows=drows, cols=dcols))
-        self.report_data = Storage(row_label=str(row_label),
-                                   col_label=str(col_label),
+        row_label = "%s %s" % (BY, str(row_label))
+        col_label = "%s %s" % (BY, str(col_label))
+        layer_label=str(layer_label)
+        json_data = json.dumps(dict(rows=drows,
+                                    cols=dcols,
+                                    row_label=row_label,
+                                    col_label=col_label,
+                                    layer_label=layer_label
+                                   ))
+        self.report_data = Storage(row_label=row_label,
+                                   col_label=col_label,
+                                   layer_label=layer_label,
                                    json_data=json_data)
 
     # -------------------------------------------------------------------------

@@ -2016,7 +2016,6 @@ class S3QueryBuilder(object):
                     multiple = True
                 else:
                     continue
-                model.load(ktablename)
                 try:
                     ktable = s3db[ktablename]
                 except:
@@ -2443,7 +2442,6 @@ class S3Resource(object):
         # Table
         model = manager.model
         self.tablename = "%s_%s" % (self.prefix, self.name)
-        model.load(self.tablename)
         try:
             self.table = s3db[self.tablename]
         except:
