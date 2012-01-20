@@ -2688,7 +2688,6 @@ class S3SearchAutocompleteWidget(FormWidget):
 
         r = current.manager.parse_request(modulename, resourcename, args=[])
         search_div = r.resource.search( r, **attributes)["form"]
-        #search_div = response.s3.catalog_item_search( r, **attributes)["form"]
 
         hidden_input = INPUT(value = value or "",
                              requires = field.requires,

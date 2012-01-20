@@ -56,11 +56,10 @@ if deployment_settings.has_module("inv"):
         org_site_represent = s3db.org_site_represent
 
         # Inventory depends on Supply Items/Packs
-        s3mgr.load("supply_item")
-        item_id = response.s3.item_id
-        supply_item_id = response.s3.supply_item_id
-        item_pack_id = response.s3.item_pack_id
-        item_pack_virtualfields = response.s3.item_pack_virtualfields
+        item_id = s3db.supply_item_entity_id
+        supply_item_id = s3db.supply_item_id
+        item_pack_id = s3db.supply_item_pack_id
+        item_pack_virtualfields = s3db.supply_item_pack_virtualfields
         s3mgr.load("req_req_item")
         req_item_id = response.s3.req_item_id
 

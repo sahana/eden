@@ -41,9 +41,15 @@ S3.dataTables = new Array();
   S3.dataTables.no_pagination = true;
 {{else:}}
   {{if r:}}
-    {{if response.s3.dataTable_Method:}}
-      S3.dataTables.sAjaxSource = '{{=r.url(method="%s"%response.s3.dataTable_Method, representation="aaData")}}';{{else:}}
-      S3.dataTables.sAjaxSource = '{{=r.url(method="", representation="aaData")}}';{{pass}}
+    {{if response.s3.dataTable_Method and response.s3.dataTable_vars:}}
+      S3.dataTables.sAjaxSource = '{{=r.url(method="%s"%response.s3.dataTable_Method, vars="%s"%response.s3.dataTable_vars, representation="aaData")}}';
+    {{elif response.s3.dataTable_Method:}}
+      S3.dataTables.sAjaxSource = '{{=r.url(method="%s"%response.s3.dataTable_Method, representation="aaData")}}';
+    {{elif response.s3.dataTable_vars:}}
+      S3.dataTables.sAjaxSource = '{{=r.url(method="", vars="%s"%response.s3.dataTable_vars, representation="aaData")}}';
+    {{else:}}
+      S3.dataTables.sAjaxSource = '{{=r.url(method="", representation="aaData")}}';
+    {{pass}}
   {{else:}}{{try:}}
       S3.dataTables.sAjaxSource = '{{=datatable_ajax_source}}';
     {{except:}}{{pass}}

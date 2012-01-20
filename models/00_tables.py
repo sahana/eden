@@ -22,9 +22,10 @@ import eden.msg
 import eden.doc
 import eden.hrm
 import eden.project
-import eden.dvi
+import eden.supply
 import eden.irs
 import eden.delphi
+import eden.dvi
 import eden.support
 
 # =============================================================================

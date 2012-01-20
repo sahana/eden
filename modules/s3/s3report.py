@@ -744,7 +744,7 @@ class S3Report:
 
                 # Get the records
                 cell = cells[r][c]
-                if cell[RECORDS] is not None:
+                if RECORDS in cell and cell[RECORDS] is not None:
                     ids = cell[RECORDS]
                 else:
                     data = pt[r][c]

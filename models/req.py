@@ -76,11 +76,10 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
         human_resource_id = s3db.hrm_human_resource_id
 
         if deployment_settings.has_module("inv"):
-            s3mgr.load("supply_item")
-            item_id = response.s3.item_id
-            supply_item_id = response.s3.supply_item_id
-            item_pack_id = response.s3.item_pack_id
-            item_pack_virtualfields = response.s3.item_pack_virtualfields
+            item_id = s3db.supply_item_entity_id
+            supply_item_id = s3db.supply_item_id
+            item_pack_id = s3db.supply_item_pack_id
+            item_pack_virtualfields = s3db.supply_item_pack_virtualfields
 
         if deployment_settings.has_module("hrm"):
             multi_skill_id = s3db.hrm_multi_skill_id
@@ -296,7 +295,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
         # Represent
         def req_represent(id, link = True):
             id = int(id)
-            table = db.req_req
+            table = s3db.req_req
             if id:
                 query = (table.id == id)
                 req = db(query).select(table.date,
@@ -335,7 +334,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
         #----------------------------------------------------------------------
         def req_onaccept(form):
 
-            table = db.req_req
+            table = s3db.req_req
 
             # Configure the next page to go to based on the request type
             tablename = "req_req"
@@ -546,16 +545,14 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                 Check to see if your Inventory can be used to match any open Requests
             """
 
-            # Load Models (for tabs at least)
-            s3mgr.load("inv_inv_item")
-
             site_id = r.vars.site_id
-            site_name = org_site_represent(site_id, link = False)
+            site_name = eden.org.org_site_represent(site_id, link = False)
+
             output = {}
             output["title"] = T("Check Request")
             output["rheader"] = req_rheader(r, check_page = True)
 
-            stable = db.org_site
+            stable = s3db.org_site
             ltable = s3db.gis_location
             query = (stable.id == site_id ) & \
                     (stable.location_id == ltable.id)
@@ -567,6 +564,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
             req_location_r = db(query).select(ltable.lat,
                                               ltable.lon,
                                               limitby=(0, 1)).first()
+
             try:
                 distance = gis.greatCircleDistance(location_r.lat, location_r.lon,
                                                    req_location_r.lat, req_location_r.lon,)
@@ -579,7 +577,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
             output["subtitle"] = T("Request Items")
 
             # Get req_items & inv_items from this site
-            table = db.req_req_item
+            table = s3db.req_req_item
             query = (table.req_id == r.id ) & \
                     (table.deleted == False )
             req_items = db(query).select(table.id,
@@ -589,7 +587,7 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                                          table.quantity_commit,
                                          table.quantity_transit,
                                          table.quantity_fulfil)
-            itable = db.inv_inv_item
+            itable = s3db.inv_inv_item
             query = (itable.site_id == site_id ) & \
                     (itable.deleted == False )
             inv_items = db(query).select(itable.item_id,
@@ -612,6 +610,8 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                               _id = "list",
                               _class = "dataTable display")
 
+                supply_item_represent = table.item_id_represent
+                item_pack_represent = table.item_pack_id.represent
                 for req_item in req_items:
                     # Convert inv item quantity to req item quantity
                     try:
@@ -632,9 +632,9 @@ if deployment_settings.has_module(module): # or deployment_settings.has_module("
                         status = SPAN(T("NO"), _class = "req_status_none"),
 
                     items.append(TR( #A(req_item.id),
-                                     response.s3.supply_item_represent(req_item.item_id),
+                                     supply_item_represent(req_item.item_id),
                                      req_item.quantity,
-                                     response.s3.item_pack_represent(req_item.item_pack_id),
+                                     item_pack_represent(req_item.item_pack_id),
                                      # This requires an action btn to get the req_id
                                      req_item.quantity_commit,
                                      req_item.quantity_fulfil,

@@ -53,8 +53,7 @@ if deployment_settings.get_security_policy() not in (1, 2, 3, 4, 5, 6, 7):
     db.auth_permission.table_name.requires = IS_IN_SET(_tables)
 #s3db.pr_pe_subscription.resource.requires = IS_IN_SET(_tables)
 s3db.gis_feature_class.resource.requires = IS_IN_SET(_tables)
-if deployment_settings.has_module("msg"):
-    s3db.msg_tag.resource.requires = IS_IN_SET(_tables)
+#s3db.msg_tag.resource.requires = IS_IN_SET(_tables)
 
 module = "admin"
 

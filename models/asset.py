@@ -54,15 +54,15 @@ if deployment_settings.has_module("asset"):
                             s3.asset.ASSET_TYPE_OTHER      : T("Other")
                            }
         # Assets depend on Supply Items/Brands
-        s3mgr.load("supply_item")
-        item_id = response.s3.item_id
-        supply_item_id = response.s3.supply_item_id
-        supply_item_represent = response.s3.supply_item_represent
+        item_id = s3db.supply_item_entity_id
+        supply_item_id = s3db.supply_item_id
+        supply_item_represent = s3db.supply_item_represent
 
         asset_item_represent = lambda id: supply_item_represent(id,
                                                                 show_um = False)
 
         vehicle = deployment_settings.has_module("vehicle")
+
         tablename = "asset_asset"
         table = db.define_table(tablename,
                                 super_link("track_id", "sit_trackable"),
