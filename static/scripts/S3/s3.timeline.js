@@ -109,7 +109,7 @@ S3.timeline.onLoad = function() {
     var bandInfos = [
         Timeline.createBandInfo({
             width:          '90%',
-            intervalUnit:   Timeline.DateTime.MONTH,
+            intervalUnit:   Timeline.DateTime.DAY,
             intervalPixels: 140,
             eventSource:    S3.timeline.eventSource,
             date:           now,
@@ -118,7 +118,7 @@ S3.timeline.onLoad = function() {
         Timeline.createBandInfo({
             overview:       true,
             width:          '10%',
-            intervalUnit:   Timeline.DateTime.YEAR,
+            intervalUnit:   Timeline.DateTime.MONTH,
             intervalPixels: 200,
             eventSource:    S3.timeline.eventSource,
             date:           now
