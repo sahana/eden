@@ -29,8 +29,6 @@ if deployment_settings.has_module(module):
         import sys
         sys.path.append("applications/%s/modules/s3" % request.application)
 
-        # @ToDo: Switch to the JSON library that coems with web2py, for consistency with other modules
-        #import json
         import gluon.contrib.simplejson as json
 
         from xml.sax.saxutils import unescape
@@ -1158,6 +1156,7 @@ $("#chart_btn").click(function(){
                                width = 720,
                                bbox = bounds,
                                collapsed = True,
+                               catalogue_layers = True,
                               )
             allQuestions = s3.survey_get_series_questions(series_id)
             numericTypeList = ("Numeric")

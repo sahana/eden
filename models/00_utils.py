@@ -161,27 +161,6 @@ session.s3.utc_offset = s3_get_utc_offset()
 # - unused currently?
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
-# Comments Fields
-def comments_represent(text, showlink=True):
-    if len(text) < 80:
-        return text
-    elif not showlink:
-        return "%s..." % text[:76]
-    else:
-        import uuid
-        unique =  uuid.uuid4()
-        represent = DIV(
-                        DIV(text,
-                            _id=unique,
-                            _class="hidden popup",
-                            _onmouseout="$('#%s').hide();" % unique
-                           ),
-                        A("%s..." % text[:76],
-                          _onmouseover="$('#%s').removeClass('hidden').show();" % unique,
-                         ),
-                       )
-        return represent
-
 # -----------------------------------------------------------------------------
 # Date/Time representation functions
 s3_date_represent = S3DateTime.date_represent

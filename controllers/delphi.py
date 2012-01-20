@@ -10,50 +10,7 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# Load Models
-s3mgr.load("delphi_group")
-
 s3_menu(module)
-
-delphi_problem_represent = response.s3.delphi_problem_represent
-delphi_solution_represent = response.s3.delphi_solution_represent
-
-# -----------------------------------------------------------------------------
-class DU:
-    """
-        Delphi User class
-
-        @ToDo: Remove or move to a module
-            (Web2Py doesn't recommend instantiating classes inside controllers)
-    """
-
-    def user(self):
-        # Used by Discuss() (& summary())
-        return db.auth_user[self.user_id]
-
-    def __init__(self, group_id=None):
-        self.user_id = auth.user.id if (auth.is_logged_in() and session.auth) else None
-        self.status = 1 # guest
-        self.membership = None
-        if s3_has_role("DelphiAdmin"):
-            # DelphiAdmin is Moderator for every Group
-            self.status = 4
-        elif self.user_id != None and group_id != None:
-            table = db.delphi_membership
-            query = (table.group_id == group_id) & \
-                    (table.user_id == self.user_id)
-            self.membership = db(query).select()
-            if self.membership:
-                self.membership = self.membership[0]
-                self.status = self.membership.status
-
-        self.authorised = (self.status == 4)
-
-        # Only Moderators & Participants can Vote
-        self.can_vote = self.status in (3, 4)
-        # All but Guests can add Solutions & Discuss
-        self.can_add_item = self.status != 1
-        self.can_post = self.status != 1
 
 # =============================================================================
 def index():
@@ -67,11 +24,12 @@ def index():
 
     module_name = deployment_settings.modules[module].name_nice
 
-    groups = db(db.delphi_group.active == True).select()
+    table = s3db.delphi_group
+    groups = db(table.active == True).select()
     result = []
     for group in groups:
         actions = []
-        duser = DU(group)
+        duser = eden.delphi.S3DelphiUser(group)
         if duser.authorised:
             actions.append(("group/%d/update" % group.id, T("Edit")))
             actions.append(("new_problem/create/?group=%s&next=%s" % \
@@ -84,7 +42,7 @@ def index():
                     "Role: %s%s" % (duser.status,
                                     (duser.membership and duser.membership.req) and "*" or "")))
 
-        table = db.delphi_problem
+        table = s3db.delphi_problem
         query = (table.group_id == group.id) & \
                 (table.active == True)
         latest_problems = db(query).select(orderby =~ table.modified_on)
@@ -205,7 +163,7 @@ def problem_rheader(r, tabs = []):
         if r.component and \
            r.component_name == "solution" and \
            r.component_id:
-            stable = db.delphi_solution
+            stable = s3db.delphi_solution
             query = (stable.id == r.component_id)
             solution = db(query).select(stable.name,
                                         stable.description,
@@ -231,7 +189,7 @@ def problem():
     """ Problem REST Controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # Custom Methods
     s3mgr.model.set_method(module, resourcename,
@@ -304,13 +262,13 @@ def vote(r, **attr):
     problem = r.record
 
     # Get this User's permissions for this Group
-    duser = DU(problem.group_id)
+    duser = eden.delphi.S3DelphiUser(problem.group_id)
 
     # Add the RHeader to maintain consistency with the other pages
     rheader = problem_rheader(r)
 
     # Lookup Solution Options
-    stable = db.delphi_solution
+    stable = s3db.delphi_solution
     query = (stable.problem_id == problem.id)
     rows = db(query).select(stable.id,
                             stable.name)
@@ -319,7 +277,7 @@ def vote(r, **attr):
         options[row.id] = row.name
 
     if duser.user_id:
-        vtable = db.delphi_vote
+        vtable = s3db.delphi_vote
         query = (vtable.problem_id == problem.id) & \
                 (vtable.created_by == auth.user.id)
         votes = db(query).select(vtable.solution_id,
@@ -369,7 +327,7 @@ def save_vote():
     if not problem_id:
         raise HTTP(400)
 
-    ptable = db.delphi_problem
+    ptable = s3db.delphi_problem
     query = (ptable.id == problem_id)
     problem = db(query).select(ptable.group_id,
                                limitby=(0, 1)).first()
@@ -377,7 +335,7 @@ def save_vote():
         raise HTTP(404)
 
     # Get this User's permissions for this Group
-    duser = DU(problem.group_id)
+    duser = eden.delphi.S3DelphiUser(problem.group_id)
 
     if not duser.can_vote:
         auth.permission.fail()
@@ -390,7 +348,7 @@ def save_vote():
         raise HTTP(400, body=status)
 
     # Check the votes are valid
-    stable = db.delphi_solution
+    stable = s3db.delphi_solution
     query = (stable.problem_id == problem_id)
     solutions = db(query).select(stable.id)
     options = []
@@ -409,7 +367,7 @@ def save_vote():
         count += 1
 
     # Read the old votes
-    vtable = db.delphi_vote
+    vtable = s3db.delphi_vote
     query = (vtable.problem_id == problem_id) & \
             (vtable.created_by == auth.user.id)
     old_votes = db(query).select(vtable.solution_id,
@@ -485,6 +443,8 @@ def _getUnitNormalDeviation(zscore):
 
         Looks up the Unit Normal Deviation based on the Z-Score (Proportion/Probability)
         http://en.wikipedia.org/wiki/Standard_normal_table
+
+        @ToDo: Move to S3Statistics module
     """
 
     UNIT_NORMAL = (
@@ -613,7 +573,7 @@ def results(r, **attr):
     problem = r.record
 
     # Lookup Votes
-    vtable = db.delphi_vote
+    vtable = s3db.delphi_vote
     query = (vtable.problem_id == problem.id)
     votes = db(query).select(vtable.solution_id,
                              vtable.rank,
@@ -622,7 +582,7 @@ def results(r, **attr):
         return empty
 
     # Lookup Solutions
-    stable = db.delphi_solution
+    stable = s3db.delphi_solution
     query = (stable.problem_id == problem.id)
     solutions = db(query).select(stable.id,
                                  stable.name,
@@ -1035,12 +995,12 @@ def comment_parse(comment, comments, solution_id=None):
     """
 
     if comment.created_by:
-        utable = db.auth_user
+        utable = s3db.auth_user
         query = (utable.id == comment.created_by)
         user = db(query).select(utable.email,
                                 utable.person_uuid,
                                 limitby=(0, 1)).first()
-        ptable = db.pr_person
+        ptable = s3db.pr_person
         query = (ptable.uuid == user.person_uuid)
         person = db(query).select(ptable.first_name,
                                   ptable.middle_name,
@@ -1054,7 +1014,7 @@ def comment_parse(comment, comments, solution_id=None):
     else:
         author = B(T("Anonymous"))
     if not solution_id and comment.solution_id:
-        solution = "re: %s" % delphi_solution_represent(comment.solution_id)
+        solution = "re: %s" % s3db.delphi_solution_represent(comment.solution_id)
         header = DIV(author, " ", solution)
         solution_id = comment.solution_id
     else:
@@ -1103,7 +1063,7 @@ def comments():
         problem_id = id
         solution_id = None
     elif resourcename == "solution":
-        stable = db.delphi_solution
+        stable = s3db.delphi_solution
         query = (stable.id == id)
         solution = db(query).select(stable.problem_id,
                                     limitby=(0, 1)).first()
@@ -1115,7 +1075,7 @@ def comments():
     else:
         raise HTTP(400)
 
-    table = db.delphi_comment
+    table = s3db.delphi_comment
     table.problem_id.default = problem_id
     table.problem_id.writable = table.problem_id.readable = False
     if solution_id:
@@ -1148,7 +1108,7 @@ def comments():
                                                              table.created_by,
                                                              table.created_on)
 
-    _user_table = db.auth_user
+    _user_table = s3db.auth_user
     output = UL(_id="comments")
     for comment in comments:
         if not comment.parent:

@@ -317,6 +317,8 @@ class S3LocationModel(S3Model):
 
         T = current.T
         db = current.db
+        s3db = current.s3db
+        cache = s3db.cache
         gis = current.gis
         auth = current.auth
         request = current.request
@@ -426,7 +428,7 @@ class S3LocationModel(S3Model):
                                        table.lon_max,
                                        #table.level,
                                        limitby=(0, 1),
-                                       cache=s3.cache).first()
+                                       cache=cache).first()
 
         # Don't allow a group as parent
         # (Check not needed here -- enforced in requires validator.)
@@ -2145,8 +2147,8 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
     T = current.T
     db = current.db
     s3db = current.s3db
+    cache = s3db.cache
     request = current.request
-    cache = current.response.s3.cache
     gis = current.gis
 
     def lat_lon_represent(location):
@@ -2282,7 +2284,7 @@ def gis_location_represent(record, showlink=True, simpletext=False):
     else:
         db = current.db
         s3db = current.s3db
-        s3 = current.response.s3
+        cache = s3db.cache
         table = s3db.gis_location
         location = db(table.id == record).select(table.id,
                                                  table.name,
@@ -2292,7 +2294,7 @@ def gis_location_represent(record, showlink=True, simpletext=False):
                                                  table.lat,
                                                  table.lon,
                                                  table.osm_id,
-                                                 cache=s3.cache,
+                                                 cache=cache,
                                                  limitby=(0, 1)).first()
 
     return gis_location_represent_row(location, showlink, simpletext)

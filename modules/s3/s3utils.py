@@ -48,7 +48,9 @@ __all__ = ["URL2",
            "s3_fullname",
            "s3_represent_facilities",
            "s3_represent_multiref",
+           "s3_comments_represent",
            "s3_url_represent",
+           "s3_user_represent",
            "sort_dict_by_values",
            "jaro_winkler",
            "jaro_winkler_distance_row",
@@ -58,6 +60,7 @@ import sys
 import os
 import re
 import hashlib
+import uuid
 
 from gluon import *
 from gluon import current
@@ -602,6 +605,27 @@ def s3_represent_multiref(table, opt, represent=None, separator=", "):
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
+def s3_comments_represent(text, showlink=True):
+    """ Represent Comments Fields """
+    if len(text) < 80:
+        return text
+    elif not showlink:
+        return "%s..." % text[:76]
+    else:
+        unique =  uuid.uuid4()
+        represent = DIV(
+                        DIV(text,
+                            _id=unique,
+                            _class="hidden popup",
+                            _onmouseout="$('#%s').hide();" % unique
+                           ),
+                        A("%s..." % text[:76],
+                          _onmouseover="$('#%s').removeClass('hidden').show();" % unique,
+                         ),
+                       )
+        return represent
+
+# =============================================================================
 def s3_url_represent(url):
     """ Make URLs clickable """
 
@@ -609,6 +633,22 @@ def s3_url_represent(url):
         return ""
 
     return A(url, _href=url, _target="blank")
+
+# =============================================================================
+def s3_user_represent(id):
+    """ Represent a User as their email address """
+
+    db = current.db
+    s3db = current.s3db
+    cache = s3db.cache
+
+    table = s3db.auth_user
+    user = db(table.id == id).select(table.email,
+                                     limitby=(0, 1),
+                                     cache=cache).first()
+    if user:
+        return user.email
+    return None
 
 # =============================================================================
 def sort_dict_by_values(adict):

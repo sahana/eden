@@ -2016,7 +2016,7 @@ def project_assignee_represent(id):
 
     db = current.db
     s3db = current.s3db
-    cache = current.response.s3.cache
+    cache = s3db.cache
     output = current.messages.NONE
 
     if not id:

@@ -1418,7 +1418,7 @@ def layer_bing():
     # This layer should only ever have a single layer, so display this direct
     record = db(table.id > 0).select(table.id,
                                      limitby=(0, 1),
-                                     cache=s3.cache).first()
+                                     cache=s3db.cache).first()
     if record:
         args = [str(record.id)]
     else:
@@ -1489,7 +1489,7 @@ def layer_google():
     # This layer should only ever have a single layer, so display this direct
     record = db(table.id > 0).select(table.id,
                                      limitby=(0, 1),
-                                     cache=s3.cache).first()
+                                     cache=s3db.cache).first()
     if record:
         args = [str(record.id)]
     else:
@@ -1550,7 +1550,7 @@ def layer_yahoo():
     # This layer should only ever have a single layer, so display this direct
     record = db(table.id > 0).select(table.id,
                                      limitby=(0, 1),
-                                     cache=s3.cache).first()
+                                     cache=s3db.cache).first()
     if record:
         args = [str(record.id)]
     else:
