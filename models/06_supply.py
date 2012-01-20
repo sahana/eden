@@ -235,7 +235,7 @@ if deployment_settings.has_module("inv") or \
                                      table.parent_item_category_id,
                                      # left = table.on(table.id == table.parent_item_category_id), Doesn't work
                                      limitby=(0, 1),
-                                     cache=s3.cache).first()
+                                     cache=s3db.cache).first()
 
                 if r.code and use_code:
                     represent_append = r.code
@@ -1246,13 +1246,12 @@ S3FilterFieldChange({
 
                 def country(self):
                     country = NONE
-                    etable = db.supply_item_entity
+                    etable = s3db.supply_item_entity
                     instance_type = self.supply_item_entity.instance_type
                     if instance_type == "inv_inv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        otable = db.org_office
+                        itable = s3db[instance_type]
+                        otable = s3db.org_office
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (otable.site_id == itable.site_id)
@@ -1265,10 +1264,9 @@ S3FilterFieldChange({
                             country = record.L0 or T("Unknown")
                     elif instance_type == "inv_recv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        rtable = db.inv_recv
-                        otable = db.org_office
+                        itable = s3db[instance_type]
+                        rtable = s3db.inv_recv
+                        otable = s3db.org_office
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (rtable.id == itable.recv_id) & \
@@ -1282,10 +1280,9 @@ S3FilterFieldChange({
                             country = record.L0 or T("Unknown")
                     elif instance_type == "proc_plan_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        ptable = db.proc_plan
-                        otable = db.org_office
+                        itable = s3db[instance_type]
+                        ptable = s3db.proc_plan
+                        otable = s3db.org_office
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (ptable.id == itable.plan_id) & \
@@ -1304,13 +1301,12 @@ S3FilterFieldChange({
 
                 def organisation(self):
                     organisation = NONE
-                    etable = db.supply_item_entity
+                    etable = s3db.supply_item_entity
                     instance_type = self.supply_item_entity.instance_type
                     if instance_type == "inv_inv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        otable = db.org_office
+                        itable = s3db[instance_type]
+                        otable = s3db.org_office
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (otable.site_id == itable.site_id)
@@ -1324,10 +1320,9 @@ S3FilterFieldChange({
                                                                   acronym=False)
                     elif instance_type == "proc_plan_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        rtable = db.proc_plan
-                        otable = db.org_office
+                        itable = s3db[instance_type]
+                        rtable = s3db.proc_plan
+                        otable = s3db.org_office
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (rtable.id == itable.plan_id) & \
@@ -1342,10 +1337,9 @@ S3FilterFieldChange({
                                                                   acronym=False)
                     elif instance_type == "inv_recv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        rtable = db.inv_recv
-                        otable = db.org_office
+                        itable = s3db[instance_type]
+                        rtable = s3db.inv_recv
+                        otable = s3db.org_office
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (rtable.id == itable.recv_id) & \
@@ -1366,12 +1360,11 @@ S3FilterFieldChange({
                 #def site(self):
                 def contacts(self):
                     site = NONE
-                    etable = db.supply_item_entity
+                    etable = s3db.supply_item_entity
                     instance_type = self.supply_item_entity.instance_type
                     if instance_type == "inv_inv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
+                        itable = s3db[instance_type]
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name])
                         except:
@@ -1381,9 +1374,8 @@ S3FilterFieldChange({
                                                   limitby=(0, 1)).first()
                     elif instance_type == "inv_recv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        rtable = db.inv_recv
+                        itable = s3db[instance_type]
+                        rtable = s3db.inv_recv
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (rtable.id == itable.recv_id)
@@ -1394,9 +1386,8 @@ S3FilterFieldChange({
                                                   limitby=(0, 1)).first()
                     elif instance_type == "proc_plan_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        ptable = db.proc_plan
+                        itable = s3db[instance_type]
+                        ptable = s3db.proc_plan
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (ptable.id == itable.plan_id)
@@ -1411,10 +1402,11 @@ S3FilterFieldChange({
 
                     #site = s3db.org_site_represent(record.site_id)
                     #return site
-                    otable = db.org_office
-                    record = db(otable.site_id == record.site_id).select(otable.id,
-                                                                         otable.comments,
-                                                                         limitby=(0, 1)).first()
+                    otable = s3db.org_office
+                    query = (otable.site_id == record.site_id)
+                    record = db(query).select(otable.id,
+                                              otable.comments,
+                                              limitby=(0, 1)).first()
                     if request.extension == "xls" or \
                        request.extension == "pdf":
                         if record.comments:
@@ -1422,7 +1414,8 @@ S3FilterFieldChange({
                         else:
                             return NONE
                     elif record.comments:
-                        comments = comments_represent(record.comments, showlink=False)
+                        comments = s3_comments_represent(record.comments,
+                                                         showlink=False)
                     else:
                         comments = NONE
                     return A(comments,
@@ -1431,12 +1424,11 @@ S3FilterFieldChange({
 
                 def status(self):
                     status = NONE
-                    etable = db.supply_item_entity
+                    etable = s3db.supply_item_entity
                     instance_type = self.supply_item_entity.instance_type
                     if instance_type == "inv_inv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
+                        itable = s3db[instance_type]
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name])
                         except:
@@ -1451,9 +1443,8 @@ S3FilterFieldChange({
                                status = T("In Stock")
                     elif instance_type == "proc_plan_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        rtable = db.proc_plan
+                        itable = s3db[instance_type]
+                        rtable = s3db.proc_plan
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (rtable.id == itable.plan_id)
@@ -1469,9 +1460,8 @@ S3FilterFieldChange({
                                status = T("Planned Procurement")
                     elif instance_type == "inv_recv_item":
                         tablename = instance_type
-                        s3mgr.load(instance_type)
-                        itable = db[instance_type]
-                        rtable = db.inv_recv
+                        itable = s3db[instance_type]
+                        rtable = s3db.inv_recv
                         try:
                             query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
                                     (rtable.id == itable.recv_id)
@@ -1517,9 +1507,9 @@ S3FilterFieldChange({
                     rheader = DIV()
 
                     # Filter by Category
-                    table = db.supply_item_category
-                    etable = db.supply_item_entity
-                    itable = db.supply_item
+                    table = s3db.supply_item_category
+                    etable = s3db.supply_item_entity
+                    itable = s3db.supply_item
                     query = (etable.deleted == False) & \
                             (etable.item_id == itable.id) & \
                             (itable.item_category_id == table.id)
@@ -1551,8 +1541,8 @@ S3FilterFieldChange({
 
                     # Find Offices with Items
                     # @ToDo: Other Site types (how to do this as a big Join?)
-                    table = db.org_office
-                    otable = db.org_organisation
+                    table = s3db.org_office
+                    otable = s3db.org_organisation
                     fields = [table.L0,
                               #table.name,
                               otable.name]

@@ -630,8 +630,9 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
-        cache = current.response.s3.cache
+        s3db = current.s3db
+        cache = s3db.cache
+        table = s3db.gis_location
 
         if not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
@@ -1377,8 +1378,9 @@ class GIS(object):
         """
 
         db = current.db
-        cache = current.response.s3.cache
-        table = db.gis_location
+        s3db = current.s3db
+        cache = s3db.cache
+        table = s3db.gis_location
 
         try:
             # location is passed as integer (location_id)
@@ -1438,7 +1440,7 @@ class GIS(object):
         T = current.T
         db = current.db
         s3db = current.s3db
-        cache = current.response.s3.cache
+        cache = s3db.cache
         fieldname = field.name
         tablename = field.tablename
         table = s3db[tablename]
@@ -1889,7 +1891,7 @@ class GIS(object):
         if tablename is not None:
             db = current.db
             s3db = current.s3db
-            cache = current.response.s3.cache
+            cache = s3db.cache
             table_marker = s3db.gis_marker
             table_fclass = s3db.gis_feature_class
 
@@ -1947,7 +1949,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        cache = current.response.s3.cache
+        cache = s3db.cache
         table_fclass = s3db.gis_feature_class
 
         # 1st choice for a Symbol is the Feature Class's
@@ -1990,7 +1992,7 @@ class GIS(object):
         if id:
             db = current.db
             s3db = current.s3db
-            cache = current.response.s3.cache
+            cache = s3db.cache
             table = db.gis_projection
             query = (table.id == id)
             projection = db(query).select(table.epsg,
@@ -2253,7 +2255,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        cache = current.response.s3.cache
+        cache = s3db.cache
         table = s3db.gis_location
 
         if level == "L1":
@@ -2622,7 +2624,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        cache = current.response.s3.cache
+        cache = s3db.cache
         table = s3db.gis_location
 
         csv.field_size_limit(2**20 * 30)  # 30 megs
@@ -2884,7 +2886,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        cache = current.response.s3.cache
+        cache = s3db.cache
         request = current.request
         settings = current.deployment_settings
         table = s3db.gis_location
@@ -3514,7 +3516,7 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         auth = current.auth
-        cache = current.response.s3.cache
+        cache = s3db.cache
         settings = current.deployment_settings
         public_url = settings.get_base_public_url()
 
@@ -4526,9 +4528,9 @@ class Marker(object):
     """ Represents a Map Marker """
     def __init__(self, id=None):
         gis = current.gis
-        cache = current.response.s3.cache
         db = current.db
         s3db = current.s3db
+        cache = s3db.cache
         tablename = "gis_marker"
         table = s3db[tablename]
         if id:
@@ -4562,9 +4564,9 @@ class Projection(object):
     """ Represents a Map Projection """
     def __init__(self, id=None):
         gis = current.gis
-        cache = current.response.s3.cache
         db = current.db
         s3db = current.s3db
+        cache = s3db.cache
         tablename = "gis_projection"
         table = s3db[tablename]
         if id:

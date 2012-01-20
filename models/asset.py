@@ -404,6 +404,8 @@ SCRIPT("""
             current_log = s3_asset_get_current_log(asset.id)
             if request.vars.status:
                 status = int(request.vars.status)
+            else:
+                status = 0
 
             if status and status != "None":
                 table.status.default = status

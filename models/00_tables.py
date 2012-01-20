@@ -24,6 +24,7 @@ import eden.hrm
 import eden.project
 import eden.dvi
 import eden.irs
+import eden.delphi
 import eden.support
 
 # =============================================================================
@@ -33,21 +34,10 @@ from s3.s3fields import *
 
 # =============================================================================
 # Representations for Auth Users & Groups
-def s3_user_represent(id):
-    """ Represent a User as their email address """
-
-    table = db.auth_user
-    user = db(table.id == id).select(table.email,
-                                     limitby=(0, 1),
-                                     cache=(cache.ram, 10)).first()
-    if user:
-        return user.email
-    return None
-
 def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
     """ Represent a User as their profile picture or Gravatar """
 
-    table = db[tablename]
+    table = s3db[tablename]
 
     email = None
     image = None
@@ -93,7 +83,7 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
 def s3_role_represent(id):
     """ Represent a Role by Name """
 
-    table = db.auth_group
+    table = s3db.auth_group
     role = db(table.id == id).select(table.role,
                                      limitby=(0, 1),
                                      cache=(cache.ram, 10)).first()

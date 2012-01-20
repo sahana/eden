@@ -98,7 +98,6 @@ s3 = response.s3
 response.s3.gis = Storage()  # Defined early for use by S3Config.
 
 current.cache = cache
-response.s3.cache = (current.cache.ram, 60)
 
 # Import S3Config
 import s3cfg

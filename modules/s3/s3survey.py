@@ -1330,8 +1330,9 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             answerMatrix.addElement(cell)
         endcol = startcol+width
         endrow = startrow+height
-        # Only for debugging purposes
-        self.verifyCoords(endrow, endcol)
+        if DEBUG:
+            # Only for debugging purposes
+            self.verifyCoords(endrow, endcol)
         return (endrow, endcol)
 #        if self.labelLeft:
 #            return (row+self.xlsMargin[1]+height, col+self.xlsMargin[0]+mergeWH)
@@ -1755,7 +1756,10 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         maxWidth = 20
         endrow = row
         endcol = col
-
+        lwidth = 10
+        lheight = 1
+        iwidth = 0
+        iheight = 0
         if self.label:
             _TQstn = self._Tquestion(langDict)
             cell = MatrixElement(row,
@@ -1801,7 +1805,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             answerMatrix.addElement(cell)
             answerCol = 3
         wwidth = lwidth
-        mergeWH = mergeLH
+        mergeWH = lwidth - 1
         wheight = len(list)
         if self.singleRow:
             wwidthpart = (wwidth - len(list)) / len(list)
@@ -1836,14 +1840,15 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         else:
             if endrow < row:
                 endrow = row
-            if endcol < col + 1 + mergeLH:
-                endcol = col + 1 + mergeLH
+            if endcol < col + 1 + mergeWH:
+                endcol = col + 1 + mergeWH
         self.addPaddingAroundWidget(matrix, startrow, startcol, lwidth, lheight, wwidth, iheight+wheight)
         self.addPaddingToCell(matrix, startrow, startcol, endrow, endcol)
         endrow += self.xlsMargin[1]
         endcol += self.xlsMargin[0]
-        # Only for debugging purposes
-        self.verifyCoords(endrow, endcol)
+        if DEBUG:
+            # Only for debugging purposes
+            self.verifyCoords(endrow, endcol)
         return (endrow, endcol)
 
 
@@ -2370,75 +2375,115 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                 posn += 1
         return table
 
+    def getMatrixSize(self, maxWidth = 20):
+        self._store_metadata()
+        self.getMetaData()
+        width = 0
+        height = 0
+        # Add space for the sub heading
+        height = 1
+        codeNum = self.qstnNo
+        labelWidth = maxWidth/2
+        for line in range(int(self.rowCnt)):
+            label = survey_T(self.rows[line],self.langDict)
+            (lwidth, lheight) = (labelWidth, len(label)/(4 * labelWidth / 3) + 1)
+            for cell in range(int(self.colCnt)):
+                code = "%s%s" % (self.question["code"], codeNum)
+                codeNum += 1
+                childWidget = self.getChildWidget(code)
+                type = childWidget.get("Type")
+                realWidget = survey_question_type[type](childWidget.id)
+                (cwidth, cheight) = realWidget.getWidgetSize(maxWidth)
+                lwidth += cwidth
+                if cheight > lheight:
+                    lheight = cheight
+            height += lheight
+            if lwidth > width:
+                width = lwidth
+        if DEBUG:
+            print >> sys.stdout, "%s (%s,%s)" % (self.question["code"], height, width)
+        self.xlsWidgetSize = (width,height)
+        return (height, width)
+
+        
     def writeToMatrix(self,
                       matrix,
                       row,
                       col,
                       langDict=dict(),
                       answerMatrix=None,
-                      style={"Label": True
-                            ,"LabelLeft" : True
-                            }
                       ):
         """
             Function to write out basic details to the matrix object
         """
         self._store_metadata()
         self.getMetaData()
+        startrow = row
         startcol = col
-        nextrow = row
-        nextcol = col
-        gridStyle = style
-        gridStyle["Label"] = False
-        if self.data != None:
-            cell = MatrixElement(row, col, survey_T(self.subtitle, langDict),
-                                 style="styleSubHeader")
+        endrow = row
+        endcol = col
+        maxWidth = 20
+        labelWidth = maxWidth / 2
+        codeNum = self.qstnNo
+        row += 1
+        needHeading = True
+        # Merge the top left cells
+        cell = MatrixElement(startrow,
+                             startcol,
+                             "",
+                             style="styleSubHeader"
+                            )
+        cell.merge(labelWidth - 1,0)
+        matrix.addElement(cell)
+        for line in range(int(self.rowCnt)):
+            # Add the label
+            label = survey_T(self.rows[line],self.langDict)
+            (lwidth, lheight) = (labelWidth, len(label)/(4 * labelWidth / 3) + 1)
+            cell = MatrixElement(row,
+                                 col,
+                                 label,
+                                 style="styleSubHeader"
+                                )
+            cell.merge(lwidth - 1,lheight - 1)
             matrix.addElement(cell)
-            # Add a *mostly* blank line for the heading.
-            # This will be added on the first run through the list
-            # To take into account the number of columns required
-            firstRun = True
-            colCnt = 0
-            nextrow += 1
-            posn = 0
-            codeNum = self.qstnNo
-            for line in self.data:
-                col = startcol
-                row = nextrow
-                cell = MatrixElement(row, col, survey_T(self.rows[posn],
-                                                        langDict),
-                                     style="styleText")
-                matrix.addElement(cell)
-                col += 1
-                for cell in line:
-                    if firstRun:
-                        cell = MatrixElement(row - 1, col,
-                                             survey_T(self.columns[colCnt],
-                                                      langDict),
-                                             style="styleSubHeader")
-                        matrix.addElement(cell)
-                        colCnt += 1
-                    if cell == "Blank":
-                        col += 1
-                    else:
-                        code = "%s%s" % (self.question["code"], codeNum)
-                        codeNum += 1
-                        childWidget = self.getChildWidget(code)
-                        type = childWidget.get("Type")
-                        realWidget = survey_question_type[type](childWidget.id)
-                        (endrow, col) = realWidget.writeToMatrix(matrix,
-                                                                 row,
-                                                                 col,
-                                                                 langDict,
-                                                                 answerMatrix,
-                                                                 style)
-                    if endrow > nextrow:
-                        nextrow = endrow
-                posn += 1
-                if col > nextcol:
-                    nextcol = col
-                firstRun = False
-        return (nextrow + self.xlsMargin[1], nextcol + self.xlsMargin[0])
+            maxrow = row + lheight
+            endcol = col + lwidth
+            for cell in range(int(self.colCnt)):
+                code = "%s%s" % (self.question["code"], codeNum)
+                codeNum += 1
+                childWidget = self.getChildWidget(code)
+                type = childWidget.get("Type")
+                realWidget = survey_question_type[type](childWidget.id)
+                realWidget.label = False
+#                realWidget.xlsMargin = (0,0)
+                col = endcol
+                realWidget.startPosn = (col, row)
+                (endrow, endcol) = realWidget.writeToMatrix(matrix,
+                                                             row,
+                                                             col,
+                                                             langDict,
+                                                             answerMatrix
+                                                            )
+                if endrow > maxrow:
+                    maxrow = endrow
+                if needHeading:
+                    # Now add the heading for this column
+                    label = survey_T(self.columns[cell],self.langDict)
+                    cell = MatrixElement(startrow,
+                                         col,
+                                         label,
+                                         style="styleSubHeader"
+                                        )
+                    cell.merge(endcol - col -1 ,0)
+                    matrix.addElement(cell)
+            row = maxrow
+            col = startcol
+            needHeading = False
+        # Add widget padding
+        self.addPaddingToCell(matrix, startrow, startcol, row, endcol)
+        row += self.xlsMargin[1]
+        endcol += self.xlsMargin[0]
+        return (row, endcol)
 
     def insertChildren(self, record, metadata):
         self.id = record.id
@@ -2557,6 +2602,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
             self.question.parentNumber = int(parentNumber)
         self.metalist.append("Type")
         self.typeDescription = T("Grid Child")
+        self.xlsWidgetSize = (0,0)
 
     def display(self, **attr):
         return None
