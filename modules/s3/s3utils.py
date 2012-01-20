@@ -40,8 +40,8 @@ __all__ = ["URL2",
            "getBrowserName",
            "s3_debug",
            "s3_dev_toolbar",
-           "s3_truncate",
            "s3_mark_required",
+           "s3_truncate",
            "s3_split_multi_value",
            "s3_get_db_field_value",
            "s3_filter_staff",
@@ -141,40 +141,10 @@ def URL3(a=None, r=None):
     return url
 
 # =============================================================================
-def s3_dev_toolbar():
-    """
-        Developer Toolbar - ported from gluon.Response.toolbar()
-        Shows useful stuff at the bottom of the page in Debug mode
-    """
-    from gluon.dal import thread
-    from gluon.utils import web2py_uuid
-
-    BUTTON = TAG.button
-
-    if hasattr(thread, "instances"):
-        dbstats = [TABLE(*[TR(PRE(row[0]),
-                           "%.2fms" % (row[1]*1000)) \
-                           for row in i.db._timings]) \
-                         for i in thread.instances]
-    else:
-        dbstats = [] # if no db or on GAE
-    u = web2py_uuid()
-    return DIV(
-        BUTTON("request", _onclick="$('#request-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.request), _class="dbg_hidden", _id="request-%s" % u),
-        BUTTON("session", _onclick="$('#session-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.session), _class="dbg_hidden", _id="session-%s" % u),
-        # Disabled response as it breaks S3SearchLocationWidget
-        #BUTTON("response", _onclick="$('#response-%s').slideToggle()" % u),
-        #DIV(BEAUTIFY(current.response), _class="dbg_hidden", _id="response-%s" % u),
-        BUTTON("db stats", _onclick="$('#db-stats-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(dbstats), _class="dbg_hidden", _id="db-stats-%s" % u),
-        SCRIPT("$('.dbg_hidden').hide()")
-        )
-
-# =============================================================================
 class Traceback(object):
-    """ Generate the traceback for viewing in Tickets """
+    """
+        Generate the traceback for viewing error Tickets
+    """
 
     def __init__(self, text):
         """ Traceback constructor """
@@ -234,7 +204,11 @@ class Traceback(object):
 
 # =============================================================================
 def getBrowserName(userAgent):
-    "Determine which browser is being used."
+    """
+        Determine which browser is being used.
+        - used by Selenium
+    """
+
     if userAgent.find("MSIE") > -1:
         return "IE"
     elif userAgent.find("Firefox") > -1:
@@ -245,22 +219,58 @@ def getBrowserName(userAgent):
         return "Unknown"
 
 # =============================================================================
-def s3_truncate(text, length=48, nice=True):
+def s3_debug(message, value=None):
     """
-        Nice truncating of text
+       Debug Function (same name/parameters as JavaScript one)
 
-        @param text: the text
-        @param length: the maximum length
-        @param nice: do not truncate words
+       Provide an easy, safe, systematic way of handling Debug output
+       (print to stdout doesn't work with WSGI deployments)
+
+       @ToDo: Should be using python's built-in logging module?
     """
 
-    if len(text) > length:
-        if nice:
-            return "%s..." % text[:length].rsplit(" ", 1)[0][:45]
-        else:
-            return "%s..." % text[:45]
+    try:
+        output = "S3 Debug: %s" % str(message)
+        if value:
+            "%s: %s" % (output, str(value))
+    except:
+        output = u"S3 Debug: %s" % unicode(message)
+        if value:
+            u"%s: %s" % (output, unicode(value))
+
+    print >> sys.stderr, output
+
+# =============================================================================
+def s3_dev_toolbar():
+    """
+        Developer Toolbar - ported from gluon.Response.toolbar()
+        Shows useful stuff at the bottom of the page in Debug mode
+    """
+    from gluon.dal import thread
+    from gluon.utils import web2py_uuid
+
+    BUTTON = TAG.button
+
+    if hasattr(thread, "instances"):
+        dbstats = [TABLE(*[TR(PRE(row[0]),
+                           "%.2fms" % (row[1]*1000)) \
+                           for row in i.db._timings]) \
+                         for i in thread.instances]
     else:
-        return text
+        dbstats = [] # if no db or on GAE
+    u = web2py_uuid()
+    return DIV(
+        BUTTON("request", _onclick="$('#request-%s').slideToggle()" % u),
+        DIV(BEAUTIFY(current.request), _class="dbg_hidden", _id="request-%s" % u),
+        BUTTON("session", _onclick="$('#session-%s').slideToggle()" % u),
+        DIV(BEAUTIFY(current.session), _class="dbg_hidden", _id="session-%s" % u),
+        # Disabled response as it breaks S3SearchLocationWidget
+        #BUTTON("response", _onclick="$('#response-%s').slideToggle()" % u),
+        #DIV(BEAUTIFY(current.response), _class="dbg_hidden", _id="response-%s" % u),
+        BUTTON("db stats", _onclick="$('#db-stats-%s').slideToggle()" % u),
+        DIV(BEAUTIFY(dbstats), _class="dbg_hidden", _id="db-stats-%s" % u),
+        SCRIPT("$('.dbg_hidden').hide()")
+        )
 
 # =============================================================================
 def s3_mark_required(fields,
@@ -324,27 +334,22 @@ def s3_mark_required(fields,
         return None
 
 # =============================================================================
-def s3_debug(message, value=None):
-
+def s3_truncate(text, length=48, nice=True):
     """
-       Debug Function (same name/parameters as JavaScript one)
+        Nice truncating of text
 
-       Provide an easy, safe, systematic way of handling Debug output
-       (print to stdout doesn't work with WSGI deployments)
-
-       @ToDo: Should be using python's built-in logging module?
+        @param text: the text
+        @param length: the maximum length
+        @param nice: do not truncate words
     """
 
-    try:
-        output = "S3 Debug: %s" % str(message)
-        if value:
-            "%s: %s" % (output, str(value))
-    except:
-        output = u"S3 Debug: %s" % unicode(message)
-        if value:
-            u"%s: %s" % (output, unicode(value))
-
-    print >> sys.stderr, output
+    if len(text) > length:
+        if nice:
+            return "%s..." % text[:length].rsplit(" ", 1)[0][:45]
+        else:
+            return "%s..." % text[:45]
+    else:
+        return text
 
 # =============================================================================
 def s3_split_multi_value(value):

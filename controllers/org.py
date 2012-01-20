@@ -45,6 +45,7 @@ def subsector():
 # =============================================================================
 def site():
     """ RESTful CRUD controller """
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -120,8 +121,7 @@ def room():
 def incoming():
     """ Incoming Shipments """
 
-    s3mgr.load("inv_inv_item")
-    return response.s3.inv_incoming()
+    return inv_incoming()
 
 # =============================================================================
 def req_match():

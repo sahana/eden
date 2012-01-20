@@ -44,24 +44,21 @@ def vehicle():
         Filtered version of the asset_asset resource
     """
 
-    # Load the models
-    s3mgr.load("vehicle_vehicle")
-    module = "asset"
-    resourcename = "asset"
     tablename = "asset_asset"
-    table = db[tablename]
+    table = s3db[tablename]
 
     s3mgr.configure("vehicle_vehicle",
                     deletable=False)
 
     # Type is Vehicle
+    VEHICLE = s3db.asset_types["VEHICLE"]
     field = table.type
-    field.default = s3.asset.ASSET_TYPE_VEHICLE
+    field.default = VEHICLE
     field.readable = False
     field.writable = False
 
     # Only show vehicles
-    response.s3.filter = (field == s3.asset.ASSET_TYPE_VEHICLE)
+    response.s3.filter = (field == VEHICLE)
 
     # Remove type from list_fields
     list_fields = s3mgr.model.get_config("asset_asset", "list_fields")
@@ -80,8 +77,10 @@ def vehicle():
                             _title="%s|%s" % (T("Vehicle Type"),
                                               T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))))
     field.widget = None # We want a simple dropdown
-    query = (db.supply_item_category.is_vehicle == True) & \
-            (db.supply_item.item_category_id == db.supply_item_category.id)
+    ctable = s3db.supply_item_category
+    itable = s3db.supply_item
+    query = (ctable.is_vehicle == True) & \
+            (itable.item_category_id == ctable.id)
     field.requires = IS_ONE_OF(db(query),
                                "supply_item.id",
                                "%(name)s",
@@ -89,7 +88,7 @@ def vehicle():
                             )
     # Label changes
     table.sn.label = T("License Plate")
-    db.asset_log.room_id.label = T("Parking Area")
+    s3db.asset_log.room_id.label = T("Parking Area")
 
     # CRUD strings
     ADD_VEHICLE = T("Add Vehicle")
@@ -139,7 +138,7 @@ def vehicle():
                     search_method = vehicle_search)
 
     # Defined in Model
-    return s3.asset.controller()
+    return asset_controller()
 
 # END =========================================================================
 

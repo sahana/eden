@@ -37,6 +37,11 @@ from ..s3 import *
 
 # =============================================================================
 class S3SituationModel(S3Model):
+    """
+    """
+
+    #names = [
+    #    ]
 
     def model(self):
 
@@ -104,6 +109,8 @@ class S3SituationModel(S3Model):
                            sit_trackable=self.super_key(sit_trackable))
 
         # ---------------------------------------------------------------------
+        # Pass variables back to global scope (response.s3.*)
+        #
         return Storage()
 
 # END =========================================================================

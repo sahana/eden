@@ -120,7 +120,7 @@ def hospital():
                    r.component.name == "recv" or \
                    r.component.name == "send":
                     # Filter out items which are already in this inventory
-                    response.s3.inv_prep(r)
+                    s3db.inv_prep(r)
 
                 elif r.component.name == "human_resource":
                     # Filter out people which are already staff for this hospital
@@ -237,11 +237,7 @@ def hospital():
 def incoming():
     """ Incoming Shipments """
 
-    s3mgr.load("inv_inv_item")
-    if "inv_incoming" in response.s3:
-        return response.s3.inv_incoming()
-    else:
-        raise HTTP(404)
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():

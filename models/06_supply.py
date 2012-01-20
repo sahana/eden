@@ -34,10 +34,13 @@ def item_entity_controller():
     """
         RESTful CRUD controller
         - consolidated report of inv_item, recv_item & proc_plan_item
+        @ToDo: Migrate JS to Static as part of migrating this to an
+               S3Search Widget
     """
 
     tablename = "supply_item_entity"
     table = s3db[tablename]
+
     # CRUD strings
     s3.crud_strings[tablename] = Storage(
         title_create = T("Add Item"),

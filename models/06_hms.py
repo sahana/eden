@@ -279,7 +279,7 @@ if deployment_settings.has_module(module):
                     except:
                         pass
                     try:
-                        tabs = tabs + response.s3.inv_tabs(r)
+                        tabs = tabs + s3db.inv_tabs(r)
                     except:
                         pass
 

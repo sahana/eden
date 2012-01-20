@@ -188,12 +188,6 @@ def s3_filename(filename):
     return "".join(c for c in cleanedFilename if c in validFilenameChars)
 
 # -----------------------------------------------------------------------------
-def s3_component_form(r, **attr):
-    """ Custom Method to create a PDF for a component form """
-    exporter = s3base.S3PDF()
-    return exporter(r, **attr)
-
-# -----------------------------------------------------------------------------
 def s3_include_debug():
     """
         Generates html to include:

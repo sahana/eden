@@ -92,6 +92,7 @@ class S3ProjectModel(S3Model):
         human_resource_id = self.hrm_human_resource_id
 
         s3_date_format = settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Enable DRR extensions?
         drr = settings.get_project_drr()
@@ -205,7 +206,7 @@ class S3ProjectModel(S3Model):
                                   # drr uses the separate project_organisation table
                                   organisation_id(
                                                readable=False if drr else True,
-                                               writable=False if drr else True
+                                               writable=False if drr else True,
                                               ),
                                   Field("name",
                                         label = T("Name"),
@@ -218,15 +219,17 @@ class S3ProjectModel(S3Model):
                                   Field("code",
                                         label = T("Code"),
                                         readable=False,
-                                        writable=False
+                                        writable=False,
                                         ),
                                   Field("description", "text",
                                         label = T("Description")),
                                   Field("start_date", "date",
                                         label = T("Start date"),
+                                        represent = s3_date_represent,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
                                   Field("end_date", "date",
                                         label = T("End date"),
+                                        represent = s3_date_represent,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
                                   Field("duration",
                                         readable=False,

@@ -1922,8 +1922,8 @@ class AuthS3(Auth):
         session = current.session
 
         if not hasattr(table, "_tablename"):
-            current.manager.load(table)
-            table = db[table]
+            s3db = current.s3db
+            table = s3db[table]
 
         if session.s3.security_policy == 1:
             # Simple policy

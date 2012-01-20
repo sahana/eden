@@ -120,14 +120,15 @@ def warehouse():
                    r.component.name == "recv" or \
                    r.component.name == "send":
                     # Filter out items which are already in this inventory
-                    response.s3.inv_prep(r)
+                    s3db.inv_prep(r)
 
                 elif r.component.name == "human_resource":
                     # Filter out people which are already staff for this warehouse
                     s3_filter_staff(r)
                     # Cascade the organisation_id from the hospital to the staff
-                    db.hrm_human_resource.organisation_id.default = r.record.organisation_id
-                    db.hrm_human_resource.organisation_id.writable = False
+                    htable = s3db.hrm_human_resource
+                    htable.organisation_id.default = r.record.organisation_id
+                    htable.organisation_id.writable = False
 
                 elif r.component.name == "req":
                     if r.method != "update" and r.method != "read":
@@ -153,7 +154,8 @@ def warehouse():
         csv_template = "warehouse"
     csv_stylesheet = "%s.xsl" % csv_template
 
-    output = s3_rest_controller(rheader=rheader,
+    output = s3_rest_controller(module, resourcename,
+                                rheader=rheader,
                                 csv_template = csv_template,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
@@ -168,8 +170,8 @@ def warehouse():
 def incoming():
     """ Incoming Shipments """
 
-    s3mgr.load("inv_inv_item")
-    return response.s3.inv_incoming()
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():
@@ -224,8 +226,7 @@ def inv_item():
     s3mgr.import_prep = import_prep
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    s3mgr.load("inv_inv_item")
-    return response.s3.inv_item_controller()
+    return inv_item_controller()
 
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
@@ -266,8 +267,7 @@ def recv():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    s3mgr.load("inv_recv")
-    return response.s3.inv_recv_controller()
+    return inv_recv_controller()
 
 # -----------------------------------------------------------------------------
 def recv_item():
@@ -280,8 +280,7 @@ def send():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    s3mgr.load("inv_send")
-    return response.s3.inv_send_controller()
+    return inv_send_controller()
 
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):
@@ -852,7 +851,7 @@ def recv_sent():
         session.error = T("This shipment has already been received.")
 
     if not auth.s3_has_permission("update",
-                                  s3db.org_site,
+                                  "org_site",
                                   record_id=site_id):
         session.error = T("You do not have permission to receive this shipment.")
 
@@ -914,7 +913,7 @@ def send_commit():
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
                                                           r_commit.site_id)
     if not auth.s3_has_permission("update",
-                                  s3db["%s_%s" % (prefix, resourcename)],
+                                  "%s_%s" % (prefix, resourcename),
                                   record_id=id):
         session.error = T("You do not have permission to send a shipment from this site.")
         redirect(URL(c = "req",

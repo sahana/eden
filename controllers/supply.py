@@ -77,6 +77,7 @@ def item_pack():
 
     s3mgr.configure(tablename,
                     listadd=False)
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
