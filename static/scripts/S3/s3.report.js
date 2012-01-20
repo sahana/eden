@@ -35,7 +35,7 @@
 
 $(function() {
     var plot;
-    render_pie_chart = function(src) {
+    render_pie_chart = function(src, title, layer) {
         plot = jQuery.jqplot ('chart', [src],
             {
                 seriesDefaults: {
@@ -45,11 +45,12 @@ $(function() {
                         diameter:250
                     }
                 },
+                title: layer + ' ' + title,
                 legend: { show:true, location: 'e', escapeHtml:true }
             }
         );
     };
-    render_vbar_chart = function(src) {
+    render_vbar_chart = function(src, title, layer) {
         var s = new Array(src.length);
         var t = new Array(src.length);
         minzero = 0;
@@ -90,29 +91,29 @@ $(function() {
 //                     min: minzero,
                     autoscale: true
                 }
-            }
-
+            },
+            title: layer + ' ' + title,
         });
     };
     $('#pie_chart_rows').click(function() {
         $('#chart-container').show();
         $('#chart').empty();
-        render_pie_chart(json_data['rows']);
+        render_pie_chart(json_data['rows'], json_data['row_label'], json_data['layer_label']);
     });
     $('#pie_chart_cols').click(function() {
         $('#chart-container').show();
         $('#chart').empty();
-        render_pie_chart(json_data['cols']);
+        render_pie_chart(json_data['cols'], json_data['col_label'], json_data['layer_label']);
     });
     $('#vbar_chart_rows').click(function() {
         $('#chart-container').show();
         $('#chart').empty();
-        render_vbar_chart(json_data['rows']);
+        render_vbar_chart(json_data['rows'], json_data['row_label'], json_data['layer_label']);
     });
     $('#vbar_chart_cols').click(function() {
         $('#chart-container').show();
         $('#chart').empty();
-        render_vbar_chart(json_data['cols']);
+        render_vbar_chart(json_data['cols'], json_data['col_label'], json_data['layer_label']);
     });
     $('#hide-chart').click(function(){
         $('#chart-container').hide();
