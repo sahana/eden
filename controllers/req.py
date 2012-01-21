@@ -16,20 +16,6 @@ if not deployment_settings.has_module(module):
 
 s3_menu(module)
 
-# Load Models
-# (events loaded automatically, if-enabled)
-s3mgr.load("req_req")
-req_create_form_mods = response.s3.req_create_form_mods
-req_priority_represent = response.s3.req_priority_represent
-
-req_item_inv_item_btn = dict(url = URL(c = "req",
-                                       f = "req_item_inv_item",
-                                       args = ["[id]"]
-                                      ),
-                             _class = "action-btn",
-                             label = str(T("Find")), # Change to Fulfil? Match?
-                             )
-
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -64,6 +50,7 @@ def is_affiliated():
 # =============================================================================
 def create():
     """ Redirect to req/create """
+
     redirect(URL(f="req", args="create"))
 
 # -----------------------------------------------------------------------------
@@ -71,15 +58,11 @@ def req():
     """ REST Controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return response.s3.req_controller()
+    return req_controller()
 
 # =============================================================================
 def req_item():
     """ REST Controller """
-
-    # Load Model & resolver
-    tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
 
     s3mgr.configure(tablename,
                     insertable=False)
@@ -90,7 +73,7 @@ def req_item():
                 # Hide fields which don't make sense in a Create form
                 # - includes one embedded in list_create
                 # - list_fields over-rides, so still visible within list itself
-                response.s3.req_hide_quantities(r.table)
+                s3db.req_hide_quantities(r.table)
 
         return True
     response.s3.prep = prep
@@ -110,26 +93,30 @@ def req_item_packs():
         Called by S3FilterFieldChange to provide the pack options for a
             particular Item
     """
-    table = db.supply_item_pack
-    query = (db.req_req_item.id == request.args[0]) & \
-            (db.req_req_item.item_id == table.item_id)
+
+    table = s3db.supply_item_pack
+    ritable = s3db.req_req_item 
+    query = (ritable.id == request.args[0]) & \
+            (ritable.item_id == table.item_id)
 
     response.headers["Content-Type"] = "application/json"
     return db(query).select(table.id,
                             table.name,
                             table.quantity).json()
+
 # -----------------------------------------------------------------------------
 def req_item_inv_item():
     """
         Shows the inventory items which match a requested item
         @ToDo: Make this page a component of req_item
     """
-    s3mgr.load("inv_inv_item")
 
     req_item_id  = request.args[0]
     request.args = [] #
-    req_item = db.req_req_item[req_item_id]
-    req = db.req_req[req_item.req_id]
+    ritable = s3db.req_req_item
+    req_item = ritable[req_item_id]
+    rtable = s3db.req_req
+    req = rtable[req_item.req_id]
 
     output = {}
 
@@ -144,31 +131,31 @@ def req_item_inv_item():
 
     output["req_item"] = TABLE( TR(
                                     TH( "%s: " % T("Requested By") ),
-                                    s3db.org_site_represent(req.site_id),
+                                    rtable.site_id.represent(req.site_id),
                                     TH( "%s: " % T("Item")),
-                                    response.s3.inv_item_represent(req_item.item_id),
+                                    ritable.item_id.represent(req_item.item_id),
                                    ),
                                 TR(
                                     TH( "%s: " % T("Requester") ),
-                                    s3db.pr_person_represent(req.requester_id),
+                                    rtable.requester_id.represent(req.requester_id),
                                     TH( "%s: " % T("Quantity")),
                                     req_item.quantity,
                                    ),
                                 TR(
                                     TH( "%s: " % T("Date Requested") ),
-                                    req.date,
+                                    rtable.date.represent(req.date),
                                     TH( T("Quantity Committed")),
                                     req_item.quantity_commit,
                                    ),
                                 TR(
                                     TH( "%s: " % T("Date Required") ),
-                                    req.date_required,
+                                    rtable.date_required.represent(req.date_required),
                                     TH( "%s: " % T("Quantity in Transit")),
                                     req_item.quantity_transit,
                                    ),
                                 TR(
                                     TH( "%s: " % T("Priority") ),
-                                    req_priority_represent(req.priority),
+                                    rtable.priority.represent(req.priority),
                                     TH( "%s: " % T("Quantity Fulfilled")),
                                     req_item.quantity_fulfil,
                                    )
@@ -176,22 +163,23 @@ def req_item_inv_item():
 
     response.s3.no_sspag = True # pagination won't work with 2 datatables on one page @todo: test
 
+    itable = s3db.inv_inv_item
     # Get list of matching inventory items
-    response.s3.filter = (db.inv_inv_item.item_id == req_item.item_id)
+    response.s3.filter = (itable.item_id == req_item.item_id)
     # Tweak CRUD String for this context
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Inventories currently have this item in stock")
     inv_items = s3_rest_controller("inv", "inv_item")
     output["items"] = inv_items["items"]
 
     # Get list of alternative inventory items
-    atable = db.supply_item_alt
+    atable = s3db.supply_item_alt
     query = (atable.item_id == req_item.item_id ) & \
             (atable.deleted == False )
     alt_item_rows = db(query).select(atable.alt_item_id)
     alt_item_ids = [alt_item_row.alt_item_id for alt_item_row in alt_item_rows]
 
     if alt_item_ids:
-        response.s3.filter = (db.inv_inv_item.item_id.belongs(alt_item_ids))
+        response.s3.filter = (itable.item_id.belongs(alt_item_ids))
         inv_items_alt = s3_rest_controller("inv", "inv_item")
         output["items_alt"] = inv_items_alt["items"]
     else:
@@ -215,7 +203,7 @@ def req_skill():
     """ REST Controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return response.s3.req_skill_controller()
+    return req_skill_controller()
 
 # =============================================================================
 def commit():
@@ -224,7 +212,7 @@ def commit():
     # Check if user is affiliated to an Organisation
     if not is_affiliated():
         tablename = "req_commit_person"
-        table = db[tablename]
+        table = s3db[tablename]
         # Unaffiliated people can't commit on behalf of others
         table.person_id.writable = False
         # & can only make single-person commitments
@@ -263,10 +251,10 @@ def commit():
             req_id = r.record.req_id
             if r.component.name == "item":
                 # Limit commit items to items from the request
-                db.req_commit_item.req_item_id.requires = \
+                s3db.req_commit_item.req_item_id.requires = \
                     IS_ONE_OF(db,
                               "req_req_item.id",
-                              response.s3.req_item_represent,
+                              s3db.req_item_represent,
                               orderby = "req_req_item.id",
                               filterby = "req_id",
                               filter_opts = [req_id],
@@ -307,17 +295,18 @@ def commit_rheader(r):
             if type == 1:
                 tabs.append((T("Items"), "commit_item"))
 
+                table = r.table
                 #req_record = db.req_req[record.req_id]
                 #req_date = req_record.date
-                rheader = DIV( TABLE( TR( TH( "%s: " % T("Request")),
-                                          response.s3.req_represent(record.req_id),
+                rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),
+                                          table.req_id.represent(record.req_id),
                                          ),
                                       TR( TH( "%s: " % T("Committing Warehouse")),
                                           s3db.org_site_represent(record.site_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),
                                           ),
-                                      TR( TH( "%s: " % T("Comments")),
+                                      TR( TH( "%s: " % table.comments.label),
                                           TD(record.comments, _colspan=3)
                                           ),
                                          ),
@@ -344,31 +333,31 @@ def commit_rheader(r):
                 #req_record = db.req_req[record.req_id]
                 #req_date = req_record.date
                 organisation_represent = s3db.org_organisation_represent
-                rheader = DIV( TABLE( TR( TH( "%s: " % T("Request")),
-                                          response.s3.req_represent(record.req_id),
+                rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),
+                                          table.req_id.represent(record.req_id),
                                          ),
                                       TR( TH( "%s: " % T("Committing Organization")),
                                           organisation_represent(record.organisation_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),
                                           ),
-                                      TR( TH( "%s: " % T("Comments")),
+                                      TR( TH( "%s: " % table.comments.label),
                                           TD(record.comments, _colspan=3)
                                           ),
                                          ),
                                         )
             else:
                 # Other (& Assets/Shelter)
-                rheader = DIV( TABLE( TR( TH( "%s: " % T("Request")),
-                                          response.s3.req_represent(record.req_id),
+                rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),
+                                          table.req_id.represent(record.req_id),
                                          ),
                                       TR( TH( "%s: " % T("Committing Person")),
                                           s3db.pr_person_represent(record.committer_id),
                                           TH( "%s: " % T("Commit Date")),
                                           s3_date_represent(record.date),
                                           ),
-                                      TR( TH( "%s: " % T("Comments")),
-                                          TD(record.comments, _colspan=3)
+                                      TR( TH( "%s: " % table.comments.label),
+                                          TD(record.comments or "", _colspan=3)
                                           ),
                                          ),
                                         )
@@ -384,8 +373,7 @@ def commit_rheader(r):
 def commit_item():
     """ REST Controller """
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def commit_req():
@@ -397,18 +385,16 @@ def commit_req():
     """
 
     req_id = request.args[0]
-    r_req = db.req_req[req_id]
+    r_req = s3db.req_req[req_id]
     site_id = request.vars.get("site_id")
 
-    s3mgr.load("inv_inv_item")
-
     # User must have permissions over facility which is sending
-    (prefix, resourcename, id) = s3mgr.model.get_instance(db.org_site,
+    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
                                                           site_id)
     if not site_id or not auth.s3_has_permission("update",
-                                              db["%s_%s" % (prefix,
-                                                            resourcename)],
-                                              record_id=id):
+                                                 "%s_%s" % (prefix,
+                                                            resourcename),
+                                                 record_id=id):
         session.error = T("You do not have permission to make this commitment.")
         redirect(URL(c = "req",
                      f = "req",
@@ -416,14 +402,15 @@ def commit_req():
                      ))
 
     # Create a new commit record
-    commit_id = db.req_commit.insert( date = request.utcnow,
-                                      req_id = req_id,
-                                      site_id = site_id,
-                                      type = r_req.type)
+    commit_id = s3db.req_commit.insert(date = request.utcnow,
+                                       req_id = req_id,
+                                       site_id = site_id,
+                                       type = r_req.type
+                                       )
 
     # Only select items which are in the warehouse
-    ritable = db.req_req_item
-    iitable = db.inv_inv_item
+    ritable = s3db.req_req_item
+    iitable = s3db.inv_inv_item
     query = (ritable.req_id == req_id) & \
             (ritable.quantity_fulfil < ritable.quantity) & \
             (iitable.site_id == site_id) & \
@@ -437,6 +424,7 @@ def commit_req():
                                  iitable.quantity,
                                  iitable.item_pack_id)
 
+    citable = s3db.req_commit_item
     for req_item in req_items:
         req_item_quantity = req_item.req_req_item.quantity * \
                             req_item.req_req_item.pack_quantity
@@ -451,15 +439,15 @@ def commit_req():
         commit_item_quantity = commit_item_quantity / req_item.req_req_item.pack_quantity
 
         if commit_item_quantity:
-            commit_item_id = db.req_commit_item.insert( commit_id = commit_id,
-                                                        req_item_id = req_item.req_req_item.id,
-                                                        item_pack_id = req_item.req_req_item.item_pack_id,
-                                                        quantity = commit_item_quantity
-                                                       )
+            commit_item_id = citable.insert(commit_id = commit_id,
+                                            req_item_id = req_item.req_req_item.id,
+                                            item_pack_id = req_item.req_req_item.item_pack_id,
+                                            quantity = commit_item_quantity
+                                            )
 
             # Update the req_item.commit_quantity  & req.commit_status
             s3mgr.store_session("req", "commit_item", commit_item_id)
-            response.s3.commit_item_onaccept(None)
+            s3db.req_commit_item_onaccept(None)
 
     # Redirect to commit
     redirect(URL(c = "req",
@@ -476,41 +464,37 @@ def send_req():
     """
 
     req_id = request.args[0]
-    r_req = db.req_req[req_id]
+    r_req = s3db.req_req[req_id]
     site_id = request.vars.get("site_id")
-
-    s3mgr.load("inv_inv_item")
-    s3mgr.load("inv_send")
-    s3mgr.load("inv_send_item")
 
     # User must have permissions over facility which is sending
     (prefix, resourcename, id) = s3mgr.model.get_instance(db.org_site,
                                                           site_id)
     if not site_id or not auth.s3_has_permission("update",
-                                                 db["%s_%s" % (prefix,
-                                                               resourcename)],
+                                                 "%s_%s" % (prefix,
+                                                            resourcename),
                                                  record_id=id):
         session.error = T("You do not have permission to send this shipment.")
         redirect(URL(c = "req",
                      f = "req",
                      args = [req_id]))
 
-    to_location_id = db.org_site[r_req.site_id].location_id
+    to_location_id = s3db.org_site[r_req.site_id].location_id
 
     # Create a new send record
-    send_id = db.inv_send.insert( date = request.utcnow,
-                                  site_id = site_id,
-                                  to_location_id = to_location_id)
+    send_id = s3db.inv_send.insert(date = request.utcnow,
+                                   site_id = site_id,
+                                   to_location_id = to_location_id)
 
     # Only select items which are in the warehouse
-    ritable = db.req_req_item
-    iitable = db.inv_inv_item
+    ritable = s3db.req_req_item
+    iitable = s3db.inv_inv_item
     query = (ritable.req_id == req_id) & \
             (ritable.quantity_fulfil < ritable.quantity) & \
             (iitable.site_id == site_id) & \
             (ritable.item_id == iitable.item_id) & \
             (ritable.deleted == False)  & \
-            (db.inv_inv_item.deleted == False)
+            (iitable.deleted == False)
     req_items = db(query).select(ritable.id,
                                  ritable.quantity,
                                  ritable.item_pack_id,
@@ -519,6 +503,7 @@ def send_req():
                                  iitable.quantity,
                                  iitable.item_pack_id)
 
+    istable = s3db.inv_send_item
     for req_item in req_items:
         req_item_quantity = req_item.req_req_item.quantity * \
                             req_item.req_req_item.pack_quantity
@@ -533,11 +518,11 @@ def send_req():
         send_item_quantity = send_item_quantity / req_item.req_req_item.pack_quantity
 
         if send_item_quantity:
-            send_item_id = db.inv_send_item.insert( send_id = send_id,
-                                                    inv_item_id = req_item.inv_inv_item.id,
-                                                    req_item_id = req_item.req_req_item.id,
-                                                    item_pack_id = req_item.req_req_item.item_pack_id,
-                                                    quantity = send_item_quantity)
+            send_item_id = istable.insert(send_id = send_id,
+                                          inv_item_id = req_item.inv_inv_item.id,
+                                          req_item_id = req_item.req_req_item.id,
+                                          item_pack_id = req_item.req_req_item.item_pack_id,
+                                          quantity = send_item_quantity)
 
     # Redirect to commit
     redirect(URL(c = "inv",
@@ -546,9 +531,12 @@ def send_req():
 
 # =============================================================================
 def commit_item_json():
-    ctable = db.req_commit
-    itable = db.req_commit_item
-    stable = db.org_site
+    """
+    """
+
+    ctable = s3db.req_commit
+    itable = s3db.req_commit_item
+    stable = s3db.org_site
     #ctable.date.represent = lambda dt: dt[:10]
     query = (itable.req_item_id == request.args[0]) & \
             (ctable.id == itable.commit_id) & \

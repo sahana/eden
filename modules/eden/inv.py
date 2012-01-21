@@ -322,8 +322,7 @@ class S3IncomingModel(S3Model):
         supply_item_id = self.supply_item_id
         item_pack_id = self.supply_item_pack_id
         item_pack_virtualfields = self.supply_item_pack_virtualfields
-        current.manager.load("req_req_item")
-        req_item_id = s3.req_item_id
+        req_item_id = self.req_item_id
 
         messages = current.messages
         NONE = messages.NONE
@@ -713,8 +712,7 @@ class S3DistributionModel(S3Model):
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
         item_pack_virtualfields = self.supply_item_pack_virtualfields
-        current.manager.load("req_req_item")
-        req_item_id = s3.req_item_id
+        req_item_id = self.req_item_id
 
         messages = current.messages
         NONE = messages.NONE

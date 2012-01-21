@@ -760,7 +760,7 @@ S3FilterFieldChange({
         #                          ),
         #            ondelete = "RESTRICT")
 
-        # =============================================================================
+        # =====================================================================
         # Item Super-Entity
         #
         # This super entity provides a common way to provide a foreign key to supply_item
@@ -778,9 +778,9 @@ S3FilterFieldChange({
                                   #super_link("track_id", "sit_trackable"),
                                   #location_id(),
                                   supply_item_id(represent = lambda id: \
-                                                    supply_item_represent(id,
-                                                                          show_um = False,
-                                                                          show_link = True)),
+                                            self.supply_item_represent(id,
+                                                                       show_um=False,
+                                                                       show_link=True)),
                                   item_pack_id(),
                                   Field("quantity", "double",
                                         label = T("Quantity"),
@@ -789,7 +789,7 @@ S3FilterFieldChange({
                                   *s3.ownerstamp()
                                   )
 
-        # -----------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         item_id = self.super_link("item_entity_id", "supply_item_entity",
                                   #writable = True,
                                   #readable = True,
@@ -1112,6 +1112,7 @@ S3FilterFieldChange({
         
         db = current.db
         s3db = current.s3db
+        request = current.request
 
         item_id = form.vars.id
 

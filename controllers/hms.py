@@ -133,7 +133,7 @@ def hospital():
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        response.s3.req_create_form_mods()
+                        s3db.req_create_form_mods()
 
                 elif r.component.name == "bed_capacity":
                     table = db.hms_bed_capacity
@@ -240,14 +240,10 @@ def incoming():
     return inv_incoming()
 
 # -----------------------------------------------------------------------------
-def req_match():
+def match():
     """ Match Requests """
 
-    s3mgr.load("req_req")
-    if "req_match" in response.s3:
-        return response.s3.req_match()
-    else:
-        raise HTTP(404)
+    return req_match()
 
 # END =========================================================================
 

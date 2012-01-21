@@ -124,11 +124,10 @@ def incoming():
     return inv_incoming()
 
 # =============================================================================
-def req_match():
+def match():
     """ Match Requests """
 
-    s3mgr.load("req_req")
-    return response.s3.req_match()
+    return req_match()
 
 # =============================================================================
 def donor():

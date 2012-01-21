@@ -24,7 +24,7 @@ import eden.hrm
 import eden.project
 import eden.supply
 import eden.inv
-#import eden.req
+import eden.req
 import eden.proc
 import eden.asset
 import eden.vehicle

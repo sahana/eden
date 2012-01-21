@@ -134,13 +134,13 @@ def warehouse():
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        response.s3.req_create_form_mods()
+                        s3db.req_create_form_mods()
 
         # "show_obsolete" var option can be added (btn?) later to
         # disable this filter
         if r.method in [None, "list"] and \
             not r.vars.get("show_obsolete", False):
-            r.resource.add_filter((db.org_office.obsolete != True))
+            r.resource.add_filter((s3db.org_office.obsolete != True))
         return True
     response.s3.prep = prep
 
@@ -399,8 +399,8 @@ def recv_process():
 
     # Get Recv & Inv Items
     ritable = s3db.inv_recv_item
-    query = ( ritable.recv_id == recv_id ) & \
-            ( ritable.deleted == False )
+    query = (ritable.recv_id == recv_id) & \
+            (ritable.deleted == False)
     recv_items = db(query).select(ritable.id,
                                   ritable.item_id,
                                   ritable.quantity,
@@ -438,18 +438,18 @@ def recv_process():
         else:
             # This item must be added to the inv
             inv_item_id = 0
-            item = dict( site_id = site_id,
-                         item_id = item_id,
-                         quantity = recv_item.quantity,
-                         item_pack_id = recv_item.item_pack_id)
+            item = dict(site_id = site_id,
+                        item_id = item_id,
+                        quantity = recv_item.quantity,
+                        item_pack_id = recv_item.item_pack_id)
 
         # Update Inv Item
         itable[inv_item_id] = item
 
         # Check for req_items (-> fulfil)
-        update_req_id.append( req_item_in_shipment(shipment_item = Storage(inv_recv_item = recv_item),
-                                                   shipment_type = "recv",
-                                                   req_items = req_items))
+        update_req_id.append(req_item_in_shipment(shipment_item = Storage(inv_recv_item = recv_item),
+                                                  shipment_type = "recv",
+                                                  req_items = req_items))
 
     # Update recv record & lock for editing
     rtable[recv_id] = dict(date = request.utcnow,
@@ -462,7 +462,7 @@ def recv_process():
         if req_id:
             s3mgr.store_session("req", "req", req_id)
             s3mgr.store_session("req", "req_item", req_item_id)
-            s3.req_item_onaccept(None)
+            s3db.req_item_onaccept(None)
 
     session.confirmation = T("Shipment Items received by Warehouse")
 
@@ -583,7 +583,7 @@ def recv_cancel():
         if req_id:
             s3mgr.store_session("req", "req", req_id)
             s3mgr.store_session("req", "req_item", req_item_id)
-            s3.req_item_onaccept(None)
+            s3db.req_item_onaccept(None)
 
     session.confirmation = T("Received Shipment canceled and items removed from Warehouse")
 
@@ -694,7 +694,7 @@ def send_process():
             if req_id:
                 s3mgr.store_session("req", "req", req_id)
                 s3mgr.store_session("req", "req_item", req_item_id)
-                s3.req_item_onaccept(None)
+                s3db.req_item_onaccept(None)
 
         # Go to the Site which has sent these items
         (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
@@ -828,7 +828,7 @@ def send_cancel():
             if req_id:
                 s3mgr.store_session("req", "req", req_id)
                 s3mgr.store_session("req", "req_item", req_item_id)
-                s3.req_item_onaccept(None)
+                s3db.req_item_onaccept(None)
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 

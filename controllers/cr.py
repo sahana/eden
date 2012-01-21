@@ -273,27 +273,20 @@ def cr_shelter_prep(r):
                 if r.method != "update" and r.method != "read":
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
-                    response.s3.req_create_form_mods()
+                    s3db.req_create_form_mods()
 
     return True
 # =============================================================================
 def incoming():
     """ Incoming Shipments """
 
-    try:
-        return inv_incoming()
-    except TypeError:
-        return None
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
-def req_match():
+def match():
     """ Match Requests """
 
-    s3mgr.load("req_req")
-    try:
-        return response.s3.req_match()
-    except TypeError:
-        return None
+    return req_match()
 
 # =============================================================================
 # This code provides urls of the form:
