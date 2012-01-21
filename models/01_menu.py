@@ -956,7 +956,7 @@ if auth.permission.format in ("html"):
             ],
 
             "condition1": lambda: not deployment_settings.get_security_map() or s3_has_role(MAP_ADMIN),
-            "conditional1": [[T("Service Catalogue"), False, URL(f="map_service_catalogue")]]
+            "conditional1": [[T("Service Catalog"), False, URL(f="map_service_catalogue")]]
         },
 
         # HMS / Hospital Status Assessment and Request Management System
