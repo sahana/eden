@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -59,7 +59,7 @@ OpenLayers.Control.KeyboardDefaults = OpenLayers.Class(OpenLayers.Control, {
      *    http://unixpapa.com/js/key.html
      *
      * Parameters:
-     * code - {Integer} 
+     * evt - {Event} 
      */
     defaultKeyPress: function (evt) {
         switch(evt.keyCode) {

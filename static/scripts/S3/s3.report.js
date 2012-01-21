@@ -92,7 +92,7 @@ $(function() {
                     autoscale: true
                 }
             },
-            title: layer + ' ' + title,
+            title: layer + ' ' + title
         });
     };
     $('#pie_chart_rows').click(function() {

@@ -779,6 +779,7 @@ class S3ProjectModel(S3Model):
             T = current.T
             request = current.request
             response = current.response
+            session = current.session
             s3 = response.s3
         
             calendar = r.record.calendar
@@ -786,8 +787,14 @@ class S3ProjectModel(S3Model):
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
 
-            # Control our code in static/scripts/S3/s3.timeline.js
+            # Pass vars to our JS code
             s3.js_global.append("S3.timeline.calendar = '%s';" % calendar)
+
+            # Add our control script
+            if session.s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
 
             # Create the DIV
             item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")

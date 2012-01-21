@@ -622,6 +622,12 @@ class S3IRSModel(S3Model):
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
 
+            # Add our control script
+            if session.s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
+
             # Add our data
             # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
             # add in JS using S3.timeline.eventSource.addMany(events) where events is a []

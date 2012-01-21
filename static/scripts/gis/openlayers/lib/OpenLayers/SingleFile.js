@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -31,7 +31,7 @@ var OpenLayers = {
         for(var i=0, len=s.length; i<len; i++) {
             src = s[i].getAttribute('src');
             if(src) {
-                var m = src.match(r);
+                m = src.match(r);
                 if(m) {
                     l = m[1];
                     break;

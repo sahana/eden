@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -35,7 +35,8 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
     /**
      * Property: frame
      * {DOMElement} The image element is appended to the frame.  Any gutter on
-     * the image will be hidden behind the frame. 
+     * the image will be hidden behind the frame. If no gutter is set,
+     * this will be null.
      */ 
     frame: null, 
 
@@ -79,7 +80,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * transition effects are not supported if POST requests are used.
      */
     maxGetUrlLength: null,
-    
+
     /** TBD 3.0 - reorder the parameters to the init function to remove 
      *             URL. the getUrl() function on the layer gets called on 
      *             each draw(), so no need to specify it here.
@@ -99,13 +100,15 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
         OpenLayers.Tile.prototype.initialize.apply(this, arguments);
 
         this.url = url; //deprecated remove me
-
-        this.frame = document.createElement("div");
-        this.frame.style.position = "absolute";
-        this.frame.style.overflow = "hidden";
         
         this.layerAlphaHack = this.layer.alpha && OpenLayers.Util.alphaHack();
 
+        if (this.maxGetUrlLength != null || this.layer.gutter || this.layerAlphaHack) {
+            // only create frame if it's needed
+            this.frame = document.createElement("div");
+            this.frame.style.position = "absolute";
+            this.frame.style.overflow = "hidden";
+        }
         if (this.maxGetUrlLength != null) {
             OpenLayers.Util.extend(this, OpenLayers.Tile.Image.IFrame);
         }
@@ -116,7 +119,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * nullify references to prevent circular references and memory leaks
      */
     destroy: function() {
-        if (this.frame != null)  {
+        if (this.imgDiv)  {
             this.clear();
             this.imgDiv = null;
             this.frame = null;
@@ -136,7 +139,9 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
     draw: function() {
         var drawn = OpenLayers.Tile.prototype.draw.apply(this, arguments);
         if (drawn) {
+            // The layer's reproject option is deprecated.
             if (this.layer != this.layer.map.baseLayer && this.layer.reproject) {
+                // getBoundsFromBaseLayer is defined in deprecated.js.
                 this.bounds = this.getBoundsFromBaseLayer(this.position);
             }
             if (this.isLoading) {
@@ -160,7 +165,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      *     position it correctly, and set its url.
      */
     renderTile: function() {
-        this.layer.div.appendChild(this.frame);
+        this.layer.div.appendChild(this.getTile());
         if (this.layer.async) {
             // Asynchronous image requests call the asynchronous getURL method
             // on the layer to fetch an image that covers 'this.bounds', in the scope of
@@ -186,7 +191,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * code.
      */
     positionTile: function() {
-        var style = this.frame.style;
+        var style = this.getTile().style;
         style.left = this.position.x + "%";
         style.top = this.position.y + "%";
         style.width = this.size.w + "%";
@@ -202,8 +207,9 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
         var img = this.imgDiv;
         if (img) {
             OpenLayers.Event.stopObservingElement(img);
-            if (this.frame.parentNode === this.layer.div) {
-                this.layer.div.removeChild(this.frame);
+            var tile = this.getTile();
+            if (tile.parentNode === this.layer.div) {
+                this.layer.div.removeChild(tile);
             }
             this.setImgSrc();
             if (this.layerAlphaHack === true) {
@@ -214,45 +220,49 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
     },
     
     /**
-     * Method: createImage
-     * Creates the content for the frame on the tile.
+     * Method: getImage
+     * Returns or creates and returns the tile image.
      */
-    createImage: function() {
-        var img = document.createElement("img");
-        this.imgDiv = img;
+    getImage: function() {
+        if (!this.imgDiv) {
+            this.imgDiv = document.createElement("img");
 
-        img.className = "olTileImage";
-        // avoid image gallery menu in IE6
-        img.galleryImg = "no";
+            this.imgDiv.className = "olTileImage";
+            // avoid image gallery menu in IE6
+            this.imgDiv.galleryImg = "no";
 
-        var style = img.style,
-            gutter = this.layer.gutter;
-        if (gutter) {
-            var tileSize = this.layer.tileSize,
-                left = (gutter / tileSize.w * 100),
-                top = (gutter / tileSize.h * 100);
-            style.left = -left + "%";
-            style.top = -top + "%";
-            style.width = (2 * left + 100) + "%";
-            style.height = (2 * top + 100) + "%";
+            var style = this.imgDiv.style;
+            if (this.layer.gutter) {
+                var left = this.layer.gutter / this.layer.tileSize.w * 100;
+                var top = this.layer.gutter / this.layer.tileSize.h * 100;
+                style.left = -left + "%";
+                style.top = -top + "%";
+                style.width = (2 * left + 100) + "%";
+                style.height = (2 * top + 100) + "%";
+            } else {
+                style.width = "100%";
+                style.height = "100%";
+            }
+            style.visibility = "hidden";
+            style.opacity = 0;
+            if (this.layer.opacity < 1) {
+                style.filter = 'alpha(opacity=' +
+                               (this.layer.opacity * 100) +
+                               ')';
+            }
             style.position = "absolute";
-        } else {
-            style.width = "100%";
-            style.height = "100%";
-        }
-        style.display = "none";
-        if (this.layer.opacity < 1) {
-            OpenLayers.Util.modifyDOMElement(img, null, null, null, null, null,
-                null, this.layer.opacity);
-        }
-        if (this.layerAlphaHack) {
-            // move the image out of sight
-            style.paddingTop = style.height;
-            style.height = "0";
+            if (this.layerAlphaHack) {
+                // move the image out of sight
+                style.paddingTop = style.height;
+                style.height = "0";
+                style.width = "100%";
+            }
+            if (this.frame) {
+                this.frame.appendChild(this.imgDiv);
+            }
         }
 
-        this.frame.appendChild(img);
-        return img;
+        return this.imgDiv;
     },
 
     /**
@@ -260,7 +270,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * Creates the content for the frame on the tile.
      */
     initImage: function() {
-        var img = this.imgDiv || this.createImage();
+        var img = this.getImage();
         if (this.url && img.getAttribute("src") == this.url) {
             this.onImageLoad();
         } else {
@@ -302,7 +312,8 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      */
     setImgSrc: function(url) {
         var img = this.imgDiv;
-        img.style.display = "none";
+        img.style.visibility = 'hidden';
+        img.style.opacity = 0;
         if (url) {
             img.src = url;
         }
@@ -316,7 +327,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * {DOMElement} The tile's markup
      */
     getTile: function() {
-        return this.frame;
+        return this.frame ? this.frame : this.getImage();
     },
 
     /**
@@ -330,11 +341,16 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * or if it's currently loading.
      */
     createBackBuffer: function() {
-        if(!this.imgDiv || this.isLoading) {
+        if (!this.imgDiv || this.isLoading) {
             return;
         }
-        var backBuffer = this.frame.cloneNode(false);
-        backBuffer.appendChild(this.imgDiv);
+        var backBuffer;
+        if (this.frame) {
+            backBuffer = this.frame.cloneNode(false);
+            backBuffer.appendChild(this.imgDiv);
+        } else {
+            backBuffer = this.imgDiv;
+        }
         this.imgDiv = null;
         return backBuffer;
     },
@@ -346,7 +362,10 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
     onImageLoad: function() {
         var img = this.imgDiv;
         OpenLayers.Event.stopObservingElement(img);
-        img.style.display = "";
+
+        img.style.visibility = 'inherit';
+        img.style.opacity = this.layer.opacity;
+
         this.isLoading = false;
         this.events.triggerEvent("loadend");
 

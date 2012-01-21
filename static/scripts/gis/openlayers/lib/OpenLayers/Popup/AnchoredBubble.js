@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -6,11 +6,14 @@
 
 /**
  * @requires OpenLayers/Popup/Anchored.js
+ * @requires OpenLayers/Console.js
  * @requires Rico/Corner.js
  */
 
 /**
  * Class: OpenLayers.Popup.AnchoredBubble
+ * This class is *deprecated*. Use {<OpenLayers.Popup.Anchored>} and
+ * round corners using CSS3's border-radius property.
  * 
  * Inherits from: 
  *  - <OpenLayers.Popup.Anchored>
@@ -40,6 +43,8 @@ OpenLayers.Popup.AnchoredBubble =
      */
     initialize:function(id, lonlat, contentSize, contentHTML, anchor, closeBox,
                         closeBoxCallback) {
+
+        OpenLayers.Console.warn('AnchoredBubble is deprecated');
         
         this.padding = new OpenLayers.Bounds(
             0, OpenLayers.Popup.AnchoredBubble.CORNER_SIZE,

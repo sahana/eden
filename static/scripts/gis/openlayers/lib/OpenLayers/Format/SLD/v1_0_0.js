@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -40,11 +40,6 @@ OpenLayers.Format.SLD.v1_0_0 = OpenLayers.Class(
      * options - {Object} An optional object whose properties will be set on
      *     this instance.
      */
-    initialize: function(options) {
-        OpenLayers.Format.SLD.v1.prototype.initialize.apply(
-            this, [options]
-        );
-    },
 
     CLASS_NAME: "OpenLayers.Format.SLD.v1_0_0" 
 

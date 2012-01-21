@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -7,6 +7,11 @@
  * @requires OpenLayers/Rule.js
  * @requires OpenLayers/Format/SLD.js
  * @requires OpenLayers/Format/Filter/v1_0_0.js
+ * @requires OpenLayers/Symbolizer/Point.js
+ * @requires OpenLayers/Symbolizer/Line.js
+ * @requires OpenLayers/Symbolizer/Polygon.js
+ * @requires OpenLayers/Symbolizer/Text.js
+ * @requires OpenLayers/Symbolizer/Raster.js
  */
 
 /**
@@ -86,9 +91,6 @@ OpenLayers.Format.SLD.v1 = OpenLayers.Class(OpenLayers.Format.Filter.v1_0_0, {
      * options - {Object} An optional object whose properties will be set on
      *     this instance.
      */
-    initialize: function(options) {
-        OpenLayers.Format.Filter.v1_0_0.prototype.initialize.apply(this, [options]);
-    },
     
     /**
      * Method: read
