@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          Location - CSV Import Stylesheet
 
-         2011-Jun-13 / Graeme Foster <graeme AT acm DOT org>
-
          - use for import to gis/location resource
          - example raw URL usage:
            Let URLpath be the URL to Sahana Eden appliation
@@ -19,62 +17,537 @@
            URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
 
            You can add a third argument &ignore_errors
+
          CSV fields:
+         Country.................L0 Country Name or ISO2
+         ADM1_NAME...............L1 Name
+         ADM1_CODE...............L1 Code
+         ADM1_CODE2..............L1 Code2
+         ADM2_NAME...............L2 Name
+         ADM2_CODE...............L2 Code
+         ADM2_CODE2..............L2 Code2
+         ADM3_NAME...............L3 Name
+         ADM3_CODE...............L3 Code
+         ADM3_CODE2..............L3 Code2
+         ADM4_NAME...............L4 Name
+         ADM4_CODE...............L4 Code
+         ADM4_CODE2..............L4 Code2
          Name....................gis_location.name
-         Level...................gis_location.level      (optional)
-         Parent..................gis_location.parent     (optional)
-         Lat.....................gis_location.lat
+         Code....................gis_location.code
+         Code2...................gis_location.code2
+         Lat.....................gis_location.lat        (for speciifc locations)
          Lon.....................gis_location.lon
+         WKT.....................gis_location.wkt
+         Population..............gis_location.population (optional)
          Elevation...............gis_location.elevation  (optional)
 
+         Specify as many level of hierarchy as you need to ensure correct
+         location within the hierarchy
+
+         Note: If you want WKT & Population fields populated for all admin levels
+         then you will need to run the import once per admin level, e.g.:
+         TL_L1.csv (ADM2_NAME, ADM3_NAME, ADM4_NAME, Name blank)
+         TL_L2.csv (ADM3_NAME, ADM4_NAME, Name blank)
+         TL_L3.csv (ADM4_NAME, Name blank)
+         TL_L4.csv (Name blank)
+         
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <xsl:key name="parents" match="row" use="col[@field='Parent']/text()"/>
+    <xsl:include href="../../xml/countries.xsl"/>
+
+    <xsl:key name="L1" match="row" use="col[@field='ADM1_NAME']/text()"/>
+    <xsl:key name="L2" match="row" use="col[@field='ADM2_NAME']/text()"/>
+    <xsl:key name="L3" match="row" use="col[@field='ADM3_NAME']/text()"/>
+    <xsl:key name="L4" match="row" use="col[@field='ADM4_NAME']/text()"/>
 
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
-            <!-- Parent locations -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('parents',
-                                                        col[@field='Parent']/text())[1])]">
-                <resource name="gis_location">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="col[@field='Parent']"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="col[@field='Parent']"/></data>
-                </resource>
+            <!-- L1 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('L1',
+                                                                   col[@field='ADM1_NAME'])[1])]">
+                <xsl:call-template name="L1"/>
             </xsl:for-each>
+
+            <!-- L2 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('L2',
+                                                                   col[@field='ADM2_NAME'])[1])]">
+                <xsl:call-template name="L2"/>
+            </xsl:for-each>
+
+            <!-- L3 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('L3',
+                                                                   col[@field='ADM3_NAME'])[1])]">
+                <xsl:call-template name="L3"/>
+            </xsl:for-each>
+
+            <!-- L4 -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('L4',
+                                                                   col[@field='ADM4_NAME'])[1])]">
+                <xsl:call-template name="L4"/>
+            </xsl:for-each>
+
+            <!-- Specific Locations -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template match="row">
+    <xsl:template name="L1">
 
-        <xsl:variable name="parent" select="col[@field='Parent']/text()"/>
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='ADM1_NAME']/text()"/>
+        <xsl:variable name="code" select="col[@field='ADM1_CODE']/text()"/>
+        <xsl:variable name="code2" select="col[@field='ADM1_CODE2']/text()"/>
+
+        <!-- Country Code = UUID of the L0 Location -->
+        <xsl:variable name="countrycode">
+            <xsl:choose>
+                <xsl:when test="string-length($l0)!=2">
+                    <xsl:call-template name="countryname2iso">
+                        <xsl:with-param name="country">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$l0"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
 
         <!-- Create the gis location -->
         <resource name="gis_location">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
-            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
-            <xsl:if test="col[@field='Level']!=''">
-                <data field="level"><xsl:value-of select="col[@field='Level']"/></data>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($countrycode, $l1, $code, $code2)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$l1"/></data>
+            <data field="level"><xsl:text>L1</xsl:text></data>
+            <xsl:if test="$code!=''">
+                <data field="code"><xsl:value-of select="$code"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Elevation']!=''">
-                <data field="elevation"><xsl:value-of select="col[@field='Elevation']"/></data>
+            <xsl:if test="$code2!=''">
+                <data field="code2"><xsl:value-of select="$code2"/></data>
             </xsl:if>
-            <xsl:if test="$parent!=''">
+            <!-- Parent to Country -->
+            <xsl:if test="$country!=''">
                 <reference field="parent" resource="gis_location">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$parent"/>
+                    <xsl:attribute name="uuid">
+                        <xsl:value-of select="$country"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+            <!-- If this is the import level then add the details -->
+            <xsl:choose>
+                <xsl:when test="col[@field='ADM2_NAME'] or col[@field='ADM3_NAME'] or col[@field='ADM4_NAME'] or col[@field='Name']">
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="col[@field='WKT']!=''">
+                            <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
+                            <!-- Polygon -->
+                            <data field="gis_feature_type"><xsl:text>3</xsl:text></data>
+                        </xsl:when>
+                        <xsl:when test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:when>
+                    </xsl:choose>
+                    <xsl:if test="col[@field='Population']!=''">
+                        <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L2">
+
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='ADM1_NAME']/text()"/>
+        <xsl:variable name="l2" select="col[@field='ADM2_NAME']/text()"/>
+        <xsl:variable name="l1code" select="col[@field='ADM1_CODE']/text()"/>
+        <xsl:variable name="l1code2" select="col[@field='ADM1_CODE2']/text()"/>
+        <xsl:variable name="code" select="col[@field='ADM2_CODE']/text()"/>
+        <xsl:variable name="code2" select="col[@field='ADM2_CODE2']/text()"/>
+
+        <!-- Country Code = UUID of the L0 Location -->
+        <xsl:variable name="countrycode">
+            <xsl:choose>
+                <xsl:when test="string-length($l0)!=2">
+                    <xsl:call-template name="countryname2iso">
+                        <xsl:with-param name="country">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$l0"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+
+        <!-- Create the gis location -->
+        <resource name="gis_location">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($countrycode, $l1, $l2, $code, $code2)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$l2"/></data>
+            <data field="level"><xsl:text>L2</xsl:text></data>
+            <xsl:if test="$code!=''">
+                <data field="code"><xsl:value-of select="$code"/></data>
+            </xsl:if>
+            <xsl:if test="$code2!=''">
+                <data field="code2"><xsl:value-of select="$code2"/></data>
+            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="col[@field='ADM1_NAME']!=''">
+                    <!-- Parent to L1 -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($countrycode, $l1, $l1code, $l1code2)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$country!=''">
+                    <!-- Parent to Country -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="$country"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+            </xsl:choose>
+
+            <!-- If this is the import level then add the details -->
+             <xsl:choose>
+                <xsl:when test="col[@field='ADM3_NAME'] or col[@field='ADM4_NAME'] or col[@field='Name']">
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="col[@field='WKT']!=''">
+                            <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
+                            <!-- Polygon -->
+                            <data field="gis_feature_type"><xsl:text>3</xsl:text></data>
+                        </xsl:when>
+                        <xsl:when test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:when>
+                    </xsl:choose>
+                    <xsl:if test="col[@field='Population']!=''">
+                        <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L3">
+
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='ADM1_NAME']/text()"/>
+        <xsl:variable name="l2" select="col[@field='ADM2_NAME']/text()"/>
+        <xsl:variable name="l3" select="col[@field='ADM3_NAME']/text()"/>
+        <xsl:variable name="l1code" select="col[@field='ADM1_CODE']/text()"/>
+        <xsl:variable name="l1code2" select="col[@field='ADM1_CODE2']/text()"/>
+        <xsl:variable name="l2code" select="col[@field='ADM2_CODE']/text()"/>
+        <xsl:variable name="l2code2" select="col[@field='ADM2_CODE2']/text()"/>
+        <xsl:variable name="code" select="col[@field='ADM3_CODE']/text()"/>
+        <xsl:variable name="code2" select="col[@field='ADM3_CODE2']/text()"/>
+
+        <!-- Country Code = UUID of the L0 Location -->
+        <xsl:variable name="countrycode">
+            <xsl:choose>
+                <xsl:when test="string-length($l0)!=2">
+                    <xsl:call-template name="countryname2iso">
+                        <xsl:with-param name="country">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$l0"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+
+        <!-- Create the gis location -->
+        <resource name="gis_location">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($countrycode, $l1, $l2, $l3, $code, $code2)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$l3"/></data>
+            <data field="level"><xsl:text>L3</xsl:text></data>
+            <xsl:if test="$code!=''">
+                <data field="code"><xsl:value-of select="$code"/></data>
+            </xsl:if>
+            <xsl:if test="$code2!=''">
+                <data field="code2"><xsl:value-of select="$code2"/></data>
+            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="col[@field='ADM2_NAME']!=''">
+                    <!-- Parent to L2 -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($countrycode, $l1, $l2, $l2code, $l2code2)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="col[@field='ADM1_NAME']!=''">
+                    <!-- Parent to L1 -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($countrycode, $l1, $l1code, $l1code2)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$country!=''">
+                    <!-- Parent to Country -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="$country"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+            </xsl:choose>
+
+            <!-- If this is the import level then add the details -->
+            <xsl:choose>
+                <xsl:when test="col[@field='ADM4_NAME'] or col[@field='Name']">
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="col[@field='WKT']!=''">
+                            <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
+                            <!-- Polygon -->
+                            <data field="gis_feature_type"><xsl:text>3</xsl:text></data>
+                        </xsl:when>
+                        <xsl:when test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:when>
+                    </xsl:choose>
+                    <xsl:if test="col[@field='Population']!=''">
+                        <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L4">
+
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='ADM1_NAME']/text()"/>
+        <xsl:variable name="l2" select="col[@field='ADM2_NAME']/text()"/>
+        <xsl:variable name="l3" select="col[@field='ADM3_NAME']/text()"/>
+        <xsl:variable name="l4" select="col[@field='ADM4_NAME']/text()"/>
+        <xsl:variable name="l1code" select="col[@field='ADM1_CODE']/text()"/>
+        <xsl:variable name="l1code2" select="col[@field='ADM1_CODE2']/text()"/>
+        <xsl:variable name="l2code" select="col[@field='ADM2_CODE']/text()"/>
+        <xsl:variable name="l2code2" select="col[@field='ADM2_CODE2']/text()"/>
+        <xsl:variable name="l3code" select="col[@field='ADM3_CODE']/text()"/>
+        <xsl:variable name="l3code2" select="col[@field='ADM3_CODE2']/text()"/>
+        <xsl:variable name="code" select="col[@field='ADM4_CODE']/text()"/>
+        <xsl:variable name="code2" select="col[@field='ADM4_CODE2']/text()"/>
+
+        <!-- Country Code = UUID of the L0 Location -->
+        <xsl:variable name="countrycode">
+            <xsl:choose>
+                <xsl:when test="string-length($l0)!=2">
+                    <xsl:call-template name="countryname2iso">
+                        <xsl:with-param name="country">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$l0"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+
+        <!-- Create the gis location -->
+        <resource name="gis_location">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($countrycode, $l1, $l2, $l3, $l4, $code, $code2)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$l4"/></data>
+            <data field="level"><xsl:text>L4</xsl:text></data>
+            <xsl:if test="$code!=''">
+                <data field="code"><xsl:value-of select="$code"/></data>
+            </xsl:if>
+            <xsl:if test="$code2!=''">
+                <data field="code2"><xsl:value-of select="$code2"/></data>
+            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="col[@field='ADM3_NAME']!=''">
+                    <!-- Parent to L3 -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($countrycode, $l1, $l2, $l3, $l3code, $l3code2)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="col[@field='ADM2_NAME']!=''">
+                    <!-- Parent to L2 -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($countrycode, $l1, $l2, $l2code, $l2code2)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="col[@field='ADM1_NAME']!=''">
+                    <!-- Parent to L1 -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($countrycode, $l1, $l1code, $l1code2)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+                <xsl:when test="$country!=''">
+                    <!-- Parent to Country -->
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="$country"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:when>
+            </xsl:choose>
+
+            <!-- If this is the import level then add the details -->
+             <xsl:choose>
+                <xsl:when test="col[@field='Name']">
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="col[@field='WKT']!=''">
+                            <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
+                            <!-- Polygon -->
+                            <data field="gis_feature_type"><xsl:text>3</xsl:text></data>
+                        </xsl:when>
+                        <xsl:when test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:when>
+                    </xsl:choose>
+                    <xsl:if test="col[@field='Population']!=''">
+                        <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="row">
+
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='ADM1_NAME']/text()"/>
+        <xsl:variable name="l2" select="col[@field='ADM2_NAME']/text()"/>
+        <xsl:variable name="l3" select="col[@field='ADM3_NAME']/text()"/>
+        <xsl:variable name="l4" select="col[@field='ADM4_NAME']/text()"/>
+        <xsl:variable name="l1code" select="col[@field='ADM1_CODE']/text()"/>
+        <xsl:variable name="l1code2" select="col[@field='ADM1_CODE2']/text()"/>
+        <xsl:variable name="l2code" select="col[@field='ADM2_CODE']/text()"/>
+        <xsl:variable name="l2code2" select="col[@field='ADM2_CODE2']/text()"/>
+        <xsl:variable name="l3code" select="col[@field='ADM3_CODE']/text()"/>
+        <xsl:variable name="l3code2" select="col[@field='ADM3_CODE2']/text()"/>
+        <xsl:variable name="l4code" select="col[@field='ADM4_CODE']/text()"/>
+        <xsl:variable name="l4code2" select="col[@field='ADM4_CODE2']/text()"/>
+        <xsl:variable name="name" select="col[@field='Name']/text()"/>
+        <xsl:variable name="code" select="col[@field='Code']/text()"/>
+        <xsl:variable name="code2" select="col[@field='Code2']/text()"/>
+
+        <!-- Create the specific location -->
+        <xsl:if test="$name!=''">
+            <resource name="gis_location">
+                <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+                <xsl:choose>
+                    <xsl:when test="col[@field='WKT']!=''">
+                        <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
+                        <!-- Polygon -->
+                        <data field="gis_feature_type"><xsl:text>3</xsl:text></data>
+                    </xsl:when>
+                    <xsl:when test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                        <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                        <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                    </xsl:when>
+                </xsl:choose>
+                <xsl:if test="$code!=''">
+                    <data field="code"><xsl:value-of select="$code"/></data>
+                </xsl:if>
+                <xsl:if test="$code2!=''">
+                    <data field="code2"><xsl:value-of select="$code2"/></data>
+                </xsl:if>
+               <xsl:if test="col[@field='Population']!=''">
+                    <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Elevation']!=''">
+                    <data field="elevation"><xsl:value-of select="col[@field='Elevation']"/></data>
+                </xsl:if>
+                <xsl:choose>
+                    <xsl:when test="col[@field='ADM4_NAME']!=''">
+                        <!-- Parent to L4 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($countrycode, $l1, $l2, $l3, $l4, $l4code, $l4code2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="col[@field='ADM3_NAME']!=''">
+                        <!-- Parent to L3 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($countrycode, $l1, $l2, $l3, $l3code, $l3code2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="col[@field='ADM2_NAME']!=''">
+                        <!-- Parent to L2 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($countrycode, $l1, $l2, $l2code, $l2code2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="col[@field='ADM1_NAME']!=''">
+                        <!-- Parent to L1 -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($countrycode, $l1, $l1code, $l1code2)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$country!=''">
+                        <!-- Parent to Country -->
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

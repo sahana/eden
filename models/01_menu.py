@@ -843,29 +843,6 @@ if auth.permission.format in ("html"):
             ]
         },
 
-        # DVR / Disaster Victim Registry
-        # ---------------------------------------------------------------------
-        "dvr": {
-            "menu": [
-                [T("Add Disaster Victims"), False,  aURL(f="index"),[
-                    [T("Add new Group"), False, aURL(p="create", f="index")],
-                    [T("Add new Individual"), False, aURL(p="create", f="index")]
-                ]],
-                [T("Edit Disaster Victims"), False,  aURL(f="index"),[
-                    [T("Search and Edit Group"), False, aURL(f="index")],
-                    [T("Search and Edit Individual"), False, aURL(f="index")]
-                ]],
-                [T("List Groups"), False,  aURL(f="index"),[
-                    [T("List Groups/View Members"), False, aURL(f="index")]
-                ]],
-                [T("Reports"), False,  aURL(f="index"),[
-                    [T("Drill Down by Group"), False, aURL(f="index")],
-                    [T("Drill Down by Shelter"), False, aURL(f="index")],
-                    [T("Drill Down by Incident"), False, aURL(f="index")]
-                ]],
-            ]
-        },
-
         # EVENT / Event Module
         # ---------------------------------------------------------------------
         "event": {
@@ -948,6 +925,7 @@ if auth.permission.format in ("html"):
                                                         vars={"group": 1})],
                     [T("List All"), False, aURL(f="location")],
                     [T("Search"), False, aURL(f="location", args="search")],
+                    [T("Import"), False, aURL(f="location", args="import")],
                     #[T("Geocode"), False, aURL(f="geocode_manual")],
                 ]],
                 [T("Fullscreen Map"), False, aURL(f="map_viewing_client")],

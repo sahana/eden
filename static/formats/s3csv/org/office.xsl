@@ -25,7 +25,7 @@
          Name....................org_office
          Organisation............org_organisation
          Type....................org_office
-         Country.................org_office.L0
+         Country.................org_office.L0 Name or ISO2
          Building................org_office.building_name
          Address.................org_office.address
          Postcode................org_office.postcode
@@ -159,9 +159,18 @@
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
-            <xsl:call-template name="countryname2iso">
-                <xsl:with-param name="country" select="$l0"/>
-            </xsl:call-template>
+            <xsl:choose>
+                <xsl:when test="string-length($l0)!=2">
+                    <xsl:call-template name="countryname2iso">
+                        <xsl:with-param name="country">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$l0"/>
+                </xsl:otherwise>
+            </xsl:choose>
         </xsl:variable>
 
         <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>

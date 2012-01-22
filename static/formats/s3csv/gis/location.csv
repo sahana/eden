@@ -1,2 +1,1 @@
-Parent,Level,Name,Lat,Lon,Elevation
-"USA","L1","California",17.33,-79.32,
+Country,ADM1_NAME,ADM1_CODE,ADM1_CODE2,ADM2_NAME,ADM2_CODE,ADM2_CODE2,ADM3_NAME,ADM3_CODE,ADM3_CODE2,ADM4_NAME,ADM4_CODE,ADM4_CODE2,Name,Code,Code2,Population,WKT,Lat,Lon,Elevation
