@@ -1646,6 +1646,11 @@ class S3Request(object):
 
         if vars is None:
             vars = self.get_vars
+        elif isinstance(vars, str):
+            # We've come from a dataTable_vars which has the vars as
+            # a JSON string, but with the wrong quotation marks
+            vars = json.loads(vars.replace("'", "\""))
+
         if "format" in vars:
             del vars["format"]
 

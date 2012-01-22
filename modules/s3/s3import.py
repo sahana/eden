@@ -4,7 +4,7 @@
     Resource Import Tools
 
     @author: Graeme Foster <graeme[at]acm.org>
-    @author: Dominic König <dominic[at]aidiq.com>
+    @author: Dominic KÃ¶nig <dominic[at]aidiq.com>
 
     @copyright: 2011 (c) Sahana Software Foundation
     @license: MIT
@@ -304,7 +304,6 @@ class S3Importer(S3CRUD):
 
         _debug("S3Importer.upload()")
 
-        response = current.response
         request = self.request
 
         form = self._upload_form(r, **attr)
@@ -324,6 +323,7 @@ class S3Importer(S3CRUD):
         _debug("S3Importer.display()")
 
         response = current.response
+        s3 = response.s3
 
         db = current.db
         table = self.upload_table
@@ -370,9 +370,9 @@ class S3Importer(S3CRUD):
 
             upload_file = r.files[ofilename]
             if extension == "xls":
-                if "xls_parser" in response.s3:
+                if "xls_parser" in s3:
                     upload_file.seek(0)
-                    upload_file = response.s3.xls_parser(upload_file.read())
+                    upload_file = s3.xls_parser(upload_file.read())
                     extension = "csv"
 
             if upload_file is None:
@@ -395,7 +395,7 @@ class S3Importer(S3CRUD):
                 response.flash = ""
                 return self.upload(r, **attr)
             else:
-                response.s3.dataTable_vars = {"job":upload_id}
+                s3.dataTable_vars = {"job" : upload_id}
                 return self.display_job(upload_id)
         return output
 
@@ -470,9 +470,9 @@ class S3Importer(S3CRUD):
               ),
         ))
 
-        output.update(title=self.messages.title_job_read,
-                      rheader=rheader,
-                      subtitle=self.messages.title_job_list,)
+        output["title"] = self.messages.title_job_read
+        output["rheader"] = rheader
+        output["subtitle"] = self.messages.title_job_list
 
         return output
 
@@ -629,10 +629,11 @@ class S3Importer(S3CRUD):
 
         session = current.session
         response = current.response
+        s3 = response.s3
         request = self.request
         table = self.upload_table
 
-        formstyle = response.s3.crud.formstyle
+        formstyle = s3.crud.formstyle
         response.view = self._view(request, "list_create.html")
 
         if REPLACE_OPTION in attr:
@@ -650,7 +651,7 @@ class S3Importer(S3CRUD):
             self.csv_extra_fields = extra_fields
         labels, required = s3_mark_required(fields)
         if required:
-            response.s3.has_required = True
+            s3.has_required = True
 
         form = SQLFORM.factory(table_name=self.UPLOAD_TABLE_NAME,
                                labels=labels,
@@ -712,7 +713,7 @@ class S3Importer(S3CRUD):
                     elif value is None:
                         continue
                     self.csv_extra_data[label] = value
-        response.s3.no_formats = True
+        s3.no_formats = True
         return form
 
     # -------------------------------------------------------------------------
@@ -721,12 +722,11 @@ class S3Importer(S3CRUD):
             List of previous Import jobs
         """
 
-        response = current.response
-        request = self.request
         db = current.db
+        request = self.request
         controller = self.controller
         function = self.function
-        s3 = response.s3
+        s3 = current.response.s3
 
         table = self.upload_table
         s3.filter = (table.controller == controller) & \
@@ -804,14 +804,14 @@ class S3Importer(S3CRUD):
             @todo: docstring?
         """
 
-        response = current.response
+        s3 = current.response.s3
 
         represent = {"element" : self._item_element_represent}
         self._use_import_item_table(job_id)
 
         # Add a filter to the dataTable query
-        response.s3.filter = (self.table.job_id == job_id) & \
-                             (self.table.tablename == self.controller_tablename)
+        s3.filter = (self.table.job_id == job_id) & \
+                    (self.table.tablename == self.controller_tablename)
 
         output = self._dataTable(["id", "element", "error"],
                                  sort_by = [[1, "asc"]],
@@ -822,9 +822,9 @@ class S3Importer(S3CRUD):
         if self.request.representation == "aadata":
             return output
 
-        response.s3.dataTableSelectable = True
-        response.s3.dataTableSelectAll = True
-        response.s3.dataTablePostMethod = True
+        s3.dataTableSelectable = True
+        s3.dataTableSelectAll = True
+        s3.dataTablePostMethod = True
         table = output["items"]
         job = INPUT(_type="hidden", _id="importUploadID", _name="job",
                     _value="%s" % upload_id)
@@ -834,13 +834,13 @@ class S3Importer(S3CRUD):
                          _name="selected", _value="")
         form = FORM(table, job, mode, selected)
         output["items"] = form
-        response.s3.dataTableSelectSubmitURL = "import?job=%s&" % upload_id
-        response.s3.actions = [
-                                dict(label= str(self.messages.item_show_details),
-                                     _class="action-btn",
-                                     _jqclick="$('.importItem.'+id).toggle();",
-                                     ),
-                              ]
+        s3.dataTableSelectSubmitURL = "import?job=%s&" % upload_id
+        s3.actions = [
+                        dict(label= str(self.messages.item_show_details),
+                             _class="action-btn",
+                             _jqclick="$('.importItem.'+id).toggle();",
+                             ),
+                      ]
         return output
 
     # -------------------------------------------------------------------------
@@ -959,7 +959,6 @@ class S3Importer(S3CRUD):
         """
 
         request = self.request
-        response = current.response
 
         if file_format == "csv":
             xslt_path = os.path.join(self.xslt_path, "s3csv")
@@ -1179,12 +1178,13 @@ class S3Importer(S3CRUD):
         # ********************************************************************
         # Common tasks
         # ********************************************************************
+        db = current.db
         session = current.session
         request = self.request
         response = current.response
         resource = self.resource
+        s3 = response.s3
         representation = request.representation
-        db = current.db
         table = self.table
         tablename = self.tablename
         vars = request.get_vars
@@ -1217,8 +1217,8 @@ class S3Importer(S3CRUD):
         list_fields = [f.name for f in fields]
 
         # Filter
-        if response.s3.filter is not None:
-            self.resource.add_filter(response.s3.filter)
+        if s3.filter is not None:
+            self.resource.add_filter(s3.filter)
 
         # ********************************************************************
         # ajax call
@@ -1302,10 +1302,10 @@ class S3Importer(S3CRUD):
             totalrows = resource.count()
             if items:
                 if totalrows:
-                    if response.s3.dataTable_iDisplayLength:
-                        limit = 2 * response.s3.dataTable_iDisplayLength
+                    if s3.dataTable_iDisplayLength:
+                        limit = 2 * s3.dataTable_iDisplayLength
                     else:
-                        limit = 20
+                        limit = 50
                 # Add a test on the first call here:
                 # Now get the limit rows for ajax style update of table
                 sqltable = resource.sqltable(fields=list_fields,
@@ -1326,8 +1326,8 @@ class S3Importer(S3CRUD):
                 aadata.update(iTotalRecords=totalrows,
                               iTotalDisplayRecords=totalrows)
                 response.aadata = json(aadata)
-                response.s3.start = 0
-                response.s3.limit = limit
+                s3.start = 0
+                s3.limit = limit
             else: # No items in database
                 # s3import tables don't have a delete field but kept for the record
                 if "deleted" in table:
@@ -1343,7 +1343,7 @@ class S3Importer(S3CRUD):
 
             output.update(items=items, sortby=sort_by)
             # Value to be added to the dataTable ajax call
-            response.s3.dataTable_Method = "import"
+            s3.dataTable_Method = "import"
 
         return output
 
@@ -1410,6 +1410,9 @@ class S3Importer(S3CRUD):
         for child in data:
             f = child.get("field", None)
             if f not in table.fields:
+                continue
+            elif f == "wkt":
+                # Skip bulky WKT fields
                 continue
             field = table[f]
             ftype = str(field.type)

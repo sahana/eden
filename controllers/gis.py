@@ -135,7 +135,6 @@ def define_map(window=False, toolbar=False, config=None):
 
 # =============================================================================
 def location():
-
     """ RESTful CRUD controller for Locations """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -192,7 +191,6 @@ def location():
     # for non-interactive.
     def prep(r, vars):
 
-        response.s3.dataTable_iDisplayLength = 25
         def get_location_info():
             table = s3db.gis_location
             query = (table.id == r.id)
@@ -404,11 +402,23 @@ def location():
         # We've been called from the Location Selector widget
         table.addr_street.readable = table.addr_street.writable = False
 
-    output = s3_rest_controller()
+        
+    country = S3ReusableField("country", "string", length=2,
+                              label = T("Country"),
+                              requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                                    lambda: gis.get_countries(key_type="code"),
+                                    zero = SELECT_LOCATION)),
+                              represent = lambda code: \
+                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT)
+
+    output = s3_rest_controller(csv_extra_fields = [
+                                    dict(label="Country",
+                                         field=country())
+                                ])
 
     _map = vars.get("_map", None)
     if _map and isinstance(output, dict):
-        output.update(_map=_map)
+        output["_map"] = _map
 
     return output
 

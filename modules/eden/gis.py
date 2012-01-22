@@ -233,6 +233,7 @@ class S3LocationModel(S3Model):
             title_list = T("Locations"),
             title_update = T("Edit Location"),
             title_search = T("Search Locations"),
+            title_upload = T("Import Locations"),
             subtitle_create = T("Add New Location"),
             subtitle_list = LIST_LOCATIONS,
             label_list_button = LIST_LOCATIONS,
