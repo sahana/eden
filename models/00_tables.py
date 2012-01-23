@@ -27,6 +27,7 @@ import eden.irs
 import eden.delphi
 import eden.dvi
 import eden.support
+import eden.survey
 
 # =============================================================================
 # Import S3 meta fields into global namespace
