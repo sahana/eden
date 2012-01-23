@@ -225,7 +225,8 @@ def activity():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
-    tabs = [(T("Details"), None)]
+    tabs = [(T("Details"), None),
+            (T("Contact Persons"), "contact")]
     if drr:
         tabs.append((T("Beneficiaries"), "beneficiary"))
         tabs.append((T("Documents"), "document"))
