@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -6,7 +6,6 @@
 
 /**
  * @requires OpenLayers/Layer/HTTPRequest.js
- * @requires OpenLayers/Console.js
  * @requires OpenLayers/Tile/Image.js
  */
 
@@ -51,6 +50,13 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      *  created by this Layer, if supported by the tile class.
      */
     tileOptions: null,
+
+    /**
+     * APIProperty: tileClass
+     * {<OpenLayers.Tile>} The tile class to use for this layer.
+     *     Defaults is OpenLayers.Tile.Image.
+     */
+    tileClass: OpenLayers.Tile.Image,
     
     /**
      * Property: grid
@@ -140,6 +146,34 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
     backBufferLonLat: null,
 
     /**
+     * Property: backBufferTimerId
+     * {Number} The id of the back buffer timer. This timer is used to
+     *     delay the removal of the back buffer, thereby preventing
+     *     flash effects caused by tile animation.
+     */
+    backBufferTimerId: null,
+
+    /**
+     * Register a listener for a particular event with the following syntax:
+     * (code)
+     * layer.events.register(type, obj, listener);
+     * (end)
+     *
+     * Listeners will be called with a reference to an event object.  The
+     *     properties of this event depends on exactly what happened.
+     *
+     * All event objects have at least the following properties:
+     * object - {Object} A reference to layer.events.object.
+     * element - {DOMElement} A reference to layer.events.element.
+     *
+     * Supported event types:
+     * tileloaded - Triggered when each new tile is
+     *     loaded, as a means of progress update to listeners.
+     *     listeners can access 'numLoadingTiles' if they wish to keep
+     *     track of the loading progress.
+     */
+
+    /**
      * Constructor: OpenLayers.Layer.Grid
      * Create a new grid layer
      *
@@ -152,14 +186,6 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
     initialize: function(name, url, params, options) {
         OpenLayers.Layer.HTTPRequest.prototype.initialize.apply(this, 
                                                                 arguments);
-        
-        //grid layers will trigger 'tileloaded' when each new tile is 
-        // loaded, as a means of progress update to listeners.
-        // listeners can access 'numLoadingTiles' if they wish to keep track
-        // of the loading progress
-        //
-        this.events.addEventType("tileloaded");
-
         this.grid = [];
 
         this._moveGriddedTiles = OpenLayers.Function.bind(
@@ -179,6 +205,10 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
             window.clearTimeout(this.timerId);
             this.timerId = null;
         }
+        if(this.backBufferTimerId !== null) {
+            window.clearTimeout(this.backBufferTimerId);
+            this.backBufferTimerId = null;
+        }
     },
 
     /**
@@ -186,9 +216,8 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      * Deconstruct the layer and clear the grid.
      */
     destroy: function() {
+        this.removeBackBuffer();
         this.clearGrid();
-        // clearGrid should remove any back buffer from the layer,
-        // so no need to call removeBackBuffer here
 
         this.grid = null;
         this.tileSize = null;
@@ -309,12 +338,16 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
             } else {
 
                 // if the bounds have changed such that they are not even 
-                //  *partially* contained by our tiles (IE user has 
-                //  programmatically panned to the other side of the earth) 
-                //  then we want to reTile (thus, partial true).  
-
+                // *partially* contained by our tiles (e.g. when user has 
+                // programmatically panned to the other side of the earth on
+                // zoom level 18), then moveGriddedTiles could potentially have
+                // to run through thousands of cycles, so we want to reTile
+                // instead (thus, partial true).  
                 forceReTile = forceReTile ||
-                              !tilesBounds.containsBounds(bounds, true);
+                    !tilesBounds.intersectsBounds(bounds, {
+                        worldBounds: this.map.baseLayer.wrapDateLine &&
+                            this.map.getMaxExtent()
+                    });
 
                 if(resolution !== serverResolution) {
                     bounds = this.map.calculateBounds(null, serverResolution);
@@ -433,6 +466,9 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      * resolution - {Number} The resolution to transition to.
      */
     applyBackBuffer: function(resolution) {
+        if(this.backBufferTimerId !== null) {
+            this.removeBackBuffer();
+        }
         var backBuffer = this.backBuffer;
         if(!backBuffer) {
             backBuffer = this.createBackBuffer();
@@ -508,10 +544,14 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      * Remove back buffer from DOM.
      */
     removeBackBuffer: function() {
-        if(this.backBuffer && this.backBuffer.parentNode) {
+        if(this.backBuffer) {
             this.div.removeChild(this.backBuffer);
             this.backBuffer = null;
             this.backBufferResolution = null;
+            if(this.backBufferTimerId !== null) {
+                window.clearTimeout(this.backBufferTimerId);
+                this.backBufferTimerId = null;
+            }
         }
     },
 
@@ -559,23 +599,6 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
         } 
         OpenLayers.Layer.HTTPRequest.prototype.setTileSize.apply(this, [size]);
     },
-        
-    /**
-     * Method: getGridBounds
-     * Deprecated. This function will be removed in 3.0. Please use 
-     *     getTilesBounds() instead.
-     * 
-     * Returns:
-     * {<OpenLayers.Bounds>} A Bounds object representing the bounds of all the
-     * currently loaded tiles (including those partially or not at all seen 
-     * onscreen)
-     */
-    getGridBounds: function() {
-        var msg = "The getGridBounds() function is deprecated. It will be " +
-                  "removed in 3.0. Please use getTilesBounds() instead.";
-        OpenLayers.Console.warn(msg);
-        return this.getTilesBounds();
-    },
 
     /**
      * APIMethod: getTilesBounds
@@ -589,18 +612,16 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
     getTilesBounds: function() {    
         var bounds = null; 
         
-        if (this.grid.length) {
-            var bottom = this.grid.length - 1;
-            var bottomLeftTile = this.grid[bottom][0];
-    
-            var right = this.grid[0].length - 1; 
-            var topRightTile = this.grid[0][right];
-    
-            bounds = new OpenLayers.Bounds(bottomLeftTile.bounds.left, 
-                                           bottomLeftTile.bounds.bottom,
-                                           topRightTile.bounds.right, 
-                                           topRightTile.bounds.top);
+        var length = this.grid.length;
+        if (length) {
+            var bottomLeftTileBounds = this.grid[length - 1][0].bounds,
+                width = this.grid[0].length * bottomLeftTileBounds.getWidth(),
+                height = this.grid.length * bottomLeftTileBounds.getHeight();
             
+            bounds = new OpenLayers.Bounds(bottomLeftTileBounds.left, 
+                                           bottomLeftTileBounds.bottom,
+                                           bottomLeftTileBounds.left + width, 
+                                           bottomLeftTileBounds.bottom + height);
         }   
         return bounds;
     },
@@ -624,8 +645,10 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
                                   center.lon + (tileWidth/2),
                                   center.lat + (tileHeight/2));
   
-        var ul = new OpenLayers.LonLat(tileBounds.left, tileBounds.top);
-        var px = this.map.getLayerPxFromLonLat(ul);
+        var px = this.map.getLayerPxFromLonLat({
+            lon: tileBounds.left,
+            lat: tileBounds.top
+        });
 
         if (!this.grid.length) {
             this.grid[0] = [];
@@ -664,10 +687,6 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      */
     calculateGridLayout: function(bounds, origin, resolution) {
         bounds = bounds.clone();
-        var map = this.map;
-        if (map.wrapDateLine) {
-            bounds = bounds.wrapDateLine(map.getMaxExtent());
-        }
         
         var tilelon = resolution * this.tileSize.w;
         var tilelat = resolution * this.tileSize.h;
@@ -749,8 +768,6 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
         var tilelon = tileLayout.tilelon;
         var tilelat = tileLayout.tilelat;
 
-        this.origin = new OpenLayers.Pixel(tileoffsetx, tileoffsety);
-
         var startX = tileoffsetx; 
         var startLon = tileoffsetlon;
 
@@ -820,7 +837,7 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      *     potential specific implementations in sub-classes.)
      *
      * Returns:
-     * {OpenLayers.Bounds}
+     * {<OpenLayers.Bounds>}
      */
     getMaxExtent: function() {
         return this.maxExtent;
@@ -910,9 +927,9 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
      * Returns:
      * {<OpenLayers.Tile>} The added OpenLayers.Tile
      */
-    addTile:function(bounds, position) {
-        return new OpenLayers.Tile.Image(this, position, bounds, null, 
-                                         this.tileSize, this.tileOptions);
+    addTile: function(bounds, position) {
+        return new this.tileClass(this, position, bounds, null,
+                                  this.tileSize, this.tileOptions);
     },
     
     /** 
@@ -940,8 +957,15 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
             //if that was the last tile, then trigger a 'loadend' on the layer
             if (this.numLoadingTiles == 0) {
                 this.events.triggerEvent("loadend");
-                this.removeBackBuffer();
-            }
+                if(this.backBuffer) {
+                    // the removal of the back buffer is delayed to prevent flash
+                    // effects due to the animation of tile displaying
+                    this.backBufferTimerId = window.setTimeout(
+                        OpenLayers.Function.bind(this.removeBackBuffer, this),
+                        2500
+                    );
+                }
+        }
         };
         tile.events.register("loadend", this, tile.onLoadEnd);
         tile.events.register("unload", this, tile.onLoadEnd);
@@ -980,9 +1004,10 @@ OpenLayers.Layer.Grid = OpenLayers.Class(OpenLayers.Layer.HTTPRequest, {
         var offsetX = parseInt(this.map.layerContainerDiv.style.left);
         var offsetY = parseInt(this.map.layerContainerDiv.style.top);
         var tlViewPort = tlLayer.add(offsetX, offsetY);
-        var tileSize = this.tileSize.clone();
-        tileSize.w *= scale;
-        tileSize.h *= scale;
+        var tileSize = {
+            w: this.tileSize.w * scale,
+            h: this.tileSize.h * scale
+        };
         if (tlViewPort.x > -tileSize.w * (buffer - 1)) {
             this.shiftColumn(true);
         } else if (tlViewPort.x < -tileSize.w * buffer) {

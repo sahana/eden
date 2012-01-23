@@ -92,6 +92,8 @@ div.olControlMousePosition {
 
 .olControlOverviewMapMinimizeButton,
 .olControlOverviewMapMaximizeButton {
+    height: 18px;
+    width: 18px;
     right: 0;
     bottom: 80px;
     cursor: pointer;
@@ -318,10 +320,8 @@ div.olControlSaveFeaturesItemInactive {
     padding-top: 5px;
     padding-left: 10px;
     padding-bottom: 5px;
-    padding-right: 75px;
+    padding-right: 10px;
     background-color: darkblue;
-    width: 100%;
-    height: 100%;
 }
 
 .olControlLayerSwitcher .layersDiv .baseLbl,
@@ -338,6 +338,8 @@ div.olControlSaveFeaturesItemInactive {
 
 .olControlLayerSwitcher .maximizeDiv,
 .olControlLayerSwitcher .minimizeDiv {
+    width: 18px;
+    height: 18px;
     top: 5px;
     right: 0;
     cursor: pointer;
@@ -425,4 +427,15 @@ span.olGoogleAttribution.hybrid a, span.olGoogleAttribution.satellite a {
 }
 .olControlEditingToolbar .olControlDrawFeaturePolygonItemActive {
     background-position: -26px -24px;
+}
+
+/**
+ * Animations
+ */
+
+.olTileImage {
+    -webkit-transition: opacity 0.2s linear;
+    -moz-transition: opacity 0.2s linear;
+    -o-transition: opacity 0.2s linear;
+    transition: opacity 0.2s linear;
 }

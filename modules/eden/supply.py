@@ -30,7 +30,8 @@
 """
 
 __all__ = ["S3SupplyModel",
-           "supply_item_rheader"
+           "supply_item_rheader",
+           "supply_item_pack_virtualfields"
           ]
 
 import re
@@ -451,7 +452,15 @@ class S3SupplyModel(S3Model):
         self.add_component("supply_item_alt",
                            supply_item="item_id")
 
-        # Prcurement Plan Items as component of Items
+        # Inventory Items as component of Items
+        self.add_component("inv_inv_item",
+                           supply_item="item_id")
+
+        # Order Items as component of Items
+        self.add_component("inv_recv_item",
+                           supply_item="item_id")
+
+        # Procurement Plan Items as component of Items
         self.add_component("proc_plan_item",
                            supply_item="item_id")
 
@@ -547,7 +556,7 @@ $(document).ready(function() {
                          comment=T("Search for an item by category."),
                          field=["item_category_id"],
                          represent = lambda id: \
-                            item_category_represent(id, use_code=False),
+                            self.item_category_represent(id, use_code=False),
                          cols = 3
                        ),
                        S3SearchOptionsWidget(
@@ -669,6 +678,10 @@ S3FilterFieldChange({
         #    else:
         #        return None
 
+        # Inventory items as component of Packs
+        self.add_component("inv_inv_item",
+                           supply_item_pack="item_pack_id")
+
         self.configure("supply_item_pack", deduplicate=self.item_pack_duplicate)
 
         # =====================================================================
@@ -747,7 +760,7 @@ S3FilterFieldChange({
         #                          ),
         #            ondelete = "RESTRICT")
 
-        # =============================================================================
+        # =====================================================================
         # Item Super-Entity
         #
         # This super entity provides a common way to provide a foreign key to supply_item
@@ -765,9 +778,9 @@ S3FilterFieldChange({
                                   #super_link("track_id", "sit_trackable"),
                                   #location_id(),
                                   supply_item_id(represent = lambda id: \
-                                                    supply_item_represent(id,
-                                                                          show_um = False,
-                                                                          show_link = True)),
+                                            self.supply_item_represent(id,
+                                                                       show_um=False,
+                                                                       show_link=True)),
                                   item_pack_id(),
                                   Field("quantity", "double",
                                         label = T("Quantity"),
@@ -776,7 +789,7 @@ S3FilterFieldChange({
                                   *s3.ownerstamp()
                                   )
 
-        # -----------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         item_id = self.super_link("item_entity_id", "supply_item_entity",
                                   #writable = True,
                                   #readable = True,
@@ -826,12 +839,14 @@ S3FilterFieldChange({
                        search_method = item_entity_search)
 
         # ---------------------------------------------------------------------
+        # Pass variables back to global scope (response.s3.*)
+        #
         return Storage(
                 supply_item_id = supply_item_id,
                 supply_item_entity_id = item_id,
                 supply_item_pack_id = item_pack_id,
                 supply_item_represent = self.supply_item_represent,
-                supply_item_pack_virtualfields = item_pack_virtualfields,
+                supply_item_pack_virtualfields = supply_item_pack_virtualfields,
                 supply_item_duplicate_fields = item_duplicate_fields,
                 supply_item_add = self.supply_item_add,
                 )
@@ -1097,6 +1112,7 @@ S3FilterFieldChange({
         
         db = current.db
         s3db = current.s3db
+        request = current.request
 
         item_id = form.vars.id
 
@@ -1266,7 +1282,7 @@ def supply_item_rheader(r):
     return None
 
 # =============================================================================
-class item_pack_virtualfields(dict, object):
+class supply_item_pack_virtualfields(dict, object):
     """ Virtual Field for pack_quantity """
 
     def __init__(self,

@@ -1201,7 +1201,6 @@ def org_organisation_rheader(r, tabs=[]):
     """ Organization page headers """
 
     if r.representation == "html":
-
         if r.record is None:
             # List or Create form: rheader makes no sense here
             return None
@@ -1254,22 +1253,16 @@ def org_organisation_rheader(r, tabs=[]):
 
 # -----------------------------------------------------------------------------
 def org_office_rheader(r, tabs=[]):
-
     """ Office/Warehouse page headers """
 
     if r.representation == "html":
-
         tablename, record = s3_rheader_resource(r)
         if tablename == "org_office" and record:
             office = record
 
             T = current.T
-            db = current.db
             s3db = current.s3db
             s3 = current.response.s3
-            settings = current.deployment_settings
-
-            UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
             tabs = [(T("Basic Details"), None),
                     #(T("Contact Data"), "contact"),
@@ -1280,41 +1273,32 @@ def org_office_rheader(r, tabs=[]):
             except:
                 pass
             try:
-                tabs = tabs + s3.inv_tabs(r)
+                tabs = tabs + s3db.inv_tabs(r)
             except:
                 pass
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            table = s3db.org_organisation
-            query = (table.id == office.organisation_id)
-            organisation = db(query).select(table.name,
-                                            limitby=(0, 1)).first()
-            if organisation:
-                org_name = organisation.name
-            else:
-                org_name = None
-
             table = s3db.org_office
+
             rheader = DIV(TABLE(
                           TR(
                              TH("%s: " % table.name.label),
                              office.name,
                              TH("%s: " % table.type.label),
-                             s3.org_office_type_opts.get(office.type,
-                                                         UNKNOWN_OPT),
+                             table.type.represent(office.type),
                              ),
                           TR(
                              TH("%s: " % table.organisation_id.label),
-                             org_name,
+                             table.organisation_id.represent(office.organisation_id),
                              TH("%s: " % table.location_id.label),
-                             s3db.gis_location_represent(office.location_id),
+                             table.location_id.represent(office.location_id),
                              ),
                           TR(
                              TH("%s: " % table.email.label),
-                             office.email,
+                             office.email or "",
                              TH("%s: " % table.phone1.label),
-                             office.phone1,
+                             office.phone1 or "",
                              ),
                           #TR(TH(A(T("Edit Office"),
                           #        _href=URL(c="org", f="office",

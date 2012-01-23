@@ -393,10 +393,14 @@ class S3IRSModel(S3Model):
                         method="ushahidi",
                         action=self.irs_ushahidi_import)
 
+        if settings.has_module("fire"):
+            create_next = URL(args=["[id]", "human_resource"])
+        else:
+            create_next = URL(args=["[id]", "update"])
+         
         self.configure("irs_ireport",
-                       # Porto-specific currently
-                       #create_onaccept=self.ireport_onaccept,
-                       #create_next=URL(args=["[id]", "human_resource"]),
+                       create_onaccept=self.ireport_onaccept,
+                       create_next=create_next,
                        update_next=URL(args=["[id]", "update"])
                        )
 
@@ -452,6 +456,9 @@ class S3IRSModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
+        if not settings.has_module("fire"):
+            return
+
         vars = form.vars
         ireport = vars.id
         category = vars.category
@@ -470,12 +477,14 @@ class S3IRSModel(S3Model):
         # 1st unassigned vehicle of the matching type
         # @ToDo: Filter by Org/Base
         # @ToDo: Filter by those which are under repair (asset_log)
-        current.manager.load("fire_station_vehicle")
         table = s3db.irs_ireport_vehicle
+        stable = s3db.org_site
         atable = s3db.asset_asset
         vtable = s3db.vehicle_vehicle
+        ftable = s3db.fire_station
+        fvtable = s3db.fire_station_vehicle
         for type in types:
-            query = (atable.type == s3.asset.ASSET_TYPE_VEHICLE) & \
+            query = (atable.type == s3db.asset_types["VEHICLE"]) & \
                     (vtable.type == type) & \
                     (vtable.asset_id == atable.id) & \
                     (atable.deleted == False) & \
@@ -490,10 +499,10 @@ class S3IRSModel(S3Model):
                 current.manager.load("vehicle_vehicle")
                 vehicle = vehicle.id
                 query = (vtable.asset_id == vehicle) & \
-                        (db.fire_station_vehicle.vehicle_id == vtable.id) & \
-                        (db.fire_station.id == db.fire_station_vehicle.station_id) & \
-                        (db.org_site.id == db.fire_station.site_id)
-                site = db(query).select(db.org_site.id,
+                        (fvtable.vehicle_id == vtable.id) & \
+                        (ftable.id == fvtable.station_id) & \
+                        (stable.id == ftable.site_id)
+                site = db(query).select(stable.id,
                                         limitby=(0, 1)).first()
                 if site:
                     site = site.id
@@ -507,7 +516,7 @@ class S3IRSModel(S3Model):
                     # @ToDo: Filter by Base
                     table = s3db.irs_ireport_vehicle_human_resource
                     htable = s3db.hrm_human_resource
-                    on_shift = response.s3.fire_staff_on_duty()
+                    on_shift = s3db.fire_staff_on_duty()
                     query = on_shift & \
                             ((table.id == None) | \
                              (table.closed == True) | \
@@ -612,6 +621,12 @@ class S3IRSModel(S3Model):
 
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
+
+            # Add our control script
+            if session.s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
 
             # Add our data
             # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
@@ -845,9 +860,7 @@ class S3IRSResponseModel(S3Model):
         # Vehicles assigned to an Incident
         #
         if settings.has_module("vehicle"):
-            table = self.asset_asset
-            asset_id = s3.asset_id
-            asset_represent = s3.asset_represent
+            asset_id = self.asset_asset_id
             tablename = "irs_ireport_vehicle"
             table = self.define_table(tablename,
                                       ireport_id(),
@@ -874,6 +887,8 @@ class S3IRSResponseModel(S3Model):
             table.site_id.readable = True
             # Populated from fire_station_vehicle
             #table.site_id.writable = True
+
+            table.virtualfields.append(irs_ireport_vehicle_virtual_fields())
 
             # ---------------------------------------------------------------------
             # Which Staff are assigned to which Vehicle?
@@ -919,11 +934,12 @@ class S3IRSResponseModel(S3Model):
         # Vehicles are a type of Asset
         table = s3db.asset_asset
         ltable = s3db.irs_ireport_vehicle
+        asset_represent = s3db.asset_asset_id.represent
 
         # Filter to Vehicles which aren't already on a call
         # @ToDo: Filter by Org/Base
         # @ToDo: Filter out those which are under repair
-        query = (table.type == s3.asset.ASSET_TYPE_VEHICLE) & \
+        query = (table.type == s3db.asset_types["VEHICLE"]) & \
                 (table.deleted == False) & \
                 ((ltable.id == None) | \
                  (ltable.closed == True) | \
@@ -1017,5 +1033,21 @@ def irs_rheader(r, tabs=[]):
 
     else:
         return None
+
+# =============================================================================
+class irs_ireport_vehicle_virtual_fields:
+    """
+    """
+
+    extra_fields = ["datetime"]
+
+    def minutes(self):
+        request = current.request
+        try:
+            delta = request.utcnow - self.irs_ireport_vehicle.datetime
+        except:
+            return 0
+
+        return int(delta.seconds / 60)
 
 # END =========================================================================

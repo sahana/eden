@@ -9,6 +9,9 @@
 /**
  * @include GeoExt/widgets/FeatureRenderer.js
  * @requires GeoExt/widgets/LayerLegend.js
+ * @rquires OpenLayers/Style.js
+ * @rquires OpenLayers/Rule.js
+ * @rquires OpenLayers/Layer/Vector.js
  */
 
 /** api: (define)

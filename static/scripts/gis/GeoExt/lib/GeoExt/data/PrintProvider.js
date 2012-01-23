@@ -5,13 +5,20 @@
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
  * of the license.
  */
-Ext.namespace("GeoExt.data");
+
+/**
+ * @require OpenLayers/Layer.js
+ * @require OpenLayers/Format/JSON.js
+ * @require OpenLayers/Format/GeoJSON.js
+ * @require OpenLayers/BaseTypes/Class.js
+ */
 
 /** api: (define)
  *  module = GeoExt.data
  *  class = PrintProvider
  *  base_link = `Ext.util.Observable <http://dev.sencha.com/deploy/dev/docs/?class=Ext.util.Observable>`_
  */
+Ext.namespace("GeoExt.data");
 
 /** api: example
  *  Minimal code to print as much of the current map extent as possible as
@@ -481,13 +488,7 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
                 jsonData: jsonData,
                 headers: {"Content-Type": "application/json; charset=" + this.encoding},
                 success: function(response) {
-                    // In IE, using a Content-disposition: attachment header
-                    // may make it hard or impossible to download the pdf due
-                    // to security settings. So we'll display the pdf inline.
-                    var url = Ext.urlAppend(
-                        Ext.decode(response.responseText).getURL,
-                        (Ext.isIE ? "inline=true" : "")
-                    );
+                    var url = Ext.decode(response.responseText).getURL;
                     this.download(url);
                 },
                 failure: function(response) {
@@ -776,6 +777,23 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
                     name: layer.name,
                     opacity: (layer.opacity != null) ? layer.opacity : 1.0
                 });
+            },
+            "Markers": function(layer) {
+                var features = [];
+                for (var i=0, len=layer.markers.length; i<len; i++) {
+                    var marker = layer.markers[i];
+                    var geometry = new OpenLayers.Geometry.Point(marker.lonlat.lon, marker.lonlat.lat);
+                    var style = {externalGraphic: marker.icon.url,
+                        graphicWidth: marker.icon.size.w, graphicHeight: marker.icon.size.h,
+                        graphicXOffset: marker.icon.offset.x, graphicYOffset: marker.icon.offset.y};
+                    var feature = new OpenLayers.Feature.Vector(geometry, {}, style);
+                    features.push(feature);
+            }
+                var vector = new OpenLayers.Layer.Vector(layer.name);
+                vector.addFeatures(features);
+                var output = this.encoders.layers.Vector.call(this, vector);
+                vector.destroy();
+                return output;
             }
         },
         "legends": {
@@ -810,7 +828,7 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
             },
             "base": function(legend){
                 return [{
-                    name: legend.items.get(0).text,
+                    name: legend.getLabel(),
                     classes: []
                 }];
             }

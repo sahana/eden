@@ -32,33 +32,26 @@ def index():
 # -----------------------------------------------------------------------------
 def create():
     """ Redirect to asset/create """
+
     redirect(URL(f="asset", args="create"))
 
 # -----------------------------------------------------------------------------
 def asset():
     """ RESTful CRUD controller """
 
-    # Load the models
-    s3mgr.load("asset_asset")
-    if deployment_settings.has_module("vehicle"):
-        s3mgr.load("vehicle_vehicle")
-
-    # Defined in Model
-    return s3.asset.controller()
+    # Defined in Model for use from Multiple Controllers for unified menus
+    return asset_controller()
 
 # =============================================================================
 def item():
     """ RESTful CRUD controller """
 
-    # Load the models
-    s3mgr.load("supply_item")
-
     # Sort Alphabetically for the AJAX-pulled dropdown
     s3mgr.configure("supply_item",
-                    orderby=db.supply_item.name)
+                    orderby=s3db.supply_item.name)
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return response.s3.supply_item_controller()
+    return supply_item_controller()
 
 # END =========================================================================
 

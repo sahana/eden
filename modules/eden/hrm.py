@@ -1891,18 +1891,26 @@ def hrm_multi_skill_represent(opt):
     db = current.db
     s3db = current.s3db
 
+    NONE = current.messages.NONE
+
     table = s3db.hrm_skill
     set = db(table.id > 0).select(table.id,
                                   table.name).as_dict()
 
+    if not set:
+        return NONE
+
     if isinstance(opt, (list, tuple)):
         opts = opt
-        vals = [str(set.get(o)["name"]) for o in opts]
+        try:
+            vals = [str(set.get(o)["name"]) for o in opts]
+        except:
+            return None
     elif isinstance(opt, int):
         opts = [opt]
         vals = str(set.get(opt)["name"])
     else:
-        return current.messages.NONE
+        return NONE
 
     if len(opts) > 1:
         vals = ", ".join(vals)

@@ -1,59 +1,59 @@
-"ADM1_NAME","ADM2_NAME","CODE"
-"California","Orange County",59
-"California","Tehama County",103
-"California","Colusa County",11
-"California","Santa Barbara County",83
-"California","Mono County",51
-"California","Monterey County",53
-"California","Placer County",61
-"California","Amador County",5
-"California","Calaveras County",9
-"California","Imperial County",25
-"California","Siskiyou County",93
-"California","Sonoma County",97
-"California","Santa Clara County",85
-"California","Kern County",29
-"California","Yolo County",113
-"California","Mendocino County",45
-"California","Sacramento County",67
-"California","Madera County",39
-"California","Yuba County",115
-"California","Tulare County",107
-"California","San Diego County",73
-"California","Plumas County",63
-"California","San Benito County",69
-"California","Shasta County",89
-"California","Stanislaus County",99
-"California","Mariposa County",43
-"California","Fresno County",19
-"California","Alpine County",3
-"California","Marin County",41
-"California","Glenn County",21
-"California","Lassen County",35
-"California","Del Norte County",15
-"California","Napa County",55
-"California","San Luis Obispo County",79
-"California","San Mateo County",81
-"California","Nevada County",57
-"California","San Joaquin County",77
-"California","San Bernardino County",71
-"California","Sutter County",101
-"California","Riverside County",65
-"California","Trinity County",105
-"California","Contra Costa County",13
-"California","Ventura County",111
-"California","Tuolumne County",109
-"California","Butte County",7
-"California","Sierra County",91
-"California","Lake County",33
-"California","Modoc County",49
-"California","El Dorado County",17
-"California","Los Angeles County",37
-"California","Alameda County",1
-"California","Inyo County",27
-"California","San Francisco County",75
-"California","Santa Cruz County",87
-"California","Kings County",31
-"California","Humboldt County",23
-"California","Solano County",95
-"California","Merced County",47
+ADM1_NAME,ADM2_NAME,ADM2_CODE
+California,Orange County,59
+California,Tehama County,103
+California,Colusa County,11
+California,Santa Barbara County,83
+California,Mono County,51
+California,Monterey County,53
+California,Placer County,61
+California,Amador County,5
+California,Calaveras County,9
+California,Imperial County,25
+California,Siskiyou County,93
+California,Sonoma County,97
+California,Santa Clara County,85
+California,Kern County,29
+California,Yolo County,113
+California,Mendocino County,45
+California,Sacramento County,67
+California,Madera County,39
+California,Yuba County,115
+California,Tulare County,107
+California,San Diego County,73
+California,Plumas County,63
+California,San Benito County,69
+California,Shasta County,89
+California,Stanislaus County,99
+California,Mariposa County,43
+California,Fresno County,19
+California,Alpine County,3
+California,Marin County,41
+California,Glenn County,21
+California,Lassen County,35
+California,Del Norte County,15
+California,Napa County,55
+California,San Luis Obispo County,79
+California,San Mateo County,81
+California,Nevada County,57
+California,San Joaquin County,77
+California,San Bernardino County,71
+California,Sutter County,101
+California,Riverside County,65
+California,Trinity County,105
+California,Contra Costa County,13
+California,Ventura County,111
+California,Tuolumne County,109
+California,Butte County,7
+California,Sierra County,91
+California,Lake County,33
+California,Modoc County,49
+California,El Dorado County,17
+California,Los Angeles County,37
+California,Alameda County,1
+California,Inyo County,27
+California,San Francisco County,75
+California,Santa Cruz County,87
+California,Kings County,31
+California,Humboldt County,23
+California,Solano County,95
+California,Merced County,47

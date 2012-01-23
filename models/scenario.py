@@ -199,9 +199,7 @@ if deployment_settings.has_module(module):
         # @ToDo: Search Widget
         if deployment_settings.has_module("asset"):
 
-            # Load the Models
-            s3mgr.load("asset_asset")
-            asset_id = response.s3.asset_id
+            asset_id = s3db.asset_asset_id
 
             tablename = "scenario_asset"
             table = db.define_table(tablename,

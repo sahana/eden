@@ -120,26 +120,27 @@ def warehouse():
                    r.component.name == "recv" or \
                    r.component.name == "send":
                     # Filter out items which are already in this inventory
-                    response.s3.inv_prep(r)
+                    s3db.inv_prep(r)
 
                 elif r.component.name == "human_resource":
                     # Filter out people which are already staff for this warehouse
                     s3_filter_staff(r)
                     # Cascade the organisation_id from the hospital to the staff
-                    db.hrm_human_resource.organisation_id.default = r.record.organisation_id
-                    db.hrm_human_resource.organisation_id.writable = False
+                    htable = s3db.hrm_human_resource
+                    htable.organisation_id.default = r.record.organisation_id
+                    htable.organisation_id.writable = False
 
                 elif r.component.name == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        response.s3.req_create_form_mods()
+                        s3db.req_create_form_mods()
 
         # "show_obsolete" var option can be added (btn?) later to
         # disable this filter
         if r.method in [None, "list"] and \
             not r.vars.get("show_obsolete", False):
-            r.resource.add_filter((db.org_office.obsolete != True))
+            r.resource.add_filter((s3db.org_office.obsolete != True))
         return True
     response.s3.prep = prep
 
@@ -153,7 +154,8 @@ def warehouse():
         csv_template = "warehouse"
     csv_stylesheet = "%s.xsl" % csv_template
 
-    output = s3_rest_controller(rheader=rheader,
+    output = s3_rest_controller(module, resourcename,
+                                rheader=rheader,
                                 csv_template = csv_template,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
@@ -168,8 +170,8 @@ def warehouse():
 def incoming():
     """ Incoming Shipments """
 
-    s3mgr.load("inv_inv_item")
-    return response.s3.inv_incoming()
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():
@@ -224,8 +226,7 @@ def inv_item():
     s3mgr.import_prep = import_prep
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    s3mgr.load("inv_inv_item")
-    return response.s3.inv_item_controller()
+    return inv_item_controller()
 
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
@@ -266,8 +267,7 @@ def recv():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    s3mgr.load("inv_recv")
-    return response.s3.inv_recv_controller()
+    return inv_recv_controller()
 
 # -----------------------------------------------------------------------------
 def recv_item():
@@ -280,8 +280,7 @@ def send():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    s3mgr.load("inv_send")
-    return response.s3.inv_send_controller()
+    return inv_send_controller()
 
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):
@@ -400,8 +399,8 @@ def recv_process():
 
     # Get Recv & Inv Items
     ritable = s3db.inv_recv_item
-    query = ( ritable.recv_id == recv_id ) & \
-            ( ritable.deleted == False )
+    query = (ritable.recv_id == recv_id) & \
+            (ritable.deleted == False)
     recv_items = db(query).select(ritable.id,
                                   ritable.item_id,
                                   ritable.quantity,
@@ -439,18 +438,18 @@ def recv_process():
         else:
             # This item must be added to the inv
             inv_item_id = 0
-            item = dict( site_id = site_id,
-                         item_id = item_id,
-                         quantity = recv_item.quantity,
-                         item_pack_id = recv_item.item_pack_id)
+            item = dict(site_id = site_id,
+                        item_id = item_id,
+                        quantity = recv_item.quantity,
+                        item_pack_id = recv_item.item_pack_id)
 
         # Update Inv Item
         itable[inv_item_id] = item
 
         # Check for req_items (-> fulfil)
-        update_req_id.append( req_item_in_shipment(shipment_item = Storage(inv_recv_item = recv_item),
-                                                   shipment_type = "recv",
-                                                   req_items = req_items))
+        update_req_id.append(req_item_in_shipment(shipment_item = Storage(inv_recv_item = recv_item),
+                                                  shipment_type = "recv",
+                                                  req_items = req_items))
 
     # Update recv record & lock for editing
     rtable[recv_id] = dict(date = request.utcnow,
@@ -463,7 +462,7 @@ def recv_process():
         if req_id:
             s3mgr.store_session("req", "req", req_id)
             s3mgr.store_session("req", "req_item", req_item_id)
-            s3.req_item_onaccept(None)
+            s3db.req_item_onaccept(None)
 
     session.confirmation = T("Shipment Items received by Warehouse")
 
@@ -584,7 +583,7 @@ def recv_cancel():
         if req_id:
             s3mgr.store_session("req", "req", req_id)
             s3mgr.store_session("req", "req_item", req_item_id)
-            s3.req_item_onaccept(None)
+            s3db.req_item_onaccept(None)
 
     session.confirmation = T("Received Shipment canceled and items removed from Warehouse")
 
@@ -695,7 +694,7 @@ def send_process():
             if req_id:
                 s3mgr.store_session("req", "req", req_id)
                 s3mgr.store_session("req", "req_item", req_item_id)
-                s3.req_item_onaccept(None)
+                s3db.req_item_onaccept(None)
 
         # Go to the Site which has sent these items
         (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
@@ -829,7 +828,7 @@ def send_cancel():
             if req_id:
                 s3mgr.store_session("req", "req", req_id)
                 s3mgr.store_session("req", "req_item", req_item_id)
-                s3.req_item_onaccept(None)
+                s3db.req_item_onaccept(None)
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 
@@ -852,7 +851,7 @@ def recv_sent():
         session.error = T("This shipment has already been received.")
 
     if not auth.s3_has_permission("update",
-                                  s3db.org_site,
+                                  "org_site",
                                   record_id=site_id):
         session.error = T("You do not have permission to receive this shipment.")
 
@@ -914,7 +913,7 @@ def send_commit():
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
                                                           r_commit.site_id)
     if not auth.s3_has_permission("update",
-                                  s3db["%s_%s" % (prefix, resourcename)],
+                                  "%s_%s" % (prefix, resourcename),
                                   record_id=id):
         session.error = T("You do not have permission to send a shipment from this site.")
         redirect(URL(c = "req",

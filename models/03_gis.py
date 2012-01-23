@@ -19,7 +19,6 @@ else:
     _gis.edit_GR = deployment_settings.get_gis_edit_group()
 
 # For Bulk Importer
-s3.gis_import_csv = gis.import_csv
 s3.gis_set_default_location = gis.set_default_location
 
 # =============================================================================

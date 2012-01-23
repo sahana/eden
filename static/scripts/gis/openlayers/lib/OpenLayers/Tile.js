@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -7,11 +7,9 @@
 /**
  * @requires OpenLayers/BaseTypes/Class.js
  * @requires OpenLayers/Util.js
- * @requires OpenLayers/Console.js
- * @requires OpenLayers/Lang.js
  */
 
-/*
+/**
  * Class: OpenLayers.Tile 
  * This is a class designed to designate a single tile, however
  *     it is explicitly designed to do relatively little. Tiles store 
@@ -234,44 +232,6 @@ OpenLayers.Tile = OpenLayers.Class({
      */
     clear: function(draw) {
         // to be implemented by subclasses
-    },
-    
-    /**   
-     * Method: getBoundsFromBaseLayer
-     * Take the pixel locations of the corner of the tile, and pass them to 
-     *     the base layer and ask for the location of those pixels, so that 
-     *     displaying tiles over Google works fine.
-     *
-     * Parameters:
-     * position - {<OpenLayers.Pixel>}
-     *
-     * Returns:
-     * bounds - {<OpenLayers.Bounds>} 
-     */
-    getBoundsFromBaseLayer: function(position) {
-        var msg = OpenLayers.i18n('reprojectDeprecated',
-                                              {'layerName':this.layer.name});
-        OpenLayers.Console.warn(msg);
-        var topLeft = this.layer.map.getLonLatFromLayerPx(position); 
-        var bottomRightPx = position.clone();
-        bottomRightPx.x += this.size.w;
-        bottomRightPx.y += this.size.h;
-        var bottomRight = this.layer.map.getLonLatFromLayerPx(bottomRightPx); 
-        // Handle the case where the base layer wraps around the date line.
-        // Google does this, and it breaks WMS servers to request bounds in 
-        // that fashion.  
-        if (topLeft.lon > bottomRight.lon) {
-            if (topLeft.lon < 0) {
-                topLeft.lon = -180 - (topLeft.lon+180);
-            } else {
-                bottomRight.lon = 180+bottomRight.lon+180;
-            }        
-        }
-        var bounds = new OpenLayers.Bounds(topLeft.lon, 
-                                       bottomRight.lat, 
-                                       bottomRight.lon, 
-                                       topLeft.lat);  
-        return bounds;
     },
     
     CLASS_NAME: "OpenLayers.Tile"

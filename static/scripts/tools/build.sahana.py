@@ -157,6 +157,32 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
+    # Also do s3.embed_component.js
+    print "Compressing s3.embed_component.js"
+    inputFilename = os.path.join("..", "S3", "s3.embed_component.js")
+    outputFilename = "s3.embed_component.min.js"
+    input = file(inputFilename, "r").read()
+    minimized = minimize(input)
+    file(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
+    # Also do s3.report.js
+    print "Compressing s3.report.js"
+    inputFilename = os.path.join("..", "S3", "s3.report.js")
+    outputFilename = "s3.report.min.js"
+    input = file(inputFilename, "r").read()
+    minimized = minimize(input)
+    file(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Also do s3.search.js
     print "Compressing s3.search.js"
     inputFilename = os.path.join("..", "S3", "s3.search.js")
@@ -183,10 +209,10 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
-    # Also do s3.embed_component.js
-    print "Compressing s3.embed_component.js"
-    inputFilename = os.path.join("..", "S3", "s3.embed_component.js")
-    outputFilename = "s3.embed_component.min.js"
+    # Also do s3.timeline.js
+    print "Compressing s3.timeline.js"
+    inputFilename = os.path.join("..", "S3", "s3.timeline.js")
+    outputFilename = "s3.timeline.min.js"
     input = file(inputFilename, "r").read()
     minimized = minimize(input)
     file(outputFilename, "w").write(minimized)

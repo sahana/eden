@@ -92,6 +92,7 @@ class S3ProjectModel(S3Model):
         human_resource_id = self.hrm_human_resource_id
 
         s3_date_format = settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Enable DRR extensions?
         drr = settings.get_project_drr()
@@ -205,7 +206,7 @@ class S3ProjectModel(S3Model):
                                   # drr uses the separate project_organisation table
                                   organisation_id(
                                                readable=False if drr else True,
-                                               writable=False if drr else True
+                                               writable=False if drr else True,
                                               ),
                                   Field("name",
                                         label = T("Name"),
@@ -218,15 +219,17 @@ class S3ProjectModel(S3Model):
                                   Field("code",
                                         label = T("Code"),
                                         readable=False,
-                                        writable=False
+                                        writable=False,
                                         ),
                                   Field("description", "text",
                                         label = T("Description")),
                                   Field("start_date", "date",
                                         label = T("Start date"),
+                                        represent = s3_date_represent,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
                                   Field("end_date", "date",
                                         label = T("End date"),
+                                        represent = s3_date_represent,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
                                   Field("duration",
                                         readable=False,
@@ -776,6 +779,7 @@ class S3ProjectModel(S3Model):
             T = current.T
             request = current.request
             response = current.response
+            session = current.session
             s3 = response.s3
         
             calendar = r.record.calendar
@@ -783,8 +787,14 @@ class S3ProjectModel(S3Model):
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
 
-            # Control our code in static/scripts/S3/s3.timeline.js
+            # Pass vars to our JS code
             s3.js_global.append("S3.timeline.calendar = '%s';" % calendar)
+
+            # Add our control script
+            if session.s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
 
             # Create the DIV
             item = DIV(_id="s3timeline", _style="height: 400px; border: 1px solid #aaa; font-family: Trebuchet MS, sans-serif; font-size: 85%;")

@@ -1604,6 +1604,9 @@ class S3XML(S3Codec):
             @todo: add a character encoding parameter to skip the guessing
         """
 
+        # Increase field sixe to ne able to import WKTs
+        csv.field_size_limit(2**20 * 100)  # 100 megs
+
         root = etree.Element(cls.TAG.table)
         if resourcename is not None:
             root.set(cls.ATTRIBUTE.name, resourcename)

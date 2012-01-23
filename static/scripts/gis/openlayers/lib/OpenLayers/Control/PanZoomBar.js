@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -151,7 +151,7 @@ OpenLayers.Control.PanZoomBar = OpenLayers.Class(OpenLayers.Control.PanZoom, {
         // place the controls
         this.buttons = [];
 
-        var sz = new OpenLayers.Size(18,18);
+        var sz = {w: 18, h: 18};
         if (this.panIcons) {
             var centered = new OpenLayers.Pixel(px.x+sz.w/2, px.y);
             var wposition = sz.w;
@@ -190,17 +190,16 @@ OpenLayers.Control.PanZoomBar = OpenLayers.Class(OpenLayers.Control.PanZoom, {
     * Method: _addZoomBar
     * 
     * Parameters:
-    * location - {<OpenLayers.Pixel>} where zoombar drawing is to start.
+    * centered - {<OpenLayers.Pixel>} where zoombar drawing is to start.
     */
     _addZoomBar:function(centered) {
-        var imgLocation = OpenLayers.Util.getImagesLocation();
-        
+        var imgLocation = OpenLayers.Util.getImageLocation("slider.png");
         var id = this.id + "_" + this.map.id;
         var zoomsToEnd = this.map.getNumZoomLevels() - 1 - this.map.getZoom();
         var slider = OpenLayers.Util.createAlphaImageDiv(id,
                        centered.add(-1, zoomsToEnd * this.zoomStopHeight), 
-                       new OpenLayers.Size(20,9), 
-                       imgLocation+"slider.png",
+                       {w: 20, h: 9},
+                       imgLocation,
                        "absolute");
         slider.style.cursor = "move";
         this.slider = slider;
@@ -218,17 +217,18 @@ OpenLayers.Control.PanZoomBar = OpenLayers.Class(OpenLayers.Control.PanZoom, {
             "click": this.doubleClick
         });
         
-        var sz = new OpenLayers.Size();
-        sz.h = this.zoomStopHeight * this.map.getNumZoomLevels();
-        sz.w = this.zoomStopWidth;
+        var sz = {
+            w: this.zoomStopWidth,
+            h: this.zoomStopHeight * this.map.getNumZoomLevels()
+        };
+        var imgLocation = OpenLayers.Util.getImageLocation("zoombar.png");
         var div = null;
         
         if (OpenLayers.Util.alphaHack()) {
             var id = this.id + "_" + this.map.id;
             div = OpenLayers.Util.createAlphaImageDiv(id, centered,
-                                      new OpenLayers.Size(sz.w, 
-                                              this.zoomStopHeight),
-                                      imgLocation + "zoombar.png", 
+                                      {w: sz.w, h: this.zoomStopHeight},
+                                      imgLocation,
                                       "absolute", null, "crop");
             div.style.height = sz.h + "px";
         } else {
@@ -236,7 +236,7 @@ OpenLayers.Control.PanZoomBar = OpenLayers.Class(OpenLayers.Control.PanZoom, {
                         'OpenLayers_Control_PanZoomBar_Zoombar' + this.map.id,
                         centered,
                         sz,
-                        imgLocation+"zoombar.png");
+                        imgLocation);
         }
         div.style.cursor = "pointer";
         this.zoombarDiv = div;

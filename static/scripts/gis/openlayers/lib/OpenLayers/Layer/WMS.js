@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -6,7 +6,6 @@
 
 /**
  * @requires OpenLayers/Layer/Grid.js
- * @requires OpenLayers/Tile/Image.js
  */
 
 /**
@@ -31,17 +30,6 @@ OpenLayers.Layer.WMS = OpenLayers.Class(OpenLayers.Layer.Grid, {
                       format: "image/jpeg"
                      },
     
-    /**
-     * Property: reproject
-     * *Deprecated*. See http://trac.openlayers.org/wiki/SphericalMercator
-     * for information on the replacement for this functionality. 
-     * {Boolean} Try to reproject this layer if its coordinate reference system
-     *           is different than that of the base layer.  Default is false.  
-     *           Set this in the layer options.  Should be set to false in 
-     *           most cases.
-     */
-    reproject: false,
- 
     /**
      * APIProperty: isBaseLayer
      * {Boolean} Default is true for WMS layer

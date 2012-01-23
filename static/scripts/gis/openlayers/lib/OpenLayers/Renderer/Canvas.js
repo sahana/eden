@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -525,10 +525,6 @@ OpenLayers.Renderer.Canvas = OpenLayers.Class(OpenLayers.Renderer, {
      * style    - {Object}
      */
     drawText: function(location, style) {
-        style = OpenLayers.Util.extend({
-            fontColor: "#000000",
-            labelAlign: "cm"
-        }, style);
         var pt = this.getLocalXY(location);
 
         this.setCanvasStyle("reset");
@@ -560,6 +556,13 @@ OpenLayers.Renderer.Canvas = OpenLayers.Class(OpenLayers.Renderer, {
                 this.canvas.measureText('xx').width;
             pt[1] += lineHeight*vfactor*(numRows-1);
             for (var i = 0; i < numRows; i++) {
+                if (style.labelOutlineWidth) {
+                    this.canvas.save();
+                    this.canvas.strokeStyle = style.labelOutlineColor;
+                    this.canvas.lineWidth = style.labelOutlineWidth;
+                    this.canvas.strokeText(labelRows[i], pt[0], pt[1] + (lineHeight*i) + 1);
+                    this.canvas.restore();
+                }
                 this.canvas.fillText(labelRows[i], pt[0], pt[1] + (lineHeight*i));
             }
         } else if (this.canvas.mozDrawText) {
@@ -626,12 +629,12 @@ OpenLayers.Renderer.Canvas = OpenLayers.Class(OpenLayers.Renderer, {
      * evt - {<OpenLayers.Event>} 
      *
      * Returns:
-     * {<OpenLayers.Feature.Vector} A feature or null.  This method returns a 
+     * {<OpenLayers.Feature.Vector} A feature or undefined.  This method returns a 
      *     feature instead of a feature id to avoid an unnecessary lookup on the
      *     layer.
      */
     getFeatureIdFromEvent: function(evt) {
-        var feature = null;
+        var feature;
         if (this.hitDetection) {
             // this dragging check should go in the feature handler
             if (!this.map.dragging) {

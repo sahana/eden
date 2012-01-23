@@ -163,8 +163,8 @@ if deployment_settings.has_module(module):
                 mapconfig = db(mquery).select(ctable.ALL).first()
 
                 # Write them to their respective destination tables
-                htable = db.event_human_resource # @ToDo: Change to Positions
-                ftable = db.event_site
+                htable = s3db.event_human_resource # @ToDo: Change to Positions
+                ftable = s3db.event_site
                 for row in hrms:
                     htable.insert(event_id=event,
                                   human_resource_id=row.human_resource_id)
@@ -176,7 +176,7 @@ if deployment_settings.has_module(module):
                     atable = db.scenario_asset
                     aquery = query & (atable.scenario_id == table.id)
                     assets = db(aquery).select(atable.asset_id)
-                    atable = db.event_asset
+                    atable = s3db.event_asset
                     for row in assets:
                         atable.insert(event_id=event,
                                       asset_id=row.asset_id)
@@ -435,10 +435,8 @@ if deployment_settings.has_module(module):
         # Assets
         # @ToDo: Search Widget
         if deployment_settings.has_module("asset"):
-            # Load the Models
-            s3mgr.load("asset_asset")
-            # Retrieve from the Global
-            asset_id = response.s3.asset_id
+
+            asset_id = s3db.asset_asset_id
 
             tablename = "event_asset"
             table = db.define_table(tablename,

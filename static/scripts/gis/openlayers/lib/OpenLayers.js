@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -71,7 +71,7 @@
             for(var i=0, len=s.length; i<len; i++) {
                 src = s[i].getAttribute('src');
                 if(src) {
-                    var m = src.match(r);
+                    m = src.match(r);
                     if(m) {
                         l = m[1];
                         break;
@@ -97,6 +97,7 @@
             jsFiles = [
                 "OpenLayers/BaseTypes/Class.js",
                 "OpenLayers/Util.js",
+                "OpenLayers/Animation.js",
                 "OpenLayers/BaseTypes.js",
                 "OpenLayers/BaseTypes/Bounds.js",
                 "OpenLayers/BaseTypes/Date.js",
@@ -110,6 +111,7 @@
                 "Rico/Corner.js",
                 "Rico/Color.js",
                 "OpenLayers/Events.js",
+                "OpenLayers/Events/buttonclick.js",
                 "OpenLayers/Request.js",
                 "OpenLayers/Request/XMLHttpRequest.js",
                 "OpenLayers/Projection.js",
@@ -122,22 +124,18 @@
                 "OpenLayers/Tile.js",
                 "OpenLayers/Tile/Image.js",
                 "OpenLayers/Tile/Image/IFrame.js",
-                "OpenLayers/Tile/WFS.js",
                 "OpenLayers/Layer/Image.js",
                 "OpenLayers/Layer/SphericalMercator.js",
                 "OpenLayers/Layer/EventPane.js",
                 "OpenLayers/Layer/FixedZoomLevels.js",
                 "OpenLayers/Layer/Google.js",
                 "OpenLayers/Layer/Google/v3.js",
-                "OpenLayers/Layer/VirtualEarth.js",
-                "OpenLayers/Layer/Yahoo.js",
                 "OpenLayers/Layer/HTTPRequest.js",
                 "OpenLayers/Layer/Grid.js",
                 "OpenLayers/Layer/MapGuide.js",
                 "OpenLayers/Layer/MapServer.js",
                 "OpenLayers/Layer/KaMap.js",
                 "OpenLayers/Layer/KaMapCache.js",
-                "OpenLayers/Layer/MultiMap.js",
                 "OpenLayers/Layer/Markers.js",
                 "OpenLayers/Layer/Text.js",
                 "OpenLayers/Layer/WorldWind.js",
@@ -148,6 +146,7 @@
                 "OpenLayers/Layer/GeoRSS.js",
                 "OpenLayers/Layer/Boxes.js",
                 "OpenLayers/Layer/XYZ.js",
+                "OpenLayers/Layer/OSM.js",
                 "OpenLayers/Layer/Bing.js",
                 "OpenLayers/Layer/TMS.js",
                 "OpenLayers/Layer/TileCache.js",
@@ -159,7 +158,6 @@
                 "OpenLayers/Popup/FramedCloud.js",
                 "OpenLayers/Feature.js",
                 "OpenLayers/Feature/Vector.js",
-                "OpenLayers/Feature/WFS.js",
                 "OpenLayers/Handler.js",
                 "OpenLayers/Handler/Click.js",
                 "OpenLayers/Handler/Hover.js",
@@ -207,7 +205,6 @@
                 "OpenLayers/Control/TransformFeature.js",
                 "OpenLayers/Control/SLDSelect.js",
                 "OpenLayers/Geometry.js",
-                "OpenLayers/Geometry/Rectangle.js",
                 "OpenLayers/Geometry/Collection.js",
                 "OpenLayers/Geometry/Point.js",
                 "OpenLayers/Geometry/MultiPoint.js",
@@ -217,7 +214,6 @@
                 "OpenLayers/Geometry/Polygon.js",
                 "OpenLayers/Geometry/MultiLineString.js",
                 "OpenLayers/Geometry/MultiPolygon.js",
-                "OpenLayers/Geometry/Surface.js",
                 "OpenLayers/Renderer.js",
                 "OpenLayers/Renderer/Elements.js",
                 "OpenLayers/Renderer/NG.js",
@@ -244,17 +240,16 @@
                 "OpenLayers/Filter/Function.js",                
                 "OpenLayers/Protocol.js",
                 "OpenLayers/Protocol/HTTP.js",
-                "OpenLayers/Protocol/SQL.js",
-                "OpenLayers/Protocol/SQL/Gears.js",
                 "OpenLayers/Protocol/WFS.js",
                 "OpenLayers/Protocol/WFS/v1.js",
                 "OpenLayers/Protocol/WFS/v1_0_0.js",
                 "OpenLayers/Protocol/WFS/v1_1_0.js",
+                "OpenLayers/Protocol/CSW.js", 
+                "OpenLayers/Protocol/CSW/v2_0_2.js",
                 "OpenLayers/Protocol/Script.js",
                 "OpenLayers/Protocol/SOS.js",
                 "OpenLayers/Protocol/SOS/v1_0_0.js",
                 "OpenLayers/Layer/PointTrack.js",
-                "OpenLayers/Layer/GML.js",
                 "OpenLayers/Style.js",
                 "OpenLayers/Style2.js",
                 "OpenLayers/StyleMap.js",
@@ -337,7 +332,6 @@
                 "OpenLayers/Format/XLS/v1.js",
                 "OpenLayers/Format/XLS/v1_1_0.js",
                 "OpenLayers/Format/OGCExceptionReport.js",
-                "OpenLayers/Layer/WFS.js",
                 "OpenLayers/Control/GetFeature.js",
                 "OpenLayers/Control/NavToolbar.js",
                 "OpenLayers/Control/PanPanel.js",

@@ -162,7 +162,7 @@ def org_office_controller():
                    r.component.name == "recv" or \
                    r.component.name == "send":
                     # Filter out items which are already in this inventory
-                    s3.inv_prep(r)
+                    s3db.inv_prep(r)
                 elif r.component.name == "human_resource":
                     # Filter out people which are already staff for this office
                     s3_filter_staff(r)
@@ -174,7 +174,7 @@ def org_office_controller():
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
-                        s3.req_create_form_mods()
+                        s3db.req_create_form_mods()
 
         return True
     s3.prep = prep

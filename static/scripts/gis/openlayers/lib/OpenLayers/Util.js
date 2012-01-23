@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -10,7 +10,6 @@
  * @requires OpenLayers/BaseTypes/LonLat.js
  * @requires OpenLayers/BaseTypes/Pixel.js
  * @requires OpenLayers/BaseTypes/Size.js
- * @requires OpenLayers/Console.js
  * @requires OpenLayers/Lang.js
  */
 
@@ -25,8 +24,9 @@ OpenLayers.Util = OpenLayers.Util || {};
  *
  * Parameters:
  * e - {String or DOMElement or Window}
- * Return:
- * {Array(DOMElement)}
+ *
+ * Returns:
+ * {Array(DOMElement) or DOMElement}
  */
 OpenLayers.Util.getElement = function() {
     var elements = [];
@@ -67,7 +67,7 @@ OpenLayers.Util.isElement = function(o) {
  * Parameters:
  * a - {Object} the object test.
  * 
- * Returns
+ * Returns:
  * {Boolean} true if the object is an array.
  */
 OpenLayers.Util.isArray = function(a) {
@@ -90,7 +90,7 @@ if(typeof window.$  === "undefined") {
  * array - {Array}
  * item - {Object}
  * 
- * Return
+ * Returns:
  * {Array} A reference to the array
  */
 OpenLayers.Util.removeItem = function(array, item) {
@@ -101,23 +101,6 @@ OpenLayers.Util.removeItem = function(array, item) {
         }
     }
     return array;
-};
-
-/**
- * Function: clearArray
- * *Deprecated*. This function will disappear in 3.0.
- * Please use "array.length = 0" instead.
- * 
- * Parameters:
- * array - {Array}
- */
-OpenLayers.Util.clearArray = function(array) {
-    OpenLayers.Console.warn(
-        OpenLayers.i18n(
-            "methodDeprecated", {'newMethod': 'array = []'}
-        )
-    );
-    array.length = 0;
 };
 
 /** 
@@ -157,8 +140,12 @@ OpenLayers.Util.indexOf = function(array, obj) {
  * Parameters:
  * element - {DOMElement} DOM element to modify.
  * id - {String} The element id attribute to set.
- * px - {<OpenLayers.Pixel>} The left and top style position.
- * sz - {<OpenLayers.Size>}  The width and height style attributes.
+ * px - {<OpenLayers.Pixel>|Object} The element left and top position,
+ *                                  OpenLayers.Pixel or an object with
+ *                                  a 'x' and 'y' properties.
+ * sz - {<OpenLayers.Size>|Object} The element width and height,
+ *                                 OpenLayers.Size or an object with a
+ *                                 'w' and 'h' properties.
  * position - {String}       The position attribute.  eg: absolute, 
  *                           relative, etc.
  * border - {String}         The style.border attribute.  eg:
@@ -209,8 +196,12 @@ OpenLayers.Util.modifyDOMElement = function(element, id, px, sz, position,
  * id - {String} An identifier for this element.  If no id is
  *               passed an identifier will be created 
  *               automatically.
- * px - {<OpenLayers.Pixel>} The element left and top position. 
- * sz - {<OpenLayers.Size>} The element width and height.
+ * px - {<OpenLayers.Pixel>|Object} The element left and top position,
+ *                                  OpenLayers.Pixel or an object with
+ *                                  a 'x' and 'y' properties.
+ * sz - {<OpenLayers.Size>|Object} The element width and height,
+ *                                 OpenLayers.Size or an object with a
+ *                                 'w' and 'h' properties.
  * imgURL - {String} A url pointing to an image to use as a 
  *                   background image.
  * position - {String} The style.position value. eg: absolute,
@@ -252,8 +243,12 @@ OpenLayers.Util.createDiv = function(id, px, sz, imgURL, position,
  * Parameters:
  * id - {String} The id field for the img.  If none assigned one will be
  *               automatically generated.
- * px - {<OpenLayers.Pixel>} The left and top positions.
- * sz - {<OpenLayers.Size>} The style.width and style.height values.
+ * px - {<OpenLayers.Pixel>|Object} The element left and top position,
+ *                                  OpenLayers.Pixel or an object with
+ *                                  a 'x' and 'y' properties.
+ * sz - {<OpenLayers.Size>|Object} The element width and height,
+ *                                 OpenLayers.Size or an object with a
+ *                                 'w' and 'h' properties.
  * imgURL - {String} The url to use as the image source.
  * position - {String} The style.position value.
  * border - {String} The border to place around the image.
@@ -297,27 +292,6 @@ OpenLayers.Util.createImage = function(id, px, sz, imgURL, position, border,
     }
         
     return image;
-};
-
-/**
- * Function: setOpacity
- * *Deprecated*.  This function has been deprecated. Instead, please use 
- *     <OpenLayers.Util.modifyDOMElement> 
- *     or 
- *     <OpenLayers.Util.modifyAlphaImageDiv>
- * 
- * Set the opacity of a DOM Element
- *     Note that for this function to work in IE, elements must "have layout"
- *     according to:
- *     http://msdn.microsoft.com/workshop/author/dhtml/reference/properties/haslayout.asp
- *
- * Parameters:
- * element - {DOMElement} Set the opacity on this DOM element
- * opacity - {Float} Opacity value (0.0 - 1.0)
- */
-OpenLayers.Util.setOpacity = function(element, opacity) {
-    OpenLayers.Util.modifyDOMElement(element, null, null, null,
-                                     null, null, null, opacity);
 };
 
 /**
@@ -369,8 +343,10 @@ OpenLayers.Util.alphaHack = function() {
  * Parameters:
  * div - {DOMElement} Div containing Alpha-adjusted Image
  * id - {String}
- * px - {<OpenLayers.Pixel>}
- * sz - {<OpenLayers.Size>}
+ * px - {<OpenLayers.Pixel>|Object} OpenLayers.Pixel or an object with
+ *                                  a 'x' and 'y' properties.
+ * sz - {<OpenLayers.Size>|Object} OpenLayers.Size or an object with
+ *                                 a 'w' and 'h' properties.
  * imgURL - {String}
  * position - {String}
  * border - {String}
@@ -417,8 +393,10 @@ OpenLayers.Util.modifyAlphaImageDiv = function(div, id, px, sz, imgURL,
  * 
  * Parameters:
  * id - {String}
- * px - {<OpenLayers.Pixel>}
- * sz - {<OpenLayers.Size>}
+ * px - {<OpenLayers.Pixel>|Object} OpenLayers.Pixel or an object with
+ *                                  a 'x' and 'y' properties.
+ * sz - {<OpenLayers.Size>|Object} OpenLayers.Size or an object with
+ *                                 a 'w' and 'h' properties.
  * imgURL - {String}
  * position - {String}
  * border - {String}
@@ -438,6 +416,7 @@ OpenLayers.Util.createAlphaImageDiv = function(id, px, sz, imgURL,
     var div = OpenLayers.Util.createDiv();
     var img = OpenLayers.Util.createImage(null, null, null, null, null, null, 
                                           null, delayDisplay);
+    img.className = "olAlphaImg";
     div.appendChild(img);
 
     OpenLayers.Util.modifyAlphaImageDiv(div, id, px, sz, imgURL, position, 
@@ -594,6 +573,16 @@ OpenLayers.ImgPath = '';
  */
 OpenLayers.Util.getImagesLocation = function() {
     return OpenLayers.ImgPath || (OpenLayers._getScriptLocation() + "img/");
+};
+
+/** 
+ * Function: getImageLocation
+ * 
+ * Returns:
+ * {String} The fully formatted location string for a specified image
+ */
+OpenLayers.Util.getImageLocation = function(image) {
+    return OpenLayers.Util.getImagesLocation() + image;
 };
 
 
@@ -931,27 +920,6 @@ OpenLayers.Util.getParameters = function(url) {
 };
 
 /**
- * Function: getArgs
- * *Deprecated*.  Will be removed in 3.0.  Please use instead
- *     <OpenLayers.Util.getParameters>
- * 
- * Parameters:
- * url - {String} Optional url used to extract the query string.
- *                If null, query string is taken from page location.
- * 
- * Returns:
- * {Object} An object of key/value pairs from the query string.
- */
-OpenLayers.Util.getArgs = function(url) {
-    OpenLayers.Console.warn(
-        OpenLayers.i18n(
-            "methodDeprecated", {'newMethod': 'OpenLayers.Util.getParameters'}
-        )
-    );
-    return OpenLayers.Util.getParameters(url);
-};
-
-/**
  * Property: lastSeqID
  * {Integer} The ever-incrementing count variable.
  *           Used for generating unique ids.
@@ -1153,22 +1121,6 @@ OpenLayers.Util.getScaleFromResolution = function (resolution, units) {
     var scale = resolution * OpenLayers.INCHES_PER_UNIT[units] *
                     OpenLayers.DOTS_PER_INCH;
     return scale;
-};
-
-/**
- * Function: safeStopPropagation
- * *Deprecated*. This function has been deprecated. Please use directly 
- *     <OpenLayers.Event.stop> passing 'true' as the 2nd 
- *     argument (preventDefault)
- * 
- * Safely stop the propagation of an event *without* preventing
- *   the default browser action from occurring.
- * 
- * Parameter:
- * evt - {Event}
- */
-OpenLayers.Util.safeStopPropagation = function(evt) {
-    OpenLayers.Event.stop(evt, true);
 };
 
 /**
@@ -1376,10 +1328,12 @@ OpenLayers.Util.isEquivalentUrl = function(url1, url2, options) {
  * 
  * Parameters:
  * url - {String}
- * options - {Object} A hash of options.  Can be one of:
- *            ignoreCase: lowercase url,
- *            ignorePort80: don't include explicit port if port is 80,
- *            ignoreHash: Don't include part of url after the hash (#).
+ * options - {Object} A hash of options.
+ *
+ * Valid options:
+ *   ignoreCase - {Boolean} lowercase url,
+ *   ignorePort80 - {Boolean} don't include explicit port if port is 80,
+ *   ignoreHash - {Boolean} Don't include part of url after the hash (#).
  * 
  * Returns:
  * {Object} An object with separate url, a, port, host, and args parsed out 
@@ -1554,7 +1508,7 @@ OpenLayers.Util.getBrowserName = function() {
  *         this node instead of the body root when calculating dimensions. 
  * 
  * Returns:
- * {OpenLayers.Size}
+ * {<OpenLayers.Size>}
  */
 OpenLayers.Util.getRenderedDimensions = function(contentHTML, size, options) {
     

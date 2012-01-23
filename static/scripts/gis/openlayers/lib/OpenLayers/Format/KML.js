@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -573,9 +573,9 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
                         this.styles[(options.styleBaseUrl || "") + styleUrl];
                 }
 
-                if (styleUrl && key == "highlight") {
-                    // TODO: implement the "select" part
-                }
+                // TODO: implement the "select" part
+                //if (styleUrl && key == "highlight") {
+                //}
 
             }
         }
@@ -1393,7 +1393,7 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
      * Parameters:
      * geometry - {<OpenLayers.Geometry>}
      * 
-     * Return:
+     * Returns:
      * {DOMElement}
      */     
     buildCoordinatesNode: function(geometry) {

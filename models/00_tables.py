@@ -23,7 +23,13 @@ import eden.doc
 import eden.hrm
 import eden.project
 import eden.supply
+import eden.inv
+import eden.req
+import eden.proc
+import eden.asset
+import eden.vehicle
 import eden.irs
+import eden.fire
 import eden.delphi
 import eden.dvi
 import eden.support
@@ -424,6 +430,7 @@ def address_onvalidation(form):
                                          feature=location,
                                          ids=False,
                                          names=True)
+
 s3.address_onvalidation = address_onvalidation
 
 def address_update(table, record_id):
@@ -473,6 +480,8 @@ def address_update(table, record_id):
                                          names=True)
             # Update record
             db(table.id == record_id).update(**vars)
+
+s3.address_update = address_update
 
 # =============================================================================
 # Default CRUD strings

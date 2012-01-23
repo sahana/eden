@@ -92,19 +92,14 @@ def shelter():
     """
 
     tablename = "cr_shelter"
-    table = db[tablename]
+    table = s3db[tablename]
 
     # Load Models to add tabs
-    if deployment_settings.has_module("inv"):
-        s3mgr.load("inv_inv_item")
-    elif deployment_settings.has_module("req"):
+    if deployment_settings.has_module("req"):
         # (gets loaded by Inv if available)
         s3mgr.load("req_req")
 
-    # Prepare the Presence table for use by Shelters
-    s3mgr.load("pr_presence")
-
-    field = db.pr_presence.shelter_id
+    field = s3db.pr_presence.shelter_id
     field.requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter.id",
                                           "%(name)s",
                                           sort=True))
@@ -132,14 +127,14 @@ def shelter():
     field.writable = True
 
     # Make pr_presence.pe_id visible:
-    pe_id = db.pr_presence.pe_id
+    pe_id = s3db.pr_presence.pe_id
     pe_id.readable = True
     pe_id.writable = True
 
     # Usually, the pe_id field is an invisible foreign key, therefore it
     # has no default representation/requirements => need to add this here:
     pe_id.label = T("Person/Group")
-    pe_id.represent = s3.pr_pentity_represent
+    pe_id.represent = s3db.pr_pentity_represent
     pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                s3.pr_pentity_represent,
                                filterby="instance_type",
@@ -182,7 +177,7 @@ def cr_shelter_prep(r):
     """
 
     if r.component and r.component.name == "presence":
-        r.resource.add_filter(db.pr_presence.closed == False)
+        r.resource.add_filter(s3db.pr_presence.closed == False)
 
     if r.interactive:
         if r.method != "read":
@@ -195,14 +190,14 @@ def cr_shelter_prep(r):
                r.component.name == "recv" or \
                r.component.name == "send":
                 # Filter out items which are already in this inventory
-                response.s3.inv_prep(r)
+                s3db.inv_prep(r)
 
             elif r.component.name == "human_resource":
                 # Filter out people which are already staff for this warehouse
                 s3_filter_staff(r)
                 # Cascade the organisation_id from the hospital to the staff
-                db.hrm_human_resource.organisation_id.default = r.record.organisation_id
-                db.hrm_human_resource.organisation_id.writable = False
+                s3db.hrm_human_resource.organisation_id.default = r.record.organisation_id
+                s3db.hrm_human_resource.organisation_id.writable = False
 
             elif r.component.name == "rat":
                 # Hide the Implied fields
@@ -211,8 +206,8 @@ def cr_shelter_prep(r):
                 db.assess_rat.location_id.comment = ""
                 # Set defaults
                 if auth.is_logged_in():
-                    query = (db.pr_person.uuid == session.auth.user.person_uuid) & \
-                            (db.hrm_human_resource.person_id == db.pr_person.id)
+                    query = (s3db.pr_person.uuid == session.auth.user.person_uuid) & \
+                            (s3db.hrm_human_resource.person_id == db.pr_person.id)
                     staff_id = db(query).select(db.hrm_human_resource.id,
                                                 limitby=(0, 1)).first()
                     if staff_id:
@@ -278,28 +273,20 @@ def cr_shelter_prep(r):
                 if r.method != "update" and r.method != "read":
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
-                    response.s3.req_create_form_mods()
+                    s3db.req_create_form_mods()
 
     return True
 # =============================================================================
 def incoming():
     """ Incoming Shipments """
 
-    s3mgr.load("inv_inv_item")
-    try:
-        return response.s3.inv_incoming()
-    except TypeError:
-        return None
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
-def req_match():
+def match():
     """ Match Requests """
 
-    s3mgr.load("req_req")
-    try:
-        return response.s3.req_match()
-    except TypeError:
-        return None
+    return req_match()
 
 # =============================================================================
 # This code provides urls of the form:

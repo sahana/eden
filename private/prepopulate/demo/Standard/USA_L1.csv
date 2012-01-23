@@ -1,52 +1,52 @@
-"ADM0_NAME","ADM1_NAME","CODE"
-"United States","Alabama","AL"
-"United States","Alaska","AK"
-"United States","Arizona","AZ"
-"United States","Arkansas","AR"
-"United States","California","CA"
-"United States","Colorado","CO"
-"United States","Connecticut","CT"
-"United States","Delaware","DE"
-"United States","District of Columbia","DC"
-"United States","Florida","FL"
-"United States","Georgia","GA"
-"United States","Hawaii","HI"
-"United States","Idaho","ID"
-"United States","Illinois","IL"
-"United States","Indiana","IN"
-"United States","Iowa","IA"
-"United States","Kansas","KS"
-"United States","Kentucky","KY"
-"United States","Louisiana","LA"
-"United States","Maine","ME"
-"United States","Maryland","MD"
-"United States","Massachusetts","MA"
-"United States","Michigan","MI"
-"United States","Minnesota","MN"
-"United States","Mississippi","MS"
-"United States","Missouri","MO"
-"United States","Montana","MT"
-"United States","Nebraska","NE"
-"United States","Nevada","NV"
-"United States","New Hampshire","NH"
-"United States","New Jersey","NJ"
-"United States","New Mexico","NM"
-"United States","New York","NY"
-"United States","North Carolina","NC"
-"United States","North Dakota","ND"
-"United States","Ohio","OH"
-"United States","Oklahoma","OK"
-"United States","Oregon","OR"
-"United States","Pennsylvania","PA"
-"United States","Rhode Island","RI"
-"United States","South Carolina","SC"
-"United States","South Dakota","SD"
-"United States","Tennessee","TN"
-"United States","Texas","TX"
-"United States","Utah","UT"
-"United States","Vermont","VT"
-"United States","Virginia","VA"
-"United States","Washington","WA"
-"United States","West Virginia","WV"
-"United States","Wisconsin","WI"
-"United States","Wyoming","WY"
+Country,ADM1_NAME,ADM1_CODE
+US,Alabama,AL
+US,Alaska,AK
+US,Arizona,AZ
+US,Arkansas,AR
+US,California,CA
+US,Colorado,CO
+US,Connecticut,CT
+US,Delaware,DE
+US,District of Columbia,DC
+US,Florida,FL
+US,Georgia,GA
+US,Hawaii,HI
+US,Idaho,ID
+US,Illinois,IL
+US,Indiana,IN
+US,Iowa,IA
+US,Kansas,KS
+US,Kentucky,KY
+US,Louisiana,LA
+US,Maine,ME
+US,Maryland,MD
+US,Massachusetts,MA
+US,Michigan,MI
+US,Minnesota,MN
+US,Mississippi,MS
+US,Missouri,MO
+US,Montana,MT
+US,Nebraska,NE
+US,Nevada,NV
+US,New Hampshire,NH
+US,New Jersey,NJ
+US,New Mexico,NM
+US,New York,NY
+US,North Carolina,NC
+US,North Dakota,ND
+US,Ohio,OH
+US,Oklahoma,OK
+US,Oregon,OR
+US,Pennsylvania,PA
+US,Rhode Island,RI
+US,South Carolina,SC
+US,South Dakota,SD
+US,Tennessee,TN
+US,Texas,TX
+US,Utah,UT
+US,Vermont,VT
+US,Virginia,VA
+US,Washington,WA
+US,West Virginia,WV
+US,Wisconsin,WI
+US,Wyoming,WY

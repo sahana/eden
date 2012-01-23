@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -94,7 +94,7 @@ OpenLayers.Control.Navigation = OpenLayers.Class(OpenLayers.Control, {
      *    You should probably set handleRightClicks to true if you use this
      *    with MOD_CTRL, to disable the context menu for machines which use
      *    CTRL-Click as a right click.
-     * Default: <OpenLayers.Handler.MOD_SHIFT
+     * Default: <OpenLayers.Handler.MOD_SHIFT>
      */
     zoomBoxKeyMask: OpenLayers.Handler.MOD_SHIFT,
     

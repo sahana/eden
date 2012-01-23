@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -49,7 +49,7 @@ OpenLayers.Feature = OpenLayers.Class({
     /**
      * APIProperty: popupClass
      * {<OpenLayers.Class>} The class which will be used to instantiate
-     *     a new Popup. Default is <OpenLayers.Popup.AnchoredBubble>.
+     *     a new Popup. Default is <OpenLayers.Popup.Anchored>.
      */
     popupClass: null,
 
@@ -188,7 +188,7 @@ OpenLayers.Feature = OpenLayers.Class({
             if (!this.popup) {
                 var anchor = (this.marker) ? this.marker.icon : null;
                 var popupClass = this.popupClass ? 
-                    this.popupClass : OpenLayers.Popup.AnchoredBubble;
+                    this.popupClass : OpenLayers.Popup.Anchored;
                 this.popup = new popupClass(this.id + "_popup", 
                                             this.lonlat,
                                             this.data.popupSize,

@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2011 by OpenLayers Contributors (see authors.txt for 
+/* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
  * full list of contributors). Published under the Clear BSD license.  
  * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
  * full text of the license. */
@@ -114,7 +114,7 @@ OpenLayers.Layer.MapServer = OpenLayers.Class(OpenLayers.Layer.Grid, {
      * Method: getFullRequestString
      * combine the layer's url with its params and these newParams. 
      *   
-     * Parameter:
+     * Parameters:
      * newParams - {Object} New parameters that should be added to the 
      *                      request string.
      * altUrl - {String} (optional) Replace the URL in the full request  

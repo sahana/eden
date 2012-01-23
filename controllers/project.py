@@ -423,7 +423,7 @@ def task():
                         r.component.table.type.default = 3
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
-                        response.s3.req_create_form_mods()
+                        s3db.req_create_form_mods()
                 elif r.component_name == "human_resource":
                     r.component.table.type.default = 2
 

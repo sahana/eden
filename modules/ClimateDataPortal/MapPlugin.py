@@ -396,14 +396,14 @@ function (
     legend_height_inches <- grconvertY(
         -(
             (legend_line_count * 11) + 
-            (length(wrapped_names) * 6)
+            (length(wrapped_names) * 6) + 30
         ),
         "device",
         "inches"
     ) - grconvertY(0, "device", "inches")
     par(
         xpd = T,
-        mai = (par()$mai + c(legend_height_inches, 0, 0, 0))
+        mai = (par()$mai + c(legend_height_inches , 0, 0, 0))
     )
     ts.plot(...,
         gpars = list(
@@ -425,7 +425,7 @@ function (
         par()$usr[1],
         par()$usr[3] - (
             grconvertY(0, "device", "user") -
-            grconvertY(40, "device", "user")
+            grconvertY(70, "device", "user")
         ),
         wrapped_names,
         cex = 0.8,

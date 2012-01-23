@@ -166,6 +166,7 @@ class S3LocationModel(S3Model):
                                   #Field("ce", "integer", writable=False, readable=False), # Circular 'Error' around Lat/Lon (in m). Needed for CoT.
                                   #Field("le", "integer", writable=False, readable=False), # Linear 'Error' for the Elevation (in m). Needed for CoT.
                                   Field("area", "double", writable=False, readable=False), # Area of the Polygon (in km2).
+                                  Field("population", "integer", writable=False, readable=False), # Population of the Location
                                   Field("source", length=32,
                                         requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                                   s3.comments(),
@@ -232,6 +233,7 @@ class S3LocationModel(S3Model):
             title_list = T("Locations"),
             title_update = T("Edit Location"),
             title_search = T("Search Locations"),
+            title_upload = T("Import Locations"),
             subtitle_create = T("Add New Location"),
             subtitle_list = LIST_LOCATIONS,
             label_list_button = LIST_LOCATIONS,
@@ -323,6 +325,7 @@ class S3LocationModel(S3Model):
         auth = current.auth
         request = current.request
         response = current.response
+        session = current.session
         s3 = response.s3
 
         system_roles = session.s3.system_roles
