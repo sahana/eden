@@ -1,5 +1,4 @@
 /** 
- * @requires Rico/license.js
  * @requires OpenLayers/Console.js
  * @requires OpenLayers/BaseTypes/Class.js
  * @requires OpenLayers/BaseTypes/Element.js

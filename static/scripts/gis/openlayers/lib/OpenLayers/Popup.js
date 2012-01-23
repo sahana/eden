@@ -431,7 +431,9 @@ OpenLayers.Popup = OpenLayers.Class({
      * Makes the popup visible.
      */
     show: function() {
-        this.div.style.display = '';
+        if (this.div != null) {
+            this.div.style.display = '';
+        }
 
         if (this.panMapIfOutOfView) {
             this.panIntoView();
@@ -443,7 +445,9 @@ OpenLayers.Popup = OpenLayers.Class({
      * Makes the popup invisible.
      */
     hide: function() {
-        this.div.style.display = 'none';
+        if (this.div != null) {
+            this.div.style.display = 'none';
+        }
     },
 
     /**
