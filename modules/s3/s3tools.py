@@ -423,8 +423,7 @@ class S3BulkImporter(object):
             # Store the view
             view = response.view
 
-            auth = current.auth
-            deployment_settings = auth.deployment_settings
+            deployment_settings = current.deployment_settings
 
             _debug ("Running job %s %s (filename=%s transform=%s)" % (task[1], task[2], task[3], task[4]))
             prefix = task[1]
