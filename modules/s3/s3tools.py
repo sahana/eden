@@ -57,7 +57,7 @@ from gluon.tools import Crud
 
 from s3validators import IS_UTC_OFFSET
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     print >> sys.stderr, "S3Tools: DEBUG MODE"
     def _debug(m):
@@ -443,39 +443,34 @@ class S3BulkImporter(object):
                     prefix = details["prefix"]
                 if "name" in details:
                     name = details["name"]
-            else:
-                manager.load(tablename)
-            # Skip the job if the target table doesn't exist
-            if tablename not in db:
+
+            try:
+                resource = manager.define_resource(prefix, name)
+            except KeyError:
+                # Table cannot be loaded
                 self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)
-                return
+
             # Check if the source file is accessible
             try:
                 csv = open(task[3], "r")
             except IOError:
                 self.errorList.append(errorString % task[3])
                 return
+
             # Check if the stylesheet is accessible
             try:
                 open(task[4], "r")
             except IOError:
                 self.errorList.append(errorString % task[4])
                 return
-            # Create a request
-            vars = dict(filename=task[3], transform=task[4])
-            # Old back-end
-            r = manager.parse_request(prefix=prefix,
-                                      name=name,
-                                      args=["create.s3csv"],
-                                      vars=vars)
-            # @todo: attach files for upload like:
-            #resource = r.resource
-            #resource.files = {filename:open(filename, "rb")}
-            # Execute the request
-            output = r()
-            # If it doesn't import - use this to check the
-            # returned message and error tree for validation errors:
-            #print >> sys.stderr, "%s=%s" % (r.tablename, output)
+
+            try:
+                result = resource.import_xml(csv,
+                                             format="csv",
+                                             stylesheet=task[4])
+            except SyntaxError, e:
+                self.errorList.append("WARNING: import error - %s" % e)
+
             db.commit()
             _debug ("%s import job completed" % tablename)
 
