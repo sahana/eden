@@ -537,7 +537,6 @@ class S3LocationAutocompleteWidget(FormWidget):
                  delay = 450,     # milliseconds
                  min_length = 2): # Increase this for large deployments
 
-        self.deployment_settings = current.deployment_settings
         self.prefix = prefix
         self.resourcename = resourcename
         self.fieldname = fieldname
@@ -582,17 +581,12 @@ class S3LocationAutocompleteWidget(FormWidget):
                             "exclude_value":"XX"})
 
         # Which Levels do we have in our hierarchy & what are their Labels?
-        #location_hierarchy = gis.get_location_hierarchy()
-        location_hierarchy = self.deployment_settings.gis.location_hierarchy
-        try:
-            # Ignore the bad bulk-imported data
-            del location_hierarchy["XX"]
-        except KeyError:
-            pass
-        # What is the maximum level of hierarchy?
-        #max_hierarchy = gis.get_max_hierarchy_level()
-        # Is full hierarchy mandatory?
-        #strict = gis.get_strict_hierarchy()
+        #location_hierarchy = current.deployment_settings.gis.location_hierarchy
+        #try:
+        #    # Ignore the bad bulk-imported data
+        #    del location_hierarchy["XX"]
+        #except:
+        #    pass
 
         return S3GenericAutocompleteTemplate(
             self.post_process,
@@ -1349,7 +1343,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                 gis.set_temporary_config(config_L0.id)
         location_hierarchy = gis.get_location_hierarchy()
         # This is all levels to start, but L0 will be dropped later.
-        levels = gis.allowed_hierarchy_level_keys
+        levels = gis.hierarchy_level_keys
         if config_L0:
             gis.restore_config()
 

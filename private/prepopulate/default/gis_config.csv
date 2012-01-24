@@ -1,0 +1,2 @@
+Name,Region,Default,Zoom,Lat,Lon,L1,L2,L3,Projection,Symbology,Marker,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
+Site,,,2,22.593723263,5.28516253,"State / Province","County / District","City / Town / Village",900913,US,marker_red,-90,90,-180,180,

@@ -621,9 +621,9 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 letter = label[0].upper()
                 if letter not in letter_options:
                     letters.append(letter)
-                    letter_options[letter] = [(key,label)]
+                    letter_options[letter] = [(key, label)]
                 else:
-                    letter_options[letter].append((key,label))
+                    letter_options[letter].append((key, label))
 
             # Ensure that letters contains A & Z
             # (For usability to ensure that the complete range is displayed)
@@ -650,10 +650,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 if count > MAX_OPTIONS or letter == "Z":
                     if not options:
                         options = letter_option
-                    #Are these options for a single letter or a range?
+                    # Are these options for a single letter or a range?
                     if to_letter != from_letter:
                         letter = "%s - %s" % (from_letter, to_letter)
-                    #Letter Label
+                    # Letter Label
                     widget.append(DIV( letter,
                                        _id = "%s_search_select_%s_label_%s" %
                                                 (resource.name,

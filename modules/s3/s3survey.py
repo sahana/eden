@@ -973,6 +973,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
     def __init__(self,
                  question_id
                 ):
+
         self.ANSWER_VALID = 0
         self.ANSWER_MISSING = 1
         self.ANSWER_PARTLY_VALID = 2
@@ -2025,25 +2026,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         T = current.T
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.typeDescription = T("Location")
-#        # @todo:  modify so that the metdata can define which bits are displayed
-#        settings = current.deployment_settings
-#        self.hierarchyElements = [str(settings.gis.location_hierarchy["L0"]),
-#                                 str(settings.gis.location_hierarchy["L1"]),
-#                                 str(settings.gis.location_hierarchy["L2"]),
-#                                 str(settings.gis.location_hierarchy["L3"]),
-#                                 str(settings.gis.location_hierarchy["L4"]),
-#                                 "Latitude",
-#                                 "Longitude",
-#                                ]
-#        self.hierarchyAnswers = ["L0",
-#                                 "L1",
-#                                 "L2",
-#                                 "L3",
-#                                 "L4",
-#                                 "Latitude",
-#                                 "Longitude",
-#                                ]
-#        self.locationLabel = self.hierarchyAnswers[0:-2]
         self.xlsWidgetSize = [12,0]
 
     def canGrowHorizontal(self):

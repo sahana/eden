@@ -1,0 +1,25 @@
+"UUID","Name","Marker","GPS Marker","Resource","Filter Field","Filter Value"
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-TRACK","Track",,"TracBack Point","gis_track",,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-L0","Country",,,,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-L1","Province",,,,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-L2","District",,,,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-L3","Town",,"City (Medium)",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-L4","Village",,"City (Small)",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-AIRPORT","Airport","airport","Airport",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-BRIDGE","Bridge","bridge","Bridge",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-CHURCH","Church","church","Church",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-FOOD","Food","food","Restaurant",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-HOSPITAL","Hospital","hospital","Medical Facility","hms_hospital",,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-INCIDENT","Incident",,"Danger Area",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-OFFICE","Office","office","Building","org_office",,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-PERSON","Person","person","Contact, Dreadlocks","pr_person",,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-PORT","Port","port","Marina",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-PROJECT","Project",,,,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-SCHOOL","School","school","School",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-SHELTER","Shelter","shelter","Campground","cr_shelter",,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-SMS","SMS","phone",,,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-VEHICLE","Vehicle","vehicle","Car","asset_asset","type",1
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-WAREHOUSE","Warehouse","office","Building",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-WATER","Water","water","Drinking Water",,,
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-STAFF","Staff","person","Contact, Dreadlocks","hrm_human_resource","type",1
+"www.sahanafoundation.org/GIS-FEATURE-CLASS-VOLUNTEER","Volunteer","volunteer","Contact, Dreadlocks","hrm_human_resource","type",2

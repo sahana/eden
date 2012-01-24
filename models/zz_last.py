@@ -10,6 +10,8 @@ current.s3task = s3task
 # -----------------------------------------------------------------------------
 # GIS config
 # -----------------------------------------------------------------------------
+s3.gis.old_config = session.s3.gis_config_id
+
 if request.vars._config:
     # The user has just selected a config from the GIS menu
     try:
@@ -34,7 +36,7 @@ if request.vars._config:
     # when the next page loads. Then do the same for _language.
     del request.vars._config
 
-if session.s3.gis_config_id != _gis.old_config:
+if session.s3.gis_config_id != s3.gis.old_config:
     # Set the field options that depend on the currently selected gis_config,
     # and hence on a particular set of labels for the location hierarchy.
     gis.set_config(session.s3.gis_config_id, force_update_dependencies=True)

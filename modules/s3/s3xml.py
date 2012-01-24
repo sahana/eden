@@ -37,6 +37,7 @@
 
 __all__ = ["S3XML"]
 
+import os
 import sys
 import csv
 import datetime
@@ -200,7 +201,7 @@ class S3XML(S3Codec):
         """
 
         self.error = None
-        if isinstance(source, basestring) and source[:5] == "https":
+        if isinstance(source, basestring) and source[:4] == "http":
             try:
                 source = urllib2.urlopen(source)
             except:
@@ -612,6 +613,7 @@ class S3XML(S3Codec):
 
         gis = current.gis
         db = current.db
+        s3db = current.s3db
 
         # Quicker to download Icons from Static
         # also doesn't require authentication so KML files can work in
@@ -631,7 +633,7 @@ class S3XML(S3Codec):
                 r_id = r.id[0]
             else:
                 continue # Multi-reference
-            ktable = db[r.table]
+            ktable = s3db[r.table]
             LatLon = db(ktable.id == r_id).select(ktable[self.Lat],
                                                   ktable[self.Lon],
                                                   limitby=(0, 1))
@@ -1022,15 +1024,29 @@ class S3XML(S3Codec):
                 filename = child.get(self.ATTRIBUTE.filename, None)
                 upload = None
                 if filename and filename in files:
+                    # We already have the file cached
                     upload = files[filename]
+                elif download_url == "local":
+                    # File is already in-place
+                    value = filename
+                    # Read from the filesystem
+                    # uploadfolder = table[f].uploadfolder
+                    # if not uploadfolder:
+                        # uploadfolder = os.path.join(current.request.folder,
+                                                    # "uploads")
+                    # filepath = os.path.join(uploadfolder, filename)
+                    # try:
+                        # upload = open(filepath, r)
+                    # except IOError:
+                        # continue
                 elif download_url:
+                    # Download file from Internet
                     if not filename:
                         try:
                             filename = download_url.split("?")[0]
                         except:
                             # Fake filename as fallback
                             filename = "upload.bin"
-                    import urllib2
                     try:
                         upload = urllib2.urlopen(download_url)
                     except IOError:
@@ -1038,7 +1054,7 @@ class S3XML(S3Codec):
                 if upload:
                     field = table[f]
                     value = field.store(upload, filename)
-                else:
+                elif download_url != "local":
                     continue
             else:
                 value = child.get(self.ATTRIBUTE.value, None)
@@ -1080,9 +1096,9 @@ class S3XML(S3Codec):
                     else:
                         v = value
                     try:
-                        if field_type == "upload":
+                        if field_type == "upload" and download_url != "local":
                             fn, ff = field.retrieve(value)
-                            v = Storage({"filename":fn, "file": ff})
+                            v = Storage({"filename": fn, "file": ff})
                             (v, error) = validate(table, original, f, v)
                         elif field_type == "password":
                             v = value

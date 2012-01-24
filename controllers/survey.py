@@ -16,6 +16,12 @@
 
 """
 
+module = request.controller
+resourcename = request.function
+
+if module not in deployment_settings.modules:
+    raise HTTP(404, body="Module disabled: %s" % module)
+
 import sys
 sys.path.append("applications/%s/modules/s3" % request.application)
 try:
@@ -39,20 +45,13 @@ from s3survey import S3AnalysisPriority, \
                      S3QuestionTypeOptionWidget, \
                      survey_T
 
-module = request.controller
-prefix = request.controller
-resourcename = request.function
-
-if not deployment_settings.has_module(prefix):
-    raise HTTP(404, body="Module disabled: %s" % prefix)
-
 s3_menu(module)
 
 def index():
 
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[prefix].name_nice
+    module_name = deployment_settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -61,9 +60,8 @@ def template():
     """ RESTful CRUD controller """
 
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
+    s3mgr.load("survey_template")
+    table = s3db.survey_template
     s3 = response.s3
 
     def prep(r):
@@ -171,20 +169,22 @@ def template():
     response.s3.postp = postp
     rheader = response.s3.survey_template_rheader
     # remove CRUD generated buttons in the tabs
-    s3mgr.configure(tablename,
+    s3mgr.configure("survey_template",
                     listadd=False,
                     deletable=False,
                    )
-    output = s3_rest_controller(prefix, resourcename, rheader=rheader)
+    output = s3_rest_controller(module, resourcename, rheader=rheader)
 
     return output
 
 def templateRead():
     # Load Model
-    prefix = "survey"
+    module = "survey"
     resourcename = "template"
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
+    s3mgr.load("survey_complete")
+
     s3 = response.s3
     crud_strings = s3.crud_strings[tablename]
     if "vars" in request and len(request.vars) > 0:
@@ -210,17 +210,18 @@ def templateRead():
                    )
 
     response.s3.postp = postp
-    r = s3mgr.parse_request(prefix, resourcename, args=[template_id])
+    r = s3mgr.parse_request(module, resourcename, args=[template_id])
     output  = r(method = "read", rheader=s3.survey_template_rheader)
     del output["list_btn"] # Remove the list button
     return output
 
 def templateSummary():
     # Load Model
-    prefix = "survey"
+    module = "survey"
     resourcename = "template"
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
+    s3mgr.load("survey_complete")
     s3 = response.s3
     crud_strings = s3.crud_strings[tablename]
 
@@ -244,7 +245,7 @@ def templateSummary():
                    )
 
     response.s3.postp = postp
-    output = s3_rest_controller(prefix,
+    output = s3_rest_controller(module,
                                 resourcename,
                                 method = "list",
                                 rheader=s3.survey_template_rheader
@@ -254,10 +255,12 @@ def templateSummary():
 
 def templateTranslateDownload():
     # Load Model
-    prefix = "survey"
+    module = "survey"
     resourcename = "translate"
-    tablename = "%s_%s" % (prefix, resourcename)
-    s3mgr.load(tablename)
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load("survey_template")
+    s3mgr.load("survey_translate")
+    s3mgr.load("survey_complete")
 
     try:
         import xlwt
@@ -345,10 +348,11 @@ def templateTranslateDownload():
 def series():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
-    response.s3.survey_answerlist_dataTable_pre()
+    s3 = response.s3
+    s3.survey_answerlist_dataTable_pre()
 
     def prep(r):
         if r.interactive:
@@ -392,24 +396,25 @@ def series():
     s3mgr.configure("survey_complete",
                     listadd=False,
                     deletable=False)
-    response.s3.prep = prep
-    response.s3.postp = postp
-    output = s3_rest_controller(prefix,
+    s3.prep = prep
+    s3.postp = postp
+    output = s3_rest_controller(module,
                                 resourcename,
-                                rheader=response.s3.survey_series_rheader)
+                                rheader=s3.survey_series_rheader)
     return output
 
 def series_export_formatted():
-    prefix = "survey"
+    module = "survey"
     resourcename = "series"
-    tablename = "%s_%s" % (prefix, resourcename)
-    s3mgr.load(tablename)
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load("survey_series")
+    s3mgr.load("survey_complete")
     crud_strings = response.s3.crud_strings[tablename]
 
     try:
         import xlwt
     except ImportError:
-        output = s3_rest_controller(prefix,
+        output = s3_rest_controller(module,
                                 resourcename,
                                 rheader=response.s3.survey_series_rheader)
         return output
@@ -425,7 +430,7 @@ def series_export_formatted():
     ######################################################################
     # Check that the series_id has been passed in
     if len(request.args) != 1:
-        output = s3_rest_controller(prefix,
+        output = s3_rest_controller(module,
                                     resourcename,
                                     rheader=response.s3.survey_series_rheader)
         return output
@@ -943,10 +948,11 @@ def completed_chart():
         chart drawn is managed by the analysis widget.
     """
     # Load Model
-    prefix = "survey"
+    module = "survey"
     resourcename = "series"
-    tablename = "%s_%s" % (prefix, resourcename)
-    s3mgr.load(tablename)
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load("survey_series")
+    s3mgr.load("survey_question")
     if "series_id" in request.vars:
         seriesID = request.vars.series_id
     else:
@@ -969,7 +975,7 @@ def completed_chart():
 def section():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
 
@@ -996,7 +1002,7 @@ def section():
     response.s3.postp = postp
 
     rheader = response.s3.survey_section_rheader
-    output = s3_rest_controller(prefix, resourcename, rheader=rheader)
+    output = s3_rest_controller(module, resourcename, rheader=rheader)
     return output
 
 
@@ -1004,7 +1010,7 @@ def section():
 def question():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
 
@@ -1023,46 +1029,48 @@ def question():
     response.s3.postp = postp
 
     rheader = response.s3.survey_section_rheader
-    output = s3_rest_controller(prefix, resourcename, rheader=rheader)
+    output = s3_rest_controller(module, resourcename, rheader=rheader)
     return output
 
 def question_list():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
+    s3mgr.load("survey_complete")
     table = db[tablename]
 
-    output = s3_rest_controller(prefix, resourcename)
+    output = s3_rest_controller(module, resourcename)
     return output
 
 def formatter():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
 
-    output = s3_rest_controller(prefix, resourcename)
+    output = s3_rest_controller(module, resourcename)
     return output
 
 def question_metadata():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
 
-    output = s3_rest_controller(prefix, resourcename)
+    output = s3_rest_controller(module, resourcename)
     return output
 
 def newAssessment():
     """ RESTful CRUD controller """
     # Load Model
-    prefix = "survey"
+    module = "survey"
     resourcename = "complete"
-    tablename = "%s_%s" % (prefix, resourcename)
-    s3mgr.load(tablename)
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load("survey_complete")
+    s3mgr.load("survey_series")
     table = db[tablename]
     s3 = response.s3
 
@@ -1154,7 +1162,7 @@ def newAssessment():
 
     response.s3.prep = prep
     response.s3.postp = postp
-    output = s3_rest_controller(prefix,
+    output = s3_rest_controller(module,
                                 resourcename,
                                 method = "create",
                                 rheader=s3.survey_series_rheader
@@ -1165,30 +1173,14 @@ def newAssessment():
 def complete():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
     s3 = response.s3
     s3.survey_answerlist_dataTable_pre()
 
-    def prep(r):
-        if r.method == "create" or r.method == "update":
-            if "post_vars" in request and len(request.post_vars) > 0:
-                complete_id = r.component_id
-                id = s3.survey_save_answers_for_complete(r.id,
-                                                         request.post_vars)
-                session.confirmation = T("Record created")
-                redirect(URL(c="survey",
-                             f="complete",
-                             args=[r.id,"create"],
-                             vars = {}))
-        return True
-
     def postp(r, output):
-        if r.method == "create" or r.method == "update":
-            form = s3.survey_buildQuestionnaire(r.id)
-            output["form"] = form
-        elif r.method == "import":
+        if r.method == "import":
             pass # don't want the import dataTable to be modified
         else:
             s3.survey_answerlist_dataTable_post(r)
@@ -1283,27 +1275,27 @@ def complete():
     s3mgr.configure("survey_complete",
                     listadd=False,
                     deletable=False)
-    response.s3.prep = prep
+
     response.s3.postp = postp
     response.s3.xls_parser = import_xls
-    output = s3_rest_controller(prefix, resourcename,
+    output = s3_rest_controller(module, resourcename,
                                 csv_extra_fields=csv_extra_fields)
     return output
 
 def answer():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (prefix, resourcename)
+    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     table = db[tablename]
 
-    output = s3_rest_controller(prefix, resourcename)
+    output = s3_rest_controller(module, resourcename)
     return output
 
 def analysis():
     """ Bespoke controller """
     # Load Model
-#    tablename = "%s_%s" % (prefix, resourcename)
+#    tablename = "%s_%s" % (module, resourcename)
 #    s3mgr.load(tablename)
 #    table = db[tablename]
     try:
@@ -1313,5 +1305,5 @@ def analysis():
     s3mgr.configure("survey_complete",
                     listadd=False,
                     deletable=False)
-    output = s3_rest_controller(prefix, "complete")
+    output = s3_rest_controller(module, "complete")
     return output
