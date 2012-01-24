@@ -329,19 +329,15 @@ class S3BulkImporter(object):
             The file consists of a comma separated list of:
             application, resource name, csv filename, xsl filename.
         """
+        import csv
         source = open(os.path.join(path, "tasks.cfg"), "r")
-        values = source.readlines()
-        source.close()
-        for tasks in values:
-            # strip out the new line
-            task = tasks.strip()
-            if task == "":
+        values = csv.reader(source)
+        for details in values:
+            if details == []:
                 continue
-            if task[0] == "#": # comment
+            prefix = details[0][0].strip('" ')
+            if prefix == "#": # comment
                 continue
-            # split at the comma
-            details = task.split(",")
-            prefix = details[0].strip('" ')
             if prefix == "*": # specialist function
                 self.extractSpecialistLine(path, details)
             else: # standard importer
@@ -351,7 +347,8 @@ class S3BulkImporter(object):
         """
             Method that extract the details for an import Task
         """
-        if len(details) == 4:
+        argCnt = len(details)
+        if argCnt == 4 or argCnt == 5:
              # remove any spaces and enclosing double quote
             app = details[0].strip('" ')
             res = details[1].strip('" ')
@@ -385,8 +382,11 @@ class S3BulkImporter(object):
                         self.errorList.append(
                         "Failed to find a transform file %s, Giving up." % xslFileName)
                         return
-            self.tasks.append([1, app, res, csv, xsl])
-            self.importTasks.append([app, res, csv, xsl])
+            vars = None
+            if argCnt == 5:
+                vars = details[4]
+            self.tasks.append([1, app, res, csv, xsl, vars])
+            self.importTasks.append([app, res, csv, xsl, vars])
         else:
             self.errorList.append(
             "prepopulate error: job not of length 4. %s job ignored" % task)
@@ -423,8 +423,7 @@ class S3BulkImporter(object):
             # Store the view
             view = response.view
 
-            auth = current.auth
-            deployment_settings = auth.deployment_settings
+            deployment_settings = current.deployment_settings
 
             _debug ("Running job %s %s (filename=%s transform=%s)" % (task[1], task[2], task[3], task[4]))
             prefix = task[1]
@@ -443,39 +442,50 @@ class S3BulkImporter(object):
                     prefix = details["prefix"]
                 if "name" in details:
                     name = details["name"]
-            else:
-                manager.load(tablename)
-            # Skip the job if the target table doesn't exist
-            if tablename not in db:
+
+            try:
+                resource = manager.define_resource(prefix, name)
+            except KeyError:
+                # Table cannot be loaded
                 self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)
                 return
+
             # Check if the source file is accessible
             try:
                 csv = open(task[3], "r")
             except IOError:
                 self.errorList.append(errorString % task[3])
                 return
+
             # Check if the stylesheet is accessible
             try:
                 open(task[4], "r")
             except IOError:
                 self.errorList.append(errorString % task[4])
                 return
-            # Create a request
-            vars = dict(filename=task[3], transform=task[4])
-            # Old back-end
-            r = manager.parse_request(prefix=prefix,
-                                      name=name,
-                                      args=["create.s3csv"],
-                                      vars=vars)
-            # @todo: attach files for upload like:
-            #resource = r.resource
-            #resource.files = {filename:open(filename, "rb")}
-            # Execute the request
-            output = r()
-            # If it doesn't import - use this to check the
-            # returned message and error tree for validation errors:
-            #print >> sys.stderr, "%s=%s" % (r.tablename, output)
+
+            extra_data = None
+            if task[5]:
+                try:
+                    import gluon.contrib.simplejson as json
+                    from xml.sax.saxutils import unescape
+                    extradata = unescape(task[5], {"'": '"'})
+                    extradata = json.loads(extradata)
+                    extra_data = extradata
+                except:
+                    pass
+            try:
+                # @todo: add extra_data and file attachments
+                result = resource.import_xml(csv,
+                                             format="csv",
+                                             stylesheet=task[4],
+                                             extra_data=extra_data)
+            except SyntaxError, e:
+                self.errorList.append("WARNING: import error - %s" % e)
+                return
+            # @todo: check result (=JSON message) for import errors
+            # and report them to stderr
+
             db.commit()
             _debug ("%s import job completed" % tablename)
 
