@@ -57,7 +57,7 @@ from gluon.tools import Crud
 
 from s3validators import IS_UTC_OFFSET
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3Tools: DEBUG MODE"
     def _debug(m):
