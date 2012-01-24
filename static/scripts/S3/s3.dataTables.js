@@ -364,7 +364,7 @@ $(document).ready(function() {
                     if (Actions[i]._onclick) {
                         var oc = Actions[i]._onclick.replace(re, id);
                         Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
-                    } else if (Actions[i]._jqclick){
+                    } else if (Actions[i]._jqclick) {
                         Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
                         actionCallBacks.push([id, S3ActionCallBack]);
                     }else {

@@ -1,0 +1,3 @@
+UUID,Name,EPSG,maxExtent,maxResolution,units
+"www.sahanafoundation.org/GIS-PROJECTION-900913","Spherical Mercator",900913,"-20037508, -20037508, 20037508, 20037508.34",156543.0339,"m"
+"www.sahanafoundation.org/GIS-PROJECTION-4326","WGS84",4326,"-180,-90,180,90",1.40625,"degrees"

@@ -596,7 +596,7 @@ class S3HRJobModel(S3Model):
                                                                   ##gis_location_represent_row,
                                                                   ##filterby="level",
                                                                   ### @ToDo Should this change per config?
-                                                                  ##filter_opts=gis.allowed_region_level_keys,
+                                                                  ##filter_opts=gis.region_level_keys,
                                                                   ##orderby="gis_location.name"),
                                                ##widget=None),
                                    #*s3.meta_fields())

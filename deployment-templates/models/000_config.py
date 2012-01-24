@@ -211,59 +211,6 @@ deployment_settings.L10n.religions = {
 deployment_settings.gis.display_L0 = False
 # Currently unused
 #deployment_settings.gis.display_L1 = True
-
-# Map settings that relate to locale, such as the number and names of the
-# location hierarchy levels, are now in gis_config.  The site-wide gis_config
-# will be populated from the settings here.
-# @ToDo: Move to 1st_run to avoid confusion
-deployment_settings.gis.location_hierarchy = OrderedDict([
-    ("L0", T("Country")),
-    ("L1", T("State")),
-     #("L2", "%s / %s / %s" % (T("County"), T("District")),
-    ("L3", "%s / %s / %s" % (T("City"), T("Town"), T("Village"))),
-    #("L2", T("City")),
-    #("L3", T("Town")),
-    #("L4", T("Neighborhood")),
-    #("L4", T("Village")),
-])
-# Maximum hierarchy level to allow for any map configuration.
-deployment_settings.gis.max_allowed_hierarchy_level = "L4"
-# @ToDo: Move to 1st_run to avoid confusion
-deployment_settings.gis.default_symbology = "US"
-# Default map configuration values for the site:
-# @ToDo: Move this to zzz_1st_run / prepopulate
-# @ToDo: Projections & Markers should use UUIDs not IDs
-deployment_settings.gis.default_config_values = Storage(
-    name = "Site Map Configuration",
-    # Where the map is centered:
-    lat = "22.593723263",
-    lon = "5.28516253",
-    # How close to zoom in initially -- larger is closer.
-    zoom = 2,
-    zoom_levels = 22,
-    projection_id = 1,
-    marker_id = 1,
-    map_height = 600,
-    map_width = 1000,
-    # Rough bounds for locations, used by onvalidation to filter out lon, lat
-    # which are obviously wrong (e.g. missing minus sign) or far outside the
-    # intended region.
-    min_lon = -180,
-    min_lat = -90,
-    max_lon = 180,
-    max_lat = 90,
-    # Optional source of map tiles.
-    #wmsbrowser_name = "Web Map Service",
-    #wmsbrowser_url = "http://geo.eden.sahanafoundation.org/geoserver/wms?service=WMS&request=GetCapabilities",
-    search_level = "L0",
-    # Should locations that link to a hierarchy location be required to link
-    # at the deepest level? (False means they can have a hierarchy location of
-    # any level as parent.)
-    strict_hierarchy = False,
-    # Should all specific locations (e.g. addresses, waypoints) be required to
-    # link to where they are in the location hierarchy?
-    location_parent_required = False
-)
 # Set this if there will be multiple areas in which work is being done,
 # and a menu to select among them is wanted. With this on, any map
 # configuration that is designated as being available in the menu will appear

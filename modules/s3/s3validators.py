@@ -746,12 +746,13 @@ class IS_LOCATION_SELECTOR(Validator):
         s3db = current.s3db
         auth = current.auth
         gis = current.gis
-        request = current.request
         response = current.response
         session = current.session
+
         table = s3db.gis_location
 
-        L0 = request.vars.get("gis_location_L0", None)
+        vars = current.request.vars
+        L0 = vars.get("gis_location_L0", None)
 
         # Are we allowed to create Locations?
         if not auth.s3_has_permission("create", table):
@@ -783,7 +784,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 L5_allowed = config.edit_L5
             else:
                 # default is deployment_setting
-                L1_allowed = response.s3.gis.edit_Lx
+                L1_allowed = current.deployment_settings.get_gis_edit_lx()
                 L2_allowed = L1_allowed
                 L3_allowed = L1_allowed
                 L4_allowed = L1_allowed
@@ -796,11 +797,11 @@ class IS_LOCATION_SELECTOR(Validator):
         # We don't use the full onaccept as we don't need to
         onaccept = gis.update_location_tree
 
-        L1 = request.vars.get("gis_location_L1", None)
-        L2 = request.vars.get("gis_location_L2", None)
-        L3 = request.vars.get("gis_location_L3", None)
-        L4 = request.vars.get("gis_location_L4", None)
-        L5 = request.vars.get("gis_location_L5", None)
+        L1 = vars.get("gis_location_L1", None)
+        L2 = vars.get("gis_location_L2", None)
+        L3 = vars.get("gis_location_L3", None)
+        L4 = vars.get("gis_location_L4", None)
+        L5 = vars.get("gis_location_L5", None)
 
         # Check if we have parents to create
         # L1
@@ -1019,17 +1020,19 @@ class IS_LOCATION_SELECTOR(Validator):
                     L5 = None
 
         # Check if we have a specific location to create
-        name = request.vars.get("gis_location_name", None)
-        lat = request.vars.get("gis_location_lat", None)
-        lon = request.vars.get("gis_location_lon", None)
-        street = request.vars.get("gis_location_street", None)
-        postcode = request.vars.get("gis_location_postcode", None)
+        name = vars.get("gis_location_name", None)
+        lat = vars.get("gis_location_lat", None)
+        lon = vars.get("gis_location_lon", None)
+        street = vars.get("gis_location_street", None)
+        postcode = vars.get("gis_location_postcode", None)
         parent = L5 or L4 or L3 or L2 or L1 or L0 or None
 
+        # Move vars into form.
         form = Storage()
         form.vars = Storage()
-        form.vars.lat = lat
-        form.vars.lon = lon
+        vars = form.vars
+        vars.lat = lat
+        vars.lon = lon
         # onvalidation
         gis.wkt_centroid(form)
         return Storage(
@@ -1038,11 +1041,11 @@ class IS_LOCATION_SELECTOR(Validator):
                         street=street,
                         postcode=postcode,
                         parent=parent,
-                        wkt = form.vars.wkt,
-                        lon_min = form.vars.lon_min,
-                        lon_max = form.vars.lon_max,
-                        lat_min = form.vars.lat_min,
-                        lat_max = form.vars.lat_max
+                        wkt = vars.wkt,
+                        lon_min = vars.lon_min,
+                        lon_max = vars.lon_max,
+                        lat_min = vars.lat_min,
+                        lat_max = vars.lat_max
                       )
 
 # -----------------------------------------------------------------------------

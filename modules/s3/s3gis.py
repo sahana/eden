@@ -121,6 +121,7 @@ GPS_SYMBOLS = [
     "City (Medium)",
     "City (Small)",
     "Civil",
+    "Contact, Dreadlocks",
     "Controlled Area",
     "Convenience Store",
     "Crossing",
@@ -248,28 +249,9 @@ class GIS(object):
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
         self.gps_symbols = GPS_SYMBOLS
-        self.group_level = {"GR": current.T("Location Group")}
-        # @ToDo: "Level" XX interferes with actual levels (and so does GR to
-        # some extent). Could replace "level" XX by a boolean field "imported"
-        # or "unverified" in gis_location (or add a "type" field). Then we
-        # could import hierarchy locations complete with level, and just mark
-        # them as needing verification.
-        self.imported_level = {"XX": current.T("Imported")}
-        self.non_hierarchy_levels = OrderedDict()
-        self.non_hierarchy_levels.update(self.group_level)
-        self.non_hierarchy_levels.update(self.imported_level)
-        self.is_level_key = re.compile("^L[0-9]+$").match
-        # These values involving the allowed hierarchy depth can change due to
-        # changes in settings or the gis_config table schema, so these are only
-        # initial values.
-        self.max_allowed_level_num = \
-            int(settings.get_gis_max_allowed_hierarchy_level()[1:])
-        self.allowed_hierarchy_level_keys = [
-            "L%d" % n for n in range(0, self.max_allowed_level_num + 1)]
-        self.allowed_region_level_keys = copy.copy(self.allowed_hierarchy_level_keys)
-        self.allowed_region_level_keys.extend(self.group_level.keys())
-        # This is a placeholder and will be reset when the gis model runs.
-        self.gis_config_table_max_level_num = self.max_allowed_level_num
+        self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
+        self.max_allowed_level_num = 4
+        self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
         # Info for countries. These will be filled in once the gis_location
         # table is available and populated with L0 countries.
         # countries and site countries are lists (or Rows) of Storage, ordered
@@ -726,7 +708,7 @@ class GIS(object):
                 ancestors = self.get_parents(feature_id, feature=feature)
                 if ancestors:
                     for ancestor in ancestors:
-                        if ancestor.level and self.is_level_key(ancestor.level):
+                        if ancestor.level and ancestor.level in self.hierarchy_level_keys:
                             if names and ids:
                                 results[ancestor.level] = Storage()
                                 results[ancestor.level].name = ancestor.name
@@ -739,150 +721,61 @@ class GIS(object):
             if names:
                 # We need to have entries for all levels
                 # (both for address onvalidation & new LocationSelector)
-                for key in self.allowed_hierarchy_level_keys:
+                for key in self.hierarchy_level_keys:
                     if not results.has_key(key):
                         results[key] = None
 
         return results
 
     # -------------------------------------------------------------------------
-    # NB: The only reason this method is not in S3Config is to restrict the
-    # levels to the number of fields in the gis_config table, which is not
-    # available when S3Config is instantiated (because db is not available),
-    # and because the table may change if migrate is true.
-    def get_location_hierarchy_settings(self):
-        """
-            Returns the default location hierarchy constrained to available table fields.
-        """
-
-        settings = current.deployment_settings
-
-        # Get the default levels that are within the allowed max.
-        hierarchy = settings.get_gis_default_location_hierarchy()
-        max_level_num = int(hierarchy.keys()[-1][1:])
-        if max_level_num > self.max_allowed_level_num:
-            hierarchy = copy.copy(hierarchy)
-            for n in range(self.max_allowed_level_num + 1, max_level_num + 1):
-                del hierarchy["L%d" % n]
-        return hierarchy
-
-    # -------------------------------------------------------------------------
-    def extract_allowed_hierarchy_level_names(self, source):
-        """
-            Helper to extract the value for each allowed hierarchy level.
-
-            Extracts a value for all allowed levels in order from the supplied
-            dict-compatible source; does not filter absent levels (needed by
-            gis_config onvalidation to detect gaps).
-        """
-
-        level_names = [source[key] if key in source else None
-                       for key in self.allowed_hierarchy_level_keys]
-        return level_names
-
-    # -------------------------------------------------------------------------
-    # @ToDo: Should there be a minimum hierarchy depth?
-    def config_onvalidation(self, vars, errors):
-        """
-            Checks location hierarchy and region values.
-
-            Helper for gis_config onvalidation, GIS.set_config, and creation of
-            the default config in zzz_1st_run. Only gis_config onvalidation
-            needs error message text, but it is the majority case. Note this
-            expects vars and errors to be Storage() so that existence of fields
-            need not be checked.
-
-            If strict hierarchy is set, the hierarchy names must not have gaps.
-            If the config is intended for the region menu, it must have a region
-            location and a name to show in the menu.
-        """
-
-        T = current.T
-
-        if vars.strict_hierarchy:
-            level_names = self.extract_allowed_hierarchy_level_names(vars)
-            # L0 is always missing because its label is hard-coded and is not
-            # writable in the form, so is not present in form.vars.
-            gaps = filter(None, map(lambda n:
-                                        not level_names[n] and
-                                        level_names[n + 1] and
-                                        "L%d" % n,
-                                    range(1, self.max_allowed_level_num)))
-            if gaps:
-                hierarchy_gap = T("A strict location hierarchy cannot have gaps.")
-                for gap in gaps:
-                    errors[gap] = hierarchy_gap
-
-        if vars.show_region_in_menu:
-            #if not vars.region_location_id:
-            #    errors.region_location_id = T("Please specify a location for the region.")
-            if not vars.name:
-                errors.name = T("Please specify a name to use in the region menu.")
-
-    # -------------------------------------------------------------------------
-    def update_gis_config_dependent_options(self):
+    def update_gis_config_dependent_options(self, tablename=None):
         """
             Re-set table options that depend on data or options in gis_config.
 
-            The gis_config table may be inaccessible at the time config data is
-            needed in models to set field options in database tables, or the
-            data may have been written after that point (e.g. in zzz_1st_run),
-            or the selected config might be changed on the fly.
-            In all these cases, the options need to be reset to pick up current
-            values.
+            Only update tables which are already defined
         """
 
-        s3db = current.s3db
-        settings = current.deployment_settings
+        T = current.T
+        db = current.db
 
-        # If necessary, adjust allowed hierarchy levels.
-        limit = int(settings.get_gis_max_allowed_hierarchy_level()[1:])
-        table = s3db.table("gis_config", None)
-        if table:
-            level_keys = filter(self.is_level_key, table.fields)
-            self.gis_config_table_max_level_num = int(level_keys[-1][1:])
-            limit = min(limit, self.gis_config_table_max_level_num)
-        if limit != self.max_allowed_level_num:
-            self.max_allowed_level_num = limit
-            self.allowed_hierarchy_level_keys = [
-                "L%d" % n for n in range(0, limit + 1)]
-            self.allowed_region_level_keys = copy.copy(
-                self.allowed_hierarchy_level_keys)
-            self.allowed_region_level_keys.extend(self.group_level.keys())
+        levels = ["L1", "L2", "L3", "L4"]
+        labels = {}
+        for level in levels:
+            labels[level] = self.get_location_hierarchy(level)
 
-        # gis_location
-        table = s3db.table("gis_location", None)
-        if table:
-            table.level.requires = \
-                IS_NULL_OR(IS_IN_SET(self.get_all_current_levels()))
-            # Represent needs to vary per record not per region
-            #table.level.represent = lambda level: \
-            #    level and self.get_all_current_levels(level) or current.messages.NONE
-        # @ToDon't: Change only filter_opts, since we can't easily get at the
-        # gis_location_represent_row represent function. Or rather, don't
-        # bother adjusting this -- see comment in 03_gis where this is set.
-        #table.parent.requires = IS_NULL_OR(IS_ONE_OF(
-        #    db, "gis_location.id",
-        #    gis_location_represent_row,
-        #    filterby="level",
-        #    filter_opts=gis.get_hierarchy_level_keys(),
-        #    orderby="gis_location.name"))
+        if tablename and tablename in db:
+            # Update the specific table which has just been defined
+            table = db[tablename]
+            if tablename == "gis_location":
+                labels["L0"] = T("Country")
+                table.level.requires = \
+                    IS_NULL_OR(IS_IN_SET(labels))
+            else:
+                for field in levels:
+                    table[field].label = labels[field]
+        else:
+            # Do all Tables which are already defined
 
-        # These tables store location hierarchy info for XSLT export.
-        # Labels are used for PDF & XLS Reports
-        tables_with_levels = ["org_office",
-                              "pr_address",
-                              "cr_shelter",
-                              "asset_asset",
-                              #"hms_hospital",
-                             ]
+            # gis_location
+            if "gis_location" in db:
+                table = db.gis_location
+                table.level.requires = \
+                    IS_NULL_OR(IS_IN_SET(labels))
 
+            # These tables store location hierarchy info for XSLT export.
+            # Labels are used for PDF & XLS Reports
+            tables = ["org_office",
+                      "pr_address",
+                      "cr_shelter",
+                      "asset_asset",
+                      #"hms_hospital",
+                     ]
 
-        for tablename in tables_with_levels:
-            table = s3db.table(tablename, None)
-            if table:
-                for field in filter(self.is_level_key, table.fields):
-                    table[field].label = self.get_location_hierarchy(field)
+            for tablename in tables:
+                if tablename in db:
+                    table = db[tablename]
+                    for field in levels:
+                        table[field].label = labels[field]
 
     # -------------------------------------------------------------------------
     # NB: On the first pass with an empty database, this is called before
@@ -950,63 +843,58 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        auth = current.auth
 
-        # This may be called on the first run with a new database before the
-        # gis_config table is created.
-        try:
-            _config = s3db.gis_config
-            _marker = s3db.gis_marker
-            _projection = s3db.gis_projection
-            have_tables = _config and _projection
-        except Exception, exception:
-            s3_debug(exception)
-            have_tables = False
+        ctable = s3db.gis_config
+        mtable = s3db.gis_marker
+        ptable = s3db.gis_projection
 
         row = None
-
-        if have_tables:
-            if config_id:
-                query = (_config.id == config_id) & \
-                        (_marker.id == _config.marker_id) & \
-                        (_projection.id == _config.projection_id)
-                row = db(query).select(limitby=(0, 1)).first()
-
-            # If no id supplied, or the requested config does not exist,
-            # fall back to personal or site config.
-            if not row:
-                if auth.is_logged_in():
-                    # Read personalised config, if available.
-                    ptable = s3db.pr_person
-                    query = (ptable.uuid == auth.user.person_uuid) & \
-                            (_config.pe_id == ptable.pe_id) & \
-                            (_marker.id == _config.marker_id) & \
-                            (_projection.id == _config.projection_id)
-                    row = db(query).select(limitby=(0, 1)).first()
-                    if row:
-                        config_id = row["gis_config"].id
-                if not row:
-                    # No personal config or not logged in. Use site default.
-                    config_id = 1
-                    query = (_config.id == config_id) & \
-                            (_marker.id == _config.marker_id) & \
-                            (_projection.id == _config.projection_id)
-                    row = db(query).select(limitby=(0, 1)).first()
+        if config_id:
+            query = (ctable.id == config_id) & \
+                    (mtable.id == ctable.marker_id) & \
+                    (ptable.id == ctable.projection_id)
+            row = db(query).select(limitby=(0, 1)).first()
 
         cache = Storage()
 
+        # If no id supplied, or the requested config does not exist,
+        # fall back to personal or site config.
+        if not row:
+            auth = current.auth
+            if auth.is_logged_in():
+                # Read personalised config, if available.
+                prtable = s3db.pr_person
+                query = (prtable.uuid == auth.user.person_uuid) & \
+                        (ctable.pe_id == prtable.pe_id) & \
+                        (mtable.id == ctable.marker_id) & \
+                        (ptable.id == ctable.projection_id)
+                row = db(query).select(limitby=(0, 1)).first()
+            if not row:
+                # No personal config or not logged in. Use site default.
+                config = db(ctable.id > 0).select(limitby=(0, 1)).first()
+                if not config:
+                    # No configs found at all
+                    s3.gis.config = cache
+                    return cache
+                query = (ctable.id == config.id) & \
+                        (mtable.id == ctable.marker_id) & \
+                        (ptable.id == ctable.projection_id)
+                row = db(query).select(limitby=(0, 1)).first()
+
         if row:
+            if not config_id:
+                config_id = row["gis_config"].id
             config = row["gis_config"]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
             non_hierarchy_fields = filter(
                 lambda key: key not in s3.all_meta_field_names
-                                and not self.is_level_key(key),
+                                and key not in self.hierarchy_level_keys,
                 config)
             for key in non_hierarchy_fields:
                 cache[key] = config[key]
             levels = OrderedDict()
-            for key in self.allowed_hierarchy_level_keys:
+            for key in self.hierarchy_level_keys:
                 if key in config and config[key]:
                     levels[key] = config[key]
             cache.location_hierarchy = levels
@@ -1015,45 +903,15 @@ class GIS(object):
             for key in ["image", "height", "width"]:
                 cache["marker_%s" % key] = marker[key] if key in marker else None
 
-        else:
-            # On the first request with a new database, there are no configs.
-            # In fact, there may not be a gis_config table at that point...
-            # Get the available info from deployment_settings or from fallback
-            # defaults.  This is approximately the info that will later be
-            # written into the site config, minus the fields having only
-            # defaults in the gis_config table definition.
-            # When we didn't get a real config, the config id in session will
-            # be false, so we'll try to get it on the first call of the next
-            # request.
-            vars = Storage()  # scatch copy of config values for validation
-            errors = Storage()
-            settings = current.deployment_settings
-            cache.update(settings.gis.default_config_values)
-            vars.update(settings.gis.default_config_values)
-            cache.location_hierarchy = self.get_location_hierarchy_settings()
-            vars.update(cache.location_hierarchy)
-            # The values in 000_config may have errors -- check them.
-            # vars contains a flattened copy of the config, as it would be
-            # received from the form.
-            self.config_onvalidation(vars, errors)
-            # Do a minimal fixup of any errors.
-            # If there's an error in region settings, don't show it in the menu.
-            if errors.region_location_id or errors.name:
-                cache.show_region_in_menu = False
-            # If there are missing level names, default them to Ln.
-            for error in errors:
-                if self.is_level_key(error):
-                    cache[error] = error
-
-        # Store the values if they were found.
+        # Store the values
+        s3.gis.config = cache
         if cache:
-            s3.gis.config = cache
             self.update_gis_config_dependent_options()
             if set_in_session:
                 session.s3.gis_config_id = config_id
 
         # Let caller know if their id was valid.
-        return config_id if row else None
+        return config_id if row else cache
 
     # -------------------------------------------------------------------------
     def set_temporary_config(self, config_id):
@@ -1069,10 +927,10 @@ class GIS(object):
             until either restore_config() is called, or the request ends.
         """
 
-        response = current.response
+        s3 = current.response.s3
 
         # Save the current config structure.
-        response.s3.gis.saved_config = response.s3.gis.config
+        s3.gis.saved_config = s3.gis.config
 
         # Cache the requested config in its place, without changing session.
         self.set_config(config_id, False)
@@ -1084,13 +942,12 @@ class GIS(object):
             After this, get_config will again return the restored config.
         """
 
-        session = current.session
-        response = current.response
+        s3 = current.response.s3
 
-        if response.s3.gis.saved_config:
-            response.s3.gis.config = response.s3.gis.saved_config
+        if s3.gis.saved_config:
+            s3.gis.config = s3.gis.saved_config
         else:
-            self.set_config(session.s3.gis_config_id)
+            self.set_config(current.session.s3.gis_config_id)
         self.update_gis_config_dependent_options()
 
     # -------------------------------------------------------------------------
@@ -1101,14 +958,13 @@ class GIS(object):
             @ToDo: Config() class
         """
 
-        session = current.session
-        response = current.response
+        s3 = current.response.s3
 
-        if not response.s3.gis.config:
+        if not s3.gis.config:
             # Ask set_config to put the appropriate config in response.
-            self.set_config(session.s3.gis_config_id)
+            self.set_config(current.session.s3.gis_config_id)
 
-        return response.s3.gis.config
+        return s3.gis.config
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1121,7 +977,8 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         try:
             # ID?
@@ -1139,7 +996,7 @@ class GIS(object):
                 s3_debug("S3GIS: Location cannot be set as defaut", location)
                 return
 
-        table = db.gis_config
+        table = s3db.gis_config
         query = (table.id == 1)
         db(query).update(default_location_id=id)
 
@@ -1154,7 +1011,7 @@ class GIS(object):
         if level:
             try:
                 return location_hierarchy[level]
-            except KeyError:
+            except:
                 return level
         else:
             return location_hierarchy
@@ -1196,9 +1053,11 @@ class GIS(object):
             Get the current hierarchy levels plus non-hierarchy levels.
         """
 
+        T = current.T
         all_levels = OrderedDict()
         all_levels.update(self.get_location_hierarchy())
-        all_levels.update(self.non_hierarchy_levels)
+        all_levels["GR"] = T("Location Group")
+        #all_levels["XX"] = T("Imported")
 
         if level:
             try:
@@ -3303,11 +3162,15 @@ class GIS(object):
                 f = open(projpath, "r")
                 f.close()
             except:
-                session.error = "'%s' %s /static/scripts/gis/proj4js/lib/defs" % (
-                    projection,
-                    T("Projection not supported - please add definition to")
-                )
-                redirect(URL(r=request, c="gis", f="projection"))
+                if projection:
+                    response.warning =  \
+                        T("Map not available: Projection %(projection)s not supported - please add definition to %(path)s") % \
+                            dict(projection = "'%s'" % projection,
+                                 path= "/static/scripts/gis/proj4js/lib/defs")
+                else:
+                    response.warning =  \
+                        T("Map not available: No Projection configured")
+                return None
 
         units = config.units
         maxResolution = config.maxResolution
@@ -4491,45 +4354,6 @@ class GoogleLayer(SingleRecordLayer):
 
 
 # -----------------------------------------------------------------------------
-class YahooLayer(SingleRecordLayer):
-    """
-        Yahoo Layers from Catalogue
-
-        NB This will stop working on 13 September 2011
-        http://developer.yahoo.com/blogs/ydn/posts/2011/06/yahoo-maps-apis-service-closure-announcement-new-maps-offerings-coming-soon/
-    """
-    js_array = "S3.gis.Yahoo"
-    table_name = "gis_layer_yahoo"
-
-    def __init__(self):
-        super(YahooLayer, self).__init__()
-        if self.record:
-            self.scripts.append("http://api.maps.yahoo.com/ajaxymap?v=3.8&appid=%s" % self.apikey)
-        config = current.gis.get_config()
-        if Projection(id=config.projection_id).epsg != 900913:
-            raise Exception("Cannot display Yahoo layers unless we're using the Spherical Mercator Projection")
-
-    def as_dict(self):
-        record = self.record
-        if record is not None:
-            # Mandatory attributes
-            #"ApiKey": self.apikey
-            output = {
-                }
-
-            # Attributes which are defaulted client-side if not set
-            if record.satellite_enabled:
-                output["Satellite"] = record.satellite or "Yahoo Satellite"
-            if record.maps_enabled:
-                output["Maps"] = record.maps or "Yahoo Maps"
-            if record.hybrid_enabled:
-                output["Hybrid"] = record.hybrid or "Yahoo Hybrid"
-
-            return output
-        else:
-            return None
-
-# -----------------------------------------------------------------------------
 class MultiRecordLayer(Layer):
     def __init__(self):
         super(MultiRecordLayer, self).__init__()
@@ -5111,7 +4935,10 @@ class YahooGeocoder(Geocoder):
     @staticmethod
     def get_api_key():
         " Acquire API key from the database "
-        YahooLayer().apikey
+
+        settings = current.deployment_settings
+        apikey = settings.gis_yahoo_apikey
+        return apikey
 
     # -------------------------------------------------------------------------
     def get_xml(self):

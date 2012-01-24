@@ -1171,54 +1171,25 @@ def feature_layer_query(form):
     return
 
 # -----------------------------------------------------------------------------
+def symbology():
+    """ RESTful CRUD controller """
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    output = s3_rest_controller()
+
+    if not "gis" in response.view and response.view != "popup.html":
+        response.view = "gis/" + response.view
+
+    return output
+
+# -----------------------------------------------------------------------------
 def marker():
     """ RESTful CRUD controller """
     if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
         auth.permission.fail()
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    # CRUD Strings
-    ADD_MARKER = T("Add Marker")
-    LIST_MARKERS = T("List Markers")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_MARKER,
-        title_display = T("Marker Details"),
-        title_list = T("Markers"),
-        title_update = T("Edit Marker"),
-        title_search = T("Search Markers"),
-        subtitle_create = T("Add New Marker"),
-        subtitle_list = LIST_MARKERS,
-        label_list_button = LIST_MARKERS,
-        label_create_button = ADD_MARKER,
-        label_delete_button = T("Delete Marker"),
-        msg_record_created = T("Marker added"),
-        msg_record_modified = T("Marker updated"),
-        msg_record_deleted = T("Marker deleted"),
-        msg_list_empty = T("No Markers currently available"))
-
-    def gis_marker_onvalidation(form):
-        """
-            Record the size of an Image upon Upload
-            Don't wish to resize here as we'd like to use full resolution for printed output
-        """
-
-        import Image
-
-        im = Image.open(form.vars.image.file)
-        (width, height) = im.size
-        form.vars.image.file.seek(0)
-
-        form.vars.width = width
-        form.vars.height = height
-
-        return
-
-    s3mgr.configure(tablename,
-                    onvalidation=gis_marker_onvalidation)
-
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller()
 
     if not "gis" in response.view and response.view != "popup.html":
         response.view = "gis/" + response.view
@@ -1232,28 +1203,6 @@ def projection():
 
     if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
         auth.permission.fail()
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    # CRUD Strings
-    ADD_PROJECTION = T("Add Projection")
-    LIST_PROJECTIONS = T("List Projections")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_PROJECTION,
-        title_display = T("Projection Details"),
-        title_list = T("Projections"),
-        title_update = T("Edit Projection"),
-        title_search = T("Search Projections"),
-        subtitle_create = T("Add New Projection"),
-        subtitle_list = LIST_PROJECTIONS,
-        label_list_button = LIST_PROJECTIONS,
-        label_create_button = ADD_PROJECTION,
-        label_delete_button = T("Delete Projection"),
-        msg_record_created = T("Projection added"),
-        msg_record_modified = T("Projection updated"),
-        msg_record_deleted = T("Projection deleted"),
-        msg_list_empty = T("No Projections currently defined"))
 
     output = s3_rest_controller()
 
@@ -1517,67 +1466,6 @@ def layer_google():
     return output
 
 # -----------------------------------------------------------------------------
-def layer_yahoo():
-    """ RESTful CRUD controller """
-    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-        auth.permission.fail()
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    # This flag is set onvalidation based on the individual layers
-    table.enabled.readable = table.enabled.writable = False
-
-    table.name.label = T("Description")
-    table.description.readable = table.description.writable = False
-    table.apikey.label = T("API Key")
-    table.satellite_enabled.label = T("Enabled?")
-    table.satellite.label = T("Name")
-    table.maps_enabled.label = T("Enabled?")
-    table.maps.label = T("Name")
-    table.hybrid_enabled.label = T("Enabled?")
-    table.hybrid.label = T("Name")
-
-    # CRUD Strings
-    type = "Yahoo"
-    EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
-    s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
-        title_update=EDIT_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED)
-
-    s3mgr.configure(tablename,
-                    deletable=False,
-                    listadd=False,
-                    subheadings = {
-                        T("Satellite Layer"): "satellite_enabled",
-                        T("Roads Layer"): "maps_enabled",
-                        T("Hybrid Layer"): "hybrid_enabled",
-                        "": "role_required"
-                    })
-
-    # This layer should only ever have a single layer, so display this direct
-    record = db(table.id > 0).select(table.id,
-                                     limitby=(0, 1),
-                                     cache=s3db.cache).first()
-    if record:
-        args = [str(record.id)]
-    else:
-        args = ["create"]
-
-    # Parse the Request
-    r = s3mgr.parse_request(args=args)
-
-    # Execute the request
-    output = r()
-
-    if not "gis" in response.view:
-        response.view = "gis/%s" % response.view
-
-    return output
-
-# -----------------------------------------------------------------------------
 def layer_mgrs():
     """ RESTful CRUD controller """
     if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
@@ -1692,18 +1580,18 @@ def layer_georss():
 
     # Post-processor
     def postp(r, output):
-        s3_action_buttons(r)
-        # Only show the enable button if the layer is not currently enabled
-        query = (r.table.enabled != True)
-        rows = db(query).select(r.table.id)
-        restrict = [str(row.id) for row in rows]
-        response.s3.actions.append(dict(label=str(T("Enable")),
-                                        _class="action-btn",
-                                        url=URL(args=["[id]", "enable"]),
-                                        restrict = restrict
+        if r.interactive and r.method != "import":
+            s3_action_buttons(r)
+            # Only show the enable button if the layer is not currently enabled
+            query = (r.table.enabled != True)
+            rows = db(query).select(r.table.id)
+            restrict = [str(row.id) for row in rows]
+            response.s3.actions.append(dict(label=str(T("Enable")),
+                                            _class="action-btn",
+                                            url=URL(args=["[id]", "enable"]),
+                                            restrict = restrict
+                                            )
                                         )
-                                    )
-
         return output
     response.s3.postp = postp
 
@@ -1790,7 +1678,8 @@ def layer_kml():
 
     # Post-processor
     def postp(r, output):
-        s3_action_buttons(r, copyable=True)
+        if r.interactive and r.method != "import":
+            s3_action_buttons(r, copyable=True)
         return output
     response.s3.postp = postp
 
@@ -1840,18 +1729,18 @@ def layer_tms():
 
     # Post-processor
     def postp(r, output):
-        s3_action_buttons(r, copyable=True)
-        # Only show the enable button if the layer is not currently enabled
-        query = (r.table.enabled != True)
-        rows = db(query).select(r.table.id)
-        restrict = [str(row.id) for row in rows]
-        response.s3.actions.append(dict(label=str(T("Enable")),
-                                        _class="action-btn",
-                                        url=URL(args=["[id]", "enable"]),
-                                        restrict = restrict
+        if r.interactive and r.method != "import":
+            s3_action_buttons(r, copyable=True)
+            # Only show the enable button if the layer is not currently enabled
+            query = (r.table.enabled != True)
+            rows = db(query).select(r.table.id)
+            restrict = [str(row.id) for row in rows]
+            response.s3.actions.append(dict(label=str(T("Enable")),
+                                            _class="action-btn",
+                                            url=URL(args=["[id]", "enable"]),
+                                            restrict = restrict
+                                            )
                                         )
-                                    )
-
         return output
     response.s3.postp = postp
 
@@ -1896,7 +1785,8 @@ def layer_wfs():
 
     # Post-processor
     def postp(r, output):
-        s3_action_buttons(r, copyable=True)
+        if r.interactive and r.method != "import":
+            s3_action_buttons(r, copyable=True)
         return output
     response.s3.postp = postp
 
@@ -1946,18 +1836,18 @@ def layer_wms():
 
     # Post-processor
     def postp(r, output):
-        s3_action_buttons(r, copyable=True)
-        # Only show the enable button if the layer is not currently enabled
-        query = (r.table.enabled != True)
-        rows = db(query).select(r.table.id)
-        restrict = [str(row.id) for row in rows]
-        response.s3.actions.append(dict(label=str(T("Enable")),
-                                        _class="action-btn",
-                                        url=URL(args=["[id]","enable"]),
-                                        restrict = restrict
+        if r.interactive and r.method != "import":
+            s3_action_buttons(r, copyable=True)
+            # Only show the enable button if the layer is not currently enabled
+            query = (r.table.enabled != True)
+            rows = db(query).select(r.table.id)
+            restrict = [str(row.id) for row in rows]
+            response.s3.actions.append(dict(label=str(T("Enable")),
+                                            _class="action-btn",
+                                            url=URL(args=["[id]","enable"]),
+                                            restrict = restrict
+                                            )
                                         )
-                                    )
-
         return output
     response.s3.postp = postp
 

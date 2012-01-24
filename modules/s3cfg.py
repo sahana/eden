@@ -206,40 +206,6 @@ class S3Config(Storage):
     # hierarchy labels as that is defined separately in 000_config.
     def get_gis_countries(self):
         return self.gis.get("countries", [])
-    def get_gis_default_config_values(self):
-        return self.gis.get("default_config_values", Storage())
-    def get_gis_default_location_hierarchy(self):
-        location_hierarchy = self.gis.get("location_hierarchy", None)
-        if not location_hierarchy:
-            location_hierarchy = OrderedDict([
-                ("L0", current.T("Country")),
-                ("L1", current.T("Province")),
-                ("L2", current.T("District")),
-                ("L3", current.T("Town")),
-                ("L4", current.T("Village")),
-                #("L5", current.T("Neighbourhood")),
-                ])
-        return location_hierarchy
-    # These fields in gis_config are references to other tables. Rather than
-    # hard code an id, default via the name.
-    def get_gis_default_symbology(self):
-        return self.gis.get("default_symbology", "US")
-    def get_gis_default_projection(self):
-        return self.gis.get("default_projection", "Spherical Mercator")
-    def get_gis_default_marker(self):
-        return self.gis.get("default_marker", "marker_red")
-    def get_gis_max_allowed_hierarchy_level(self):
-        # If the site's default hierarchy is deeper than the specified maximum,
-        # adjust the limit so the entire default hierarchy will be shown in a
-        # config update form. (At this point, we cannot also limit this to the
-        # depth available in the gis_config table as the database is not
-        # available. See max_allowed_level_num in s3gis GIS.)
-        limit = current.response.s3.gis.adjusted_max_allowed_hierarchy_level
-        if not limit:
-            limit = max(self.gis.get("max_allowed_hierarchy_level", "L4"),
-                        self.get_gis_default_location_hierarchy().keys()[-1])
-            current.response.s3.gis.adjusted_max_allowed_hierarchy_level = limit
-        return limit
     def get_gis_building_name(self):
         " Display Building Name when selecting Locations "
         return self.gis.get("building_name", True)

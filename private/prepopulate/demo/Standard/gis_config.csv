@@ -1,2 +1,2 @@
-Name,Region,Default,Zoom,Lat,Lon,L1,L2,L3,MinLat,MaxLat,MinLon,MaxLon
-US,United States,Los Angeles County,4,38.93,-100.17,State,County,City,19.0,71.3,-179.2,179.8
+Name,Region,Default,Zoom,Lat,Lon,L1,L2,L3,Projection,Symbology,Marker,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
+US,United States,Los Angeles County,4,38.93,-100.17,State,County,City,900913,US,marker_red,19.0,71.3,-179.2,179.8,
