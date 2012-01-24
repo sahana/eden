@@ -201,7 +201,7 @@ class S3XML(S3Codec):
         """
 
         self.error = None
-        if isinstance(source, basestring) and source[:4] == "http":
+        if isinstance(source, basestring) and source[:5] == "https":
             try:
                 source = urllib2.urlopen(source)
             except:
