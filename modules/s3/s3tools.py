@@ -449,6 +449,7 @@ class S3BulkImporter(object):
             except KeyError:
                 # Table cannot be loaded
                 self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)
+                return
 
             # Check if the source file is accessible
             try:
@@ -465,11 +466,15 @@ class S3BulkImporter(object):
                 return
 
             try:
+                # @todo: add extra_data and file attachments
                 result = resource.import_xml(csv,
                                              format="csv",
                                              stylesheet=task[4])
             except SyntaxError, e:
                 self.errorList.append("WARNING: import error - %s" % e)
+                return
+            # @todo: check result (=JSON message) for import errors
+            # and report them to stderr
 
             db.commit()
             _debug ("%s import job completed" % tablename)
