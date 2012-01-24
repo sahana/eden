@@ -32,7 +32,6 @@
 __all__ = ["S3ProjectModel",
            "S3ProjectDRRModel",
            "S3ProjectTaskModel",
-           "S3ProjectModel",
            "project_rheader",
            "S3ProjectTaskVirtualfields"]
 
@@ -86,6 +85,7 @@ class S3ProjectModel(S3Model):
         settings = current.deployment_settings
 
         currency_type = s3.currency_type
+        person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
         sector_id = self.org_sector_id
@@ -591,6 +591,16 @@ class S3ProjectModel(S3Model):
 
         # Components
 
+        # Contact Persons
+        self.add_component("pr_person",
+                           project_activity=Storage(
+                                name="contact",
+                                link="project_activity_contact",
+                                joinby="activity_id",
+                                key="person_id",
+                                actuate="hide",
+                                autodelete=False))
+
         # Beneficiaries
         self.add_component("project_beneficiary",
                            project_activity="activity_id")
@@ -605,6 +615,47 @@ class S3ProjectModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
+
+        # ---------------------------------------------------------------------
+        # Project Activity Contact Person
+        #
+        tablename = "project_activity_contact"
+        table = self.define_table(tablename,
+                                  activity_id(),
+                                  person_id(widget=S3AddPersonWidget(),
+                                            requires=IS_ADD_PERSON_WIDGET(),
+                                            comment=None),
+                                  *s3.meta_fields())
+
+        table.virtualfields.append(S3ProjectActivityContactVirtualFields())
+
+        # CRUD Strings
+        ADD_CONTACT = T("Add Contact")
+        LIST_CONTACTS = T("List Contacts")
+        if pca:
+            LIST_OF_CONTACTS = T("Community Contacts")
+        else:
+            LIST_OF_CONTACTS = T("Contacts")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_CONTACT,
+            title_display = T("Contact Details"),
+            title_list = LIST_CONTACTS,
+            title_update = T("Edit Contact Details"),
+            title_search = T("Search Contacts"),
+            subtitle_create = T("Add New Contact"),
+            subtitle_list = LIST_OF_CONTACTS,
+            label_list_button = LIST_CONTACTS,
+            label_create_button = ADD_CONTACT,
+            msg_record_created = T("Contact Added"),
+            msg_record_modified = T("Contact Updated"),
+            msg_record_deleted = T("Contact Deleted"),
+            msg_list_empty = T("No Contacts Found"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       list_fields=["person_id",
+                                    (T("Email"), "email"),
+                                    (T("Mobile Phone"), "sms")])
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -781,7 +832,7 @@ class S3ProjectModel(S3Model):
             response = current.response
             session = current.session
             s3 = response.s3
-        
+
             calendar = r.record.calendar
 
             # Add core Simile Code
@@ -2373,6 +2424,44 @@ class S3ProjectActivityVirtualfields:
             return parents["L3"]
         else:
             return None
+
+# =============================================================================
+class S3ProjectActivityContactVirtualFields:
+    """ Virtual fields for the project_activity_contact table """
+
+    extra_fields = ["person_id"]
+
+    def email(self):
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+
+        person_id = self.project_activity_contact.person_id
+        query = (ctable.deleted != True) & \
+                (ptable.id == person_id) & \
+                (ctable.pe_id == ptable.pe_id) & \
+                (ctable.contact_method == "EMAIL")
+        items = db(query).select(ctable.value)
+        return ", ".join([item.value for item in items])
+
+    def sms(self):
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+
+        person_id = self.project_activity_contact.person_id
+        query = (ctable.deleted != True) & \
+                (ptable.id == person_id) & \
+                (ctable.pe_id == ptable.pe_id) & \
+                (ctable.contact_method == "SMS")
+        items = db(query).select(ctable.value)
+        return ", ".join([item.value for item in items])
 
 # =============================================================================
 class S3ProjectTaskVirtualfields:
