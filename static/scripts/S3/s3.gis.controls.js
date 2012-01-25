@@ -298,9 +298,7 @@ function addGoogleEarthControl(toolbar) {
                 S3.gis.mapPanelContainer.getLayout().setActiveItem(1);
                 // Since the LayerTree isn't useful, collapse it
                 S3.gis.mapWin.items.items[0].collapse();
-                // When updating to current GXP
-                //S3.gis.googleEarthPanel.on('pluginready', function() {
-                S3.gis.googleEarthPanel.on('earthready', function() {
+                S3.gis.googleEarthPanel.on('pluginready', function() {
                     addGoogleEarthKmlLayers();
                 });
             } else {
@@ -727,4 +725,32 @@ function addPdfControl(toolbar) {
     });
     toolbar.addSeparator();
     toolbar.add(mgrsButton);
+}
+
+// WMS GetFeatureInfo control
+// @ToDo: Activate only if Queryable WMS layers are loaded
+function addWMSGetFeatureInfoControl(toolbar) {
+    S3.gis.wmsGetFeatureInfo = new gxp.plugins.WMSGetFeatureInfo({
+        actionTarget: 'mappnlcntr.tbar',
+        outputTarget: 'map',
+        outputConfig: {
+            width: 400,
+            height: 200
+        },
+        toggleGroup: 'controls',
+        // html not permitted by Proxy
+        format: "grid",
+        // @ToDo: i18n
+        infoActionTip: 'Get Feature Info',
+        popupTitle: 'Feature Info'
+    });
+    // Set up shortcuts to allow GXP Plugins to work
+    // @ToDo: Move to a more central place
+    S3.gis.wmsGetFeatureInfo.target = S3.gis;
+    S3.gis.portal = Object();
+    //S3.gis.portal.mapPanelContainer = S3.gis.mapPanelContainer;
+    S3.gis.portal.map = S3.gis.mapPanel;
+    // @ToDo: Why do we need to toggle the Measure control before this works?
+    //S3.gis.wmsGetFeatureInfo.activate();
+    S3.gis.wmsGetFeatureInfo.addActions();
 }

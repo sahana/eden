@@ -3109,8 +3109,9 @@ class GIS(object):
         s3_has_role = auth.s3_has_role
 
         # Defaults
+        # Also in static/S3/s3.gis.js
         # http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
-        self.cluster_distance = 5    # pixels
+        self.cluster_distance = 2    # pixels
         self.cluster_threshold = 2   # minimum # of features to form a cluster
 
         # Read configuration
@@ -4086,7 +4087,6 @@ S3.gis.layers_feature_queries[%i] = {
         ))))
 
         # Static Script
-
         if debug:
             add_javascript("scripts/S3/s3.gis.js")
             add_javascript("scripts/S3/s3.gis.layers.js")
@@ -4303,11 +4303,13 @@ class GoogleLayer(SingleRecordLayer):
                 # v3 API
                 add_script("http://maps.google.com/maps/api/js?v=3.2&sensor=false")
                 if debug and record.streetview_enabled:
+                    # Non-debug has this included within GeoExt.js
                     add_script("scripts/gis/gxp/widgets/GoogleStreetViewPanel.js")
             if record.earth_enabled:
                 add_script("http://www.google.com/jsapi?key=%s" % self.apikey)
                 add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
                 if debug:
+                    # Non-debug has this included within GeoExt.js
                     add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")
 
     def as_dict(self):
@@ -4360,14 +4362,14 @@ class MultiRecordLayer(Layer):
         self.sublayers = []
         self.scripts = []
 
-        auth = current.auth
+        s3_has_role = current.auth.s3_has_role
 
         layer_type_list = []
         # Read the enabled Layers
         for record in current.db(self.table.enabled == True).select():
             # Check user is allowed to access the layer
             role_required = record.role_required
-            if (not role_required) or auth.s3_has_role(role_required):
+            if (not role_required) or s3_has_role(role_required):
                 self.sublayers.append(self.SubLayer(record))
 
     def as_javascript(self):
@@ -4799,6 +4801,16 @@ class WMSLayer(MultiRecordLayer):
     """ WMS Layer from Catalogue """
     js_array = "S3.gis.layers_wms"
     table_name = "gis_layer_wms"
+
+    def __init__(self):
+        super(WMSLayer, self).__init__()
+        if self.sublayers:
+            debug = current.session.s3.debug
+            add_script = self.scripts.append
+            if debug:
+                # Non-debug has this included within GeoExt.js
+                add_script("scripts/gis/gxp/plugins/Tool.js")
+                add_script("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
 
     class SubLayer(MultiRecordLayer.SubLayer):
         def as_dict(self):

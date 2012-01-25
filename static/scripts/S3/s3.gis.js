@@ -31,6 +31,7 @@ S3.gis.options = {
     numZoomLevels: S3.gis.numZoomLevels
 };
 // Default values if not set by the layer
+// Also in modules/s3/s3gis.py
 // http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
 S3.gis.cluster_distance = 2;    // pixels
 S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
@@ -103,6 +104,15 @@ Ext.onReady(function() {
             map.zoomToExtent(S3.gis.bounds);
         }
 
+        // Ensure that mapPanel knows about whether our WMS layers are queryable
+        if (S3.gis.layers_wms) {
+            for (i = 0; i < map.layers.length; i++) {
+                if (map.layers[i].queryable) {
+                    S3.gis.mapPanel.layers.data.items[i].data.queryable = 1;
+                }
+            }
+        }
+        
         // Toolbar Tooltips
         Ext.QuickTips.init();
 });
@@ -596,6 +606,13 @@ function addToolbar() {
         //toolbar.add(rotateButton);
         //toolbar.add(modifyButton);
         //toolbar.add(removeButton);
+    }
+
+    // WMS GetFeatureInfo
+    // @ToDo: Do this only when i18n strings passed, which is only when there is at least 1 Queryable WMS layer
+    // - although, this doesn't allow dynamic adding of layers...
+    if (S3.gis.layers_wms) {
+        addWMSGetFeatureInfoControl(toolbar);
     }
 
     // OpenStreetMap Editor
