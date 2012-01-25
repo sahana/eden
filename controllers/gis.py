@@ -87,7 +87,8 @@ def map_viewing_client():
 def define_map(window=False, toolbar=False, config=None):
     """
         Define the main Situation Map
-        This can then be called from both the Index page (embedded) & the Map_Viewing_Client (fullscreen)
+        This can then be called from both the Index page (embedded)
+        & the Map_Viewing_Client (fullscreen)
     """
 
     if not config:
@@ -100,6 +101,7 @@ def define_map(window=False, toolbar=False, config=None):
 
     # @ToDo: Make these configurable
     search = True
+    legend = True
     googleEarth = True
     googleStreetview = True
     catalogue_layers = True
@@ -125,6 +127,7 @@ def define_map(window=False, toolbar=False, config=None):
                        catalogue_toolbar=catalogue_toolbar,
                        wms_browser = wms_browser,
                        toolbar=toolbar,
+                       legend=legend,
                        search=search,
                        catalogue_layers=catalogue_layers,
                        mouse_position = mouse_position,
