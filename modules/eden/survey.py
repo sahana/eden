@@ -73,19 +73,53 @@ __all__ = ["S3TemplateModel",
            "survey_serieslist_dataTable_post",
            "survey_answerlist_dataTable_pre",
            "survey_answerlist_dataTable_post",
+           "survey_json2py",
+           "survey_json2list",
           ]
 
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-import gluon.contrib.simplejson as json
-
-from xml.sax.saxutils import unescape
 
 import sys
 sys.path.append("applications/%s/modules/s3" % current.request.application)
 from s3survey import survey_question_type, \
-                     survey_analysis_type
+                     survey_analysis_type, \
+                     _debug
+
+def json2py(jsonstr):
+    """
+        Utility function to convert a string in json to a pythin structure  
+    """
+    import gluon.contrib.simplejson as json
+    from xml.sax.saxutils import unescape
+
+    try:
+        rawjson = unescape(jsonstr, {"u'": '"'})
+        rawjson = unescape(rawjson, {"'": '"'})
+        pythonStructure = json.loads(rawjson)
+    except:
+        _debug("ERROR: attempting to convert %s using modules/eden/survey/json2py.py" % (jsonstr))
+        return jsonstr
+    else:
+        return pythonStructure
+survey_json2py = json2py
+
+def json2list(jsonstr):
+    """
+        Used to modify a json string to a python list.
+    """
+    if jsonstr == "":
+        valueList = []
+    else:
+        if jsonstr[0] == "[":
+            valueList = json2py(jsonstr)
+        else:
+            valueList = jsonstr.split(",")
+        if not isinstance(valueList, list):
+            valueList = [valueList]
+    return valueList
+survey_json2list = json2list
 
 class S3TemplateModel(S3Model):
     """
@@ -381,9 +415,13 @@ class S3TemplateModel(S3Model):
             addQuestion(template_id, name, code, notes, type, posn)
         if form.vars.location_detail != None:
             s3 = current.response.s3
-            rawjson = unescape(form.vars.location_detail, {"u'": '"'})
-            rawjson = unescape(rawjson, {"'": '"'})
-            locationList = json.loads(rawjson)
+            locationList = json2py(form.vars.location_detail)
+            if len(locationList) > 0:
+                name = "The location P-code"
+                code = "STD-P-Code"
+                type = "String"
+                posn += 1
+                addQuestion(template_id, name, code, None, type, posn)
             for loc in locationList:
                 if loc in s3.survey_hierarchy_elements:
                     name = s3.survey_hierarchy_elements[loc]
@@ -714,7 +752,7 @@ def survey_build_template_summary(template_id):
     header = THEAD(hr)
 
     numOfQstnTypes = len(survey_question_type) + 1
-    questions = getAllQuestionsForTemplate(template_id)
+    questions = survey_getAllQuestionsForTemplate(template_id)
     sectionTitle = ""
     line = []
     body = TBODY()
@@ -939,6 +977,7 @@ class S3QuestionModel(S3Model):
             single quotes, rather than double quotes and so these need
             to be escaped to double quotes to make it valid JSON
         """
+        from xml.sax.saxutils import unescape
         if form.vars.metadata != None:
             form.vars.metadata = unescape(form.vars.metadata,{"'":'"'})
         return True
@@ -1209,35 +1248,8 @@ def survey_getQuestionFromName(name, series_id):
     return question
 
 
-
-def survey_get_default_location_question(complete_id):
-    """
-        This will find the standard loaction question
-        It will check each standard location question in 
-        the hierarchy until either one is found or none are found
-    """
-    s3db = current.s3db
-    db = current.db
-
-    comtable = s3db.survey_complete
-    qsntable = s3db.survey_question
-    answtable = s3db.survey_answer
-    query = ((answtable.question_id == qsntable.id) & \
-             (answtable.complete_id == comtable.id))
-    codeList = ["STD-L4","STD-L3","STD-L2","STD-L1","STD-L0"]
-    for locCode in codeList:
-        record = db(query & (qsntable.code == locCode)).select(qsntable.id,
-                                                               limitby=(0, 1)).first()
-        if record:
-            widgetObj = getWidgetFromQuestion(record.id)
-            break
-    if record:
-        widgetObj.loadAnswer(complete_id, record.id)
-        return widgetObj
-    else:
-        return None
-    
 def survey_updateMetaData (record, type, metadata):
+    import gluon.contrib.simplejson as json
     db = current.db
     s3db = current.s3db
 
@@ -1246,8 +1258,7 @@ def survey_updateMetaData (record, type, metadata):
     # the metadata can either be passed in as a JSON string
     # or as a parsed map. If it is a string load the map.
     if isinstance(metadata, str):
-        metadata = unescape(metadata, {"'": '"'})
-        metadataList = json.loads(metadata)
+        metadataList = json2py(metadata)
     else:
         metadataList = metadata
     for (desc, value) in metadataList.items():
@@ -1306,8 +1317,7 @@ class S3FormatterModel(S3Model):
         extracts the records from the table will then need to change all
         single quotes to double quotes. This can be done as follows:
 
-        rules = unescape(rules, {"'": '"'})
-        rowList = json.loads(rules)
+        rowList = json2py(rules)
 
     """
     names = ["survey_formatter"]
@@ -1359,6 +1369,7 @@ class S3FormatterModel(S3Model):
             If this is the formatter rules for the Background Information
             section then add the standard questions to the layout
         """
+        import gluon.contrib.simplejson as json
         db = current.db
         s3db = current.s3db
 
@@ -1376,18 +1387,14 @@ class S3FormatterModel(S3Model):
                 col1.append("STD-DATE")
             if template.time_qstn != "":
                 col1.append("STD-TIME")
-            col2 = []
             if "location_detail" in template:
-                rawjson = unescape(template.location_detail, {"u'": '"'})
-                rawjson = unescape(rawjson, {"'": '"'})
-                locationList = json.loads(rawjson)
+                col2 = ["STD-P-Code"]
+                locationList = json2py(template.location_detail)
                 for loc in locationList:
                     col2.append("STD-%s" % loc)
                 col = [col1, col2]
                 rule = [{"columns":col}]
-                oldrules = form.vars.rules
-                rawjson = unescape(oldrules, {"'": '"'})
-                ruleList = json.loads(rawjson)
+                ruleList = json2py(form.vars.rules)
                 ruleList[:0]=rule
                 rules = json.dumps(ruleList)
                 ftable = db.survey_formatter
@@ -1462,8 +1469,7 @@ def survey_getQstnLayoutRules(template_id,
             rowList.append([qstn.survey_question.code])
     else:
         # convert the JSON rules to python
-        rules = unescape(rules, {"'": '"'})
-        rowList = json.loads(rules)
+        rowList = json2py(rules)
     return rowList
 
 
@@ -2180,6 +2186,45 @@ def survey_series_rheader(r, tabs=[]):
             rsection = TR(TH(lblSection), TD(row))
             tsection.append(rsection)
 
+            urlexport = URL(c="survey",
+                            f="series_export_formatted",
+                            args=[record.id]
+                            )
+            tranForm = FORM(_action=urlexport)
+            translationList = survey_getAllTranslationsForSeries(record.id)
+            if len(translationList) > 0:
+                tranTable = TABLE()
+                tr = TR()
+                tr.append(INPUT(_type='radio',
+                                _name='translationLanguage',
+                                _value="Default",
+                                _checked=True,
+                               ))
+                tr.append(LABEL("Default"))
+                colCnt = 1
+                for translation in translationList:
+                    # include a maximum of 4 translation languages per row
+                    if colCnt == 4:
+                        tranTable.append(tr)
+                        tr = TR()
+                        colCnt = 0
+                    tr.append(INPUT(_type='radio',
+                                    _name='translationLanguage',
+                                    _value=translation["code"],
+                                   ))
+                    tr.append(LABEL(translation["language"]))
+                    colCnt += 1
+                if colCnt != 0:
+                    tranTable.append(tr)
+                tranForm.append(tranTable)
+            exportBtn = INPUT(_type="submit",
+                              _id="export_btn",
+                              _name="Export_Spreadsheet",
+                              _value=T("Download Assessment Template Spreadsheet"),
+                              _class="action-btn"
+                             )
+            tranForm.append(exportBtn)
+            tsection.append(tranForm)
 
             rheader = DIV(TABLE(
                           TR(
@@ -2538,8 +2583,10 @@ class S3CompleteModel(S3Model):
         locDetails = templateRec["location_detail"]
         if not locDetails:
             return
-        widgetObj = survey_get_default_location_question(complete_id)
+        widgetObj = get_default_location(complete_id)
         db(rtable.id == complete_id).update(location = widgetObj.repr())
+        locations = get_location_details(complete_id)
+        S3CompleteModel.importLocations(locations)
 
     @staticmethod
     def importAnswers(id, list):
@@ -2579,6 +2626,56 @@ class S3CompleteModel(S3Model):
                            "survey",
                            "answer.xsl")
         resource = s3mgr.define_resource("survey", "answer")
+        resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
+
+    @staticmethod
+    def importLocations(location_dict):
+        """
+            private function used to save the locations to gis.location
+        """
+        import csv
+        import os
+        s3mgr = current.manager
+        answer = []
+        lastLocWidget = None
+        codeList = ["STD-L0","STD-L1","STD-L2","STD-L3","STD-L4"]
+        for loc in codeList:
+            if loc in location_dict:
+                answer.append(location_dict[loc].repr())
+                lastLocWidget = location_dict[loc]
+            else:
+                answer.append("")
+        # Check that we have at least one location question answered
+        if lastLocWidget == None:
+            return
+        codeList = ["STD-P-Code","STD-Lat","STD-Lon"]
+        for loc in codeList:
+            if loc in location_dict:
+                answer.append(location_dict[loc].repr())
+            else:
+                answer.append("")
+
+        from tempfile import TemporaryFile
+        csvfile = TemporaryFile()
+        writer = csv.writer(csvfile)
+        writer.writerow(["Country",
+                         "ADM1_NAME",
+                         "ADM2_NAME",
+                         "ADM3_NAME",
+                         "ADM4_NAME",
+                         "Code2",
+                         "Lat",
+                         "Lon"])
+        writer.writerow(answer)
+        csvfile.seek(0)
+        xsl = os.path.join("applications",
+                           current.request.application,
+                           "static",
+                           "formats",
+                           "s3csv",
+                           "gis",
+                           "location.xsl")
+        resource = s3mgr.define_resource("gis", "location")
         resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
 
     @staticmethod
@@ -2688,6 +2785,58 @@ def survey_answer_list_represent(value):
         answer = answer.strip("\" ")
         result.append(TR(TD(B(question)),TD(answer)))
     return result
+
+def get_location_details(complete_id):
+    """
+        It will return a dict of values for all of the standard location
+        questions that have been answered
+    """
+    s3db = current.s3db
+    db = current.db
+    locations = {}
+    comtable = s3db.survey_complete
+    qsntable = s3db.survey_question
+    answtable = s3db.survey_answer
+    query = ((answtable.question_id == qsntable.id) & \
+             (answtable.complete_id == comtable.id))
+    codeList = ["STD-P-Code",
+                "STD-L0","STD-L1","STD-L2","STD-L3","STD-L4",
+                "STD-Lat","STD-Lon"]
+    for locCode in codeList:
+        record = db(query & (qsntable.code == locCode)).select(qsntable.id,
+                                                               limitby=(0, 1)).first()
+        if record:
+            widgetObj = getWidgetFromQuestion(record.id)
+            widgetObj.loadAnswer(complete_id, record.id)
+            locations[locCode] = widgetObj
+    return locations
+
+def get_default_location(complete_id):
+    """
+        It will check each standard location question in 
+        the hierarchy until either one is found or none are found
+    """
+    s3db = current.s3db
+    db = current.db
+
+    comtable = s3db.survey_complete
+    qsntable = s3db.survey_question
+    answtable = s3db.survey_answer
+    query = ((answtable.question_id == qsntable.id) & \
+             (answtable.complete_id == comtable.id))
+    codeList = ["STD-L4","STD-L3","STD-L2","STD-L1","STD-L0"]
+    for locCode in codeList:
+        record = db(query & (qsntable.code == locCode)).select(qsntable.id,
+                                                               limitby=(0, 1)).first()
+        if record:
+            widgetObj = getWidgetFromQuestion(record.id)
+            break
+    if record:
+        widgetObj.loadAnswer(complete_id, record.id)
+        return widgetObj
+    else:
+        return None
+    
 
 def survey_getAllAnswersForQuestionInSeries(question_id, series_id):
     """
@@ -2800,7 +2949,7 @@ def getLocationList(series_id):
     rows = query.select(comtable.id)
     response_locations = []
     for row in rows:
-        locWidget = survey_get_default_location_question(row.id)
+        locWidget = get_default_location(row.id)
         complete_id = locWidget.question["complete_id"]
         if "answer" not in locWidget.question:
             continue
