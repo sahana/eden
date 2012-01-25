@@ -1111,38 +1111,6 @@ def newAssessment():
                              vars = {}))
             s3.survey_answerlist_dataTable_post(r)
             form = s3.survey_buildQuestionnaireFromSeries(series_id, None)
-            translationList = s3.survey_getAllTranslationsForSeries(series_id)
-            urlexport = URL(c=module,
-                            f="series_export_formatted",
-                            args=[series_id]
-                            )
-            tranForm = FORM(_action=urlexport)
-            if len(translationList) > 0:
-                tranTable = TABLE()
-                tr = TR()
-                tr.append(INPUT(_type='radio',
-                                    _name='translationLanguage',
-                                    _value="Default",
-                                    _checked=True,
-                                   ))
-                tr.append(LABEL("Default"))
-                tranTable.append(tr)
-                for translation in translationList:
-                    tr = TR()
-                    tr.append(INPUT(_type='radio',
-                                        _name='translationLanguage',
-                                        _value=translation["code"],
-                                       ))
-                    tr.append(LABEL(translation["language"]))
-                    tranTable.append(tr)
-                tranForm.append(tranTable)
-            exportBtn = INPUT(_type="submit",
-                              _id="export_btn",
-                              _name="Export_Spreadsheet",
-                              _value=T("Download Assessment Template Spreadsheet"),
-                              _class="action-btn"
-                             )
-            tranForm.append(exportBtn)
             urlimport = URL(c=module,
                             f="complete",
                             args=["import"],
@@ -1155,8 +1123,7 @@ def newAssessment():
                              _class="action-btn"
                              ),
                           )
-            tranForm.append(buttons)
-            output["subtitle"] = tranForm
+            output["subtitle"] = buttons
             output["form"] = form
         return output
 

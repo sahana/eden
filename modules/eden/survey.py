@@ -2186,6 +2186,45 @@ def survey_series_rheader(r, tabs=[]):
             rsection = TR(TH(lblSection), TD(row))
             tsection.append(rsection)
 
+            urlexport = URL(c="survey",
+                            f="series_export_formatted",
+                            args=[record.id]
+                            )
+            tranForm = FORM(_action=urlexport)
+            translationList = survey_getAllTranslationsForSeries(record.id)
+            if len(translationList) > 0:
+                tranTable = TABLE()
+                tr = TR()
+                tr.append(INPUT(_type='radio',
+                                _name='translationLanguage',
+                                _value="Default",
+                                _checked=True,
+                               ))
+                tr.append(LABEL("Default"))
+                colCnt = 1
+                for translation in translationList:
+                    # include a maximum of 4 translation languages per row
+                    if colCnt == 4:
+                        tranTable.append(tr)
+                        tr = TR()
+                        colCnt = 0
+                    tr.append(INPUT(_type='radio',
+                                    _name='translationLanguage',
+                                    _value=translation["code"],
+                                   ))
+                    tr.append(LABEL(translation["language"]))
+                    colCnt += 1
+                if colCnt != 0:
+                    tranTable.append(tr)
+                tranForm.append(tranTable)
+            exportBtn = INPUT(_type="submit",
+                              _id="export_btn",
+                              _name="Export_Spreadsheet",
+                              _value=T("Download Assessment Template Spreadsheet"),
+                              _class="action-btn"
+                             )
+            tranForm.append(exportBtn)
+            tsection.append(tranForm)
 
             rheader = DIV(TABLE(
                           TR(
