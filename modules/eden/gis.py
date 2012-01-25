@@ -2019,8 +2019,11 @@ class S3MapModel(S3Model):
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Buffer"),
                                                                       T("The number of tiles around the visible map to download. Zero means that the 1st page loads faster, higher numbers mean subsequent panning is faster.")))),
-                                  #Field("queryable", "boolean", default=False, label=T("Queryable?")),
-                                  #Field("legend_url", label=T("legend URL")),
+                                  Field("queryable", "boolean", default=True, label=T("Queryable?")),
+                                  Field("legend_url", label=T("Legend URL"),
+                                        comment=DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Legend URL"),
+                                                                      T("Address of an image to use for this Layer in the Legend. This allows use of a controlled static image rather than querying the server automatically for what it provides (which won't work through GeoWebCache anyway).")))),
                                   #Field("legend_format", label=T("Legend Format"), requires = IS_NULL_OR(IS_IN_SET(gis_layer_wms_img_formats))),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)

@@ -60,7 +60,6 @@ def template():
     """ RESTful CRUD controller """
 
     # Load Model
-    s3mgr.load("survey_template")
     table = s3db.survey_template
     s3 = response.s3
 
@@ -173,7 +172,7 @@ def template():
                     listadd=False,
                     deletable=False,
                    )
-    output = s3_rest_controller(module, resourcename, rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
 
     return output
 

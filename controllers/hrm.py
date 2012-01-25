@@ -376,7 +376,7 @@ def hrm_map_popup(r):
         elif contact.contact_method == "SMS":
             mobile_phone = contact.value
     if mobile_phone:
-        output.append(TR(TD(B("%s:" % pr_contact_method_opts.get("SMS"))),
+        output.append(TR(TD(B("%s:" % msg.CONTACT_OPTS.get("SMS"))),
                          TD(mobile_phone)))
     # Office number
     if r.record.site_id:
@@ -392,7 +392,7 @@ def hrm_map_popup(r):
             pass
     # Email address (as hyperlink)
     if email:
-        output.append(TR(TD(B("%s:" % pr_contact_method_opts.get("EMAIL"))),
+        output.append(TR(TD(B("%s:" % msg.CONTACT_OPTS.get("EMAIL"))),
                          TD(A(email, _href="mailto:%s" % email))))
 
     return output

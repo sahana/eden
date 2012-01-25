@@ -8,8 +8,12 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         API Key..............string..........Layer API key
-         Enabled..............boolean.........Layer Enabled?
+         API Key..............string..........Layer API key (only needed for MapMaker & Earth)
+         Maps.................boolean.........Layer Maps Enabled?
+         Satellite............boolean.........Layer Satellite Enabled?
+         Hybrid...............boolean.........Layer Hybrid Enabled?
+         Streetview...........boolean.........Layer Streetview Enabled?
+         Earth................boolean.........Layer Earth Enabled?
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -26,7 +30,11 @@
         <resource name="gis_layer_google">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="apikey"><xsl:value-of select="col[@field='API Key']"/></data>
-            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
+            <data field="maps_enabled"><xsl:value-of select="col[@field='Maps']"/></data>
+            <data field="satellite_enabled"><xsl:value-of select="col[@field='Satellite']"/></data>
+            <data field="hybrid_enabled"><xsl:value-of select="col[@field='Hybrid']"/></data>
+            <data field="streetview_enabled"><xsl:value-of select="col[@field='Streetview']"/></data>
+            <data field="earth_enabled"><xsl:value-of select="col[@field='Earth']"/></data>
         </resource>
     </xsl:template>
     <!-- ****************************************************************** -->
