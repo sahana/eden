@@ -609,9 +609,8 @@ function addToolbar() {
     }
 
     // WMS GetFeatureInfo
-    // @ToDo: Do this only when i18n strings passed, which is only when there is at least 1 Queryable WMS layer
-    // - although, this doesn't allow dynamic adding of layers...
-    if (S3.gis.layers_wms) {
+    // @ToDo: Add control if we add appropriate layers dynamically...
+    if (S3.i18n.gis_get_feature_info) {
         addWMSGetFeatureInfoControl(toolbar);
     }
 
