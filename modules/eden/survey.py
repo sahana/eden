@@ -381,7 +381,8 @@ class S3TemplateModel(S3Model):
             addQuestion(template_id, name, code, notes, type, posn)
         if form.vars.location_detail != None:
             s3 = current.response.s3
-            rawjson = unescape(form.vars.location_detail, {"'": '"'})
+            rawjson = unescape(form.vars.location_detail, {"u'": '"'})
+            rawjson = unescape(rawjson, {"'": '"'})
             locationList = json.loads(rawjson)
             for loc in locationList:
                 if loc in s3.survey_hierarchy_elements:
@@ -610,7 +611,7 @@ def survey_buildQuestionnaireFromTemplate(template_id):
         build a form displaying all the questions for a given template_id
     """
     s3 = current.response.s3
-    questions = getAllQuestionsForTemplate(template_id)
+    questions = survey_getAllQuestionsForTemplate(template_id)
     return buildQuestionsForm(questions,readOnly=True)
 
 def survey_getAllSectionsForTemplate(template_id):
@@ -1376,20 +1377,21 @@ class S3FormatterModel(S3Model):
             if template.time_qstn != "":
                 col1.append("STD-TIME")
             col2 = []
-            location_detail = template.location_detail
-            rawjson = unescape(location_detail, {"'": '"'})
-            locationList = json.loads(rawjson)
-            for loc in locationList:
-                col2.append("STD-%s" % loc)
-            col = [col1, col2]
-            rule = [{"columns":col}]
-            oldrules = form.vars.rules
-            rawjson = unescape(oldrules, {"'": '"'})
-            ruleList = json.loads(rawjson)
-            ruleList[:0]=rule
-            rules = json.dumps(ruleList)
-            ftable = db.survey_formatter
-            db(ftable.id == form.vars.id).update(rules = rules)
+            if "location_detail" in template:
+                rawjson = unescape(template.location_detail, {"u'": '"'})
+                rawjson = unescape(rawjson, {"'": '"'})
+                locationList = json.loads(rawjson)
+                for loc in locationList:
+                    col2.append("STD-%s" % loc)
+                col = [col1, col2]
+                rule = [{"columns":col}]
+                oldrules = form.vars.rules
+                rawjson = unescape(oldrules, {"'": '"'})
+                ruleList = json.loads(rawjson)
+                ruleList[:0]=rule
+                rules = json.dumps(ruleList)
+                ftable = db.survey_formatter
+                db(ftable.id == form.vars.id).update(rules = rules)
 
     @staticmethod
     def survey_formatter_duplicate(job):

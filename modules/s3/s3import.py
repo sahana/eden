@@ -4,7 +4,7 @@
     Resource Import Tools
 
     @author: Graeme Foster <graeme[at]acm.org>
-    @author: Dominic KÃ¶nig <dominic[at]aidiq.com>
+    @author: Dominic König <dominic[at]aidiq.com>
 
     @copyright: 2011 (c) Sahana Software Foundation
     @license: MIT
