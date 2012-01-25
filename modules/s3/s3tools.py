@@ -42,11 +42,13 @@ __all__ = ["SQLTABLES3",
 
 import sys
 import os
+import csv
 import datetime
 import re
 import urllib
 import warnings
 from cgi import escape
+from xml.sax.saxutils import unescape
 
 from gluon import *
 from gluon.html import xmlescape
@@ -54,6 +56,8 @@ from gluon.storage import Storage, Messages
 from gluon.sql import Field, Row, Query
 from gluon.sqlhtml import SQLFORM, SQLTABLE
 from gluon.tools import Crud
+
+import gluon.contrib.simplejson as json
 
 from s3validators import IS_UTC_OFFSET
 
@@ -329,7 +333,6 @@ class S3BulkImporter(object):
             The file consists of a comma separated list of:
             application, resource name, csv filename, xsl filename.
         """
-        import csv
         source = open(os.path.join(path, "tasks.cfg"), "r")
         values = csv.reader(source)
         for details in values:
@@ -423,8 +426,6 @@ class S3BulkImporter(object):
             # Store the view
             view = response.view
 
-            deployment_settings = current.deployment_settings
-
             _debug ("Running job %s %s (filename=%s transform=%s)" % (task[1], task[2], task[3], task[4]))
             prefix = task[1]
             name = task[2]
@@ -467,8 +468,6 @@ class S3BulkImporter(object):
             extra_data = None
             if task[5]:
                 try:
-                    import gluon.contrib.simplejson as json
-                    from xml.sax.saxutils import unescape
                     extradata = unescape(task[5], {"'": '"'})
                     extradata = json.loads(extradata)
                     extra_data = extradata

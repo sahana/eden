@@ -1,4 +1,4 @@
 "Name","Description","URL","Layers","Folder","Enabled","Base","Transparent","Opacity","Format","Tiled","Map"
-"VMap0","A Free low-resolution Vector Map of the whole world","http://vmap0.tiles.osgeo.org/wms/vmap0","basic",,"True","True","True",,,,
-"Blue Marble","A composite of four months of MODIS observations with a spatial resolution (level of detail) of 1 square kilometer per pixel.","http://maps.opengeo.org/geowebcache/service/wms","bluemarble",,"True","True",,,,,
-"LandSat","Global 15m satellite imagery from 2003.","http://hyperquad.telascience.org/cgi-bin/onearth?","OnEarth_PAN_321_20030801",,"True","True",,,"image/jpeg",,
+"VMap0","A Free low-resolution Vector Map of the whole world","http://vmap0.tiles.osgeo.org/wms/vmap0","basic",,False,"True","True",,,,
+"Blue Marble","A composite of four months of MODIS observations with a spatial resolution (level of detail) of 1 square kilometer per pixel.","http://maps.opengeo.org/geowebcache/service/wms","bluemarble",,False,"True",,,,,
+"LandSat","Global 15m satellite imagery from 2003.","http://hyperquad.telascience.org/cgi-bin/onearth?","OnEarth_PAN_321_20030801",,False,"True",,,"image/jpeg",,

@@ -259,6 +259,7 @@ function addGeoJSONLayer(layer) {
     // Style Rule For Clusters
     var cluster_style = {
         label: '${label}',
+        labelAlign: 'cm',
         pointRadius: '${radius}',
         fillColor: '${fill}',
         fillOpacity: opacity,
@@ -1077,6 +1078,7 @@ function addWFSLayer(layer) {
     var style_cluster = new OpenLayers.Style (
         {
             label: '${label}',
+            labelAlign: 'cm',
             pointRadius: '${radius}',
             fillColor: '${fill}',
             fillOpacity: opacity / 2,
@@ -1221,6 +1223,11 @@ function addWMSLayer(layer) {
     } else {
         var opacity = 1;
     }
+    if (undefined != layer.queryable) {
+        var queryable = layer.queryable;
+    } else {
+        var queryable = 1;
+    }
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
@@ -1230,6 +1237,7 @@ function addWMSLayer(layer) {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
+            queryable: queryable,
             visibility: visibility
         }
     );

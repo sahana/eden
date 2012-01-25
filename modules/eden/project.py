@@ -548,8 +548,10 @@ class S3ProjectModel(S3Model):
             report_fields.append((T("Theme"), "project_id$multi_theme_id"))
             report_fields.append((T("Hazard"), "project_id$multi_hazard_id"))
             report_fields.append((T("HFA"), "project_id$hfa"))
-            lh = settings.get_gis_default_location_hierarchy()
-            lh = [(lh[opt], opt) for opt in lh]
+            lh = current.gis.get_location_hierarchy()
+            if lh:
+                lh = [(lh[opt], opt) for opt in lh]
+                report_fields.extend(lh)
             report_fields.extend(lh)
             report_fields.append("location_id")
         else:
