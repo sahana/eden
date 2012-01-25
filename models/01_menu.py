@@ -1082,6 +1082,12 @@ if auth.permission.format in ("html"):
                           args="import"
                          )
                     ],
+                    [T("Import Template Layout"),
+                     False,
+                     aURL(f="formatter",
+                          args="import"
+                         )
+                    ],
                     [T("Import Completed Responses"),
                      False,
                      aURL(f="complete",

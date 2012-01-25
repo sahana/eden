@@ -386,6 +386,8 @@ class S3Importer(S3CRUD):
             upload_id = row.id
             if "single_pass" in r.vars:
                 single_pass = r.vars["single_pass"]
+            else:
+                single_pass = None
             self._generate_import_job(upload_id,
                                       upload_file,
                                       extension,

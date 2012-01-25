@@ -39,7 +39,7 @@ from gluon.sqlhtml import *
 import gluon.contrib.simplejson as json
 from gluon import *
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     print >> sys.stderr, "S3Survey: DEBUG MODE"
     def _debug(m):
@@ -1077,7 +1077,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             function to format the answer, which can be passed in
         """
         if value == None:
-            value = getAnswer()
+            value = self.getAnswer()
         return value
 
     def loadAnswer(self, complete_id, question_id, forceDB=False):
@@ -1987,7 +1987,7 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
         self.field.requires = IS_IN_SET(self.getList())
         value = self.getAnswer()
         s3 = current.response.s3
-        valueList = s3.json2list(answer)
+        valueList = s3.survey_json2list(value)
         self.field.name = self.question.code
         input = CheckboxesWidget.widget(self.field, valueList, **self.attr)
         self.field.name = "value"
@@ -2026,50 +2026,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     def canGrowHorizontal(self):
         return True
 
-
-    def getAnswer(self):
-        """
-            Return the value of the answer for this question
-
-            Overloaded method.
-
-            The answer can either be stored as a plain text or as a JSON string
-
-            If it is plain text then this is the location as entered, and is
-            the value that needs to be returned.
-
-            If it is a JSON value then it should include the raw value and
-            any other of the following properties.
-            {'raw':'original value',
-             'id':numerical value referencing a record on gis_location table,
-             'parent':'name of the parent location'
-             'Latitude':numeric
-             'Longitude':numeric
-            }
-        """
-        if "answer" in self.question:
-            answer = self.question.answer
-            # if it is JSON then ensure all quotes are converted to double
-            try:
-                rowList = self.getAnswerListFromJSON(answer)
-                return rowList["raw"]
-            except:
-                return answer
-        else:
-            return ""
-
-    def repr(self, value=None):
-        """
-            function to format the answer, which can be passed in
-        """
-        if value == None:
-            return self.getAnswer()
-        try:
-            rowList = self.getAnswerListFromJSON(value)
-            return rowList["raw"]
-        except:
-            return value
-
     def display(self, **attr):
         """
             This displays the widget on a web form. It uses the layout
@@ -2077,33 +2033,22 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         """
         return S3QuestionTypeAbstractWidget.display(self, **attr)
 
-    def getLocationRecord(self, complete_id, answer):
+    def getLocationRecord(self, complete_id, location):
         """
             Return the location record from the database
         """
         record = Storage()
-        if answer != None:
-            gtable = current.db.gis_location
-            # if it is JSON then ensure all quotes are converted to double
-            try:
-                rowList = self.getAnswerListFromJSON(answer)
-            except:
-                query = (gtable.name == answer)
-                key = answer
-            else:
-                if "id" in rowList:
-                    query = (gtable.id == rowList["id"])
-                    key = rowList["id"]
-                else:
-                    (query, key) = self.buildQuery(rowList)
+        if location != None:
+            gtable = current.s3db.gis_location
+            query = (gtable.name == location)
             record = current.db(query).select(gtable.name,
                                               gtable.lat,
                                               gtable.lon,
                                              )
             record.complete_id = complete_id
-            record.key = key
+            record.key = location
             if len(record.records) == 0:
-                msg = "Unknown Location %s, %s, %s" %(answer, query, record.key)
+                msg = "Unknown Location %s, %s, %s" %(location, query, record.key)
                 _debug(msg)
             return record
         else:
@@ -2116,25 +2061,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         """
         return value
 
-    def buildQuery(self, rowList):
-        """
-            Function that will build a gis_location query
-
-            @todo: Extend this to test the L0-L4 values
-        """
-        gtable = current.db.gis_location
-        if "alternative" in rowList:
-            query = (gtable.name == rowList["alternative"])
-            key = rowList["alternative"]
-        else:
-            query = (gtable.name == rowList["raw"])
-            key = rowList["raw"]
-        if "Parent" in rowList:
-            parent_query = current.db(gtable.name == rowList["Parent"]).select(gtable.id)
-            query = query & (gtable.parent.belongs(parent_query))
-            key += rowList["Parent"]
-        return (query, key)
-
     def getAnswerListFromJSON(self, answer):
         """
             If the answer is stored as a JSON value return the data as a map
@@ -2143,7 +2069,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             and must be handled by the calling function
         """
         s3 = current.response.s3
-        answerList = s3.json2py(answer)
+        answerList = s3.survey_json2py(answer)
         return answerList
 
     ######################################################################
@@ -3222,7 +3148,7 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
             Where necessary, this function will be overridden.
         """
         s3 = current.response.s3
-        valueList = s3.json2list(answer)
+        valueList = s3.survey_json2list(answer)
         return valueList
 
     def basicResults(self):
