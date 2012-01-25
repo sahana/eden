@@ -1234,6 +1234,11 @@ function addWMSLayer(layer) {
     } else {
         var queryable = 1;
     }
+    if (undefined != layer.legendURL) {
+        var legendURL = layer.legendURL;
+    } else {
+        var legendURL;
+    }
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
@@ -1277,6 +1282,10 @@ function addWMSLayer(layer) {
         } else {
             wmsLayer.buffer = 0;
         }
+    }
+    if (legendURL) {
+        // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+        wmsLayer.legendURL = legendURL;
     }
     map.addLayer(wmsLayer);
 }

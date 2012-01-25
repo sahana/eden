@@ -19,6 +19,7 @@
          Opacity..............double..........Layer Opacity
          Format...............string..........Layer Image Format
          Queryable............boolean.........Layer Queryable?
+         LegendURL............string..........Layer LegendURL
          Tiled................boolean.........Layer Tiled?
          Style................string..........Layer Style
          Map..................string..........Layer Map (not usually required)
@@ -48,6 +49,7 @@
             <data field="opacity"><xsl:value-of select="col[@field='Opacity']"/></data>
             <data field="img_format"><xsl:value-of select="col[@field='Format']"/></data>
             <data field="queryable"><xsl:value-of select="col[@field='Queryable']"/></data>
+            <data field="legend_url"><xsl:value-of select="col[@field='LegendURL']"/></data>
             <data field="tiled"><xsl:value-of select="col[@field='Tiled']"/></data>
             <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="map"><xsl:value-of select="col[@field='Map']"/></data>

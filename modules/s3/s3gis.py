@@ -4831,6 +4831,12 @@ class WMSLayer(MultiRecordLayer):
                 url = self.url,
                 layers = self.layers
             )
+            legend_url = self.legend_url
+            if legend_url and not legend_url.startswith("http"):
+                legend_url = "%s/%s%s" % \
+                    (current.deployment_settings.get_base_public_url(),
+                     current.request.application,
+                     legend_url)
             self.add_attributes_if_not_default(
                 output,
                 transparent = (self.transparent, (True,)),
@@ -4842,6 +4848,7 @@ class WMSLayer(MultiRecordLayer):
                 style = (self.style, (None,)),
                 bgcolor = (self.bgcolor, (None,)),
                 tiled = (self.tiled, (False, )),
+                legendURL = (legend_url, (None,)),
                 queryable = (self.queryable, (False, )),
             )
             self.setup_folder(output)
