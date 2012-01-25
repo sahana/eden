@@ -728,7 +728,6 @@ function addPdfControl(toolbar) {
 }
 
 // WMS GetFeatureInfo control
-// @ToDo: Activate only if Queryable WMS layers are loaded
 function addWMSGetFeatureInfoControl(toolbar) {
     S3.gis.wmsGetFeatureInfo = new gxp.plugins.WMSGetFeatureInfo({
         actionTarget: 'mappnlcntr.tbar',
@@ -740,9 +739,8 @@ function addWMSGetFeatureInfoControl(toolbar) {
         toggleGroup: 'controls',
         // html not permitted by Proxy
         format: "grid",
-        // @ToDo: i18n
-        infoActionTip: 'Get Feature Info',
-        popupTitle: 'Feature Info'
+        infoActionTip: S3.i18n.gis_get_feature_info,
+        popupTitle: S3.i18n.gis_feature_info
     });
     // Set up shortcuts to allow GXP Plugins to work
     // @ToDo: Move to a more central place

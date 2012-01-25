@@ -4015,6 +4015,15 @@ S3.gis.layers_feature_queries[%i] = {
             # @ToDo: Just add the default Base Layer
             pass
 
+        # WMS getFeatureInfo
+        if response.s3.gis.get_feature_info:
+            getfeatureinfo = """S3.i18n.gis_get_feature_info = '%s';
+S3.i18n.gis_feature_info = '%s';
+""" % (T("Get Feature Info"),
+       T("Feature Info"))
+        else:
+            getfeatureinfo = ""
+        
         #############
         # Main script
         #############
@@ -4060,6 +4069,7 @@ S3.gis.layers_feature_queries[%i] = {
             # i18n Labels
             legend,                     # Presence of label turns feature on
             search,                     # Presence of label turns feature on
+            getfeatureinfo,             # Presence of labels turns feature on
             "S3.i18n.gis_requires_login = '%s';\n" % T("Requires Login"),
             "S3.i18n.gis_base_layers = '%s';\n" % T("Base Layers"),
             "S3.i18n.gis_overlays = '%s';\n" % T("Overlays"),
@@ -4814,11 +4824,19 @@ class WMSLayer(MultiRecordLayer):
 
     class SubLayer(MultiRecordLayer.SubLayer):
         def as_dict(self):
+            if self.queryable:
+                current.response.s3.gis.get_feature_info = True
             output = dict(
                 name = self.safe_name,
                 url = self.url,
                 layers = self.layers
             )
+            legend_url = self.legend_url
+            if legend_url and not legend_url.startswith("http"):
+                legend_url = "%s/%s%s" % \
+                    (current.deployment_settings.get_base_public_url(),
+                     current.request.application,
+                     legend_url)
             self.add_attributes_if_not_default(
                 output,
                 transparent = (self.transparent, (True,)),
@@ -4830,6 +4848,8 @@ class WMSLayer(MultiRecordLayer):
                 style = (self.style, (None,)),
                 bgcolor = (self.bgcolor, (None,)),
                 tiled = (self.tiled, (False, )),
+                legendURL = (legend_url, (None,)),
+                queryable = (self.queryable, (False, )),
             )
             self.setup_folder(output)
             self.setup_visibility_and_opacity(output)

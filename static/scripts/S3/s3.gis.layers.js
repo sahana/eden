@@ -457,6 +457,8 @@ function addGeoJSONLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            legendURL: marker_url,
             styleMap: featureClusterStyleMap,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -652,6 +654,8 @@ function addGPXLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            legendURL: marker_url,
             style: style_marker,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -757,6 +761,8 @@ function addKMLLayer(layer) {
                     interval: refresh * 1000 // milliseconds
                 })
             ],
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            legendURL: marker_url,
             style: style_marker,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -1228,6 +1234,11 @@ function addWMSLayer(layer) {
     } else {
         var queryable = 1;
     }
+    if (undefined != layer.legendURL) {
+        var legendURL = layer.legendURL;
+    } else {
+        var legendURL;
+    }
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
@@ -1237,6 +1248,7 @@ function addWMSLayer(layer) {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             queryable: queryable,
             visibility: visibility
         }
@@ -1270,6 +1282,10 @@ function addWMSLayer(layer) {
         } else {
             wmsLayer.buffer = 0;
         }
+    }
+    if (legendURL) {
+        // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+        wmsLayer.legendURL = legendURL;
     }
     map.addLayer(wmsLayer);
 }
