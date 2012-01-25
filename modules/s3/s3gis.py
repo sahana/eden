@@ -770,11 +770,12 @@ class GIS(object):
                     # Ignore this one!
                     ids.remove(str(row.id))
                     for id in ids:
-                        tryagain.append(int(id))
+                        if id not in tryagain:
+                            tryagain.append(int(id))
                 else:
                     # Try the Parent
                     parent = row.parent
-                    if parent:
+                    if parent and parent not in tryagain:
                         tryagain.append(parent)
 
         return (output, tryagain)
