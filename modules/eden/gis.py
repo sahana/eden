@@ -31,6 +31,7 @@
 
 __all__ = ["S3LocationModel",
            "S3GISConfigModel",
+           "S3FeatureLayerModel",
            "S3MapModel",
            "gis_location_represent"
            ]
@@ -308,7 +309,8 @@ class S3LocationModel(S3Model):
         gis = current.gis
 
         # Update the Path
-        gis.update_location_tree(form.vars.id, form.vars.parent)
+        vars = form.vars
+        gis.update_location_tree(vars.id, vars.parent)
         return
 
     # -------------------------------------------------------------------------
@@ -347,11 +349,12 @@ class S3LocationModel(S3Model):
         field_error = T("Please select another level")
 
         # Shortcuts
-        level = "level" in form.vars and form.vars.level
-        parent = "parent" in form.vars and form.vars.parent
-        lat = "lat" in form.vars and form.vars.lat
-        lon = "lon" in form.vars and form.vars.lon
-        members = "members" in form.vars and form.vars.members
+        vars = form.vars
+        level = "level" in vars and vars.level
+        parent = "parent" in vars and vars.parent
+        lat = "lat" in vars and vars.lat
+        lon = "lon" in vars and vars.lon
+        members = "members" in vars and vars.members
         id = "id" in request.vars and request.vars.id
 
         # For a new location, set the level to "GR" if members are present.
@@ -379,7 +382,7 @@ class S3LocationModel(S3Model):
                     form.errors["members"] = record_error
                     return
                 # Make sure no-one takes away all members.
-                if "members" in form.vars and not form.vars.members:
+                if "members" in vars and not vars.members:
                     error = T("A location group must have at least one member.")
                     response.error = error
                     form.errors["members"] = error
@@ -400,12 +403,12 @@ class S3LocationModel(S3Model):
             # make a group, set "group" level. Don't allow also setting a parent.
             if members:
                 if edit_GR:
-                    if "parent" in form.vars and form.vars.parent:
+                    if "parent" in vars and vars.parent:
                         error = T("Location group cannot have a parent.")
                         response.error = error
                         form.errors["parent"] = error
                         return
-                    form.vars.level = "GR"
+                    vars.level = "GR"
                 else:
                     error = T("Sorry, only users with the MapAdmin role are allowed to create location groups.")
                     response.error = error
@@ -429,7 +432,6 @@ class S3LocationModel(S3Model):
                                        table.lon_min,
                                        table.lat_max,
                                        table.lon_max,
-                                       #table.level,
                                        limitby=(0, 1),
                                        cache=cache).first()
 
@@ -480,9 +482,9 @@ class S3LocationModel(S3Model):
         # Check within permitted bounds
         # (avoid incorrect data entry)
         # Points only for now
-        if not "gis_feature_type" in form.vars or (form.vars.gis_feature_type == "1"):
+        if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
             # Skip if no Lat/Lon provided
-            if (lat != None) and (lon != None):
+            if lat and lon:
                 if parent and _parent.gis_feature_type == 3:
                     # Check within Bounds of the Parent
                     # Rough (Bounding Box)
@@ -597,7 +599,6 @@ class S3LocationModel(S3Model):
                     query = query & (table.level == level)
 
             _duplicate = db(query).select(table.id,
-                                          table.uuid,
                                           limitby=(0, 1)).first()
             if _duplicate:
                 job.id = _duplicate.id
@@ -638,7 +639,6 @@ class S3GISConfigModel(S3Model):
              "gis_marker",
              "gis_projection",
              "gis_symbology",
-             "gis_feature_class",
              "gis_marker_id",
              "gis_projection_id",
              "gis_config_form_setup"
@@ -795,6 +795,7 @@ class S3GISConfigModel(S3Model):
 
         # =====================================================================
         # GIS Symbology
+        # - currently unused
         tablename = "gis_symbology"
         table = self.define_table(tablename,
                                   Field("name", length=32,
@@ -967,55 +968,6 @@ class S3GISConfigModel(S3Model):
         if settings.get_security_map() and not auth.s3_has_role("MapAdmin"):
             self.configure(tablename,
                            deletable=False)
-
-        # ----------------------------------------------------------------------
-        # GIS Feature Classes
-        #
-        #  These are used in exported feeds for Icons
-        #
-        tablename = "gis_feature_class"
-        table = self.define_table(tablename,
-                                  Field("name", length=64,
-                                        notnull=True, unique=True,
-                                        label = T("Name")),
-                                  Field("description", label = T("Description")),
-                                  symbology_id(), # Currently a server-side config option, whereas it would be more useful as a URL query option
-                                  marker_id(),
-                                  Field("gps_marker", label = T("GPS Marker"),
-                                        # This is the list of GPS Markers for Garmin devices
-                                        requires = IS_NULL_OR(IS_IN_SET(gis.gps_symbols,
-                                                                        zero=T("Use default")))),
-                                  Field("resource", label = T("Resource")),
-                                  # e.g. L1 for Provinces, L2 for Districts, etc
-                                  # e.g. office type 5 for Warehouses
-                                  Field("filter_field",
-                                        label = T("Filter Field")),
-                                  Field("filter_value",
-                                        label = T("Filter Value"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s /" % (T("Filter Value"),
-                                                                          T("If you want several values, then separate with")))),
-                                  *s3.meta_fields())
-
-        # Configured in zz_last.py when all tables are available
-        #table.resource.requires = IS_NULL_OR(IS_IN_SET(db.tables))
-
-        #ADD_FEATURE_CLASS = T("Add Feature Class")
-        # Reusable field to include in other table definitions
-        #feature_class_id = S3ReusableField("feature_class_id", db.gis_feature_class, sortby="name",
-        #                                    requires = IS_NULL_OR(IS_ONE_OF(db, "gis_feature_class.id", "%(name)s")),
-        #                                    represent = lambda id: (id and [db(db.gis_feature_class.id == id).select(db.gis_feature_class.name,
-        #                                                                                                             limitby=(0, 1)).first().name] or [NONE])[0],
-        #                                    label = T("Feature Class"),
-        #                                    comment = DIV(A(ADD_FEATURE_CLASS,
-        #                                                    _class="colorbox",
-        #                                                    _href=URL(c="gis", f="feature_class", args="create", vars=dict(format="popup")),
-        #                                                    _target="top",
-        #                                                    _title=ADD_FEATURE_CLASS),
-        #                                              DIV( _class="tooltip",
-        #                                                   _title="%s|%s" % (T("Feature Class"),
-        #                                                                     T("Defines the marker used for display & the attributes visible in the popup.")))),
-        #                                    ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -1228,6 +1180,7 @@ class S3GISConfigModel(S3Model):
     @staticmethod
     def gis_config_represent(id):
         """ Represent a Configuration """
+
         T = current.T
         url = URL(c="gis", f="config", args=id)
         return A(T("Open"), _href=url, _class="action-btn")
@@ -1284,7 +1237,7 @@ class S3GISConfigModel(S3Model):
             if "pe_id" in form.request_vars:
                 name = s3db.pr_pentity_represent(form.request_vars.pe_id)
                 name = "Personal: %s" % name
-                form.vars.name = name
+                vars.name = name
         except:
             # AJAX Save of Viewport from Map
             pass
@@ -1292,11 +1245,11 @@ class S3GISConfigModel(S3Model):
         # If there's a region location, set its owned by role to MapAdmin.
         # That makes Authenticated no longer an owner, so they only get whatever
         # is permitted by uacl (currently that is set to READ).
-        if "region_location_id" in form.vars and form.vars.region_location_id:
+        if "region_location_id" in vars and vars.region_location_id:
             system_roles = current.session.s3.system_roles
             MAP_ADMIN = system_roles.MAP_ADMIN
             table = s3db.gis_location
-            query = (table.id == form.vars.region_location_id)
+            query = (table.id == vars.region_location_id)
             db(query).update(owned_by_role = MAP_ADMIN)
 
     # -------------------------------------------------------------------------
@@ -1493,6 +1446,94 @@ class S3GISConfigModel(S3Model):
 
 
 # =============================================================================
+class S3FeatureLayerModel(S3Model):
+    """
+        Model for Feature Layers
+        - used to select a set of Features for either Display on a Map
+          or Export as XML: S3XML.gis_encode()
+          (for transformation to GeoJSON/KML/GPX)
+    """
+
+    names = ["gis_layer_feature"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        request = current.request
+        s3 = current.response.s3
+
+        marker_id = self.gis_marker_id
+
+        # =============================================================================
+        # Feature Layers
+
+        tablename = "gis_layer_feature"
+        table = self.define_table(tablename,
+                        Field("name", length=64, notnull=True, unique=True,
+                              label = T("Name")),
+                        Field("description", label=T("Description")),
+                        Field("enabled", "boolean", default=True,
+                              label=T("Available in Viewer?")),
+                        Field("visible", "boolean", default=True,
+                              label=T("On by default?")),
+                        gis_layer_folder()(),
+                        Field("module",
+                              label = T("Module")),
+                        Field("resource",
+                              label = T("Resource")),
+                        # REST Query added to Map JS to call back to server
+                        Field("filter",
+                              label = T("REST Filter"),
+                              comment = DIV(_class="stickytip",
+                                            _title="%s|%s" % (T("REST Filter"),
+                                                              "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % T("Uses the REST Query Format defined in")))),
+                        # SQL Query to determine icon for feed export (e.g. type=1)
+                        # @ToDo: Have both be REST-style with this being used for both & optional additional params available for main map (e.g. obsolete=False&time_between...)
+                        Field("filter_field",
+                              label = T("Filter Field")),
+                        Field("filter_value",
+                              label = T("Filter Value"),
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s /" % (T("Filter Value"),
+                                                                T("If you want several values, then separate with")))),
+                        Field("popup_label",        # @ToDo: Replace with s3.crud_strings[tablename]?
+                              label = T("Popup Label"),
+                              comment=DIV(_class="tooltip",
+                                          _title="%s|%s" % (T("Popup Label"),
+                                                            T("Used in onHover Tooltip & Cluster Popups to differentiate between types.")))),
+                        Field("popup_fields",
+                              default = "name",
+                              label = T("Popup Fields"),
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Popup Fields"),
+                                                              T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records.")))),
+                        marker_id(),                # Optional Marker to over-ride the values from the Feature Classes
+                        Field("gps_marker", label = T("GPS Marker"),
+                              # This is the list of GPS Markers for Garmin devices
+                              requires = IS_NULL_OR(IS_IN_SET(current.gis.gps_symbols,
+                                                              zero=T("Use default")))),
+                        # Disabled until re-implemented:
+                        #Field("polygons", "boolean", default=False,
+                        #      label=T("Display Polygons?")),
+                        gis_opacity()(),
+                        # @ToDo: Expose the Graphic options
+                        gis_refresh()(),
+                        cluster_distance()(),
+                        cluster_threshold()(),
+                        s3.role_required(),       # Single Role
+                        #s3.roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                        *s3.meta_fields())
+
+        # In Controller (to ensure all tables visible)
+        #table.resource.requires = IS_IN_SET(db.tables)
+
+        # ---------------------------------------------------------------------
+        return Storage(
+            )
+
+
+# =============================================================================
 class S3MapModel(S3Model):
     """ Models for Maps """
 
@@ -1501,7 +1542,6 @@ class S3MapModel(S3Model):
              "gis_feature_query",
              "gis_layer_bing",
              "gis_layer_coordinate",
-             "gis_layer_feature",
              "gis_layer_geojson",
              "gis_layer_georss",
              "gis_layer_google",
@@ -1535,70 +1575,8 @@ class S3MapModel(S3Model):
         role_required = s3.role_required
         #roles_permitted = s3.roles_permitted
 
-        gis_layer_folder = self.gis_layer_folder()
-        gis_opacity = self.gis_opacity()
-        gis_refresh = self.gis_refresh()
-        cluster_distance = self.cluster_distance()
-        cluster_threshold = self.cluster_threshold()
-
-        # =============================================================================
-        # Feature Layers
-        # Used to select a set of Features for either Display or Export
-        #
-        # This needs to be accessible from any resource controller which is used as a
-        # feature layer
-        #
-
-        # Used by S3REST
-        tablename = "gis_layer_feature"
-        table = self.define_table(tablename,
-                        Field("name", length=64, notnull=True, unique=True,
-                              label = T("Name")),
-                        Field("enabled", "boolean", default=True,
-                              label=T("Available in Viewer?")),
-                        Field("visible", "boolean", default=True,
-                              label=T("On by default?")),
-                        gis_layer_folder(),
-                        Field("module",
-                              label = T("Module")),
-                        Field("resource",
-                              label = T("Resource")),
-                        # REST Query
-                        Field("filter",
-                              label = T("Filter"),
-                              comment = DIV(_class="stickytip",
-                                            _title="%s|%s" % (T("Filter"),
-                                                              "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % T("Uses the REST Query Format defined in")))),
-                        Field("popup_label",        # @ToDo: Replace with s3.crud_strings[tablename]?
-                              label = T("Popup Label"),
-                              comment=DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Popup Label"),
-                                                            T("Used in onHover Tooltip & Cluster Popups to differentiate between types.")))),
-                        Field("popup_fields",
-                              default = "name",
-                              label = T("Popup Fields"),
-                              comment = DIV(_class="tooltip",
-                                            _title="%s|%s" % (T("Popup Fields"),
-                                                              T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records.")))),
-                        marker_id(),                # Optional Marker to over-ride the values from the Feature Classes
-                        # Disabled until re-implemented:
-                        #Field("polygons", "boolean", default=False,
-                        #      label=T("Display Polygons?")),
-                        gis_opacity(),
-                        # @ToDo: Expose the Graphic options
-                        gis_refresh(),
-                        cluster_distance(),
-                        cluster_threshold(),
-                        role_required(),       # Single Role
-                        #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                        s3.comments(),
-                        *s3.meta_fields())
-
-        # In Controller (to ensure all tables visible)
-        #table.resource.requires = IS_IN_SET(db.tables)
-
         # ---------------------------------------------------------------------
-        # GPS Feature Queries
+        # GIS Feature Queries
         #
         # Store results of Feature Queries in a temporary table to allow
         # BBOX queries, Clustering, Refresh, Client-side Filtering, etc
@@ -1664,9 +1642,9 @@ class S3MapModel(S3Model):
         # @ToDo: Constrain to a single record
         table = self.define_table("gis_layer_bing",
                                   name_field(),
-                                  Field("description"),
+                                  Field("description", label=T("Description")),
                                   Field("enabled", "boolean", default=False),
-                                  Field("apikey"),
+                                  Field("apikey", label=T("API Key")),
                                   Field("aerial_enabled", "boolean", default=False),
                                   Field("aerial", default="Bing Satellite"),
                                   Field("road_enabled", "boolean", default=False),
@@ -1689,7 +1667,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                                   *s3.meta_fields())
@@ -1702,16 +1680,16 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url", label=T("Location"), requires=IS_NOT_EMPTY()),
                                   projection_id(default=2,
                                                 requires = IS_ONE_OF(db, "gis_projection.id",
                                                                      "%(name)s")),
                                   marker_id(),
-                                  gis_opacity(),
-                                  gis_refresh(),
-                                  cluster_distance(),
-                                  cluster_threshold(),
+                                  gis_opacity()(),
+                                  gis_refresh()(),
+                                  cluster_distance()(),
+                                  cluster_threshold()(),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                                   *s3.meta_fields())
@@ -1724,7 +1702,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url", label=T("Location"), requires = IS_NOT_EMPTY()),
                                   Field("data", label=T("Data"),
                                         comment=DIV(_class="tooltip",
@@ -1736,10 +1714,10 @@ class S3MapModel(S3Model):
                                                     _title="%s|%s" % (T("Image"),
                                                                       T("Optional. The name of an element whose contents should be a URL of an Image file put into Popups.")))),
                                   marker_id(),
-                                  gis_opacity(),
-                                  gis_refresh(),
-                                  cluster_distance(),
-                                  cluster_threshold(),
+                                  gis_opacity()(),
+                                  gis_refresh()(),
+                                  cluster_distance()(),
+                                  cluster_threshold()(),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                                   *s3.meta_fields())
@@ -1779,7 +1757,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("track", "upload", autodelete = True,
                                         label = T("GPS Track File"),
                                         requires = IS_UPLOAD_FILENAME(extension="gpx"),
@@ -1799,9 +1777,9 @@ class S3MapModel(S3Model):
                                   Field("routes", "boolean", default=False,
                                         label=T("Display Routes?")),
                                   marker_id(),
-                                  gis_opacity(),
-                                  cluster_distance(),
-                                  cluster_threshold(),
+                                  gis_opacity()(),
+                                  cluster_distance()(),
+                                  cluster_threshold()(),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                                   *s3.meta_fields())
@@ -1814,7 +1792,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url", label=T("Location"),
                                         requires=IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
@@ -1824,10 +1802,10 @@ class S3MapModel(S3Model):
                                         comment=T("The attribute within the KML which is used for the title of popups.")),
                                   Field("body", label=T("Body"), default="description",
                                         comment=T("The attribute(s) within the KML which are used for the body of popups. (Use a space between attributes)")),
-                                  gis_refresh(),
-                                  gis_opacity(),
-                                  cluster_distance(),
-                                  cluster_threshold(),
+                                  gis_refresh()(),
+                                  gis_opacity()(),
+                                  cluster_distance()(),
+                                  cluster_threshold()(),
                                   marker_id(),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
@@ -1841,7 +1819,7 @@ class S3MapModel(S3Model):
                                   name_field(),
                                   Field("description", label=T("Description")),
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("code", "text", label=T("Code"),
                                         default="var myNewLayer = new OpenLayers.Layer.XYZ();\nmap.addLayer(myNewLayer);"),
                                   role_required(),       # Single Role
@@ -1870,7 +1848,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url1", label=T("Location"), requires=IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Location"),
@@ -1894,7 +1872,7 @@ class S3MapModel(S3Model):
                                   name_field(),
                                   Field("description", label=T("Description")),
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url", label=T("Location"), requires=IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Location"),
@@ -1922,7 +1900,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=True,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url", label=T("Location"), requires = IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Location"),
@@ -1961,10 +1939,10 @@ class S3MapModel(S3Model):
                                   projection_id(default=2), # 4326
                                   Field("version", label=T("Version"), default="1.1.0",
                                         requires=IS_IN_SET(["1.0.0", "1.1.0"], zero=None)),
-                                  #gis_refresh(),
-                                  gis_opacity(),
-                                  cluster_distance(),
-                                  cluster_threshold(),
+                                  #gis_refresh()(),
+                                  gis_opacity()(),
+                                  cluster_distance()(),
+                                  cluster_threshold()(),
                                   #Field("editable", "boolean", default=False, label=T("Editable?")),
                                   role_required(),       # Single Role
                                   #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
@@ -1978,7 +1956,7 @@ class S3MapModel(S3Model):
                                   Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
                                   Field("visible", "boolean", default=False,
                                         label=T("On by default? (only applicable to Overlays)")),
-                                  gis_layer_folder(),
+                                  gis_layer_folder()(),
                                   Field("url", label=T("Location"), requires = IS_NOT_EMPTY(),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Location"),
@@ -1990,7 +1968,7 @@ class S3MapModel(S3Model):
                                         label=T("Base Layer?")),
                                   Field("transparent", "boolean", default=True,
                                         label=T("Transparent?")),
-                                  gis_opacity(),
+                                  gis_opacity()(),
                                   Field("map", length=32, label=T("Map"),
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Map"),
@@ -2037,7 +2015,7 @@ class S3MapModel(S3Model):
         #                          name_field(),
         #                          Field("description", label=T("Description")),
         #                          Field("enabled", "boolean", default=True, label=T("Available in Viewer?")),
-        #                          gis_layer_folder(),
+        #                          gis_layer_folder()(),
         #                          Field("url", label=T("Location"), requires=IS_NOT_EMPTY(),
         #                                comment=DIV(_class="tooltip",
         #                                            _title="%s|%s" % (T("Location"),
@@ -2122,7 +2100,7 @@ class S3MapModel(S3Model):
         #                          Field("visibility", "boolean"),
         #                          Field("group_"),
         #                          Field("fixed", "boolean"),
-        #                          gis_opacity(),
+        #                          gis_opacity()(),
         #                          Field("type_"),
         #                          # Handle this as a special case for 'None' layer ('ol' source)
         #                          #"args":["None",{"visibility":false}]
@@ -2172,65 +2150,7 @@ class S3MapModel(S3Model):
 
         # ---------------------------------------------------------------------
         return Storage(
-                gis_opacity = self.gis_opacity,
-                gis_refresh = self.gis_refresh,
-                gis_cluster_distance = self.cluster_distance,
-                gis_cluster_threshold = self.cluster_threshold
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_layer_folder():
-        T = current.T
-        return S3ReusableField("dir", length=32,
-                               comment = DIV(_class="tooltip",
-                                             _title="%s|%s" % (T("Folder"),
-                                                               T("If you enter a foldername then the layer will appear in this folder in the Map's layer switcher."))),
-                               label = T("Folder"))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_opacity():
-        T = current.T
-        return S3ReusableField("opacity", "double", default=1.0,
-                               requires = IS_FLOAT_IN_RANGE(0, 1),
-                               widget = S3SliderWidget(minval=0, maxval=1, steprange=0.01, value=1),
-                               comment = DIV(_class="tooltip",
-                                             _title="%s|%s" % (T("Opacity"),
-                                                               T("Left-side is fully transparent (0), right-side is opaque (1.0)."))),
-                               label = T("Opacity"))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_refresh():
-        T = current.T
-        return S3ReusableField("refresh", "integer", default=900,        # 15 minutes
-                               requires = IS_INT_IN_RANGE(10, 86400),    # 10 seconds - 24 hours
-                               label = T("Refresh Rate (seconds)"))
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cluster_distance():
-        T = current.T
-        return S3ReusableField("cluster_distance", "integer", notnull=True,
-                               label = T("Cluster Distance"),
-                               comment = DIV(_class="tooltip",
-                                             _title="%s|%s" % (T("Cluster Distance"),
-                                                               T("The number of pixels apart that features need to be before they are clustered."))),
-                               requires = IS_INT_IN_RANGE(1, 30),
-                               default = 5)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cluster_threshold():
-        T = current.T
-        return S3ReusableField("cluster_threshold", "integer", notnull=True,
-                               label = T("Cluster Threshold"),
-                               comment = DIV(_class="tooltip",
-                                             _title="%s|%s" % (T("Cluster Threshold"),
-                                                               T("The minimum number of features to form a cluster."))),
-                               requires = IS_INT_IN_RANGE(1, 10),
-                               default = 2)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2278,26 +2198,55 @@ class S3MapModel(S3Model):
             # Disable it
             form.vars.enabled = False
 
-    # -------------------------------------------------------------------------
-    #@staticmethod
-    # def gis_yahoo_onvalidation(form):
-        # """
-            # Warn the user about issues
-        # """
 
-        # T = current.T
-        # reponse = current.response
+# =============================================================================
+def gis_layer_folder():
+    T = current.T
+    return S3ReusableField("dir", length=32,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Folder"),
+                                                           T("If you enter a foldername then the layer will appear in this folder in the Map's layer switcher."))),
+                           label = T("Folder"))
 
-        # if not form.vars.apikey:
-            # response.warning = T("Yahoo Layers cannot be displayed if there isn't a valid API Key")
-        ## Enable the overall LayerType if any of the layers are enabled
-        # if "satellite_enabled" in form.vars or \
-           # "maps_enabled" in form.vars or \
-           # "hybrid_enabled" in form.vars:
-            # form.vars.enabled = True
-        # else:
-            ## Disable it
-            # form.vars.enabled = False
+# =============================================================================
+def gis_opacity():
+    T = current.T
+    return S3ReusableField("opacity", "double", default=1.0,
+                           requires = IS_FLOAT_IN_RANGE(0, 1),
+                           widget = S3SliderWidget(minval=0, maxval=1, steprange=0.01, value=1),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Opacity"),
+                                                           T("Left-side is fully transparent (0), right-side is opaque (1.0)."))),
+                           label = T("Opacity"))
+
+# =============================================================================
+def gis_refresh():
+    T = current.T
+    return S3ReusableField("refresh", "integer", default=900,        # 15 minutes
+                           requires = IS_INT_IN_RANGE(10, 86400),    # 10 seconds - 24 hours
+                           label = T("Refresh Rate (seconds)"))
+
+# =============================================================================
+def cluster_distance():
+    T = current.T
+    return S3ReusableField("cluster_distance", "integer", notnull=True,
+                           label = T("Cluster Distance"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Cluster Distance"),
+                                                           T("The number of pixels apart that features need to be before they are clustered."))),
+                           requires = IS_INT_IN_RANGE(1, 30),
+                           default = 5)
+
+# =============================================================================
+def cluster_threshold():
+    T = current.T
+    return S3ReusableField("cluster_threshold", "integer", notnull=True,
+                           label = T("Cluster Threshold"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Cluster Threshold"),
+                                                           T("The minimum number of features to form a cluster."))),
+                           requires = IS_INT_IN_RANGE(1, 10),
+                           default = 2)
 
 # =============================================================================
 def gis_location_represent_row(location, showlink=True, simpletext=False):

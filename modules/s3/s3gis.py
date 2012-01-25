@@ -1795,7 +1795,6 @@ class GIS(object):
             @ToDo: Reverse this - have this call Marker()?
 
             @ToDo: Try this once per Resource if unfiltered
-            @ToDo: Use gis_layer_feature instead of gis_feature_class?
 
             @param config - the gis_config
             @param tablename
@@ -1809,36 +1808,42 @@ class GIS(object):
             db = current.db
             s3db = current.s3db
             cache = s3db.cache
-            table_marker = s3db.gis_marker
-            table_fclass = s3db.gis_feature_class
 
-            symbology = config.symbology_id
+            table = s3db.gis_layer_feature
+            mtable = s3db.gis_marker
+
+            (module, resource) = tablename.split("_", 1)
+
+            #symbology = config.symbology_id
             marker = None
 
-            # 1st choice for a Marker is the Feature Class's
-            query = (table_fclass.resource == tablename) & \
-                    (table_fclass.symbology_id == symbology)
-            fclasses = db(query).select(table_fclass.marker_id,
-                                        table_fclass.filter_field,
-                                        table_fclass.filter_value,
-                                        cache=cache)
-            if fclasses:
-                for row in fclasses:
+            # 1st choice for a Marker is the Feature Layer's
+            query = (table.module == module) & \
+                    (table.resource == resource)
+                    #& (table.symbology_id == symbology)
+            layers = db(query).select(table.marker_id,
+                                      # @ToDo: Unify this call for gis_encode
+                                      #table.gps_marker,
+                                      table.filter_field,
+                                      table.filter_value,
+                                      cache=cache)
+            if layers:
+                for row in layers:
                     if record and row.filter_field:
                         # Check if the record matches the filter
-                        if record[row.filter_field] == int(row.filter_value):
-                            query = (table_marker.id == row.marker_id)
-                            marker = db(query).select(table_marker.image,
-                                                      table_marker.height,
-                                                      table_marker.width,
+                        if record[row.filter_field] == row.filter_value:
+                            query = (mtable.id == row.marker_id)
+                            marker = db(query).select(mtable.image,
+                                                      mtable.height,
+                                                      mtable.width,
                                                       limitby=(0, 1),
                                                       cache=cache).first()
                     else:
                         # No Filter so we match automatically
-                        query = (table_marker.id == row.marker_id)
-                        marker = db(query).select(table_marker.image,
-                                                  table_marker.height,
-                                                  table_marker.width,
+                        query = (mtable.id == row.marker_id)
+                        marker = db(query).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
                                                   limitby=(0, 1),
                                                   cache=cache).first()
                     if marker:
@@ -1867,16 +1872,22 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         cache = s3db.cache
-        table_fclass = s3db.gis_feature_class
 
-        # 1st choice for a Symbol is the Feature Class's
-        query = (table_fclass.resource == tablename)
-        fclasses = db(query).select(table_fclass.gps_marker,
-                                    table_fclass.filter_field,
-                                    table_fclass.filter_value,
-                                    cache=cache)
-        if fclasses:
-            for row in fclasses:
+        table = s3db.gis_layer_feature
+
+        (module, resource) = tablename.split("_", 1)
+        
+        # 1st choice for a Symbol is the Feature Layer's
+        query = (table.module == module) & \
+                (table.resource == resource)
+        layers = db(query).select(table.gps_marker,
+                                  # @ToDo: Unify this call for gis_encode
+                                  #table.marker_id,
+                                  table.filter_field,
+                                  table.filter_value,
+                                  cache=cache)
+        if layers:
+            for row in layers:
                 if row.filter_field:
                     # Check if the record matches the filter
                     if record[row.filter_field] == row.filter_value:
