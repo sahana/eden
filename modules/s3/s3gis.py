@@ -728,6 +728,80 @@ class GIS(object):
         return results
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def _get_parents_of_level(locations, level):
+        """
+            Given a list of gis_location.ids, return a list of the Parents of
+            the given Level (Lx)
+
+            - helper functions used by get_parents_of_level() to handle recursion
+        """
+
+        output = []
+
+        if not locations or not level:
+            return output
+
+        # Read the records from the database
+        db = current.db
+        s3db = current.s3db
+        table = s3db.gis_location
+        query = (table.id.belongs(locations))
+        rows = db(query).select(table.id,
+                                table.level,
+                                table.parent,
+                                table.path)
+
+        tryagain = []
+
+        for row in rows:
+            _level = row.level
+            if _level == level:
+                # We're already at the right level, pass it back
+                output.append(row.id)
+            elif _level[1:] > level[1:]:
+                # We're already too high, skip
+                continue
+            else:
+                # Try the Path
+                path = row.path
+                if path:
+                    ids = path.split("/")
+                    # Ignore this one!
+                    ids.remove(str(row.id))
+                    for id in ids:
+                        tryagain.append(int(id))
+                else:
+                    # Try the Parent
+                    parent = row.parent
+                    if parent:
+                        tryagain.append(parent)
+
+        return (output, tryagain)
+
+    # -------------------------------------------------------------------------
+    def get_parents_of_level(self, locations, level):
+        """
+            Given a list of gis_location.ids, return a list of the Parents of
+            the given Level (Lx)
+
+            - used by S3Report
+        """
+
+        output = []
+
+        if not locations or not level:
+            return output
+
+        while locations:
+            # Recursively pull out good records & try parents agaian
+            (newoutput, locations) = self._get_parents_of_level(locations, level)
+            for id in newoutput:
+                output.append(id)
+
+        return output
+
+    # -------------------------------------------------------------------------
     def update_gis_config_dependent_options(self, tablename=None):
         """
             Re-set table options that depend on data or options in gis_config.
@@ -1020,32 +1094,11 @@ class GIS(object):
     def get_max_hierarchy_level(self):
         """
             Returns the deepest level key (i.e. Ln) in the current hierarchy.
+            - used by gis_location_onvalidation()
         """
 
         location_hierarchy = self.get_location_hierarchy()
         return max(location_hierarchy)
-
-    # -------------------------------------------------------------------------
-    def get_max_hierarchy_level_num(self):
-        """
-            Returns number of highest level (i.e. n in Ln) in current hierarchy.
-        """
-
-        return int(self.get_max_hierarchy_level()[1:])
-
-    # -------------------------------------------------------------------------
-    def get_hierarchy_level_keys(self):
-        """
-            Returns list of level keys up to max for current hierarchy.
-
-            This does not exclude levels where there are gaps in the
-            current hierarchy. To get just the levels that actually have
-            labels, merely iterate over the hierarchy dict itself.
-            That can be gotten by calling get_location_hierarchy().
-        """
-
-        keys = ["L%d" % n
-                for n in range(0, self.get_max_hierarchy_level_num() + 1)]
 
     # -------------------------------------------------------------------------
     def get_all_current_levels(self, level=None):
@@ -1303,22 +1356,24 @@ class GIS(object):
         fieldname = field.name
         tablename = field.tablename
         table = s3db[tablename]
+        hrtable = s3db.hrm_human_resource
+        otable = s3db.org_organisation
 
         # Fallback representation is the value itself
         represent = value
 
         # If the field is a FK, then check for specials
-        if (tablename, fieldname) in db.pr_person._referenced_by:
+        if (tablename, fieldname) in s3db.pr_person._referenced_by:
             represent = s3_fullname(value)
-        elif (tablename, fieldname) in db.hrm_human_resource._referenced_by:
+        elif (tablename, fieldname) in hrtable._referenced_by:
             # e.g. assess_rat - convert to Organisation
-            query = (db.hrm_human_resource.id == value)
-            _value = db(query).select(db.hrm_human_resource.organisation_id,
+            query = (hrtable.id == value)
+            _value = db(query).select(hrtable.organisation_id,
                                       limitby=(0, 1),
                                       cache=cache).first()
             if _value:
-                query = (db.org_organisation.id == _value)
-                _represent = db(query).select(db.org_organisation.name,
+                query = (otable.id == _value)
+                _represent = db(query).select(otable.name,
                                               limitby=(0, 1),
                                               cache=cache).first()
                 if _represent:
@@ -1344,7 +1399,7 @@ class GIS(object):
         elif field.type[:9] == "reference":
             try:
                 tablename = field.type[10:]
-                table = db[tablename]
+                table = s3db[tablename]
                 # Try the name
                 represent = db(table.id == value).select(table.name,
                                                          cache=cache,
@@ -1364,6 +1419,7 @@ class GIS(object):
         """
 
         db = current.db
+        s3db = current.s3db
         session = current.session
         T = current.T
         locations = db.gis_location
@@ -1406,7 +1462,7 @@ class GIS(object):
             s3_debug("Invalid Polygon!")
             return None
 
-        table = db[tablename]
+        table = s3db[tablename]
 
         if "location_id" not in table.fields():
             # @ToDo: Add any special cases to be able to find the linked location
@@ -1620,7 +1676,7 @@ class GIS(object):
 
             if tablename:
                 # Lookup the resource
-                table = db[tablename]
+                table = current.s3db[tablename]
                 query = query & (table.location_id == locations.id)
                 records = db(query).select(table.ALL,
                                            locations.id,
@@ -1675,7 +1731,8 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
+        s3db = current.s3db
+        table = s3db.gis_location
 
         if isinstance(feature_id, int):
             query = (table.id == feature_id)
@@ -1852,7 +1909,7 @@ class GIS(object):
             db = current.db
             s3db = current.s3db
             cache = s3db.cache
-            table = db.gis_projection
+            table = s3db.gis_projection
             query = (table.id == id)
             projection = db(query).select(table.epsg,
                                           limitby=(0, 1),
