@@ -30,8 +30,6 @@
 
 import sys
 
-from xml.sax.saxutils import unescape
-
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -1988,11 +1986,8 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
         S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
         self.field.requires = IS_IN_SET(self.getList())
         value = self.getAnswer()
-        try:
-            answer = unescape(value, {"'": '"'})
-            valueList = json.loads(answer)
-        except json.JSONDecodeError:
-            valueList = []
+        s3 = current.response.s3
+        valueList = s3.json2list(answer)
         self.field.name = self.question.code
         input = CheckboxesWidget.widget(self.field, valueList, **self.attr)
         self.field.name = "value"
@@ -2118,18 +2113,8 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
-
-            If the value is a json then data might need to be extracted from it
-
         """
-        try:
-            answerList = self.getAnswerListFromJSON(value)
-        except:
-            return value
-        newValue = {}
-        jsonAnswer = json.dumps(newValue)
-        jsonValue = unescape(jsonAnswer, {'"': "'"})
-        return jsonValue
+        return value
 
     def buildQuery(self, rowList):
         """
@@ -2157,10 +2142,9 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             If it is not valid JSON then an exception will be raised,
             and must be handled by the calling function
         """
-        jsonAnswer = unescape(answer, {"u'": '"'})
-        jsonAnswer = unescape(jsonAnswer, {"'": '"'})
-        return json.loads(jsonAnswer)
-
+        s3 = current.response.s3
+        answerList = s3.json2py(answer)
+        return answerList
 
     ######################################################################
     # Functions not fully implemented or used
@@ -3232,31 +3216,13 @@ class S3OptionOtherAnalysis(S3OptionAnalysis):
 # -----------------------------------------------------------------------------
 class S3MultiOptionAnalysis(S3OptionAnalysis):
 
-#    def __init__(self,
-#                 type,
-#                 question_id,
-#                 answerList
-#                ):
-#        newList = []
-#        for answer in answerList:
-#            try:
-#                value = unescape(answer, {"'": '"'})
-#                valueList = json.loads(answer)
-#            except json.JSONDecodeError:
-#                valueList = []
-#            newList.append(valueList)
-#        S3AbstractAnalysis.__init__(self, type, question_id, newList)
-
     def castRawAnswer(self, complete_id, answer):
         """
             Used to modify the answer from its raw text format.
-            Where necessary, this will function be overridden.
+            Where necessary, this function will be overridden.
         """
-        try:
-            value = unescape(answer, {"'": '"'})
-            valueList = json.loads(value)
-        except json.JSONDecodeError:
-            valueList = []
+        s3 = current.response.s3
+        valueList = s3.json2list(answer)
         return valueList
 
     def basicResults(self):

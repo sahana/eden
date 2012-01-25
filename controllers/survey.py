@@ -1146,7 +1146,8 @@ def newAssessment():
             urlimport = URL(c=module,
                             f="complete",
                             args=["import"],
-                            vars = {"viewing":"%s.%s" % ("survey_series", series_id)}
+                            vars = {"viewing":"%s.%s" % ("survey_series", series_id)
+                                   ,"single_pass":True}
                             )
             buttons = DIV (A(T("Import completed Assessment Template Spreadsheet"),
                              _href=urlimport,

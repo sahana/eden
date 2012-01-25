@@ -73,19 +73,47 @@ __all__ = ["S3TemplateModel",
            "survey_serieslist_dataTable_post",
            "survey_answerlist_dataTable_pre",
            "survey_answerlist_dataTable_post",
+           "json2py",
           ]
 
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-import gluon.contrib.simplejson as json
-
-from xml.sax.saxutils import unescape
 
 import sys
 sys.path.append("applications/%s/modules/s3" % current.request.application)
 from s3survey import survey_question_type, \
                      survey_analysis_type
+
+def json2py(jsonstr):
+    """
+        Utility function to convert a string in json to a pythin structure  
+    """
+    import gluon.contrib.simplejson as json
+    from xml.sax.saxutils import unescape
+
+    try:
+        rawjson = unescape(jsonstr, {"u'": '"'})
+        rawjson = unescape(rawjson, {"'": '"'})
+        pythonStructure = json.loads(rawjson)
+    except e:
+        print >> sys.stderr, "ERROR: %s attempting to convert %s using modules/eden/survey/json2py.py" % (e, jsonstr)
+        return jsonstr
+    else:
+        return pythonStructure
+
+def json2list(jsonstr):
+    """
+        Used to modify the answer from its raw text format.
+        Where necessary, this function will be overridden.
+    """
+    if jsonstr == "":
+        valueList = []
+    else:
+        valueList = json2py(jsonstr)
+        if not isinstance(valueList, list):
+            valueList = [valueList]
+    return valueList
 
 class S3TemplateModel(S3Model):
     """
@@ -381,9 +409,7 @@ class S3TemplateModel(S3Model):
             addQuestion(template_id, name, code, notes, type, posn)
         if form.vars.location_detail != None:
             s3 = current.response.s3
-            rawjson = unescape(form.vars.location_detail, {"u'": '"'})
-            rawjson = unescape(rawjson, {"'": '"'})
-            locationList = json.loads(rawjson)
+            locationList = json2py(form.vars.location_detail)
             for loc in locationList:
                 if loc in s3.survey_hierarchy_elements:
                     name = s3.survey_hierarchy_elements[loc]
@@ -939,6 +965,7 @@ class S3QuestionModel(S3Model):
             single quotes, rather than double quotes and so these need
             to be escaped to double quotes to make it valid JSON
         """
+        from xml.sax.saxutils import unescape
         if form.vars.metadata != None:
             form.vars.metadata = unescape(form.vars.metadata,{"'":'"'})
         return True
@@ -1246,8 +1273,7 @@ def survey_updateMetaData (record, type, metadata):
     # the metadata can either be passed in as a JSON string
     # or as a parsed map. If it is a string load the map.
     if isinstance(metadata, str):
-        metadata = unescape(metadata, {"'": '"'})
-        metadataList = json.loads(metadata)
+        metadataList = json2py(metadata)
     else:
         metadataList = metadata
     for (desc, value) in metadataList.items():
@@ -1306,8 +1332,7 @@ class S3FormatterModel(S3Model):
         extracts the records from the table will then need to change all
         single quotes to double quotes. This can be done as follows:
 
-        rules = unescape(rules, {"'": '"'})
-        rowList = json.loads(rules)
+        rowList = json2py(rules)
 
     """
     names = ["survey_formatter"]
@@ -1378,16 +1403,12 @@ class S3FormatterModel(S3Model):
                 col1.append("STD-TIME")
             col2 = []
             if "location_detail" in template:
-                rawjson = unescape(template.location_detail, {"u'": '"'})
-                rawjson = unescape(rawjson, {"'": '"'})
-                locationList = json.loads(rawjson)
+                locationList = json2py(template.location_detail)
                 for loc in locationList:
                     col2.append("STD-%s" % loc)
                 col = [col1, col2]
                 rule = [{"columns":col}]
-                oldrules = form.vars.rules
-                rawjson = unescape(oldrules, {"'": '"'})
-                ruleList = json.loads(rawjson)
+                ruleList = json2py(form.vars.rules)
                 ruleList[:0]=rule
                 rules = json.dumps(ruleList)
                 ftable = db.survey_formatter
@@ -1462,8 +1483,7 @@ def survey_getQstnLayoutRules(template_id,
             rowList.append([qstn.survey_question.code])
     else:
         # convert the JSON rules to python
-        rules = unescape(rules, {"'": '"'})
-        rowList = json.loads(rules)
+        rowList = json2py(rules)
     return rowList
 
 
