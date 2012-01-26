@@ -1076,10 +1076,24 @@ if auth.permission.format in ("html"):
                 [T("Administration"), False, aURL(f="complete"), [
                     #[T("New"), False, aURL(p="create", f="complete", args="create")],
                     #[T("List All"), False, aURL(f="complete")],
-                    [T("Import Templates"), False, aURL(f="question_list",
-                                                        args="import")],
-                    [T("Import Completed Responses"), False, aURL(f="complete",
-                                                                  args="import")]
+                    [T("Import Templates"),
+                     False,
+                     aURL(f="question_list",
+                          args="import"
+                         )
+                    ],
+                    [T("Import Template Layout"),
+                     False,
+                     aURL(f="formatter",
+                          args="import"
+                         )
+                    ],
+                    [T("Import Completed Responses"),
+                     False,
+                     aURL(f="complete",
+                          args="import"
+                         )
+                    ]
                 ]],
                 ]
         },

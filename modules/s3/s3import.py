@@ -384,8 +384,14 @@ class S3Importer(S3CRUD):
 
             row = db(query).select(table.id, limitby=(0, 1)).first()
             upload_id = row.id
-            self._generate_import_job(upload_id, upload_file, extension)
-
+            if "single_pass" in r.vars:
+                single_pass = r.vars["single_pass"]
+            else:
+                single_pass = None
+            self._generate_import_job(upload_id,
+                                      upload_file,
+                                      extension,
+                                      commit_job = single_pass)
             if upload_id is None:
                 row = db(query).update(status = 2) # in error
                 if self.error != None:
@@ -395,6 +401,9 @@ class S3Importer(S3CRUD):
                 response.flash = ""
                 return self.upload(r, **attr)
             else:
+                if single_pass:
+                    current.session.flash = self.messages.file_uploaded
+                    redirect(URL(r=self.request, f=self.function, args=["import"]))
                 s3.dataTable_vars = {"job" : upload_id}
                 return self.display_job(upload_id)
         return output
@@ -848,7 +857,8 @@ class S3Importer(S3CRUD):
                              upload_id,
                              openFile,
                              fileFormat,
-                             stylesheet=None):
+                             stylesheet=None,
+                             commit_job=False):
         """
             This will take a s3_import_upload record and
             generate the importJob
@@ -922,7 +932,7 @@ class S3Importer(S3CRUD):
                             extra_data=self.csv_extra_data,
                             stylesheet=stylesheet,
                             ignore_errors = True,
-                            commit_job = False,
+                            commit_job = commit_job,
                             **args)
 
         job = resource.job

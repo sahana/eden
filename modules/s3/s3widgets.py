@@ -1298,11 +1298,11 @@ class S3LocationSelectorWidget(FormWidget):
                                                            id = config.default_location_id)
             if "L0" in defaults:
                 default_L0 = defaults["L0"]
-                id = defaults["L0"].id
-                if id not in countries:
-                    # Add the default country to the list of possibles
-                    countries[id] = defaults["L0"].name
-            if default_L0:
+                if default_L0:
+                    id = defaults["L0"].id
+                    if id not in countries:
+                        # Add the default country to the list of possibles
+                        countries[id] = defaults["L0"].name
                 country_snippet = "S3.gis.country = '%s';\n" % \
                     gis.get_default_country(key_type="code")
 

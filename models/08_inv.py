@@ -64,7 +64,7 @@ def inv_recv_controller():
     response.s3.prep = prep
 
     output = s3_rest_controller("inv", "recv",
-                                rheader=inv_recv_rheader)
+                                rheader=eden.inv.inv_recv_rheader)
     return output
 
 # -----------------------------------------------------------------------------
