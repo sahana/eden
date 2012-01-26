@@ -615,7 +615,7 @@ class S3ModelExtensions(object):
                     supertables = [supertables]
                 for s in supertables:
                     if isinstance(s, str):
-                        s = S3Model.table(s)
+                        s = load(s)
                     if s is None:
                         continue
                     h = self.components.get(s._tablename, None)

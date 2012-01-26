@@ -66,6 +66,7 @@ from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions, S3RecordLinker
 from s3export import S3Exporter
 from s3method import S3Method
+from s3query import S3ResourceFilter
 
 from s3import import S3ImportJob
 from s3sync import S3Sync
@@ -1824,569 +1825,6 @@ class S3Request(object):
 
 # =============================================================================
 
-class S3QueryBuilder(object):
-    """
-        Query Builder
-    """
-
-    # -------------------------------------------------------------------------
-    def parse_bbox_query(self, resource, vars):
-        """
-            Build a BBOX filter query
-            Syntax ?bbox{.fkfield}=minLon,minLat,maxLon,maxLat
-
-            @param resource: the resource
-            @param vars: dict of URL vars
-        """
-
-        s3db = current.s3db
-        locations = s3db.gis_location
-        table = resource.table
-        bbox_query = None
-
-        if vars:
-            for k in vars:
-                if k[:4] == "bbox":
-                    fname = None
-                    if k.find(".") != -1:
-                        fname = k.split(".")[1]
-                    elif resource.tablename != "gis_location":
-                        for f in resource.table.fields:
-                            if str(table[f].type) == "reference gis_location":
-                                fname = f
-                                break
-                    if fname is None or fname not in resource.table.fields:
-                        # Field not found - ignore
-                        continue
-                    try:
-                        minLon, minLat, maxLon, maxLat = vars[k].split(",")
-                    except:
-                        # Badly-formed bbox - ignore
-                        continue
-                    else:
-                        bbox_filter = ((locations.lon > minLon) & \
-                                       (locations.lon < maxLon) & \
-                                       (locations.lat > minLat) & \
-                                       (locations.lat < maxLat))
-                        if fname is not None:
-                            # Need a join
-                            join = (locations.id == table[fname])
-                            bbox = (join & bbox_filter)
-                        else:
-                            bbox = bbox_filter
-                    if bbox_query is None:
-                        bbox_query = bbox
-                    else:
-                        bbox_query = bbox_query & bbox
-
-        return bbox_query
-
-    # -------------------------------------------------------------------------
-    def parse_url_rlinks(self, resource, vars):
-        """
-            Parse URL resource link queries. Syntax:
-            ?linked{.<component>}.<from|to>.<table>={link_class},
-                <ANY|ALL|list_of_ids>
-
-            @param resource: the resource
-            @param vars: dict of URL vars
-
-            @status: currently unused
-            @todo: deprecate?
-        """
-
-        db = current.db
-        linker = current.manager.linker
-        q = None
-
-        for k in vars:
-            if k[:7] == "linked.":
-                link = k.split(".")
-                if len(link) < 3:
-                    continue
-                else:
-                    link = link[1:]
-                o_tn = link.pop()
-                if o_tn in db:
-                    link_table = db[o_tn]
-                else:
-                    continue
-                operator = link.pop()
-                if not operator in ("from", "to"):
-                    continue
-                table = resource.table
-                join = None
-                if link and link[0] in resource.components:
-                    component = components[link[0]]
-                    table = component.table
-                    pkey, fkey = component.pkey, component.fkey
-                    join = (resource.table[pkey] == table[fkey])
-                link_class = None
-                union = False
-                val = vars[k]
-                if isinstance(val, (list, tuple)):
-                    val = ",".join(val)
-                ids = val.split(",")
-                if ids:
-                    if not ids[0].isdigit() and ids[0] not in ("ANY", "ALL"):
-                        link_class = ids.pop(0)
-                if ids:
-                    if ids.count("ANY"):
-                        link_id = None
-                        union = True
-                    elif ids.count("ALL"):
-                        link_id = None
-                    else:
-                        link_id = filter(str.isdigit, ids)
-                if operator == "from":
-                    query = linker.get_target_query(link_table, link_id, table,
-                                                    link_class=link_class,
-                                                    union=union)
-                else:
-                    query = linker.get_origin_query(table, link_table, link_id,
-                                                    link_class=link_class,
-                                                    union=union)
-                if query is not None:
-                    if join is not None:
-                        query = (join & query)
-                    q = q and (q & query) or query
-        return q
-
-    # -------------------------------------------------------------------------
-    def parse_url_query(self, resource, vars):
-        """
-            Parse URL query
-
-            @param resource: the resource
-            @param vars: dict of URL vars
-        """
-
-        s3db = current.s3db
-        manager = current.manager
-        xml = manager.xml
-        model = manager.model
-        settings = manager.deployment_settings
-
-        q = Storage()
-
-        queries = [(k, vars[k]) for k in vars if k.find(".") > 0]
-        for k, val in queries:
-
-            # Parse the URL variable name:
-            # Format: cn.{fk$}fn{__op}
-            # cn - component name
-            # fk - foreign key
-            # fn - field name
-            # op - operator
-            cn, fn = k.split(".", 1)
-            fk = None
-            op = "eq"
-            if fn.find("$") > 0:
-                fk, fn = fn.split("$", 1)
-            if fn.find("__") > 0:
-                fn, op = fn.split("__", 1)
-
-            cjoin = None
-            if cn == resource.alias:
-                table = resource.table
-            elif cn in resource.components:
-                component = resource.components[cn]
-                table = component.table
-                cjoin = component.get_join()
-            elif cn in resource.links:
-                link = resource.links[cn]
-                table = link.table
-                cjoin = link.linked.get_join()
-            else:
-                continue
-            if cjoin and manager.DELETED in table.fields:
-                cjoin = cjoin & (table[manager.DELETED] != True)
-            if cn not in q:
-                q[cn] = Storage(join = cjoin,
-                                table = table)
-            hook = q[cn]
-
-            if fn == "uid":
-                fn = manager.xml.UID
-            fjoin = None
-            if fk is not None:
-                if fk not in table.fields:
-                    continue
-                ftype = str(table[fk].type)
-                if ftype[:9] == "reference":
-                    ktablename = ftype[10:]
-                    multiple = False
-                elif ftype[:14] == "list:reference":
-                    ktablename = ftype[15:]
-                    multiple = True
-                else:
-                    continue
-                try:
-                    ktable = s3db[ktablename]
-                except:
-                    continue
-                if multiple:
-                    fjoin = (ktable._id.belongs(table[fk]))
-                else:
-                    fjoin = (ktable._id == table[fk])
-                if manager.DELETED in ktable.fields:
-                    fjoin = fjoin & (ktable[manager.DELETED] != True)
-                table = ktable
-            if (fk, fn) not in hook:
-                hook[(fk, fn)] = Storage(join = fjoin,
-                                         table = table)
-            hook = hook[(fk, fn)]
-            if "filter" not in hook:
-                hook.filter = Storage()
-
-            # parse value list
-            if fn not in table.fields:
-                continue
-            ftype = str(table[fn].type)
-            values = val
-            if op in ("lt", "le", "gt", "ge"):
-                if ftype not in ("id",
-                                 "integer",
-                                 "double",
-                                 "date",
-                                 "time",
-                                 "datetime"):
-                    continue
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
-                vlist = []
-                for v in values:
-                    if v.find(",") > 0:
-                        v = v.split(",", 1)[-1]
-                    vlist.append(v)
-                values = vlist
-            elif op == "eq":
-                if isinstance(values, (list, tuple)):
-                    values = values[-1]
-                if values.find(",") > 0:
-                    values = values.split(",")
-                else:
-                    values = [values]
-            elif op == "ne":
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
-                vlist = []
-                for v in values:
-                    if v.find(",") > 0:
-                        v = v.split(",")
-                        vlist.extend(v)
-                    else:
-                        vlist.append(v)
-                values = vlist
-            elif op in ("like", "unlike"):
-                if ftype not in ("string", "text"):
-                    continue
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
-            elif op in ("in", "ex"):
-                if not ftype.startswith("list:"):
-                    continue
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
-            else:
-                continue
-
-            # parse values
-            vlist = []
-            for v in values:
-                value = v
-                if op in ("eq", "ne") and v.upper() == "NONE":
-                    value = None
-                    vlist.append(value)
-                    continue
-                if ftype == "boolean":
-                    if v in ("true", "True"):
-                        value = True
-                    else:
-                        value = False
-                elif ftype in ("integer"):
-                    try:
-                        value = int(v)
-                    except ValueError:
-                        continue
-                elif ftype.startswith("reference") or ftype == "id":
-                    try:
-                        value = long(v)
-                    except ValueError:
-                        continue
-                elif ftype == "double":
-                    try:
-                        value = float(v)
-                    except ValueError:
-                        continue
-                elif ftype == "date":
-                    validator = IS_DATE(format=settings.get_L10n_date_format())
-                    value, error = validator(v)
-                    if error:
-                        continue
-                elif ftype == "time":
-                    validator = IS_TIME()
-                    value, error = validator(v)
-                    if error:
-                        continue
-                elif ftype == "datetime":
-                    tfmt = xml.ISOFORMAT
-                    try:
-                        (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(v, tfmt)
-                        value = datetime.datetime(y,m,d,hh,mm,ss)
-                    except ValueError:
-                        continue
-                vlist.append(value)
-
-            if vlist:
-                hook.filter[op] = vlist
-
-        return q
-
-    # -------------------------------------------------------------------------
-    def query(self, resource, id=None, uid=None, filter=None, vars=None):
-        """
-            Query builder
-
-            @param resource: the resource
-            @param id: record ID or list of record IDs to include
-            @param uid: record UID or list of record UIDs to include
-            @param filter: filtering query (DAL only)
-            @param vars: dict of URL query variables
-        """
-
-        # Initialize
-        resource.clear()
-        resource.clear_query()
-
-        manager = current.manager
-        xml = manager.xml
-        DELETED = manager.DELETED
-
-        if vars:
-            queries = self.parse_url_query(resource, vars)
-            if queries:
-                resource.vars = vars
-        else:
-            queries = Storage()
-
-        # multiple results expected by default
-        resource._multiple = True
-
-        db = current.db
-        table = resource.table
-        name = resource.name
-
-        # Accessible/available query
-        if resource.accessible_query is not None:
-            mquery = resource.accessible_query("read", table)
-        else:
-            mquery = (table._id > 0)
-
-        # Deletion status
-        if DELETED in table.fields and not resource.include_deleted:
-            remaining = (table[DELETED] != True)
-            mquery = remaining & mquery
-
-        # Master query
-        resource._mquery = None
-        if id is not None:
-            if not isinstance(id, (list, tuple)):
-                resource._multiple = False
-                mquery = mquery & (table._id == id)
-            else:
-                mquery = mquery & (table._id.belongs(id))
-            resource._mquery = mquery
-        if uid is not None and xml.UID in table:
-            if not isinstance(uid, (list, tuple)):
-                resource._multiple = False
-                mquery = mquery & (table[xml.UID] == uid)
-            else:
-                mquery = mquery & (table[xml.UID].belongs(uid))
-            resource._mquery = mquery
-
-        # Component or link table query
-        parent = resource.parent
-        if parent:
-            # Parent master query
-            if parent._mquery:
-                mquery &= parent._mquery
-                mquery &= resource.get_join()
-                if resource.alias in parent._cquery:
-                    mquery &= parent._cquery[resource.alias]
-                if resource.link is not None:
-                    lname = resource.link.name
-                    if lname in parent._cquery:
-                        mquery &= parent._cquery[lname]
-                elif resource.linked is not None:
-                    cname = resource.linked.alias
-                    if cname in parent._cquery:
-                        mquery &= parent._cquery[cname]
-            else:
-                mquery = mquery & parent._query
-                join = resource.get_join()
-                if str(mquery).find(str(join)) == -1:
-                    mquery = mquery & (join)
-            # Component filter
-            if resource.filter is not None:
-                mquery = mquery & (resource.filter)
-            # Cardinality
-            resource._multiple = resource.multiple
-            resource._query = mquery
-        else:
-            # BBOX query
-            bbox = self.parse_bbox_query(resource, vars)
-            if bbox is not None:
-                mquery = mquery & bbox
-                if resource._mquery:
-                    resource._mquery &= bbox
-            for cn in queries:
-                hook = queries[cn]
-                if hook.join is not None:
-                    cjoin = hook.join
-                else:
-                    cjoin = None
-                table = hook.table
-                cquery = None
-                for key in hook:
-                    if key in ("table", "join"):
-                        continue
-                    fk, fn = key
-                    subhook = hook[(fk, fn)]
-                    if subhook.join is not None:
-                        table = subhook.table
-                        fjoin = subhook.join
-                    else:
-                        fjoin = None
-                    if subhook.filter is None:
-                        continue
-                    if fn not in table.fields:
-                        continue
-                    fquery = None
-                    for op in subhook.filter:
-                        query = None
-
-                        values = subhook.filter[op]
-                        if fn == xml.UID:
-                            uids = map(xml.import_uid, values)
-                            values = uids
-                        f = table[fn]
-                        if op == "eq":
-                            if len(values) == 1:
-                                if values[0] is None:
-                                    query = (f == None)
-                                else:
-                                    query = (f == values[0])
-                            elif len(values):
-                                if None in values:
-                                    values.remove(None)
-                                    query = ((f.belongs(values)) | (f == None))
-                                else:
-                                    query = (f.belongs(values))
-                        elif op == "ne":
-                            if len(values) == 1:
-                                if values[0] is None:
-                                    query = (f != None)
-                                else:
-                                    query = ((f != values[0]) | (f == None))
-                            elif len(values):
-                                query = ((~(f.belongs(values))) | (f == None))
-                        elif op == "lt":
-                            v = values[-1]
-                            query = (f < v)
-                        elif op == "le":
-                            v = values[-1]
-                            query = (f <= v)
-                        elif op == "gt":
-                            v = values[-1]
-                            query = (f > v)
-                        elif op == "ge":
-                            v = values[-1]
-                            query = (f >= v)
-                        elif op == "in":
-                            for v in values:
-                                q = None
-                                if v.find(",") != -1:
-                                    sv = v.split(",")
-                                    for s in sv:
-                                        sq = (f.contains(s))
-                                        q = q is not None and q | sq or sq
-                                else:
-                                    q = (f.contains(v))
-                                if query:
-                                    query = query & q
-                                else:
-                                    query = q
-                            query = (query)
-                        elif op == "ex":
-                            for v in values:
-                                q = (~(f.contains(v)))
-                                if query:
-                                    query = query & q
-                                else:
-                                    query = q
-                            query = (query)
-                        elif op == "like":
-                            for v in values:
-                                if v.find(",") != -1:
-                                    q = None
-                                    sv = v.split(",")
-                                    for s in sv:
-                                        sq = (f.lower().contains(s.lower()))
-                                        q = q is not None and q | sq or sq
-                                else:
-                                    q = (f.lower().contains(v.lower()))
-                                if query:
-                                    query = query & q
-                                else:
-                                    query = q
-                            query = (query)
-                        elif op == "unlike":
-                            for v in values:
-                                q = ((~(f.lower().contains(v.lower()))) | (f == None))
-                                if query:
-                                    query = query & q
-                                else:
-                                    query = q
-                            query = (query)
-                        else:
-                            continue
-                        if query is not None:
-                            if fquery is None:
-                                fquery = query
-                            else:
-                                fquery &= query
-                    if fquery is not None:
-                        if fjoin is not None:
-                            fquery = fjoin & fquery
-                        if cquery is None:
-                            cquery = fquery
-                        else:
-                            cquery &= fquery
-                if cquery is not None:
-                    if cjoin is not None:
-                        resource._cjoins[cn] = cjoin
-                        mquery &= cjoin
-                    resource._cquery[cn] = cquery
-                    mquery &= cquery
-            if resource._mquery is not None:
-                if name in resource._cquery:
-                    resource._mquery &= resource._cquery[name]
-                if filter:
-                    resource._mquery &= filter
-                resource._query = resource._mquery
-            else:
-                resource._query = mquery
-                if filter:
-                    resource._query &= filter
-
-        _debug("Resource=%s\nMasterQuery=%s\nQuery=%s" % (resource.table,
-                                                          resource._mquery,
-                                                          resource._query))
-        return resource._query
-
-# =============================================================================
-
 class S3Resource(object):
     """
         API for resources
@@ -2452,6 +1890,9 @@ class S3Resource(object):
         except:
             manager.error = "Undefined table: %s" % self.tablename
             raise KeyError(manager.error)
+
+        # New Query Builder
+        self.rfilter = None
 
         # The Query
         self.query_builder = manager.query_builder
@@ -2587,6 +2028,13 @@ class S3Resource(object):
 
         # Reset the rows counter
         self._length = None
+
+        # @todo: use S3ResourceFilter rather than query()
+        #self.rfilter = S3ResourceFilter(self,
+                                        #id=id,
+                                        #uid=uid,
+                                        #filter=filter,
+                                        #vars=vars)
 
         return self.query_builder.query(self,
                                         id=id,
@@ -3401,12 +2849,18 @@ class S3Resource(object):
         root = etree.Element(xml.TAG.root)
         export_map = Storage()
         reference_map = []
+        prefix = self.prefix
+        name = self.name
+        if base_url:
+            url = "%s/%s/%s" % (base_url, prefix, name)
+        else:
+            url = "/%s/%s" % (prefix, name)
         for record in self:
             element = self.__export_resource(record,
                                              rfields=rfields,
                                              dfields=dfields,
                                              parent=root,
-                                             base_url=base_url,
+                                             base_url=url,
                                              reference_map=reference_map,
                                              export_map=export_map,
                                              components=mcomponents,
@@ -3461,7 +2915,7 @@ class S3Resource(object):
                                             rfields=rfields,
                                             dfields=dfields,
                                             parent=root,
-                                            base_url=base_url,
+                                            base_url=url,
                                             reference_map=reference_map,
                                             export_map=export_map,
                                             components=rcomponents,
@@ -3531,16 +2985,17 @@ class S3Resource(object):
 
         # Export the record
         add = False
-        element, rmap = self.__export_record(record,
-                                             rfields=rfields,
-                                             dfields=dfields,
-                                             parent=parent,
-                                             export_map=export_map,
-                                             url=record_url,
-                                             msince=msince,
-                                             marker=marker,
-                                             popup_label=popup_label,
-                                             popup_fields=popup_fields)
+        export = self.__export_record
+        element, rmap = export(record,
+                               rfields=rfields,
+                               dfields=dfields,
+                               parent=parent,
+                               export_map=export_map,
+                               url=record_url,
+                               msince=msince,
+                               marker=marker,
+                               popup_label=popup_label,
+                               popup_fields=popup_fields)
         if element is not None:
             add = True
 
@@ -3578,6 +3033,8 @@ class S3Resource(object):
                     crecords = [crecords[0]]
 
                 # Export records
+                export = component.__export_record
+                map_record = component.__map_record
                 for crecord in crecords:
                     # Construct the component record URL
                     if component_url:
@@ -3585,19 +3042,18 @@ class S3Resource(object):
                     else:
                         crecord_url = None
                     # Export the component record
-                    celement, crmap = component.__export_record(
-                                            crecord,
-                                            rfields=crfields,
-                                            dfields=cdfields,
-                                            parent=element,
-                                            export_map=export_map,
-                                            url=crecord_url,
-                                            msince=msince,
-                                            marker=marker)
+                    celement, crmap = export(crecord,
+                                             rfields=crfields,
+                                             dfields=cdfields,
+                                             parent=element,
+                                             export_map=export_map,
+                                             url=crecord_url,
+                                             msince=msince,
+                                             marker=marker)
                     if celement is not None:
                         add = True # keep the parent record
-                        component.__map_record(crecord, crmap,
-                                               reference_map, export_map)
+                        map_record(crecord, crmap,
+                                   reference_map, export_map)
 
         # Update reference_map and export_map
         if add:
@@ -4634,5 +4090,568 @@ class S3Resource(object):
                                _id="list",
                                _class="dataTable display")
         return items
+
+# =============================================================================
+
+class S3QueryBuilder(object):
+    """
+        Query Builder
+    """
+
+    # -------------------------------------------------------------------------
+    def parse_bbox_query(self, resource, vars):
+        """
+            Build a BBOX filter query
+            Syntax ?bbox{.fkfield}=minLon,minLat,maxLon,maxLat
+
+            @param resource: the resource
+            @param vars: dict of URL vars
+        """
+
+        s3db = current.s3db
+        locations = s3db.gis_location
+        table = resource.table
+        bbox_query = None
+
+        if vars:
+            for k in vars:
+                if k[:4] == "bbox":
+                    fname = None
+                    if k.find(".") != -1:
+                        fname = k.split(".")[1]
+                    elif resource.tablename != "gis_location":
+                        for f in resource.table.fields:
+                            if str(table[f].type) == "reference gis_location":
+                                fname = f
+                                break
+                    if fname is None or fname not in resource.table.fields:
+                        # Field not found - ignore
+                        continue
+                    try:
+                        minLon, minLat, maxLon, maxLat = vars[k].split(",")
+                    except:
+                        # Badly-formed bbox - ignore
+                        continue
+                    else:
+                        bbox_filter = ((locations.lon > minLon) & \
+                                       (locations.lon < maxLon) & \
+                                       (locations.lat > minLat) & \
+                                       (locations.lat < maxLat))
+                        if fname is not None:
+                            # Need a join
+                            join = (locations.id == table[fname])
+                            bbox = (join & bbox_filter)
+                        else:
+                            bbox = bbox_filter
+                    if bbox_query is None:
+                        bbox_query = bbox
+                    else:
+                        bbox_query = bbox_query & bbox
+
+        return bbox_query
+
+    # -------------------------------------------------------------------------
+    def parse_url_rlinks(self, resource, vars):
+        """
+            Parse URL resource link queries. Syntax:
+            ?linked{.<component>}.<from|to>.<table>={link_class},
+                <ANY|ALL|list_of_ids>
+
+            @param resource: the resource
+            @param vars: dict of URL vars
+
+            @status: currently unused
+            @todo: deprecate?
+        """
+
+        db = current.db
+        linker = current.manager.linker
+        q = None
+
+        for k in vars:
+            if k[:7] == "linked.":
+                link = k.split(".")
+                if len(link) < 3:
+                    continue
+                else:
+                    link = link[1:]
+                o_tn = link.pop()
+                if o_tn in db:
+                    link_table = db[o_tn]
+                else:
+                    continue
+                operator = link.pop()
+                if not operator in ("from", "to"):
+                    continue
+                table = resource.table
+                join = None
+                if link and link[0] in resource.components:
+                    component = components[link[0]]
+                    table = component.table
+                    pkey, fkey = component.pkey, component.fkey
+                    join = (resource.table[pkey] == table[fkey])
+                link_class = None
+                union = False
+                val = vars[k]
+                if isinstance(val, (list, tuple)):
+                    val = ",".join(val)
+                ids = val.split(",")
+                if ids:
+                    if not ids[0].isdigit() and ids[0] not in ("ANY", "ALL"):
+                        link_class = ids.pop(0)
+                if ids:
+                    if ids.count("ANY"):
+                        link_id = None
+                        union = True
+                    elif ids.count("ALL"):
+                        link_id = None
+                    else:
+                        link_id = filter(str.isdigit, ids)
+                if operator == "from":
+                    query = linker.get_target_query(link_table, link_id, table,
+                                                    link_class=link_class,
+                                                    union=union)
+                else:
+                    query = linker.get_origin_query(table, link_table, link_id,
+                                                    link_class=link_class,
+                                                    union=union)
+                if query is not None:
+                    if join is not None:
+                        query = (join & query)
+                    q = q and (q & query) or query
+        return q
+
+    # -------------------------------------------------------------------------
+    def parse_url_query(self, resource, vars):
+        """
+            Parse URL query
+
+            @param resource: the resource
+            @param vars: dict of URL vars
+        """
+
+        s3db = current.s3db
+        manager = current.manager
+        xml = manager.xml
+        model = manager.model
+        settings = manager.deployment_settings
+
+        q = Storage()
+
+        queries = [(k, vars[k]) for k in vars if k.find(".") > 0]
+        for k, val in queries:
+
+            # Parse the URL variable name:
+            # Format: cn.{fk$}fn{__op}
+            # cn - component name
+            # fk - foreign key
+            # fn - field name
+            # op - operator
+            cn, fn = k.split(".", 1)
+            fk = None
+            op = "eq"
+            if fn.find("$") > 0:
+                fk, fn = fn.split("$", 1)
+            if fn.find("__") > 0:
+                fn, op = fn.split("__", 1)
+
+            cjoin = None
+            if cn == resource.alias:
+                table = resource.table
+            elif cn in resource.components:
+                component = resource.components[cn]
+                table = component.table
+                cjoin = component.get_join()
+            elif cn in resource.links:
+                link = resource.links[cn]
+                table = link.table
+                cjoin = link.linked.get_join()
+            else:
+                continue
+            if cjoin and manager.DELETED in table.fields:
+                cjoin = cjoin & (table[manager.DELETED] != True)
+            if cn not in q:
+                q[cn] = Storage(join = cjoin,
+                                table = table)
+            hook = q[cn]
+
+            if fn == "uid":
+                fn = manager.xml.UID
+            fjoin = None
+            if fk is not None:
+                if fk not in table.fields:
+                    continue
+                ftype = str(table[fk].type)
+                if ftype[:9] == "reference":
+                    ktablename = ftype[10:]
+                    multiple = False
+                elif ftype[:14] == "list:reference":
+                    ktablename = ftype[15:]
+                    multiple = True
+                else:
+                    continue
+                try:
+                    ktable = s3db[ktablename]
+                except:
+                    continue
+                if multiple:
+                    fjoin = (ktable._id.belongs(table[fk]))
+                else:
+                    fjoin = (ktable._id == table[fk])
+                if manager.DELETED in ktable.fields:
+                    fjoin = fjoin & (ktable[manager.DELETED] != True)
+                table = ktable
+            if (fk, fn) not in hook:
+                hook[(fk, fn)] = Storage(join = fjoin,
+                                         table = table)
+            hook = hook[(fk, fn)]
+            if "filter" not in hook:
+                hook.filter = Storage()
+
+            # parse value list
+            if fn not in table.fields:
+                continue
+            ftype = str(table[fn].type)
+            values = val
+            if op in ("lt", "le", "gt", "ge"):
+                if ftype not in ("id",
+                                 "integer",
+                                 "double",
+                                 "date",
+                                 "time",
+                                 "datetime"):
+                    continue
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                vlist = []
+                for v in values:
+                    if v.find(",") > 0:
+                        v = v.split(",", 1)[-1]
+                    vlist.append(v)
+                values = vlist
+            elif op == "eq":
+                if isinstance(values, (list, tuple)):
+                    values = values[-1]
+                if values.find(",") > 0:
+                    values = values.split(",")
+                else:
+                    values = [values]
+            elif op == "ne":
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                vlist = []
+                for v in values:
+                    if v.find(",") > 0:
+                        v = v.split(",")
+                        vlist.extend(v)
+                    else:
+                        vlist.append(v)
+                values = vlist
+            elif op in ("like", "unlike"):
+                if ftype not in ("string", "text"):
+                    continue
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+            elif op in ("in", "ex"):
+                if not ftype.startswith("list:"):
+                    continue
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+            else:
+                continue
+
+            # parse values
+            vlist = []
+            for v in values:
+                value = v
+                if op in ("eq", "ne") and v.upper() == "NONE":
+                    value = None
+                    vlist.append(value)
+                    continue
+                if ftype == "boolean":
+                    if v in ("true", "True"):
+                        value = True
+                    else:
+                        value = False
+                elif ftype in ("integer"):
+                    try:
+                        value = int(v)
+                    except ValueError:
+                        continue
+                elif ftype.startswith("reference") or ftype == "id":
+                    try:
+                        value = long(v)
+                    except ValueError:
+                        continue
+                elif ftype == "double":
+                    try:
+                        value = float(v)
+                    except ValueError:
+                        continue
+                elif ftype == "date":
+                    validator = IS_DATE(format=settings.get_L10n_date_format())
+                    value, error = validator(v)
+                    if error:
+                        continue
+                elif ftype == "time":
+                    validator = IS_TIME()
+                    value, error = validator(v)
+                    if error:
+                        continue
+                elif ftype == "datetime":
+                    tfmt = xml.ISOFORMAT
+                    try:
+                        (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(v, tfmt)
+                        value = datetime.datetime(y,m,d,hh,mm,ss)
+                    except ValueError:
+                        continue
+                vlist.append(value)
+
+            if vlist:
+                hook.filter[op] = vlist
+
+        return q
+
+    # -------------------------------------------------------------------------
+    def query(self, resource, id=None, uid=None, filter=None, vars=None):
+        """
+            Query builder
+
+            @param resource: the resource
+            @param id: record ID or list of record IDs to include
+            @param uid: record UID or list of record UIDs to include
+            @param filter: filtering query (DAL only)
+            @param vars: dict of URL query variables
+        """
+
+        # Initialize
+        resource.clear()
+        resource.clear_query()
+
+        manager = current.manager
+        xml = manager.xml
+        DELETED = manager.DELETED
+
+        if vars:
+            queries = self.parse_url_query(resource, vars)
+            if queries:
+                resource.vars = vars
+        else:
+            queries = Storage()
+
+        # multiple results expected by default
+        resource._multiple = True
+
+        db = current.db
+        table = resource.table
+        name = resource.name
+
+        # Accessible/available query
+        if resource.accessible_query is not None:
+            mquery = resource.accessible_query("read", table)
+        else:
+            mquery = (table._id > 0)
+
+        # Deletion status
+        if DELETED in table.fields and not resource.include_deleted:
+            remaining = (table[DELETED] != True)
+            mquery = remaining & mquery
+
+        # Master query
+        resource._mquery = None
+        if id is not None:
+            if not isinstance(id, (list, tuple)):
+                resource._multiple = False
+                mquery = mquery & (table._id == id)
+            else:
+                mquery = mquery & (table._id.belongs(id))
+            resource._mquery = mquery
+        if uid is not None and xml.UID in table:
+            if not isinstance(uid, (list, tuple)):
+                resource._multiple = False
+                mquery = mquery & (table[xml.UID] == uid)
+            else:
+                mquery = mquery & (table[xml.UID].belongs(uid))
+            resource._mquery = mquery
+
+        # Component or link table query
+        parent = resource.parent
+        if parent:
+            # Parent master query
+            if parent._mquery:
+                mquery &= parent._mquery
+                mquery &= resource.get_join()
+                if resource.alias in parent._cquery:
+                    mquery &= parent._cquery[resource.alias]
+                if resource.link is not None:
+                    lname = resource.link.name
+                    if lname in parent._cquery:
+                        mquery &= parent._cquery[lname]
+                elif resource.linked is not None:
+                    cname = resource.linked.alias
+                    if cname in parent._cquery:
+                        mquery &= parent._cquery[cname]
+            else:
+                mquery = mquery & parent._query
+                join = resource.get_join()
+                if str(mquery).find(str(join)) == -1:
+                    mquery = mquery & (join)
+            # Component filter
+            if resource.filter is not None:
+                mquery = mquery & (resource.filter)
+            # Cardinality
+            resource._multiple = resource.multiple
+            resource._query = mquery
+        else:
+            # BBOX query
+            bbox = self.parse_bbox_query(resource, vars)
+            if bbox is not None:
+                mquery = mquery & bbox
+                if resource._mquery:
+                    resource._mquery &= bbox
+            for cn in queries:
+                hook = queries[cn]
+                if hook.join is not None:
+                    cjoin = hook.join
+                else:
+                    cjoin = None
+                table = hook.table
+                cquery = None
+                for key in hook:
+                    if key in ("table", "join"):
+                        continue
+                    fk, fn = key
+                    subhook = hook[(fk, fn)]
+                    if subhook.join is not None:
+                        table = subhook.table
+                        fjoin = subhook.join
+                    else:
+                        fjoin = None
+                    if subhook.filter is None:
+                        continue
+                    if fn not in table.fields:
+                        continue
+                    fquery = None
+                    for op in subhook.filter:
+                        query = None
+
+                        values = subhook.filter[op]
+                        if fn == xml.UID:
+                            uids = map(xml.import_uid, values)
+                            values = uids
+                        f = table[fn]
+                        if op == "eq":
+                            if len(values) == 1:
+                                if values[0] is None:
+                                    query = (f == None)
+                                else:
+                                    query = (f == values[0])
+                            elif len(values):
+                                if None in values:
+                                    values.remove(None)
+                                    query = ((f.belongs(values)) | (f == None))
+                                else:
+                                    query = (f.belongs(values))
+                        elif op == "ne":
+                            if len(values) == 1:
+                                if values[0] is None:
+                                    query = (f != None)
+                                else:
+                                    query = ((f != values[0]) | (f == None))
+                            elif len(values):
+                                query = ((~(f.belongs(values))) | (f == None))
+                        elif op == "lt":
+                            v = values[-1]
+                            query = (f < v)
+                        elif op == "le":
+                            v = values[-1]
+                            query = (f <= v)
+                        elif op == "gt":
+                            v = values[-1]
+                            query = (f > v)
+                        elif op == "ge":
+                            v = values[-1]
+                            query = (f >= v)
+                        elif op == "in":
+                            for v in values:
+                                q = None
+                                if v.find(",") != -1:
+                                    sv = v.split(",")
+                                    for s in sv:
+                                        sq = (f.contains(s))
+                                        q = q is not None and q | sq or sq
+                                else:
+                                    q = (f.contains(v))
+                                if query:
+                                    query = query & q
+                                else:
+                                    query = q
+                            query = (query)
+                        elif op == "ex":
+                            for v in values:
+                                q = (~(f.contains(v)))
+                                if query:
+                                    query = query & q
+                                else:
+                                    query = q
+                            query = (query)
+                        elif op == "like":
+                            for v in values:
+                                if v.find(",") != -1:
+                                    q = None
+                                    sv = v.split(",")
+                                    for s in sv:
+                                        sq = (f.lower().contains(s.lower()))
+                                        q = q is not None and q | sq or sq
+                                else:
+                                    q = (f.lower().contains(v.lower()))
+                                if query:
+                                    query = query & q
+                                else:
+                                    query = q
+                            query = (query)
+                        elif op == "unlike":
+                            for v in values:
+                                q = ((~(f.lower().contains(v.lower()))) | (f == None))
+                                if query:
+                                    query = query & q
+                                else:
+                                    query = q
+                            query = (query)
+                        else:
+                            continue
+                        if query is not None:
+                            if fquery is None:
+                                fquery = query
+                            else:
+                                fquery &= query
+                    if fquery is not None:
+                        if fjoin is not None:
+                            fquery = fjoin & fquery
+                        if cquery is None:
+                            cquery = fquery
+                        else:
+                            cquery &= fquery
+                if cquery is not None:
+                    if cjoin is not None:
+                        resource._cjoins[cn] = cjoin
+                        mquery &= cjoin
+                    resource._cquery[cn] = cquery
+                    mquery &= cquery
+            if resource._mquery is not None:
+                if name in resource._cquery:
+                    resource._mquery &= resource._cquery[name]
+                if filter:
+                    resource._mquery &= filter
+                resource._query = resource._mquery
+            else:
+                resource._query = mquery
+                if filter:
+                    resource._query &= filter
+
+        _debug("Resource=%s\nMasterQuery=%s\nQuery=%s" % (resource.table,
+                                                          resource._mquery,
+                                                          resource._query))
+        return resource._query
 
 # END =========================================================================

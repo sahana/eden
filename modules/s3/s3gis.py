@@ -516,6 +516,15 @@ class GIS(object):
             min_lat = config.min_lat
             max_lat = config.max_lat
 
+        if min_lon is None:
+            min_lon = -180
+        if max_lon is None:
+            max_lon = 180
+        if min_lat is None:
+            min_lat = -90
+        if max_lat is None:
+            max_lat = 90
+
         # Assure a reasonable-sized box.
         delta_lon = (bbox_min_size - (max_lon - min_lon)) / 2.0
         if delta_lon > 0:
@@ -1876,7 +1885,7 @@ class GIS(object):
         table = s3db.gis_layer_feature
 
         (module, resource) = tablename.split("_", 1)
-        
+
         # 1st choice for a Symbol is the Feature Layer's
         query = (table.module == module) & \
                 (table.resource == resource)
@@ -4092,7 +4101,7 @@ S3.i18n.gis_feature_info = '%s';
        T("Feature Info"))
         else:
             getfeatureinfo = ""
-        
+
         #############
         # Main script
         #############
@@ -4503,8 +4512,8 @@ class MultiRecordLayer(Layer):
         def setup_folder(self, output):
             if self.dir:
                 output["dir"] = self.dir
- 
-        @staticmethod 
+
+        @staticmethod
         def add_attributes_if_not_default(output, **values_and_defaults):
             # could also write values in debug mode, to check if defaults ignored.
             # could also check values are not being overwritten.
