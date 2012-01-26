@@ -61,6 +61,10 @@ def update_check(environment):
         import tweepy
     except(ImportError):
         warnings.append("S3Msg unresolved dependency: tweepy required for non-Tropo Twitter support")
+    try:
+        import PyRTF
+    except(ImportError):
+        warnings.append("Survey, this is required if (and only if) you want to export the survey assessment template as a Word document")
 
     # -------------------------------------------------------------------------
     # Check Web2Py
