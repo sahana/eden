@@ -301,7 +301,7 @@ class S3OrganisationModel(S3Model):
         else:
             help = T("Enter some characters to bring up a list of possible matches")
             widget = S3OrganisationAutocompleteWidget()
-        
+
         organisation_comment = DIV(A(ADD_ORGANIZATION,
                                    _class="colorbox",
                                    _href=organisation_popup_url,
@@ -1177,7 +1177,7 @@ def org_site_represent(id, default_label="[no label]", link = True):
             if record:
                 id = record.id
                 type = record.type
-            
+
         if type == 5:
              instance_type_nice = T("Warehouse")
 
@@ -1242,7 +1242,7 @@ def org_organisation_rheader(r, tabs=[]):
                          A(organisation.website, _href=organisation.website))
         else:
             website = ""
-            
+
         rheader = DIV(TABLE(
             TR(
                 TH("%s: " % table.name.label),
