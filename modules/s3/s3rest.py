@@ -3401,12 +3401,18 @@ class S3Resource(object):
         root = etree.Element(xml.TAG.root)
         export_map = Storage()
         reference_map = []
+        prefix = self.prefix
+        name = self.name
+        if base_url:
+            url = "%s/%s/%s" % (base_url, prefix, name)
+        else:
+            url = "/%s/%s" % (prefix, name)
         for record in self:
             element = self.__export_resource(record,
                                              rfields=rfields,
                                              dfields=dfields,
                                              parent=root,
-                                             base_url=base_url,
+                                             base_url=url,
                                              reference_map=reference_map,
                                              export_map=export_map,
                                              components=mcomponents,
@@ -3461,7 +3467,7 @@ class S3Resource(object):
                                             rfields=rfields,
                                             dfields=dfields,
                                             parent=root,
-                                            base_url=base_url,
+                                            base_url=url,
                                             reference_map=reference_map,
                                             export_map=export_map,
                                             components=rcomponents,
@@ -3531,16 +3537,17 @@ class S3Resource(object):
 
         # Export the record
         add = False
-        element, rmap = self.__export_record(record,
-                                             rfields=rfields,
-                                             dfields=dfields,
-                                             parent=parent,
-                                             export_map=export_map,
-                                             url=record_url,
-                                             msince=msince,
-                                             marker=marker,
-                                             popup_label=popup_label,
-                                             popup_fields=popup_fields)
+        export = self.__export_record
+        element, rmap = export(record,
+                               rfields=rfields,
+                               dfields=dfields,
+                               parent=parent,
+                               export_map=export_map,
+                               url=record_url,
+                               msince=msince,
+                               marker=marker,
+                               popup_label=popup_label,
+                               popup_fields=popup_fields)
         if element is not None:
             add = True
 
@@ -3578,6 +3585,8 @@ class S3Resource(object):
                     crecords = [crecords[0]]
 
                 # Export records
+                export = component.__export_record
+                map_record = component.__map_record
                 for crecord in crecords:
                     # Construct the component record URL
                     if component_url:
@@ -3585,19 +3594,18 @@ class S3Resource(object):
                     else:
                         crecord_url = None
                     # Export the component record
-                    celement, crmap = component.__export_record(
-                                            crecord,
-                                            rfields=crfields,
-                                            dfields=cdfields,
-                                            parent=element,
-                                            export_map=export_map,
-                                            url=crecord_url,
-                                            msince=msince,
-                                            marker=marker)
+                    celement, crmap = export(crecord,
+                                             rfields=crfields,
+                                             dfields=cdfields,
+                                             parent=element,
+                                             export_map=export_map,
+                                             url=crecord_url,
+                                             msince=msince,
+                                             marker=marker)
                     if celement is not None:
                         add = True # keep the parent record
-                        component.__map_record(crecord, crmap,
-                                               reference_map, export_map)
+                        map_record(crecord, crmap,
+                                   reference_map, export_map)
 
         # Update reference_map and export_map
         if add:
