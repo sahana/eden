@@ -1028,7 +1028,7 @@ def training_event():
 
         return True
     response.s3.prep = prep
-    
+
     output = s3_rest_controller(rheader=hrm_rheader)
     return output
 
