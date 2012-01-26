@@ -511,10 +511,10 @@ class GIS(object):
                 max_lat = max(lat, max_lat)
 
         else: # no features
-            min_lon = config.min_lon
-            max_lon = config.max_lon
-            min_lat = config.min_lat
-            max_lat = config.max_lat
+            min_lon = config.min_lon or -180
+            max_lon = config.max_lon or 180
+            min_lat = config.min_lat or -90
+            max_lat = config.max_lat or 90
 
         # Assure a reasonable-sized box.
         delta_lon = (bbox_min_size - (max_lon - min_lon)) / 2.0
@@ -946,7 +946,7 @@ class GIS(object):
                 row = db(query).select(limitby=(0, 1)).first()
             if not row:
                 # No personal config or not logged in. Use site default.
-                config = db(ctable.id > 0).select(limitby=(0, 1)).first()
+                config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
                 if not config:
                     # No configs found at all
                     s3.gis.config = cache
@@ -1781,7 +1781,10 @@ class GIS(object):
         return None
 
     # -------------------------------------------------------------------------
-    def get_marker(self, config=None, tablename=None, record=None):
+    def get_marker(self,
+                   config=None,
+                   tablename=None, record=None,
+                   marker= True, gps=False):
 
         """
             Returns the Marker for a Feature
@@ -1799,10 +1802,15 @@ class GIS(object):
             @param config - the gis_config
             @param tablename
             @param record
+            @param marker: return the marker
+            @param gps: return the gps_marker
         """
 
-        if not config:
-            config = self.get_config()
+        # Default GPS Symbol
+        DEFAULT = "White Dot"
+
+        _gps_marker = None
+        _marker = None
 
         if tablename is not None:
             db = current.db
@@ -1814,93 +1822,60 @@ class GIS(object):
 
             (module, resource) = tablename.split("_", 1)
 
-            #symbology = config.symbology_id
-            marker = None
-
             # 1st choice for a Marker is the Feature Layer's
             query = (table.module == module) & \
                     (table.resource == resource)
-                    #& (table.symbology_id == symbology)
+
             layers = db(query).select(table.marker_id,
-                                      # @ToDo: Unify this call for gis_encode
-                                      #table.gps_marker,
+                                      table.gps_marker,
                                       table.filter_field,
                                       table.filter_value,
                                       cache=cache)
+
             if layers:
+                _gps_marker = None
                 for row in layers:
                     if record and row.filter_field:
                         # Check if the record matches the filter
-                        if record[row.filter_field] == row.filter_value:
-                            query = (mtable.id == row.marker_id)
-                            marker = db(query).select(mtable.image,
-                                                      mtable.height,
-                                                      mtable.width,
-                                                      limitby=(0, 1),
-                                                      cache=cache).first()
+                        if str(record[row.filter_field]) == row.filter_value:
+                            _gps_marker = row.gps_marker or DEFAULT
+                            if marker:
+                                query = (mtable.id == row.marker_id)
+                                _marker = db(query).select(mtable.image,
+                                                           mtable.height,
+                                                           mtable.width,
+                                                           limitby=(0, 1),
+                                                           cache=cache).first()
                     else:
                         # No Filter so we match automatically
-                        query = (mtable.id == row.marker_id)
-                        marker = db(query).select(mtable.image,
-                                                  mtable.height,
-                                                  mtable.width,
-                                                  limitby=(0, 1),
-                                                  cache=cache).first()
-                    if marker:
+                        _gps_marker = row.gps_marker or DEFAULT
+                        if marker:
+                            query = (mtable.id == row.marker_id)
+                            _marker = db(query).select(mtable.image,
+                                                       mtable.height,
+                                                       mtable.width,
+                                                       limitby=(0, 1),
+                                                       cache=cache).first()
+                    if _gps_marker:
                         # Return the 1st matching marker
-                        return marker
+                        break
 
-        # Default Marker
-        marker_default = Storage(image = config.marker_image,
-                                 height = config.marker_height,
-                                 width = config.marker_width)
-        return marker_default
+        gps_marker = _gps_marker or DEFAULT
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_gps_marker(tablename, record):
+        if marker and not _marker:
+            # Default Marker
+            if not config:
+                config = self.get_config()
 
-        """
-            Returns the GPS Marker (Symbol) for a Feature
+            _marker = Storage(image = config.marker_image,
+                              height = config.marker_height,
+                              width = config.marker_width)
+        if not gps:
+            # Just return the marker
+            return _marker
 
-            Used by s3xml's gis_encode() for Feeds export
-
-            @param tablename
-            @param record
-        """
-
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-
-        table = s3db.gis_layer_feature
-
-        (module, resource) = tablename.split("_", 1)
-        
-        # 1st choice for a Symbol is the Feature Layer's
-        query = (table.module == module) & \
-                (table.resource == resource)
-        layers = db(query).select(table.gps_marker,
-                                  # @ToDo: Unify this call for gis_encode
-                                  #table.marker_id,
-                                  table.filter_field,
-                                  table.filter_value,
-                                  cache=cache)
-        if layers:
-            for row in layers:
-                if row.filter_field:
-                    # Check if the record matches the filter
-                    if record[row.filter_field] == row.filter_value:
-                        if row.gps_marker:
-                            return row.gps_marker
-                else:
-                    # No Filter so we match automatically
-                    if row.gps_marker:
-                        return row.gps_marker
-
-        # 2nd choice for a Symbol is the default
-        gps_marker = "White Dot"
-        return gps_marker
+        # Return both
+        return (_marker, gps_marker)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4092,7 +4067,7 @@ S3.i18n.gis_feature_info = '%s';
        T("Feature Info"))
         else:
             getfeatureinfo = ""
-        
+
         #############
         # Main script
         #############
@@ -4503,8 +4478,8 @@ class MultiRecordLayer(Layer):
         def setup_folder(self, output):
             if self.dir:
                 output["dir"] = self.dir
- 
-        @staticmethod 
+
+        @staticmethod
         def add_attributes_if_not_default(output, **values_and_defaults):
             # could also write values in debug mode, to check if defaults ignored.
             # could also check values are not being overwritten.

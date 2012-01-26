@@ -1627,7 +1627,7 @@ class S3MapModel(S3Model):
 
         # Make available to global scope (for Map Service Catalogue & ???)
         #s3.gis.layer_types = ["shapefile", "scan", "xyz", "yahoo"]
-        s3.gis.layer_types = ["bing", "coordinate", "openstreetmap", "geojson", "georss", "google", "gpx", "js", "kml", "mgrs", "tms", "wfs", "wms"]
+        s3.gis.layer_types = ["feature", "bing", "coordinate", "openstreetmap", "geojson", "georss", "google", "gpx", "js", "kml", "mgrs", "tms", "wfs", "wms"]
         gis_layer_wms_img_formats = ["image/jpeg", "image/png", "image/bmp", "image/tiff", "image/gif", "image/svg+xml"]
 
         # Base

@@ -7,6 +7,7 @@
 
          CSV column...........Format..........Content
 
+         UID..................string..........gis_config.uuid (needed for SITE_DEFAULT)
          Name.................string..........gis_config.name
          Region...............string..........gis_config.region_location_id.name
          Default..............string..........gis_config.default_location_id.name
@@ -88,6 +89,11 @@
             </resource>
         </xsl:if>
         <resource name="gis_config">
+            <xsl:if test="col[@field='UUID']!=''">
+                <xsl:attribute name="uuid">
+                    <xsl:value-of select="col[@field='UUID']"/>
+                </xsl:attribute>
+            </xsl:if>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="zoom"><xsl:value-of select="col[@field='Zoom']"/></data>
             <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
