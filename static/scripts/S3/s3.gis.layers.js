@@ -259,6 +259,7 @@ function addGeoJSONLayer(layer) {
     // Style Rule For Clusters
     var cluster_style = {
         label: '${label}',
+        labelAlign: 'cm',
         pointRadius: '${radius}',
         fillColor: '${fill}',
         fillOpacity: opacity,
@@ -456,6 +457,8 @@ function addGeoJSONLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            legendURL: marker_url,
             styleMap: featureClusterStyleMap,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -651,6 +654,8 @@ function addGPXLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            legendURL: marker_url,
             style: style_marker,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -756,6 +761,8 @@ function addKMLLayer(layer) {
                     interval: refresh * 1000 // milliseconds
                 })
             ],
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            legendURL: marker_url,
             style: style_marker,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -1077,6 +1084,7 @@ function addWFSLayer(layer) {
     var style_cluster = new OpenLayers.Style (
         {
             label: '${label}',
+            labelAlign: 'cm',
             pointRadius: '${radius}',
             fillColor: '${fill}',
             fillOpacity: opacity / 2,
@@ -1221,6 +1229,16 @@ function addWMSLayer(layer) {
     } else {
         var opacity = 1;
     }
+    if (undefined != layer.queryable) {
+        var queryable = layer.queryable;
+    } else {
+        var queryable = 1;
+    }
+    if (undefined != layer.legendURL) {
+        var legendURL = layer.legendURL;
+    } else {
+        var legendURL;
+    }
 
     var wmsLayer = new OpenLayers.Layer.WMS(
         name, url, {
@@ -1230,6 +1248,8 @@ function addWMSLayer(layer) {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
+            // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+            queryable: queryable,
             visibility: visibility
         }
     );
@@ -1262,6 +1282,10 @@ function addWMSLayer(layer) {
         } else {
             wmsLayer.buffer = 0;
         }
+    }
+    if (legendURL) {
+        // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+        wmsLayer.legendURL = legendURL;
     }
     map.addLayer(wmsLayer);
 }

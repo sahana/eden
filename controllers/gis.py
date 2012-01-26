@@ -87,7 +87,8 @@ def map_viewing_client():
 def define_map(window=False, toolbar=False, config=None):
     """
         Define the main Situation Map
-        This can then be called from both the Index page (embedded) & the Map_Viewing_Client (fullscreen)
+        This can then be called from both the Index page (embedded)
+        & the Map_Viewing_Client (fullscreen)
     """
 
     if not config:
@@ -100,6 +101,7 @@ def define_map(window=False, toolbar=False, config=None):
 
     # @ToDo: Make these configurable
     search = True
+    legend = True
     googleEarth = True
     googleStreetview = True
     catalogue_layers = True
@@ -125,6 +127,7 @@ def define_map(window=False, toolbar=False, config=None):
                        catalogue_toolbar=catalogue_toolbar,
                        wms_browser = wms_browser,
                        toolbar=toolbar,
+                       legend=legend,
                        search=search,
                        catalogue_layers=catalogue_layers,
                        mouse_position = mouse_position,
@@ -1012,53 +1015,6 @@ def config():
 
 
 # -----------------------------------------------------------------------------
-def feature_class():
-    """
-        RESTful CRUD controller
-        Deprecated? (How to link Symbology with Feature Queries?)
-    """
-    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-        auth.permission.fail()
-
-    # Load all models
-    s3mgr.model.load_all_models()
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-    table.resource.requires = IS_IN_SET(db.tables)
-
-    # Model options
-    table.gps_marker.comment = DIV( _class="tooltip",
-                                    _title="%s|%s" % (T("GPS Marker"),
-                                                      T("Defines the icon used for display of features on handheld GPS.")))
-
-    # CRUD Strings
-    ADD_FEATURE_CLASS = T("Add Feature Class")
-    LIST_FEATURE_CLASS = T("List Feature Classes")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_FEATURE_CLASS,
-        title_display = T("Feature Class Details"),
-        title_list = T("Feature Classes"),
-        title_update = T("Edit Feature Class"),
-        title_search = T("Search Feature Class"),
-        subtitle_create = T("Add New Feature Class"),
-        subtitle_list = LIST_FEATURE_CLASS,
-        label_list_button = LIST_FEATURE_CLASS,
-        label_create_button = ADD_FEATURE_CLASS,
-        label_delete_button = T("Delete Feature Class"),
-        msg_record_created = T("Feature Class added"),
-        msg_record_modified = T("Feature Class updated"),
-        msg_record_deleted = T("Feature Class deleted"),
-        msg_list_empty = T("No Feature Classes currently defined"))
-
-    output = s3_rest_controller()
-
-    if not "gis" in response.view and response.view != "popup.html":
-        response.view = "gis/" + response.view
-
-    return output
-
-# -----------------------------------------------------------------------------
 def layer_feature():
     """ RESTful CRUD controller """
     if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
@@ -1067,6 +1023,12 @@ def layer_feature():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
+    # Model options
+    table.gps_marker.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % (T("GPS Marker"),
+                                                     T("Defines the icon used for display of features on handheld GPS.")))
+
+    
     # Load Models
     s3mgr.model.load_all_models()
 
@@ -1078,6 +1040,7 @@ def layer_feature():
             if "location_id" in db[table]:
                 tables.append(table)
         s3db.gis_layer_feature.resource.requires = IS_IN_SET(tables)
+
         return True
     response.s3.prep = prep
 
@@ -2008,8 +1971,10 @@ def feature_query():
         asynchronously using S3Task
     """
 
-    # Load Model
-    s3mgr.load("gis_feature_query")
+    table = s3db.gis_feature_query
+
+    # Filter out any records without LatLon
+    response.s3.filter = (table.lat != None) & (table.lon != None)
 
     # Parse the Request
     r = s3mgr.parse_request()

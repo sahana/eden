@@ -548,9 +548,10 @@ class S3ProjectModel(S3Model):
             report_fields.append((T("Theme"), "project_id$multi_theme_id"))
             report_fields.append((T("Hazard"), "project_id$multi_hazard_id"))
             report_fields.append((T("HFA"), "project_id$hfa"))
-            lh = settings.get_gis_default_location_hierarchy()
-            lh = [(lh[opt], opt) for opt in lh]
-            report_fields.extend(lh)
+            lh = current.gis.get_location_hierarchy()
+            if lh:
+                lh = [(lh[opt], opt) for opt in lh]
+                report_fields.extend(lh)
             report_fields.append("location_id")
         else:
             report_fields.append((T("Time Estimated"), "time_estimated"))
@@ -975,6 +976,8 @@ class S3ProjectDRRModel(S3Model):
         activity_id = self.project_activity_id
         #multi_activity_type_id = self.project_multi_activity_type_id
 
+        pca = current.deployment_settings.get_project_community_activity()
+
         messages = current.messages
         NONE = messages.NONE
 
@@ -1018,8 +1021,10 @@ class S3ProjectDRRModel(S3Model):
             title_update = T("Edit Project Organization"),
             title_search = T("Search Project Organizations"),
             title_upload = T("Import Project Organizations"),
+            title_report = T("Funding Report"),
             subtitle_create = T("Add Organization to Project"),
             subtitle_list = T("Project Organizations"),
+            subtitle_report = T("Funding"),
             label_list_button = LIST_PROJECT_ORG,
             label_create_button = ADD_PROJECT_ORG,
             label_delete_button = T("Remove Organization from Project"),
@@ -1164,7 +1169,9 @@ class S3ProjectDRRModel(S3Model):
                                   s3.comments(),
                                   *s3.meta_fields())
 
-        # Field configuration?
+        # Field configuration
+        if pca:
+            table.activity_id.label = T("Community")
 
         # CRUD Strings
         ADD_BNF = T("Add Beneficiaries")
@@ -1205,7 +1212,7 @@ class S3ProjectDRRModel(S3Model):
                                       "activity_id$multi_activity_type_id"
                                      ],
                         report_cols=[
-                                      "bnf_type",
+                                      (T("Beneficiary Type"), "bnf_type"),
                                      ],
                         report_fact=["number"],
                         report_method=["sum"])

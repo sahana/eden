@@ -220,6 +220,7 @@ class S3SupplyModel(S3Model):
                                         label = T("Name"),
                                         required = True),
                                   Field("can_be_asset", "boolean",
+                                        default=True,
                                         readable=settings.has_module("asset"),
                                         writable=settings.has_module("asset"),
                                         label=T("Items in Category can be Assets")),

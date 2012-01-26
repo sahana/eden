@@ -31,6 +31,7 @@ S3.gis.options = {
     numZoomLevels: S3.gis.numZoomLevels
 };
 // Default values if not set by the layer
+// Also in modules/s3/s3gis.py
 // http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
 S3.gis.cluster_distance = 2;    // pixels
 S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
@@ -62,49 +63,58 @@ function registerPlugin(plugin) {
 
 // Main Ext function
 Ext.onReady(function() {
-        // Build the OpenLayers map
-        addMap();
+    // Build the OpenLayers map
+    addMap();
 
-        // Set some common options
-        if ( undefined == S3.gis.west_collapsed ) {
-            S3.gis.west_collapsed = false;
-        }
+    // Set some common options
+    if ( undefined == S3.gis.west_collapsed ) {
+        S3.gis.west_collapsed = false;
+    }
 
-        // Which Elements do we want in our mapWindow?
-        // @ToDo: Move all these to Plugins
-        items = [S3.gis.layerTree];
-        if (S3.gis.wmsBrowser) {
-            items.push(S3.gis.wmsBrowser);
-        }
-        if (S3.gis.searchCombo) {
-            items.push(S3.gis.searchCombo);
-        }
-        if (S3.gis.printFormPanel) {
-            items.push(S3.gis.printFormPanel);
-        }
-        if (S3.gis.legendPanel) {
-            items.push(S3.gis.legendPanel);
-        }
-        
-        for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
-            S3.gis.plugins[i].addToMapWindow(items);
-        }
+    // Which Elements do we want in our mapWindow?
+    // @ToDo: Move all these to Plugins
+    items = [S3.gis.layerTree];
+    if (S3.gis.wmsBrowser) {
+        items.push(S3.gis.wmsBrowser);
+    }
+    if (S3.gis.searchCombo) {
+        items.push(S3.gis.searchCombo);
+    }
+    if (S3.gis.printFormPanel) {
+        items.push(S3.gis.printFormPanel);
+    }
+    if (S3.gis.legendPanel) {
+        items.push(S3.gis.legendPanel);
+    }
+    
+    for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
+        S3.gis.plugins[i].addToMapWindow(items);
+    }
 
-        // Instantiate the main Map window
-        if (S3.gis.window) {
-            addMapWindow(items);
-        } else {
-            // Embedded Map
-            addMapPanel(items);
-        }
+    // Instantiate the main Map window
+    if (S3.gis.window) {
+        addMapWindow(items);
+    } else {
+        // Embedded Map
+        addMapPanel(items);
+    }
 
-        // If we were instantiated with bounds, use these now
-        if ( S3.gis.bounds ) {
-            map.zoomToExtent(S3.gis.bounds);
-        }
+    // If we were instantiated with bounds, use these now
+    if ( S3.gis.bounds ) {
+        map.zoomToExtent(S3.gis.bounds);
+    }
 
-        // Toolbar Tooltips
-        Ext.QuickTips.init();
+    // Ensure that mapPanel knows about whether our WMS layers are queryable
+    if (S3.gis.layers_wms) {
+        for (i = 0; i < map.layers.length; i++) {
+            if (map.layers[i].queryable) {
+                S3.gis.mapPanel.layers.data.items[i].data.queryable = 1;
+            }
+        }
+    }
+    
+    // Toolbar Tooltips
+    Ext.QuickTips.init();
 });
 
 
@@ -173,7 +183,15 @@ function addMap() {
 
     // Legend Panel
     if (S3.i18n.gis_legend) {
-        S3.gis.legendPanel = new GeoExt.LegendPanel({
+
+        // Ensure that legendPanel knows about the Markers for our Feature layers
+        for (i = 0; i < map.layers.length; i++) {
+                if (map.layers[i].legendURL) {
+                    S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
+                }
+            }
+
+       S3.gis.legendPanel = new GeoExt.LegendPanel({
             id: 'legendpanel',
             title: S3.i18n.gis_legend,
             defaults: {
@@ -596,6 +614,12 @@ function addToolbar() {
         //toolbar.add(rotateButton);
         //toolbar.add(modifyButton);
         //toolbar.add(removeButton);
+    }
+
+    // WMS GetFeatureInfo
+    // @ToDo: Add control if we add appropriate layers dynamically...
+    if (S3.i18n.gis_get_feature_info) {
+        addWMSGetFeatureInfoControl(toolbar);
     }
 
     // OpenStreetMap Editor

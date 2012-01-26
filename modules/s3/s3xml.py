@@ -201,7 +201,7 @@ class S3XML(S3Codec):
         """
 
         self.error = None
-        if isinstance(source, basestring) and source[:4] == "http":
+        if isinstance(source, basestring) and source[:5] == "https":
             try:
                 source = urllib2.urlopen(source)
             except:
@@ -623,8 +623,8 @@ class S3XML(S3Codec):
 
         references = filter(lambda r:
                             r.element is not None and \
-                            self.Lat in db[r.table].fields and \
-                            self.Lon in db[r.table].fields,
+                            self.Lat in s3db[r.table].fields and \
+                            self.Lon in s3db[r.table].fields,
                             rmap)
 
         for i in xrange(0, len(references)):
@@ -665,10 +665,17 @@ class S3XML(S3Codec):
                         marker_url = "%s/gis_marker.image.%s.png" % \
                                      (download_url, marker)
                     else:
+                        # @ToDo: Optimise this by doing the table lookup once &
+                        #        only doing the record lookup if there is a
+                        #        filter to check on
                         marker = gis.get_marker(tablename=resource.tablename, record=record)
                         marker_url = "%s/%s" % (download_url, marker.image)
                     r.element.set(self.ATTRIBUTE.marker, marker_url)
                     # Lookup GPS Marker (Symbol)
+                    # @ToDo: Optimise this by doing the table lookup once &
+                    #        only doing the record lookup if there is a filter
+                    #        to check on
+                    #        Maybe skip completely for GeoJSON?
                     symbol = gis.get_gps_marker(resource.tablename, record)
                     r.element.set(self.ATTRIBUTE.sym, symbol)
                     if popup_fields:
