@@ -4420,7 +4420,12 @@ class MultiRecordLayer(Layer):
 
         layer_type_list = []
         # Read the enabled Layers
-        for record in current.db(self.table.enabled == True).select():
+        table = self.table
+        fields = table.fields
+        metafields = current.response.s3.all_meta_field_names
+        fields = [table[f] for f in fields if f not in metafields]
+        rows = current.db(table.enabled == True).select(*fields)
+        for record in rows:
             # Check user is allowed to access the layer
             role_required = record.role_required
             if (not role_required) or s3_has_role(role_required):

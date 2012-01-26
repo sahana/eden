@@ -223,7 +223,9 @@ response.s3.all_meta_field_names = [field.name for field in
      s3_meta_created_by(),
      s3_meta_modified_by(),
      s3_meta_owned_by_user(),
-     s3_meta_owned_by_role()
+     s3_meta_owned_by_role(),
+     s3_meta_owned_by_organisation(),
+     s3_meta_owned_by_facility()
     ]]
 
 # =============================================================================

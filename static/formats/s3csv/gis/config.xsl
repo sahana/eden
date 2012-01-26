@@ -17,6 +17,7 @@
          L1...................string..........gis_config.L1 (Name for L1 locations)
          L2...................string..........gis_config.L2 (Name for L2 locations)
          L3...................string..........gis_config.L3 (Name for L3 locations)
+         L4...................string..........gis_config.L4 (Name for L4 locations)
          Projection...........integer.........gis_config.projection.epsg
          Symbology............string..........gis_config.symbology_id
          Marker...............string..........gis_config.marker_id
@@ -24,6 +25,7 @@
          MaxLat...............float...........gis_config.max_lat
          MinLon...............float...........gis_config.min_lon
          MaxLon...............float...........gis_config.max_lon
+         Search Level.........string..........gis_config.search_level
          WMS Browser..........float...........gis_config.wmsbrowser_url
          
 
@@ -101,11 +103,17 @@
             <data field="L1"><xsl:value-of select="col[@field='L1']"/></data>
             <data field="L2"><xsl:value-of select="col[@field='L2']"/></data>
             <data field="L3"><xsl:value-of select="col[@field='L3']"/></data>
+            <data field="L4"><xsl:value-of select="col[@field='L4']"/></data>
             <data field="min_lat"><xsl:value-of select="col[@field='MinLat']"/></data>
             <data field="min_lon"><xsl:value-of select="col[@field='MinLon']"/></data>
             <data field="max_lat"><xsl:value-of select="col[@field='MaxLat']"/></data>
             <data field="max_lon"><xsl:value-of select="col[@field='MaxLon']"/></data>
-            <data field="wmsbrowser_url"><xsl:value-of select="col[@field='WMS Browser']"/></data>
+            <xsl:if test="col[@field='Search Level']!=''">
+                <data field="search_level"><xsl:value-of select="col[@field='Search Level']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='WMS Browser']!=''">
+                <data field="wmsbrowser_url"><xsl:value-of select="col[@field='WMS Browser']"/></data>
+            </xsl:if>
             <reference field="marker_id" resource="gis_marker">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Marker"/>
