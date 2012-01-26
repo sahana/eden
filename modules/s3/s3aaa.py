@@ -2212,7 +2212,7 @@ class AuthS3(Auth):
                   FAC_ID,
                   OWNED_BY_ORG,
                   OWNED_BY_FAC]
-        fields = [f for f in fields if f in table]
+        fields = [f for f in table if f.name in fields]
 
         # Get the record
         if not isinstance(record, Row):

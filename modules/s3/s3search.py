@@ -572,11 +572,11 @@ class S3SearchOptionsWidget(S3SearchWidget):
             # Find the fields which are needed to represent:
             db = current.db
             ktable = db[field_type[10:]]
-            fieldnames = re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
-            fieldnames += ["id"]
+            fieldnames = ["id"]
+            fieldnames += re.findall("%\(([a-zA-Z0-9_]*)\)s", represent)
             represent_fields = [ktable[fieldname] for fieldname in fieldnames]
             query = (ktable.id.belongs(opt_keys)) & (ktable.deleted == False)
-            represent_rows = db(query).select(*represent_fields).as_dict()
+            represent_rows = db(query).select(*represent_fields).as_dict(key=represent_fields[0].name)
             opt_list = []
             for opt_key in opt_keys:
                 opt_represent = represent % represent_rows[opt_key]
