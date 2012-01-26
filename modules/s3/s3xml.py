@@ -618,8 +618,17 @@ class S3XML(S3Codec):
         # Quicker to download Icons from Static
         # also doesn't require authentication so KML files can work in
         # Google Earth
+        # @ToDo: Remove the Public URL to keep filesize small when
+        # loading off same server? (GeoJSON &layer=xx)
         download_url = download_url.replace("default/download",
                                             "static/img/markers")
+
+        if marker:
+            marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
+        else:                             
+            marker = None
+
+        tablename = resource.tablename
 
         references = filter(lambda r:
                             r.element is not None and \
@@ -655,28 +664,18 @@ class S3XML(S3Codec):
                         if colour:
                             r.element.set(self.ATTRIBUTE.colour, colour)
 
-                    # Lookup Marker (Icon)
-                    # @ToDo: Remove the Public URL to keep filesize small when
-                    # loading off same server? (GeoJSON &layer=xx)
+                    # Lookup Marker (Icon) & GPS Symbol
                     # @ToDo: Return the markers outside the records
                     #        (as there are many less of them)
                     #        & use the stylesheet to hook-up appropriately
-                    elif marker:
-                        marker_url = "%s/gis_marker.image.%s.png" % \
-                                     (download_url, marker)
-                    else:
-                        # @ToDo: Optimise this by doing the table lookup once &
-                        #        only doing the record lookup if there is a
-                        #        filter to check on
-                        marker = gis.get_marker(tablename=resource.tablename, record=record)
-                        marker_url = "%s/%s" % (download_url, marker.image)
+                    #        Maybe skip GPS completely for GeoJSON?
+                    (_marker, symbol) = gis.get_marker(tablename=tablename,
+                                                       record=record,
+                                                       gps=True,
+                                                       marker=False if marker else True)
+                    if _marker:
+                        marker_url = "%s/%s" % (download_url, _marker.image)
                     r.element.set(self.ATTRIBUTE.marker, marker_url)
-                    # Lookup GPS Marker (Symbol)
-                    # @ToDo: Optimise this by doing the table lookup once &
-                    #        only doing the record lookup if there is a filter
-                    #        to check on
-                    #        Maybe skip completely for GeoJSON?
-                    symbol = gis.get_gps_marker(resource.tablename, record)
                     r.element.set(self.ATTRIBUTE.sym, symbol)
                     if popup_fields:
                         # Internal feature Layers
