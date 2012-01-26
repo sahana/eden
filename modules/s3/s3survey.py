@@ -1486,7 +1486,7 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Numeric")
 
     def display(self, **attr):
-        length = self.get("length", 10)
+        length = self.get("Length", 10)
         attr["_size"] = length
         attr["_maxlength"] = length
         return S3QuestionTypeAbstractWidget.display(self, **attr)
@@ -1534,8 +1534,8 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         result = S3QuestionTypeAbstractWidget.validate(self, valueList)
         if result != ANSWER_VALID:
             return result
-        length = self.get("length", 10)
-        format = self.get("format")
+        length = self.get("Length", 10)
+        format = self.get("Format")
         data = value(valueList, 0)
         if format != None:
             try:

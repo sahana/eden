@@ -331,7 +331,7 @@ class S3TemplateModel(S3Model):
         return True
 
     @staticmethod
-    def addQuestion(template_id, name, code, notes, type, posn):
+    def addQuestion(template_id, name, code, notes, type, posn, metadata={}):
         db = current.db
         s3db = current.s3db
 
@@ -348,6 +348,12 @@ class S3TemplateModel(S3Model):
                                        notes = notes,
                                        type = type
                                       )
+            qstn_metadata_table = s3db.survey_question_metadata
+            for (descriptor, value) in metadata.items():
+                qstn_metadata_table.insert(question_id = qstn_id,
+                                           descriptor = descriptor,
+                                           value = value 
+                                          )
         # Add these questions to the section: "Background Information"
         sectable = s3db.survey_section
         section_name = "Background Information"
@@ -430,10 +436,12 @@ class S3TemplateModel(S3Model):
                 code = "STD-%s" % loc
                 if loc == "Lat" or loc == "Lon":
                     type = "Numeric"
+                    metadata = {"Format": "nnn.nnnnnn"}
                 else:
                     type = "Location"
+                    metadata = {}
                 posn += 1
-                addQuestion(template_id, name, code, "", type, posn)
+                addQuestion(template_id, name, code, "", type, posn, metadata)
 
     @staticmethod
     def survey_template_duplicate(job):
@@ -2639,12 +2647,20 @@ class S3CompleteModel(S3Model):
         answer = []
         lastLocWidget = None
         codeList = ["STD-L0","STD-L1","STD-L2","STD-L3","STD-L4"]
+        headingList = ["Country",
+                       "ADM1_NAME",
+                       "ADM2_NAME",
+                       "ADM3_NAME",
+                       "ADM4_NAME"
+                      ]
+        cnt = 0
+        headings = []
         for loc in codeList:
             if loc in location_dict:
                 answer.append(location_dict[loc].repr())
                 lastLocWidget = location_dict[loc]
-            else:
-                answer.append("")
+                headings.append(headingList[cnt])
+            cnt += 1
         # Check that we have at least one location question answered
         if lastLocWidget == None:
             return
@@ -2658,14 +2674,8 @@ class S3CompleteModel(S3Model):
         from tempfile import TemporaryFile
         csvfile = TemporaryFile()
         writer = csv.writer(csvfile)
-        writer.writerow(["Country",
-                         "ADM1_NAME",
-                         "ADM2_NAME",
-                         "ADM3_NAME",
-                         "ADM4_NAME",
-                         "Code2",
-                         "Lat",
-                         "Lon"])
+        headings += ["Code2", "Lat", "Lon"]
+        writer.writerow(headings)
         writer.writerow(answer)
         csvfile.seek(0)
         xsl = os.path.join("applications",
