@@ -1971,8 +1971,10 @@ def feature_query():
         asynchronously using S3Task
     """
 
-    # Load Model
-    s3mgr.load("gis_feature_query")
+    table = s3db.gis_feature_query
+
+    # Filter out any records without LatLon
+    response.s3.filter = (table.lat != None) & (table.lon != None)
 
     # Parse the Request
     r = s3mgr.parse_request()

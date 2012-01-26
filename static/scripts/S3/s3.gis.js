@@ -190,7 +190,6 @@ function addMap() {
                     S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
                 }
             }
-        }
 
        S3.gis.legendPanel = new GeoExt.LegendPanel({
             id: 'legendpanel',
@@ -235,6 +234,7 @@ function addMap() {
     for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
         S3.gis.plugins[i].setup(map);
     }
+}
 
 // Create an embedded Map Panel
 function addMapPanel(items) {
