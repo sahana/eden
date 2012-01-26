@@ -1148,49 +1148,54 @@ def org_site_represent(id, default_label="[no label]", link = True):
     if isinstance(id, Row) and "instance_type" in id:
         # Do not repeat the lookup if already done by IS_ONE_OF
         site = id
+        id = None
     else:
-        site = db(stable._id == id).select(stable.instance_type,
+        site = db(stable._id == id).select(stable.name,
+                                           stable.site_id,
+                                           stable.instance_type,
                                            limitby=(0, 1)).first()
         if not site:
             return site_str
 
     instance_type = site.instance_type
-    table = s3db[instance_type]
     try:
-        table = db[instance_type]
+        table = s3db[instance_type]
     except:
         return site_str
 
-    # All the current types of facility have a required "name" field that can
-    # serve as their representation.
-    query = (table.site_id == id)
-    if instance_type == "org_office":
-        record = db(query).select(table.id,
-                                  table.type,
-                                  table.name, limitby=(0, 1)).first()
-    else:
-        record = db(query).select(table.id,
-                                  table.name, limitby=(0, 1)).first()
-
     instance_type_nice = stable.instance_type.represent(instance_type)
 
-    try:
-        if instance_type == "org_office" and record.type == 5:
+    if instance_type == "org_office":
+        type = None
+        try:
+            type = site.type
+        except:
+            query = (table.site_id == site.site_id)
+            record = db( query ).select( table.id,
+                                         table.type,
+                                         limitby=(0, 1)).first()
+            if record:
+                id = record.id
+                type = record.type
+            
+        if type == 5:
              instance_type_nice = T("Warehouse")
-    except:
-        pass
 
-    if record:
-        site_str = "%s (%s)" % (record.name, instance_type_nice)
+    if site:
+        site_str = "%s (%s)" % (site.name, instance_type_nice)
     else:
         # Since name is notnull for all types so far, this won't be reached.
         site_str = "[site %d] (%s)" % (id, instance_type_nice)
 
-    if link and record:
+    if link and site:
+        if not id:
+            query = (table.site_id == site.site_id)
+            id = db( query ).select( table.id,
+                                     limitby=(0, 1)).first()
         c, f = instance_type.split("_")
         site_str = A(site_str,
                      _href = URL(c=c, f=f,
-                                 args = [record.id],
+                                 args = [id],
                                  extension = "" # removes the .aaData extension in paginated views!
                                  ))
 
