@@ -537,7 +537,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
             opt_keys = (True, False)
         else:
             # Find unique values of options for that field
-            rows = resource.select(field, groupby = resource.table[field])
+            rows = resource.select(resource.table[field], groupby = resource.table[field])
             if field_type.startswith("list"):
                 opt_keys = []
                 for row in rows:
