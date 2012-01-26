@@ -1,6 +1,6 @@
 # Script to import all
 #
-# run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_eric2.py
+# run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_supply_item_ifrc_standard.py
 #
 
 import time
@@ -13,10 +13,11 @@ session.s3.roles.append(ADMIN)
 
 s3mgr.load("supply_item")
 
-import_dir = os.path.join(request.folder, "static", "formats", "s3csv")
+stylesheet_dir = os.path.join(request.folder, "static", "formats", "s3csv", "supply")
+import_dir = os.path.join(request.folder, "private", "prepopulate", "demo", "Standard")
 
-import_file = os.path.join(import_dir, "eric_supply_item_category.csv")
-stylesheet = os.path.join(import_dir, "eric_supply_item_category.xsl")
+import_file = os.path.join(import_dir, "supply_item_category_ifrc_standard.csv")
+stylesheet = os.path.join(stylesheet_dir, "item_category_ifrc_standard.xsl")
 resource = s3mgr.define_resource("supply", "item_category")
 File = open(import_file, "r")
 resource.import_xml(File,
@@ -24,10 +25,9 @@ resource.import_xml(File,
                     stylesheet=stylesheet)
 File.close()
 
-# 500 Items
-#import_file = os.path.join(import_dir, "eric_sample.csv")
-import_file = os.path.join(import_dir, "eric_complete.csv")
-stylesheet = os.path.join(import_dir, "eric.xsl")
+import_file = os.path.join(import_dir, "supply_item_ifrc_standard_sample.csv") # Sample of 100 Items
+#import_file = os.path.join(import_dir, "supply_item_ifrc_standard.csv") # Complete ~11,000 Items
+stylesheet = os.path.join(stylesheet_dir, "stylesheet_dir.xsl")
 resource = s3mgr.define_resource("supply", "item")
 File = open(import_file, "r")
 resource.import_xml(File,
