@@ -45,7 +45,7 @@
     <xsl:variable name="OrgAcronym">IFRC</xsl:variable>
 
     <!-- The Catalog (hardcoded here) -->
-    <xsl:variable name="CatalogName">ERIC - Complete</xsl:variable>
+    <xsl:variable name="CatalogName">IFRC Standard Catalog</xsl:variable>
 
 	<xsl:key name="catalogs" match="row" use="col[@field='Catalog']"/>
     <xsl:key name="groups" match="row" use="col[@field='GROUP_CODE']"/>

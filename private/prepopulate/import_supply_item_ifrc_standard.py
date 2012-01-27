@@ -2,6 +2,9 @@
 #
 # run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_supply_item_ifrc_standard.py
 #
+# Equivalent to PrePop:
+# supply,item_category,supply_item_category_ifrc_standard.csv,item_category_ifrc_standard.xsl  
+# supply,item,supply_item_ifrc_standard.csv, item_ifrc_standard.xsl
 
 import time
 
@@ -24,10 +27,10 @@ resource.import_xml(File,
                     format="csv",
                     stylesheet=stylesheet)
 File.close()
-
 import_file = os.path.join(import_dir, "supply_item_ifrc_standard_sample.csv") # Sample of 100 Items
+#import_file = os.path.join(import_dir, "supply_item_eic.csv") # EIC ~3,000 Items
 #import_file = os.path.join(import_dir, "supply_item_ifrc_standard.csv") # Complete ~11,000 Items
-stylesheet = os.path.join(stylesheet_dir, "stylesheet_dir.xsl")
+stylesheet = os.path.join(stylesheet_dir, "item_ifrc_standard.xsl")
 resource = s3mgr.define_resource("supply", "item")
 File = open(import_file, "r")
 resource.import_xml(File,
