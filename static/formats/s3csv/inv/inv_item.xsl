@@ -24,7 +24,7 @@
          Warehouse..............org_office
          Category...............supply_item_category
          Item description.......supply_item.name
-         Catalogue number.......supply_catalog.name
+         Catalog         .......supply_catalog.name
          Tracking number (CTN)..
          Remark.................
          Outbound...............
@@ -40,6 +40,7 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
+    <xsl:key name="catalog" match="row" use="col[@field='Catalog']"/>
     <xsl:key name="warehouse" match="row" use="col[@field='Warehouse']"/>
     <xsl:key name="item_category" match="row" use="col[@field='Category']"/>
     <xsl:key name="supply_item" match="row" use="col[@field='Item description']"/>
@@ -48,6 +49,11 @@
 
     <xsl:template match="/">
         <s3xml>
+
+            <!-- Catalogs -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('catalog', col[@field='Catalog'])[1])]">
+                <xsl:call-template name="Catalog"/>
+            </xsl:for-each>
 
             <!-- Warehouses -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('warehouse', col[@field='Warehouse'])[1])]">
@@ -59,7 +65,7 @@
                 <xsl:call-template name="ItemCategory"/>
             </xsl:for-each>
 
-            <!-- Catalog Items -->
+            <!-- Items -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('supply_item', col[@field='Item description'])[1])]">
                 <xsl:call-template name="SupplyItem"/>
                 <xsl:call-template name="SupplyItemPack"/>
@@ -103,6 +109,19 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Catalog">
+        <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
+
+        <resource name="supply_catalog">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$catalog"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$catalog"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Warehouse">
         <xsl:variable name="warehouse" select="col[@field='Warehouse']/text()"/>
 
@@ -119,12 +138,20 @@
     <!-- ****************************************************************** -->
     <xsl:template name="ItemCategory">
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
+        <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
 
         <resource name="supply_item_category">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$category"/>
             </xsl:attribute>
-            <data field="code"><xsl:value-of select="$category"/></data>
+            <!-- Link to Supply Catalog -->
+            <reference field="catalog_id" resource="supply_catalog">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$catalog"/>
+                </xsl:attribute>
+            </reference>
+            <data field="code"><xsl:value-of select="substring($category/text(),1,16)"/></data>
+            <data field="name"><xsl:value-of select="$category"/></data>
         </resource>
 
     </xsl:template>
@@ -133,6 +160,7 @@
     <xsl:template name="SupplyItem">
         <xsl:variable name="item" select="col[@field='Item description']/text()"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
+        <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
@@ -152,6 +180,24 @@
                     <xsl:value-of select="$item"/>
                 </xsl:attribute>
             </reference>
+            <!-- Nest to Supply Catalog -->
+	        <resource name="supply_catalog_item">
+	            <xsl:attribute name="tuid">
+	                <xsl:value-of select="$item"/>
+	            </xsl:attribute>
+	            <!-- Link to Supply Catalog -->
+	            <reference field="catalog_id" resource="supply_catalog">
+	                <xsl:attribute name="tuid">
+	                    <xsl:value-of select="$catalog"/>
+	                </xsl:attribute>
+	            </reference>
+	            <!-- Link to Supply Item Category -->
+	            <reference field="item_category_id" resource="supply_item_category">
+	                <xsl:attribute name="tuid">
+	                    <xsl:value-of select="$category"/>
+	                </xsl:attribute>
+	            </reference>
+	        </resource>
         </resource>
 
     </xsl:template>

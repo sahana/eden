@@ -215,10 +215,11 @@ class S3SupplyModel(S3Model):
                                         label = T("Parent"),
                                         ondelete = "RESTRICT"),
                                   Field("code", length=16,
-                                        label = T("Code")),
-                                  Field("name", length=128,
-                                        label = T("Name"),
+                                        label = T("Code"),
                                         required = True),
+                                  Field("name", length=128,
+                                        label = T("Name")
+                                        ),
                                   Field("can_be_asset", "boolean",
                                         default=True,
                                         readable=settings.has_module("asset"),
@@ -918,7 +919,7 @@ S3FilterFieldChange({
                                  limitby=(0, 1),
                                  cache=cache).first()
 
-            if r.code and use_code:
+            if (r.code and use_code) or (not r.name and r.code):
                 represent_append = r.code
                 represent_join = "-"
             else:
@@ -1084,8 +1085,7 @@ S3FilterFieldChange({
             resource_duplicate("supply_item_category", job,
                                fields = ["catalog_id",
                                          "parent_item_category_id",
-                                         "code",
-                                         "name"])
+                                         "code"])
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1118,26 +1118,15 @@ S3FilterFieldChange({
         item_id = form.vars.id
 
         if isinstance(form, SQLFORM):
-        # Can't use auth.permission.format == "html" as it's still True for pre-populate via browser
-            # Create a catalog_item for items added via browser
+            # Create a supply_catalog_item for items added via browser
             table = s3db.supply_catalog_item
 
-            #is request.vars the right place to store catalog_id?
-            # no, it is not => imports won't have it and thus
-            # imported items will always end up in the default
-            # catalog
             catalog_id = request.vars.catalog_id
             ctable = s3db.supply_catalog
             if not catalog_id:
                 # Default Catalog
-                catalog = db().select(ctable.id,
-                                      orderby=ctable.id,
-                                      limitby=(0, 1)).first()
-                if catalog:
-                    catalog_id = catalog.id
-                else:
-                    # Create a default catalog
-                    catalog_id = ctable.insert(name="Default Catalog")
+                catalog = db(ctable.name == settings.get_supply_catalog_default()
+                             ).select( ctable.id, limitby=(0, 1)).first()
 
             query = (table.item_id == item_id) & \
                     (table.deleted == False )
