@@ -626,14 +626,17 @@ def survey_getAllWidgetsForTemplate(template_id):
     rows = query.select(qsntable.id,
                         qsntable.code,
                         qsntable.type,
+                        q_ltable.posn,
                         )
     widgets = {}
     for row in rows:
-        qstnType = row.type
-        qstn_id = row.id
-        qstn_code = row.code
+        qstnType = row.survey_question.type
+        qstn_id = row.survey_question.id
+        qstn_code = row.survey_question.code
+        qstn_posn = row.survey_question_list.posn
         widgetObj = survey_question_type[qstnType](qstn_id)
         widgets[qstn_code] = widgetObj
+        widgetObj.question["posn"] = qstn_posn
         question = {}
     return widgets
 
@@ -1099,7 +1102,7 @@ class S3QuestionModel(S3Model):
                     (table.section_id == sid)
             return duplicator(job, query)
 
-def survey_getQuestionFromCode(code, series_id):
+def survey_getQuestionFromCode(code, series_id=None):
     """
         function to return the question for the given series
         with the code that matches the one passed in
@@ -1110,11 +1113,17 @@ def survey_getQuestionFromCode(code, series_id):
     sertable = s3db.survey_series
     q_ltable = s3db.survey_question_list
     qsntable = s3db.survey_question
-    query = db((sertable.id == series_id) & \
-               (q_ltable.template_id == sertable.template_id) & \
-               (q_ltable.question_id == qsntable.id) & \
-               (qsntable.code == code)
-              )
+    if series_id != None:
+        query = db((sertable.id == series_id) & \
+                   (q_ltable.template_id == sertable.template_id) & \
+                   (q_ltable.question_id == qsntable.id) & \
+                   (qsntable.code == code)
+                  )
+    else:
+        query = db((q_ltable.template_id == sertable.template_id) & \
+                   (q_ltable.question_id == qsntable.id) & \
+                   (qsntable.code == code)
+                  )
     record = query.select(qsntable.id,
                           qsntable.code,
                           qsntable.name,
@@ -2188,9 +2197,6 @@ def survey_series_rheader(r, tabs=[]):
             row = db(query).count()
             tsection = TABLE(_class="survey-complete-list")
             lblSection = T("Number of Event Assessment Responses")
-            #if (row == 0):
-            #    rsection = SPAN(T("As of yet, no completed surveys have been added to this series."))
-            #else:
             rsection = TR(TH(lblSection), TD(row))
             tsection.append(rsection)
 
@@ -2225,14 +2231,31 @@ def survey_series_rheader(r, tabs=[]):
                 if colCnt != 0:
                     tranTable.append(tr)
                 tranForm.append(tranTable)
-            exportBtn = INPUT(_type="submit",
-                              _id="export_btn",
-                              _name="Export_Spreadsheet",
-                              _value=T("Download Assessment Template Spreadsheet"),
-                              _class="action-btn"
-                             )
-            tranForm.append(exportBtn)
-            tsection.append(tranForm)
+            export_xls_btn = INPUT(_type="submit",
+                                   _id="export_xls_btn",
+                                   _name="Export_Spreadsheet",
+                                   _value=T("Download Assessment Template Spreadsheet"),
+                                   _class="action-btn"
+                                  )
+            tranForm.append(export_xls_btn)
+            export_rtf_btn = INPUT(_type="submit",
+                                   _id="export_rtf_btn",
+                                   _name="Export_Word",
+                                   _value=T("Download Assessment Template Word Document"),
+                                   _class="action-btn"
+                                  )
+            tranForm.append(export_rtf_btn)
+            urlimport = URL(c="survey",
+                            f="export_all_responses",
+                            args=[record.id],
+                            )
+            buttons = DIV (A(T("Export all completed responses"),
+                             _href=urlimport,
+                             _id="All_resposnes",
+                             _class="action-btn"
+                             ),
+                          )
+
 
             rheader = DIV(TABLE(
                           TR(
@@ -2245,6 +2268,8 @@ def survey_series_rheader(r, tabs=[]):
                              ),
                               ),
                           tsection,
+                          tranForm,
+                          buttons,
                           rheader_tabs)
             return rheader
     return None

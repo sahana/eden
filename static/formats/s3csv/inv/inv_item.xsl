@@ -124,6 +124,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$category"/>
             </xsl:attribute>
+            <data field="name"><xsl:value-of select="$category"/></data>
             <data field="code"><xsl:value-of select="$category"/></data>
         </resource>
 
