@@ -254,8 +254,8 @@ class S3ProjectModel(S3Model):
                                         writable=False if drr else True,
                                         label = T("Budget")),
                                   sector_id(
-                                            #readable=False,
-                                            #writable=False,
+                                            readable=False,
+                                            writable=False,
                                             widget=lambda f, v: \
                                             CheckboxesWidget.widget(f, v, cols=3)),
 
@@ -319,13 +319,13 @@ class S3ProjectModel(S3Model):
                        super_entity="doc_entity",
                        deduplicate=self.project_project_deduplicate,
                        onvalidation=self.project_project_onvalidation,
-                       #onaccept=self.project_project_onaccept,
+                       onaccept=self.project_project_onaccept,
                        create_next=URL(c="project", f="project",
                                        args=["[id]", next]),
                        list_fields=["id",
                                     "name",
-                                    #"organisation_id",
-                                    "countries_id",
+                                    "organisation_id",
+                                    #"countries_id",
                                     "start_date",
                                     "end_date",
                                    ])
@@ -545,7 +545,6 @@ class S3ProjectModel(S3Model):
             report_fields.append((T("Activity"), "name"))
         report_fields.append((T("Activity Type"), "multi_activity_type_id"))
         if drr:
-            report_fields.append((T("Sector"), "project_id$sector_id"))
             report_fields.append((T("Theme"), "project_id$multi_theme_id"))
             report_fields.append((T("Hazard"), "project_id$multi_hazard_id"))
             report_fields.append((T("HFA"), "project_id$hfa"))
@@ -588,7 +587,7 @@ class S3ProjectModel(S3Model):
                                       comment = s3_popup_comment(c="project",
                                                                  f="activity",
                                                                  title=ADD_ACTIVITY,
-                                                                 tooltip=T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")),
+                                                                 tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")),
                                       ondelete = "CASCADE")
 
         # Components
@@ -986,11 +985,10 @@ class S3ProjectDRRModel(S3Model):
         # Project Organisation
         #
         project_organisation_roles = {
-            1: T("Host National Society"),
-            2: T("Partner National Society"),
+            1: T("Lead Implementer"), # T("Host National Society")
+            2: T("Partner"), # T("Partner National Society")
             3: T("Donor"),
-            #4: T("Customer"), # T("Beneficiary")?
-            5: T("Partner")
+            4: T("Customer"), # T("Beneficiary")?
         }
         project_organisation_lead_role = 1
 
@@ -1201,14 +1199,11 @@ class S3ProjectDRRModel(S3Model):
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,
-                        report_filter=[
-                            S3SearchOptionsWidget(field=["project_id"],
-                                                  name="project",
-                                                  label=T("Project")),
-                            S3SearchOptionsWidget(field=["bnf_type"],
-                                                  name="bnf_type",
-                                                  label=T("Beneficiary Type")),
-                        ],
+                        #report_filter=[
+                            #S3SearchOptionsWidget(field=["project_id"],
+                                                  #name="project",
+                                                  #label=T("Project"))
+                        #],
                         report_rows=[
                                       "activity_id",
                                       "project_id",
