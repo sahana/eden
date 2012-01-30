@@ -2313,7 +2313,7 @@ class AuthS3(Auth):
                                         fac_table.uuid,
                                         limitby=(0, 1)).first()
                 if site:
-                    inst_table = db[site.instance_type]
+                    inst_table = s3db[site.instance_type]
                     query = inst_table.uuid == site.uuid
                     facility = db(query).select(inst_table[OWNED_BY_FAC],
                                                 limitby=(0, 1)).first()

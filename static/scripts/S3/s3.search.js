@@ -174,7 +174,7 @@ $(document).ready(function() {
 
     /* Expanding & Collapsing Letters */
     $('.search_select_letter_label').click( function () {
-        $('#' + selSearchDiv.attr('id').replace('label', 'widget')).slideToggle();
+        $('#' + $(this).attr('id').replace('label', 'widget')).slideToggle();
         $(this).toggleClass('expanded');
     });
 

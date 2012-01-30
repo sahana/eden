@@ -191,40 +191,49 @@ $(document).ready(function() {
     });
 });"""),
                                 )
-
+        
+        report_filter = [
+                         S3SearchSimpleWidget(
+                             name="inv_item_search_text",
+                             label=T("Search"),
+                             comment=T("Search for an item by text."),
+                             field=[ "item_id$name",
+                                     #"item_id$category_id$name",
+                                     #"site_id$name"
+                                    ]
+                             ),
+                          S3SearchOptionsWidget(
+                              name="recv_search_site",
+                              label=T("Facility"),
+                              field=["site_id"],
+                              represent ="%(name)s",
+                              comment=T("If none are selected, then all are searched."),
+                              cols = 2
+                              ),
+                          S3SearchMinMaxWidget(
+                              name="inv_item_search_expiry_date",
+                              method="range",
+                              label=T("Expiry Date"),
+                              field=["expiry_date"]
+                              )
+                         ]
         # Item Search Method
         inv_item_search = S3Search(
             # Advanced Search only
-            advanced=(S3SearchSimpleWidget(
-                        name="inv_item_search_text",
-                        label=T("Search"),
-                        comment=T("Search for an item by text."),
-                        field=[ "item_id$name",
-                                #"item_id$category_id$name",
-                                #"site_id$name"
-                                ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="recv_search_site",
-                        label=T("Facility"),
-                        field=["site_id"],
-                        represent ="%(name)s",
-                        comment=T("If none are selected, then all are searched."),
-                        cols = 2
-                      ),
-                      S3SearchMinMaxWidget(
-                        name="inv_item_search_expiry_date",
-                        method="range",
-                        label=T("Expiry Date"),
-                        field=["expiry_date"]
-                      )
-            ))
+            advanced=report_filter
+            )
 
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        search_method = inv_item_search,
+                       report_filter = report_filter,
+                       report_rows = ["item_id"],
+                       report_cols = ["site_id"],
+                       report_fact = ["quantity"],
+                       report_method=["sum"],
                        report_groupby = self.inv_inv_item.site_id,
-                       report_hide_comments = True)
+                       report_hide_comments = True
+                       )
 
         # Component
         self.add_component("inv_send_item",
@@ -997,7 +1006,7 @@ def inv_recv_rheader(r):
             T = current.T
             s3 = current.response.s3
 
-            tables = [(T("Edit Details"), None),
+            tabs = [(T("Edit Details"), None),
                       (T("Items"), "recv_item"),
                     ]
 
@@ -1034,11 +1043,10 @@ def inv_recv_rheader(r):
                             rheader_tabs
                             )
 
-            rfooter = s3.rfooter
             rfooter = TAG[""]()
 
             if record.status == SHIP_STATUS_IN_PROCESS:
-                if auth.s3_has_permission("update",
+                if current.auth.s3_has_permission("update",
                                           "inv_recv",
                                           record_id=record.id):
                     recv_btn = A( T("Receive Shipment"),
@@ -1087,7 +1095,7 @@ def inv_recv_rheader(r):
                                                      % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
                         rfooter.append(cancel_btn)
                         rfooter.append(cancel_btn_confirm)
-
+            s3.rfooter = rfooter
             return rheader
     return None
 
@@ -1130,8 +1138,7 @@ def inv_send_rheader(r):
                                  ),
                             rheader_tabs
                             )
-            
-            rfooter = s3.rfooter
+
             rfooter = TAG[""]()
 
             if record.status == SHIP_STATUS_IN_PROCESS:
@@ -1162,15 +1169,16 @@ def inv_send_rheader(r):
 
                 if record.status != SHIP_STATUS_CANCEL:
                     if record.status == SHIP_STATUS_SENT:
-                        if "site_id" in request.vars and \
+                        vars = current.request.vars
+                        if "site_id" in vars and \
                             auth.s3_has_permission("update",
                                                    "org_site",
-                                                   record_id=request.vars.site_id):
+                                                   record_id=vars.site_id):
                             receive_btn = A( T("Process Received Shipment"),
                                             _href = URL(c = "inv",
                                                         f = "recv_sent",
                                                         args = [record.id],
-                                                        vars = request.vars
+                                                        vars = vars
                                                         ),
                                             _id = "send_receive",
                                             _class = "action-btn",
@@ -1184,7 +1192,7 @@ def inv_send_rheader(r):
                         if auth.s3_has_permission("update",
                                                   "inv_send",
                                                   record_id=record.id):
-                            if "received" in request.vars:
+                            if "received" in vars:
                                 s3db.inv_send[record.id] = \
                                     dict(status = SHIP_STATUS_RECEIVED)
                             else:
@@ -1218,7 +1226,8 @@ def inv_send_rheader(r):
                                                          % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
                             rfooter.append(cancel_btn)
                             rfooter.append(cancel_btn_confirm)
-
+                    
+            s3.rfooter = rfooter
             return rheader
     return None
 
