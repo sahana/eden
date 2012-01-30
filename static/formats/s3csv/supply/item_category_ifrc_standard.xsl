@@ -20,20 +20,20 @@
 
            You can add a third argument &ignore_errors
          CSV fields:
-         Organisation....................?
-         Acronym.........................?
+         Organisation....................organisation.name
+         Acronym.........................organisation.acronym
          Catalog.........................supply_catalog.name
          GROUP_CODE......................code
          GROUP_DESCRIPTION...............name
          FAM.............................code
          FAMILY_DESCRITPION..............name
+         VEHICLE.........................is_vehicle
 
         creates:
             supply_catalog...............
             supply_item_category.........
 
         @todo:
-
             - remove org_organisation (?)
 
     *********************************************************************** -->
@@ -45,7 +45,7 @@
     <xsl:variable name="OrgAcronym">IFRC</xsl:variable>
 
     <!-- The Catalog (hardcoded here) -->
-    <xsl:variable name="CatalogName">ERIC - Complete</xsl:variable>
+    <xsl:variable name="CatalogName">IFRC Standard Catalog</xsl:variable>
 
 	<xsl:key name="catalogs" match="row" use="col[@field='Catalog']"/>
     <xsl:key name="groups" match="row" use="col[@field='GROUP_CODE']"/>
@@ -114,7 +114,9 @@
 		                        <!-- Item Category Data -->
 			                    <data field="code"><xsl:value-of select="$FamilyCode"/></data>
 			                    <data field="name"><xsl:value-of select="$FamilyName"/></data>
-
+                                <xsl:if test="col[@field='VEHICLE']='Vehicle'">
+                                    <data field="is_vehicle" value="true">True</data>
+                                </xsl:if>
 		                    </resource>
 		                </xsl:for-each>
 	                </resource>

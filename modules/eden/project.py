@@ -545,6 +545,7 @@ class S3ProjectModel(S3Model):
             report_fields.append((T("Activity"), "name"))
         report_fields.append((T("Activity Type"), "multi_activity_type_id"))
         if drr:
+            report_fields.append((T("Sector"), "project_id$sector_id"))
             report_fields.append((T("Theme"), "project_id$multi_theme_id"))
             report_fields.append((T("Hazard"), "project_id$multi_hazard_id"))
             report_fields.append((T("HFA"), "project_id$hfa"))
@@ -1199,11 +1200,14 @@ class S3ProjectDRRModel(S3Model):
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,
-                        #report_filter=[
-                            #S3SearchOptionsWidget(field=["project_id"],
-                                                  #name="project",
-                                                  #label=T("Project"))
-                        #],
+                        report_filter=[
+                            S3SearchOptionsWidget(field=["project_id"],
+                                                  name="project",
+                                                  label=T("Project")),
+                            S3SearchOptionsWidget(field=["bnf_type"],
+                                                  name="bnf_type",
+                                                  label=T("Beneficiary Type")),
+                        ],
                         report_rows=[
                                       "activity_id",
                                       "project_id",

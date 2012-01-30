@@ -62,6 +62,7 @@ class S3Config(Storage):
         self.ui = Storage()
         self.req = Storage()
         self.inv = Storage()
+        self.supply = Storage()
         self.hrm = Storage()
         self.project = Storage()
         self.save_search = Storage()
@@ -163,7 +164,7 @@ class S3Config(Storage):
         return self.database.get("db_type", "sqlite")
     def get_database_string(self):
         db_type = self.database.get("db_type", "sqlite")
-        pool_size = self.database.get("pool_size", 0)
+        pool_size = self.database.get("pool_size", 30)
         if (db_type == "sqlite"):
             db_string = "sqlite://storage.db"
         elif (db_type == "mysql"):
@@ -183,10 +184,7 @@ class S3Config(Storage):
         else:
             from gluon import HTTP
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
-        if pool_size:
-            return (db_string, pool_size)
-        else:
-            return db_string
+        return (db_string, pool_size)
 
     # -------------------------------------------------------------------------
     # Finance settings
@@ -428,6 +426,11 @@ class S3Config(Storage):
             * order
         """
         return self.inv.get("shipment_name", "shipment")
+
+    # -------------------------------------------------------------------------
+    # Supply
+    def get_supply_catalog_default(self):
+        return self.inv.get("catalog_default", "Other Items")
 
     # -------------------------------------------------------------------------
     # Human Resource Management

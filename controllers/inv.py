@@ -387,7 +387,7 @@ def recv_process():
 
     recv_record = rtable[recv_id]
 
-    if recv_record.status != SHIP_STATUS_IN_PROCESS:
+    if recv_record.status != eden.inv.inv_ship_status["IN_PROCESS"]:
         session.error = T("This shipment has already been received.")
 
     if session.error:
@@ -453,7 +453,7 @@ def recv_process():
 
     # Update recv record & lock for editing
     rtable[recv_id] = dict(date = request.utcnow,
-                           status = SHIP_STATUS_RECEIVED,
+                           status = eden.inv.inv_ship_status["RECEIVED"],
                            owned_by_user = None,
                            owned_by_role = ADMIN )
 
@@ -489,7 +489,7 @@ def recv_cancel():
 
     recv_record = rtable[recv_id]
 
-    if recv_record.status != SHIP_STATUS_RECEIVED:
+    if recv_record.status != eden.inv.inv_ship_status["RECEIVED"]:
         session.error = T("This shipment has not been received - it has NOT been canceled because can still be edited.")
 
     if session.error:
@@ -574,7 +574,7 @@ def recv_cancel():
 
     # Update recv record & lock for editing
     rtable[recv_id] = dict(date = request.utcnow,
-                           status = SHIP_STATUS_CANCEL,
+                           status = eden.inv.inv_ship_status["CANCEL"],
                            owned_by_user = None,
                            owned_by_role = ADMIN)
 
@@ -604,7 +604,7 @@ def send_process():
 
     send_record = stable[send_id]
 
-    if send_record.status != SHIP_STATUS_IN_PROCESS:
+    if send_record.status != eden.inv.inv_ship_status["IN_PROCESS"]:
         session.error = T("This shipment has already been sent.")
 
     if session.error:
@@ -683,7 +683,7 @@ def send_process():
     else:
         # Update Send record & lock for editing
         stable[send_id] = dict(date = request.utcnow,
-                               status = SHIP_STATUS_SENT,
+                               status = eden.inv.inv_ship_status["SENT"],
                                owned_by_user = None,
                                owned_by_role = ADMIN
                             )
@@ -724,7 +724,7 @@ def send_cancel():
 
     send_record = stable[send_id]
 
-    if send_record.status != SHIP_STATUS_SENT:
+    if send_record.status != eden.inv.inv_ship_status["SENT"]:
         session.error = T("This shipment has not been sent - it has NOT been canceled because can still be edited.")
 
     if session.error:
@@ -817,7 +817,7 @@ def send_cancel():
 
     # Update send record & lock for editing
     stable[send_id] = dict(date = request.utcnow,
-                           status = SHIP_STATUS_CANCEL,
+                           status = eden.inv.inv_ship_status["CANCEL"],
                            owned_by_user = None,
                            owned_by_role = ADMIN
                         )
@@ -847,7 +847,7 @@ def recv_sent():
 
     r_send = s3db.inv_send[send_id]
 
-    if r_send.status != SHIP_STATUS_SENT:
+    if r_send.status != eden.inv.inv_ship_status["SENT"]:
         session.error = T("This shipment has already been received.")
 
     if not auth.s3_has_permission("update",
@@ -888,7 +888,7 @@ def recv_sent():
                       req_item_id = sent_item.inv_send_item.req_item_id)
 
     # Flag shipment as received as received
-    s3db.inv_send[send_id] = dict(status = SHIP_STATUS_RECEIVED)
+    s3db.inv_send[send_id] = dict(status = eden.inv.inv_ship_status["RECEIVED"])
 
     # Redirect to rec
     redirect(URL(c = "inv",
@@ -976,7 +976,7 @@ def recv_item_json():
     query = (itable.req_item_id == request.args[0]) & \
             (rtable.id == itable.recv_id) & \
             (rtable.site_id == stable.id) & \
-            (rtable.status == SHIP_STATUS_RECEIVED) & \
+            (rtable.status == eden.inv.inv_ship_status["RECEIVED"]) & \
             (itable.deleted == False )
     records = db(query).select(rtable.id,
                                rtable.date,
@@ -1005,8 +1005,8 @@ def send_item_json():
     query = (itable.req_item_id == request.args[0]) & \
             (istable.id == itable.send_id) & \
             (istable.site_id == stable.id) & \
-            ((istable.status == SHIP_STATUS_SENT) | \
-             (istable.status == SHIP_STATUS_RECEIVED)) & \
+            ((istable.status == eden.inv.inv_ship_status["SENT"]) | \
+             (istable.status == eden.inv.inv_ship_status["RECEIVED"])) & \
             (itable.deleted == False)
     records =  db(query).select(istable.id,
                                 istable.date,
