@@ -1,0 +1,101 @@
+item code,item description,length cm,height cm,width cm,volume litre,weight kg,in EIC
+CBUDBEAN01,"BEANS, french, extra thin, tin, per kg",0,0,0,0,0,yes
+OOMAMOULEC17,"MOULD, for 1 upper part, for elbow cructch, small L17cm",39.5,29,30,34.365,12.6,yes
+AAUDLOUDLSM,LOUDSPEAKER Anchor AN-130 (Mini speaker),0,0,0,0,0,
+ASTAPTOUZ621,"(P-Touch label maker) TAPE, YELLOW, 9mm, black lettres",9.5,2.1,7.3,0.1456,0.04,
+EELESTAB0175,"VOLTAGE STABILIZER, 3 phases independent 400V/230V, 175 KVA",0,0,0,0,0,yes
+OOMAMARPLB25B,"(large belt grinder mod 306) BELT, 250x2000mm, grit 60",30,23.5,2.5,1.7625,4.7,
+OOMAMARPSAFOOT,(for all grinder models) SAFETY FOOT SWITCH,29,17,17,8.381,1,
+AFODMWAT1.5,"MINERAL WATER, 1.5L bottle",0,0,0,0,0,
+AFOROUTW,OUTWARD REGISTER for shipping (50 sheets),29.6,0.8,21.2,0.502,0.32,
+APACBAGSD4,"(bag, diplomatic) LEAD SEAL, bag of 100",0,0,0,0,0,
+DORAMULT3T,"MULTIVITAMIN ,12 MINERALS & TRACE elements, tabs (Supradyn®)",5,8,5,0.2,0.08,
+DORANALA5T,"NALIDIXIC ACID, 500 mg, tab.",0,0,0,0.001584,0.0009,yes
+DORAMULT2T,"VITAMIN B compound, CALCIUM, MAGNESIUM,ZINC, tabs (Berocca®)",11,5,9,0.495,0.18,
+EGENHONDEU65,"GENERATOR ""Honda"" EU65, 5.5 KVA, 230V, pétrole",0,0,0,0,0,
+TXPEMISC,"MISCELLANOUS, Peugeot spareparts",0,0,0,0,0,
+TXPETOOLPPSA1,"DIAGNOSIS TOOL, Peugeot Platform 2000 (router)",0,0,0,0,0,
+TYAMVMBKY200,"MOTORBIKE, ""YAMAHA"" AG200, trail, 4 stroke engine",0,0,0,0,0,
+UADMPFKI04,"ERU, PERSONNAL FIELD KIT, for 4 persons/10 days",0,0,0,0,0,yes
+UADMPFKIAMRC,"ERU, Delegate package for 4 person team, American RC",0,0,0,0,450,yes
+UCOMPCKI01,"ERU, PERSONNAL COMMUNICATION KIT",0,0,0,0,0,yes
+UCOMTELE1,"ERU telecommunication, complete",0,0,0,0,0,
+UENGELEC01,"KIT, LIGHTING/ELECTRICITY for BHC, SPRC, incl. generator",0,0,0,0,0,
+ULOGBASC,"ERU base camp, complete",0,0,0,0,0,
+ULOGLOGI,"ERU logistics, complete",0,0,0,89000,9900,yes
+UMEDBHCU1,ERU basic health care unit complete,0,0,0,89000,9900,yes
+UMEDHOSP1,ERU referral hospital complete,0,0,0,350000,60000,yes
+UMEDHOSPS100,"ERU, Referral Hospital, 100-10 Medical Supplies MODULE, NRC",0,0,0,0,0,
+UMEDKREPTBA1,"KIT, TRADITIONAL BIRTH ATTENDANT (TBA)",0,0,0,0,0,
+UMEDRDEH1NRC,Rapid Deployment Emergency Hospital,0,0,0,89000,9900,yes
+UMSISGYN01,"ERU FRC, SET, GYNAECOLOGY, box 1/2, sterilised, instruments",0,0,0,0,0,
+URELRELI1,"ERU relief, complete",0,0,0,0,0,yes
+URELRELIAMRC,"ERU relief, American Red Cross, complete",0,0,0,0,0,
+UWATMM1540BS,"ERU, Water and Sanitation, BASIC SANITATION for M15/M40",0,0,0,0,0,
+VEXTTETR3S,"OXYTETRACYCLINE HYDROCHLORIDE, 3.6% spray",0,0,0,0,0,
+VEXTTETR4P,"TETRACYCLINE, 4% powder",0,0,0,0,0,
+VINJAMOX3V,AMOXYCILLIN 1.5g + CLOXACILLIN 1.5g vial,0,0,0,0,0,
+VINJDEXA2V,"DEXAMETHASONE, 2mg/ml IM/IV vial",0,0,0,0,0,
+VINJDIMI1S,"DIMINAZENE, 1.05g IM sachet",0,0,0,0,0,
+VINJHOMI25T,"HOMIDIUM BROMIDE, 250mg IM tab",0,0,0,0,0,
+VINJISOM1P,"ISOMETAMIDIUM CHLORIDE HYDROCHLORIDE, 1g IM powder",0,0,0,0,0,
+VMEQKNIF40672,"KNIFE, HOOF, 70mm, dble cutting edge, wood handle, left",0,0,0,0,0,
+VMEQMARKSWYEL,"MARKING STICKS, WAX, 54gr, screw bottom/plastic cover, yello",0,0,0,0,0,
+VMEQMEASH70430,"TAPE, MEASURING, 250cm/60g, autom.rolling case, crease-res.",0,0,0,0,0,
+VMEQSTETH01270,"STETHOSCOPE, dble chest piece, Ø memb. 45/30mm, heavy duty",0,0,0,0,0,
+VMEQTHERH00150,"THERMOMETER, 125mm, calibrated 35-43°C, fast.knob, w/case",0,0,0,0,0,
+VMISMISC,"MISCELLANEOUS, group veterinary",0,0,0,0,0,
+VORAALBE10S1,"ALBENDAZOLE, 10% Oral Suspension, 1L",0,0,0,0,0,
+VORAALBE10S18,"ALBENDAZOLE, 10% Oral Suspension, 180 ml",0,0,0,0,0,
+VORASALT,"SALT, lick block",0,0,0,0,0,
+VORASULZ48S,"SULPHADIAZINE 400mg + TRIMETHOPRIM, 80mg sachet",0,0,0,0,0,
+VORATYLO25S,"TYLOSIN 5g + Ca FOSFOMYCIN 20g + FRUCT. + VitE, sachet",0,0,0,0,0,
+WASDCHLA0005T,"CHLORINE, 5mg (NaDCC 8.5mg), for 1L water, 1 tablet",0,0,0,0.0008,0.0002,yes
+WASDVASDPT125L,"PURITABS TABLETS MAXI, for 50L at 5mg/L or 125L at 2mg/L",0,0,0,0,0,
+WASDVASDPTS1L,"PURIFYING TABLET, silver action, 1 tablet for 1L",0,0,0,0,0,
+WASDVASDPTS5L,"PURIFYING TABLET, silver action, 1 tablet for 5L",0,0,0,0,0,
+WCHPALUSG50,"ALUMINIUM SULFATE, granulates, 50kg bag",0,0,0,0,50,yes
+WCHPCHLF01,"FLOCUL. + DISINF. 'CHLOR-FLOC', fr wat. tr., 1kg for 5000L",0,0,0,1.97,1.12,yes
+WCHPCHLF02T,"FLOCUL. + DISINF. 'CHLOR-FLOC', for 1L water tr., tab.",0,0,0,0,0,yes
+WCHPDELT2L1,DELTAMETHRIN liquid 2.5% x 1L.,0,0,0,0,0,
+WCHPDELT2WP3,"DELTAMETHRIN, 'K-OTHRINE', 2.5%, wettable powder, 33g sach.",17,1.5,15,0.3825,0.044,yes
+WCHPDELT2WP8,"DELTAMETHRIN, 'K-OTHRINE', 2.5%, wettable powder, 80g sach.",25,14.7,1,0.75,0.1,yes
+WCHPLIMEQP40,"QUICK LIME, calcium oxide, powder, 40kg bag",0,0,0,0,0,yes
+WCHPPERM5P50T,"PERMETHRIN, 0.5%, powder, 50g, tin",0,0,0,0.54,0.08,yes
+WCHPPHOS3T,"ALUMINIUM PHOSPHIDE, 'PHOSTOXIN', 3g, tab., pack of 1kg",0,0,0,0,0,yes
+WCHPRODEL05,"LANIRAT, granulated, 500g, tin",0,0,0,0,0,
+WCHPSOCAP25,"SODIUM CARBONATE, powder, for water treatment, 25kg bags",0,0,0,0,0,
+WMEAALUT01,"WATER TEST, aluminium",11,4,11,0.484,0.17,yes
+WMEAALUT01T,"TABLETS for dosing aluminium in water test, n° 1&2",22,6,6,0.003168,0.0006,yes
+WMEAALUTPACK,ALUMINIUM TESTER PACK,0,0,0,0,0,
+WMEACHMT10,"CHLORIMETER, Ele",18,5,10,0.9,0.46,
+WMEACLIN10,"CLINOMETER, CLYSIMETER, 360deg",11,3.5,9,0.3465,0.15,yes
+WMEACLYS10,"CLYSIMETER, CLINOMETER, 400 GON",0,0,0,0,0,
+WMEACMPA10,"COMPASS, GEOLOGIST",0,0,0,0,0,
+WMEACNDU02,"CONDUCTIVITY METER, range 0-2.0ms/cm",0,0,0,0,0,
+WMEAFLOW2F,"FLOWMETER, 2"", threaded female",0,0,0,0,0,
+WMEAGPS-CAM1,"CAMERA with geographical coordinates, built-in GPS",0,0,0,0,0,
+WMEAGPS-GARM,"GPS, Garmin Etrex, 2 x AA/R6 batterries",0,0,0,0,0,
+WMEAHYGR10,HYGROMETER,0,0,0,0,0,
+WMEAHYGRMEST,"METEO PORTABLE STATION, hygrometer, thermometer, barometer",0,0,0,0,0,
+WMEALEVE10,"LEVEL, Abney",0,0,0,0,0,yes
+WMEALEVE20,"LEVEL, surveying level, 22X",29,20,20,11.6,3.1,yes
+WMEAMISC00,Miscellaneous code for adding Group/Family to FSHQ item tree,0,0,0,0,0,
+WMEAPHMT10,POCKET-METER pH330 SET incl SenTix 41-electrode,36,12,32,13.824,2.4,yes
+WMEAPHMTCOLO,"PH TESTER, colorimetric",0,0,0,0,0,
+WMEAPHOT10,"PHOTOMETER, Ele",0,0,0,0,0,
+WMEAPHPA0014,"SET OF pH STRIPS, 100 strips, 0 to 14",0,0,0,0,0,
+WMEAPOOL10,POOL TESTER + accessories,11.5,4,11,0.506,0.02,yes
+WMEAPOOL10A,(pool test) TABLET DPD1 for dosing free chlorine,12,8,6,0.0026,0.06,yes
+WMEATHEO10B,"ROD for theodolite, graduated, measuring, round, telescopic",0,0,0,0,0,yes
+WMEATHEO10C,TRIPODE for theodolite,103,18,20,37.08,4.8,yes
+WMEATHEO10D,"TRIPODE UNIVERSAL, for measuring instruments",0,0,0,42.8,5.3,yes
+WMEATHERC1,"THERMOMETER, for compost, lenght 1m",0,0,0,0,0,
+WMEATOPO10,TOPOFIL (Chaix),13,9,10,1.17,0.5,
+WMEATURB10,"TURBIDITY TUBE, for measuring turbidity, plastic, in 2 pces",36,4,7,1.008,0.25,yes
+WMEAVMIWPENH01,"HAND PENETROMETER, 1m depth",0,0,0,0,0,
+WMEAWHIS10,"WHISTLE, for well, with measuring tape 25m",38,6,15,3.42,1.86,
+WMISMISC,"MISCELLANEOUS, Group Wat/Hab",0,0,0,0,0,
+WNEAGACL11/4,"CLAMP, to clamp on 1.1/4"" pipe, use with 8mm allen key",0,0,0,0,0,
+WNEAMISC00,Miscellaneous code for adding Group/Family to FSHQ item tree,0,0,0,0,0,
+WNEASTNR3,"STRAINER+check valve, 3"", thread fem.",13,20,13,3.38,1.8,yes

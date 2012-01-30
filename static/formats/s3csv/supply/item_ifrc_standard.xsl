@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         ERIC (Emergency Relief Item Catalog)  - CSV Import Stylesheet
+         IFRC Standard Catalog & Emergency Item Catalog (EIC) - CSV Import Stylesheet
 
          2011-06-20 / Michael Howden <michael AT aidiq DOT com>
 
@@ -27,7 +27,7 @@
          width cm........................
          volume litre....................
          weight kg.......................
-         in EIC.......................... If "yes" add to catalog "ERIC" too
+         in EIC.......................... If "yes" add to catalog "EIC" too
 
         creates:
             supply_catalog...............
@@ -46,12 +46,12 @@
 
     <xsl:variable name="OrgName">International Federation of Red Cross and Red Crescent Societies</xsl:variable>
     <xsl:variable name="OrgAcronym">IFRC</xsl:variable>
-    <xsl:variable name="ERIC">ERIC</xsl:variable>
-    <xsl:variable name="ERICComplete">ERIC - Complete</xsl:variable>
+    <xsl:variable name="IFRCStandard">IFRC Standard Catalog</xsl:variable>
+    <xsl:variable name="EIC">EIC</xsl:variable>
 
     <xsl:key name="item" match="row" use="col[@field='item code']"/>
     <xsl:key name="category" match="row" use="substring(col[@field='item code']/text(),1,1)"/>
-    <xsl:key name="subcategory" match="row" use="substring(col[@field='item code']/text(),1,3)"/>
+    <xsl:key name="subcategory" match="row" use="substring(col[@field='item code']/text(),1,4)"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -66,58 +66,46 @@
 
             <resource name="supply_catalog">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$ERIC"/>
+                    <xsl:value-of select="$IFRCStandard"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$ERIC"/></data>
+                <data field="name"><xsl:value-of select="$IFRCStandard"/></data>
             </resource>
 
             <resource name="supply_catalog">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$ERICComplete"/>
+                    <xsl:value-of select="$EIC"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$ERICComplete"/></data>
+                <data field="name"><xsl:value-of select="$EIC"/></data>
 
             </resource>
 
             <!-- Generate parent categories -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('category', substring(col[@field='item code']/text(),1,1))[1])]">
-                <xsl:variable name="category_id" select="substring(col[@field='item code']/text(),1,1)"/>
-                <!-- Add to ERIC - Complete -->
+                <xsl:variable name="category_code" select="substring(col[@field='item code']/text(),1,1)"/>
+                <!-- Add to IFRCStandard -->
                 <xsl:call-template name="SupplyItemCategory">
-                    <xsl:with-param name="category_id" select="$category_id"/>
-                    <xsl:with-param name="catalog" select="$ERICComplete"/>
+                    <xsl:with-param name="id" select="$category_code"/>
+                    <xsl:with-param name="category_code" select="$category_code"/>
                 </xsl:call-template>
-                <!-- Add to ERIC -->
-                <xsl:if test="//row[substring(col[@field='item code']/text(),1,1)=$category_id and col[@field='in EIC']/text()='yes']">
-                    <xsl:call-template name="SupplyItemCategory">
-                        <xsl:with-param name="category_id" select="$category_id"/>
-                        <xsl:with-param name="catalog" select="$ERIC"/>
-                    </xsl:call-template>
-                </xsl:if>
             </xsl:for-each>
 
             <!-- Generate subcategories -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('subcategory', substring(col[@field='item code']/text(),1,3))[1])]">
-                <xsl:variable name="category_id" select="substring(col[@field='item code']/text(),2,3)"/>
-                <xsl:variable name="parent_category" select="substring(col[@field='item code']/text(),1,1)"/>
-                <xsl:variable name="id" select="substring(col[@field='item code']/text(),1,3)"/>
-                <!-- Add to ERIC - Complete -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('subcategory', substring(col[@field='item code']/text(),1,4))[1])]">
+                <xsl:variable name="id" select="substring(col[@field='item code']/text(),1,4)"/>
+                <xsl:variable name="category_code" select="substring(col[@field='item code']/text(),2,4)"/>
+                <xsl:variable name="parent_category_code" select="substring(col[@field='item code']/text(),1,1)"/>
+
+                <!-- Add to IFRC Standard -->
                 <xsl:call-template name="SupplyItemCategory">
-                    <xsl:with-param name="category_id" select="$category_id"/>
-                    <xsl:with-param name="parent_category" select="$parent_category"/>
-                    <xsl:with-param name="catalog" select="$ERICComplete"/>
+                    <xsl:with-param name="id" select="$id"/>
+                    <xsl:with-param name="category_code" select="$category_code"/>
+                    <xsl:with-param name="parent_category_code" select="$parent_category_code"/>
                 </xsl:call-template>
-                <!-- Add to ERIC -->
-                <xsl:if test="//row[substring(col[@field='item code']/text(),1,3)=$id and col[@field='in EIC']/text()='yes']">
-                    <xsl:call-template name="SupplyItemCategory">
-                        <xsl:with-param name="category_id" select="$category_id"/>
-                        <xsl:with-param name="parent_category" select="$parent_category"/>
-                        <xsl:with-param name="catalog" select="$ERIC"/>
-                    </xsl:call-template>
-                </xsl:if>
             </xsl:for-each>
 
-            <xsl:apply-templates select="//row[generate-id(.)=generate-id(key('item', col[@field='item code'])[1])]"/>
+            <!-- Items -->
+            <xsl:apply-templates select="table/row"/>
+
         </s3xml>
     </xsl:template>
 
@@ -125,8 +113,7 @@
     <xsl:template match="row">
 
         <!-- Item -->
-        <xsl:variable name="CategoryParent" select="substring(col[@field='item code']/text(),1,1)"/>
-        <xsl:variable name="Category" select="substring(col[@field='item code']/text(),2,3)"/>
+        <xsl:variable name="Category" select="substring(col[@field='item code']/text(),1,4)"/>
         <xsl:variable name="Code" select="col[@field='item code']/text()"/>
         <xsl:variable name="Name" select="col[@field='item description']/text()"/>
         <xsl:variable name="Length" select="col[@field='length cm']/text()"/>
@@ -134,7 +121,7 @@
         <xsl:variable name="Width" select="col[@field='width cm']/text()"/>
         <xsl:variable name="Volume" select="col[@field='volume litre']/text()"/>
         <xsl:variable name="Weight" select="col[@field='weight kg']/text()"/>
-        <xsl:variable name="InERIC" select="col[@field='in EIC']/text()"/>
+        <xsl:variable name="InEIC" select="col[@field='in EIC']/text()"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
@@ -149,38 +136,44 @@
             <data field="width"><xsl:value-of select="$Width"/></data>
             <data field="volume"><xsl:value-of select="$Volume"/></data>
             <data field="weight"><xsl:value-of select="$Weight"/></data>
+            <!-- Link to Category -->
+            <reference field="item_category_id" resource="supply_item_category">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select=" $Category"/>
+                </xsl:attribute>
+            </reference>
 
-            <!-- Link to ERIC - Complete-->
+            <!-- Link to IFRC Standard-->
             <resource name="supply_catalog_item">
                 <!-- Link to Catalog -->
                 <reference field="catalog_id" resource="supply_catalog">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="$ERICComplete"/>
+                        <xsl:value-of select="$IFRCStandard"/>
                     </xsl:attribute>
                 </reference>
                 <!-- Link to Category -->
                 <reference field="item_category_id" resource="supply_item_category">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($ERICComplete, '__', $Category)"/>
+                        <xsl:value-of select="$Category"/>
                     </xsl:attribute>
                 </reference>
                 <!-- Must include a field (workaround) -->
                 <data field="comments">_</data>
             </resource>
 
-            <!-- Link to ERIC -->
-            <xsl:if test="$InERIC = 'yes'">
+            <!-- Link to EIC -->
+            <xsl:if test="$InEIC = 'yes'">
                 <resource name="supply_catalog_item">
                     <!-- Link to Catalog -->
                     <reference field="catalog_id" resource="supply_catalog">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$ERIC"/>
+                            <xsl:value-of select="$EIC"/>
                         </xsl:attribute>
                     </reference>
                     <!-- Link to Category -->
                     <reference field="item_category_id" resource="supply_item_category">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat($ERIC, '__', $Category)"/>
+                            <xsl:value-of select=" $Category"/>
                         </xsl:attribute>
                     </reference>
                     <!-- Must include a field (workaround) -->
@@ -193,28 +186,27 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="SupplyItemCategory">
-
-        <xsl:param name="parent_category"/>
-        <xsl:param name="category_id"/>
-        <xsl:param name="catalog"/>
+        <xsl:param name="id"/>
+        <xsl:param name="category_code"/>
+        <xsl:param name="parent_category_code"/>
 
         <resource name="supply_item_category">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($catalog, '__', $category_id)"/>
+                <xsl:value-of select="$id"/>
             </xsl:attribute>
             <reference field="catalog_id" resource="supply_catalog">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$catalog"/>
+                    <xsl:value-of select="$IFRCStandard"/>
                 </xsl:attribute>
             </reference>
-            <xsl:if test="$parent_category">
+            <xsl:if test="$parent_category_code">
                 <reference field="parent_item_category_id" resource="supply_item_category">
                     <xsl:attribute name="tuid">
-                         <xsl:value-of select="concat($catalog, '__', $parent_category)"/>
+                         <xsl:value-of select="$parent_category_code"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-            <data field="code"><xsl:value-of select="$category_id"/></data>
+            <data field="code"><xsl:value-of select="$category_code"/></data>
         </resource>
 
     </xsl:template>

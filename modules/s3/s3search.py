@@ -152,11 +152,12 @@ class S3SearchWidget(object):
 
             if f.find(".") != -1: # Component
                 cname, f = f.split(".", 1)
-                component = resource.components.get(cname, None)
-                if not component:
+                if cname not in resource.components:
                     continue
-                ktable = component.resource.table
-                ktablename = component.resource.tablename
+                else:
+                    component = resource.components[cname]
+                ktable = component.table
+                ktablename = component.tablename
                 pkey = component.pkey
                 fkey = component.fkey
                 # Do not add queries for empty tables
@@ -189,6 +190,7 @@ class S3SearchWidget(object):
                     continue
 
             # Master queries
+            # @todo: update this for new QueryBuilder (S3ResourceFilter)
             if ktable and ktablename not in master_query:
                 query = (resource.accessible_query("read", ktable))
                 if "deleted" in ktable.fields:
@@ -542,7 +544,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_keys = []
                 for row in rows:
                     if row[field] != None:
-                        _opt_keys = row[field].split("|")
+                        try:
+                            _opt_keys = row[field].split("|")
+                        except:
+                            _opt_keys = row[field]
                         for opt_key in _opt_keys:
                             opt_keys.append(opt_key)
             else:

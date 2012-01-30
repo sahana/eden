@@ -972,6 +972,8 @@ if auth.permission.format in ("html"):
                         [T("List All"), False, aURL(c="inv", f="warehouse")],
                         [T("Search"), False, aURL(c="inv", f="warehouse",
                                                   args="search")],
+                        [T("Report"), False, aURL(p="create", c="inv", f="inv_item",
+                                                  args=["report"])],
                         [T("Import"), False, aURL(p="create", c="inv",
                                                   f="warehouse",
                                                   args=["import"])],
