@@ -28,7 +28,7 @@ def inv_item_controller():
                               csv_extra_fields = [
                                 dict(label="Organisation",
                                      field=s3db.org_organisation_id(comment=None))],
-                               interactive_report = True
+                              interactive_report = True
                               )
 
 # -----------------------------------------------------------------------------

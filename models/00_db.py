@@ -14,7 +14,7 @@ if s3.debug:
     # Needed for s3_include_debug
     import sys
     # Reload all modules every request
-    # Doesn't catch s3cfg
+    # Doesn't catch s3cfg or s3/*
     from gluon.custom_import import track_changes
     track_changes(True)
 
@@ -43,18 +43,17 @@ if migrate:
 else:
     check_reserved = None
 
-db_string = deployment_settings.get_database_string()
-if db_string[0].find("sqlite") != -1:
-    db = DAL(db_string[0],
+(db_string, pool_size) = deployment_settings.get_database_string()
+if db_string.find("sqlite") != -1:
+    db = DAL(db_string,
              check_reserved=check_reserved,
              migrate_enabled = migrate,
              fake_migrate_all = fake_migrate)
     # on SQLite 3.6.19+ this enables foreign key support (included in Python 2.7+)
     # db.executesql("PRAGMA foreign_keys=ON")
 else:
-    # Tuple (inc pool_size)
     try:
-        if db_string[0].find("mysql") != -1:
+        if db_string.find("mysql") != -1:
             # Use MySQLdb where available (pymysql has given broken pipes)
             try:
                 import MySQLdb
@@ -65,17 +64,17 @@ else:
                 pass
             if check_reserved:
                 check_reserved = ["postgres"]
-            db = DAL(db_string[0], check_reserved=check_reserved,
-                     pool_size=db_string[1], migrate_enabled = migrate)
+            db = DAL(db_string, check_reserved=check_reserved,
+                     pool_size=pool_size, migrate_enabled = migrate)
         else:
             # PostgreSQL
             if check_reserved:
                 check_reserved = ["mysql"]
-            db = DAL(db_string[0], check_reserved=check_reserved,
-                     pool_size=db_string[1], migrate_enabled = migrate)
+            db = DAL(db_string, check_reserved=check_reserved,
+                     pool_size=pool_size, migrate_enabled = migrate)
     except:
-        db_type = db_string[0].split(":", 1)[0]
-        db_location = db_string[0].split("@", 1)[1]
+        db_type = db_string.split(":", 1)[0]
+        db_location = db_string.split("@", 1)[1]
         raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
 
 current.db = db
