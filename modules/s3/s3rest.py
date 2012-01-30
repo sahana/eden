@@ -4400,21 +4400,7 @@ class S3ResourceFilter:
                 if fn[-1] == "!":
                     invert = True
                     fn = fn.rstrip("!")
-            if val[0] == '"' and val[-1] == '"':
-                val = val[1:-1]
-            else:
-                if "," in val:
-                    val = val.split(",")
-                if isinstance(val, (list, tuple)):
-                    _val = []
-                    for v in val:
-                        if v == "NONE":
-                            v = None
-                        _val.append(v)
-                    val = _val
-                else:
-                    if val == "NONE":
-                        val = None
+            val = S3ResourceFilter._parse_value(val)
             try:
                 q = S3ResourceQuery(op, S3QueryField(fn), val)
             except SyntaxError:
@@ -4506,6 +4492,38 @@ class S3ResourceFilter:
                     else:
                         bbox_query = bbox_query & bbox
         return bbox_query
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _parse_value(value):
+        """
+            Parses the value of a URL variable
+
+            @param value: the value as either string or list of strings
+        """
+
+        if type(value) is list:
+            value = ",".join[value]
+        vlist = []
+        w = ""
+        quote = False
+        for c in value:
+            if c == '"':
+                w += c
+                quote = not quote
+            elif c == "," and not quote:
+                if w == "NONE":
+                    w = None
+                vlist.append(w)
+                w = ""
+            else:
+                w += c
+        if w == "NONE":
+            w = None
+        vlist.append(w)
+        if len(vlist) == 1:
+            return vlist[0]
+        return vlist
 
     # -------------------------------------------------------------------------
     def __call__(self, rows, start=None, limit=None):
