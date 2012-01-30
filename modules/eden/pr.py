@@ -2018,7 +2018,7 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
                                 instance_type_nice)
     return pe_str
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def pr_person_represent(id):
     """ Representation """
 

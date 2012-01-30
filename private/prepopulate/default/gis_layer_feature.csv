@@ -2,7 +2,7 @@
 "Incident Reports",,"irs","ireport","marker_red","Danger Area","Incident","name/category",,,,,
 "Hospitals",,"hms","hospital","hospital","Medical Facility","Hospital",,,,,,
 "Shelters",,"cr","shelter","shelter","Campground","Shelter","name/organisation_id/capacity",,,,,
-"Offices","All Active Offices","org","office","office","Building","Office","name/organisation_id","office.type=None,1,2,3,4&office.obsolete=False",,,,
+"Offices","All Active Offices","org","office","office","Building","Office","name/organisation_id","office.type=NONE,1,2,3,4&office.obsolete=False",,,,
 "Activities",,"project","activity","activity",,"Activity","name/location_id/multi_activity_type_id",,,,,
 "Staff","All Active Staff","hrm","human_resource","person","Contact, Dreadlocks","Staff","person_id/job_title/organisation_id","human_resource.type=1&human_resource.status=1","type",1,,
 "Volunteers","All Active Volunteers","hrm","human_resource","volunteer","Contact, Dreadlocks","Volunteer","person_id/job_title/organisation_id","human_resource.type=2&human_resource.status=1","type",2,,

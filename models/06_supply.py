@@ -25,7 +25,7 @@ def supply_item_controller():
                                               filterby = "is_vehicle",
                                               filter_opts = [True])
                                             )
-    
+
     return s3_rest_controller("supply", "item",
                               rheader=eden.supply.supply_item_rheader)
 

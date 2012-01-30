@@ -1092,7 +1092,7 @@ class S3RequestSkillModel(S3Model):
 
         # -----------------------------------------------------------------
         # Link Skill Requests to Tasks
-        # @ToDo: Break this into a separate model activated based on a 
+        # @ToDo: Break this into a separate model activated based on a
         #        deployment_setting
         #
         tablename = "project_task_req"
@@ -1167,7 +1167,7 @@ class S3CommitModel(S3Model):
 
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
-        
+
         # ---------------------------------------------------------------------
         # Commitments (Pledges)
         tablename = "req_commit"
@@ -1248,7 +1248,7 @@ class S3CommitModel(S3Model):
                        listadd = False,
                        onvalidation = self.commit_onvalidation,
                        onaccept = self.commit_onaccept)
-                        
+
         # Components
         # Commitment Items as component of Commitment
         self.add_component("req_commit_item",
@@ -1317,7 +1317,7 @@ class S3CommitModel(S3Model):
     def commit_onaccept(form):
         """
         """
-    
+
         db = current.db
         s3db = current.s3db
 

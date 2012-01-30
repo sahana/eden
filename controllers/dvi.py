@@ -119,6 +119,9 @@ def body():
 
     resourcename = request.function
 
+    gender_opts = s3db.pr_gender_opts
+    gender_opts[1] = T("unknown")
+
     btable = s3db.dvi_body
     itable = s3db.dvi_identification
 

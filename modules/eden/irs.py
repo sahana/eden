@@ -397,7 +397,7 @@ class S3IRSModel(S3Model):
             create_next = URL(args=["[id]", "human_resource"])
         else:
             create_next = URL(args=["[id]", "update"])
-         
+
         self.configure("irs_ireport",
                        create_onaccept=self.ireport_onaccept,
                        create_next=create_next,
@@ -691,7 +691,7 @@ S3.timeline.tl_start = '""", tl_start.isoformat(), """';
 S3.timeline.tl_end = '""", tl_end.isoformat(), """';
 S3.timeline.now = '""", now.isoformat(), """';
 """))
-    
+
             # Control our code in static/scripts/S3/s3.timeline.js
             s3.js_global.append(code)
 

@@ -941,7 +941,7 @@ def inv_tabs(r):
     auth = current.auth
     session = current.session
     settings = current.deployment_settings
-    
+
     if settings.has_module("inv") and \
         auth.s3_has_permission("read", "inv_inv_item"):
         collapse_tabs = settings.get_inv_collapse_tabs()
@@ -1106,9 +1106,9 @@ def inv_send_rheader(r):
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "send_item"),
                 ]
-            
+
             rheader_tabs = s3_rheader_tabs(r, tabs)
-            
+
             table = r.table
 
             rheader = DIV( TABLE(
@@ -1130,7 +1130,7 @@ def inv_send_rheader(r):
                                  ),
                             rheader_tabs
                             )
-            
+
             rfooter = s3.rfooter
             rfooter = TAG[""]()
 
