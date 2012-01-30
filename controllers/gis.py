@@ -754,20 +754,19 @@ def map_service_catalogue():
     if authorised:
         # List View with checkboxes to Enable/Disable layers
         for type in response.s3.gis.layer_types:
-            table = db["gis_layer_%s" % type]
-            query = table.id > 0
-            sqlrows = db(query).select()
-            for row in sqlrows:
+            table = s3db["gis_layer_%s" % type]
+            rows = db(table.id > 0).select(table.id,
+                                           table.name,
+                                           table.description,
+                                           table.enabled)
+            for row in rows:
                 if even:
                     theclass = "even"
                     even = False
                 else:
                     theclass = "odd"
                     even = True
-                if row.description:
-                    description = row.description
-                else:
-                    description = ""
+                description = row.description or ""
                 label = "%s_%s" % (type, str(row.id))
                 if row.enabled:
                     enabled = INPUT(_type="checkbox", value=True, _name=label)
@@ -779,34 +778,9 @@ def map_service_catalogue():
                                     TD(description),
                                     TD(enabled),
                                     _class=theclass))
-        # Feature Layers
-        type = "feature"
-        for row in db(s3db.gis_layer_feature.id > 0).select():
-            if even:
-                theclass = "even"
-                even = False
-            else:
-                theclass = "odd"
-                even = True
-            if row.comments:
-                    description = row.comments
-            else:
-                description = ""
-            label = "%s_%s" % (type, str(row.id))
-            if row.enabled:
-                enabled = INPUT(_type="checkbox", value=True, _name=label)
-            else:
-                enabled = INPUT(_type="checkbox", _name=label)
-            item_list.append(TR(TD(A(row.name,
-                                     _href=URL(f="layer_feature",
-                                               args=row.id))),
-                                TD(description),
-                                TD(enabled),
-                                _class=theclass))
-
-        table_header = THEAD(TR(TH("Layer"),
-                                TH("Description"),
-                                TH("Enabled?")))
+        table_header = THEAD(TR(TH(T("Layer")),
+                                TH(T("Description")),
+                                TH(T("Enabled?"))))
         table_footer = TFOOT(TR(TD(INPUT(_id="submit_button",
                                          _type="submit",
                                          _value=T("Update")),
@@ -825,19 +799,18 @@ def map_service_catalogue():
         # Simple List View
         for type in response.s3.gis.layer_types:
             table = s3db["gis_layer_%s" % type]
-            query = table.id > 0
-            sqlrows = db(query).select()
-            for row in sqlrows:
+            rows = db(table.id > 0).select(table.id,
+                                           table.name,
+                                           table.description,
+                                           table.enabled)
+            for row in rows:
                 if even:
                     theclass = "even"
                     even = False
                 else:
                     theclass = "odd"
                     even = True
-                if row.description:
-                    description = row.description
-                else:
-                    description = ""
+                description = row.description or ""
                 if row.enabled:
                     enabled = INPUT(_type="checkbox",
                                     value="on",
@@ -851,37 +824,13 @@ def map_service_catalogue():
                                     TD(description),
                                     TD(enabled),
                                     _class=theclass))
-        # Feature Layers
-        type = "feature"
-        table = s3db["gis_layer_%s" % type]
-        query = table.id > 0
-        sqlrows = db(query).select()
-        for row in sqlrows:
-            if even:
-                theclass = "even"
-                even = False
-            else:
-                theclass = "odd"
-                even = True
-            if row.comments:
-                description = row.comments
-            else:
-                description = ""
-            if row.enabled:
-                enabled = INPUT(_type="checkbox",
-                                value="on",
-                                _disabled="disabled")
-            else:
-                enabled = INPUT(_type="checkbox", _disabled="disabled")
-            item_list.append(TR(TD(A(row.name,
-                                     _href=URL(f="layer_feature",
-                                               args=row.id))),
-                                TD(description),
-                                TD(enabled),
-                                _class=theclass))
 
-        table_header = THEAD(TR(TH("Layer"), TH("Description"), TH("Enabled?")))
-        items = DIV(TABLE(table_header, TBODY(item_list), _id="table-container"))
+        table_header = THEAD(TR(TH(T("Layer")),
+                                TH(T("Description")),
+                                TH(T("Enabled?"))))
+        items = DIV(TABLE(table_header,
+                          TBODY(item_list),
+                          _id="table-container"))
 
     output.update(dict(items=items))
     return output
@@ -895,20 +844,20 @@ def layers_enable():
     # Hack: We control all perms from this 1 table
     table = s3db.gis_layer_openstreetmap
     authorised = s3_has_permission("update", table)
+    vars = request.vars
     if authorised:
         for type in response.s3.gis.layer_types:
             resourcename = "gis_layer_%s" % type
             table = s3db[resourcename]
-            query = table.id > 0
-            sqlrows = db(query).select()
-            for row in sqlrows:
+            rows = db(table.id > 0).select(table.id)
+            for row in rows:
                 query_inner = (table.id == row.id)
                 var = "%s_%i" % (type, row.id)
                 # Read current state
                 if db(query_inner).select(table.enabled,
                                           limitby=(0, 1)).first().enabled:
                     # Old state: Enabled
-                    if var in request.vars:
+                    if var in vars:
                         # Do nothing
                         pass
                     else:
@@ -919,7 +868,7 @@ def layers_enable():
                                  representation="html")
                 else:
                     # Old state: Disabled
-                    if var in request.vars:
+                    if var in vars:
                         # Enable
                         db(query_inner).update(enabled=True)
                         # Audit
@@ -928,37 +877,6 @@ def layers_enable():
                     else:
                         # Do nothing
                         pass
-        resourcename = "gis_layer_feature"
-        table = s3db[resourcename]
-        query = table.id > 0
-        sqlrows = db(query).select()
-        for row in sqlrows:
-            query_inner = (table.id == row.id)
-            var = "feature_%i" % (row.id)
-            # Read current state
-            if db(query_inner).select(table.enabled,
-                                      limitby=(0, 1)).first().enabled:
-                # Old state: Enabled
-                if var in request.vars:
-                    # Do nothing
-                    pass
-                else:
-                    # Disable
-                    db(query_inner).update(enabled=False)
-                    # Audit
-                    s3_audit("update", module, resourcename, record=row.id,
-                             representation="html")
-            else:
-                # Old state: Disabled
-                if var in request.vars:
-                    # Enable
-                    db(query_inner).update(enabled=True)
-                    # Audit
-                    s3_audit("update", module, resourcename, record=row.id,
-                             representation="html")
-                else:
-                    # Do nothing
-                    pass
 
         session.flash = T("Layers updated")
 
