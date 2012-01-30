@@ -122,6 +122,13 @@ if populate > 0:
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % \
         (field, tablename, field))
 
+    # Supply Module
+    tablename = "supply_catalog"
+    table = db[tablename]
+    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
+            table.insert(name = deployment_settings.get_supply_catalog_default() )
+
+    # Climate module
     if "climate" in deployment_settings.modules:
         climate_first_run()
 

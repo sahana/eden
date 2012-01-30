@@ -27,7 +27,9 @@ def inv_item_controller():
     return s3_rest_controller("inv", "inv_item",
                               csv_extra_fields = [
                                 dict(label="Organisation",
-                                     field=s3db.org_organisation_id(comment=None))])
+                                     field=s3db.org_organisation_id(comment=None))],
+                               interactive_report = True
+                              )
 
 # -----------------------------------------------------------------------------
 def inv_recv_controller():

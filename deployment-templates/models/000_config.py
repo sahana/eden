@@ -356,6 +356,10 @@ deployment_settings.security.archive_not_delete = True
 # Use the term 'Order' instead of 'Shipment'
 #deployment_settings.inv.shipment_name = "order"
 
+# Supply
+# Do not edit after deployment
+#deployment_settings.supply.catalog_default = T("Other Items")
+
 # Human Resource Management
 #deployment_settings.hrm.email_required = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.

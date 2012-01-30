@@ -2212,7 +2212,7 @@ class AuthS3(Auth):
                   FAC_ID,
                   OWNED_BY_ORG,
                   OWNED_BY_FAC]
-        fields = [f for f in fields if f in table.fields]
+        fields = [table[f] for f in fields if f in table.fields]
 
         # Get the record
         if not isinstance(record, Row):
@@ -2313,7 +2313,7 @@ class AuthS3(Auth):
                                         fac_table.uuid,
                                         limitby=(0, 1)).first()
                 if site:
-                    inst_table = db[site.instance_type]
+                    inst_table = s3db[site.instance_type]
                     query = inst_table.uuid == site.uuid
                     facility = db(query).select(inst_table[OWNED_BY_FAC],
                                                 limitby=(0, 1)).first()

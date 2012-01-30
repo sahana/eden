@@ -1,23 +1,23 @@
-"Warehouse","Category","Item description","Catalogue number","Tracking number (CTN)","Remark","Outbound","UM","Currency","Price","Stock"
-"Central Warehouse","Food","Perishable Food","Standard",,,,"lbs",,,7500
-"Central Warehouse","Food","Canned/Dried Food","Standard",,,,"lbs",,,50000
-"Central Warehouse","FUEL","Gasoline","Standard",,,,"gal",,,5000
-"Central Warehouse","Health","Bandages","Standard",,,,"ea",,,25000
-"Central Warehouse","Food","Infant Formula","Standard",,,,"lbs",,,6500
-"Central Warehouse","CLOTHING","Childrens Clothing","Standard",,,,"ea",,,12000
-"Central Warehouse","CLOTHING","Mens Clothing","Standard",,,,"ea",,,6000
-"Central Warehouse","CLOTHING","Womens Clothing","Standard",,,,"ea",,,5000
-"EMD Main Warehouse","Food","Potable Water","Standard",,,,"gal",,,20000
-"EMD Main Warehouse","Food","Canned/Dried Food","Standard",,,,"lbs",,,75000
-"EMD Main Warehouse","Food","Infant Formula","Standard",,,,"lbs",,,8000
-"EMD Main Warehouse","FUEL","Gasoline","Standard",,,,"gal",,,9000
-"EMD Main Warehouse","Health","Body Bags","Standard",,,,"ea",,,5000
-"EMD Main Warehouse","SUPPLIES","ID Badges","Standard",,,,"ea",,,12000
-"EMD Main Warehouse","WASH","Diapers","Standard",,,,"dz",,,2000
-"EMD Main Warehouse","WASH","Non-Potable Water","Standard",,,,"gal",,,80000
-"EMD Main Warehouse","Food","Water Cooler","Standard",,,,"ea",,,500
-"EMD Main Warehouse","Health","Water Purification System","Standard",,,,"ea",,,2000
-"EMD Main Warehouse","Shelter","Tent","Standard",,,,"ea",,,5000
-"EMD Main Warehouse","Health","Stretcher","Standard",,,,"ea",,,150
-"EMD Main Warehouse","SUPPLIES","Radio","Standard",,,,"ea",,,50
-"EMD Main Warehouse","SUPPLIES","Bolt Cutters","Standard",,,,"ea",,,75
+Warehouse,Category,Item description,Catalog,Tracking number (CTN),Remark,Outbound,UM,Currency,Price,Stock
+Central Warehouse,Food,Perishable Food,Other Items,,,,lbs,,,7500
+Central Warehouse,Food,Canned/Dried Food,Other Items,,,,lbs,,,50000
+Central Warehouse,FUEL,Gasoline,Other Items,,,,gal,,,5000
+Central Warehouse,Health,Bandages,Other Items,,,,ea,,,25000
+Central Warehouse,Food,Infant Formula,Other Items,,,,lbs,,,6500
+Central Warehouse,CLOTHING,Childrens Clothing,Other Items,,,,ea,,,12000
+Central Warehouse,CLOTHING,Mens Clothing,Other Items,,,,ea,,,6000
+Central Warehouse,CLOTHING,Womens Clothing,Other Items,,,,ea,,,5000
+EMD Main Warehouse,Food,Potable Water,Other Items,,,,gal,,,20000
+EMD Main Warehouse,Food,Canned/Dried Food,Other Items,,,,lbs,,,75000
+EMD Main Warehouse,Food,Infant Formula,Other Items,,,,lbs,,,8000
+EMD Main Warehouse,FUEL,Gasoline,Other Items,,,,gal,,,9000
+EMD Main Warehouse,Health,Body Bags,Other Items,,,,ea,,,5000
+EMD Main Warehouse,SUPPLIES,ID Badges,Other Items,,,,ea,,,12000
+EMD Main Warehouse,WASH,Diapers,Other Items,,,,dz,,,2000
+EMD Main Warehouse,WASH,Non-Potable Water,Other Items,,,,gal,,,80000
+EMD Main Warehouse,Food,Water Cooler,Other Items,,,,ea,,,500
+EMD Main Warehouse,Health,Water Purification System,Other Items,,,,ea,,,2000
+EMD Main Warehouse,Shelter,Tent,Other Items,,,,ea,,,5000
+EMD Main Warehouse,Health,Stretcher,Other Items,,,,ea,,,150
+EMD Main Warehouse,SUPPLIES,Radio,Other Items,,,,ea,,,50
+EMD Main Warehouse,SUPPLIES,Bolt Cutters,Other Items,,,,ea,,,75
