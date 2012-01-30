@@ -542,7 +542,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_keys = []
                 for row in rows:
                     if row[field] != None:
-                        _opt_keys = row[field].split("|")
+                        try:
+                            _opt_keys = row[field].split("|")
+                        except:
+                            _opt_keys = row[field]
                         for opt_key in _opt_keys:
                             opt_keys.append(opt_key)
             else:

@@ -993,7 +993,7 @@ def training():
                 (orgtable.owned_by_organisation.belongs(session.s3.roles))
         response.s3.filter = query
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(interactive_report = True)
     return output
 
 # -----------------------------------------------------------------------------

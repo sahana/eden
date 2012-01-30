@@ -24,7 +24,7 @@
          Acronym.........................asset_log.organisation_id.acronym
          Office..........................asset_log.site_id
          OfficeCode......................asset_log.site_id.code
-         Catalog.........................supply_catalog_item.catalog_id
+         Catalog.........................supply_catalog_item.catalog_id.name
          Asset No........................number
          Type............................type
          Category........................supply_catalog_item.item_category_id
@@ -329,6 +329,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$CategoryID"/>
             </xsl:attribute>
+            <data field="code"><xsl:value-of select="substring($CategoryName/text(),1,16)"/></data>
             <data field="name"><xsl:value-of select="$CategoryName"/></data>
             <reference field="catalog_id" resource="supply_catalog">
                 <xsl:attribute name="tuid">
@@ -360,6 +361,12 @@
             <data field="name"><xsl:value-of select="$Name"/></data>
             <data field="model"><xsl:value-of select="$Model"/></data>
             <data field="um">piece</data>
+               <!-- Link to Supply Item Category -->
+               <reference field="item_category_id" resource="supply_item_category">
+                   <xsl:attribute name="tuid">
+                       <xsl:value-of select="$CategoryID"/>
+                   </xsl:attribute>
+               </reference>
             <xsl:if test="$BrandName!=''">
                 <reference field="brand_id" resource="supply_brand">
                     <xsl:attribute name="tuid">
@@ -367,22 +374,23 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+            <!-- Nest to Supply Catalog -->
             <resource name="supply_catalog_item">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$ItemCode"/>
                 </xsl:attribute>
+                <!-- Link to Supply Catalog -->
                 <reference field="catalog_id" resource="supply_catalog">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$CatalogName"/>
                     </xsl:attribute>
                 </reference>
+                <!-- Link to Supply Item Category -->
                 <reference field="item_category_id" resource="supply_item_category">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$CategoryID"/>
                     </xsl:attribute>
                 </reference>
-                <!-- Must include a field (workaround) -->
-                <data field="comments">_</data>
             </resource>
         </resource>
 
