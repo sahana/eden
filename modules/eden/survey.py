@@ -1863,9 +1863,10 @@ $.post('%s',
 
     @staticmethod
     def seriesMap(r, **attr):
+        from datetime import datetime
+        startTime = datetime.now()
         from s3survey import S3AnalysisPriority
         import math
-
         s3 = current.response.s3
         request = current.request
         T = current.T
@@ -2042,6 +2043,9 @@ $.post('%s',
         output["map"] = map
 
         current.response.view = "survey/series_map.html"
+        endTime = datetime.now()
+        duration = endTime - startTime
+        print duration
         return output
 
     @staticmethod
@@ -2238,13 +2242,18 @@ def survey_series_rheader(r, tabs=[]):
                                    _class="action-btn"
                                   )
             tranForm.append(export_xls_btn)
-            export_rtf_btn = INPUT(_type="submit",
-                                   _id="export_rtf_btn",
-                                   _name="Export_Word",
-                                   _value=T("Download Assessment Template Word Document"),
-                                   _class="action-btn"
-                                  )
-            tranForm.append(export_rtf_btn)
+            try:
+                # only add the Export to Word button up if PyRTF is installed 
+                from PyRTF import Document
+                export_rtf_btn = INPUT(_type="submit",
+                                       _id="export_rtf_btn",
+                                       _name="Export_Word",
+                                       _value=T("Download Assessment Template Word Document"),
+                                       _class="action-btn"
+                                      )
+                tranForm.append(export_rtf_btn)
+            except:
+                pass
             urlimport = URL(c="survey",
                             f="export_all_responses",
                             args=[record.id],
