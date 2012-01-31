@@ -1976,6 +1976,7 @@
 'Italian': 'Italian',
 'Item': 'Item',
 'Item Added to Shipment': 'Item Added to Shipment',
+'Item Catalogs': 'Item Catalogues',
 'Item Catalog Details': 'Item Catalogue Details',
 'Item Categories': 'Item Categories',
 'Item Category': 'Item Category',

@@ -470,18 +470,13 @@ function s3_gis_l0_select() {
                     }
                 }
                 // @ToDo: Are we operating in mode strict?
+                //        - these will need adding to the output if we need them
                 // Store in global var?
                 //data.strict_hierarchy;
                 //data.location_parent_required;
             }
         }
     });
-
-    // Alter the Labels for the Lx levels
-    // - unhide L2/L4/L5 if-required
-    //s3_gis_show_level(5);
-    //s3_gis_show_level(4);
-    //s3_gis_show_level(2);
 
     // Set the Autocompletes' filters
     $( '#gis_location_L1_ac' ).autocomplete( 'option', 'source',  s3_gis_ac_set_source(1) );

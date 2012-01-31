@@ -933,6 +933,15 @@ if auth.permission.format in ("html"):
                 #[T("Bulk Uploader"), False, aURL(c="doc", f="bulk_upload")]
             ],
 
+            "on_admin": [
+                [T("Hierarchies"), False, aURL(f="hierarchy"), [
+                    [T("New Hierarchy"), False, aURL(p="create", f="hierarchy",
+                                                    args="create")],
+                    [T("List All"), False, aURL(f="hierarchy")],
+                    [T("Import"), False, aURL(f="hierarchy", args="import")],
+                ]]
+            ],
+
             "condition1": lambda: not deployment_settings.get_security_map() or s3_has_role(MAP_ADMIN),
             "conditional1": [[T("Service Catalog"), False, URL(f="map_service_catalogue")]]
         },
@@ -1028,13 +1037,15 @@ if auth.permission.format in ("html"):
                     ]]
                 ],
 
-            "on_admin": [[T("Item Categories"), False, aURL(c="supply", f="item_category"), [
+            "on_admin": [
+                [T("Item Categories"), False, aURL(c="supply", f="item_category"), [
                     [T("New Item Category"), False, aURL(p="create",
                                                          c="supply",
                                                          f="item_category",
                                                          args="create")],
                     [T("List All"), False, aURL(c="supply", f="item_category")]
-                ]]]
+                ]]
+            ]
         },
 
         # IRS / Incident Report System

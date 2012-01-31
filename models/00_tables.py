@@ -323,8 +323,8 @@ response.s3.currency_type = currency_type
 #
 # These fields are populated onaccept from location_id
 #
-# Labels that need gis_config data are set by gis.set_config() calling
-# gis.update_gis_config_dependent_options()
+# Labels that vary by country are set by gis.update_table_hierarchy_labels()
+# @ToDo; Add Postcode to this
 #
 
 address_building_name = S3ReusableField("building_name",
@@ -356,7 +356,8 @@ address_L1 = S3ReusableField("L1",
                              readable=False,
                              writable=False)
 address_L0 = S3ReusableField("L0",
-                             label=T("Country"), # L0 Location Name never varies except with a Translation
+                             # L0 Location Name never varies except with a Translation
+                             label=T("Country"),
                              readable=False,
                              writable=False)
 
@@ -399,10 +400,11 @@ def address_onvalidation(form):
         If these fields are populated then create/update the location
     """
 
-    if "location_id" in form.vars:
+    vars = form.vars
+    if "location_id" in vars:
         table = s3db.gis_location
         # Read Postcode & Street Address
-        query = (table.id == form.vars.location_id)
+        query = (table.id == vars.location_id)
         location = db(query).select(table.addr_street,
                                     table.addr_postcode,
                                     table.name,
@@ -411,27 +413,27 @@ def address_onvalidation(form):
                                     table.path,
                                     limitby=(0, 1)).first()
         if location:
-            form.vars.address = location.addr_street
-            form.vars.postcode = location.addr_postcode
+            vars.address = location.addr_street
+            vars.postcode = location.addr_postcode
             if location.level == "L0":
-                form.vars.L0 = location.name
+                vars.L0 = location.name
             elif location.level == "L1":
-                form.vars.L1 = location.name
+                vars.L1 = location.name
                 if location.parent:
                     query = (table.id == location.parent)
                     country = db(query).select(table.name,
                                                limitby=(0, 1)).first()
                     if country:
-                        form.vars.L0 = country.name
+                        vars.L0 = country.name
             else:
                 if location.level is None:
-                    form.vars.building_name = location.name
+                    vars.building_name = location.name
                 # Get Names of ancestors at each level
-                gis.get_parent_per_level(form.vars,
-                                         form.vars.location_id,
-                                         feature=location,
-                                         ids=False,
-                                         names=True)
+                vars = gis.get_parent_per_level(vars,
+                                                vars.location_id,
+                                                feature=location,
+                                                ids=False,
+                                                names=True)
 
 s3.address_onvalidation = address_onvalidation
 
@@ -475,11 +477,11 @@ def address_update(table, record_id):
                 if location.level is None:
                     vars.building_name = location.name
                 # Get Names of ancestors at each level
-                gis.get_parent_per_level(vars,
-                                         vars.location_id,
-                                         feature=location,
-                                         ids=False,
-                                         names=True)
+                vars = gis.get_parent_per_level(vars,
+                                                vars.location_id,
+                                                feature=location,
+                                                ids=False,
+                                                names=True)
             # Update record
             db(table.id == record_id).update(**vars)
 

@@ -227,12 +227,23 @@ class S3Config(Storage):
         return self.gis.get("display_L1", True)
     def get_gis_duplicate_features(self):
         return self.gis.get("duplicate_features", False)
-    def get_gis_edit_lx(self):
-        " Edit Hierarchy Locations "
-        return self.gis.get("edit_Lx", True)
     def get_gis_edit_group(self):
         " Edit Location Groups "
         return self.gis.get("edit_GR", False)
+    def get_gis_map_height(self):
+        """
+            Height of the Embedded Map
+            Change this if-required for your theme
+            NB API can override this in specific modules
+        """
+        return self.gis.get("map_height", 600)
+    def get_gis_map_width(self):
+        """
+            Width of the Embedded Map
+            Change this if-required for your theme
+            NB API can override this in specific modules
+        """
+        return self.gis.get("map_width", 1000)
     def get_gis_marker_max_height(self):
         return self.gis.get("marker_max_height", 35)
     def get_gis_marker_max_width(self):
@@ -246,7 +257,7 @@ class S3Config(Storage):
     def get_gis_geoserver_username(self):
         return self.gis.get("geoserver_username", "admin")
     def get_gis_geoserver_password(self):
-        return self.gis.get("geoserver_password", "password")
+        return self.gis.get("geoserver_password", "")
     def get_gis_spatialdb(self):
         return self.gis.get("spatialdb", False)
 

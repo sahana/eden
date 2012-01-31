@@ -760,7 +760,7 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
         field = config.search_level or "L0"
         self.field = [field]
 
-        label = gis.get_location_hierarchy(field)
+        label = gis.get_location_hierarchy(level=field)
 
         self.attr = Storage(attr)
         self.attr["label"] = label

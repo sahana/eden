@@ -4,7 +4,7 @@
     Admin Controllers
 """
 
-module = "admin"
+module = request.controller
 resourcename = request.function
 
 # Options Menu (available in all Functions' Views)

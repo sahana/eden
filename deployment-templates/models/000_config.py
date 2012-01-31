@@ -196,6 +196,11 @@ deployment_settings.L10n.religions = {
 #deployment_settings.ui.pdf_logo = "static/img/mylogo.png"
 
 # GIS (Map) settings
+# Size of the Embedded Map
+# Change this if-required for your theme
+# NB API can override this in specific modules
+#deployment_settings.gis.map_height = 600
+#deployment_settings.gis.map_width = 1000
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
@@ -217,8 +222,8 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.gis.menu = T("Maps")
 # Maximum Marker Size
 # (takes effect only on display)
-deployment_settings.gis.marker_max_height = 35
-deployment_settings.gis.marker_max_width = 30
+#deployment_settings.gis.marker_max_height = 35
+#deployment_settings.gis.marker_max_width = 30
 # Duplicate Features so that they show wrapped across the Date Line?
 # Points only for now
 # lon<0 have a duplicate at lon+360
@@ -234,7 +239,7 @@ deployment_settings.gis.spatialdb = False
 # NB Needs to be publically-accessible URL for querying via client JS
 #deployment_settings.gis.geoserver_url = "http://localhost/geoserver"
 #deployment_settings.gis.geoserver_username = "admin"
-#deployment_settings.gis.geoserver_password = "password"
+#deployment_settings.gis.geoserver_password = ""
 
 # Twitter settings:
 # Register an app at http://twitter.com/apps

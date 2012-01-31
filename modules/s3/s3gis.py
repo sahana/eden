@@ -693,7 +693,10 @@ class GIS(object):
                 path = self.update_location_tree(feature_id, feature.parent)
 
             # Get ids of ancestors at each level.
-            strict = self.get_strict_hierarchy()
+            if feature.parent:
+                strict = self.get_strict_hierarchy(feature.parent)
+            else:
+                strict = self.get_strict_hierarchy(feature_id)
             if path and strict and not names:
                 # No need to do a db lookup for parents in this case -- we
                 # know the levels of the parents from their position in path.
@@ -721,7 +724,8 @@ class GIS(object):
             if names:
                 # We need to have entries for all levels
                 # (both for address onvalidation & new LocationSelector)
-                for key in self.hierarchy_level_keys:
+                hierarchy_level_keys = self.hierarchy_level_keys
+                for key in hierarchy_level_keys:
                     if not results.has_key(key):
                         results[key] = None
 
@@ -803,9 +807,9 @@ class GIS(object):
         return output
 
     # -------------------------------------------------------------------------
-    def update_gis_config_dependent_options(self, tablename=None):
+    def update_table_hierarchy_labels(self, tablename=None):
         """
-            Re-set table options that depend on data or options in gis_config.
+            Re-set table options that depend on location_hierarchy
 
             Only update tables which are already defined
         """
@@ -814,9 +818,7 @@ class GIS(object):
         db = current.db
 
         levels = ["L1", "L2", "L3", "L4"]
-        labels = {}
-        for level in levels:
-            labels[level] = self.get_location_hierarchy(level)
+        labels = self.get_location_hierarchy()
 
         if tablename and tablename in db:
             # Update the specific table which has just been defined
@@ -826,8 +828,8 @@ class GIS(object):
                 table.level.requires = \
                     IS_NULL_OR(IS_IN_SET(labels))
             else:
-                for field in levels:
-                    table[field].label = labels[field]
+                for level in levels:
+                    table[level].label = labels[level]
         else:
             # Do all Tables which are already defined
 
@@ -849,20 +851,13 @@ class GIS(object):
             for tablename in tables:
                 if tablename in db:
                     table = db[tablename]
-                    for field in levels:
-                        table[field].label = labels[field]
+                    for level in levels:
+                        table[level].label = labels[level]
 
     # -------------------------------------------------------------------------
-    # NB: On the first pass with an empty database, this is called before
-    # any configs are created, and used to set defaults in various tables.
-    # It's unlikely that these will be used on the first page displayed,
-    # but not impossible -- the first user doesn't have to enter the home page
-    # url. So when there's no config, values from deployment_settings are
-    # used -- the same ones that will be used for the site config.
     def set_config(self, config_id,
                    set_in_session=True,
-                   force_update_cache=False,
-                   force_update_dependencies=False):
+                   force_update_cache=False):
         """
             Reads the specified GIS config from the DB, caches it in response.
 
@@ -874,13 +869,6 @@ class GIS(object):
             If force_update_cache is true, the config will be read and cached in
             response even if the specified config is the same as what's already
             cached. Used when the config was just written.
-
-            If force_update_dependencies is true, dependent values or options
-            will be recomputed or reset, even if the specified config is the
-            same as what's already cached. Used when dependencies were
-            previously unavailable (e.g. tables that need hierarchy labels set
-            were not yet in db). Note dependencies will be set in any case where
-            the config cache is updated.
 
             If set_in_session is true (the normal case), the id of the config
             that was used will be saved in the session.  If set_in_session is
@@ -894,12 +882,10 @@ class GIS(object):
             Scalar fields from the gis_config record and its linked
             gis_projection record have the same names as the fields in their
             tables and can be accessed as response.s3.gis.<fieldname>.
-            Structured fields are stored as structures, for convenience.
-            Currently only the location hierarchy labels are provided this way.
-            It is a Storage() with keys L0..Ln, and is available as
-            response.s3.gis.location_hierarchy.
 
             Returns the id of the config it actually used, if any.
+
+            @ToDo: Merge configs for Site/OU/User/Event/Region
         """
 
         session = current.session
@@ -912,8 +898,6 @@ class GIS(object):
                session.s3.gis_config_id == config_id and \
                s3.gis.config and \
                s3.gis.config.id == config_id:
-                if force_update_dependencies:
-                    self.update_gis_config_dependent_options()
                 return
 
         db = current.db
@@ -962,17 +946,10 @@ class GIS(object):
             config = row["gis_config"]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
-            non_hierarchy_fields = filter(
-                lambda key: key not in s3.all_meta_field_names
-                                and key not in self.hierarchy_level_keys,
-                config)
-            for key in non_hierarchy_fields:
+            fields = filter(lambda key: key not in s3.all_meta_field_names,
+                            config)
+            for key in fields:
                 cache[key] = config[key]
-            levels = OrderedDict()
-            for key in self.hierarchy_level_keys:
-                if key in config and config[key]:
-                    levels[key] = config[key]
-            cache.location_hierarchy = levels
             for key in ["epsg", "units", "maxResolution", "maxExtent"]:
                 cache[key] = projection[key] if key in projection else None
             for key in ["image", "height", "width"]:
@@ -981,49 +958,11 @@ class GIS(object):
         # Store the values
         s3.gis.config = cache
         if cache:
-            self.update_gis_config_dependent_options()
             if set_in_session:
                 session.s3.gis_config_id = config_id
 
         # Let caller know if their id was valid.
         return config_id if row else cache
-
-    # -------------------------------------------------------------------------
-    def set_temporary_config(self, config_id):
-        """
-            Temporarily overrides the selected gis_config.
-
-            This is used to replace the config cached in response.s3.gis.config
-            with the config with the supplied id, without disturbing the
-            selection in session.s3.gis_config_id. This allows use of a
-            different config for one request, or part of a request.
-
-            After this call, get_config() will return the temporary config
-            until either restore_config() is called, or the request ends.
-        """
-
-        s3 = current.response.s3
-
-        # Save the current config structure.
-        s3.gis.saved_config = s3.gis.config
-
-        # Cache the requested config in its place, without changing session.
-        self.set_config(config_id, False)
-
-    # -------------------------------------------------------------------------
-    def restore_config(self):
-        """
-            Restores the config saved by set_temporary_config.
-            After this, get_config will again return the restored config.
-        """
-
-        s3 = current.response.s3
-
-        if s3.gis.saved_config:
-            s3.gis.config = s3.gis.saved_config
-        else:
-            self.set_config(current.session.s3.gis_config_id)
-        self.update_gis_config_dependent_options()
 
     # -------------------------------------------------------------------------
     def get_config(self):
@@ -1072,24 +1011,97 @@ class GIS(object):
                 return
 
         table = s3db.gis_config
-        query = (table.id == 1)
+        query = (table.uuid == "SITE_DEFAULT")
         db(query).update(default_location_id=id)
 
     # -------------------------------------------------------------------------
-    def get_location_hierarchy(self, level=None):
+    def get_location_hierarchy(self, level=None, location=None):
         """
-            Returns the location hierarchy from the current config.
+            Returns the location hierarchy and it's labels
+
+            @param: level - a specific level for which to lookup the label
+            @param: location - the location_id to lookup the location for
+                               currently only the actual location is supported
+                               @ToDo: Do a search of parents to allow this
+                                      lookup for any location
         """
 
-        config = self.get_config()
-        location_hierarchy = config.location_hierarchy
+        T = current.T
+        COUNTRY = str(T("Country"))
+
+        if level == "L0":
+            return COUNTRY
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.gis_hierarchy
+
+        if level:
+            fields = [table[level]]
+        else:
+            fields = [table.L1,
+                      table.L2,
+                      table.L3,
+                      table.L4,
+                      table.L5]
+
+        query = (table.uuid == "SITE_DEFAULT")
+        if location:
+            # Try the Region, but ensure we have the fallback available in a single query
+            query = query | (table.location_id == location)
+        rows = db(query).select(cache=s3db.cache,
+                                *fields)
+        if len(rows) > 1:
+            # Remove the Site Default
+            filter = lambda row: row.uuid == "SITE_DEFAULT"
+            rows.exclude(filter)
+        row = rows.first()
         if level:
             try:
-                return location_hierarchy[level]
+                return T(row[level])
             except:
                 return level
         else:
-            return location_hierarchy
+            levels = OrderedDict()
+            hierarchy_level_keys = self.hierarchy_level_keys
+            for key in hierarchy_level_keys:
+                if key == "L0":
+                    levels[key] = COUNTRY
+                elif row[key]:
+                    # Only include rows with values
+                    levels[key] = str((row[key]))
+            return levels
+
+    # -------------------------------------------------------------------------
+    def get_strict_hierarchy(self, location=None):
+        """
+            Returns the strict hierarchy value from the current config.
+
+            @param: location - the location_id of the record to check
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.gis_hierarchy
+
+        # Read the system default
+        # @ToDo: Check for an active gis_config region?
+        query = (table.uuid == "SITE_DEFAULT")
+        if location:
+            # Try the Location's Country, but ensure we have the fallback available in a single query
+            query = query | (table.location_id == self.get_parent_country(location))
+        rows = db(query).select(table.strict_hierarchy,
+                                cache=s3db.cache)
+        if len(rows) > 1:
+            # Remove the Site Default
+            filter = lambda row: row.uuid == "SITE_DEFAULT"
+            rows.exclude(filter)
+        row = rows.first()
+        strict = row.strict_hierarchy
+
+        return strict
 
     # -------------------------------------------------------------------------
     def get_max_hierarchy_level(self):
@@ -1123,25 +1135,6 @@ class GIS(object):
             return all_levels
 
     # -------------------------------------------------------------------------
-    def get_strict_hierarchy(self):
-        """
-            Returns the strict hierarchy value from the current config.
-        """
-
-        config = self.get_config()
-        return config.strict_hierarchy if config.strict_hierarchy else False
-
-    # -------------------------------------------------------------------------
-    def get_location_parent_required(self):
-        """
-            Returns the location parent required value from the current config.
-        """
-
-        config = self.get_config()
-        return config.location_parent_required \
-               if config.location_parent_required else False
-
-    # -------------------------------------------------------------------------
     # @ToDo: There is nothing stopping someone from making extra configs that
     # have country locations as their region location. Need to select here
     # only those configs that belong to the hierarchy. If the L0 configs are
@@ -1150,64 +1143,40 @@ class GIS(object):
     # with lowest id if there are more than one per country. This same issue
     # applies to any other use of country configs that relies on getting the
     # official set (e.g. looking up hierarchy labels).
-    @staticmethod
-    def get_edit_level(level, id, row=None):
+    def get_edit_level(self, level, id):
         """
-            Returns the edit_<level> value from the parent country config.
+            Returns the edit_<level> value from the parent country hierarchy.
 
-            If the location has no level or parent or the path cannot be
-            determined, then this is not a valid hierarchy location -- returns
-            False in that case.
+            Used by gis_location_onvalidation()
 
-            @param id: the id of the location or an ancestor -- used to find
-            the ancestor country location.
-            @param row: if the record for the location or an ancestor is
-            available, it can be supplied via row.
-            @param config:
+            @param id: the id of the location or an ancestor - used to find
+                       the ancestor country location.
         """
 
+        country = self.get_parent_country(id)
+        
         db = current.db
-        response = current.response
-        _location = db.gis_location
-        _config = db.gis_config
+        s3db = current.s3db
 
-        if not level:
-            return False
+        table = s3db.gis_hierarchy
 
-        if id and not row:
-            query = _location.id == id
-            row = db(query).select(_location.level,
-                                   _location.parent,
-                                   _location.path,
-                                   limitby=(0, 1)).first()
-        elif row:
-            row_level = "level" in row and row.level
-            if row_level == "L0":
-                country_id = id
-            else:
-                path = "path" in row and row.path
-                id = id or "id" in row and row.id
-                if id and not path:
-                    path = update_location_tree(id)
-                if path:
-                    country_id = int(path.split("/")[0])
+        fieldname = "edit_%s" % level
 
-            query = (_location.id == country_id) & \
-                    (_config.region_location_id == country_id)
-            edit_field = "edit_%s" % level
-            country_info = db(query).select(_location.level,
-                                            _config[edit_field],
-                                            limitby=(0, 1)).first()
-            if country_info:
-                country_config = country_info["gis_config"]
-                country_loc = country_info["gis_location"]
-                if country_loc.level == "L0":
-                    # The most remote ancestor was a country with a config.
-                    return country_config[edit_field]
+        # Read the system default
+        query = (table.uuid == "SITE_DEFAULT")
+        if country:
+            # Try the Location's Country, but ensure we have the fallback available in a single query
+            query = query | (table.location_id == country)
+        rows = db(query).select(table[fieldname],
+                                cache=s3db.cache)
+        if len(rows) > 1:
+            # Remove the Site Default
+            filter = lambda row: row.uuid == "SITE_DEFAULT"
+            rows.exclude(filter)
+        row = rows.first()
+        edit = row[fieldname]
 
-        # If there is no gis_config for this country then default to the
-        # deployment_setting
-        return response.s3.gis.edit_Lx
+        return edit
 
     # -------------------------------------------------------------------------
     def get_countries(self, key_type="id"):
@@ -1286,7 +1255,7 @@ class GIS(object):
         """
             Returns the parent country for a given record
 
-            @param: location_id: the location or id to search for
+            @param: location: the location or id to search for
             @param: key_type: whether to return an id or code
         """
 
@@ -1348,6 +1317,8 @@ class GIS(object):
         """
             Return the representation for a Field based on it's value
             Used by s3xml's gis_encode()
+
+            @ToDo: Move out of S3GIS
         """
 
         T = current.T
@@ -3066,8 +3037,8 @@ class GIS(object):
             Normally called in the controller as: map = gis.show_map()
             In the view, put: {{=XML(map)}}
 
-            @param height: Height of viewport (if not provided then the default setting from the Map Service Catalogue is used)
-            @param width: Width of viewport (if not provided then the default setting from the Map Service Catalogue is used)
+            @param height: Height of viewport (if not provided then the default deployment setting is used)
+            @param width: Width of viewport (if not provided then the default deployment setting is used)
             @param bbox: default Bounding Box of viewport (if not provided then the Lat/Lon/Zoom are used) (Dict):
                 {
                 "max_lat" : float,
@@ -3159,15 +3130,14 @@ class GIS(object):
         self.cluster_threshold = 2   # minimum # of features to form a cluster
 
         # Read configuration
-        config = self.get_config()
         if height:
             map_height = height
         else:
-            map_height = config.map_height
+            map_height = settings.get_gis_map_height()
         if width:
             map_width = width
         else:
-            map_width = config.map_width
+            map_width = settings.get_gis_map_width()
         if (bbox
             and (-90 < bbox["max_lat"] < 90)
             and (-90 < bbox["min_lat"] < 90)
@@ -3179,6 +3149,9 @@ class GIS(object):
         else:
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
+
+        config = self.get_config()
+
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments
         if "lat" in request.vars:
@@ -3230,11 +3203,6 @@ class GIS(object):
 
         mtable = s3db.gis_marker
         markers = {}
-
-        if session.s3.gis_config_id == 1:
-            region = ""
-        else:
-            region = "S3.gis.region = %i;" % session.s3.gis_config_id
 
         html = DIV(_id="map_wrapper")
 
@@ -3310,6 +3278,13 @@ class GIS(object):
             add_javascript("scripts/gis/osm_styles.js")
             add_javascript("scripts/gis/GeoExt/lib/GeoExt.js")
             add_javascript("scripts/gis/GeoExt/ux/GeoNamesSearchCombo.js")
+            add_javascript("scripts/gis/gxp/RowExpander.js")
+            add_javascript("scripts/gis/gxp/widgets/NewSourceWindow.js")
+            add_javascript("scripts/gis/gxp/plugins/LayerSource.js")
+            add_javascript("scripts/gis/gxp/plugins/WMSSource.js")
+            add_javascript("scripts/gis/gxp/plugins/Tool.js")
+            add_javascript("scripts/gis/gxp/plugins/AddLayers.js")
+            add_javascript("scripts/gis/gxp/plugins/RemoveLayer.js")
             if mouse_position == "mgrs":
                 add_javascript("scripts/gis/usng2.js")
                 add_javascript("scripts/gis/MP.js")
@@ -3367,15 +3342,19 @@ class GIS(object):
         else:
             draw_polygon = ""
 
-        # Toolbar
-        if s3_has_role(MAP_ADMIN):
-        #if auth.is_logged_in():
-            # Provide a way to save the viewport
-            # @ToDo Extend to personalised Map Views
-            # @ToDo Extend to choice of Base Layer & Enabled status of Overlays
-            mapAdmin = "S3.gis.mapAdmin = true;\n"
+        if config.pe_id or s3_has_role(MAP_ADMIN):
+            # Personal/OU config or MapAdmin, so enable Save Button
+            region = "S3.gis.region = %i;" % config.id
         else:
-            mapAdmin = ""
+            region = ""
+
+        # Upload Layer
+        if settings.get_gis_geoserver_password():
+            upload_layer = "S3.i18n.gis_uploadlayer = 'Upload Shapefile';\n"
+            add_javascript("scripts/gis/gxp/FileUploadField.js")
+            add_javascript("scripts/gis/gxp/widgets/LayerUploadPanel.js")
+        else:
+            upload_layer = ""
 
         # Search
         if search:
@@ -3383,7 +3362,6 @@ class GIS(object):
 S3.i18n.gis_search_no_internet = '%s';
 """ % (T("Search Geonames"),
        T("Geonames.org search requires Internet connectivity!"))
-
         else:
             search = ""
 
@@ -4076,7 +4054,6 @@ S3.i18n.gis_feature_info = '%s';
         # @ToDo: Consider passing this as JSON Objects to allow it to be done dynamically
         html.append(SCRIPT("".join((
             "S3.public_url = '%s';\n" % public_url,  # Needed just for GoogleEarthPanel
-            mapAdmin,
             region,
             s3_gis_window,
             s3_gis_windowHide,
@@ -4114,6 +4091,7 @@ S3.i18n.gis_feature_info = '%s';
             legend,                     # Presence of label turns feature on
             search,                     # Presence of label turns feature on
             getfeatureinfo,             # Presence of labels turns feature on
+            upload_layer,               # Presence of labels turns feature on
             "S3.i18n.gis_requires_login = '%s';\n" % T("Requires Login"),
             "S3.i18n.gis_base_layers = '%s';\n" % T("Base Layers"),
             "S3.i18n.gis_overlays = '%s';\n" % T("Overlays"),
@@ -4868,7 +4846,6 @@ class WMSLayer(MultiRecordLayer):
             add_script = self.scripts.append
             if debug:
                 # Non-debug has this included within GeoExt.js
-                add_script("scripts/gis/gxp/plugins/Tool.js")
                 add_script("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
 
     class SubLayer(MultiRecordLayer.SubLayer):
