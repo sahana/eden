@@ -233,7 +233,7 @@ class S3TemplateModel(S3Model):
             msg_record_created = T("Assessment Template added"),
             msg_record_modified = T("Assessment Template updated"),
             msg_record_deleted = T("Assessment Template deleted"),
-            msg_list_empty = T("No Assessment Templates currently registered"))
+            msg_list_empty = T("No Assessment Templates"))
 
 
 
@@ -302,7 +302,7 @@ class S3TemplateModel(S3Model):
             msg_record_created = T("Template Section added"),
             msg_record_modified = T("Template Section updated"),
             msg_record_deleted = T("Template Section deleted"),
-            msg_list_empty = T("No Template Sections currently registered"))
+            msg_list_empty = T("No Template Sections"))
 
         self.configure(tablename, orderby = tablename+".posn",
                        deduplicate=self.survey_section_duplicate
@@ -877,7 +877,7 @@ class S3QuestionModel(S3Model):
             msg_record_created = T("Assessment Question added"),
             msg_record_modified = T("Assessment Question updated"),
             msg_record_deleted = T("Assessment Question deleted"),
-            msg_list_empty = T("No Assessment Questions currently registered"))
+            msg_list_empty = T("No Assessment Questions"))
 
         self.configure(tablename,
                         onvalidation = self.question_onvalidate,
@@ -932,7 +932,7 @@ class S3QuestionModel(S3Model):
             msg_record_created = T("Question Meta-Data added"),
             msg_record_modified = T("Question Meta-Data updated"),
             msg_record_deleted = T("Question Meta-Data deleted"),
-            msg_list_empty = T("No Question Meta-Data currently registered"),
+            msg_list_empty = T("No Question Meta-Data"),
             title_upload = T("Upload a Question List import file")
             )
 
@@ -1557,26 +1557,26 @@ class S3SeriesModel(S3Model):
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
-            title_create = T("Conduct an Event Assessment"),
-            title_display = T("Details of Event Assessment"),
-            title_list = T("List of Event Assessments"),
-            title_update = T("Edit this Event Assessment"),
-            title_analysis_summary = T("Event Assessment Summary"),
-            title_analysis_chart = T("Event Assessment Chart"),
-            title_map = T("Event Assessment Map"),
-            subtitle_create = T("Add a new Event Assessment"),
-            subtitle_list = T("Event Assessment"),
-            subtitle_analysis_summary = T("Summary of Event Assessment Responses"),
-            help_analysis_summary = T("Click on a question to select it then click 'Display Selected Questions' button to view all event assessment responses for only the selected questions"),
+            title_create = T("Conduct an Disaster Assessment"),
+            title_display = T("Details of Disaster Assessment"),
+            title_list = T("List of Disaster Assessments"),
+            title_update = T("Edit this Disaster Assessment"),
+            title_analysis_summary = T("Disaster Assessment Summary"),
+            title_analysis_chart = T("Disaster Assessment Chart"),
+            title_map = T("Disaster Assessment Map"),
+            subtitle_create = T("Add a new Disaster Assessment"),
+            subtitle_list = T("Disaster Assessment"),
+            subtitle_analysis_summary = T("Summary of Completed Assessment Forms"),
+            help_analysis_summary = T("Click on questions below to select them, then click 'Display Selected Questions' button to view the selected questions for all Completed Assessment Forms"),
             subtitle_analysis_chart = T("Select a label question and at least one numeric question to display the chart."),
-            subtitle_map = T("Event Assessment Map"),
-            label_list_button = T("List of Event Assessment"),
-            label_create_button = T("Add a new Event Assessment"),
-            label_delete_button = T("Delete this Event Assessment"),
-            msg_record_created = T("Event Assessment added"),
-            msg_record_modified = T("Event Assessment updated"),
-            msg_record_deleted = T("Event Assessment deleted"),
-            msg_list_empty = T("No Event Assessments currently registered"))
+            subtitle_map = T("Disaster Assessment Map"),
+            label_list_button = T("List of Disaster Assessment"),
+            label_create_button = T("Add a new Disaster Assessments"),
+            label_delete_button = T("Delete this Disaster Assessment"),
+            msg_record_created = T("Disaster Assessment added"),
+            msg_record_modified = T("Disaster Assessment updated"),
+            msg_record_deleted = T("Disaster Assessment deleted"),
+            msg_list_empty = T("No Disaster Assessments"))
 
         self.configure(tablename,
                         create_next = URL(f="newAssessment",
@@ -1815,7 +1815,7 @@ class S3SeriesModel(S3Model):
 
         table.append(TR(TH(T("Select Numeric Questions (one or more):")), _class="survey_question"))
         # First add the special questions
-        specialQuestions = [{"code":"Count", "name" : T("Number or Responses")}]
+        specialQuestions = [{"code":"Count", "name" : T("Number of Completed Assessment Forms")}]
         innerTable = TABLE()
         for qstn in specialQuestions:
             tr = addQstnChkboxToTR(numQstnList, qstn)
@@ -2038,7 +2038,7 @@ $.post('%s',
 
         output["title"] = crud_strings.title_map
         output["subtitle"] = crud_strings.subtitle_map
-        output["instructions"] = T("Click on a marker to see the Event Assessment Response")
+        output["instructions"] = T("Click on a marker to see the Completed Assessment Form")
         output["form"] = form
         output["map"] = map
 
@@ -2181,8 +2181,8 @@ def survey_series_rheader(r, tabs=[]):
             # Tabs
             if auth.s3_has_permission("create", "survey_series"):
                 tabs = [(T("Details"), None),
-                        (T("Add New Response"), "newAssessment/"),
-                        (T("Responses"), "complete"),
+                        (T("Enter Completed Assessment"), "newAssessment/"),
+                        (T("Completed Assessments"), "complete"),
                         (T("Summary"), "summary"),
                         (T("Chart"), "graph"),
                         (T("Map"), "map"),
@@ -2200,7 +2200,7 @@ def survey_series_rheader(r, tabs=[]):
             query = (completeTable.series_id == record.id)
             row = db(query).count()
             tsection = TABLE(_class="survey-complete-list")
-            lblSection = T("Number of Event Assessment Responses")
+            lblSection = T("Number of Completed Assessment Forms")
             rsection = TR(TH(lblSection), TD(row))
             tsection.append(rsection)
 
@@ -2238,7 +2238,7 @@ def survey_series_rheader(r, tabs=[]):
             export_xls_btn = INPUT(_type="submit",
                                    _id="export_xls_btn",
                                    _name="Export_Spreadsheet",
-                                   _value=T("Download Assessment Template Spreadsheet"),
+                                   _value=T("Download Assessment Form Spreadsheet"),
                                    _class="action-btn"
                                   )
             tranForm.append(export_xls_btn)
@@ -2248,7 +2248,7 @@ def survey_series_rheader(r, tabs=[]):
                 export_rtf_btn = INPUT(_type="submit",
                                        _id="export_rtf_btn",
                                        _name="Export_Word",
-                                       _value=T("Download Assessment Template Word Document"),
+                                       _value=T("Download Assessment Form Document"),
                                        _class="action-btn"
                                       )
                 tranForm.append(export_rtf_btn)
@@ -2264,7 +2264,6 @@ def survey_series_rheader(r, tabs=[]):
                              _class="action-btn"
                              ),
                           )
-
 
             rheader = DIV(TABLE(
                           TR(
@@ -2470,22 +2469,22 @@ class S3CompleteModel(S3Model):
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
-            title_create = T("Enter Event Assessment Response"),
-            title_display = T("Event Assessment Response Details"),
-            title_list = T("List of Event Assessment Responses"),
-            title_update = T("Edit Event Assessment Response"),
-            title_selected = T("List of Selected Event Assessment Questions"),
-            subtitle_create = T("Enter Event Assessment Response"),
-            subtitle_list = T("Event Assessment Responses"),
-            subtitle_selected = T("Selected Event Assessment Questions"),
-            label_list_button = T("List all Event Assessment Response"),
-            label_create_button = T("Add a new Completed Assessment"),
-            label_delete_button = T("Delete this Event Assessment Response"),
-            msg_record_created = T("Event Assessment Response entered"),
-            msg_record_modified = T("Event Assessment Response updated"),
-            msg_record_deleted = T("Event Assessment Response deleted"),
-            msg_list_empty = T("No Event Assessment Responses currently registered"),
-            title_upload = T("Upload the Event Assessment Response import file")
+            title_create = T("Enter Completed Assessment Form"),
+            title_display = T("Completed Assessment Form Details"),
+            title_list = T("List of Completed Assessment Forms"),
+            title_update = T("Edit Completed Assessment Form"),
+            title_selected = T("Selected Questions for all Completed Assessment Forms"),
+            subtitle_create = T("Enter Completed Assessment Form"),
+            subtitle_list = T("Completed Assessment Forms"),
+            subtitle_selected = T("Selected Questions for all Completed Assessment Forms"),
+            label_list_button = T("List all Completed Assessment Form"),
+            label_create_button = T("Add a new Completed Assessment Form"),
+            label_delete_button = T("Delete this Completed Assessment Form"),
+            msg_record_created = T("Completed Assessment Form entered"),
+            msg_record_modified = T("Completed Assessment Form updated"),
+            msg_record_deleted = T("Completed Assessment Form deleted"),
+            msg_list_empty = T("No Completed Assessment Forms"),
+            title_upload = T("Upload the Completed Assessment Form")
             )
 
         self.configure(tablename,
@@ -2534,7 +2533,7 @@ class S3CompleteModel(S3Model):
             msg_record_created = T("Assessment Answer added"),
             msg_record_modified = T("Assessment Answer updated"),
             msg_record_deleted = T("Assessment Answer deleted"),
-            msg_list_empty = T("No Assessment Answers currently registered"))
+            msg_list_empty = T("No Assessment Answers"))
 
         self.configure(tablename,
                        onaccept = self.answer_onaccept,

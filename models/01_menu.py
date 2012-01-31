@@ -1082,7 +1082,7 @@ if auth.permission.format in ("html"):
                 #[T("Section"), False, aURL(f="section"), [
                 #    [T("New"), False, aURL(p="create", f="section", args="create")],
                 #    [T("List All"), False, aURL(f="section")]]],
-                [T("Event Assessments"), False, aURL(f="series"), [
+                [T("Disaster Assessments"), False, aURL(f="series"), [
                     [T("New"), False, aURL(p="create", f="series", args="create")],
                     [T("List All"), False, aURL(f="series")],
                 ]],
@@ -1103,7 +1103,7 @@ if auth.permission.format in ("html"):
                           args="import"
                          )
                     ],
-                    [T("Import Completed Responses"),
+                    [T("Import Completed Assessment Forms"),
                      False,
                      aURL(f="complete",
                           args="import"
