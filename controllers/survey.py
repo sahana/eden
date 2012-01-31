@@ -422,10 +422,12 @@ def export_all_responses():
     # get all questions and write out as a heading
     col = 0
     completeRow = {}
-    nextRow = 1
+    nextRow = 2
     qstnList = response.s3.survey_getAllQuestionsForSeries(series_id)
     for qstn in qstnList:
         row = 0
+        sheet1.write(row,col,qstn["code"])
+        row += 1
         sheet1.write(row,col,qstn["name"])
         # for each question get the response
         allResponses = response.s3.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"], series_id)
@@ -441,7 +443,7 @@ def export_all_responses():
             sheet1.write(row,col,value)
         col += 1
     sheet1.panes_frozen = True
-    sheet1.vert_split_pos = 2
+    sheet1.horz_split_pos = 2
     book.save(output)
 
 
