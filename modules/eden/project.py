@@ -1208,7 +1208,6 @@ class S3ProjectDRRModel(S3Model):
                                                   name="bnf_type",
                                                   label=T("Beneficiary Type")),
                         ],
-
                         report_rows=[
                                       "activity_id",
                                       "project_id",

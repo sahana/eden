@@ -164,7 +164,7 @@ class S3Config(Storage):
         return self.database.get("db_type", "sqlite")
     def get_database_string(self):
         db_type = self.database.get("db_type", "sqlite")
-        pool_size = self.database.get("pool_size", 0)
+        pool_size = self.database.get("pool_size", 30)
         if (db_type == "sqlite"):
             db_string = "sqlite://storage.db"
         elif (db_type == "mysql"):
@@ -184,10 +184,7 @@ class S3Config(Storage):
         else:
             from gluon import HTTP
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
-        if pool_size:
-            return (db_string, pool_size)
-        else:
-            return db_string
+        return (db_string, pool_size)
 
     # -------------------------------------------------------------------------
     # Finance settings
