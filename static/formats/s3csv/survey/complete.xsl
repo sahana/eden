@@ -32,48 +32,33 @@
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
 
+    <xsl:key name="survey_template"
+             match="row"
+             use="col[@field='Template']"/>
+    <xsl:key name="survey_series"
+             match="row"
+             use="col[@field='Series']"/>
+
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
             <xsl:apply-templates select="table/row"/>
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('survey_template',
+                                                        col[@field='Template'])[1])]">
+                <xsl:call-template name="Template"/>
+            </xsl:for-each>
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('survey_series',
+                                                        col[@field='Series'])[1])]">
+                <xsl:call-template name="Series"/>
+            </xsl:for-each>
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
-        <!-- Create the survey template -->
-        <resource name="survey_template">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="col[@field='Template']"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="col[@field='Template']"/></data>
-            <data field="description"><xsl:value-of select="col[@field='Template Description']"/></data>
-            <data field="status"><xsl:value-of select="2"/></data>
-        </resource>
-
-        <!-- Create the survey series -->
-        <resource name="survey_series">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="col[@field='Series']"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="col[@field='Series']"/></data>
-            <!-- Link to Template -->
-            <reference field="template_id" resource="survey_template">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Template']"/>
-                </xsl:attribute>
-            </reference>
-            <!-- Link to Organisation -->
-            <reference field="organisation_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
-                </xsl:attribute>
-            </reference>
-        </resource>
 
         <resource name="survey_complete">
             <data field="answer_list">
@@ -106,6 +91,47 @@
 
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="Template">
+        <xsl:variable name="template" select="col[@field='Template']/text()"/>
+
+        <!-- Create the survey template -->
+        <resource name="survey_template">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$template"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$template"/></data>
+            <data field="description"><xsl:value-of select="col[@field='Template Description']"/></data>
+            <data field="status"><xsl:value-of select="2"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="Series">
+        <xsl:variable name="series" select="col[@field='Series']/text()"/>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <!-- Create the survey series -->
+        <resource name="survey_series">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$series"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$series"/></data>
+            <!-- Link to Template -->
+            <reference field="template_id" resource="survey_template">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Template']"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to Organisation -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$OrgName"/>
+                </xsl:attribute>
+            </reference>
+        </resource>
+    </xsl:template>
     <!-- ****************************************************************** -->
 
 </xsl:stylesheet>
