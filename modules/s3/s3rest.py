@@ -1904,6 +1904,9 @@ class S3Resource(object):
 
         # The Rows
         self._rows = None
+        self._rowindex = None
+        self.rfields = None
+        self.dfields = None
         self._ids = []
         self._uids = []
         self._length = None
@@ -2101,13 +2104,17 @@ class S3Resource(object):
         """
 
         db = current.db
+        manager = current.manager
+        audit = manager.audit
+        prefix = self.prefix
+        name = self.name
 
         rfilter = self.rfilter
         if rfilter is None:
             rfilter = self.build_query()
         query = rfilter.get_query()
-
         vfltr = rfilter.get_filter()
+
         if vfltr is not None:
             attr = Storage(attributes)
             if "limitby" in attr:
@@ -2131,32 +2138,9 @@ class S3Resource(object):
             rows = rfilter(rows, start=start, limit=limit)
 
         # Audit
-        manager = current.manager
-        audit = manager.audit
-        prefix = self.prefix
-        name = self.name
-        table = self.table
-        if self.tablename in rows:
-            _id = str(table._id)
-        else:
-            _id = table._id.name
-        try:
-            ids = [r[_id] for r in rows]
-        except KeyError:
-            ids = None
-            audit("list", prefix, name)
-        else:
-            for i in ids:
-                audit("read", prefix, name, record=i)
+        audit("list", prefix, name)
 
         # Keep the rows for later access
-        self._ids = ids
-        try:
-            UID = manager.xml.UID
-            if uid in table.fields:
-                self._uids = [row[UID] for row in rows]
-        except:
-            self._uids = None
         self._rows = rows
         return rows
 
@@ -2525,6 +2509,7 @@ class S3Resource(object):
         """
 
         self._rows = None
+        self._rowindex = None
         self._length = None
         self._ids = []
         self._uids = []
@@ -2559,18 +2544,20 @@ class S3Resource(object):
             @returns: a Row
 
             @todo: doesn't work for joins (i.e. where _id not in Row)
-            @todo: is this still needed?
         """
 
-        if self._rows is None:
-            self.load()
-        rows = self._rows
-        _id = self.table._id.name
+        index = self._rowindex
+        if index is None:
+            _id = self.table._id.name
+            rows = self._rows
+            if rows:
+                index = Storage([(str(row[_id]), row) for row in rows])
+            else:
+                index = Storage()
+            self._rowindex = index
         key = str(key)
-        for i in xrange(len(rows)):
-            row = rows[i]
-            if str(row[_id]) == key:
-                return row
+        if key in index:
+            return index[key]
         raise IndexError
 
     # -------------------------------------------------------------------------
@@ -2600,18 +2587,14 @@ class S3Resource(object):
         if not component:
             return self[key]
         else:
-            if isinstance(key, Row):
-                master = key
-            else:
-                master = self[key]
-            if isinstance(component, S3Resource):
-                c = component
-            elif component in self.components:
+            master = self[key]
+            try:
                 c = self.components[component]
-            elif component in self.links:
-                c = self.links[component]
-            else:
-                raise AttributeError
+            except:
+                try:
+                    c = self.links[component]
+                except:
+                    raise AttributeError
             if c.link:
                 pkey, fkey = c.pkey, c.fkey
                 lkey, rkey = c.lkey, c.rkey
@@ -3119,14 +3102,17 @@ class S3Resource(object):
         tablename = self.tablename
         table = self.table
 
+        default = (None, None)
+
         # Do not export the record if it already is in the export map
         if tablename in export_map and record.id in export_map[tablename]:
-            return (None, None)
+            return default
 
         # Do not export the record if it hasn't been modified since msince
+        MTIME = xml.MTIME
         if msince is not None:
-            if xml.MTIME in record and record[xml.MTIME] <= msince:
-                return (None, None)
+            if MTIME in record and record[MTIME] <= msince:
+                return default
 
         # Audit read
         prefix = self.prefix
@@ -3783,6 +3769,10 @@ class S3Resource(object):
         manager = current.manager
         xml = manager.xml
 
+        UID = xml.UID
+        IGNORE_FIELDS = xml.IGNORE_FIELDS
+        FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
+
         table = self.table
         tablename = self.tablename
 
@@ -3790,25 +3780,29 @@ class S3Resource(object):
             # Skip Bulky WKT fields
             skip.append("wkt")
 
-        fields = filter(lambda f:
-                        f != xml.UID and
-                        f not in skip and
-                        f not in xml.IGNORE_FIELDS and
-                        str(table[f].type) != "id",
-                        table.fields)
+        rfields = self.rfields
+        dfields = self.dfields
 
-        if manager.show_ids and table._id.name not in fields:
-            fields.insert(0, table._id.name)
+        if rfields is None or dfields is None:
+            rfields = []
+            dfields = []
+            pkey = table._id.name
+            for f in table.fields:
+                if f == pkey or \
+                f == UID or \
+                f in skip or \
+                f in IGNORE_FIELDS:
+                    continue
 
-        rfields = filter(lambda f:
-                         (str(table[f].type).startswith("reference") or
-                          str(table[f].type).startswith("list:reference")) and
-                         f not in xml.FIELDS_TO_ATTRIBUTES,
-                         fields)
-
-        dfields = filter(lambda f:
-                         f not in rfields,
-                         fields)
+                ftype = str(table[f].type)
+                if (ftype[:9] == "reference" or \
+                    ftype[:14] == "list:reference") and \
+                f not in FIELDS_TO_ATTRIBUTES:
+                    rfields.append(f)
+                else:
+                    dfields.append(f)
+            self.rfields = rfields
+            self.dfields = dfields
 
         return (rfields, dfields)
 
@@ -5155,7 +5149,11 @@ class S3ResourceQuery:
         if op == self.CONTAINS:
             q = l.contains(r)
         elif op == self.BELONGS:
-            q = l.belongs(r)
+            if type(r) is list and None in r:
+                _r = [item for item in r if item is not None]
+                q = ((l.belongs(_r)) | (l == None))
+            else:
+                q = l.belongs(r)
         elif op == self.LIKE:
             q = l.lower().like("%%%s%%" % str(r).lower())
         elif op == self.LT:
