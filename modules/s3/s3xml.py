@@ -374,12 +374,12 @@ class S3XML(S3Codec):
 
         if not uid:
             return uid
-        if uid.startswith("urn:"):
+        if uid[:4] == "urn:":
             return uid
         else:
-            x = uid.find("/")
-            if (x < 1 or x == len(uid)-1) and self.domain:
-                return "%s/%s" % (self.domain, uid)
+            domain = self.domain
+            if domain and "/" not in uid[1:-1]:
+                return "%s/%s" % (domain, uid.strip("/"))
             else:
                 return uid
 
@@ -391,17 +391,15 @@ class S3XML(S3Codec):
             @param uid: the UID
         """
 
-        if not uid or not self.domain:
-            return uid
-        if uid.startswith("urn:"):
+        domain = self.domain
+        if not uid or uid.startswith("urn:") or not domain:
             return uid
         else:
-            x = uid.find("/")
-            if x < 1 or x == len(uid)-1:
+            if "/" in uid[1:-1]:
                 return uid
             else:
                 (_domain, _uid) = uid.split("/", 1)
-                if _domain == self.domain:
+                if _domain == domain:
                     return _uid
                 else:
                     return uid
@@ -643,6 +641,11 @@ class S3XML(S3Codec):
         db = current.db
         s3db = current.s3db
 
+        LATFIELD = self.Lat
+        LONFIELD = self.Lon
+
+        ATTRIBUTE = self.ATTRIBUTE
+
         # Quicker to download Icons from Static
         # also doesn't require authentication so KML files can work in
         # Google Earth
@@ -656,40 +659,44 @@ class S3XML(S3Codec):
         else:
             marker_url = None
 
+        table = resource.table
         tablename = resource.tablename
 
-        references = filter(lambda r:
-                            r.element is not None and \
-                            self.Lat in s3db[r.table].fields and \
-                            self.Lon in s3db[r.table].fields,
-                            rmap)
-
-        for i in xrange(0, len(references)):
-            r = references[i]
+        references = []
+        for r in rmap:
+            if r.element is None:
+                continue
+            ktable = s3db.table(r.table)
+            if ktable is None:
+                continue
+            fields = ktable.fields
+            if LATFIELD not in fields or \
+               LONFIELD not in fields:
+                continue
+            element = r.element
+            attr = element.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
                 continue # Multi-reference
-            ktable = s3db[r.table]
-            LatLon = db(ktable.id == r_id).select(ktable[self.Lat],
-                                                  ktable[self.Lon],
+            LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
+                                                  ktable[LONFIELD],
                                                   limitby=(0, 1))
             if LatLon:
                 LatLon = LatLon.first()
-                if LatLon[self.Lat] is not None and \
-                   LatLon[self.Lon] is not None:
-                    r.element.set(self.ATTRIBUTE.lat,
-                                  "%.6f" % LatLon[self.Lat])
-                    r.element.set(self.ATTRIBUTE.lon,
-                                  "%.6f" % LatLon[self.Lon])
+                lat = LatLon[LATFIELD]
+                lon = LatLon[LONFIELD]
+                if lat is not None and lon is not None:
+                    attr[ATTRIBUTE.lat] = "%.6f" % lat
+                    attr[ATTRIBUTE.lon] = "%.6f" % lon
                     if shape or size or colour:
                         # Feature Queries (but never used?)
                         if shape:
-                            r.element.set(self.ATTRIBUTE.shape, shape)
+                            attr[ATTRIBUTE.shape] = shape
                         if size:
-                            r.element.set(self.ATTRIBUTE.size, size)
+                            attr[ATTRIBUTE.size] = size
                         if colour:
-                            r.element.set(self.ATTRIBUTE.colour, colour)
+                            attr[ATTRIBUTE.colour] = colour
                         # We don't want a default Marker if these are specified
                         marker = True
 
@@ -704,8 +711,8 @@ class S3XML(S3Codec):
                                                        marker=False if marker else True)
                     if _marker:
                         marker_url = "%s/%s" % (download_url, _marker.image)
-                    r.element.set(self.ATTRIBUTE.marker, marker_url)
-                    r.element.set(self.ATTRIBUTE.sym, symbol)
+                    attr[ATTRIBUTE.marker] = marker_url
+                    attr[ATTRIBUTE.sym] = symbol
                     if popup_fields:
                         # Internal feature Layers
                         # Build the HTML for the onHover Tooltip
@@ -721,7 +728,7 @@ class S3XML(S3Codec):
                             if value:
                                 # @ToDo: Slow query which would be
                                 #        good to optimise
-                                field = resource.table[fieldname]
+                                field = table[fieldname]
                                 represent = gis.get_representation(field,
                                                                    value)
                                 # Is this is faster than the simpler alternative?
@@ -736,7 +743,7 @@ class S3XML(S3Codec):
                                 if fieldname != popup_fields[0]:
                                     value = record[fieldname]
                                     if value:
-                                        field = resource.table[fieldname]
+                                        field = table[fieldname]
                                         # @ToDo: Slow query which would be
                                         # good to optimise
                                         represent = gis.get_representation(
@@ -752,7 +759,7 @@ class S3XML(S3Codec):
                         except:
                             pass
                         else:
-                            r.element.set(self.ATTRIBUTE.popup, tooltip)
+                            attr[ATTRIBUTE.popup] = tooltip
 
                         # Build the URL for the onClick Popup contents
                         if not popup_url:
@@ -763,14 +770,14 @@ class S3XML(S3Codec):
                     elif popup_label:
                         # Feature Queries
                         # This is the pre-generated HTML for the onHover Tooltip
-                        r.element.set(self.ATTRIBUTE.popup, popup_label)
+                        attr[ATTRIBUTE.popup] = popup_label
 
                     if popup_url:
                         # @ToDo: add the Public URL so that layers can
                         # be loaded off remote Sahana instances
                         # (make this optional to keep filesize small
                         # when not needed?)
-                        r.element.set(self.ATTRIBUTE.url, popup_url)
+                        attr[ATTRIBUTE.url] = popup_url
 
     # -------------------------------------------------------------------------
     def resource(self, parent, table, record,

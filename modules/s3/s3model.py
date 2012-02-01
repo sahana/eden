@@ -624,26 +624,36 @@ class S3ModelExtensions(object):
 
         components = Storage()
         for alias in hooks:
+
             hook = hooks[alias]
-            load(hook.tablename)
-            if hook.tablename not in db:
+            tn = hook.tablename
+            lt = hook.linktable
+
+            ctable = load(tn)
+            if ctable is None:
                 continue
-            if hook.linktable:
-                load(hook.linktable)
-                if hook.linktable not in db:
+
+            if lt:
+                ltable = load(lt)
+                if ltable is None:
                     continue
+            else:
+                ltable = None
+
+            prefix, name = tn.split("_", 1)
             component = Storage(values=hook.values,
-                                multiple=hook.multiple)
-            component.tablename = hook.tablename
-            component.table = db[hook.tablename]
-            prefix, name = hook.tablename.split("_", 1)
-            component.prefix = prefix
-            component.name = name
-            component.alias = alias
+                                multiple=hook.multiple,
+                                tablename=tn,
+                                table=ctable,
+                                prefix=prefix,
+                                name=name,
+                                alias=alias)
+
             if hook.supertable is not None:
                 joinby = hook.supertable._id.name
             else:
                 joinby = hook.fkey
+
             if hook.pkey is None:
                 if hook.supertable is not None:
                     component.pkey = joinby
@@ -651,20 +661,25 @@ class S3ModelExtensions(object):
                     component.pkey = table._id.name
             else:
                 component.pkey = hook.pkey
-            if hook.linktable is not None:
+
+            if ltable is not None:
+
                 if hook.actuate:
                     component.actuate = hook.actuate
                 else:
                     component.actuate = "link"
-                component.linktable = db[hook.linktable]
+                component.linktable = ltable
+
                 if hook.fkey is None:
-                    component.fkey = component.table._id.name
+                    component.fkey = ctable._id.name
                 else:
                     component.fkey = hook.fkey
+
                 component.lkey = hook.lkey
                 component.rkey = hook.rkey
                 component.autocomplete = hook.autocomplete
                 component.autodelete = hook.autodelete
+
             else:
                 component.linktable = None
                 component.fkey = hook.fkey
@@ -672,6 +687,7 @@ class S3ModelExtensions(object):
                 component.actuate = None
                 component.autocomplete = None
                 component.autodelete = None
+
             components[alias] = component
         return components
 

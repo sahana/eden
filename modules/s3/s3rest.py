@@ -402,7 +402,7 @@ class S3RequestManager(object):
             else:
                 text = str(cache.ram(key,
                                      lambda: field.represent(val),
-                                     time_expire=5))
+                                     time_expire=60))
         else:
             if val is None:
                 text = NONE
@@ -3159,13 +3159,14 @@ class S3Resource(object):
         """
 
         tablename = self.tablename
+        record_id = record.id
 
         if rmap:
             reference_map.extend(rmap)
-        if export_map.get(self.tablename, None):
-            export_map[self.tablename].append(record.id)
+        if tablename in export_map:
+            export_map[tablename].append(record_id)
         else:
-            export_map[self.tablename] = [record.id]
+            export_map[tablename] = [record_id]
         return
 
     # -------------------------------------------------------------------------
@@ -4105,15 +4106,15 @@ class S3Resource(object):
         repr_row = manager.represent
         def __represent(f, row, columns=columns):
             field = f.field
-            if field:
+            if field is not None:
                 return repr_row(field, record=row, linkto=linkto)
             else:
                 tname = f.tname
                 fname = f.fname
                 if (tname, fname) in columns:
-                    if tname in row and fname in row[tname]:
-                        return str(row[tname][fname])
-                    elif fname in row:
+                    if tname in row:
+                        row = row[tname]
+                    if fname in row:
                         return str(row[fname])
                     else:
                         return None

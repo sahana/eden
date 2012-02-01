@@ -1072,7 +1072,7 @@ class GIS(object):
             for key in hierarchy_level_keys:
                 if key == "L0":
                     levels[key] = COUNTRY
-                elif row[key]:
+                elif key in row and row[key]:
                     # Only include rows with values
                     levels[key] = str(T(row[key]))
             return levels
@@ -1163,7 +1163,7 @@ class GIS(object):
         """
 
         country = self.get_parent_country(id)
-        
+
         db = current.db
         s3db = current.s3db
 
