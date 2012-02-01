@@ -14,10 +14,6 @@
          Zoom.................integer.........gis_config.zoom
          Lat..................float...........gis_config.lat
          Lon..................float...........gis_config.lon
-         L1...................string..........gis_config.L1 (Name for L1 locations)
-         L2...................string..........gis_config.L2 (Name for L2 locations)
-         L3...................string..........gis_config.L3 (Name for L3 locations)
-         L4...................string..........gis_config.L4 (Name for L4 locations)
          Projection...........integer.........gis_config.projection.epsg
          Symbology............string..........gis_config.symbology_id
          Marker...............string..........gis_config.marker_id

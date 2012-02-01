@@ -115,11 +115,12 @@ def req_controller():
                     # Get the default Facility for this user
                     # @ToDo: Use site_id in User Profile (like current organisation_id)
                     if deployment_settings.has_module("hrm"):
-                        query = (s3db.hrm_human_resource.person_id == s3_logged_in_person())
-                        site = db(query).select(s3db.org_site.id,
+                        hrtable = s3db.hrm_human_resource
+                        query = (hrtable.person_id == s3_logged_in_person())
+                        site = db(query).select(hrtable.site_id,
                                                 limitby=(0, 1)).first()
                         if site:
-                            r.table.site_id.default = site.id
+                            r.table.site_id.default = site.site_id
 
                 elif r.component.name == "document":
                     s3.crud.submit_button = T("Add")

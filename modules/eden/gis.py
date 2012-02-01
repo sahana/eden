@@ -39,7 +39,7 @@ __all__ = ["S3LocationModel",
 import os
 
 from gluon import *
-from gluon.dal import Row
+from gluon.dal import Row, Rows
 from gluon.storage import Storage
 from ..s3 import *
 
@@ -49,7 +49,9 @@ class S3LocationModel(S3Model):
 
     names = ["gis_location",
              "gis_location_name",
-             "gis_location_id"]
+             "gis_location_id",
+             "gis_country_id",
+             "gis_countries_id"]
 
     def model(self):
 
@@ -258,6 +260,30 @@ class S3LocationModel(S3Model):
                                       #widget = S3LocationAutocompleteWidget(),
                                       ondelete = "RESTRICT")
 
+        country_id = S3ReusableField("country_id", db.gis_location,
+                                     sortby = "name",
+                                     label = T("Country"),
+                                     requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                     "gis_location.id",
+                                                                     "%(name)s",
+                                                                     filterby = "level",
+                                                                     filter_opts = ["L0"],
+                                                                     sort=True)),
+                                     represent = self.country_represent,
+                                     ondelete = "RESTRICT")
+
+        countries_id = S3ReusableField("countries_id", "list:reference gis_location",
+                                       label = T("Countries"),
+                                       requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                       "gis_location.id",
+                                                                       "%(name)s",
+                                                                       filterby = "level",
+                                                                       filter_opts = ["L0"],
+                                                                       sort=True,
+                                                                       multiple=True)),
+                                       represent = self.countries_represent,
+                                       ondelete = "RESTRICT")
+
         self.configure(tablename,
                        onvalidation=self.gis_location_onvalidation,
                        onaccept=self.gis_location_onaccept,
@@ -296,8 +322,45 @@ class S3LocationModel(S3Model):
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(
-                    gis_location_id = location_id
+                    gis_location_id = location_id,
+                    gis_country_id = country_id,
+                    gis_countries_id = countries_id
                 )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def country_represent(location, row=None):
+        """ FK representation """
+
+        db = current.db
+
+        table = db.gis_location
+        query = (table.id == location)
+        row = db(query).select(table.name).first()
+        if row:
+            return row.name
+        else:
+            return current.messages.NONE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def countries_represent(locations, row=None):
+        """ FK representation """
+
+        db = current.db
+
+        if isinstance(locations, Rows):
+            try:
+                locations = [r.name for r in locations]
+                return ", ".join(locations)
+            except:
+                locations = [r.id for r in locations]
+        if not isinstance(locations, list):
+            locations = [locations]
+        table = db.gis_location
+        query = table.id.belongs(locations)
+        rows = db(query).select(table.name)
+        return S3LocationModel.countries_represent(rows)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -419,7 +482,7 @@ class S3LocationModel(S3Model):
         # 000_config or the ancestor country's gis_config has.
         if not MAP_ADMIN:
             if level and (level == "L0" or (level in gis.location_hierarchy_keys and \
-               not gis.get_edit_level(level, parent))):
+               not gis.get_edit_level(level, id))):
                 response.error = record_error
                 form.errors["level"] = T("This level is not open for editing.")
                 return
@@ -635,13 +698,15 @@ class S3GISConfigModel(S3Model):
     """
 
     names = ["gis_config",
-             "gis_config_id",
+             "gis_hierarchy",
              "gis_marker",
              "gis_projection",
              "gis_symbology",
+             "gis_config_id",
              "gis_marker_id",
              "gis_projection_id",
-             "gis_config_form_setup"
+             "gis_config_form_setup",
+             "gis_hierarchy_form_setup"
             ]
 
     def model(self):
@@ -655,6 +720,7 @@ class S3GISConfigModel(S3Model):
         settings = current.deployment_settings
 
         location_id = self.gis_location_id
+        country_id = self.gis_country_id
 
         NONE = current.messages.NONE
 
@@ -816,105 +882,149 @@ class S3GISConfigModel(S3Model):
                        deduplicate=self.gis_symbology_deduplicate)
 
         # =====================================================================
-        # GIS Config
+        # GIS Hierarchy
         #
-        # id=1 = Site default settings
-        # The defaults in the table are only initial fallback defaults, applied if
-        # no value is included in the site config. After the site config exists, its
-        # values will be used as defaults.
+        # uuid=SITE_DEFAULT = Site default settings
+        #
 
-        # @ToDo: Include a field or fields for selected layers.
-
-        tablename = "gis_config"
+        tablename = "gis_hierarchy"
         table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"), # pe_id for Personal configs
-                                  # This name will be used in the 'Regions' menu.
-                                  # This is the region name if this config represents
-                                  # a region, the person's name for a personal config
-                                  # or a name denoting "site config" for config # 1.
-                                  Field("name"),
-
-                                  # Region fields
-                                  location_id("region_location_id",
-                                              # @ToDo: The restriction to only hierarchy
-                                              # levels and groups does not allow one major
-                                              # case for regions, namely those represented
-                                              # by a boundary or other physical area.
-                                              # Physical regions are useful when the
-                                              # region of interest does not align with
-                                              # any administrative regions. For instance,
-                                              # there is the use case described by Gavin,
-                                              # where some obstacle (such as a river in
-                                              # flood) cuts across an administrative
-                                              # region, and we need to know what supplies,
-                                              # medical facilities, etc., are actually
-                                              # accessible.
-                                              widget = S3LocationAutocompleteWidget(),
-                                              requires = IS_NULL_OR(IS_LOCATION(level=gis.region_level_keys))),
-                                  Field("show_in_menu", "boolean", default=False),
-                                  # Default Location
-                                  location_id("default_location_id",
-                                              widget = S3LocationAutocompleteWidget(),
-                                              requires = IS_NULL_OR(IS_LOCATION())),
-                                  Field("map_height", "integer", notnull=True,
-                                        requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(160, 1024)],
-                                        default = 600),
-                                  Field("map_width", "integer", notnull=True,
-                                        requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(320, 1280)],
-                                        default = 1000),
-                                  Field("zoom", "integer",
-                                        default = 7,
-                                        requires = IS_INT_IN_RANGE(1, 20)),
-                                  Field("lat", "double",
-                                        requires = IS_LAT()),
-                                  Field("lon", "double",
-                                        requires = IS_LON()),
-                                  projection_id(empty=False, default=900913),
-                                  Field("wmsbrowser_url"),
-                                  Field("wmsbrowser_name", default="Web Map Service"),
-                                  # OpenStreetMap settings:
-                                  # Register your app by logging in to www.openstreetmap.org & then selecting 'oauth settings'
-                                  Field("osm_oauth_consumer_key"),
-                                  Field("osm_oauth_consumer_secret"),
-                                  symbology_id(empty=False, default=None),
-                                  marker_id(empty=False),
-                                  Field("geocoder", "boolean", default = True),
-
-                                  # Overall Bounding Box for sanity-checking inputs
-                                  Field("min_lat", "double", default=-90,
-                                        requires = IS_LAT()),
-                                  Field("max_lat", "double", default=90,
-                                        requires = IS_LAT()),
-                                  Field("min_lon", "double", default=-180,
-                                        requires = IS_LON()),
-                                  Field("max_lon", "double", default=180,
-                                        requires = IS_LON()),
-
-                                  # Fine-tune Map configuration
-                                  Field("zoom_levels", "integer", notnull=True,
-                                        requires = IS_INT_IN_RANGE(1, 30),
-                                        default = 22),
-
-                                  # Location hierarchy fields
-                                  # @ToDo: These don't seem appropriate to Personal Configs
-                                  # Move these somewhere else?
-                                  Field("L0", default = "Country",
-                                        writable = False),     # L0 should never change except in Translations
+                                  country_id("location_id"),
                                   Field("L1", default = "State / Province"),
                                   Field("L2", default = "County / District"),
                                   Field("L3", default = "City / Town / Village"),
                                   Field("L4", default = ""),   # Default: off
                                   Field("L5", default = ""),   # Default: off
-                                  Field("search_level", length=2, default="L0",
-                                        requires=IS_IN_SET(["L0", "L1", "L2", "L3", "L4", "L5"])),
-                                  Field("strict_hierarchy", "boolean", default=False),
+                                  # Do all levels of the hierarchy need to be filled-out?
+                                  Field("strict_hierarchy", "boolean",
+                                        # Currently not fully used
+                                        readable = False,
+                                        writable = False,
+                                        default=False),
+                                  # Do we minimally need a parent for every non-L0 location?
                                   Field("location_parent_required", "boolean",
+                                        # Currently completely unused
+                                        readable = False,
+                                        writable = False,
                                         default=False),
                                   Field("edit_L1", "boolean", default=True),
                                   Field("edit_L2", "boolean", default=True),
                                   Field("edit_L3", "boolean", default=True),
                                   Field("edit_L4", "boolean", default=True),
                                   Field("edit_L5", "boolean", default=True),
+                                  *s3.meta_fields())
+
+        ADD_HIERARCHY = T("Add Location Hierarchy")
+        LIST_HIERARCHIES = T("List Location Hierarchies")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_HIERARCHY,
+            title_display = T("Location Hierarchy"),
+            title_list = T("Location Hierarchies"),
+            title_update = T("Edit Location Hierarchy"),
+            title_search = T("Search Location Hierarchies"),
+            subtitle_create = T("Add New Location Hierarchy"),
+            subtitle_list = LIST_HIERARCHIES,
+            label_list_button = LIST_HIERARCHIES,
+            label_create_button = ADD_HIERARCHY,
+            label_delete_button = T("Delete Location Hierarchy"),
+            msg_record_created = T("Location Hierarchy added"),
+            msg_record_modified = T("Location Hierarchy updated"),
+            msg_record_deleted = T("Location Hierarchy deleted"),
+            msg_list_empty = T("No Location Hierarchies currently defined")
+        )
+
+        self.configure(tablename,
+                       onvalidation=self.gis_hierarchy_onvalidation,
+                       )
+
+        # =====================================================================
+        # GIS Config
+        #
+        # uuid==SITE_DEFAULT => Site default settings
+        #
+        # @ToDo: Settings that apply will be the Site Settings modified
+        #        according to any active Event or Region config and any OU or
+        #        Personal config found
+        #
+        # @ToDo: Link table to control Layers: Enabled/Visible
+
+        tablename = "gis_config"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"), # pe_id for Personal/OU configs
+                                  # Name displayed in the GIS config menu.
+                                  Field("name"),
+
+                                  # Region field
+                                  location_id("region_location_id",
+                                              widget = S3LocationAutocompleteWidget(),
+                                              requires = IS_NULL_OR(IS_LOCATION(level=gis.region_level_keys))),
+
+                                  # Map Settings
+                                  Field("zoom", "integer",
+                                        requires = IS_NULL_OR(IS_INT_IN_RANGE(1, 20))),
+                                  Field("lat", "double",
+                                        requires = IS_NULL_OR(IS_LAT())),
+                                  Field("lon", "double",
+                                        requires = IS_NULL_OR(IS_LON())),
+                                  projection_id(
+                                        # @ToDo: Remove default once we have cascading working
+                                        default=900913
+                                        ),
+                                  symbology_id(),
+                                  # @ToDo: Move this to gis_symbology
+                                  marker_id(),
+                                  Field("wmsbrowser_url"),
+                                  Field("wmsbrowser_name",
+                                        # @ToDo: Remove default once we have cascading working
+                                        default="Web Map Service"),
+                                  # OpenStreetMap settings:
+                                  # Register your app by logging in to www.openstreetmap.org & then selecting 'oauth settings'
+                                  Field("osm_oauth_consumer_key"),
+                                  Field("osm_oauth_consumer_secret"),
+                                  # Note: This hasn't yet been changed for any instance
+                                  # Do we really need it to be configurable?
+                                  Field("zoom_levels", "integer",
+                                        requires = IS_NULL_OR(IS_INT_IN_RANGE(1, 30)),
+                                        readable=False,
+                                        writable=False,
+                                        # @ToDo: Remove default once we have cascading working
+                                        default = 22),
+
+                                  # CRUD Settings
+                                  # Default Location
+                                  location_id("default_location_id",
+                                              widget = S3LocationAutocompleteWidget(),
+                                              requires = IS_NULL_OR(IS_LOCATION())),
+                                  Field("search_level", length=2,
+                                        # @ToDo: Remove default once we have cascading working
+                                        default="L0",
+                                        requires=IS_NULL_OR(IS_IN_SET(["L0", "L1", "L2", "L3", "L4", "L5"]))),
+                                  Field("geocoder", "boolean",
+                                        # This would be turned off for Offline deployments or expensive SatComms, such as BGAN
+                                        #readable=False,
+                                        #writable=False,
+                                        # @ToDo: Remove default once we have cascading working
+                                        default=True),
+                                  # Overall Bounding Box for sanity-checking inputs
+                                  Field("min_lat", "double",
+                                        # @ToDo: Remove default once we have cascading working
+                                        default=-90,
+                                        requires = IS_NULL_OR(IS_LAT())),
+                                  Field("max_lat", "double",
+                                        # @ToDo: Remove default once we have cascading working
+                                        default=90,
+                                        requires = IS_NULL_OR(IS_LAT())),
+                                  Field("min_lon", "double",
+                                        # @ToDo: Remove default once we have cascading working
+                                        default=-180,
+                                        requires = IS_NULL_OR(IS_LON())),
+                                  Field("max_lon", "double",
+                                        # @ToDo: Remove default once we have cascading working
+                                        default=180,
+                                        requires = IS_NULL_OR(IS_LON())),
+
+                                  # @ToDo: Move to link table so that the menu settings can be per-OU/Person
+                                  Field("show_in_menu", "boolean", default=False),
 
                                   *s3.meta_fields())
 
@@ -945,7 +1055,9 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Map Configurations currently defined")
         )
 
-        # Configs as component of Persons (Personalised configurations)
+        # Configs as component of Person Entities
+        #   - Personalised configurations
+        #   - Organisational configurations
         self.add_component(table,
                            pr_pentity=dict(joinby=self.super_key(db.pr_pentity),
                                            multiple=False))
@@ -974,8 +1086,8 @@ class S3GISConfigModel(S3Model):
         #
         return Storage(
                 gis_config_form_setup = self.gis_config_form_setup,
-                gis_config_prep_helper = self.gis_config_prep_helper,
                 gis_config_id = config_id,
+                gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
                 gis_marker_id = marker_id,
                 gis_projection_id = projection_id,
                 )
@@ -988,8 +1100,6 @@ class S3GISConfigModel(S3Model):
         T = current.T
         db = current.db
         s3db = current.s3db
-        gis = current.gis
-        settings = current.deployment_settings
 
         table = s3db.gis_config
 
@@ -1001,7 +1111,7 @@ class S3GISConfigModel(S3Model):
             _class="tooltip",
             _title="%s|%s" % (
                 T("Name"),
-                T("If this configuration represents a region for the Regions menu, give it a name to use in the menu. The name for a personal map configuration will be set to the user's name.")))
+                T("If this configuration is displayed on the GIS config menu, give it a name to use in the menu. The name for a personal map configuration will be set to the user's name.")))
         table.region_location_id.label = T("Region Location")
         table.default_location_id.label = T("Default Location")
         table.default_location_id.comment = DIV(
@@ -1025,20 +1135,6 @@ class S3GISConfigModel(S3Model):
                 T("The map will be displayed initially with this longitude at the center."),
                 T("Longitude is West - East (sideways)."),
                 T("Longitude is zero on the prime meridian (through Greenwich, United Kingdom) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas.")))
-        table.map_height.label = T("Map Height")
-        table.map_height.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s|%s" % (
-                T("Map Height"),
-                T("Default Height of the map window."),
-                T("In Window layout the map maximises to fill the window, so no need to set a large value here.")))
-        table.map_width.label = T("Map Width")
-        table.map_width.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s|%s" % (
-                T("Map Width"),
-                T("Default Width of the map window."),
-                T("In Window layout the map maximises to fill the window, so no need to set a large value here.")))
         table.marker_id.label = T("Default Marker")
         table.wmsbrowser_name.label = T("Web Map Service Browser Name")
         table.wmsbrowser_name.comment = DIV(
@@ -1058,10 +1154,12 @@ class S3GISConfigModel(S3Model):
             _class="stickytip",
             _title="%s|%s|%s" % (
                 T("OpenStreetMap OAuth Consumer Key"),
-                T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % dict(name_short=settings.get_system_name_short()),
-                T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % dict(url=A("http://www.openstreetmap.org",
-                                                                                                                                                                             _href="http://www.openstreetmap.org",
-                                                                                                                                                                             _target="blank"))))
+                T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
+                    dict(name_short=current.deployment_settings.get_system_name_short()),
+                T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
+                    dict(url=A("http://www.openstreetmap.org",
+                         _href="http://www.openstreetmap.org",
+                         _target="blank"))))
         table.osm_oauth_consumer_secret.label = T("OpenStreetMap OAuth Consumer Secret")
         table.geocoder.label = T("Use Geocoder for address lookups?")
         table.min_lat.label = T("Minimum Location Latitude")
@@ -1099,60 +1197,12 @@ class S3GISConfigModel(S3Model):
             _title="%s|%s" % (
                 T("Zoom"),
                 T("How much detail is seen. A high Zoom level means lot of detail, but not a wide area. A low Zoom level means seeing a wide area, but not a high level of detail.")))
-        table.L0.label = T("Hierarchy Level 0 Name (i.e. Country)")
-        table.L0.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Location Hierarchy Level 0 Name"),
-                T("Term for the top-level administrative division (i.e. Country).")))
-        table.L1.label = T("Hierarchy Level 1 Name (e.g. State or Province)")
-        table.L1.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Location Hierarchy Level 1 Name"),
-                T("Term for the primary within-country administrative division (e.g. State or Province).")))
-        table.L2.label = T("Hierarchy Level 2 Name (e.g. District or County)")
-        table.L2.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Location Hierarchy Level 2 Name"),
-                T("Term for the secondary within-country administrative division (e.g. District or County).")))
-        table.L3.label = T("Hierarchy Level 3 Name (e.g. City / Town / Village)")
-        table.L3.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Location Hierarchy Level 3 Name"),
-                T("Term for the third-level within-country administrative division (e.g. City or Town).")))
-        table.L4.label = T("Hierarchy Level 4 Name (e.g. Neighbourhood)")
-        table.L4.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Location Hierarchy Level 4 Name"),
-                T("Term for the fourth-level within-country administrative division (e.g. Village, Neighborhood or Precinct).")))
-        table.L5.label = T("Hierarchy Level 5 Name")
-        table.L5.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Location Hierarchy Level 5 Name"),
-                T("Term for the fifth-level within-country administrative division (e.g. a voting or postcode subdivision). This level is not often used.")))
         table.search_level.label = T("Search Level")
         table.search_level.comment = DIV(
             _class="tooltip",
             _title="%s|%s" % (
                 T("Search Level"),
                 T("The level at which Searches are filtered.")))
-        table.strict_hierarchy.label = T("Is this a strict hierarchy?")
-        table.strict_hierarchy.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Is this a strict hierarchy?"),
-                T("Select this if all specific locations need a parent at the deepest level of the location hierarchy. For example, if 'district' is the smallest division in the hierarchy, then all specific locations would be required to have a district as a parent.")))
-        table.location_parent_required.label = T("Must a location have a parent location?")
-        table.location_parent_required.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Must a location have a parent location?"),
-                T("Select this if all specific locations need a parent location in the location hierarchy. This can assist in setting up a 'region' representing an affected area.")))
         table.show_in_menu.label = T("Show in Menu?")
         table.show_in_menu.comment = DIV(
             _class="tooltip",
@@ -1164,17 +1214,6 @@ class S3GISConfigModel(S3Model):
             _title="%s|%s" % (
                 T("Region Location"),
                 T("A location that specifies the geographic area for this region. This can be a location from the location hierarchy, or a 'group location', or a location that has a boundary for the area.")))
-        edit_Ln_tip_1 = T("Set True to allow editing this level of the location hierarchy by users who are not MapAdmins.")
-        edit_Ln_tip_2 = T("This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.")
-        for n in range(1, gis.max_allowed_level_num):
-            field = "edit_L%d" % n
-            table[field].label = T("Edit Level %d Locations?") % n
-            table[field].comment = DIV(
-                _class="tooltip",
-                _title="%s|%s|%s" % (
-                    T("Is editing level L%d locations allowed?" % n),
-                    edit_Ln_tip_1,
-                    edit_Ln_tip_2))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1189,45 +1228,23 @@ class S3GISConfigModel(S3Model):
     @staticmethod
     def gis_config_onvalidation(form):
         """
-            Check hierarchy and region values. Add name for personal & site configs.
-
-            If strict, hierarchy names must not have gaps. If the config is intended
-            for the region menu, it must have a region location and name to show in
-            the menu.
+            Check region values. Add name for personal & site configs.
 
             If this a region location is set, protect that location from accidental
             editing (e.g. if it is used as a default location for any resources in
             the region) but making it only editable by a MapAdmin.
         """
 
-        T = current.T
-        db = current.db
         s3db = current.s3db
 
         vars = form.vars
         errors = form.errors
 
-        if vars.strict_hierarchy:
-            gis = current.gis
-            level_names = [vars[key] if key in vars else None
-                           for key in gis.hierarchy_level_keys]
-            # L0 is always missing because its label is hard-coded and is not
-            # writable in the form, so is not present in form.vars.
-            gaps = filter(None, map(lambda n:
-                                        not level_names[n] and
-                                        level_names[n + 1] and
-                                        "L%d" % n,
-                                    range(1, gis.max_allowed_level_num)))
-            if gaps:
-                hierarchy_gap = T("A strict location hierarchy cannot have gaps.")
-                for gap in gaps:
-                    errors[gap] = hierarchy_gap
-
         if vars.show_region_in_menu:
             #if not vars.region_location_id:
             #    errors.region_location_id = T("Please specify a location for the region.")
             if not vars.name:
-                errors.name = T("Please specify a name to use in the region menu.")
+                errors.name = current.T("Please specify a name to use in the region menu.")
 
         if errors:
             return
@@ -1250,7 +1267,7 @@ class S3GISConfigModel(S3Model):
             MAP_ADMIN = system_roles.MAP_ADMIN
             table = s3db.gis_location
             query = (table.id == vars.region_location_id)
-            db(query).update(owned_by_role = MAP_ADMIN)
+            current.db(query).update(owned_by_role = MAP_ADMIN)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1298,27 +1315,94 @@ class S3GISConfigModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_config_prep_helper(r, id=None):
-        """
-            Helper for gis_config prep and others where gis_config is a component.
+    def gis_hierarchy_form_setup():
+        """ Prepare the gis_hierarchy form """
 
-            Defaults are set from the site config.
-
-            @param r: the current S3Request
-            @param id: the id of the gis_config record, if update
-        """
-
+        T = current.T
         db = current.db
         s3db = current.s3db
-        gis = current.gis
 
-        table = s3db.gis_config
+        table = s3db.gis_hierarchy
 
-        config = gis.get_config()
+        table.L1.label = T("Hierarchy Level 1 Name (e.g. State or Province)")
+        table.L1.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Location Hierarchy Level 1 Name"),
+                T("Term for the primary within-country administrative division (e.g. State or Province).")))
+        table.L2.label = T("Hierarchy Level 2 Name (e.g. District or County)")
+        table.L2.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Location Hierarchy Level 2 Name"),
+                T("Term for the secondary within-country administrative division (e.g. District or County).")))
+        table.L3.label = T("Hierarchy Level 3 Name (e.g. City / Town / Village)")
+        table.L3.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Location Hierarchy Level 3 Name"),
+                T("Term for the third-level within-country administrative division (e.g. City or Town).")))
+        table.L4.label = T("Hierarchy Level 4 Name (e.g. Neighbourhood)")
+        table.L4.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Location Hierarchy Level 4 Name"),
+                T("Term for the fourth-level within-country administrative division (e.g. Village, Neighborhood or Precinct).")))
+        table.L5.label = T("Hierarchy Level 5 Name")
+        table.L5.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Location Hierarchy Level 5 Name"),
+                T("Term for the fifth-level within-country administrative division (e.g. a voting or postcode subdivision). This level is not often used.")))
+        table.strict_hierarchy.label = T("Is this a strict hierarchy?")
+        table.strict_hierarchy.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Is this a strict hierarchy?"),
+                T("Select this if all specific locations need a parent at the deepest level of the location hierarchy. For example, if 'district' is the smallest division in the hierarchy, then all specific locations would be required to have a district as a parent.")))
+        table.location_parent_required.label = T("Must a location have a parent location?")
+        table.location_parent_required.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Must a location have a parent location?"),
+                T("Select this if all specific locations need a parent location in the location hierarchy. This can assist in setting up a 'region' representing an affected area.")))
+        edit_Ln_tip_1 = T("Set True to allow editing this level of the location hierarchy by users who are not MapAdmins.")
+        edit_Ln_tip_2 = T("This is appropriate if this level is under construction. To prevent accidental modification after this level is complete, this can be set to False.")
+        max_allowed_level_num = current.gis.max_allowed_level_num
+        for n in range(1, max_allowed_level_num):
+            field = "edit_L%d" % n
+            table[field].label = T("Edit Level %d Locations?") % n
+            table[field].comment = DIV(
+                _class="tooltip",
+                _title="%s|%s|%s" % (
+                    T("Is editing level L%d locations allowed?" % n),
+                    edit_Ln_tip_1,
+                    edit_Ln_tip_2))
 
-        for fieldname in config:
-            if fieldname in table:
-                table[fieldname].default = config[fieldname]
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_hierarchy_onvalidation(form):
+        """
+            If strict, hierarchy names must not have gaps.
+        """
+
+        vars = form.vars
+
+        if vars.strict_hierarchy:
+            gis = current.gis
+            hierarchy_level_keys = gis.hierarchy_level_keys
+            level_names = [vars[key] if key in vars else None
+                           for key in hierarchy_level_keys]
+            # L0 is always missing because its label is hard-coded
+            gaps = filter(None, map(lambda n:
+                                        not level_names[n] and
+                                        level_names[n + 1] and
+                                        "L%d" % n,
+                                    range(1, gis.max_allowed_level_num)))
+            if gaps:
+                hierarchy_gap = current.T("A strict location hierarchy cannot have gaps.")
+                for gap in gaps:
+                    form.errors[gap] = hierarchy_gap
 
     # -------------------------------------------------------------------------
     def gis_marker_onvalidation(form):
@@ -1329,12 +1413,13 @@ class S3GISConfigModel(S3Model):
 
         import Image
 
-        im = Image.open(form.vars.image.file)
+        vars = form.vars
+        im = Image.open(vars.image.file)
         (width, height) = im.size
-        form.vars.image.file.seek(0)
+        vars.image.file.seek(0)
 
-        form.vars.width = width
-        form.vars.height = height
+        vars.width = width
+        vars.height = height
 
         return
 
@@ -2321,15 +2406,10 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
                 level_name = T("Country")
             else:
                 # Find the L0 Ancestor
-                L0 = None
-                ancestors = gis.get_parents(location.id, location)
-                if ancestors:
-                    for ancestor in ancestors:
-                        if ancestor.level == "L0":
-                            L0 = ancestor.id
+                L0 = gis.get_parent_country(location)
                 if L0:
-                    table = s3db.gis_config
-                    query = (table.region_location_id == L0)
+                    table = s3db.gis_hierarchy
+                    query = (table.location_id == L0)
                     config = db(query).select(table.L1,
                                               table.L2,
                                               table.L3,

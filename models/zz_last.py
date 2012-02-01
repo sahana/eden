@@ -10,7 +10,7 @@ current.s3task = s3task
 # -----------------------------------------------------------------------------
 # GIS config
 # -----------------------------------------------------------------------------
-s3.gis.old_config = session.s3.gis_config_id
+
 
 if request.vars._config:
     # The user has just selected a config from the GIS menu
@@ -20,26 +20,23 @@ if request.vars._config:
         # Manually-crafted URL?
         pass
     else:
-        session.s3.gis_config_id = config
-        if deployment_settings.has_module("event"):
-            # See if this config is associated with an Event
-            s3mgr.load("event_event")
-            table = db.event_config
-            query = (table.config_id == config)
-            event = db(query).select(table.event_id,
-                                     limitby=(0, 1)).first()
-            if event:
-                session.s3.event = event.event_id
-            else:
-                session.s3.event = None
+        if config != session.s3.gis_config_id:
+            gis.set_config(config)
+            session.s3.gis_config_id = config
+            if deployment_settings.has_module("event"):
+                # See if this config is associated with an Event
+                s3mgr.load("event_event")
+                table = db.event_config
+                query = (table.config_id == config)
+                event = db(query).select(table.event_id,
+                                         limitby=(0, 1)).first()
+                if event:
+                    session.s3.event = event.event_id
+                else:
+                    session.s3.event = None
     # @ToDo: Find out how to get _config off the url that the user will see
     # when the next page loads. Then do the same for _language.
     del request.vars._config
-
-if session.s3.gis_config_id != s3.gis.old_config:
-    # Set the field options that depend on the currently selected gis_config,
-    # and hence on a particular set of labels for the location hierarchy.
-    gis.set_config(session.s3.gis_config_id, force_update_dependencies=True)
 
 # -----------------------------------------------------------------------------
 # GIS menu

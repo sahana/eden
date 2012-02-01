@@ -143,6 +143,10 @@ function addMap() {
         plugins: []
     });
 
+    // Set up shortcuts to allow GXP Plugins to work
+    S3.gis.portal = Object();
+    S3.gis.portal.map = S3.gis.mapPanel;
+
     // We need to put the mapPanel inside a 'card' container for the Google Earth Panel
     S3.gis.mapPanelContainer = new Ext.Panel({
         layout: 'card',
@@ -377,6 +381,12 @@ function addLayerTree() {
         children: nodesArr
     });
 
+    if (S3.i18n.gis_uploadlayer) {
+        var tbar = new Ext.Toolbar();
+    } else {
+        var tbar = null;
+    }
+    
     S3.gis.layerTree = new Ext.tree.TreePanel({
         id: 'treepanel',
         title: S3.i18n.gis_layers,
@@ -388,8 +398,15 @@ function addLayerTree() {
         collapsible: true,
         collapseMode: 'mini',
         lines: false,
+        tbar: tbar,
         enableDD: true
     });
+
+    // Add/Remove Layers
+    if (S3.i18n.gis_uploadlayer) {
+        //S3.gis.layerTree.tbar = new Ext.Toolbar();
+        addRemoveLayersControl();
+    }
 
 }
 
@@ -583,8 +600,7 @@ function addToolbar() {
     addNavigationControl(toolbar);
 
     // Save Viewport
-    // @ToDo: Don't Show for Regional Configs either
-    if (S3.gis.mapAdmin || S3.gis.region != 1) {
+    if (S3.gis.region) {
         addSaveButton(toolbar);
     }
     toolbar.addSeparator();
