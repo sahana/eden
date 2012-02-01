@@ -1315,7 +1315,8 @@ class GIS(object):
     def get_representation(field,
                            value):
         """
-            Return the representation for a Field based on it's value
+            Return a quick representation for a Field based on it's value
+            - faster than field.represent(value)
             Used by s3xml's gis_encode()
 
             @ToDo: Move out of S3GIS
@@ -1327,9 +1328,7 @@ class GIS(object):
         cache = s3db.cache
         fieldname = field.name
         tablename = field.tablename
-        table = s3db[tablename]
         hrtable = s3db.hrm_human_resource
-        otable = s3db.org_organisation
 
         # Fallback representation is the value itself
         represent = value
@@ -1344,6 +1343,7 @@ class GIS(object):
                                       limitby=(0, 1),
                                       cache=cache).first()
             if _value:
+                otable = s3db.org_organisation
                 query = (otable.id == _value)
                 _represent = db(query).select(otable.name,
                                               limitby=(0, 1),
@@ -1698,6 +1698,8 @@ class GIS(object):
         """
             Returns the Lat/Lon for a Feature
 
+            used by display_feature() in gis controller
+
             @param feature_id: the feature ID (int) or UUID (str)
             @param filter: Filter out results based on deployment_settings
         """
@@ -1890,19 +1892,20 @@ class GIS(object):
             - called by S3REST: S3Resource.export_tree()
         """
 
-        db = current.db
-        s3db = current.s3db
-        request = current.request
+        vars = current.request.vars
 
         popup_label = None
         popup_fields = None
-        if "layer" in request.vars:
+        if "layer" in vars:
             # This is a Map Layer
-            layer_id = request.vars.layer
+            db = current.db
+            s3db = current.s3db
+            layer_id = vars.layer
             ltable = s3db.gis_layer_feature
             query = (ltable.id == layer_id)
             layer = db(query).select(ltable.popup_label,
                                      ltable.popup_fields,
+                                     cache = s3db.cache,
                                      limitby=(0, 1)).first()
             if layer:
                 popup_label = layer.popup_label
