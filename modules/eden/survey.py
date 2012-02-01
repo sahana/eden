@@ -1863,8 +1863,6 @@ $.post('%s',
 
     @staticmethod
     def seriesMap(r, **attr):
-        from datetime import datetime
-        startTime = datetime.now()
         from s3survey import S3AnalysisPriority
         import math
         s3 = current.response.s3
@@ -2043,9 +2041,6 @@ $.post('%s',
         output["map"] = map
 
         current.response.view = "survey/series_map.html"
-        endTime = datetime.now()
-        duration = endTime - startTime
-        print duration
         return output
 
     @staticmethod
