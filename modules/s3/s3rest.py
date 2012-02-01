@@ -4343,7 +4343,8 @@ class S3ResourceFilter:
             # Add all joins
             joined = []
             for alias in self.joins:
-                if alias in self.cquery or alias in self.cvfltr:
+                if alias == name or \
+                   alias in self.cquery or alias in self.cvfltr:
                     joins = self.joins[alias]
                     for tn in joins:
                         if tn in joined:
@@ -4363,7 +4364,7 @@ class S3ResourceFilter:
             self._add_vfltr(resource.fvfltr)
 
         # Activate this for debug:
-        #print >> sys.stderr, self
+        print >> sys.stderr, self
 
     # -------------------------------------------------------------------------
     @staticmethod
