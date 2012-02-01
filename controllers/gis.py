@@ -498,6 +498,7 @@ def l0():
                               table.lon_max,
                               table.lat_min,
                               table.lat_max,
+                              cache = s3db.cache,
                               limitby=(0, 1)).first()
     if not record:
         item = s3mgr.xml.json_message(False, 400, "Invalid ID!")
@@ -505,29 +506,10 @@ def l0():
 
     result = record.as_dict()
 
-    # Check if we have a Regional config defined for this country
-    table = s3db.gis_config
-    query = (table.region_location_id == record_id)
-    config = db(query).select(table.L1,
-                              table.L2,
-                              table.L3,
-                              table.L4,
-                              table.L5,
-                              table.geocoder,
-                              table.strict_hierarchy,
-                              table.location_parent_required,
-                              limitby=(0, 1)).first()
-    if config:
-        config = config.as_dict()
-        for key in config:
-            result[key] = config[key]
-    else:
-        # Fallback to current config
-        config = gis.get_config()
-        for key in ["geocoder", "strict_hierarchy", "location_parent_required"]:
-            result[key] = config[key]
-        for key in config.location_hierarchy:
-            result[key] = config.location_hierarchy[key]
+    # Provide the Location Hierarchy for this country
+    location_hierarchy = gis.get_location_hierarchy(location=record_id)
+    for key in location_hierarchy:
+        result[key] = location_hierarchy[key]
 
     output = json.dumps(result)
     response.headers["Content-Type"] = "application/json"
@@ -887,7 +869,6 @@ def layers_enable():
 
 # -----------------------------------------------------------------------------
 def config():
-
     """ RESTful CRUD controller """
 
     s3db.gis_config_form_setup()
@@ -898,7 +879,6 @@ def config():
            (r.id == 1 or r.vars.region_location_id) and \
            r.method in ["create", "update"] and not s3_has_role(MAP_ADMIN):
             auth.permission.fail()
-        response.s3.gis_config_prep_helper(r, r.id)
         return True
 
     response.s3.prep = prep
@@ -931,6 +911,18 @@ def config():
 
     return output
 
+# -----------------------------------------------------------------------------
+def hierarchy():
+    """ RESTful CRUD controller """
+
+    s3db.gis_hierarchy_form_setup()
+
+    output = s3_rest_controller()
+
+    #if not "gis" in response.view:
+    #    response.view = "gis/" + response.view
+
+    return output
 
 # -----------------------------------------------------------------------------
 def layer_feature():

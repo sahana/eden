@@ -331,7 +331,7 @@ class S3TemplateModel(S3Model):
         return True
 
     @staticmethod
-    def addQuestion(template_id, name, code, notes, type, posn):
+    def addQuestion(template_id, name, code, notes, type, posn, metadata={}):
         db = current.db
         s3db = current.s3db
 
@@ -348,6 +348,12 @@ class S3TemplateModel(S3Model):
                                        notes = notes,
                                        type = type
                                       )
+            qstn_metadata_table = s3db.survey_question_metadata
+            for (descriptor, value) in metadata.items():
+                qstn_metadata_table.insert(question_id = qstn_id,
+                                           descriptor = descriptor,
+                                           value = value 
+                                          )
         # Add these questions to the section: "Background Information"
         sectable = s3db.survey_section
         section_name = "Background Information"
@@ -430,10 +436,12 @@ class S3TemplateModel(S3Model):
                 code = "STD-%s" % loc
                 if loc == "Lat" or loc == "Lon":
                     type = "Numeric"
+                    metadata = {"Format": "nnn.nnnnnn"}
                 else:
                     type = "Location"
+                    metadata = {}
                 posn += 1
-                addQuestion(template_id, name, code, "", type, posn)
+                addQuestion(template_id, name, code, "", type, posn, metadata)
 
     @staticmethod
     def survey_template_duplicate(job):
@@ -618,14 +626,17 @@ def survey_getAllWidgetsForTemplate(template_id):
     rows = query.select(qsntable.id,
                         qsntable.code,
                         qsntable.type,
+                        q_ltable.posn,
                         )
     widgets = {}
     for row in rows:
-        qstnType = row.type
-        qstn_id = row.id
-        qstn_code = row.code
+        qstnType = row.survey_question.type
+        qstn_id = row.survey_question.id
+        qstn_code = row.survey_question.code
+        qstn_posn = row.survey_question_list.posn
         widgetObj = survey_question_type[qstnType](qstn_id)
         widgets[qstn_code] = widgetObj
+        widgetObj.question["posn"] = qstn_posn
         question = {}
     return widgets
 
@@ -1091,7 +1102,7 @@ class S3QuestionModel(S3Model):
                     (table.section_id == sid)
             return duplicator(job, query)
 
-def survey_getQuestionFromCode(code, series_id):
+def survey_getQuestionFromCode(code, series_id=None):
     """
         function to return the question for the given series
         with the code that matches the one passed in
@@ -1102,11 +1113,17 @@ def survey_getQuestionFromCode(code, series_id):
     sertable = s3db.survey_series
     q_ltable = s3db.survey_question_list
     qsntable = s3db.survey_question
-    query = db((sertable.id == series_id) & \
-               (q_ltable.template_id == sertable.template_id) & \
-               (q_ltable.question_id == qsntable.id) & \
-               (qsntable.code == code)
-              )
+    if series_id != None:
+        query = db((sertable.id == series_id) & \
+                   (q_ltable.template_id == sertable.template_id) & \
+                   (q_ltable.question_id == qsntable.id) & \
+                   (qsntable.code == code)
+                  )
+    else:
+        query = db((q_ltable.template_id == sertable.template_id) & \
+                   (q_ltable.question_id == qsntable.id) & \
+                   (qsntable.code == code)
+                  )
     record = query.select(qsntable.id,
                           qsntable.code,
                           qsntable.name,
@@ -1846,9 +1863,10 @@ $.post('%s',
 
     @staticmethod
     def seriesMap(r, **attr):
+        from datetime import datetime
+        startTime = datetime.now()
         from s3survey import S3AnalysisPriority
         import math
-
         s3 = current.response.s3
         request = current.request
         T = current.T
@@ -2025,6 +2043,9 @@ $.post('%s',
         output["map"] = map
 
         current.response.view = "survey/series_map.html"
+        endTime = datetime.now()
+        duration = endTime - startTime
+        print duration
         return output
 
     @staticmethod
@@ -2180,9 +2201,6 @@ def survey_series_rheader(r, tabs=[]):
             row = db(query).count()
             tsection = TABLE(_class="survey-complete-list")
             lblSection = T("Number of Event Assessment Responses")
-            #if (row == 0):
-            #    rsection = SPAN(T("As of yet, no completed surveys have been added to this series."))
-            #else:
             rsection = TR(TH(lblSection), TD(row))
             tsection.append(rsection)
 
@@ -2217,14 +2235,36 @@ def survey_series_rheader(r, tabs=[]):
                 if colCnt != 0:
                     tranTable.append(tr)
                 tranForm.append(tranTable)
-            exportBtn = INPUT(_type="submit",
-                              _id="export_btn",
-                              _name="Export_Spreadsheet",
-                              _value=T("Download Assessment Template Spreadsheet"),
-                              _class="action-btn"
-                             )
-            tranForm.append(exportBtn)
-            tsection.append(tranForm)
+            export_xls_btn = INPUT(_type="submit",
+                                   _id="export_xls_btn",
+                                   _name="Export_Spreadsheet",
+                                   _value=T("Download Assessment Template Spreadsheet"),
+                                   _class="action-btn"
+                                  )
+            tranForm.append(export_xls_btn)
+            try:
+                # only add the Export to Word button up if PyRTF is installed 
+                from PyRTF import Document
+                export_rtf_btn = INPUT(_type="submit",
+                                       _id="export_rtf_btn",
+                                       _name="Export_Word",
+                                       _value=T("Download Assessment Template Word Document"),
+                                       _class="action-btn"
+                                      )
+                tranForm.append(export_rtf_btn)
+            except:
+                pass
+            urlimport = URL(c="survey",
+                            f="export_all_responses",
+                            args=[record.id],
+                            )
+            buttons = DIV (A(T("Export all completed responses"),
+                             _href=urlimport,
+                             _id="All_resposnes",
+                             _class="action-btn"
+                             ),
+                          )
+
 
             rheader = DIV(TABLE(
                           TR(
@@ -2237,6 +2277,8 @@ def survey_series_rheader(r, tabs=[]):
                              ),
                               ),
                           tsection,
+                          tranForm,
+                          buttons,
                           rheader_tabs)
             return rheader
     return None
@@ -2639,12 +2681,20 @@ class S3CompleteModel(S3Model):
         answer = []
         lastLocWidget = None
         codeList = ["STD-L0","STD-L1","STD-L2","STD-L3","STD-L4"]
+        headingList = ["Country",
+                       "ADM1_NAME",
+                       "ADM2_NAME",
+                       "ADM3_NAME",
+                       "ADM4_NAME"
+                      ]
+        cnt = 0
+        headings = []
         for loc in codeList:
             if loc in location_dict:
                 answer.append(location_dict[loc].repr())
                 lastLocWidget = location_dict[loc]
-            else:
-                answer.append("")
+                headings.append(headingList[cnt])
+            cnt += 1
         # Check that we have at least one location question answered
         if lastLocWidget == None:
             return
@@ -2658,14 +2708,8 @@ class S3CompleteModel(S3Model):
         from tempfile import TemporaryFile
         csvfile = TemporaryFile()
         writer = csv.writer(csvfile)
-        writer.writerow(["Country",
-                         "ADM1_NAME",
-                         "ADM2_NAME",
-                         "ADM3_NAME",
-                         "ADM4_NAME",
-                         "Code2",
-                         "Lat",
-                         "Lon"])
+        headings += ["Code2", "Lat", "Lon"]
+        writer.writerow(headings)
         writer.writerow(answer)
         csvfile.seek(0)
         xsl = os.path.join("applications",

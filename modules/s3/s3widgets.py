@@ -1284,11 +1284,11 @@ class S3LocationSelectorWidget(FormWidget):
             default_L0.id = gis.get_parent_country(value)
         elif config.default_location_id:
             # Populate defaults with IDs & Names of ancestors at each level
-            gis.get_parent_per_level(defaults,
-                                     config.default_location_id,
-                                     feature=None,
-                                     ids=True,
-                                     names=True)
+            defaults = gis.get_parent_per_level(defaults,
+                                                config.default_location_id,
+                                                feature=None,
+                                                ids=True,
+                                                names=True)
             query = (locations.id == config.default_location_id)
             default_location = db(query).select(locations.level,
                                                 locations.name).first()
@@ -1299,7 +1299,7 @@ class S3LocationSelectorWidget(FormWidget):
             if "L0" in defaults:
                 default_L0 = defaults["L0"]
                 if default_L0:
-                    id = defaults["L0"].id
+                    id = default_L0.id
                     if id not in countries:
                         # Add the default country to the list of possibles
                         countries[id] = defaults["L0"].name
@@ -1333,19 +1333,12 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         # Which Levels do we have in our hierarchy & what are their initial Labels?
         # If we have a default country or one from the value then we can lookup
         # the labels we should use for that location
-        config_L0 = None
+        country = None
         if default_L0:
-            query = (ctable.region_location_id == default_L0.id)
-            config_L0 = db(query).select(ctable.id,
-                                         limitby=(0, 1),
-                                         cache=cache).first()
-            if config_L0:
-                gis.set_temporary_config(config_L0.id)
-        location_hierarchy = gis.get_location_hierarchy()
+            country = default_L0.id
+        location_hierarchy = gis.get_location_hierarchy(location=country)
         # This is all levels to start, but L0 will be dropped later.
         levels = gis.hierarchy_level_keys
-        if config_L0:
-            gis.restore_config()
 
         map_popup = ""
         if value:
@@ -1385,11 +1378,11 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                     path = this_location.path
 
                     # Populate defaults with IDs & Names of ancestors at each level
-                    gis.get_parent_per_level(defaults,
-                                             value,
-                                             feature=this_location,
-                                             ids=True,
-                                             names=True)
+                    defaults = gis.get_parent_per_level(defaults,
+                                                        value,
+                                                        feature=this_location,
+                                                        ids=True,
+                                                        names=True)
                     # If we have a non-specific location then not all keys will be populated.
                     # Populate these now:
                     for l in levels:
@@ -1604,11 +1597,6 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         hidden = ""
         throbber = "/%s/static/img/ajax-loader.gif" % request.application
         Lx_rows = DIV()
-        # We added the L0 selector as a special case above.
-        try:
-            levels.remove("L0")
-        except:
-            pass
         if value:
             # Display Read-only Fields
             name_widget = INPUT(value=represent,
@@ -1632,7 +1620,10 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                _name="gis_location_lon",
                                _disabled="disabled")
             for level in levels:
-                if level not in location_hierarchy:
+                if level == "L0":
+                    # L0 has been handled as special case earlier
+                    continue
+                elif level not in location_hierarchy:
                     # Skip levels not in hierarchy
                     continue
                 if defaults[level]:
@@ -1680,7 +1671,10 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                _name="gis_location_lon")
             for level in levels:
                 hidden = ""
-                if level not in location_hierarchy:
+                if level == "L0":
+                    # L0 has been handled as special case earlier
+                    continue
+                elif level not in location_hierarchy:
                     # Hide unused levels
                     # (these can then be enabled for other regions)
                     hidden = "hidden"

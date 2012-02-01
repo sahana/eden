@@ -38,7 +38,7 @@ __all__ = ["S3ProjectModel",
 import datetime
 
 from gluon import *
-from gluon.dal import Row, Rows
+from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from ..s3 import *
@@ -87,6 +87,7 @@ class S3ProjectModel(S3Model):
         currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
+        countries_id = self.gis_countries_id
         organisation_id = self.org_organisation_id
         sector_id = self.org_sector_id
         human_resource_id = self.hrm_human_resource_id
@@ -187,18 +188,6 @@ class S3ProjectModel(S3Model):
             4: "HFA4: Reduce the underlying risk factors.",
             5: "HFA5: Strengthen disaster preparedness for effective response at all levels.",
         }
-
-        countries_id = S3ReusableField("countries_id", "list:reference gis_location",
-                                       label = T("Countries"),
-                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                       "gis_location.id",
-                                                                       "%(name)s",
-                                                                       filterby = "level",
-                                                                       filter_opts = ["L0"],
-                                                                       sort=True,
-                                                                       multiple=True)),
-                                       represent = self.countries_represent,
-                                       ondelete = "RESTRICT")
 
         tablename = "project_project"
         table = self.define_table(tablename,
@@ -720,26 +709,6 @@ class S3ProjectModel(S3Model):
             vals = len(vals) and vals[0] or DEFAULT
 
         return vals
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def countries_represent(locations, row=None):
-        """ FK representation """
-
-        db = current.db
-
-        if isinstance(locations, Rows):
-            try:
-                locations = [r.name for r in locations]
-                return ", ".join(locations)
-            except:
-                locations = [r.id for r in locations]
-        if not isinstance(locations, list):
-            locations = [locations]
-        table = db.gis_location
-        query = table.id.belongs(locations)
-        rows = db(query).select(table.name)
-        return S3ProjectModel.countries_represent(rows)
 
     # ---------------------------------------------------------------------
     @staticmethod

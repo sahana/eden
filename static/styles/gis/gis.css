@@ -106,8 +106,17 @@
   height: 20px !important;
   width: 20px !important;
 }
+.gxp-icon-addlayers {
+    background-image: url(../../img/silk/add.png);
+}
+.gxp-icon-addserver {
+    background-image: url(../../img/silk/server_add.png);
+}
 .gxp-icon-getfeatureinfo {
     background-image: url(../../img/silk/information.png);
+}
+.gxp-icon-removelayers {
+    background-image: url(../../img/silk/delete.png);
 }
 #mappnlcntr .movefeature {
     background-image: url(../../img/gis/arrow_refresh.png) !important;
