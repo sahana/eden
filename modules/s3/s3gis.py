@@ -1038,9 +1038,10 @@ class GIS(object):
         table = s3db.gis_hierarchy
 
         if level:
-            fields = [table[level]]
+            fields = [table.uuid,
+                      table[level]]
         else:
-            fields = [table.L1,
+            fields = [table.uuid,
                       table.L2,
                       table.L3,
                       table.L4,
@@ -1056,6 +1057,9 @@ class GIS(object):
             # Remove the Site Default
             filter = lambda row: row.uuid == "SITE_DEFAULT"
             rows.exclude(filter)
+        elif not rows:
+            # prepop hasn't run yet
+            return None
         row = rows.first()
         if level:
             try:
@@ -1070,7 +1074,7 @@ class GIS(object):
                     levels[key] = COUNTRY
                 elif row[key]:
                     # Only include rows with values
-                    levels[key] = str((row[key]))
+                    levels[key] = str(T(row[key]))
             return levels
 
     # -------------------------------------------------------------------------
@@ -1092,14 +1096,19 @@ class GIS(object):
         if location:
             # Try the Location's Country, but ensure we have the fallback available in a single query
             query = query | (table.location_id == self.get_parent_country(location))
-        rows = db(query).select(table.strict_hierarchy,
+        rows = db(query).select(table.uuid,
+                                table.strict_hierarchy,
                                 cache=s3db.cache)
         if len(rows) > 1:
             # Remove the Site Default
             filter = lambda row: row.uuid == "SITE_DEFAULT"
             rows.exclude(filter)
         row = rows.first()
-        strict = row.strict_hierarchy
+        if row:
+            strict = row.strict_hierarchy
+        else:
+            # Pre-pop hasn't run yet
+            return False
 
         return strict
 

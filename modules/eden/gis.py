@@ -2268,20 +2268,22 @@ class S3MapModel(S3Model):
         T = current.T
         reponse = current.response
 
-        if not form.vars.apikey:
-            response.warning = T("Google Layers cannot be displayed if there isn't a valid API Key")
+        vars = form.vars
+
+        if not vars.apikey:
+            response.warning = T("Google Earth & MapMaker Layers cannot be displayed if there isn't a valid API Key")
         # Enable the overall LayerType if any of the layers are enabled
-        if "satellite_enabled" in form.vars or \
-           "maps_enabled" in form.vars or \
-           "hybrid_enabled" in form.vars or \
-           "mapmaker_enabled" in form.vars or \
-           "mapmakerhybrid_enabled" in form.vars or \
-           "earth_enabled" in form.vars or \
-           "streetview_enabled" in form.vars:
-            form.vars.enabled = True
+        if "satellite_enabled" in vars or \
+           "maps_enabled" in vars or \
+           "hybrid_enabled" in vars or \
+           "mapmaker_enabled" in vars or \
+           "mapmakerhybrid_enabled" in vars or \
+           "earth_enabled" in vars or \
+           "streetview_enabled" in vars:
+            vars.enabled = True
         else:
             # Disable it
-            form.vars.enabled = False
+            vars.enabled = False
 
 
 # =============================================================================
