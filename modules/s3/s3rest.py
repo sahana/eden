@@ -4449,12 +4449,14 @@ class S3ResourceFilter:
             @param vars: the URL get vars
         """
 
-        s3db = current.s3db
-        locations = s3db.gis_location
-
         table = resource.table
         tablename = resource.tablename
         fields = table.fields
+
+        if tablename == "gis_feature_query":
+            gtable = table
+        else:
+            gtable = current.s3db.gis_location
 
         bbox_query = None
         if vars:
@@ -4463,7 +4465,8 @@ class S3ResourceFilter:
                     fname = None
                     if k.find(".") != -1:
                         fname = k.split(".")[1]
-                    elif tablename != "gis_location":
+                    elif tablename not in ("gis_location",
+                                           "gis_feature_query"):
                         for f in fields:
                             if str(table[f].type) == "reference gis_location":
                                 fname = f
@@ -4477,13 +4480,13 @@ class S3ResourceFilter:
                         # Badly-formed bbox - ignore
                         continue
                     else:
-                        bbox_filter = ((locations.lon > minLon) & \
-                                       (locations.lon < maxLon) & \
-                                       (locations.lat > minLat) & \
-                                       (locations.lat < maxLat))
+                        bbox_filter = ((gtable.lon > float(minLon)) & \
+                                       (gtable.lon < float(maxLon)) & \
+                                       (gtable.lat > float(minLat)) & \
+                                       (gtable.lat < float(maxLat)))
                         if fname is not None:
                             # Need a join
-                            join = (locations.id == table[fname])
+                            join = (gtable.id == table[fname])
                             bbox = (join & bbox_filter)
                         else:
                             bbox = bbox_filter

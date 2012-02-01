@@ -626,7 +626,7 @@ class S3XML(S3Codec):
         if marker:
             marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
         else:                             
-            marker = None
+            marker_url = None
 
         tablename = resource.tablename
 
@@ -655,20 +655,21 @@ class S3XML(S3Codec):
                     r.element.set(self.ATTRIBUTE.lon,
                                   "%.6f" % LatLon[self.Lon])
                     if shape or size or colour:
-                        # Feature Queries
-                        # We don't want a default Marker if these are specified
+                        # Feature Queries (but never used?)
                         if shape:
                             r.element.set(self.ATTRIBUTE.shape, shape)
                         if size:
                             r.element.set(self.ATTRIBUTE.size, size)
                         if colour:
                             r.element.set(self.ATTRIBUTE.colour, colour)
+                        # We don't want a default Marker if these are specified
+                        marker = True
 
                     # Lookup Marker (Icon) & GPS Symbol
                     # @ToDo: Return the markers outside the records
                     #        (as there are many less of them)
                     #        & use the stylesheet to hook-up appropriately
-                    #        Maybe skip GPS completely for GeoJSON?
+                    #        Skip GPS completely for GeoJSON?
                     (_marker, symbol) = gis.get_marker(tablename=tablename,
                                                        record=record,
                                                        gps=True,
@@ -690,11 +691,13 @@ class S3XML(S3Codec):
                         try:
                             value = record[fieldname]
                             if value:
-                                field = resource.table[fieldname]
                                 # @ToDo: Slow query which would be
-                                # good to optimise
+                                #        good to optimise
+                                field = resource.table[fieldname]
                                 represent = gis.get_representation(field,
                                                                    value)
+                                # Is this is faster than the simpler alternative?
+                                #represent = resource.table[fieldname].represent(value)
                                 tooltip = "%s %s" % (represent, tooltip)
                         except:
                             # This field isn't in the table
