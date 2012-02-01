@@ -2595,14 +2595,17 @@ class S3Resource(object):
                     c = self.links[component]
                 except:
                     raise AttributeError
+            if c._rows is None:
+                c.load()
+            rows = c._rows
+            pkey, fkey = c.pkey, c.fkey
+            master_id = master[pkey]
             if c.link:
-                pkey, fkey = c.pkey, c.fkey
                 lkey, rkey = c.lkey, c.rkey
-                lids = [r[rkey] for r in c.link if master[pkey] == r[lkey]]
-                rows = [record for record in c if record[fkey] in lids]
+                lids = [r[rkey] for r in c.link if master_id == r[lkey]]
+                rows = [record for record in rows if record[fkey] in lids]
             else:
-                pkey, fkey = c.pkey, c.fkey
-                rows = [record for record in c if master[pkey] == record[fkey]]
+                rows = [record for record in rows if master_id == record[fkey]]
             return rows
 
     # -------------------------------------------------------------------------
@@ -2856,7 +2859,7 @@ class S3Resource(object):
         else:
             url = "/%s/%s" % (prefix, name)
         export_resource = self.__export_resource
-        for record in self:
+        for record in self._rows:
             element = export_resource(record,
                                       rfields=rfields,
                                       dfields=dfields,

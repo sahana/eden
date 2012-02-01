@@ -789,7 +789,6 @@ class S3XML(S3Codec):
             @param url: URL of the record
         """
 
-        Element = etree.Element
         SubElement = etree.SubElement
 
         UID = self.UID
@@ -804,7 +803,9 @@ class S3XML(S3Codec):
         NAME = ATTRIBUTE.name
         FIELD = ATTRIBUTE.field
         VALUE = ATTRIBUTE.value
+        URL = ATTRIBUTE.url
 
+        tablename = table._tablename
         deleted = False
 
         download_url = current.response.s3.download_url or ""
@@ -813,22 +814,23 @@ class S3XML(S3Codec):
         if parent is not None:
             elem = SubElement(parent, RESOURCE)
         else:
-            elem = Element(RESOURCE)
-        elem.set(NAME, table._tablename)
+            elem = etree.Element(RESOURCE)
+        attrib = elem.attrib
+        attrib[NAME] = tablename
 
         # UID
         if UID in table.fields and UID in record:
             uid = record[UID]
             uid = str(table[UID].formatter(uid)).decode("utf-8")
-            if table._tablename != auth_group:
-                elem.set(UID, self.export_uid(uid))
+            if tablename != auth_group:
+                attrib[UID] = self.export_uid(uid)
             else:
-                elem.set(UID, uid)
+                attrib[UID] = uid
 
         # DELETED
         if DELETED in record and record[DELETED]:
             deleted = True
-            elem.set(DELETED, "True")
+            attrib[DELETED] = "True"
             # export only MTIME with deleted records
             fields = [self.MTIME]
 
@@ -841,31 +843,30 @@ class S3XML(S3Codec):
             marker_download_url = download_url.replace("default/download",
                                                        "static/img/markers")
             marker_url = "%s/%s" % (marker_download_url, marker.image)
-            elem.set(ATTRIBUTE.marker, marker_url)
+            attrib[ATTRIBUTE.marker] = marker_url
             symbol = "White Dot"
-            elem.set(ATTRIBUTE.sym, symbol)
+            attrib[ATTRIBUTE.sym] = symbol
 
         # Fields
         FIELDS_TO_ATTRIBUTES = self.FIELDS_TO_ATTRIBUTES
 
         xml_encode = self.xml_encode
         encode_iso_datetime = self.encode_iso_datetime
-        as_json = json.dumps
 
         table_fields = table.fields
 
         _repr = self.represent
-        _attr = elem.attrib
         for f in fields:
             if f == DELETED:
                 continue
-            v = None
             if f in record:
                 v = record[f]
+            else:
+                v = None
             if f == MCI:
                 if v is None:
                     v = 0
-                _attr[MCI] = str(int(v) + 1)
+                attrib[MCI] = str(int(v) + 1)
                 continue
             if v is None or f not in table_fields:
                 continue
@@ -873,35 +874,37 @@ class S3XML(S3Codec):
             fieldtype = str(table[f].type)
             formatter = dbfield.formatter
             represent = dbfield.represent
-            if fieldtype == "datetime":
+            is_attr = f in FIELDS_TO_ATTRIBUTES
+            if represent is not None:
+                value = None
+                text = _repr(table, f, v)
+            elif fieldtype == "datetime":
                 value = encode_iso_datetime(v).decode("utf-8")
             elif fieldtype in ("date", "time"):
                 value = str(formatter(v)).decode("utf-8")
             else:
-                value = as_json(v).decode("utf-8")
-            if represent is not None:
-                text = _repr(table, f, v)
+                value = None
+            if value is not None:
+                text = xml_encode(value)
             else:
-                if fieldtype in ("datetime", "date", "time"):
-                    text = xml_encode(value)
-                else:
-                    text = xml_encode(str(formatter(v)).decode("utf-8"))
-            if f in FIELDS_TO_ATTRIBUTES:
+                text = xml_encode(str(formatter(v)).decode("utf-8"))
+            if is_attr:
                 if text is not None:
-                    _attr[f] = str(text)
+                    attrib[f] = str(text)
             elif fieldtype == "upload":
                 fileurl = "%s/%s" % (download_url, v)
                 filename = v
                 if filename:
                     data = SubElement(elem, DATA)
-                    data.set(FIELD, f)
-                    data.set(ATTRIBUTE.url, fileurl)
-                    data.set(ATTRIBUTE.filename, filename)
+                    attr = data.attrib
+                    attr[FIELD] = f
+                    attr[URL] = fileurl
+                    attr[ATTRIBUTE.filename] = filename
             elif fieldtype == "password":
                 # Do not export password fields
                 data = SubElement(elem, DATA)
-                data.set(FIELD, f)
-                data.text = value
+                data.attrib[FIELD] = f
+                data.text = v
             elif fieldtype == "blob":
                 # Not implemented
                 continue
@@ -910,10 +913,12 @@ class S3XML(S3Codec):
                 attr = data.attrib
                 attr[FIELD] = f
                 if represent or fieldtype not in ("string", "text"):
+                    if value is None:
+                        value = json.dumps(v).decode("utf-8")
                     attr[VALUE] = value
                 data.text = text
         if url and not deleted:
-            elem.set(ATTRIBUTE.url, url)
+            attrib[URL] = url
 
         postp = None
         if postprocess is not None:
