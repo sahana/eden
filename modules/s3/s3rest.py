@@ -1885,14 +1885,15 @@ class S3Resource(object):
         self.name = name
         self.alias = name
 
-        # Table
-        model = manager.model # @todo: needed?
-        self.tablename = "%s_%s" % (self.prefix, self.name)
+        # Tablename and table
+        tablename = "%s_%s" % (prefix, name)
         try:
-            self.table = s3db[self.tablename]
+            table = s3db[tablename]
         except:
-            manager.error = "Undefined table: %s" % self.tablename
+            manager.error = "Undefined table: %s" % tablename
             raise KeyError(manager.error)
+        self.tablename = tablename
+        self.table = table
 
         # Resource Filter
         self.rfilter = None
@@ -1900,7 +1901,7 @@ class S3Resource(object):
         self.fvfltr = None
 
         self.include_deleted = include_deleted
-        self.values = Storage() # @todo: needed?
+        self.values = Storage() # @todo: needed? => not internally
 
         # The Rows
         self._rows = None
@@ -1910,7 +1911,7 @@ class S3Resource(object):
         self._ids = []
         self._uids = []
         self._length = None
-        self._slice = False # @todo: needed?
+        self._slice = False # @todo: needed? => not internally
 
         # Request attributes
         self.vars = None # set during build_query
@@ -1930,6 +1931,7 @@ class S3Resource(object):
         self.linked = linked # the linked resource
 
         # Primary resource - attach components
+        model = manager.model
         self.components = Storage()
         self.links = Storage()
         if self.parent is None:
@@ -2036,16 +2038,14 @@ class S3Resource(object):
             @param f: a Query or a S3ResourceQuery instance
             @param c: alias of the component this filter concerns,
                       automatically adds the respective component join
+                      (not needed for S3ResourceQuery instances)
         """
 
         if f is None:
             return
-        rfilter = self.rfilter
-        if rfilter is not None:
-            rfilter.add_filter(f, component=c)
-        else:
+        if self.rfilter is None:
             self.rfilter = S3ResourceFilter(self)
-            self.rfilter.add_filter(f, component=c)
+        self.rfilter.add_filter(f, component=c)
 
     # -------------------------------------------------------------------------
     def add_component_filter(self, alias, f=None):
@@ -2059,12 +2059,9 @@ class S3Resource(object):
 
         if f is None:
             return
-        rfilter = self.rfilter
-        if rfilter is not None:
-            rfilter.add_filter(f, component=name, master=False)
-        else:
+        if self.rfilter is None:
             self.rfilter = S3ResourceFilter(self)
-            self.rfilter.add_filter(f, component=name, master=False)
+        self.rfilter.add_filter(f, component=alias, master=False)
 
     # -------------------------------------------------------------------------
     def get_query(self):
@@ -4291,9 +4288,6 @@ class S3ResourceFilter:
                 if name in self.cvfltr:
                     self.mvfltr = self.cvfltr[name]
                     del self.cvfltr[name]
-                # Remove the join to the master table
-                if tablename in self.joins:
-                    del self.joins[tablename]
 
             # Effective query -------------------------------------------------
             #
@@ -4347,7 +4341,7 @@ class S3ResourceFilter:
                    alias in self.cquery or alias in self.cvfltr:
                     joins = self.joins[alias]
                     for tn in joins:
-                        if tn in joined:
+                        if tn in joined: # or tn == name (?)
                             continue
                         else:
                             join = joins[tn]
@@ -4363,8 +4357,7 @@ class S3ResourceFilter:
         if resource.fvfltr is not None:
             self._add_vfltr(resource.fvfltr)
 
-        if DEBUG:
-            print >> sys.stderr, self
+        _debug(self)
 
     # -------------------------------------------------------------------------
     @staticmethod
