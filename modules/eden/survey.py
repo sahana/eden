@@ -2179,7 +2179,8 @@ def survey_series_rheader(r, tabs=[]):
             record = survey_getSeries(series_id)
         if record != None:
             # Tabs
-            if auth.s3_has_permission("create", "survey_series"):
+            #if auth.permission(c="survey", f = "newAssessment") & auth.permission.CREATE:
+            if auth.s3_has_permission("create", "survey_complete"):
                 tabs = [(T("Details"), None),
                         (T("Enter Completed Assessment"), "newAssessment/"),
                         (T("Completed Assessments"), "complete"),
