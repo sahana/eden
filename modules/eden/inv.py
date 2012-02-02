@@ -1181,7 +1181,7 @@ def inv_send_rheader(r):
                                                         ),
                                             _id = "send_receive",
                                             _class = "action-btn",
-                                            _title = "Receive this shipment"
+                                            _title = T("Receive this shipment")
                                             )
 
                             #receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
@@ -1202,7 +1202,7 @@ def inv_send_rheader(r):
                                                             ),
                                                 _id = "send_receive",
                                                 _class = "action-btn",
-                                                _title = "Only use this button to confirm that the shipment has been received by the destination, if the destination will not enter this information into the system directly"
+                                                _title = T("Only use this button to confirm that the shipment has been received by the destination, if the destination will not enter this information into the system directly")
                                                 )
 
                                 receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"

@@ -1,0 +1,9 @@
+Warehouse,Category,Item description,Catalogue number,Tracking number (CTN),Remark,Outbound,UM,Currency,Price,Stock
+Dili Central ,Relief Item,Blankets,,,,,Piece,,,5000
+Dili Central ,Relief Item,Jerry Cans,,,,,Piece,,,4000
+Dili Central ,Relief Item,Kitchen Sets,,,,,Unit,,,500
+Dili Central ,Relief Item,Hygiene Kits,,,,,Unit,,,500
+Dili Central ,Relief Item,Plastic Sheets,,,,,m2,,,10000
+Marcoluli Warehouse,Relief Item,Blankets,,,,,Piece,,,150
+Marcoluli Warehouse,Relief Item,Jerry Cans,,,,,Piece,,,200
+Marcoluli Warehouse,Relief Item,Plastic Sheets,Standard,,,,m2,,,2500

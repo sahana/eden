@@ -4253,6 +4253,8 @@ class S3RoleManager(S3Method):
                                                                 role.role,
                                                                 T("updated"))
                 else:
+                    import uuid
+                    role.uuid = uuid.uuid4()
                     role_id = self.table.insert(**role)
                     current.session.confirmation = '%s "%s" %s' % (T("Role"),
                                                                 role.role,

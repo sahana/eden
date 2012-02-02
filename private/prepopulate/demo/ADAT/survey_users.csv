@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Admin,Survey,survey_admin@example.com,testing,Survey Admin,Example.com
+Editor,Survey,survey_editor@example.com,testing,Survey Editor,Example.com
+Reader,Survey,survey_reader@example.com,testing,Survey Reader,Example.com
