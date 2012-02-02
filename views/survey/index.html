@@ -1,14 +1,14 @@
 {{extend "layout.html"}}
 <div id='home'>
 <h2>{{=T("Assessments")}}</h2>
-<p>{{=T("The Assessment Module stores assessment templates and allows responses to assessments for specific events to be collected and analysed")}}</p>
+<p>{{=T("The Assessment Module stores assessment templates and allows responses to assessments for specific events to be collected and analyzed")}}</p>
 <h4>{{=T("Assessment Templates")}}</h4>
 <p>{{=T("A catalog of different Assessment Templates including summary information")}}</p>
 <ul>
   <li><a href='{{=URL(c="survey", f="template")}}'>{{=T("List All")}}</a>
 </ul>
 <h4>{{=T("Event Assessments")}}</h4>
-<p>{{=T("An Assessment Template can be selected to create an Event Assessment. Within an Event Assessment responses can be collected and results can analysed as tables, charts and maps")}}</p>
+<p>{{=T("An Assessment Template can be selected to create an Event Assessment. Within an Event Assessment responses can be collected and results can analyzed as tables, charts and maps")}}</p>
 <ul>
   <li><a href='{{=URL(c="survey", f="series", args="create")}}'>{{=T("New")}}</a>
   <li><a href='{{=URL(c="survey", f="series")}}'>{{=T("List All")}}</a>

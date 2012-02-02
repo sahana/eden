@@ -208,6 +208,32 @@ if auth.permission.format in ("html"):
     if deployment_settings.get_L10n_display_toolbar():
         response.menu.append(s3.menu_lang)
     if deployment_settings.get_gis_menu():
+        # See if we need to switch config before we decide which config item to mark as active
+        if "_config" in request.get_vars:
+            # The user has just selected a config from the GIS menu
+            try:
+                config = int(request.get_vars._config)
+            except ValueError:
+                # Manually-crafted URL?
+                pass
+            else:
+                if config != session.s3.gis_config_id:
+                    config = gis.set_config(config)
+                    if deployment_settings.has_module("event"):
+                        # See if this config is associated with an Event
+                        table = s3db.event_config
+                        query = (table.config_id == config)
+                        event = db(query).select(table.event_id,
+                                                 limitby=(0, 1)).first()
+                        if event:
+                            session.s3.event = event.event_id
+                        else:
+                            session.s3.event = None
+            # Don't use the outdated cache for this call
+            cache = None
+        else:
+            cache = s3db.cache
+
         # Check if there are multiple GIS Configs for the user to switch between
         table = s3db.gis_menu
         ctable = s3db.gis_config
@@ -220,18 +246,18 @@ if auth.permission.format in ("html"):
         query = query & (table.config_id == ctable.id)
         configs = db(query).select(ctable.id,
                                    ctable.name,
-                                   cache=s3db.cache)
+                                   cache=cache)
         if len(configs):
             # Use short names for the site and personal configs else they'll wrap.
             # Provide checkboxes to select between pages
             gis_menu = [[{"name": T("Default Map"),
                           "id": "gis_menu_id_0",
-                          # This doesn't allow visibility of current state
+                          # @ToDo: Show when default item is selected without having to do a DB query to read the value
                           #"value": session.s3.gis_config_id == 0,
                           "request_type": "load"
                          },
                          False,
-                         URL(args=request.args, vars={"_config":0})
+                         URL(args=request.args, vars={"_config": 0})
                         ]]
             for config in configs:
                 gis_menu.append(
@@ -241,7 +267,7 @@ if auth.permission.format in ("html"):
                       "value": session.s3.gis_config_id == config.id,
                       "request_type": "load"},
                      False,
-                     URL(args=request.args, vars={"_config":config.id})
+                     URL(args=request.args, vars={"_config": config.id})
                     ])
             gis_menu = [deployment_settings.get_gis_menu(),
                         True, URL(c="gis", f="config"),

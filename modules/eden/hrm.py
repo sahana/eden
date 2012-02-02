@@ -2,8 +2,6 @@
 
 """ Sahana Eden Human Resources Management
 
-    @author: Fran Boon <fran[at]aidiq.com>
-
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 

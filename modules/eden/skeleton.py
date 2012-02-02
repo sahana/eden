@@ -124,10 +124,12 @@ class SkeletonDataModel(S3Model):
         )
 
     # -------------------------------------------------------------------------
-    def defaults(self):
+    @staticmethod
+    def defaults():
         """
             Return safe defaults for model globals, this will be called instead
-            of model() in case the model has been deactivated in deployment_setting.
+            of model() in case the model has been deactivated in
+            deployment_settings.
 
             You don't need this function in case your model is mandatory anyway.
         """
@@ -135,7 +137,8 @@ class SkeletonDataModel(S3Model):
         return Storage(
             skeleton_example_id = S3ReusableField("skeleton_example_id",
                                                   "integer",
-                                                  label = T("Skeleton Example")),
+                                                  readable=False,
+                                                  writable=False),
         )
 
 

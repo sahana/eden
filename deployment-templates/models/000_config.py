@@ -383,6 +383,7 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.options.support_requests = True
 
 # Comment/uncomment modules here to disable/enable them
+# @ToDo: have the system automatically enable migrate if a module is enabled
 # Modules menu is defined in 01_menu.py
 deployment_settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -538,14 +539,12 @@ deployment_settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    # Scenario depends on HRM
     ("scenario", Storage(
             name_nice = T("Scenarios"),
             description = T("Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities)."),
             restricted = True,
             module_type = 10,
         )),
-    # Event depends on HRM
     ("event", Storage(
             name_nice = T("Events"),
             description = T("Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities)."),

@@ -24,9 +24,11 @@ import eden.hrm
 import eden.project
 import eden.supply
 import eden.inv
-import eden.req
 import eden.proc
 import eden.asset
+import eden.scenario
+import eden.event
+import eden.req
 import eden.vehicle
 import eden.irs
 import eden.fire
@@ -34,6 +36,7 @@ import eden.delphi
 import eden.dvi
 import eden.support
 import eden.survey
+#import eden.patient
 
 # =============================================================================
 # Import S3 meta fields into global namespace

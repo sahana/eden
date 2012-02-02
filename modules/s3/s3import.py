@@ -6,7 +6,7 @@
     @author: Graeme Foster <graeme[at]acm.org>
     @author: Dominic König <dominic[at]aidiq.com>
 
-    @copyright: 2011 (c) Sahana Software Foundation
+    @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

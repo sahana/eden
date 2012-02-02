@@ -8,10 +8,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
 
-    @author: Fran Boon <francisboon[at]gmail.com>
-    @author: Timothy Caro-Bruce <tcarobruce[at]gmail.com>
-
-    @copyright: (c) 2010-2011 Sahana Software Foundation
+    @copyright: (c) 2010-2012 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -3168,16 +3165,17 @@ class GIS(object):
 
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments
-        if "lat" in request.vars:
-            lat = request.vars.lat
+        vars = request.vars
+        if "lat" in vars:
+            lat = float(vars.lat)
         if lat is None or lat == "":
             lat = config.lat
-        if "lon" in request.vars:
-            lon = request.vars.lon
+        if "lon" in vars:
+            lon = float(vars.lon)
         if lon is None or lon == "":
             lon = config.lon
         if "zoom" in request.vars:
-            zoom = request.vars.zoom
+            zoom = int(vars.zoom)
         if not zoom:
             zoom = config.zoom
         if not projection:

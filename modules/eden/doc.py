@@ -2,8 +2,6 @@
 
 """ Sahana Eden Document Library
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 

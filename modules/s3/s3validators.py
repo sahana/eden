@@ -4,12 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @author: Fran Boon <fran[at]aidiq.com>
-    @author: Dominic König <dominic[at]aidiq.com>
-    @author: Michael Howden <michael[at]aidiq.com>
-    @author: sunneach
-
-    @copyright: (c) 2010-2011 Sahana Software Foundation
+    @copyright: (c) 2010-2012 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

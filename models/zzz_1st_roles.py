@@ -5,10 +5,7 @@
 # Set deployment_settings.base.prepopulate to 0 in Production
 # (to save 1x DAL hit every page).
 populate = deployment_settings.get_base_prepopulate()
-if populate is True:
-    # @ToDo: Remove after some time when we can assume most people have updated
-    raise HTTP(404, body="deployment_settings has changed prepopulate from a boolean to an integer status, please update 000_config")
-elif populate:
+if populate:
     table = db[auth.settings.table_group_name]
     # The query used here takes 2/3 the time of .count().
     if db(table.id > 0).select(table.id, limitby=(0, 1)).first():

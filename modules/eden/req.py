@@ -5,7 +5,7 @@
     @author: Michael Howden <michael[at]aidiq.com>
     @author: Fran Boon <fran[at]aidiq.com>
 
-    @copyright: 2009-2011 (c) Sahana Software Foundation
+    @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -82,9 +82,7 @@ class S3RequestModel(S3Model):
 
         org_site_represent = self.org_site_represent
         human_resource_id = self.hrm_human_resource_id
-
-        current.manager.load("event_event")
-        event_id = s3.event_id
+        event_id = self.event_event_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 

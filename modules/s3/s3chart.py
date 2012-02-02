@@ -3,12 +3,8 @@
 """
     S3 Charting Toolkit
 
-    @author: Fran Boon <fran[at]aidiq[dot]com>
-
-    @copyright: 2011 (c) Sahana Software Foundation
+    @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
-
-    @status: work in progress
 
     @requires: U{B{I{NumPy}} <http://www.numpy.org>}
     @requires: U{B{I{MatPlotLib}} <http://matplotlib.sourceforge.net>}
