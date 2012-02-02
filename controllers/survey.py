@@ -1143,7 +1143,7 @@ def newAssessment():
                             vars = {"viewing":"%s.%s" % ("survey_series", series_id)
                                    ,"single_pass":True}
                             )
-            buttons = DIV (A(T("Import completed Assessment Template Spreadsheet"),
+            buttons = DIV (A(T("Upload Completed Assessment Form"),
                              _href=urlimport,
                              _id="Excel-import",
                              _class="action-btn"

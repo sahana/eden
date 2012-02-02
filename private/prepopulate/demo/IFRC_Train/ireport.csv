@@ -1,0 +1,12 @@
+Name,Category,Message,Date,Expiry,Country,State,District,City,Lat,Lon,Image,URL
+Tropical Storm Bulegila,meteorological.tropicalStorm,"Tropical Storm Bulegila has swept past Timor-Leste from the South East causing wipespread flooding and damge to houses, infrastruture and crops",16/01/12,22/01/12,Timor-Leste,,,,,,,
+Munoboi - Landslide,geophysical.landslide,A landslide has severely damaged a large area of gardens which the village used to grow vegetables,17/01/12,,Timor-Leste,AINARO,AINARO,CASSA,-9.13185,125.53959,,
+Kota - Landslide,geophysical.landslide,A landslide has buried almost half of this small village. Rescue teams are needs to search for surviors in the debris and emergency shelters will also be needed,19/01/12,,Timor-Leste,AINARO,MAUBISSE,MAUBISSE,-8.83817,125.59579,,
+Abere - Landslide,geophysical.landslide,A landslide has been reported to have completely buried this small village. Assessments are need to verify this,20/01/12,,Timor-Leste,LAUTEM,LURO,LURO,-8.54028,126.83611,,
+Teuro - Flooding,flood,Flooding has isolated the village and supplies are running low ,19/01/12,,Timor-Leste,ERMERA,HATOLIA,COLIATE-LEOTELO,-8.81179,125.37965,,
+Kailiti - Flash Flood,flood.flashFlood,A flash flood has killed 15 people,19/01/12,,Timor-Leste,ERMERA,LETEFOHO,GOULOLO,-8.82009,125.43099,,
+Halalmeta - Rising River,flood.highWater,The river has been steadily rising and the villager fear that it will flood their crops and homes,17/01/12,19/01/12,Timor-Leste,AILEU,AILEU VILA,SELOI CRAIC,-8.71894,125.48949,,
+Rairema - Wind Damage,wind.strongWind,Winds have torn up crops and ripped roofs of houses,19/01/12,,Timor-Leste,ERMERA,LETEFOHO,DUCURAI,-8.84912,125.4479,,
+Najalu - Blocked Road,roadway.roadwayClosure,Severe rain has washed out the road so it is impassable unless on motorbike ,18/01/12,,Timor-Leste,OECUSSE,PANTE MACASAR,LIFAU,-9.22306,124.27784,,
+Utimori - Blocked Road,roadway.roadwayClosure,A landslide has blocked the road and local need earthmoving equipment to move it,18/01/12,,Timor-Leste,VIQUEQUE,UATUCARBAU,BAHATATA,-8.69213,126.7186,,
+Aisalgusun - Blocked Bridge,roadway.bridgeClosure,A swollen river has washed out a bridge,16/01/12,,Timor-Leste,BOBONARO,BOBONARO,LOUR,-9.05788,125.3491,,
