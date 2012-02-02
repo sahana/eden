@@ -4249,14 +4249,16 @@ class S3RoleManager(S3Method):
                 if r.record:
                     r.record.update_record(**role)
                     role_id = form.vars.role_id
-                    current.session.confirmation = '%s "%s" %s' % (T("Role"),
-                                                                role.role,
-                                                                T("updated"))
+                    session.confirmation = '%s "%s" %s' % (T("Role"),
+                                                           role.role,
+                                                           T("updated"))
                 else:
+                    import uuid
+                    role.uuid = uuid.uuid4()
                     role_id = self.table.insert(**role)
-                    current.session.confirmation = '%s "%s" %s' % (T("Role"),
-                                                                role.role,
-                                                                T("created"))
+                    session.confirmation = '%s "%s" %s' % (T("Role"),
+                                                           role.role,
+                                                           T("created"))
 
                 if role_id:
 

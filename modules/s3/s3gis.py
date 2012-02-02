@@ -885,6 +885,8 @@ class GIS(object):
 
             Returns the id of the config it actually used, if any.
 
+            @param: config_id. use '0' to set the SITE_DEFAULT
+
             @ToDo: Merge configs for Site/OU/User/Event/Region
         """
 
@@ -894,8 +896,7 @@ class GIS(object):
         # If an id has been supplied, try it first. If it matches what's in
         # session / response, there's no work to do.
         if config_id and not force_update_cache:
-            if session.s3.gis_config_id and \
-               session.s3.gis_config_id == config_id and \
+            if session.s3.gis_config_id == config_id and \
                s3.gis.config and \
                s3.gis.config.id == config_id:
                 return
@@ -919,15 +920,16 @@ class GIS(object):
         # If no id supplied, or the requested config does not exist,
         # fall back to personal or site config.
         if not row:
-            auth = current.auth
-            if auth.is_logged_in():
+            if config_id is not 0:
                 # Read personalised config, if available.
-                prtable = s3db.pr_person
-                query = (prtable.uuid == auth.user.person_uuid) & \
-                        (ctable.pe_id == prtable.pe_id) & \
-                        (mtable.id == ctable.marker_id) & \
-                        (ptable.id == ctable.projection_id)
-                row = db(query).select(limitby=(0, 1)).first()
+                auth = current.auth
+                if auth.is_logged_in():
+                    prtable = s3db.pr_person
+                    query = (prtable.uuid == auth.user.person_uuid) & \
+                            (ctable.pe_id == prtable.pe_id) & \
+                            (mtable.id == ctable.marker_id) & \
+                            (ptable.id == ctable.projection_id)
+                    row = db(query).select(limitby=(0, 1)).first()
             if not row:
                 # No personal config or not logged in. Use site default.
                 config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
@@ -1072,7 +1074,7 @@ class GIS(object):
             for key in hierarchy_level_keys:
                 if key == "L0":
                     levels[key] = COUNTRY
-                elif row[key]:
+                elif key in row and row[key]:
                     # Only include rows with values
                     levels[key] = str(T(row[key]))
             return levels
@@ -1163,7 +1165,7 @@ class GIS(object):
         """
 
         country = self.get_parent_country(id)
-        
+
         db = current.db
         s3db = current.s3db
 

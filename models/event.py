@@ -205,13 +205,13 @@ if deployment_settings.has_module(module):
                 del mapconfig["uuid"]
                 #mapconfig["name"] = "Event %s" % form.vars.name
                 mapconfig["name"] = form.vars.name
-                mapconfig["show_in_menu"] = True
                 config = ctable.insert(**mapconfig.as_dict())
                 mtable = db.event_config
                 mtable.insert(event_id=event,
                               config_id=config)
                 # Activate this config
                 gis.set_config(config)
+                # @ToDo: Add to GIS Menu? Separate Menu?
 
         def event_update_onaccept(form):
             """ When an Event is updated, check for closure """
@@ -220,15 +220,7 @@ if deployment_settings.has_module(module):
                 # Ensure this event isn't active in the session
                 if session.s3.event == event:
                     session.s3.event = None
-                # Hide the Event from the Map menu
-                table = db.event_config
-                query = (table.event_id == event)
-                config = db(query).select(table.config_id,
-                                          limitby=(0, 1)).first()
-                if config:
-                    table = s3db.gis_config
-                    query = (table.id == config.config_id)
-                    db(query).update(show_in_menu=False)
+                # @ToDo: Hide the Event from the Map menu
                 config = gis.get_config()
                 if config == config.config_id:
                     # Reset to the Default Map

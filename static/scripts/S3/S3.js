@@ -278,7 +278,6 @@ function S3EnableNavigateAwayConfirm() {
 /**
  * ajaxS3
  * added by sunneach 2010-feb-14
- * modified by flavour
  */
 
 (function($) {
@@ -478,7 +477,6 @@ function s3_hideStatus() {
 }
 
 // ============================================================================
-// @author: Fran Boon (fran@sahanafoundation.org)
 function s3_viewMap(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;

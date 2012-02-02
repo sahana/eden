@@ -374,12 +374,12 @@ class S3XML(S3Codec):
 
         if not uid:
             return uid
-        if uid.startswith("urn:"):
+        if uid[:4] == "urn:":
             return uid
         else:
-            x = uid.find("/")
-            if (x < 1 or x == len(uid)-1) and self.domain:
-                return "%s/%s" % (self.domain, uid)
+            domain = self.domain
+            if domain and "/" not in uid[1:-1]:
+                return "%s/%s" % (domain, uid.strip("/"))
             else:
                 return uid
 
@@ -391,17 +391,15 @@ class S3XML(S3Codec):
             @param uid: the UID
         """
 
-        if not uid or not self.domain:
-            return uid
-        if uid.startswith("urn:"):
+        domain = self.domain
+        if not uid or uid.startswith("urn:") or not domain:
             return uid
         else:
-            x = uid.find("/")
-            if x < 1 or x == len(uid)-1:
+            if "/" in uid[1:-1]:
                 return uid
             else:
                 (_domain, _uid) = uid.split("/", 1)
-                if _domain == self.domain:
+                if _domain == domain:
                     return _uid
                 else:
                     return uid
@@ -475,75 +473,91 @@ class S3XML(S3Codec):
         db = current.db
         reference_map = []
 
+        UID = self.UID
+        MCI = self.MCI
+        DELETED = self.DELETED
+
+        export_uid = self.export_uid
+        xml_encode = self.xml_encode
+        represent = self.represent
+        filter_mci = self.filter_mci
+        tablename = table._tablename
+        gtablename = current.auth.settings.table_group_name
+
         for f in fields:
-            ids = record.get(f, None)
-            if not ids:
+            if f not in record:
                 continue
-            if not isinstance(ids, (list, tuple)):
+            val = ids = record[f]
+            if type(ids) is not list:
                 ids = [ids]
             multiple = False
             fieldtype = str(table[f].type)
-            if fieldtype.startswith("reference"):
+            if fieldtype[:9] == "reference":
                 ktablename = fieldtype[10:]
-            elif fieldtype.startswith("list:reference"):
+            elif fieldtype[:14] == "list:reference":
                 ktablename = fieldtype[15:]
                 multiple = True
             else:
                 continue
-
             ktable = db[ktablename]
-            pkey = ktable._id.name
+            ktable_fields = ktable.fields
+            k_id = ktable._id
+            pkey = k_id.name
+
+            if multiple:
+                query = k_id.belongs(ids)
+                limitby = None
+            else:
+                query = k_id == ids[0]
+                limitby = (0, 1)
 
             uid = None
             uids = None
             supertable = None
-
-            if ktable._id.name != "id" and "instance_type" in ktable.fields:
+            if pkey != "id" and "instance_type" in ktable_fields:
                 if multiple:
                     continue
-                krecord = ktable[ids[0]]
+                krecord = db(query).select(ktable[UID],
+                                           ktable.instance_type,
+                                           limitby=(0, 1)).first()
                 if not krecord:
                     continue
                 ktablename = krecord.instance_type
-                uid = krecord[self.UID]
-                if ktablename == str(table) and \
-                   self.UID in record and record[self.UID] == uid:
+                uid = krecord[UID]
+                if ktablename == tablename and \
+                   UID in record and record[UID] == uid:
                     continue
                 uids = [uid]
-            elif self.UID in ktable.fields:
-                query = (ktable[pkey].belongs(ids))
-                if "deleted" in ktable:
-                    query = (ktable.deleted == False) & query
-                if self.filter_mci and "mci" in ktable:
-                    query = (ktable.mci >= 0) & query
-                krecords = current.db(query).select(ktable[self.UID])
-                if krecords:
-                    uids = [r[self.UID] for r in krecords if r[self.UID]]
-                    if ktable._tablename != current.auth.settings.table_group_name:
-                        uids = [self.export_uid(u) for u in uids]
-                else:
-                    continue
             else:
-                query = (ktable._id.belongs(ids))
-                if "deleted" in ktable:
-                    query = (ktable.deleted == False) & query
-                if self.filter_mci and "mci" in ktable:
+                if DELETED in ktable_fields:
+                    query = (ktable.deleted != True) & query
+                if filter_mci and MCI in ktable_fields:
                     query = (ktable.mci >= 0) & query
-                if not current.db(query).count():
-                    continue
-
-            value = str(table[f].formatter(record[f])).decode("utf-8")
-            text = self.xml_encode(value)
+                if UID in ktable_fields:
+                    krecords = db(query).select(ktable[UID], limitby=limitby)
+                    if krecords:
+                        uids = [r[UID] for r in krecords if r[UID]]
+                        if ktablename != gtablename:
+                            uids = map(export_uid, uids)
+                    else:
+                        continue
+                else:
+                    krecord = db(query).select(k_id, limitby=(0, 1)).first()
+                    if not krecord:
+                        continue
+            value = str(table[f].formatter(val)).decode("utf-8")
             if table[f].represent:
-                text = self.represent(table, f, record[f])
-
-            reference_map.append(Storage(field=f,
-                                         table=ktablename,
-                                         multiple=multiple,
-                                         id=ids,
-                                         uid=uids,
-                                         text=text,
-                                         value=value))
+                text = represent(table, f, val)
+            else:
+                text = xml_encode(value)
+            entry = {"field":f,
+                     "table":ktablename,
+                     "multiple":multiple,
+                     "id":ids,
+                     "uid":uids,
+                     "text":text,
+                     "value":value}
+            reference_map.append(Storage(entry))
         return reference_map
 
     # -------------------------------------------------------------------------
@@ -556,27 +570,39 @@ class S3XML(S3Codec):
             @param show_ids: insert the record ID as attribute in references
         """
 
+        REFERENCE = self.TAG.reference
+
+        ATTRIBUTE = self.ATTRIBUTE
+        RESOURCE = ATTRIBUTE.resource
+        FIELD = ATTRIBUTE.field
+        UID = self.UID
+        ID = ATTRIBUTE.id
+        VALUE = ATTRIBUTE.value
+
+        as_json = json.dumps
+        SubElement = etree.SubElement
+
         for i in xrange(0, len(rmap)):
             r = rmap[i]
-            reference = etree.SubElement(element, self.TAG.reference)
-            reference.set(self.ATTRIBUTE.field, r.field)
-            reference.set(self.ATTRIBUTE.resource, r.table)
+            reference = SubElement(element, REFERENCE)
+            attr = reference.attrib
+            attr[FIELD] = r.field
+            attr[RESOURCE] = r.table
             if show_ids:
                 if r.multiple:
-                    ids = json.dumps(r.id)
+                    ids = str(as_json(r.id))
                 else:
-                    ids = "%s" % r.id[0]
-                reference.set(self.ATTRIBUTE.id, ids)
+                    ids = str(r.id[0])
+                attr[ID] = ids
             if r.uid:
                 if r.multiple:
-                    uids = json.dumps(r.uid)
+                    uids = str(as_json(r.uid))
                 else:
-                    uids = "%s" % r.uid[0]
-                reference.set(self.UID, str(uids).decode("utf-8"))
+                    uids = str(r.uid[0])
+                attr[UID] = uids.decode("utf-8")
                 reference.text = r.text
             else:
-                reference.set(self.ATTRIBUTE.value, r.value)
-                # TODO: add in-line resource
+                attr[VALUE] = r.value
             r.element = reference
 
     # -------------------------------------------------------------------------
@@ -615,6 +641,11 @@ class S3XML(S3Codec):
         db = current.db
         s3db = current.s3db
 
+        LATFIELD = self.Lat
+        LONFIELD = self.Lon
+
+        ATTRIBUTE = self.ATTRIBUTE
+
         # Quicker to download Icons from Static
         # also doesn't require authentication so KML files can work in
         # Google Earth
@@ -625,43 +656,47 @@ class S3XML(S3Codec):
 
         if marker:
             marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
-        else:                             
+        else:
             marker_url = None
 
+        table = resource.table
         tablename = resource.tablename
 
-        references = filter(lambda r:
-                            r.element is not None and \
-                            self.Lat in s3db[r.table].fields and \
-                            self.Lon in s3db[r.table].fields,
-                            rmap)
-
-        for i in xrange(0, len(references)):
-            r = references[i]
+        references = []
+        for r in rmap:
+            if r.element is None:
+                continue
+            ktable = s3db.table(r.table)
+            if ktable is None:
+                continue
+            fields = ktable.fields
+            if LATFIELD not in fields or \
+               LONFIELD not in fields:
+                continue
+            element = r.element
+            attr = element.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
                 continue # Multi-reference
-            ktable = s3db[r.table]
-            LatLon = db(ktable.id == r_id).select(ktable[self.Lat],
-                                                  ktable[self.Lon],
+            LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
+                                                  ktable[LONFIELD],
                                                   limitby=(0, 1))
             if LatLon:
                 LatLon = LatLon.first()
-                if LatLon[self.Lat] is not None and \
-                   LatLon[self.Lon] is not None:
-                    r.element.set(self.ATTRIBUTE.lat,
-                                  "%.6f" % LatLon[self.Lat])
-                    r.element.set(self.ATTRIBUTE.lon,
-                                  "%.6f" % LatLon[self.Lon])
+                lat = LatLon[LATFIELD]
+                lon = LatLon[LONFIELD]
+                if lat is not None and lon is not None:
+                    attr[ATTRIBUTE.lat] = "%.6f" % lat
+                    attr[ATTRIBUTE.lon] = "%.6f" % lon
                     if shape or size or colour:
                         # Feature Queries (but never used?)
                         if shape:
-                            r.element.set(self.ATTRIBUTE.shape, shape)
+                            attr[ATTRIBUTE.shape] = shape
                         if size:
-                            r.element.set(self.ATTRIBUTE.size, size)
+                            attr[ATTRIBUTE.size] = size
                         if colour:
-                            r.element.set(self.ATTRIBUTE.colour, colour)
+                            attr[ATTRIBUTE.colour] = colour
                         # We don't want a default Marker if these are specified
                         marker = True
 
@@ -676,8 +711,8 @@ class S3XML(S3Codec):
                                                        marker=False if marker else True)
                     if _marker:
                         marker_url = "%s/%s" % (download_url, _marker.image)
-                    r.element.set(self.ATTRIBUTE.marker, marker_url)
-                    r.element.set(self.ATTRIBUTE.sym, symbol)
+                    attr[ATTRIBUTE.marker] = marker_url
+                    attr[ATTRIBUTE.sym] = symbol
                     if popup_fields:
                         # Internal feature Layers
                         # Build the HTML for the onHover Tooltip
@@ -693,7 +728,7 @@ class S3XML(S3Codec):
                             if value:
                                 # @ToDo: Slow query which would be
                                 #        good to optimise
-                                field = resource.table[fieldname]
+                                field = table[fieldname]
                                 represent = gis.get_representation(field,
                                                                    value)
                                 # Is this is faster than the simpler alternative?
@@ -708,7 +743,7 @@ class S3XML(S3Codec):
                                 if fieldname != popup_fields[0]:
                                     value = record[fieldname]
                                     if value:
-                                        field = resource.table[fieldname]
+                                        field = table[fieldname]
                                         # @ToDo: Slow query which would be
                                         # good to optimise
                                         represent = gis.get_representation(
@@ -724,7 +759,7 @@ class S3XML(S3Codec):
                         except:
                             pass
                         else:
-                            r.element.set(self.ATTRIBUTE.popup, tooltip)
+                            attr[ATTRIBUTE.popup] = tooltip
 
                         # Build the URL for the onClick Popup contents
                         if not popup_url:
@@ -735,14 +770,14 @@ class S3XML(S3Codec):
                     elif popup_label:
                         # Feature Queries
                         # This is the pre-generated HTML for the onHover Tooltip
-                        r.element.set(self.ATTRIBUTE.popup, popup_label)
+                        attr[ATTRIBUTE.popup] = popup_label
 
                     if popup_url:
                         # @ToDo: add the Public URL so that layers can
                         # be loaded off remote Sahana instances
                         # (make this optional to keep filesize small
                         # when not needed?)
-                        r.element.set(self.ATTRIBUTE.url, popup_url)
+                        attr[ATTRIBUTE.url] = popup_url
 
     # -------------------------------------------------------------------------
     def resource(self, parent, table, record,
@@ -761,30 +796,48 @@ class S3XML(S3Codec):
             @param url: URL of the record
         """
 
-        deleted = False
-        download_url = current.response.s3.download_url or ""
+        SubElement = etree.SubElement
+
+        UID = self.UID
+        MCI = self.MCI
+        DELETED = self.DELETED
+
+        TAG = self.TAG
+        RESOURCE = TAG.resource
+        DATA = TAG.data
 
         ATTRIBUTE = self.ATTRIBUTE
+        NAME = ATTRIBUTE.name
+        FIELD = ATTRIBUTE.field
+        VALUE = ATTRIBUTE.value
+        URL = ATTRIBUTE.url
+
+        tablename = table._tablename
+        deleted = False
+
+        download_url = current.response.s3.download_url or ""
+        auth_group = current.auth.settings.table_group_name
 
         if parent is not None:
-            elem = etree.SubElement(parent, self.TAG.resource)
+            elem = SubElement(parent, RESOURCE)
         else:
-            elem = etree.Element(self.TAG.resource)
-        elem.set(ATTRIBUTE.name, table._tablename)
+            elem = etree.Element(RESOURCE)
+        attrib = elem.attrib
+        attrib[NAME] = tablename
 
         # UID
-        if self.UID in table.fields and self.UID in record:
-            uid = record[self.UID]
-            uid = str(table[self.UID].formatter(uid)).decode("utf-8")
-            if table._tablename != current.auth.settings.table_group_name:
-                elem.set(self.UID, self.export_uid(uid))
+        if UID in table.fields and UID in record:
+            uid = record[UID]
+            uid = str(table[UID].formatter(uid)).decode("utf-8")
+            if tablename != auth_group:
+                attrib[UID] = self.export_uid(uid)
             else:
-                elem.set(self.UID, uid)
+                attrib[UID] = uid
 
         # DELETED
-        if self.DELETED in record and record[self.DELETED]:
+        if DELETED in record and record[DELETED]:
             deleted = True
-            elem.set(self.DELETED, "True")
+            attrib[DELETED] = "True"
             # export only MTIME with deleted records
             fields = [self.MTIME]
 
@@ -797,66 +850,82 @@ class S3XML(S3Codec):
             marker_download_url = download_url.replace("default/download",
                                                        "static/img/markers")
             marker_url = "%s/%s" % (marker_download_url, marker.image)
-            elem.set(ATTRIBUTE.marker, marker_url)
+            attrib[ATTRIBUTE.marker] = marker_url
             symbol = "White Dot"
-            elem.set(ATTRIBUTE.sym, symbol)
+            attrib[ATTRIBUTE.sym] = symbol
 
         # Fields
+        FIELDS_TO_ATTRIBUTES = self.FIELDS_TO_ATTRIBUTES
+
+        xml_encode = self.xml_encode
+        encode_iso_datetime = self.encode_iso_datetime
+
+        table_fields = table.fields
+
+        _repr = self.represent
         for f in fields:
-            v = record.get(f, None)
-            if f == self.MCI and v is None:
-                v = 0
-            if f == self.DELETED:
+            if f == DELETED:
                 continue
-            if f not in table.fields or v is None:
-                continue
-
-            fieldtype = str(table[f].type)
-            if fieldtype == "datetime":
-                value = self.encode_iso_datetime(v).decode("utf-8")
-                text = self.xml_encode(value)
-            elif fieldtype in ("date", "time"):
-                value = str(table[f].formatter(v)).decode("utf-8")
-                text = self.xml_encode(value)
+            if f in record:
+                v = record[f]
             else:
-                value = json.dumps(v).decode("utf-8")
-                text = self.xml_encode(
-                            str(table[f].formatter(v)).decode("utf-8"))
-            if table[f].represent:
-                text = self.represent(table, f, v)
-
-            if f in self.FIELDS_TO_ATTRIBUTES:
-                if f == self.MCI:
-                    elem.set(self.MCI, str(int(v) + 1))
-                else:
-                    elem.set(f, text)
+                v = None
+            if f == MCI:
+                if v is None:
+                    v = 0
+                attrib[MCI] = str(int(v) + 1)
+                continue
+            if v is None or f not in table_fields:
+                continue
+            dbfield = table[f]
+            fieldtype = str(table[f].type)
+            formatter = dbfield.formatter
+            represent = dbfield.represent
+            is_attr = f in FIELDS_TO_ATTRIBUTES
+            if represent is not None:
+                value = None
+                text = _repr(table, f, v)
+            elif fieldtype == "datetime":
+                value = encode_iso_datetime(v).decode("utf-8")
+            elif fieldtype in ("date", "time"):
+                value = str(formatter(v)).decode("utf-8")
+            else:
+                value = None
+            if value is not None:
+                text = xml_encode(value)
+            else:
+                text = xml_encode(str(formatter(v)).decode("utf-8"))
+            if is_attr:
+                if text is not None:
+                    attrib[f] = str(text)
             elif fieldtype == "upload":
                 fileurl = "%s/%s" % (download_url, v)
                 filename = v
                 if filename:
-                    data = etree.SubElement(elem, self.TAG.data)
-                    data.set(ATTRIBUTE.field, f)
-                    data.set(ATTRIBUTE.url, fileurl)
-                    data.set(ATTRIBUTE.filename, filename)
+                    data = SubElement(elem, DATA)
+                    attr = data.attrib
+                    attr[FIELD] = f
+                    attr[URL] = fileurl
+                    attr[ATTRIBUTE.filename] = filename
             elif fieldtype == "password":
                 # Do not export password fields
-                data = etree.SubElement(elem, self.TAG.data)
-                data.set(ATTRIBUTE.field, f)
-                data.text = value
-                #continue
+                data = SubElement(elem, DATA)
+                data.attrib[FIELD] = f
+                data.text = v
             elif fieldtype == "blob":
                 # Not implemented
                 continue
             else:
-                data = etree.SubElement(elem, self.TAG.data)
-                data.set(ATTRIBUTE.field, f)
-                if table[f].represent or \
-                   fieldtype not in ("string", "text"):
-                    data.set(ATTRIBUTE.value, value)
+                data = SubElement(elem, DATA)
+                attr = data.attrib
+                attr[FIELD] = f
+                if represent or fieldtype not in ("string", "text"):
+                    if value is None:
+                        value = json.dumps(v).decode("utf-8")
+                    attr[VALUE] = value
                 data.text = text
-
         if url and not deleted:
-            elem.set(ATTRIBUTE.url, url)
+            attrib[URL] = url
 
         postp = None
         if postprocess is not None:
@@ -1512,6 +1581,8 @@ class S3XML(S3Codec):
         ATTRIBUTE = cls.ATTRIBUTE
         PREFIX = cls.PREFIX
 
+        element2json = cls.__element2json
+
         if element.tag == TAG.list:
             obj = []
             for child in element:
@@ -1520,7 +1591,7 @@ class S3XML(S3Codec):
                     continue # skip comment nodes
                 if tag[0] == "{":
                     tag = tag.rsplit("}", 1)[1]
-                child_obj = cls.__element2json(child, native=native)
+                child_obj = element2json(child, native=native)
                 if child_obj:
                     obj.append(child_obj)
             return obj
