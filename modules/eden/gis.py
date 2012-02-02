@@ -299,7 +299,7 @@ class S3LocationModel(S3Model):
                                     ])
 
         # Names as component of Locations
-        self.add_component(table, gis_location="location_id")
+        self.add_component("gis_location_name", gis_location="location_id")
 
         # ---------------------------------------------------------------------
         # Locations as component of Locations ('Parent')

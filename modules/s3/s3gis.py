@@ -1165,7 +1165,7 @@ class GIS(object):
         """
 
         country = self.get_parent_country(id)
-        
+
         db = current.db
         s3db = current.s3db
 

@@ -89,7 +89,7 @@ from s3survey import survey_question_type, \
 
 def json2py(jsonstr):
     """
-        Utility function to convert a string in json to a pythin structure  
+        Utility function to convert a string in json to a pythin structure
     """
     import gluon.contrib.simplejson as json
     from xml.sax.saxutils import unescape
@@ -160,7 +160,7 @@ class S3TemplateModel(S3Model):
 
         """
             The survey_template table
-    
+
             The template is the root table and acts as a container for
             the questions that will be used in a survey.
         """
@@ -260,7 +260,7 @@ class S3TemplateModel(S3Model):
 
         """
             The survey_sections table
-    
+
             The questions can be grouped into sections this provides
             the description of the section and
             the position of the section within the template
@@ -390,7 +390,7 @@ class S3TemplateModel(S3Model):
                              May consist of any of the following:
                              L0, L1, L2, L3, L4, Lat, Lon
                              for json entry a question will be generated
-            The code for each question will start with "STD-" followed by 
+            The code for each question will start with "STD-" followed by
             the type of question.
         """
         if form.vars.id:
@@ -809,7 +809,7 @@ def survey_build_template_summary(template_id):
 
 
 class S3QuestionModel(S3Model):
-    """ 
+    """
         Question Model
     """
 
@@ -826,10 +826,10 @@ class S3QuestionModel(S3Model):
 
         """ The survey_question table defines a question that will appear
             within a section, and thus belong to the template.
-    
+
             This holds the actual question and
             A string code (unique within the template) is used to identify the question.
-    
+
             It will have a type from the questionType dictionary.
             This type will determine the options that can be associated with it.
             A question can belong to many different sections.
@@ -1293,7 +1293,7 @@ def survey_updateMetaData (record, type, metadata):
         widgetObj = survey_question_type["Grid"]()
         widgetObj.insertChildren(record, metadataList)
 
-    
+
 
 
 class S3FormatterModel(S3Model):
@@ -1510,15 +1510,15 @@ class S3SeriesModel(S3Model):
         }
         """
             The survey_series table is used to hold all uses of a template
-    
+
             When a series is first created the template status will change from
             Pending to Active and at the stage no further changes to the
             template can be made.
-    
+
             Typically a series will be created for an event, which may be a
             response to a natural disaster, an exercise,
             or regular data collection activity.
-    
+
             The series is a container for all the responses for the event
         """
         tablename = "survey_series"
@@ -1738,7 +1738,7 @@ class S3SeriesModel(S3Model):
         s3 = current.response.s3
         request = current.request
         T = current.T
-        
+
         def addQstnChkboxToTR(numQstnList, qstn):
             tr = TR()
             if numQstnList != None and qstn["code"] in numQstnList:
@@ -2857,7 +2857,7 @@ def get_location_details(complete_id):
 
 def get_default_location(complete_id):
     """
-        It will check each standard location question in 
+        It will check each standard location question in
         the hierarchy until either one is found or none are found
     """
     s3db = current.s3db
@@ -2880,7 +2880,7 @@ def get_default_location(complete_id):
         return widgetObj
     else:
         return None
-    
+
 
 def survey_getAllAnswersForQuestionInSeries(question_id, series_id):
     """
