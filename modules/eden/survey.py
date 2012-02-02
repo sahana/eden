@@ -2259,7 +2259,7 @@ def survey_series_rheader(r, tabs=[]):
                             f="export_all_responses",
                             args=[record.id],
                             )
-            buttons = DIV (A(T("Export all completed responses"),
+            buttons = DIV (A(T("Export all Completed Assessment Data"),
                              _href=urlimport,
                              _id="All_resposnes",
                              _class="action-btn"
