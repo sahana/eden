@@ -4363,8 +4363,7 @@ class S3ResourceFilter:
         if resource.fvfltr is not None:
             self._add_vfltr(resource.fvfltr)
 
-        if DEBUG:
-            print >> sys.stderr, self
+        _debug(self)
 
     # -------------------------------------------------------------------------
     @staticmethod
