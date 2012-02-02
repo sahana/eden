@@ -3081,6 +3081,9 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         return band
 
     def chartButton(self, series_id):
+        # At the moment only draw charts for integers
+        if self.qstnWidget.get("Format", "n") != "n":
+            return None
         if len(self.valueList) < self.histCutoff:
             return None
         return S3AbstractAnalysis.chartButton(self, series_id)
