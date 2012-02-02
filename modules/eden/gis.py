@@ -1723,8 +1723,8 @@ class S3MapModel(S3Model):
         tablename = "gis_feature_query"
         table = self.define_table(tablename,
                                   Field("name", length=128, notnull=True),
-                                  Field("lat", requires=IS_LAT()),
-                                  Field("lon", requires=IS_LON()),
+                                  Field("lat", "double", requires=IS_LAT()),
+                                  Field("lon", "double", requires=IS_LON()),
                                   Field("popup_url"),
                                   Field("popup_label"),
                                   # Optional Marker

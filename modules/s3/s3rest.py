@@ -4479,10 +4479,10 @@ class S3ResourceFilter:
                         # Badly-formed bbox - ignore
                         continue
                     else:
-                        bbox_filter = ((gtable.lon > float(minLon)) & \
-                                       (gtable.lon < float(maxLon)) & \
-                                       (gtable.lat > float(minLat)) & \
-                                       (gtable.lat < float(maxLat)))
+                        bbox_filter = (gtable.lon > float(minLon)) & \
+                                      (gtable.lon < float(maxLon)) & \
+                                      (gtable.lat > float(minLat)) & \
+                                      (gtable.lat < float(maxLat))
                         if fname is not None:
                             # Need a join
                             join = (gtable.id == table[fname])

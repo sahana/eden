@@ -39,7 +39,7 @@ from gluon.sqlhtml import *
 import gluon.contrib.simplejson as json
 from gluon import *
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3Survey: DEBUG MODE"
     def _debug(m):
