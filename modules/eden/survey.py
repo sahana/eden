@@ -69,7 +69,6 @@ __all__ = ["S3TemplateModel",
            "survey_getAllTranslationsForTemplate",
            "survey_getAllTranslationsForSeries",
            "survey_build_template_summary",
-           "survey_build_series_summary",
            "survey_serieslist_dataTable_post",
            "survey_answerlist_dataTable_pre",
            "survey_answerlist_dataTable_post",
@@ -95,9 +94,9 @@ def json2py(jsonstr):
     from xml.sax.saxutils import unescape
 
     try:
-        rawjson = unescape(jsonstr, {"u'": '"'})
-        rawjson = unescape(rawjson, {"'": '"'})
-        pythonStructure = json.loads(rawjson)
+        jsonstr = unescape(jsonstr, {"u'": '"'})
+        jsonstr = unescape(jsonstr, {"'": '"'})
+        pythonStructure = json.loads(jsonstr)
     except:
         _debug("ERROR: attempting to convert %s using modules/eden/survey/json2py.py" % (jsonstr))
         return jsonstr
@@ -1069,7 +1068,11 @@ class S3QuestionModel(S3Model):
         except:
             return
         record = qstntable[question_id]
-        type = record.type
+        try:
+            type = record.type
+        except:
+            _debug("survey question missing type: %s" % record)
+            return
         if type == "Grid":
             widgetObj = survey_question_type["Grid"]()
             widgetObj.insertChildrenToList(question_id,
@@ -1635,6 +1638,7 @@ class S3SeriesModel(S3Model):
         s3db = current.s3db
         request = current.request
         s3 = current.response.s3
+        posn_offset = 11
 
         # retain the rheader
         rheader = attr.get("rheader", None)
@@ -1666,11 +1670,12 @@ class S3SeriesModel(S3Model):
                                               q_ltable.question_id,
                                               orderby = q_ltable.posn)
                 for question in questions:
+                    qstn_posn = question.posn + posn_offset
                     if mode == "Inclusive":
-                        if str(question.posn) in selected:
+                        if str(qstn_posn) in selected:
                             question_ids.append(str(question.question_id))
                     elif mode == "Exclusive":
-                        if str(question.posn) not in selected:
+                        if str(qstn_posn) not in selected:
                             question_ids.append(str(question.question_id))
                 items = buildCompletedList(series_id, question_ids)
                 if r.representation == "xls":
@@ -1711,7 +1716,7 @@ class S3SeriesModel(S3Model):
                 series_id = request.vars.series
             else:
                 series_id = r.id
-            form = survey_build_series_summary(series_id)
+            form = buildSeriesSummary(series_id, posn_offset)
             output["items"] = form
             output["sortby"] = [[0, "asc"]]
             output["title"] = crud_strings.title_analysis_summary
@@ -1863,8 +1868,6 @@ $.post('%s',
 
     @staticmethod
     def seriesMap(r, **attr):
-        from datetime import datetime
-        startTime = datetime.now()
         from s3survey import S3AnalysisPriority
         import math
         s3 = current.response.s3
@@ -2043,9 +2046,6 @@ $.post('%s',
         output["map"] = map
 
         current.response.view = "survey/series_map.html"
-        endTime = datetime.now()
-        duration = endTime - startTime
-        print duration
         return output
 
     @staticmethod
@@ -2364,7 +2364,7 @@ def survey_getPriorityQuestionForSeries(series_id):
         return None
 
 
-def survey_build_series_summary(series_id):
+def buildSeriesSummary(series_id, posn_offset):
     T = current.T
     s3 = current.response.s3
 
@@ -2385,7 +2385,7 @@ def survey_build_series_summary(series_id):
         question_id = question["qstn_id"]
         widgetObj = getWidgetFromQuestion(question_id)
         br = TR()
-        br.append(question["posn"])
+        br.append(int(question["posn"])+posn_offset) # add an offset to make all id's +ve
         br.append(question["name"])
         br.append(question["code"])
         type = widgetObj.type_represent()

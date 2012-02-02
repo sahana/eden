@@ -608,10 +608,6 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
                                    showSectionLabels = False,
                                   )
 #    if DEBUG:
-#        print >> sys.stdout, "formattedMatrix"
-#        print >> sys.stdout, formattedMatrix
-#        print >> sys.stdout, "formattedMatrix layoutBlocks"
-#        print >> sys.stdout, layoutBlocks
 #        f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
 #        print >> f, matrix1
     return (matrix1, matrix2)
@@ -892,6 +888,9 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     sheetA = book.add_sheet(T("Metadata"))
     maxCol = 0
     for cell in matrix.matrix.values():
+        if cell.col + cell.mergeH > 255:
+            print  >> sys.stderr, "Cell (%s,%s) - (%s,%s) ignored" % (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV)
+            continue
         if cell.col + cell.mergeH > maxCol:
             maxCol = cell.col + cell.mergeH
         if cell.joined():
@@ -933,6 +932,8 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                              style
                              )
     cellWidth = 480 # approximately 2 characters
+    if maxCol > 255:
+        maxCol = 255
     for col in range(maxCol+1):
         sheet1.col(col).width = cellWidth
 
@@ -973,9 +974,6 @@ def completed_chart():
         chart drawn is managed by the analysis widget.
     """
     # Load Model
-    module = "survey"
-    resourcename = "series"
-    tablename = "%s_%s" % (module, resourcename)
     s3mgr.load("survey_series")
     s3mgr.load("survey_question")
     if "series_id" in request.vars:
@@ -1166,9 +1164,9 @@ def newAssessment():
 def complete():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
+    s3mgr.load("survey_complete")
+    s3mgr.load("survey_series")
+    table = db["survey_complete"]
     s3 = response.s3
     s3.survey_answerlist_dataTable_pre()
 
@@ -1278,9 +1276,9 @@ def complete():
 def answer():
     """ RESTful CRUD controller """
     # Load Model
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
+    s3mgr.load("survey_answer")
+    s3mgr.load("survey_question")
+    table = db["survey_answer"]
 
     output = s3_rest_controller(module, resourcename)
     return output

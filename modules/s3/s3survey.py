@@ -39,7 +39,7 @@ from gluon.sqlhtml import *
 import gluon.contrib.simplejson as json
 from gluon import *
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     print >> sys.stderr, "S3Survey: DEBUG MODE"
     def _debug(m):
@@ -3081,6 +3081,9 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         return band
 
     def chartButton(self, series_id):
+        # At the moment only draw charts for integers
+        if self.qstnWidget.get("Format", "n") != "n":
+            return None
         if len(self.valueList) < self.histCutoff:
             return None
         return S3AbstractAnalysis.chartButton(self, series_id)
