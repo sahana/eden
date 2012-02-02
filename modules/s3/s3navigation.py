@@ -123,7 +123,8 @@ class S3Menu(DIV):
                         _request_type = "ajax"
                     if link:
                         if _request_type == "ajax":
-                            _onchange="var val=$('#%s:checked').length; $.getS3('%s'+'?val='+val, null, false, null, false, false);" % (_id, link)
+                            _onchange="var val=$('#%s:checked').length; $.getS3('%s'+'?val='+val, null, false, null, false, false);" % \
+                                (_id, link)
                         else:
                             # Just load the page. Use this if the changed menu
                             # item should alter the contents of the page, and

@@ -208,11 +208,46 @@ if auth.permission.format in ("html"):
     if deployment_settings.get_L10n_display_toolbar():
         response.menu.append(s3.menu_lang)
     if deployment_settings.get_gis_menu():
-        # Do not localize this string.
-        s3.gis_menu_placeholder = "GIS menu placeholder"
-        # Add a placeholder for the regions menu, which cannot be constructed
-        # until the gis_config table is available. Put it near the language menu.
-        response.menu.append(s3.gis_menu_placeholder)
+        # Check if there are multiple GIS Configs for the user to switch between
+        table = s3db.gis_menu
+        ctable = s3db.gis_config
+        query = (table.pe_id == None)
+        if auth.is_logged_in():
+            # @ToDo: Search for OUs too (API call)
+            ptable = s3db.pr_person
+            query = query | ((table.pe_id == ptable.pe_id) & \
+                             (ptable.uuid == auth.user.person_uuid))
+        query = query & (table.config_id == ctable.id)
+        configs = db(query).select(ctable.id,
+                                   ctable.name,
+                                   cache=s3db.cache)
+        if len(configs):
+            # Use short names for the site and personal configs else they'll wrap.
+            # Provide checkboxes to select between pages
+            gis_menu = [[{"name": T("Default Map"),
+                          "id": "gis_menu_id_0",
+                          # This doesn't allow visibility of current state
+                          #"value": session.s3.gis_config_id == 0,
+                          "request_type": "load"
+                         },
+                         False,
+                         URL(args=request.args, vars={"_config":0})
+                        ]]
+            for config in configs:
+                gis_menu.append(
+                    [{"name": T(config.name),
+                      "id": "gis_menu_id_%s" % config.id,
+                      # Currently not working on 1st request afterwards as being set after this (in zz_last.py)
+                      "value": session.s3.gis_config_id == config.id,
+                      "request_type": "load"},
+                     False,
+                     URL(args=request.args, vars={"_config":config.id})
+                    ])
+            gis_menu = [deployment_settings.get_gis_menu(),
+                        True, URL(c="gis", f="config"),
+                        gis_menu
+                        ]
+            response.menu.append(gis_menu)
     if s3.menu_admin:
         response.menu.append(s3.menu_admin)
 

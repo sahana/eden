@@ -113,7 +113,6 @@ if deployment_settings.has_module(module):
             if mapconfig:
                 del mapconfig["id"]
                 del mapconfig["uuid"]
-                mapconfig["show_in_menu"] = False
                 mapconfig["name"] = "Scenario %s" % form.vars.name
                 config = table.insert(**mapconfig.as_dict())
                 db.scenario_config.insert(scenario_id=form.vars.id,

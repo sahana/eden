@@ -138,7 +138,6 @@ def person():
                 _config.name.readable = _config.name.writable = False
                 # Hide region fields
                 _config.region_location_id.readable = _config.region_location_id.writable = False
-                _config.show_in_menu.readable = _config.show_in_menu.writable = False
 
             #elif r.component_name == "pe_subscription":
             #    # Load all Tables
