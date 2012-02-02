@@ -59,7 +59,7 @@ class S3Chart(object):
     """
 
     # -------------------------------------------------------------------------
-    def __init__(self, width=9, height=6):
+    def __init__(self, name, width=9, height=6):
         """
             Create the base Figure object
             
@@ -83,7 +83,10 @@ class S3Chart(object):
             MATPLOTLIB = False
 
         #from numpy import array
-
+        self.name = name
+        img_fileName = "applications/%s/uploads/chart_cache/%s.png" % \
+            (current.request.application, self.name)
+        self.URI_name = img_fileName
         self.width = width
         self.height = height
         if MATPLOTLIB:
@@ -125,6 +128,13 @@ class S3Chart(object):
         #return response.body.getvalue()
         image = chart.body.getvalue()
         if output == "xml":
+            """
+                IE 8 and before has a 32K limit on URIs this can be quickly 
+                gobbled up if the image is too large. So the image will
+                stored on the server and a URI used in the src
+            """
+            f = open(self.URI_name,"w+")
+            print >> f, image
             base64Img = base64.b64encode(image)
             image = IMG(_src="data:image/png;base64,%s" % base64Img)
         else:

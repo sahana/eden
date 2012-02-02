@@ -2112,7 +2112,10 @@ $.post('%s',
         if dataList == []:
             output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
         else:
-            chart = S3Chart(width=7.2)
+            import gluon.contrib.simplejson as json
+            chartName = "survey_series_%s_%s" % \
+            (json.dumps(request.args), json.dumps(request.vars))
+            chart = S3Chart(name=chartName, width=7.2)
             chart.displayAsIntegers()
             chart.survey_bar(labelQuestion,
                              dataList,
