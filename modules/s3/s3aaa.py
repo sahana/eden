@@ -2392,15 +2392,15 @@ class S3Permission(object):
         self.auth = auth
 
         # Deployment settings
-        deployment_settings = current.deployment_settings
-        self.policy = deployment_settings.get_security_policy()
+        settings = current.deployment_settings
+        self.policy = settings.get_security_policy()
 
         # Which level of granularity do we want?
         self.use_cacls = self.policy in (3, 4, 5, 6, 7) # Controller ACLs
         self.use_facls = self.policy in (4, 5, 6, 7)    # Function ACLs
         self.use_tacls = self.policy in (5, 6, 7)       # Table ACLs
         self.org_roles = self.policy in (6, 7)          # OrgAuth
-        self.modules = deployment_settings.modules
+        self.modules = settings.modules
 
         # If a large number of roles in the system turnes into a bottleneck
         # in policies 6 and 7, then we could reduce the number of roles in
@@ -2445,7 +2445,11 @@ class S3Permission(object):
             ext = [a for a in request.args if "." in a]
             if ext:
                 self.format = ext[-1].rsplit(".", 1)[1].lower()
-
+        if request.function == "ticket" and \
+           request.controller == "admin":
+            # Error tickets need an override
+            self.format = "html"
+        
         # Page permission cache
         self.page_acls = Storage()
         self.table_acls = Storage()

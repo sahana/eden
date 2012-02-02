@@ -1,5 +1,4 @@
-{{try:}}
- {{=H2(title)}}
+{{try:}}{{=H2(title)}}
 {{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}
@@ -11,16 +10,14 @@
 {{pass}}
 <div id='map'></div>
 <div class='form-container'>
-{{try:}}
-  {{=form}}
+{{try:}}{{=form}}
 {{except:}}{{pass}}
 </div>
 <div><br /></div>
 <div id='table-container'>
 {{try:}}
   {{if items:}}
-    {{=H3(subtitle)}}
-  {{pass}}
+  {{=H3(subtitle)}}{{pass}}
 {{except:}}{{pass}}
 <div id='list_formats'>
 {{try:}}
@@ -36,18 +33,14 @@
 {{pass}}
 {{except:}}{{pass}}
 </div>
-{{try:}}
-  {{=items}}
+{{try:}}{{=items}}
 {{except:}}{{pass}}
 </div>
-{{try:}}
-  {{=add_btn}}
+{{try:}}{{=add_btn}}
 {{except:}}{{pass}}
 </div>
 {{try:}}{{=dashboard}}{{except:}}{{pass}}
 {{if session.s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.js"></script>
-{{else:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.min.js"></script>
-{{pass}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.js"></script>{{else:}}
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.min.js"></script>{{pass}}
 {{include "dataTables.html"}}

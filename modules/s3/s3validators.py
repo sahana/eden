@@ -706,7 +706,7 @@ class IS_LOCATION_SELECTOR(Validator):
             if not auth.s3_has_permission("create", table):
                 return (None, self.no_permission)
             location = self._process_values()
-            strict = gis.get_strict_hierarchy()
+            strict = gis.get_strict_hierarchy(location)
             if strict and not location.parent:
                 return (value, self.no_parent)
             if location.name or location.lat or location.lon or \
@@ -1121,7 +1121,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
             if not auth.s3_has_permission("create", stable):
                 return (None, self.no_permission)
             location = self._process_values()
-            strict = gis.get_strict_hierarchy()
+            strict = gis.get_strict_hierarchy(location)
             if strict and not location.parent:
                 return (value, self.no_parent)
             if location.name or location.lat or location.lon or \

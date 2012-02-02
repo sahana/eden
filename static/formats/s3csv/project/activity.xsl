@@ -18,6 +18,10 @@
          City.................string..........City name (L3)
          Lat..................float...........Latitude
          Lon..................float...........Longitude
+         ContactPersonXXX.....comma-sep list..Contact Person (can be multiple columns)
+                                              as "FirstName,LastName,Email,MobilePhone",
+                                              where first name and email as well as the
+                                              three commas are mandatory
          Comments.............string..........Comments
          Beneficiaries:XXX....integer.........Number of Beneficiaries of type XXX (multiple allowed)
 
@@ -85,6 +89,8 @@
                 </reference>
             </xsl:if>
 
+            <xsl:call-template name="ContactPersonReference"/>
+
             <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
                 <xsl:call-template name="Beneficiaries"/>
             </xsl:for-each>
@@ -96,6 +102,8 @@
                 <xsl:value-of select="col[@field='Activities']"/>
             </xsl:with-param>
         </xsl:call-template>
+
+        <xsl:call-template name="ContactPerson"/>
 
         <xsl:call-template name="Locations"/>
     </xsl:template>
@@ -382,7 +390,57 @@
         </xsl:choose>
 
     </xsl:template>
-    <!-- ****************************************************************** -->
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="ContactPerson">
+        <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
+            <xsl:variable name="PersonData" select="text()"/>
+            <xsl:variable name="FirstName" select="substring-before($PersonData, ',')"/>
+            <xsl:variable name="LastName" select="substring-before(substring-after($PersonData, ','), ',')"/>
+            <xsl:variable name="Email" select="substring-before(substring-after(substring-after($PersonData, ','), ','), ',')"/>
+            <xsl:variable name="MobilePhone" select="substring-after(substring-after(substring-after($PersonData, ','), ','), ',')"/>
+            <xsl:if test="$FirstName!='' and $Email!=''">
+                <resource name="pr_person">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Contact:', $Email)"/>
+                    </xsl:attribute>
+                    <data field="first_name"><xsl:value-of select="$FirstName"/></data>
+                    <data field="last_name"><xsl:value-of select="$LastName"/></data>
+                    <resource name="pr_contact">
+                        <data field="contact_method">EMAIL</data>
+                        <data field="value"><xsl:value-of select="$Email"/></data>
+                    </resource>
+                    <xsl:if test="$MobilePhone!=''">
+                        <resource name="pr_contact">
+                            <data field="contact_method">SMS</data>
+                            <data field="value"><xsl:value-of select="$MobilePhone"/></data>
+                        </resource>
+                    </xsl:if>
+                </resource>
+            </xsl:if>
+        </xsl:for-each>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="ContactPersonReference">
+        <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
+            <xsl:variable name="PersonData" select="text()"/>
+            <xsl:variable name="FirstName" select="substring-before($PersonData, ',')"/>
+            <xsl:variable name="LastName" select="substring-before(substring-after($PersonData, ','), ',')"/>
+            <xsl:variable name="Email" select="substring-before(substring-after(substring-after($PersonData, ','), ','), ',')"/>
+            <xsl:variable name="MobilePhone" select="substring-after(substring-after(substring-after($PersonData, ','), ','), ',')"/>
+            <xsl:if test="$FirstName!='' and $Email!=''">
+                <resource name="project_activity_contact">
+                    <reference field="person_id" resource="pr_person">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Contact:', $Email)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+        </xsl:for-each>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
 </xsl:stylesheet>
 

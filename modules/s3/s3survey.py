@@ -838,9 +838,11 @@ def getMatrix(title,
         (row, col) = builder.processRule(rules, row, col, matrix)
     row = 0
     col = 0
+    logoWidth = 0
     if logo != None:
-        (nextRow,col) = matrix.addCell(row,col,"Logo",[])
-    titleWidth = max(len(title), matrix.lastCol)
+        logoWidth = 6
+        (nextRow,col) = matrix.addCell(row,col,"",[],logoWidth-1,1)
+    titleWidth = max(len(title), matrix.lastCol-logoWidth)
     (row,col) = matrix.addCell(row,col,title,["styleTitle"],titleWidth,1)
     if layoutBlocks != None:
         maxCol = col
@@ -1128,6 +1130,21 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         input = self.webwidget.widget(self.field, value, **self.attr)
         return self.layout(self.question.name, input, **attr)
 
+    def fullName(self):
+        if "parentCode" in self.question:
+            db = current.db
+            query = db(self.qtable.code == self.question.parentCode)
+            record = query.select(self.qtable.id,
+                                  self.qtable.name,
+                                  limitby=(0, 1)).first()
+            if record != None:
+                parentWidget = survey_question_type["Grid"](record.id)
+                subHeading = parentWidget.getHeading(self.question.parentNumber)
+                return "%s - %s (%s)" % (record.name,
+                                         self.question.name,
+                                         subHeading)
+        return self.question.name
+
     def layout(self, label, widget, **attr):
         """
             This lays the label widget that is passed in on the screen.
@@ -1338,6 +1355,25 @@ class S3QuestionTypeAbstractWidget(FormWidget):
 #        else:
 #            return (row+self.xlsMargin[1]+mergeLV+mergeWV, col+self.xlsMargin[0]+max(mergeLH,mergeWH))
 
+    def writeToRTF(self, ss, langDict):
+        """
+            Function to write the basic question details to a rtf document.
+
+            The basic details will be written to Cell objects that can be
+            added to a row in a table object.
+        """
+        from PyRTF import Paragraph, \
+                          Cell, \
+                          B
+        line = []
+        p = Paragraph(ss.ParagraphStyles.Normal)
+        p.append(B(str(self.fullName())))
+        line.append(Cell(p))
+        p = Paragraph(ss.ParagraphStyles.NormalGrey)
+        p.append()
+        line.append(Cell(p))
+        return line
+
     def verifyCoords(self, endrow, endcol):
         (width, height) = self.getMatrixSize()
         calcrow = self.startPosn[1] + width
@@ -1420,6 +1456,27 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
     def canGrowVertical(self):
         return True
 
+    def writeToRTF(self, ss, langDict):
+        """
+            Function to write the basic question details to a rtf document.
+
+            The basic details will be written to Cell objects that can be
+            added to a row in a table object.
+        """
+        from PyRTF import Paragraph, \
+                          Cell, \
+                          B
+        line = []
+        p = Paragraph(ss.ParagraphStyles.Normal)
+        p.append(B(str(self.fullName())))
+        # Add some spacing to increase the text size
+        p2 = Paragraph(ss.ParagraphStyles.Normal)
+        line.append(Cell(p,p2,p2,p2))
+        p = Paragraph(ss.ParagraphStyles.NormalGrey)
+        p.append("")
+        line.append(Cell(p))
+        return line
+
 ##########################################################################
 # Class S3QuestionTypeStringWidget
 ##########################################################################
@@ -1486,7 +1543,7 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Numeric")
 
     def display(self, **attr):
-        length = self.get("length", 10)
+        length = self.get("Length", 10)
         attr["_size"] = length
         attr["_maxlength"] = length
         return S3QuestionTypeAbstractWidget.display(self, **attr)
@@ -1534,8 +1591,8 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         result = S3QuestionTypeAbstractWidget.validate(self, valueList)
         if result != ANSWER_VALID:
             return result
-        length = self.get("length", 10)
-        format = self.get("format")
+        length = self.get("Length", 10)
+        format = self.get("Format")
         data = value(valueList, 0)
         if format != None:
             try:
@@ -1849,6 +1906,29 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             # Only for debugging purposes
             self.verifyCoords(endrow, endcol)
         return (endrow, endcol)
+
+    def writeToRTF(self, ss, langDict):
+        """
+            Function to write the basic question details to a rtf document.
+
+            The basic details will be written to Cell objects that can be
+            added to a row in a table object.
+        """
+        from PyRTF import Paragraph, \
+                          Cell, \
+                          B
+        line = []
+        p = Paragraph(ss.ParagraphStyles.Normal)
+        p.append(B(str(self.fullName())))
+        line.append(Cell(p))
+        list = self.getList()
+        paras = []
+        for option in list:
+            p = Paragraph(ss.ParagraphStyles.Normal)
+            p.append(survey_T(option, langDict))
+            paras.append(p)
+        line.append(Cell(*paras))
+        return line
 
 
     ######################################################################
@@ -2377,6 +2457,22 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         endcol += self.xlsMargin[0]
         return (row, endcol)
 
+    def writeToRTF(self, ss, langDict):
+        """
+            Function to write the basic question details to a rtf document.
+
+            This will just display the grid name, following this will be the
+            grid child objects.
+        """
+        from PyRTF import Paragraph, \
+                          Cell, \
+                          B
+        line = []
+        p = Paragraph(ss.ParagraphStyles.NormalCentre)
+        p.append(B(self.question.name))
+        line.append(Cell(p, span=2))
+        return line
+
     def insertChildren(self, record, metadata):
         self.id = record.id
         self.question = record
@@ -2499,21 +2595,6 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
     def display(self, **attr):
         return None
 
-    def fullName(self):
-        if "parentCode" in self.question:
-            db = current.db
-            query = db(self.qtable.code == self.question.parentCode)
-            record = query.select(self.qtable.id,
-                                  self.qtable.name,
-                                  limitby=(0, 1)).first()
-            if record != None:
-                parentWidget = survey_question_type["Grid"](record.id)
-                subHeading = parentWidget.getHeading(self.question.parentNumber)
-                return "%s - %s (%s)" % (record.name,
-                                         self.question.name,
-                                         subHeading)
-        return self.question.name
-
     def realWidget(self):
         type = self.get("Type")
         realWidget = survey_question_type[type]()
@@ -2549,6 +2630,15 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
             because it is handled by the Grid question type
         """
         return (row, col)
+
+    def writeToRTF(self, ss, langDict):
+        """
+            Function to write the basic question details to a rtf document.
+
+            The basic details will be written to Cell objects that can be
+            added to a row in a table object.
+        """
+        return self.realWidget().writeToRTF(ss,langDict)
 
 
 ###############################################################################
