@@ -882,16 +882,14 @@ class S3XML(S3Codec):
             formatter = dbfield.formatter
             represent = dbfield.represent
             is_attr = f in FIELDS_TO_ATTRIBUTES
-            if represent is not None:
-                value = None
-                text = _repr(table, f, v)
-            elif fieldtype == "datetime":
+            value = None
+            if fieldtype == "datetime":
                 value = encode_iso_datetime(v).decode("utf-8")
             elif fieldtype in ("date", "time"):
                 value = str(formatter(v)).decode("utf-8")
-            else:
-                value = None
-            if value is not None:
+            if represent is not None:
+                text = _repr(table, f, v)
+            elif value is not None:
                 text = xml_encode(value)
             else:
                 text = xml_encode(str(formatter(v)).decode("utf-8"))
