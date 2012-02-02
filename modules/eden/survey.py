@@ -89,7 +89,7 @@ from s3survey import survey_question_type, \
 
 def json2py(jsonstr):
     """
-        Utility function to convert a string in json to a pythin structure
+        Utility function to convert a string in json to a python structure
     """
     import gluon.contrib.simplejson as json
     from xml.sax.saxutils import unescape
@@ -1557,7 +1557,7 @@ class S3SeriesModel(S3Model):
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
-            title_create = T("Conduct an Disaster Assessment"),
+            title_create = T("Conduct a Disaster Assessment"),
             title_display = T("Details of Disaster Assessment"),
             title_list = T("List of Disaster Assessments"),
             title_update = T("Edit this Disaster Assessment"),

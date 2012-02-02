@@ -1,0 +1,10 @@
+skill type,name,priority
+Driving License,"Restricted",1
+Driving License,"Full",2
+Languages,"No",1
+Languages,"Bad",2
+Languages,"Fair",3
+Languages,"Average",4
+Languages,"Good",5
+Languages,"Excellent",6
+Languages,"Fluent",7

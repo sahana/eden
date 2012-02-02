@@ -64,7 +64,7 @@ def update_check(environment):
     try:
         import PyRTF
     except(ImportError):
-        warnings.append("Survey, this is required if (and only if) you want to export the survey assessment template as a Word document")
+        warnings.append("Survey unresolved dependency: PyRTF required if you want to export assessment templates as a Word document")
 
     # -------------------------------------------------------------------------
     # Check Web2Py
