@@ -1000,7 +1000,13 @@ if auth.permission.format in ("html"):
                                                     args="create")],
                     [T("List All"), False, aURL(f="hierarchy")],
                     [T("Import"), False, aURL(f="hierarchy", args="import")],
-                ]]
+                ]],
+                [T("Symbologies"), False, aURL(f="symbology"), [
+                    [T("New Symbology"), False, aURL(p="create", f="symbology",
+                                                    args="create")],
+                    [T("List All"), False, aURL(f="symbology")],
+                    [T("Import"), False, aURL(f="symbology", args="import")],
+                ]],
             ],
 
             "condition1": lambda: not deployment_settings.get_security_map() or s3_has_role(MAP_ADMIN),

@@ -852,28 +852,17 @@ class GIS(object):
                         table[level].label = labels[level]
 
     # -------------------------------------------------------------------------
-    def set_config(self, config_id,
-                   set_in_session=True,
-                   force_update_cache=False):
+    def set_config(self, config_id, force_update_cache=False):
         """
             Reads the specified GIS config from the DB, caches it in response.
 
             Passing in a false or non-existent id will cause the personal config,
-            if any, to be used, else the site config (id 1), else values from
-            deployment_settings or their fallback values defined in this class.
-            (Fallback does not include defaults from the gis_config table.)
+            if any, to be used, else the site config (uuid SITE_DEFAULT), else
+            their fallback values defined in this class.
 
             If force_update_cache is true, the config will be read and cached in
             response even if the specified config is the same as what's already
             cached. Used when the config was just written.
-
-            If set_in_session is true (the normal case), the id of the config
-            that was used will be saved in the session.  If set_in_session is
-            False, it doesn't change what's in session. This is used for
-            temporarily overriding the current config.
-
-            If the projection referenced in the selected config does not exist,
-            the config will not be used.
 
             The config itself will be available in response.s3.gis.config.
             Scalar fields from the gis_config record and its linked
@@ -904,11 +893,13 @@ class GIS(object):
         ctable = s3db.gis_config
         mtable = s3db.gis_marker
         ptable = s3db.gis_projection
+        stable = s3db.gis_symbology
 
         row = None
         if config_id:
             query = (ctable.id == config_id) & \
-                    (mtable.id == ctable.marker_id) & \
+                    (mtable.id == stable.marker_id) & \
+                    (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
             row = db(query).select(limitby=(0, 1)).first()
 
@@ -924,7 +915,8 @@ class GIS(object):
                     prtable = s3db.pr_person
                     query = (prtable.uuid == auth.user.person_uuid) & \
                             (ctable.pe_id == prtable.pe_id) & \
-                            (mtable.id == ctable.marker_id) & \
+                            (mtable.id == stable.marker_id) & \
+                            (stable.id == ctable.symbology_id) & \
                             (ptable.id == ctable.projection_id)
                     row = db(query).select(limitby=(0, 1)).first()
             if not row:
@@ -935,7 +927,8 @@ class GIS(object):
                     s3.gis.config = cache
                     return cache
                 query = (ctable.id == config.id) & \
-                        (mtable.id == ctable.marker_id) & \
+                        (mtable.id == stable.marker_id) & \
+                        (stable.id == ctable.symbology_id) & \
                         (ptable.id == ctable.projection_id)
                 row = db(query).select(limitby=(0, 1)).first()
 
@@ -957,8 +950,8 @@ class GIS(object):
         # Store the values
         s3.gis.config = cache
         if cache:
-            if set_in_session:
-                session.s3.gis_config_id = config_id
+            # Store ID in Session
+            session.s3.gis_config_id = config_id
 
         # Let caller know if their id was valid.
         return config_id if row else cache
@@ -1702,7 +1695,6 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     def get_latlon(self, feature_id, filter=False):
-
         """
             Returns the Lat/Lon for a Feature
 
@@ -1762,11 +1754,7 @@ class GIS(object):
         return None
 
     # -------------------------------------------------------------------------
-    def get_marker(self,
-                   config=None,
-                   tablename=None, record=None,
-                   marker= True, gps=False):
-
+    def get_marker(self, tablename=None, record=None, marker=True, gps=False):
         """
             Returns the Marker for a Feature
                 marker.image = filename
@@ -1780,7 +1768,6 @@ class GIS(object):
 
             @ToDo: Try this once per Resource if unfiltered
 
-            @param config - the gis_config
             @param tablename
             @param record
             @param marker: return the marker
@@ -1845,8 +1832,7 @@ class GIS(object):
 
         if marker and not _marker:
             # Default Marker
-            if not config:
-                config = self.get_config()
+            config = self.get_config()
 
             _marker = Storage(image = config.marker_image,
                               height = config.marker_height,
@@ -1861,7 +1847,6 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def get_projection(config=None, id=None):
-
         """
             Returns the Projection
                 projection.epsg
@@ -1894,7 +1879,6 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def get_popup():
-
         """
             Returns the popup_fields & popup_label for a Map Layer
             - called by S3REST: S3Resource.export_tree()
@@ -1927,7 +1911,6 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def greatCircleDistance(lat1, lon1, lat2, lon2, quick=True):
-
         """
             Calculate the shortest distance (in km) over the earth's sphere between 2 points
             Formulae from: http://www.movable-type.co.uk/scripts/latlong.html
