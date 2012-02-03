@@ -4025,7 +4025,6 @@ class S3Resource(object):
             limitby = None
 
         # Joins
-        query = rfilter.query
         qstr = str(query)
         for j in joins.values():
             if str(j) not in qstr:

@@ -36,6 +36,7 @@ import eden.delphi
 import eden.dvi
 import eden.support
 import eden.survey
+import eden.hms
 #import eden.patient
 
 # =============================================================================

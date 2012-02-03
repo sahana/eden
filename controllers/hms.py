@@ -24,7 +24,7 @@ def s3_menu_postp():
     menu_selected = []
     hospital_id = s3mgr.get_session("hms", "hospital")
     if hospital_id:
-        hospital = db.hms_hospital
+        hospital = s3db.hms_hospital
         query = (hospital.id == hospital_id)
         record = db(query).select(hospital.id,
                                   hospital.name,
@@ -55,7 +55,7 @@ def hospital():
     """ Main controller for hospital data entry """
 
     tablename = "%s_%s" % (module, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     # Load Models to add tabs
     if deployment_settings.has_module("inv"):
@@ -173,10 +173,13 @@ def hospital():
                                                   _title="%s|%s" % (T("Title"),
                                                                     T("The Role this person plays within this hospital."))))
                 elif r.component.name == "image":
-                    table = db.hms_image
-                    table.tags.comment = DIV(DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Image Tags"),
-                                                                   T("Enter tags separated by commas."))))
+                    table = s3db.doc_image
+                    table.location_id.readable = False
+                    table.location_id.writable = False
+                    table.organisation_id.readable = False
+                    table.organisation_id.writable = False
+                    table.person_id.readable = False
+                    table.person_id.writable = False
                 elif r.component.name == "ctc_capability":
                     table = db.hms_ctc_capability
                     table.ctc.comment = DIV(DIV(_class="tooltip",
@@ -227,7 +230,7 @@ def hospital():
         return True
     response.s3.prep = prep
 
-    rheader = hms_hospital_rheader
+    rheader = s3db.hms_hospital_rheader
 
     output = s3_rest_controller(module, resourcename, rheader=rheader)
     s3_menu(module, s3_menu_postp)

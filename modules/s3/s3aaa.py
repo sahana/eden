@@ -2449,7 +2449,7 @@ class S3Permission(object):
            request.controller == "admin":
             # Error tickets need an override
             self.format = "html"
-        
+
         # Page permission cache
         self.page_acls = Storage()
         self.table_acls = Storage()

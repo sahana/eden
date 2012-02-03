@@ -333,7 +333,7 @@ def req_match():
     if deployment_settings.has_module("cr"):
         rheader_dict["cr_shelter"] = response.s3.shelter_rheader
     if deployment_settings.has_module("hms"):
-        rheader_dict["hms_hospital"] = hms_hospital_rheader
+        rheader_dict["hms_hospital"] = s3db.hms_hospital_rheader
 
     s3mgr.configure("req_req", insertable=False)
     output = s3_rest_controller("req", "req",

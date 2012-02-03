@@ -66,7 +66,8 @@ class S3DocumentLibrary(S3Model):
                                irs_ireport=T("Incident Report"),
                                project_project=T("Project"),
                                project_activity=T("Project Activity"),
-                               project_task=T("Task"))
+                               project_task=T("Task"),
+                               hms_hospital=T("Hospital"))
 
         tablename = "doc_entity"
         doc_entity = self.super_entity(tablename, "doc_id", entity_types)

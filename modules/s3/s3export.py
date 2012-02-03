@@ -85,7 +85,6 @@ class S3Exporter(object):
         request = current.request
         response = current.response
         tablename = resource.tablename
-        query = resource.get_query()
 
         if response:
             servername = request and "%s_" % request.env.server_name or ""
@@ -93,7 +92,8 @@ class S3Exporter(object):
             response.headers["Content-Type"] = contenttype(".csv")
             response.headers["Content-disposition"] = "attachment; filename=%s" % filename
 
-        return str(db(query).select())
+        rows = resource.select()
+        return str(rows)
 
     # -------------------------------------------------------------------------
     def json(self, resource,
