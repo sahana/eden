@@ -9,12 +9,12 @@
         <div class="grid_16">
     
             <div id="contenttitles">
-                {% trans "Debates in " %}{{ get_place.name }}
+                <h3>{% trans "Debates in" %} {{ get_place.name }}</h3>
             </div>
       
             {% for debate in object_list %}
                 <div id="spaceitem">
-                    <p class="spacetitle"><a href="{{ debate.get_absolute_url }}">{{ debate.title}}</a></p>
+                    <h6 class="spacetitle"><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></h6>
                     <p class="spacedesc">{{ debate.description|removetags:"p"|safe }}</p>
                 </div>
             {% empty %}

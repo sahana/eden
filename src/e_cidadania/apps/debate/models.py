@@ -21,6 +21,8 @@
 """
 This file contains all the data models for the debate module.
 """
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
@@ -52,7 +54,13 @@ class Debate(models.Model):
     
     def __unicode__(self):
         return self.title
-        
+    
+    def is_active(self):
+        if datetime.date.today() >= self.end_date or self.start_date < datetime.date.today():
+            return False
+        else:
+            return True
+
     @models.permalink
     def get_absolute_url(self):
         return ('view-debate', (), {

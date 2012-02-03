@@ -178,12 +178,23 @@
                             <h4>{% trans "Active debates" %}</h4>
                             <ul class="unstyled">
                                 {% for debate in debates %}
-                                    <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></li>
+                                    {% if debate.is_active %}
+                                        <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></li>
+                                    {% endif %}
                                 {% empty %}
                                     <li>{% trans "No debates started." %}</li>
                                 {% endfor %}
                             </ul>
                             <h4>{% trans "Closed debates" %}</h4>
+                            <ul class="unstyled">
+                                {% for debate in debates %}
+                                    {% if not debate.is_active %}
+                                        <li><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></li>
+                                    {% endif %}
+                                {% empty %}
+                                    <li>{% trans "No debates closed yet." %}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
                         <div class="span5">
                             <h4>{% trans "Administration" %}</h4>
@@ -304,11 +315,9 @@
                                     This code make thw calendar inhibit the onSelect function
                                     on load it returns the error:
                                     Uncaught TypeError: Property 'datepicker' of object function (a,b){return new e.fn.init(a,b,h)} is not a function (anonymous function)
-                                    
-                                    $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);
-                                    
-                                    
-                                                            $('#datepicker').datepicker($.extend({},
+
+                                $.datepicker($.datepicker.regional['{{ LANGUAGE_CODE }}']);  
+                                $('#datepicker').datepicker($.extend({},
                                      $.datepicker.regional[ '{{ LANGUAGE_CODE }}' ], {
                                      onSelect: function(dateText) {
                                          var month = dateText.split("/")[0];
@@ -316,10 +325,8 @@
                                          window.location = "calendar/" + year + "/" + month + "/";
                                      }
                                 }));
-                        
-                        
-                        
-                                {% endcomment %}
+
+                                
                                 $('#datepicker').datepicker({
                                      onSelect: function(dateText) {
                                          var month = dateText.split("/")[0];
@@ -327,6 +334,17 @@
                                          window.location = "calendar/" + year + "/" + month + "/";
                                      }
                                 });
+                                {% endcomment %} 
+		                        $.datepicker.setDefaults(
+		                            $.datepicker.regional[ "" ],
+		                            { onSelect: function(dateText) {
+                                        var month = dateText.split("/")[0];
+                                        var year = dateText.split("/")[2];
+                                        window.location = "calendar/" + year + "/" + month + "/";
+                                      }
+                                    }
+                                );
+		                        $( "#datepicker" ).datepicker( $.datepicker.regional[ "{{ LANGUAGE_CODE }}" ] );
                             </script>
                             <div id="datepicker"></div>
                         </div>
