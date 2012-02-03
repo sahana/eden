@@ -268,7 +268,7 @@
                         <div class="span11">
                             <ul class="unstyled">
                                 {% for doc in documents %}
-                                    <li><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }}</a></li>
+                                    <li><a href="{{ MEDIA_URL }}{{ doc.docfile.url }}">{{ doc.title }} ({{ doc.get_file_ext }}, {{ doc.get_file_size }})</a></li>
                                 {% empty %}
                                     <li>{% trans "No documents available." %}</li>
                                 {% endfor %}

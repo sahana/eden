@@ -125,6 +125,20 @@ class Document(models.Model):
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
                                null=True)
     
+    def get_file_ext(self):
+        filename = self.docfile.name
+        extension = filename.split('.')
+        return extension[1].upper()
+
+    def get_file_size(self):
+        print self.docfile.size
+        if self.docfile.size < 1023:
+            return str(self.docfile.size) + " Bytes"
+        elif self.docfile.size >= 1024 and self.docfile.size <= 1048575:
+            return str(round(self.docfile.size / 1024.0, 2)) + " KB"
+        elif self.docfile.size >= 1048576:
+            return str(round(self.docfile.size / 1024000.0, 2)) + " MB"
+        
     class Meta:
         ordering = ['pub_date']
         verbose_name = _('Document')
