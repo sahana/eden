@@ -16,7 +16,6 @@
          Lon..................float...........gis_config.lon
          Projection...........integer.........gis_config.projection.epsg
          Symbology............string..........gis_config.symbology_id
-         Marker...............string..........gis_config.marker_id
          MinLat...............float...........gis_config.min_lat
          MaxLat...............float...........gis_config.max_lat
          MinLon...............float...........gis_config.min_lon
@@ -30,19 +29,12 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
     <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Markers -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('markers',
-                                                                   col[@field='Marker'])[1])]">
-                <xsl:call-template name="Marker"/>
-            </xsl:for-each>
-
             <!-- Projections -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('projections',
                                                                    col[@field='Projection'])[1])]">
@@ -66,7 +58,6 @@
 
         <xsl:variable name="region" select="col[@field='Region']/text()"/>
         <xsl:variable name="default" select="col[@field='Default']/text()"/>
-        <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
         <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
     
@@ -110,11 +101,6 @@
             <xsl:if test="col[@field='WMS Browser']!=''">
                 <data field="wmsbrowser_url"><xsl:value-of select="col[@field='WMS Browser']"/></data>
             </xsl:if>
-            <reference field="marker_id" resource="gis_marker">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Marker"/>
-                </xsl:attribute>
-            </reference>
             <reference field="projection_id" resource="gis_projection">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Projection"/>
@@ -139,20 +125,6 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-        </resource>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-
-    <xsl:template name="Marker">
-
-        <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
-    
-        <resource name="gis_marker">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Marker"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Marker"/></data>
         </resource>
     </xsl:template>
 

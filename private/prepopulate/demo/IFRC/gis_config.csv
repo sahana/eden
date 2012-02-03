@@ -1,3 +1,3 @@
-"UUID","Name","Region","Default","Zoom","Lat","Lon","Projection","Symbology","Marker","MinLat","MaxLat","MinLon","MaxLon","Search Level","WMS Browser"
-"SITE_DEFAULT","Site",,,3,4.9,125,900913,"IFRC","marker_red",-90,90,60,180,"L0","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
-,"TL","Timor-Leste","Timor-Leste",8,-8.88,125.92,900913,"IFRC","marker_red",-9.5,-8.4,124.04,127.3,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+"UUID","Name","Region","Default","Zoom","Lat","Lon","Projection","Symbology","MinLat","MaxLat","MinLon","MaxLon","Search Level","WMS Browser"
+"SITE_DEFAULT","Site",,,3,4.9,125,900913,"IFRC",-90,90,60,180,"L0","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+,"TL","Timor-Leste","Timor-Leste",8,-8.88,125.92,900913,"IFRC",-9.5,-8.4,124.04,127.3,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
