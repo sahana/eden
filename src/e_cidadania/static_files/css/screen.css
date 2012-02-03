@@ -66,6 +66,12 @@ hr { /* This hr replaces the bootstrap one */
 }
 /* END COMMON CUSTOMIZATIONS */
 
+/* MAIN INDEX */
+.introtitle {
+    font-size: 3em;
+}
+/* END MAIN INDEX */
+
 /* SPACE INDEX */
 .posttitle {
     border-bottom: 1px solid #DDD;

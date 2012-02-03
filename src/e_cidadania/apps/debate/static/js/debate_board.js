@@ -32,10 +32,12 @@ function showControls() {
     $(".mine").hover(function(){
             $(this).find(".deletenote").show();
             $(this).find("#edit-note").show();
+            $(this).find("#view-note").show();
         },
         function() {
             $(this).find(".deletenote").hide();
             $(this).find("#edit-note").hide();
+            $(this).find("#view-note").hide();
         }
     );
 }
@@ -84,6 +86,34 @@ function createNote() {
     // Activate control show/hide for the new note
 }
 
+function viewNote(obj) {
+    /*
+        editNote(obj) - This function detects the note the user clicked and raises
+        a modal dialog, after that it checks the note in the server and returns
+        it's data, prepopulating the fields.
+    */
+    var noteID = $(obj).parent().parent().attr('id');
+
+    var request = $.ajax({
+        url: "../update_note/",
+        data: { noteid: noteID }
+    });
+
+    request.done(function(note) {
+        $('h3#view-note-title').text(note.title);
+        $('p#view-note-desc').text(note.message);
+    });
+
+    request.fail(function (jqXHR, textStatus) {
+        $('#edit-current-note').modal('hide');
+        $('#jsnotify').notify("create", {
+            title: errorGetNote,
+            text: errorMsg + textStatus,
+            icon:"alert.png"
+        });
+    });
+}
+
 function editNote(obj) {
     /*
         editNote(obj) - This function detects the note the user clicked and raises
@@ -98,6 +128,7 @@ function editNote(obj) {
     });
 
     request.done(function(note) {
+
         $("input[name='notename']").val(note.title);
         $("textarea#id_note_message").val(note.message);
         $("#last-edited-note").text(noteID);
