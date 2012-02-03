@@ -992,7 +992,7 @@ def completed_chart():
     answers = getAnswers(qstnID, seriesID)
     analysisTool = survey_analysis_type[type](qstnID, answers)
     qstnName = analysisTool.qstnWidget.question.name
-    image = analysisTool.drawChart(output="png")
+    image = analysisTool.drawChart(seriesID, output="png")
     return image
 
 def section():
