@@ -21,8 +21,9 @@
 """
 These are the views that control the debates.
 """
-# JSON stuff
+
 import json
+import datetime
 
 # Generic class-based views
 from django.views.generic.base import TemplateView, RedirectView
@@ -249,6 +250,12 @@ class ViewDebate(DetailView):
 
     def get_object(self):
         debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+        
+        # Check debate dates
+        if datetime.date.today() >= debate.end_date or debate.start_date < datetime.date.today():
+            self.template_name = 'debate/debate_outdated.html'
+            #return Debate.objects.none()
+        
         return debate
 
     def get_context_data(self, **kwargs):

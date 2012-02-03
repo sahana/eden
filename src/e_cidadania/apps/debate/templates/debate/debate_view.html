@@ -28,7 +28,8 @@
             <p><strong>{% trans "Scope:" %}</strong> {{ debate.scope }}</p>
         </div>
         <div class="span8">
-            This space is meant for the start and end fields
+            <p><strong>{% trans "Start date:" %}</strong> {% if debate.start_date %}{{ debate.start_date }}{% else %}{% trans "No date"%}{% endif %}</p>
+            <p><strong>{% trans "End date:" %}</strong> {% if debate.end_date %}{{ debate.end_date }}{% else %}{% trans "No date"%}{% endif %}</p>
         </div>
     </div>
 
