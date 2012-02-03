@@ -64,7 +64,7 @@ import gluon.contrib.simplejson as json
 from s3validators import IS_ONE_OF
 from s3tools import SQLTABLES3
 from s3xml import S3XML
-from s3model import S3Model, S3ModelExtensions, S3RecordLinker
+from s3model import S3Model, S3ModelExtensions
 from s3export import S3Exporter
 from s3method import S3Method
 from s3import import S3ImportJob
@@ -160,7 +160,6 @@ class S3RequestManager(object):
         self.load = S3Model.table
         self.loader = self.model.loader
 
-        self.linker = S3RecordLinker()
         self.xml = S3XML()
         self.exporter = S3Exporter()
         self.sync = S3Sync()
