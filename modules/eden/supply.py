@@ -4,7 +4,7 @@
 
     @author: Michael Howden <michael[at]aidiq.com>
 
-    @copyright: 2009-2011 (c) Sahana Software Foundation
+    @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

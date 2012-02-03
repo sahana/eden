@@ -150,7 +150,7 @@ def inv_incoming():
     if deployment_settings.has_module("cr"):
         rheader_dict["cr_shelter"] = response.s3.shelter_rheader
     if deployment_settings.has_module("hms"):
-        rheader_dict["hms_hospital"] = hms_hospital_rheader
+        rheader_dict["hms_hospital"] = s3db.hms_hospital_rheader
 
     stable = s3db.inv_send
     SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]

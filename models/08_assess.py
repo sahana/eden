@@ -8,8 +8,11 @@
     @author: Michael Howden
 
     This module currently contains 2 types of Assessments
-      * Flexible Impact Assessments
+      * Flexible Impact Assessments (including Mobile access)
+      
       * Rapid Assessment Tool (from ECB: http://www.ecbproject.org/page/48)
+        @ToDo: Migrate this to a Template in the Survey module
+        
         @ToDo Validation similar to sitrep_school_report_onvalidation()
         http://bazaar.launchpad.net/~flavour/sahana-eden/trunk/annotate/head:/models/sitrep.py#L99
 

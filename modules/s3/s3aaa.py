@@ -7,7 +7,7 @@
     @author: Dominic König <dominic[at]aidiq[dot]com>
     @author: Fran Boon <fran[at]aidiq[dot]com>
 
-    @copyright: (c) 2010-2011 Sahana Software Foundation
+    @copyright: (c) 2010-2012 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -2449,7 +2449,7 @@ class S3Permission(object):
            request.controller == "admin":
             # Error tickets need an override
             self.format = "html"
-        
+
         # Page permission cache
         self.page_acls = Storage()
         self.table_acls = Storage()

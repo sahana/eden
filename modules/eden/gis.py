@@ -2,9 +2,7 @@
 
 """ Sahana Eden GIS Model
 
-    @author: Fran Boon <fran[at]aidiq.com>
-
-    @copyright: 2009-2011 (c) Sahana Software Foundation
+    @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1041,6 +1039,8 @@ class S3GISConfigModel(S3Model):
         table = self.define_table(tablename,
                                   Field("name", length=32,
                                         notnull=True, unique=True),
+                                  marker_id(label = T("Default Marker"),
+                                            empty=False),
                                   *s3.meta_fields())
 
         # Reusable field to include in other table definitions
@@ -1094,11 +1094,6 @@ class S3GISConfigModel(S3Model):
                                         default=900913
                                         ),
                                   symbology_id(),
-                                  # @ToDo: Move this to gis_symbology
-                                  marker_id(
-                                        # @ToDo: Remove default once we have cascading working
-                                        empty=False
-                                        ),
                                   Field("wmsbrowser_url"),
                                   Field("wmsbrowser_name",
                                         # @ToDo: Remove default once we have cascading working
@@ -1299,7 +1294,6 @@ class S3GISConfigModel(S3Model):
                 T("The map will be displayed initially with this longitude at the center."),
                 T("Longitude is West - East (sideways)."),
                 T("Longitude is zero on the prime meridian (through Greenwich, United Kingdom) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas.")))
-        table.marker_id.label = T("Default Marker")
         table.wmsbrowser_name.label = T("Web Map Service Browser Name")
         table.wmsbrowser_name.comment = DIV(
             _class="tooltip",
@@ -1723,8 +1717,8 @@ class S3MapModel(S3Model):
         tablename = "gis_feature_query"
         table = self.define_table(tablename,
                                   Field("name", length=128, notnull=True),
-                                  Field("lat", requires=IS_LAT()),
-                                  Field("lon", requires=IS_LON()),
+                                  Field("lat", "double", requires=IS_LAT()),
+                                  Field("lon", "double", requires=IS_LON()),
                                   Field("popup_url"),
                                   Field("popup_label"),
                                   # Optional Marker

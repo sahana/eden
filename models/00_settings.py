@@ -25,9 +25,6 @@ s3.base_url = "%s/%s" % (deployment_settings.get_base_public_url(),
                          request.application)
 s3.download_url = "%s/default/download" % s3.base_url
 
-# Dictionary to store our asynchronous Tasks
-tasks = {}
-
 ###############
 # Client tests
 ###############

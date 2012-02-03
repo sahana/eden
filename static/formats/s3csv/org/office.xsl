@@ -6,8 +6,6 @@
     <!-- **********************************************************************
          Office - CSV Import Stylesheet
 
-         2011-Jun-13 / Graeme Foster <graeme AT acm DOT org>
-
          - use for import to org/office resource
          - example raw URL usage:
            Let URLpath be the URL to Sahana Eden appliation
@@ -42,6 +40,8 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+
+    <xsl:include href="../commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Office types, see models/05_org.py -->
@@ -179,7 +179,7 @@
         <xsl:if test="$l1!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$l1"/>
+                    <xsl:value-of select="concat('L1',$l1)"/>
                 </xsl:attribute>
                 <reference field="parent" resource="gis_location">
                     <xsl:attribute name="uuid">
@@ -195,13 +195,13 @@
         <xsl:if test="$l2!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$l2"/>
+                    <xsl:value-of select="concat('L2',$l2)"/>
                 </xsl:attribute>
                 <xsl:choose>
                     <xsl:when test="$l1!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l1"/>
+                                <xsl:value-of select="concat('L1',$l1)"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
@@ -222,20 +222,20 @@
         <xsl:if test="$l3!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$l3"/>
+                    <xsl:value-of select="concat('L3',$l3)"/>
                 </xsl:attribute>
                 <xsl:choose>
                     <xsl:when test="$l2!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l2"/>
+                                <xsl:value-of select="concat('L2',$l2)"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
                     <xsl:when test="$l1!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l1"/>
+                                <xsl:value-of select="concat('L1',$l1)"/>
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
@@ -261,21 +261,21 @@
                 <xsl:when test="$l3!=''">
                     <reference field="parent" resource="gis_location">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$l3"/>
+                            <xsl:value-of select="concat('L3',$l3)"/>
                         </xsl:attribute>
                     </reference>
                 </xsl:when>
                 <xsl:when test="$l2!=''">
                     <reference field="parent" resource="gis_location">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$l2"/>
+                            <xsl:value-of select="concat('L2',$l2)"/>
                         </xsl:attribute>
                     </reference>
                 </xsl:when>
                 <xsl:when test="$l1!=''">
                     <reference field="parent" resource="gis_location">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="$l1"/>
+                            <xsl:value-of select="concat('L1',$l1)"/>
                         </xsl:attribute>
                     </reference>
                 </xsl:when>
