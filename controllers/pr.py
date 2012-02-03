@@ -28,7 +28,7 @@ def s3_menu_postp():
                                       args=[record.id])])
     person_id = s3mgr.get_session("pr", "person")
     if person_id:
-        person = db.pr_person
+        person = s3db.pr_person
         query = (person.id == person_id)
         record = db(query).select(person.id, limitby=(0, 1)).first()
         if record:
