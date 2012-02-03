@@ -57,7 +57,7 @@ class S3Chart(object):
 
         Currently a simple wrapper to matplotlib
     """
-
+    CACHE_PATH = "/%s/static/cache/chart"  %  current.request.application
     # -------------------------------------------------------------------------
     def __init__(self, path, width=9, height=6):
         """
@@ -93,10 +93,10 @@ class S3Chart(object):
             self.fig = None
 
     @staticmethod
-    def getCachedPath(fileName):
+    def getCachedPath(filename):
         import os
-        path = "applications/%s" % current.request.application
-        chartFile = "/uploads/chart_cache/%s.png" % fileName
+        path = "applications"
+        chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
         fullPath = "%s%s" % (path, chartFile)
         if os.path.exists(fullPath):
             return chartFile
@@ -104,12 +104,12 @@ class S3Chart(object):
             return None
 
     @staticmethod
-    def getCachedFile(fileName):
+    def getCachedFile(filename):
         """
             Return the opened cached file, if the file can't be found then
             return None
         """
-        chartFile = S3Chart.getCachedPath(fileName)
+        chartFile = S3Chart.getCachedPath(filename)
         if chartFile:
             try:
                 f = open(chartFile)
@@ -120,12 +120,12 @@ class S3Chart(object):
         return None
 
     @staticmethod
-    def storeCachedFile(fileName, image):
+    def storeCachedFile(filename, image):
         """
             Save the file in the cache area, and return the path to this file
         """
-        path = "applications/%s" % current.request.application
-        chartFile = "/uploads/chart_cache/%s.png" % fileName
+        path = "applications"
+        chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
         fullPath = "%s%s" % (path, chartFile)
         f = open(fullPath,"w+")
         print >> f, image
@@ -138,8 +138,7 @@ class S3Chart(object):
             if the prefix is None then all files will be deleted
         """
         import os
-        folder = "applications/%s/uploads/chart_cache/" % \
-                 current.request.application
+        folder = "applications%s/" % (S3Chart.CACHE_PATH)
         filelist = os.listdir(folder)
         for file in filelist:
             if prefix == None or file.startswith(prefix):

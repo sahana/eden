@@ -10,6 +10,7 @@
 /sessions/*
 /uploads/*
 /static/scripts/tools/compiler.jar
+/static/cache/chart/*
 /tests/selenium/results/*
 /tests/selenium/scripts/diagTestResults.txt
 /tests/selenium/server/selenium-server.jar

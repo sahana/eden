@@ -2854,10 +2854,14 @@ class S3AbstractAnalysis():
         return DIV(link, _class="surveyChart%sWidget" % self.type)
 
     def getChartName(self, series_id):
+        import hashlib
         request = current.request
+        h = hashlib.sha256()
+        h.update(self.qstnWidget.question.code)
+        encoded_part = h.hexdigest()
         chartName = "survey_series_%s_%s" % \
                     (series_id,
-                     self.qstnWidget.question.code,
+                     encoded_part
                     )
         return chartName
 

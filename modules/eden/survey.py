@@ -52,6 +52,7 @@ __all__ = ["S3TemplateModel",
            "survey_getTemplateFromSeries",
            "survey_getAllTemplates",
            "survey_getAllWidgetsForTemplate",
+           "survey_getWidgetFromQuestion",
            "survey_getAllSectionsForSeries",
            "survey_getAllSectionsForTemplate",
            "survey_getQuestionFromCode",
@@ -692,7 +693,7 @@ def survey_getAllSectionsForTemplate(template_id):
     return sections
 
 
-def getWidgetFromQuestion(question_id):
+def survey_getWidgetFromQuestion(question_id):
     """
         Function that gets the right widget for the question
     """
@@ -726,7 +727,7 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                                _colspan="2"),
                             _class="survey_section"))
             sectionTitle = question["section"]
-        widgetObj = getWidgetFromQuestion(question["qstn_id"])
+        widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
         if readOnly:
             table.append(TR(TD(question["code"]),
                             TD(widgetObj.type_represent()),
@@ -1231,7 +1232,7 @@ def survey_get_series_questions_of_type(questionList, type):
             questions.append(question)
         elif question["type"] == "Link" or \
              question["type"] == "GridChild":
-            widgetObj = getWidgetFromQuestion(question["qstn_id"])
+            widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
             if widgetObj.getParentType() in types:
                 question["name"] = widgetObj.fullName()
                 questions.append(question)
@@ -1729,11 +1730,17 @@ class S3SeriesModel(S3Model):
 
     @staticmethod
     def getChartName():
+        import hashlib
         request = current.request
-        chartName = "survey_series_%s_%s_%s" % \
+        end_part = "%s_%s" % (request.vars.numericQuestion,
+                              request.vars.labelQuestion
+                             )
+        h = hashlib.sha256()
+        h.update(end_part)
+        encoded_part = h.hexdigest()
+        chartName = "survey_series_%s_%s" % \
                     (request.vars.series,
-                     request.vars.numericQuestion,
-                     request.vars.labelQuestion,
+                     encoded_part
                     )
         return chartName
 
@@ -1951,7 +1958,7 @@ $.post('%s',
         else:
             chartFile = S3SeriesModel.getChartName()
             chart = S3Chart(path=chartFile, width=7.2)
-            chart.displayAsIntegers()
+            chart.asInt = True
             chart.survey_bar(labelQuestion,
                              dataList,
                              label,
@@ -2404,7 +2411,7 @@ def buildSeriesSummary(series_id, posn_offset):
     body = TBODY()
     for question in questions:
         question_id = question["qstn_id"]
-        widgetObj = getWidgetFromQuestion(question_id)
+        widgetObj = survey_getWidgetFromQuestion(question_id)
         br = TR()
         br.append(int(question["posn"])+posn_offset) # add an offset to make all id's +ve
         br.append(question["name"])
@@ -2777,7 +2784,7 @@ class S3CompleteModel(S3Model):
             complete_id = form.vars.complete_id
             question_id = form.vars.question_id
             value = form.vars.value
-            widgetObj = getWidgetFromQuestion(question_id)
+            widgetObj = survey_getWidgetFromQuestion(question_id)
             newValue = widgetObj.onaccept(value)
             if newValue != value:
                 query = (atable.question_id == question_id) & \
@@ -2873,7 +2880,7 @@ def get_location_details(complete_id):
         record = db(query & (qsntable.code == locCode)).select(qsntable.id,
                                                                limitby=(0, 1)).first()
         if record:
-            widgetObj = getWidgetFromQuestion(record.id)
+            widgetObj = survey_getWidgetFromQuestion(record.id)
             widgetObj.loadAnswer(complete_id, record.id)
             locations[locCode] = widgetObj
     return locations
@@ -2896,7 +2903,7 @@ def get_default_location(complete_id):
         record = db(query & (qsntable.code == locCode)).select(qsntable.id,
                                                                limitby=(0, 1)).first()
         if record:
-            widgetObj = getWidgetFromQuestion(record.id)
+            widgetObj = survey_getWidgetFromQuestion(record.id)
             break
     if record:
         widgetObj.loadAnswer(complete_id, record.id)
@@ -2986,7 +2993,7 @@ def buildCompletedList(series_id, question_id_list):
     for question_id in question_id_list:
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
                                                    series_id)
-        widgetObj = getWidgetFromQuestion(question_id)
+        widgetObj = survey_getWidgetFromQuestion(question_id)
 
         qtable = s3db.survey_question
         query = (qtable.id == question_id)
