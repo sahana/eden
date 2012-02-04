@@ -4,15 +4,18 @@
 
 # Set deployment_settings.base.prepopulate to 0 in Production
 # (to save 1x DAL hit every page).
-populate = deployment_settings.get_base_prepopulate()
-if populate:
+pop_list = deployment_settings.get_base_prepopulate()
+if pop_list == 0:
+    pop_list = []
+else:
     table = db[auth.settings.table_group_name]
     # The query used here takes 2/3 the time of .count().
     if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-        populate = 0
-
+        pop_list = []
+    if not isinstance(pop_list,(list,tuple)):
+        pop_list = [pop_list]
 # Add core roles as long as at least one populate setting is on
-if populate > 0:
+if len(pop_list) > 0:
 
     # Shortcuts
     acl = auth.permission

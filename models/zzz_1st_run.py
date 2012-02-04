@@ -5,7 +5,7 @@
 # however this isn't reliable (doesn't work on Win32 Service) so still in models for now...
 
 # Deployments can change settings live via appadmin
-if populate > 0:
+if len(pop_list) > 0:
 
     # Allow debug
     import sys
@@ -157,79 +157,80 @@ if populate > 0:
     if not request.env.request_method:
         request.env.request_method = "GET"
 
-    # Import data specific to the prepopulate setting
-    if populate == 1:
-        # Populate with the default data
-        path = os.path.join(request.folder,
-                            "private",
-                            "prepopulate",
-                            "default")
-        bi.perform_tasks(path)
-
-    elif populate == 2:
-        # Populate data for the regression tests
-        path = os.path.join(request.folder,
-                            "private",
-                            "prepopulate",
-                            "regression")
-        bi.perform_tasks(path)
-
-    elif populate == 3:
-        # Populate data for scalability testing
-        # This is different from the repeatable imports that use csv files
-        # This will generate millions of records of data for selected tables.
-
-        # Code needs to go here to generate a large volume of test data
-        pass
-
-    elif populate == 10:
-        # Populate data for user specific data
-        path = os.path.join(request.folder,
-                            "private",
-                            "prepopulate",
-                            "user")
-        bi.perform_tasks(path)
-
-    elif populate >= 20:
-        # Populate data for a deployment default demo
-        """
-            Read the demo_folders file and extract the folder for the specific demo
-        """
-        file = os.path.join(request.folder,
-                            "private",
-                            "prepopulate",
-                            "demo",
-                            "demo_folders.cfg")
-        source = open(file, "r")
-        values = source.readlines()
-        source.close()
-        demo = ""
-        for demos in values:
-            # strip out the new line
-            demos = demos.strip()
-            if demos == "":
-                continue
-            # split at the comma
-            details = demos.split(",")
-            if len(details) == 2:
-                 # remove any spaces and enclosing double quote
-                index = details[0].strip('" ')
-                if int(index) == populate:
-                    directory = details[1].strip('" ')
-                    path = os.path.join(request.folder,
-                                        "private",
-                                        "prepopulate",
-                                        "demo",
-                                        directory)
-                    demo = directory
-                    if os.path.exists(path):
-                        bi.perform_tasks(path)
-                    else:
-                        print >> sys.stderr, "Unable to install demo %s no demo directory found" % index
-        if demo == "":
-            print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" % populate
-        else:
-            print >> sys.stderr, "Installed demo '%s'" % demo
+    for pop_setting in pop_list:
+        # Import data specific to the prepopulate setting
+        if pop_setting == 1:
+            # Populate with the default data
+            path = os.path.join(request.folder,
+                                "private",
+                                "prepopulate",
+                                "default")
+            bi.perform_tasks(path)
+    
+        elif pop_setting == 2:
+            # Populate data for the regression tests
+            path = os.path.join(request.folder,
+                                "private",
+                                "prepopulate",
+                                "regression")
+            bi.perform_tasks(path)
+    
+        elif pop_setting == 3:
+            # Populate data for scalability testing
+            # This is different from the repeatable imports that use csv files
+            # This will generate millions of records of data for selected tables.
+    
+            # Code needs to go here to generate a large volume of test data
+            pass
+    
+        elif pop_setting == 10:
+            # Populate data for user specific data
+            path = os.path.join(request.folder,
+                                "private",
+                                "prepopulate",
+                                "user")
+            bi.perform_tasks(path)
+    
+        elif pop_setting >= 20:
+            # Populate data for a deployment default demo
+            """
+                Read the demo_folders file and extract the folder for the specific demo
+            """
+            file = os.path.join(request.folder,
+                                "private",
+                                "prepopulate",
+                                "demo",
+                                "demo_folders.cfg")
+            source = open(file, "r")
+            values = source.readlines()
+            source.close()
+            demo = ""
+            for demos in values:
+                # strip out the new line
+                demos = demos.strip()
+                if demos == "":
+                    continue
+                # split at the comma
+                details = demos.split(",")
+                if len(details) == 2:
+                     # remove any spaces and enclosing double quote
+                    index = details[0].strip('" ')
+                    if int(index) == pop_setting:
+                        directory = details[1].strip('" ')
+                        path = os.path.join(request.folder,
+                                            "private",
+                                            "prepopulate",
+                                            "demo",
+                                            directory)
+                        demo = directory
+                        if os.path.exists(path):
+                            bi.perform_tasks(path)
+                        else:
+                            print >> sys.stderr, "Unable to install demo %s no demo directory found" % index
+            if demo == "":
+                print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" % pop_setting
+            else:
+                print >> sys.stderr, "Installed demo '%s'" % demo
 
     for errorLine in bi.errorList:
         print >> sys.stderr, errorLine
