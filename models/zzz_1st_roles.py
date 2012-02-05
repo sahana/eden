@@ -157,6 +157,8 @@ if populate > 0:
                 dict(c="survey", f = "series", 
                      uacl=acl.READ, oacl=acl.READ),
                 dict(c="survey", f = "series_export_formatted", 
+                dict(c="survey", f = "export_all_responses", 
+                     uacl=acl.READ, oacl=acl.READ),
                      uacl=acl.READ, oacl=acl.READ),
                 dict(t="survey_translate", 
                      uacl=acl.READ, oacl=acl.READ))
@@ -170,6 +172,8 @@ if populate > 0:
                 dict(c="survey", f = "series", 
                      uacl=acl.CREATE|acl.READ|acl.UPDATE, oacl=acl.CREATE|acl.READ|acl.UPDATE),
                 dict(c="survey", f = "series_export_formatted", 
+                     uacl=acl.READ, oacl=acl.READ),
+                dict(c="survey", f = "export_all_responses", 
                      uacl=acl.READ, oacl=acl.READ),
                 dict(t="survey_answer", 
                      uacl=acl.CREATE|acl.READ, oacl=acl.CREATE|acl.READ|acl.UPDATE),
