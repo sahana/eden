@@ -395,7 +395,7 @@ class S3XML(S3Codec):
         if not uid or uid.startswith("urn:") or not domain:
             return uid
         else:
-            if "/" in uid[1:-1]:
+            if "/" in uid[1:-1] or "/" not in uid:
                 return uid
             else:
                 (_domain, _uid) = uid.split("/", 1)
