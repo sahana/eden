@@ -9,6 +9,7 @@
 /models/0000_update_check.py
 /sessions/*
 /uploads/*
+/private/prepopulate/user/*
 /static/scripts/tools/compiler.jar
 /static/cache/chart/*
 /tests/selenium/results/*

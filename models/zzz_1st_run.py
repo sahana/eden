@@ -157,7 +157,11 @@ if len(pop_list) > 0:
     if not request.env.request_method:
         request.env.request_method = "GET"
 
+    _debug = deployment_settings.get_base_debug()
+
     for pop_setting in pop_list:
+        start = datetime.datetime.now()
+        bi.clear_tasks()
         # Import data specific to the prepopulate setting
         if pop_setting == 1:
             # Populate with the default data
@@ -174,7 +178,8 @@ if len(pop_list) > 0:
                                 "prepopulate",
                                 "regression")
             bi.perform_tasks(path)
-    
+            print >> sys.stdout, "Installed Regression Test Data"
+
         elif pop_setting == 3:
             # Populate data for scalability testing
             # This is different from the repeatable imports that use csv files
@@ -182,7 +187,18 @@ if len(pop_list) > 0:
     
             # Code needs to go here to generate a large volume of test data
             pass
-    
+
+        elif pop_setting == 4:
+            # Populate data for the user roles
+            path = os.path.join(request.folder,
+                                "private",
+                                "prepopulate",
+                                "roles")
+            bi.perform_tasks(path)
+            end = datetime.datetime.now()
+            duration = end - start
+            print >> sys.stdout, "Installed Authorisation Roles completed in %s" % (duration)
+
         elif pop_setting == 10:
             # Populate data for user specific data
             path = os.path.join(request.folder,
@@ -190,7 +206,10 @@ if len(pop_list) > 0:
                                 "prepopulate",
                                 "user")
             bi.perform_tasks(path)
-    
+            end = datetime.datetime.now()
+            duration = end - start
+            print >> sys.stdout, "Installed Private User Data completed in %s" % (duration)
+
         elif pop_setting >= 20:
             # Populate data for a deployment default demo
             """
@@ -230,7 +249,13 @@ if len(pop_list) > 0:
             if demo == "":
                 print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" % pop_setting
             else:
-                print >> sys.stderr, "Installed demo '%s'" % demo
+                end = datetime.datetime.now()
+                duration = end - start
+                print >> sys.stdout, "Installed demo '%s' completed in %s" % (demo, duration)
+        if _debug:
+            for result in bi.resultList:
+                print >> sys.stdout, result
+        bi.resultList = []
 
     for errorLine in bi.errorList:
         print >> sys.stderr, errorLine

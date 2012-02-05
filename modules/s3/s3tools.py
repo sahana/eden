@@ -304,7 +304,6 @@ class S3BulkImporter(object):
 
     def __init__(self):
         """ Constructor """
-
         response = current.response
         self.importTasks = []
         self.specialTasks = []
@@ -412,7 +411,7 @@ class S3BulkImporter(object):
 
     def execute_import_task(self, task):
         """ Method that will execute each import job, in order """
-
+        start = datetime.datetime.now()
         if task[0] == 1:
             manager = current.manager
             db = current.db
@@ -482,31 +481,40 @@ class S3BulkImporter(object):
             # and report them to stderr
 
             db.commit()
-            _debug ("%s import job completed" % tablename)
-
             # Restore the view
             response.view = view
-            self.clear_import_tasks()
+            end = datetime.datetime.now()
+            duration = end - start
+            csvName = task[3][task[3].rfind("/")+1:]
+            msg = "   %s import job completed in %s" % (csvName, duration)
+            self.resultList.append(msg)
+
 
     def execute_special_task(self, task):
+        start = datetime.datetime.now()
         if task[0] == 2:
             fun = task[1]
-            #fun_g, fun_a = fun.split(".", 1)
             csv = task[2]
             extraArgs = task[3]
             if csv is None:
                 if extraArgs is None:
-                    current.response.s3[fun]()
+                    error = current.response.s3[fun]()
                 else:
-                    current.response.s3[fun](extraArgs)
+                    error = current.response.s3[fun](extraArgs)
             elif extraArgs is None:
-                current.response.s3[fun](csv)
+                error = current.response.s3[fun](csv)
             else:
-                current.response.s3[fun](csv, extraArgs)
+                error = current.response.s3[fun](csv, extraArgs)
+            if error:
+                self.errorList.append(error)
+            end = datetime.datetime.now()
+            duration = end - start
+            msg = "   %s import job completed in %s" % (fun, duration)
+            self.resultList.append(msg)
 
-    def clear_import_tasks(self):
+    def clear_tasks(self):
         """ Clear the importTask list """
-        self.importTasks = []
+        self.tasks = []
 
     def perform_tasks(self, path):
         """ convenience method that will load and then execute the import jobs
@@ -519,10 +527,6 @@ class S3BulkImporter(object):
             elif task[0] == 2:
                 self.execute_special_task(task)
 
-    def perform_task(self, controller, csv, xsl):
-        """ convenience method that will load and execute the import job """
-        self.load_import(controller, csv, xsl)
-        self.execute_import_tasks()
 
 
 # =============================================================================
