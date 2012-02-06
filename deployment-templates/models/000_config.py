@@ -235,6 +235,13 @@ deployment_settings.gis.mouse_position = "normal"
 #deployment_settings.gis.print_service = "/geoserver/pdf/"
 # Do we have a spatial DB available? (currently unused. Will support PostGIS & Spatialite.)
 deployment_settings.gis.spatialdb = False
+# Bing API Key (for Map layers)
+#deployment_settings.gis.api_bing = ""
+# Google API Key (for Earth & MapMaker Layers)
+# default works for localhost
+#deployment_settings.gis.api_google = ""
+# Yahoo API Key (for Geocoder)
+#deployment_settings.gis.api_yahoo = ""
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
 # NB Needs to be publically-accessible URL for querying via client JS
 #deployment_settings.gis.geoserver_url = "http://localhost/geoserver"

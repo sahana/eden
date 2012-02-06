@@ -198,10 +198,19 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # GIS (Map) Settings
-    # No defaults are needed for gis_config deployment settings -- initial
-    # defaults come either from the table itself or are added to the site
-    # config when it is created. This does not include defaults for the
-    # hierarchy labels as that is defined separately in 000_config.
+    def get_gis_api_bing(self):
+        """ API key for Bing """
+        return self.gis.get("api_bing", None)
+    def get_gis_api_google(self):
+        """
+            API key for Google
+            - needed for Earth, MapMaker & GeoCoder
+            - defaults to localhost
+        """
+        return self.gis.get("api_google", "ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw")
+    def get_gis_api_yahoo(self):
+        """ API key for Yahoo """
+        return self.gis.get("api_yahoo", None)
     def get_gis_countries(self):
         return self.gis.get("countries", [])
     def get_gis_building_name(self):

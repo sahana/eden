@@ -270,9 +270,9 @@ class CrudS3(Crud):
         if not (isinstance(table, db.Table) or table in db.tables):
             raise HTTP(404)
         if not self.has_permission("select", table):
-            redirect(self.settings.auth.settings.on_failed_authorization)
+            redirect(current.auth.settings.on_failed_authorization)
         #if record_id and not self.has_permission("select", table):
-        #    redirect(self.settings.auth.settings.on_failed_authorization)
+        #    redirect(current.auth.settings.on_failed_authorization)
         if not isinstance(table, db.Table):
             table = db[table]
         if not query:

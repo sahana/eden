@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-    Vehicle
-
-    @author: Fran Boon
-    @date-created: 2011-06-20
-
     Vehicle Management Functionality
 
     http://eden.sahanafoundation.org/wiki/BluePrint/Vehicle

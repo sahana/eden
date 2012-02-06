@@ -8,8 +8,8 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         Enabled..............boolean.........Layer Enabled?
-         Visible..............boolean.........Layer Visible?
+         Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
+         Visible..............boolean.........Layer Visible in SITE_DEFAULT config?
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -23,11 +23,31 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+
+        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
+
         <resource name="gis_layer_coordinate">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Layer"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Layer"/></data>
+        </resource>
+
+        <resource name="gis_layer_config">
+            <reference field="layer_id" resource="gis_layer_coordinate">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Layer"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="config_id" resource="gis_config">
+                <xsl:attribute name="uuid">
+                    <xsl:value-of select="'SITE_DEFAULT'"/>
+                </xsl:attribute>
+            </reference>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>
+
     </xsl:template>
     <!-- ****************************************************************** -->
 

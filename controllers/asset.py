@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-    Asset
-
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @author: Fran Boon (fran@sahanafoundation.org)
-    @date-created: 2011-03-18
-
     Asset Management Functionality
 
     http://eden.sahanafoundation.org/wiki/BluePrint/Assets

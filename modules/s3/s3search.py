@@ -2383,7 +2383,7 @@ class S3PentitySearch(S3Search):
             @param attr: request attributes
         """
 
-
+        s3db = current.s3db
         xml = current.manager.xml
 
         output = None
@@ -2412,9 +2412,10 @@ class S3PentitySearch(S3Search):
         # Fields to return
         if filter and value:
 
-            field = current.db.pr_person.first_name
-            field2 = current.db.pr_person.middle_name
-            field3 = current.db.pr_person.last_name
+            ptable = s3db.pr_person
+            field = ptable.first_name
+            field2 = ptable.middle_name
+            field3 = ptable.last_name
 
             if filter == "~":
                 # pr_person Autocomplete
@@ -2434,7 +2435,7 @@ class S3PentitySearch(S3Search):
                 raise HTTP(400, body=output)
 
         resource.add_filter(query)
-        resource.add_filter(current.db.pr_person.pe_id == table.pe_id)
+        resource.add_filter(ptable.pe_id == table.pe_id)
 
         output = resource.exporter.json(resource, start=0, limit=limit,
                                         fields=[table.pe_id], orderby=field)
@@ -2442,11 +2443,12 @@ class S3PentitySearch(S3Search):
 
         # AT: group
         if filter and value:
-            field = current.db.pr_group.name
+            gtable = s3db.pr_group 
+            field = gtable.name
             query = field.lower().like("%" + value + "%")
             resource.clear_query()
             resource.add_filter(query)
-            resource.add_filter(current.db.pr_group.pe_id == table.pe_id)
+            resource.add_filter(gtable.pe_id == table.pe_id)
             output = resource.exporter.json(resource,
                                             start=0,
                                             limit=limit,
@@ -2455,7 +2457,8 @@ class S3PentitySearch(S3Search):
             items += jsonlib.loads(output)
 
         items = [ { "id" : item[u'pe_id'],
-                    "name" : self.pentity_represent(item[u'pe_id']) }
+                    "name" : s3db.pr_pentity_represent(item[u'pe_id'],
+                                                       show_label=False) }
                   for item in items ]
         output = jsonlib.dumps(items)
 

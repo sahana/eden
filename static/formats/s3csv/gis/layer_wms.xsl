@@ -11,8 +11,8 @@
          Description..........string..........Layer Description
          URL..................string..........Layer URL
          Layers...............string..........Layers
-         Enabled..............boolean.........Layer Enabled?
-         Visible..............boolean.........Layer Visible?
+         Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
+         Visible..............boolean.........Layer Visible in SITE_DEFAULT config?
          Folder...............string..........Layer Folder
          Base.................boolean.........Layer Base?
          Transparent..........boolean.........Layer Transparent?
@@ -36,13 +36,17 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+
+        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
+
         <resource name="gis_layer_wms">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Layer"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="layers"><xsl:value-of select="col[@field='Layers']"/></data>
-            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
-            <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="base"><xsl:value-of select="col[@field='Base']"/></data>
             <data field="transparent"><xsl:value-of select="col[@field='Transparent']"/></data>
@@ -54,6 +58,22 @@
             <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="map"><xsl:value-of select="col[@field='Map']"/></data>
         </resource>
+
+        <resource name="gis_layer_config">
+            <reference field="layer_id" resource="gis_layer_wms">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Layer"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="config_id" resource="gis_config">
+                <xsl:attribute name="uuid">
+                    <xsl:value-of select="'SITE_DEFAULT'"/>
+                </xsl:attribute>
+            </reference>
+            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
+            <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
+        </resource>
+
     </xsl:template>
     <!-- ****************************************************************** -->
 

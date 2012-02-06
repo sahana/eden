@@ -110,6 +110,12 @@ class S3PersonEntity(S3Model):
         self.add_component("dvi_checklist",
                            pr_pentity=dict(joinby=pe_id,
                                            multiple=False))
+        # Map Configs
+        #   - Personalised configurations
+        #   - OU configurations (Organisation/Branch/Facility/Team)
+        self.add_component("gis_config",
+                           pr_pentity=dict(joinby=pe_id,
+                                           multiple=False))
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -340,7 +346,8 @@ class S3PersonModel(S3Model):
                                       "last_name",
                                       "picture",
                                       "gender",
-                                      "age_group"
+                                      "age_group",
+                                      #(T("Organization"), "hrm_human_resource:organisation_id$name")
                                      ],
                        onvalidation=self.pr_person_onvalidation,
                        search_method=pr_person_search,
@@ -493,7 +500,8 @@ class S3PersonModel(S3Model):
 class S3GroupModel(S3Model):
     """ Groups """
 
-    names = ["pr_group_id",
+    names = ["pr_group",
+             "pr_group_id",
              "pr_group_represent",
              "pr_group_membership"]
 

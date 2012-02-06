@@ -98,7 +98,7 @@ def s3_role_represent(id):
     table = s3db.auth_group
     role = db(table.id == id).select(table.role,
                                      limitby=(0, 1),
-                                     cache=(cache.ram, 10)).first()
+                                     cache=s3db.cache).first()
     if role:
         return role.role
     return None
@@ -282,14 +282,6 @@ s3.roles_permitted = roles_permitted
 
 # =============================================================================
 # Other reusable fields
-
-# -----------------------------------------------------------------------------
-# Reusable name field to include in other table definitions
-name_field = S3ReusableField("name", length=64,
-                             label=T("Name"), required=IS_NOT_EMPTY())
-
-# Make available for S3Models
-s3.name_field = name_field
 
 # -----------------------------------------------------------------------------
 # Reusable comments field to include in other table definitions

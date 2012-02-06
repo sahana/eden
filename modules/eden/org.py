@@ -32,9 +32,8 @@ __all__ = ["S3OrganisationModel",
            "S3RoomModel",
            "S3OfficeModel",
            "org_organisation_represent",
-           "org_organisation_rheader",
+           "org_rheader",
            "org_site_represent",
-           "org_office_rheader",
            ]
 
 from gluon import *
@@ -1130,18 +1129,18 @@ def org_organisation_represent(id, showlink=False, acronym=True):
 
     return represent
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def org_site_represent(id, default_label="[no label]", link = True):
     """ Represent a Facility in option fields or list views """
 
     db = current.db
     s3db = current.s3db
-    site_str = current.messages.NONE
+    represent = current.messages.NONE
 
     stable = s3db.org_site
 
     if not id:
-        return site_str
+        return represent
 
     if isinstance(id, Row) and "instance_type" in id:
         # Do not repeat the lookup if already done by IS_ONE_OF
@@ -1153,13 +1152,13 @@ def org_site_represent(id, default_label="[no label]", link = True):
                                            stable.instance_type,
                                            limitby=(0, 1)).first()
         if not site:
-            return site_str
+            return represent
 
     instance_type = site.instance_type
     try:
         table = s3db[instance_type]
     except:
-        return site_str
+        return represent
 
     instance_type_nice = stable.instance_type.represent(instance_type)
 
@@ -1169,9 +1168,9 @@ def org_site_represent(id, default_label="[no label]", link = True):
             type = site.type
         except:
             query = (table.site_id == site.site_id)
-            record = db( query ).select( table.id,
-                                         table.type,
-                                         limitby=(0, 1)).first()
+            record = db(query).select(table.id,
+                                      table.type,
+                                      limitby=(0, 1)).first()
             if record:
                 id = record.id
                 type = record.type
@@ -1180,142 +1179,129 @@ def org_site_represent(id, default_label="[no label]", link = True):
              instance_type_nice = T("Warehouse")
 
     if site:
-        site_str = "%s (%s)" % (site.name, instance_type_nice)
+        represent = "%s (%s)" % (site.name, instance_type_nice)
     else:
         # Since name is notnull for all types so far, this won't be reached.
-        site_str = "[site %d] (%s)" % (id, instance_type_nice)
+        represent = "[site %d] (%s)" % (id, instance_type_nice)
 
     if link and site:
         if not id:
             query = (table.site_id == site.site_id)
-            id = db( query ).select( table.id,
-                                     limitby=(0, 1)).first()
-        c, f = instance_type.split("_")
-        site_str = A(site_str,
-                     _href = URL(c=c, f=f,
-                                 args = [id],
-                                 extension = "" # removes the .aaData extension in paginated views!
-                                 ))
+            id = db(query).select(table.id,
+                                  limitby=(0, 1)).first()
+        c, f = instance_type.split("_", 1)
+        represent = A(represent,
+                      _href = URL(c=c, f=f,
+                                  args = [id],
+                                  extension = "" # removes the .aaData extension in paginated views!
+                                ))
 
-    return site_str
+    return represent
 
-# -----------------------------------------------------------------------------
-def org_organisation_rheader(r, tabs=[]):
-    """ Organization page headers """
+# =============================================================================
+def org_rheader(r, tabs=[]):
+    """ Organisation/Office/Warehouse page headers """
 
-    if r.representation == "html":
-        if r.record is None:
-            # List or Create form: rheader makes no sense here
-            return None
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+    record = r.record
+    if record is None:
+        # List or Create form: rheader makes no sense here
+        return None
 
-        T = current.T
-        s3 = current.response.s3
+    table = r.table
+    resourcename = r.name
+    T = current.T
+
+    if resourcename == "organisation":
         settings = current.deployment_settings
 
         # Tabs
-        tabs = [(T("Basic Details"), None),
-                (T("Staff & Volunteers"), "human_resource"),
-                (T("Offices"), "office"),
-                (T("Projects"), "project"),
-                #(T("Tasks"), "task"),
-               ]
+        if not tabs:
+            tabs = [(T("Basic Details"), None),
+                    (T("Staff & Volunteers"), "human_resource"),
+                    (T("Offices"), "office"),
+                    (T("Projects"), "project"),
+                    #(T("Tasks"), "task"),
+                   ]
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        table = r.table
-        organisation = r.record
-
-        if table.sector_id.readable and organisation.sector_id:
+        if table.sector_id.readable and record.sector_id:
             if settings.get_ui_cluster():
                 sector_label = T("Cluster(s)")
             else:
                 sector_label = T("Sector(s)")
             sectors = TR(TH("%s: " % sector_label),
-                         table.sector_id.represent(organisation.sector_id))
+                         table.sector_id.represent(record.sector_id))
         else:
             sectors = ""
 
-        if organisation.website:
+        if record.website:
             website = TR(TH("%s: " % table.website.label),
-                         A(organisation.website, _href=organisation.website))
+                         A(record.website, _href=record.website))
         else:
             website = ""
 
         rheader = DIV(TABLE(
             TR(
                 TH("%s: " % table.name.label),
-                organisation.name,
+                record.name,
                 ),
             website,
             sectors,
         ), rheader_tabs)
+    
+    elif resourcename == "office":
+        s3 = current.response.s3
 
-        return rheader
+        tabs = [(T("Basic Details"), None),
+                #(T("Contact Data"), "contact"),
+                (T("Staff"), "human_resource"),
+               ]
+        try:
+            tabs = tabs + s3.req_tabs(r)
+        except:
+            pass
+        try:
+            tabs = tabs + current.s3db.inv_tabs(r)
+        except:
+            pass
 
-    return None
+        rheader_tabs = s3_rheader_tabs(r, tabs)
 
-# -----------------------------------------------------------------------------
-def org_office_rheader(r, tabs=[]):
-    """ Office/Warehouse page headers """
+        rheader = DIV(TABLE(
+                      TR(
+                         TH("%s: " % table.name.label),
+                         record.name,
+                         TH("%s: " % table.type.label),
+                         table.type.represent(record.type),
+                         ),
+                      TR(
+                         TH("%s: " % table.organisation_id.label),
+                         table.organisation_id.represent(record.organisation_id),
+                         TH("%s: " % table.location_id.label),
+                         table.location_id.represent(record.location_id),
+                         ),
+                      TR(
+                         TH("%s: " % table.email.label),
+                         record.email or "",
+                         TH("%s: " % table.phone1.label),
+                         record.phone1 or "",
+                         ),
+                      #TR(TH(A(T("Edit Office"),
+                      #        _href=URL(c="org", f="office",
+                      #                  args=[r.id, "update"],
+                      #                  vars={"_next": _next})))
+                      #   )
+                          ),
+                      rheader_tabs)
 
-    if r.representation == "html":
-        tablename, record = s3_rheader_resource(r)
-        if tablename == "org_office" and record:
-            office = record
+        if r.component and r.component.name == "req":
+            # Inject the helptext script
+            rheader.append(s3.req_helptext_script)
 
-            T = current.T
-            s3db = current.s3db
-            s3 = current.response.s3
-
-            tabs = [(T("Basic Details"), None),
-                    #(T("Contact Data"), "contact"),
-                    (T("Staff"), "human_resource"),
-                   ]
-            try:
-                tabs = tabs + s3.req_tabs(r)
-            except:
-                pass
-            try:
-                tabs = tabs + s3db.inv_tabs(r)
-            except:
-                pass
-
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            table = s3db.org_office
-
-            rheader = DIV(TABLE(
-                          TR(
-                             TH("%s: " % table.name.label),
-                             office.name,
-                             TH("%s: " % table.type.label),
-                             table.type.represent(office.type),
-                             ),
-                          TR(
-                             TH("%s: " % table.organisation_id.label),
-                             table.organisation_id.represent(office.organisation_id),
-                             TH("%s: " % table.location_id.label),
-                             table.location_id.represent(office.location_id),
-                             ),
-                          TR(
-                             TH("%s: " % table.email.label),
-                             office.email or "",
-                             TH("%s: " % table.phone1.label),
-                             office.phone1 or "",
-                             ),
-                          #TR(TH(A(T("Edit Office"),
-                          #        _href=URL(c="org", f="office",
-                          #                  args=[r.id, "update"],
-                          #                  vars={"_next": _next})))
-                          #   )
-                              ),
-                          rheader_tabs)
-
-            if r.component and r.component.name == "req":
-                # Inject the helptext script
-                rheader.append(s3.req_helptext_script)
-            return rheader
-
-    return None
+    return rheader
 
 # END =========================================================================

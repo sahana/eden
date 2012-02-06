@@ -2,9 +2,6 @@
 
 """
     Impact - Controller
-
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2010-10-12
 """
 
 module = request.controller

@@ -3,9 +3,6 @@
 """
     Inventory Management
 
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2010-08-16
-
     A module to record inventories of items at a locations (sites),
     including Warehouses, Offices, Shelters & Hospitals
 """
@@ -144,7 +141,7 @@ def warehouse():
         return True
     response.s3.prep = prep
 
-    rheader = s3db.org_office_rheader
+    rheader = s3db.org_rheader
 
     if "extra_data" in request.get_vars:
         csv_template = "inv_item"

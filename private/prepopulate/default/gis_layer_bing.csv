@@ -1,2 +1,4 @@
-Name,API Key,Enabled
-Bing,,False
+Name,Type,Enabled
+Bing Aerial,aerial,False
+Bing Hybrid,hybrid,False
+Bing Road,road,False

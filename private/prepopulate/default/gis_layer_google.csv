@@ -1,2 +1,8 @@
-Name,API Key,Maps,Satellite,Hybrid,Streetview,Earth
-Google,"ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw",True,False,False,True,True
+Name,Description,Type,Enabled
+Google Maps,Streets,maps,False
+Google Hybrid,Streets over Satellite imagery,hybrid,False
+Google Satellite,Satellite imagery,satellite,False
+Google MapMaker,Community additions to streets. This is much more detailed than normal Google in some locations. It is incompatioble with Streetview.,mapmaker,False
+Google MapMapker Hybrid,Community additions to streets overlaid over Satellite imagery. This is much more detailed than normal Google in some locations. It is incompatioble with Streetview.,mapmakerhybrid,False
+Google Earth,Earth allows access to a 3D satellite view.,earth,True
+Google Streetview,Streetview allows access to a 3D photographic panorama. It is incompatible with MapMaker layers.,streetview,True

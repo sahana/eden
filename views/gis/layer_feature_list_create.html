@@ -1,8 +1,0 @@
-{{extend "layout.html"}}
-{{include "gis/catalogue_toolbar.html"}}
-{{include "_list_create.html"}}
-<script type="text/javascript">//<![CDATA[
-$(function() {
-    $('#gis_layer_feature_resource').val('{{=response.s3.feature_resource}}');
-});
-//]]></script>

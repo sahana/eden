@@ -2,11 +2,6 @@
 
 """
     Assessments - Controller
-
-    @author: Fran Boon
-    @author: Dominic König
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2010-08-25
 """
 
 module = request.controller
