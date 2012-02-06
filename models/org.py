@@ -53,7 +53,7 @@ def org_organisation_controller():
         return True
     s3.prep = prep
 
-    rheader = s3db.org_organisation_rheader
+    rheader = s3db.org_rheader
     output = s3_rest_controller("org", "organisation",
                                 native=False, rheader=rheader)
     return output
@@ -179,7 +179,7 @@ def org_office_controller():
         return True
     s3.prep = prep
 
-    rheader = s3db.org_office_rheader
+    rheader = s3db.org_rheader
 
     return s3_rest_controller("org", "office", rheader=rheader)
 

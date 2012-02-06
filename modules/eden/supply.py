@@ -2,8 +2,6 @@
 
 """ Sahana Eden Supply Model
 
-    @author: Michael Howden <michael[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 

@@ -2,9 +2,6 @@
 """
     Inventory Management
 
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2010-08-16
-
     A module to record inventories of items at a location (site)
 """
 
@@ -146,7 +143,7 @@ def inv_incoming():
     to_site_id = record.site_id
     site_id = record.site_id
 
-    rheader_dict = dict(org_office = s3db.org_office_rheader)
+    rheader_dict = dict(org_office = s3db.org_rheader)
     if deployment_settings.has_module("cr"):
         rheader_dict["cr_shelter"] = response.s3.shelter_rheader
     if deployment_settings.has_module("hms"):

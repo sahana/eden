@@ -2,9 +2,6 @@
 
 """ Sahana Eden Assets Model
 
-    @author: Michael Howden <michael[at]aidiq.com>
-    @author: Fran Boon <fran[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 

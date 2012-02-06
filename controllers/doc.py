@@ -2,9 +2,6 @@
 
 """
     Document Library - Controllers
-
-    @author: Fran Boon
-    @author: Michael Howden
 """
 
 module = request.controller

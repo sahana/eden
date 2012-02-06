@@ -873,7 +873,9 @@ class GIS(object):
 
             @param: config_id. use '0' to set the SITE_DEFAULT
 
-            @ToDo: Merge configs for Site/OU/User/Event/Region
+            @ToDo: Merge configs for Site/OU/User/Region/Event
+                   - for layers, merge is permissive, so more layers are shown,
+                     except when explicitly excluded lower down the hierarchy
         """
 
         session = current.session
@@ -1786,16 +1788,21 @@ class GIS(object):
             cache = s3db.cache
 
             table = s3db.gis_layer_feature
+            gtable = s3db.gis_config
             mtable = s3db.gis_marker
+            ltable = s3db.gis_layer_symbology
 
             (module, resource) = tablename.split("_", 1)
 
             # 1st choice for a Marker is the Feature Layer's
             query = (table.module == module) & \
-                    (table.resource == resource)
+                    (table.resource == resource) & \
+                    (table.layer_id == ltable.layer_id) & \
+                    (gtable.id == session.s3.gis_config_id) & \
+                    (gtable.symbology_id == ltable.symbology_id)
 
-            layers = db(query).select(table.marker_id,
-                                      table.gps_marker,
+            layers = db(query).select(ltable.marker_id,
+                                      ltable.gps_marker,
                                       table.filter_field,
                                       table.filter_value,
                                       cache=cache)
@@ -1803,12 +1810,14 @@ class GIS(object):
             if layers:
                 _gps_marker = None
                 for row in layers:
+                    row = row.gis_layer_feature
+                    lrow = row.gis_layer_symbology
                     if record and row.filter_field:
                         # Check if the record matches the filter
                         if str(record[row.filter_field]) == row.filter_value:
-                            _gps_marker = row.gps_marker or DEFAULT
+                            _gps_marker = lrow.gps_marker or DEFAULT
                             if marker:
-                                query = (mtable.id == row.marker_id)
+                                query = (mtable.id == lrow.marker_id)
                                 _marker = db(query).select(mtable.image,
                                                            mtable.height,
                                                            mtable.width,
@@ -1816,9 +1825,9 @@ class GIS(object):
                                                            cache=cache).first()
                     else:
                         # No Filter so we match automatically
-                        _gps_marker = row.gps_marker or DEFAULT
+                        _gps_marker = lrow.gps_marker or DEFAULT
                         if marker:
-                            query = (mtable.id == row.marker_id)
+                            query = (mtable.id == lrow.marker_id)
                             _marker = db(query).select(mtable.image,
                                                        mtable.height,
                                                        mtable.width,
@@ -1833,7 +1842,6 @@ class GIS(object):
         if marker and not _marker:
             # Default Marker
             config = self.get_config()
-
             _marker = Storage(image = config.marker_image,
                               height = config.marker_height,
                               width = config.marker_width)
@@ -1843,38 +1851,6 @@ class GIS(object):
 
         # Return both
         return (_marker, gps_marker)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_projection(config=None, id=None):
-        """
-            Returns the Projection
-                projection.epsg
-
-            Used by Projection()
-            @ToDo: Reverse this - have this call Projection()?
-
-            @param config - the gis_config
-            @param id - the id of the Projection to lookup
-        """
-
-        if id:
-            db = current.db
-            s3db = current.s3db
-            cache = s3db.cache
-            table = s3db.gis_projection
-            query = (table.id == id)
-            projection = db(query).select(table.epsg,
-                                          limitby=(0, 1),
-                                          cache=cache).first()
-
-        else:
-            if not config:
-                config = gis.get_config()
-            # Default projection
-            projection = Storage(epsg = config.epsg)
-
-        return projection
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3210,7 +3186,6 @@ class GIS(object):
         # HTML
         ######
         # Catalogue Toolbar
-        # @ToDo: Reuse views/gis/catalogue_toolbar.html?
         if catalogue_toolbar:
             config_button = SPAN( A(T("Configurations"),
                                   _href=URL(c="gis", f="config")),
@@ -3339,7 +3314,7 @@ class GIS(object):
 
         if config.pe_id or s3_has_role(MAP_ADMIN):
             # Personal/OU config or MapAdmin, so enable Save Button
-            region = "S3.gis.region = %i;" % config.id
+            region = "S3.gis.region = %i;\n" % config.id
         else:
             region = ""
 
@@ -3622,161 +3597,6 @@ S3.gis.lon = %s;
         # Layers
         ########
 
-        #
-        # Base Layers
-        #
-
-        layers_osm = ""
-
-        # ---------------------------------------------------------------------
-        # OpenStreetMap
-        #
-        # @ToDo: Provide a catalogue of standard layers which are fully-defined
-        #        in static & can just have name over-ridden, as well as
-        #        fully-custom layers.
-        # ---------------------------------------------------------------------
-        if Projection(id=config.projection_id).epsg != 900913:
-            error = "%s\n" % T("Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection")
-            response.warning += error
-        else:
-            query = (s3db.gis_layer_openstreetmap.enabled == True)
-            openstreetmap_enabled = db(query).select()
-            if openstreetmap_enabled:
-                layers_osm = """
-S3.gis.layers_osm = new Array();"""
-                counter = -1
-            else:
-                layers_osm = ""
-            for layer in openstreetmap_enabled:
-                if layer.role_required and not s3_has_role(layer.role_required):
-                    continue
-                counter = counter + 1
-                name_safe = re.sub("'", "", layer.name)
-                if layer.url2:
-                    url2 = """,
-    "url2": "%s\"""" % layer.url2
-                else:
-                    url2 = ""
-                if layer.url3:
-                    url3 = """,
-    "url3": "%s\"""" % layer.url3
-                else:
-                    url3 = ""
-                if layer.base:
-                    base = ""
-                else:
-                    base = """,
-    "isBaseLayer": false"""
-                if layer.visible:
-                    visibility = ""
-                else:
-                    visibility = """,
-    "visibility": false"""
-                if layer.dir:
-                    dir = """,
-    "dir": "%s\"""" % layer.dir
-                else:
-                    dir = ""
-                if layer.attribution:
-                    attribution = """,
-    "attribution": %s""" % repr(layer.attribution)
-                else:
-                    attribution = ""
-                if layer.zoom_levels is not None and layer.zoom_levels != 19:
-                    zoomLevels = """,
-    "zoomLevels": %i""" % layer.zoom_levels
-                else:
-                    zoomLevels = ""
-
-                # Generate JS snippet to pass to static
-                layers_osm += """
-S3.gis.layers_osm[%i] = {
-    "name": "%s",
-    "url1": "%s"%s%s%s%s%s%s%s
-}
-""" % (counter,
-       name_safe,
-       layer.url1,
-       url2,
-       url3,
-       visibility,
-       dir,
-       base,
-       attribution,
-       zoomLevels)
-
-
-        # ---------------------------------------------------------------------
-        # XYZ
-        # @ToDo: Migrate to Class/Static
-        # ---------------------------------------------------------------------
-        #layers_xyz = ""
-        #xyz_enabled = db(db.gis_layer_xyz.enabled == True).select()
-        #if xyz_enabled:
-        #    layers_xyz = """
-#function addXYZLayers() {"""
-        #    for layer in xyz_enabled:
-        #        if layer.role_required and not s3_has_role(layer.role_required):
-        #            continue
-        #        name = layer.name
-        #        name_safe = re.sub("\W", "_", name)
-        #        url = layer.url
-        #        if layer.sphericalMercator:
-        #            sphericalMercator = "sphericalMercator: true,"
-        #        else:
-        #            sphericalMercator = ""
-        #        if layer.transitionEffect:
-        #            transitionEffect = """
-        #    transitionEffect: '%s',""" % layer.transitionEffect
-        #        else:
-        #            transitionEffect = ""
-        #        if layer.zoom_levels != 19:
-        #            zoomLevels = """
-        #    numZoomLevels: %i,""" % layer.zoom_levels
-        #        else:
-        #            zoomLevels = ""
-        #        if layer.base:
-        #            base = """
-        #    isBaseLayer: true"""
-        #        else:
-        #            base = ""
-        #            if layer.transparent:
-        #                base += """
-        #    transparent: true,"""
-        #            if layer.visible:
-        #                base += """
-        #    visibility: true,"""
-        #            if layer.opacity:
-        #                base += """
-        #    opacity: %.1f,""" % layer.opacity
-        #            base += """
-        #    isBaseLayer: false"""
-
-        #        layers_xyz  += """
-#    var xyzLayer%s = new OpenLayers.Layer.XYZ( '%s', '%s', {
-#            %s%s%s%s
-#        });
-#        map.addLayer(xyzLayer%s);""" % (name_safe, name, url,
-#                                        sphericalMercator,
-#                                        transitionEffect,
-#                                        zoomLevels, base, name_safe)
-#            layers_xyz  += """
-#}"""
-
-        # JS
-        layers_js = ""
-        js_enabled = db(s3db.gis_layer_js.enabled == True).select()
-        if js_enabled:
-            layers_js = """
-function addJSLayers() {
-"""
-            for layer in js_enabled:
-                if layer.role_required and not s3_has_role(layer.role_required):
-                    continue
-                layers_js  += layer.code
-            layers_js  += """
-}"""
-
         # =====================================================================
         # Overlays
         #
@@ -3962,13 +3782,10 @@ S3.gis.layers_feature_queries[%i] = {
         cluster_distance,
         cluster_threshold)
 
-        # ---------------------------------------------------------------------
-        # Add Layers from the Catalogue
-        # ---------------------------------------------------------------------
-        layers_config = ""
         if catalogue_layers:
-            for LayerType in [
-                #OSMLayer,
+            # Add all Layers from the Catalogue
+            layer_types = [
+                OSMLayer,
                 BingLayer,
                 GoogleLayer,
                 TMSLayer,
@@ -3978,61 +3795,41 @@ S3.gis.layers_feature_queries[%i] = {
                 GeoRSSLayer,
                 GPXLayer,
                 KMLLayer,
-                WFSLayer
-            ]:
-                try:
-                    # Instantiate the Class
-                    layer = LayerType()
-                    layer_type_js = layer.as_javascript()
-                    if layer_type_js:
-                        # Add to the output JS
-                        layers_config = "".join((layers_config,
-                                                 layer_type_js))
-                        if layer.scripts:
-                            for script in layer.scripts:
-                                add_javascript(script)
-                except Exception, exception:
-                    error = "%s not shown: %s" % (LayerType.__name__,
-                                                               exception)
-                    if debug:
-                        raise HTTP(500, error)
-                    else:
-                        response.warning += error
-
-            # -----------------------------------------------------------------
-            # Coordinate Grid - only one possible
-            # @ToDo: Migrate to CoordinateGridLayer() class
-            # -----------------------------------------------------------------
-            table = s3db.gis_layer_coordinate
-            query = (table.enabled == True)
-            coordinate_enabled = db(query).select(table.name,
-                                                  table.visible,
-                                                  table.role_required)
-            if coordinate_enabled:
-                # Note that database can be ambiguous about coordinate layer
-                # consider adding constraint to only have one such layer
-                layer = coordinate_enabled.first()
-                if layer.role_required and not s3_has_role(layer.role_required):
-                    pass
-                else:
-                    name = layer["name"]
-                    # Generate HTML snippet
-                    name_safe = re.sub("'", "", layer.name)
-                    if "visible" in layer and layer["visible"]:
-                        visibility = "true"
-                    else:
-                        visibility = "false"
-                    layers_config = "".join((layers_config,
-                                             """S3.gis.CoordinateGrid = {
-    name: '%s',
-    visibility: %s
-};
-""" % (name_safe, visibility)))
+                WFSLayer,
+                JSLayer,
+                CoordinateLayer,
+            ]
         else:
-            # @ToDo: Just add the default Base Layer
-            pass
+            # Add just the default Base Layer
+            # @ToDo
+            layer_types = [
+                OSMLayer,
+                #GoogleLayer,
+            ]
+
+        layers_config = ""
+        for LayerType in layer_types:
+            try:
+                # Instantiate the Class
+                layer = LayerType()
+                layer_type_js = layer.as_javascript()
+                if layer_type_js:
+                    # Add to the output JS
+                    layers_config = "".join((layers_config,
+                                             layer_type_js))
+                    if layer.scripts:
+                        for script in layer.scripts:
+                            add_javascript(script)
+            except Exception, exception:
+                error = "%s not shown: %s" % (LayerType.__name__,
+                                                           exception)
+                if debug:
+                    raise HTTP(500, error)
+                else:
+                    response.warning += error
 
         # WMS getFeatureInfo
+        # (loads conditionally based on whether queryable WMS Layers have been added)
         if response.s3.gis.get_feature_info:
             getfeatureinfo = """S3.i18n.gis_get_feature_info = '%s';
 S3.i18n.gis_feature_info = '%s';
@@ -4078,7 +3875,6 @@ S3.i18n.gis_feature_info = '%s';
             "S3.gis.marker_default_height = %i;\n" % marker_default.height,
             "S3.gis.marker_default_width = %i;\n" % marker_default.width,
             osm_auth,
-            layers_osm,
             layers_feature_queries,
             _features,
             layers_config,
@@ -4122,8 +3918,7 @@ S3.i18n.gis_feature_info = '%s';
             add_javascript("scripts/S3/s3.gis.min.js")
 
         # Dynamic Script (stuff which should, as far as possible, be moved to static)
-        html.append(SCRIPT(layers_js + \
-                           print_tool1))
+        html.append(SCRIPT(print_tool1))
 
         # Set up map plugins
         # This, and any code it generates is done last
@@ -4137,26 +3932,28 @@ S3.i18n.gis_feature_info = '%s';
 
         return html
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class Marker(object):
-    """ Represents a Map Marker """
-    def __init__(self, id=None):
-        gis = current.gis
+    """
+        Represents a Map Marker
+    """
+
+    def __init__(self, id=None, layer_id=None):
+
         db = current.db
         s3db = current.s3db
-        cache = s3db.cache
-        tablename = "gis_marker"
-        table = s3db[tablename]
+        table = s3db.gis_marker
         if id:
             query = (table.id == id)
             marker = db(query).select(table.image,
                                       table.height,
                                       table.width,
                                       limitby=(0, 1),
-                                      cache=cache).first()
+                                      cache=s3db.cache).first()
+        #elif layer_id:
         else:
-            # @ToDo: Reverse this
-            marker = gis.get_marker()
+            # Default Marker
+            marker = current.gis.get_marker()
 
         #self.table = table
         self.image = marker.image
@@ -4169,253 +3966,85 @@ class Marker(object):
         #               args=["markers", marker.image])
 
     def add_attributes_to_output(self, output):
+
         output["marker_image"] = self.image
         output["marker_height"] = self.height
         output["marker_width"] = self.width
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class Projection(object):
-    """ Represents a Map Projection """
-    def __init__(self, id=None):
-        gis = current.gis
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-        tablename = "gis_projection"
-        table = s3db[tablename]
-        if id:
-            query = (table.id == id)
-            projection = db(query).select(table.epsg,
-                                          limitby=(0, 1),
-                                          cache=cache).first()
-        else:
-            # @ToDo: Reverse this
-            projection = gis.get_projection()
+    """
+        Represents a Map Projection
+    """
 
-        #self.table = table
+    def __init__(self, id=None):
+
+        if id:
+            s3db = current.s3db
+            table = s3db.gis_projection
+            query = (table.id == id)
+            projection = current.db(query).select(table.epsg,
+                                                  limitby=(0, 1),
+                                                  cache=s3db.cache).first()
+        else:
+            # Default projection
+            config = current.gis.get_config()
+            projection = Storage(epsg = config.epsg)
+
         self.epsg = projection.epsg
 
-# -----------------------------------------------------------------------------
-def config_dict(mandatory, defaulted):
-    d = dict(mandatory)
-    for key, (value, defaults) in defaulted.iteritems():
-        if value not in defaults:
-            d[key] = value
-    return d
-
-
-# -----------------------------------------------------------------------------
-# The layer code only needs to do:
-# - any database lookups to get extra data
-# - security checks.
-# then it generates appropriate JSON strings.
-
+# =============================================================================
 class Layer(object):
     """
-        Abstract Base Class for Layers
-    """
-    def __init__(self):
-        s3db = current.s3db
-        self.table = s3db[self.table_name]
-
-    def as_json(self):
-        """
-            Output the Layer as JSON
-            - this will be used in future for dynamic passing of config between server & client
-        """
-        if self.record:
-            return json.dumps(self.as_dict(), indent=4, sort_keys=True)
-        else:
-            return
-
-
-# -----------------------------------------------------------------------------
-class SingleRecordLayer(Layer):
-    """
-        Abstract Base Class for Layers with just a single record
+        Abstract base class for Layers from Catalogue
     """
 
     def __init__(self):
-        super(SingleRecordLayer, self).__init__()
-        auth = current.auth
-        table = self.table
-        records = current.db(table.id > 0).select()
-        assert len(records) <= 1, (
-            "There should only ever be 0 or 1 %s" % self.__class__.__name__
-        )
-        self.record = None
-        record = records.first()
-        if record is not None:
-            if record.enabled:
-                role_required = record.role_required
-                if not role_required or auth.s3_has_role(role_required):
-                    self.record = record
-            # Refresh the attributes of the Layer
-            if "apikey" in table:
-                if record:
-                    self.apikey = record.apikey
-                else:
-                    self.apikey = None
-        self.scripts = []
 
-    def as_javascript(self):
-        """
-            Output the Layer as Javascript
-            - suitable for inclusion in the HTML page
-        """
-        if self.record:
-            if "apikey" in self.table and not self.apikey:
-                raise Exception("Cannot display a %s if we have no valid API Key" % self.__class__.__name__)
-            json = self.as_json()
-            if json:
-                return "%s = %s\n" % (
-                    self.js_array,
-                    json
-                )
-            else:
-                return None
-        else:
-            return None
-
-
-# -----------------------------------------------------------------------------
-class BingLayer(SingleRecordLayer):
-    """ Bing Layer from Catalogue """
-    table_name = "gis_layer_bing"
-    js_array = "S3.gis.Bing"
-
-    def as_dict(self):
-        gis = current.gis
-        record = self.record
-        if record is not None:
-            config = gis.get_config()
-            if Projection(id=config.projection_id).epsg != 900913:
-                raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection\n")
-            else:
-                # Mandatory attributes
-                output = {
-                    "ApiKey": self.apikey
-                    }
-
-                # Attributes which are defaulted client-side if not set
-                if record.aerial_enabled:
-                    output["Aerial"] = record.aerial or "Bing Satellite"
-                if record.road_enabled:
-                    output["Road"] = record.road or "Bing Roads"
-                if record.hybrid_enabled:
-                    output["Hybrid"] = record.hybrid or "Bing Hybrid"
-                return output
-        else:
-            return None
-
-# -----------------------------------------------------------------------------
-class GoogleLayer(SingleRecordLayer):
-    """
-        Google Layers/Tools from Catalogue
-    """
-    table_name = "gis_layer_google"
-    js_array = "S3.gis.Google"
-
-    def __init__(self):
-        super(GoogleLayer, self).__init__()
-        record = self.record
-        if record is not None:
-            debug = current.session.s3.debug
-            add_script = self.scripts.append
-            if record.mapmaker_enabled or record.mapmakerhybrid_enabled:
-                # Need to use v2 API
-                # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349
-                add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % self.apikey)
-            else:
-                # v3 API
-                add_script("http://maps.google.com/maps/api/js?v=3.2&sensor=false")
-                if debug and record.streetview_enabled:
-                    # Non-debug has this included within GeoExt.js
-                    add_script("scripts/gis/gxp/widgets/GoogleStreetViewPanel.js")
-            if record.earth_enabled:
-                add_script("http://www.google.com/jsapi?key=%s" % self.apikey)
-                add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
-                if debug:
-                    # Non-debug has this included within GeoExt.js
-                    add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")
-
-    def as_dict(self):
-        gis = current.gis
-        T = current.T
-        record = self.record
-        if record is not None:
-            config = gis.get_config()
-            if Projection(id=config.projection_id).epsg != 900913:
-                if record.earth_enabled:
-                    # But the Google Earth panel can still be enabled
-                    return {
-                        "Earth": str(T("Switch to 3D"))
-                        }
-                else:
-                    raise Exception("Cannot display Google layers unless we're using the Spherical Mercator Projection")
-
-            # Mandatory attributes
-            #"ApiKey": self.apikey
-            output = {
-                }
-
-            # Attributes which are defaulted client-side if not set
-            if record.satellite_enabled:
-                output["Satellite"] = record.satellite or "Google Satellite"
-            if record.maps_enabled:
-                output["Maps"] = record.maps or "Google Maps"
-            if record.hybrid_enabled:
-                output["Hybrid"] = record.hybrid or "Google Hybrid"
-            if record.mapmaker_enabled:
-                output["MapMaker"] = record.mapmaker or "Google MapMaker"
-            if record.mapmakerhybrid_enabled:
-                output["MapMakerHybrid"] = record.mapmakerhybrid or "Google MapMaker Hybrid"
-            if record.earth_enabled:
-                output["Earth"] = str(T("Switch to 3D"))
-            if record.streetview_enabled and not (record.mapmaker_enabled or record.mapmakerhybrid_enabled):
-                # Streetview doesn't work with v2 API
-                output["StreetviewButton"] = str(T("Click where you want to open Streetview"))
-                output["StreetviewTitle"] = str(T("Street View"))
-
-            return output
-        else:
-            return None
-
-
-# -----------------------------------------------------------------------------
-class MultiRecordLayer(Layer):
-    def __init__(self):
-        super(MultiRecordLayer, self).__init__()
         self.sublayers = []
+        append = self.sublayers.append
         self.scripts = []
 
+        s3db = current.s3db
         s3_has_role = current.auth.s3_has_role
 
-        layer_type_list = []
-        # Read the enabled Layers
-        table = self.table
+        # Read the Layers enabled in the Active Config
+        tablename = self.tablename
+        table = s3db[tablename]
+        ltable = s3db.gis_layer_config
+
         fields = table.fields
         metafields = current.response.s3.all_meta_field_names
         fields = [table[f] for f in fields if f not in metafields]
-        rows = current.db(table.enabled == True).select(*fields)
-        for record in rows:
+        fields.append(ltable.visible)
+        query = (table.layer_id == ltable.layer_id) & \
+                (ltable.enabled == True) & \
+                (ltable.config_id == current.session.s3.gis_config_id)
+        rows = current.db(query).select(*fields)
+        for _record in rows:
             # Check user is allowed to access the layer
+            record = _record[tablename]
+            record["visible"] = _record.gis_layer_config.visible
             role_required = record.role_required
             if (not role_required) or s3_has_role(role_required):
-                self.sublayers.append(self.SubLayer(record))
+                append(self.SubLayer(record))
 
+    # -------------------------------------------------------------------------
     def as_javascript(self):
         """
-            Output the Layer as Javascript
+            Output the Layers as Javascript
             - suitable for inclusion in the HTML page
         """
+
         sublayer_dicts = []
-        for sublayer in self.sublayers:
+        append = sublayer_dicts.append
+        sublayers = self.sublayers
+        for sublayer in sublayers:
             # Read the output dict for this sublayer
             sublayer_dict = sublayer.as_dict()
             if sublayer_dict:
                 # Add this layer to the list of layers for this layer type
-                sublayer_dicts.append(sublayer_dict)
+                append(sublayer_dict)
 
         if sublayer_dicts:
             # Output the Layer Type as JSON
@@ -4426,6 +4055,21 @@ class MultiRecordLayer(Layer):
         else:
             return None
 
+    # -------------------------------------------------------------------------
+    def as_json(self):
+        """
+            Output the Layers as JSON
+            
+            @ToDo: Support layers with SubLayer.as_dict() to pass config
+                   dynamically between server & client
+        """
+
+        if self.record:
+            return json.dumps(self.as_dict(), indent=4, sort_keys=True)
+        else:
+            return
+
+    # -------------------------------------------------------------------------
     class SubLayer(object):
         def __init__(self, record):
             # Ensure all attributes available (even if Null)
@@ -4433,8 +4077,7 @@ class MultiRecordLayer(Layer):
             del record
             self.safe_name = re.sub('[\\"]', "", self.name)
 
-            if hasattr(self, "marker_id"):
-                self.marker = Marker(self.marker_id)
+            self.marker = Marker(layer_id=self.layer_id)
             if hasattr(self, "projection_id"):
                 self.projection = Projection(self.projection_id)
 
@@ -4447,13 +4090,21 @@ class MultiRecordLayer(Layer):
             if self.cluster_threshold != cluster_threshold:
                 output["cluster_threshold"] = self.cluster_threshold
 
-        def setup_visibility_and_opacity(self, output):
+        def setup_folder(self, output):
+            if self.dir:
+                output["dir"] = self.dir
+
+        def setup_folder_and_visibility(self, output):
+            if not self.visible:
+                output["visibility"] = False
+            if self.dir:
+                output["dir"] = self.dir
+
+        def setup_folder_visibility_and_opacity(self, output):
             if not self.visible:
                 output["visibility"] = False
             if self.opacity != 1:
                 output["opacity"] = "%.1f" % self.opacity
-
-        def setup_folder(self, output):
             if self.dir:
                 output["dir"] = self.dir
 
@@ -4465,21 +4116,123 @@ class MultiRecordLayer(Layer):
                 if value not in defaults:
                     output[key] = value
 
-        #def set_marker(self):
-        #    " Set the Marker for the Layer "
-        #    self.marker = Marker(self.marker_id)
+# -----------------------------------------------------------------------------
+class BingLayer(Layer):
+    """
+        Bing Layers from Catalogue
+    """
 
-        #def set_projection(self):
-        #    " Set the Projection for the Layer "
-        #    self.projection = Projection(self.projection_id)
+    tablename = "gis_layer_bing"
+    js_array = "S3.gis.Bing"
+
+    def __init__(self):
+        self.sublayers = []
+        append = self.sublayers.append
+        self.scripts = []
+
+        s3db = current.s3db
+        s3_has_role = current.auth.s3_has_role
+
+        # Read the Layers enabled in the Active Config
+        tablename = self.tablename
+        table = s3db[tablename]
+        ltable = s3db.gis_layer_config
+
+        fields = table.fields
+        metafields = current.response.s3.all_meta_field_names
+        fields = [table[f] for f in fields if f not in metafields]
+        fields.append(ltable.visible)
+        query = (table.layer_id == ltable.layer_id) & \
+                (ltable.enabled == True) & \
+                (ltable.config_id == current.session.s3.gis_config_id)
+        rows = current.db(query).select(*fields)
+        for _record in rows:
+            # Check user is allowed to access the layer
+            record = _record[tablename]
+            record["visible"] = _record.gis_layer_config.visible
+            role_required = record.role_required
+            if (not role_required) or s3_has_role(role_required):
+                append(record)
+
+    def as_dict(self):
+        sublayers = self.sublayers
+        if sublayers:
+            if Projection().epsg != 900913:
+                raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection\n")
+            # Mandatory attributes
+            output = {
+                "ApiKey": current.deployment_settings.get_gis_api_bing()
+                }
+
+            for sublayer in sublayers:
+                # Attributes which are defaulted client-side if not set
+                if sublayer.type == "aerial":
+                    output["Aerial"] = sublayer.name or "Bing Satellite"
+                elif sublayer.type == "road":
+                    output["Road"] = sublayer.name or "Bing Roads"
+                elif sublayer.type == "hybrid":
+                    output["Hybrid"] = sublayer.name or "Bing Hybrid"
+            return output
+        else:
+            return None
+
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        output = self.as_dict()
+        if output:
+            result = json.dumps(output, indent=4, sort_keys=True)
+            if result:
+                return "%s = %s\n" % (
+                    self.js_array,
+                    result
+                )
+
+        return None
 
 # -----------------------------------------------------------------------------
-class FeatureLayer(MultiRecordLayer):
-    """ Feature Layer from Catalogue """
-    table_name = "gis_layer_feature"
+class CoordinateLayer(Layer):
+    """
+        Coordinate Layer from Catalogue
+        - there should only be one of these
+    """
+
+    tablename = "gis_layer_coordinate"
+
+    # -------------------------------------------------------------------------
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        sublayers = self.sublayers
+        if sublayers:
+            sublayer = sublayers[0]
+            name_safe = re.sub("'", "", sublayer.name)
+            if "visible" in sublayer and sublayer["visible"]:
+                visibility = "true"
+            else:
+                visibility = "false"
+            output = "S3.gis.CoordinateGrid={name:'%s',visibility:%s};" % \
+                (name_safe, visibility)
+            return output
+        else:
+            return None
+            
+# -----------------------------------------------------------------------------
+class FeatureLayer(Layer):
+    """
+        Feature Layers from Catalogue
+    """
+
+    tablename = "gis_layer_feature"
     js_array = "S3.gis.layers_features"
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def __init__(self, record):
             record_module = record.module
             self.skip = False
@@ -4512,19 +4265,21 @@ class FeatureLayer(MultiRecordLayer):
             }
             #
             self.marker.add_attributes_to_output(output)
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
 
             return output
 
 # -----------------------------------------------------------------------------
-class GeoJSONLayer(MultiRecordLayer):
-    """ GeoJSON Layer from Catalogue """
-    table_name = "gis_layer_geojson"
+class GeoJSONLayer(Layer):
+    """
+        GeoJSON Layers from Catalogue
+    """
+
+    tablename = "gis_layer_geojson"
     js_array = "S3.gis.layers_geojson"
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             # Mandatory attributes
             output = {
@@ -4537,23 +4292,25 @@ class GeoJSONLayer(MultiRecordLayer):
             projection = self.projection
             if projection.epsg != 4326:
                 output["projection"] = projection.epsg
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
 
             return output
 
 # -----------------------------------------------------------------------------
-class GeoRSSLayer(MultiRecordLayer):
-    """ GeoRSS Layer from Catalogue """
-    table_name = "gis_layer_georss"
+class GeoRSSLayer(Layer):
+    """
+        GeoRSS Layers from Catalogue
+    """
+
+    tablename = "gis_layer_georss"
     js_array = "S3.gis.layers_georss"
 
     def __init__(self):
         super(GeoRSSLayer, self).__init__()
         GeoRSSLayer.SubLayer.cachetable = current.s3db.gis_cache
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             db = current.db
             request = current.request
@@ -4629,17 +4386,128 @@ class GeoRSSLayer(MultiRecordLayer):
             # Attributes which are defaulted client-side if not set
             if self.refresh != 900:
                 output["refresh"] = self.refresh
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
 
             return output
 
+# -----------------------------------------------------------------------------
+class GoogleLayer(Layer):
+    """
+        Google Layers/Tools from Catalogue
+    """
+
+    tablename = "gis_layer_google"
+    js_array = "S3.gis.Google"
+
+    def __init__(self):
+        self.sublayers = []
+        append = self.sublayers.append
+        self.scripts = []
+
+        s3db = current.s3db
+        s3_has_role = current.auth.s3_has_role
+
+        # Read the Layers enabled in the Active Config
+        tablename = self.tablename
+        table = s3db[tablename]
+        ltable = s3db.gis_layer_config
+
+        fields = table.fields
+        metafields = current.response.s3.all_meta_field_names
+        fields = [table[f] for f in fields if f not in metafields]
+        fields.append(ltable.visible)
+        query = (table.layer_id == ltable.layer_id) & \
+                (ltable.enabled == True) & \
+                (ltable.config_id == current.session.s3.gis_config_id)
+        rows = current.db(query).select(*fields)
+        for _record in rows:
+            # Check user is allowed to access the layer
+            record = _record[tablename]
+            record["visible"] = _record.gis_layer_config.visible
+            role_required = record.role_required
+            if (not role_required) or s3_has_role(role_required):
+                append(record)
+
+    def as_dict(self):
+        sublayers = self.sublayers
+        if sublayers:
+            T = current.T
+            epsg = (Projection().epsg != 900913)
+            apikey = current.deployment_settings.get_gis_api_google()
+            debug = current.session.s3.debug
+            add_script = self.scripts.append
+
+            output = {}
+
+            for sublayer in sublayers:
+                # Attributes which are defaulted client-side if not set
+                if sublayer.type == "earth":
+                    output["Earth"] = str(T("Switch to 3D"))
+                    add_script("http://www.google.com/jsapi?key=%s" % apikey)
+                    add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
+                    if debug:
+                        # Non-debug has this included within GeoExt.js
+                        add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")            
+                elif epsg:
+                    # Earth is the only layer which can run in non-Spherical Mercator
+                    # @ToDo: Warning?
+                    if sublayer.type == "satellite":
+                        output["Satellite"] = sublayer.name or "Google Satellite"
+                    elif sublayer.type == "maps":
+                        output["Maps"] = sublayer.name or "Google Maps"
+                    elif sublayer.type == "hybrid":
+                        output["Hybrid"] = sublayer.name or "Google Hybrid"
+                    elif sublayer.type == "streetview":
+                        output["StreetviewButton"] = "Click where you want to open Streetview"
+                    elif sublayer.type == "mapmaker":
+                        output["MapMaker"] = sublayer.name or "Google MapMaker"
+                    elif sublayer.type == "mapmakerhybrid":
+                        output["MapMakerHybrid"] = sublayer.name or "Google MapMaker Hybrid"
+
+            if "MapMaker" in output or "MapMakerHybrid" in output:
+                # Need to use v2 API
+                # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349
+                add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % apikey)
+            else:
+                # v3 API
+                add_script("http://maps.google.com/maps/api/js?v=3.2&sensor=false")
+                if "StreetviewButton" in output:
+                    # Streetview doesn't work with v2 API
+                    output["StreetviewButton"] = str(T("Click where you want to open Streetview"))
+                    output["StreetviewTitle"] = str(T("Street View"))
+                    if debug:
+                        # Non-debug has this included within GeoExt.js
+                        add_script("scripts/gis/gxp/widgets/GoogleStreetViewPanel.js")
+
+            return output
+        else:
+            return None
+
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        output = self.as_dict()
+        if output:
+            result = json.dumps(output, indent=4, sort_keys=True)
+            if result:
+                return "%s = %s\n" % (
+                    self.js_array,
+                    result
+                )
+
+        return None
 
 # -----------------------------------------------------------------------------
-class GPXLayer(MultiRecordLayer):
-    """ GPX Layer from Catalogue """
-    table_name = "gis_layer_gpx"
+class GPXLayer(Layer):
+    """
+        GPX Layers from Catalogue
+    """
+
+    tablename = "gis_layer_gpx"
     js_array = "S3.gis.layers_gpx"
 
     def __init__(self):
@@ -4651,7 +4519,7 @@ class GPXLayer(MultiRecordLayer):
         # else:
             # self.url = None
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             url = URL(c="default", f="download",
                       args=self.track)
@@ -4668,15 +4536,47 @@ class GPXLayer(MultiRecordLayer):
                 tracks = (self.tracks, (True,)),
                 routes = (self.routes, (True,)),
             )
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             return output
 
 # -----------------------------------------------------------------------------
-class KMLLayer(MultiRecordLayer):
-    """ KML Layer from Catalogue """
-    table_name = "gis_layer_kml"
+class JSLayer(Layer):
+    """
+        JS Layers from Catalogue
+        - these are raw Javascript layers for use by expert OpenLayers people
+          to quickly add/configure new data sources without needing support
+          from back-end Sahana programmers
+    """
+
+    tablename = "gis_layer_js"
+
+    # -------------------------------------------------------------------------
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        sublayers = self.sublayers
+        if sublayers:
+            output = "function addJSLayers() {"
+            for sublayer in sublayers:
+                output = "%s\n%s" % (output,
+                                     sublayer.code)
+            output = "%s\n}" % output
+            return output
+        else:
+            return None
+
+            
+# -----------------------------------------------------------------------------
+class KMLLayer(Layer):
+    """
+        KML Layers from Catalogue
+    """
+
+    tablename = "gis_layer_kml"
     js_array = "S3.gis.layers_kml"
 
     def __init__(self):
@@ -4712,7 +4612,7 @@ class KMLLayer(MultiRecordLayer):
         KMLLayer.cachepath = cachepath
 
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             db = current.db
             request = current.request
@@ -4767,19 +4667,56 @@ class KMLLayer(MultiRecordLayer):
                 body = (self.body, ("description", None)),
                 refresh = (self.refresh, (900,)),
             )
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             self.marker.add_attributes_to_output(output)
             return output
 
 # -----------------------------------------------------------------------------
-class TMSLayer(MultiRecordLayer):
-    """ TMS Layer from Catalogue """
-    table_name = "gis_layer_tms"
+class OSMLayer(Layer):
+    """
+        OpenStreetMap Layers from Catalogue
+
+        @ToDo: Provide a catalogue of standard layers which are fully-defined
+               in static & can just have name over-ridden, as well as
+               fully-custom layers.
+    """
+
+    tablename = "gis_layer_openstreetmap"
+    js_array = "S3.gis.layers_osm"
+
+    # def __init__(self):
+        # if Projection().epsg != 900913:
+            # raise Exception("Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection\n")
+        # super(OSMLayer, self).__init__()
+
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            output = {
+                    "name": self.safe_name,
+                    "url1": self.url1,
+                }
+            self.add_attributes_if_not_default(
+                output,
+                base = (self.base, (False,)),
+                url2 = (self.url2, (None,)),
+                url3 = (self.url3, (None,)),
+                zoomLevels = (self.zoom_levels, (9,)),
+                attribution = (self.attribution, (None,)),
+            )
+            self.setup_folder_and_visibility(output)
+            return output
+
+# -----------------------------------------------------------------------------
+class TMSLayer(Layer):
+    """
+        TMS Layers from Catalogue
+    """
+
+    tablename = "gis_layer_tms"
     js_array = "S3.gis.layers_tms"
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             output = {
                     "name": self.safe_name,
@@ -4794,16 +4731,19 @@ class TMSLayer(MultiRecordLayer):
                 zoomLevels = (self.zoom_levels, (9,)),
                 attribution = (self.attribution, (None,)),
             )
+            self.setup_folder(output)
             return output
 
-
 # -----------------------------------------------------------------------------
-class WFSLayer(MultiRecordLayer):
-    """ WFS Layer from Catalogue """
-    table_name = "gis_layer_wfs"
+class WFSLayer(Layer):
+    """
+        WFS Layers from Catalogue
+    """
+
+    tablename = "gis_layer_wfs"
     js_array = "S3.gis.layers_wfs"
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             output = dict(
                 name = self.safe_name,
@@ -4822,17 +4762,19 @@ class WFSLayer(MultiRecordLayer):
                 projection = (self.projection.epsg, (4326,)),
                 #editable
             )
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             return output
 
 
 # -----------------------------------------------------------------------------
-class WMSLayer(MultiRecordLayer):
-    """ WMS Layer from Catalogue """
+class WMSLayer(Layer):
+    """
+        WMS Layers from Catalogue
+    """
+
     js_array = "S3.gis.layers_wms"
-    table_name = "gis_layer_wms"
+    tablename = "gis_layer_wms"
 
     def __init__(self):
         super(WMSLayer, self).__init__()
@@ -4843,7 +4785,7 @@ class WMSLayer(MultiRecordLayer):
                 # Non-debug has this included within GeoExt.js
                 add_script("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
 
-    class SubLayer(MultiRecordLayer.SubLayer):
+    class SubLayer(Layer.SubLayer):
         def as_dict(self):
             if self.queryable:
                 current.response.s3.gis.get_feature_info = True
@@ -4872,8 +4814,7 @@ class WMSLayer(MultiRecordLayer):
                 legendURL = (legend_url, (None,)),
                 queryable = (self.queryable, (False, )),
             )
-            self.setup_folder(output)
-            self.setup_visibility_and_opacity(output)
+            self.setup_folder_visibility_and_opacity(output)
             return output
 
 
@@ -4899,7 +4840,6 @@ class S3MAP(S3Method):
             _map = S3MAP()
             #_map.newDocument(_map.defaultTitle(resource))
     """
-
 
     def apply_method(self, r, **attr):
         """
@@ -4955,14 +4895,9 @@ class GoogleGeocoder(Geocoder):
     def __init__(self, location):
         " Initialise parent class & make any necessary modifications "
         Geocoder.__init__(self)
-        params = {"q": location, "key": self.get_api_key()}
+        api_key = current.deployment_settings.get_gis_api_google()
+        params = {"q": location, "key": api_key}
         self.url = "http://maps.google.com/maps/geo?%s" % urllib.urlencode(params)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_api_key():
-        " Acquire API key from the database "
-        GoogleLayer().apikey
 
     # -------------------------------------------------------------------------
     def get_json(self):
@@ -4981,17 +4916,9 @@ class YahooGeocoder(Geocoder):
     def __init__(self, location):
         " Initialise parent class & make any necessary modifications "
         Geocoder.__init__(self)
-        params = {"location": location, "appid": self.get_api_key()}
+        api_key = current.deployment_settings.get_gis_api_yahoo()
+        params = {"location": location, "appid": api_key}
         self.url = "http://local.yahooapis.com/MapsService/V1/geocode?%s" % urllib.urlencode(params)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_api_key():
-        " Acquire API key from the database "
-
-        settings = current.deployment_settings
-        apikey = settings.gis_yahoo_apikey
-        return apikey
 
     # -------------------------------------------------------------------------
     def get_xml(self):

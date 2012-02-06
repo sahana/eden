@@ -2,8 +2,6 @@
 
 """
     Default Controllers
-
-    @author: Fran Boon
 """
 
 module = "default"
@@ -19,9 +17,9 @@ def call():
 def download():
     """ Download a file """
 
-    # Load the Models
-    # @ToDo: Make this just load the relevant models
-    s3mgr.model.load_all_models()
+    # Load the Model
+    tablename = request.args[0].split(".", 1)[0]
+    s3mgr.load(tablename)
 
     return response.download(request, db)
 

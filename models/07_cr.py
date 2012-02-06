@@ -2,9 +2,6 @@
 
 """
     Shelter (Camp) Registry, model
-
-    @author: Pat Tressel
-    @author: Fran Boon
 """
 
 if deployment_settings.has_module("cr"):

@@ -3,10 +3,6 @@
 """
     Assessment - Model
 
-    @author: Fran Boon
-    @author: Dominic König
-    @author: Michael Howden
-
     This module currently contains 2 types of Assessments
       * Flexible Impact Assessments (including Mobile access)
       

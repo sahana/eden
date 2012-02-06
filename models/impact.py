@@ -3,9 +3,6 @@
 """
     Impact
 
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2010-10-12
-
     Impact resources used by the old Assessment module
 """
 

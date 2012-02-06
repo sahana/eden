@@ -2,8 +2,6 @@
 
 """ Sahana Eden Fire Station Model
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 

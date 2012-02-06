@@ -8,12 +8,9 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         API Key..............string..........Layer API key (only needed for MapMaker & Earth)
-         Maps.................boolean.........Layer Maps Enabled?
-         Satellite............boolean.........Layer Satellite Enabled?
-         Hybrid...............boolean.........Layer Hybrid Enabled?
-         Streetview...........boolean.........Layer Streetview Enabled?
-         Earth................boolean.........Layer Earth Enabled?
+         Description..........string..........Layer Description
+         Type.................string..........Layer Type
+         Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -27,15 +24,32 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+
+        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
+
         <resource name="gis_layer_google">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="apikey"><xsl:value-of select="col[@field='API Key']"/></data>
-            <data field="maps_enabled"><xsl:value-of select="col[@field='Maps']"/></data>
-            <data field="satellite_enabled"><xsl:value-of select="col[@field='Satellite']"/></data>
-            <data field="hybrid_enabled"><xsl:value-of select="col[@field='Hybrid']"/></data>
-            <data field="streetview_enabled"><xsl:value-of select="col[@field='Streetview']"/></data>
-            <data field="earth_enabled"><xsl:value-of select="col[@field='Earth']"/></data>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Layer"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Layer"/></data>
+            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
         </resource>
+
+        <resource name="gis_layer_config">
+            <reference field="layer_id" resource="gis_layer_google">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Layer"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="config_id" resource="gis_config">
+                <xsl:attribute name="uuid">
+                    <xsl:text>SITE_DEFAULT</xsl:text>
+                </xsl:attribute>
+            </reference>
+            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
+        </resource>
+
     </xsl:template>
     <!-- ****************************************************************** -->
 

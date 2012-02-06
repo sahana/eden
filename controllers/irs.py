@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-""" Incident Reporting System - Controllers
-
-    @author: Sahana Taiwan Team
-    @author: Fran Boon
-
+"""
+    Incident Reporting System - Controllers
 """
 
 module = request.controller

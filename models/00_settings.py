@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-""" Global settings:
+"""
+    Global settings:
 
     Those which are typically edited during a deployment are in
     000_config.py & their results parsed into here. Deployers
     shouldn't typically need to edit any settings here.
-
 """
 
 # Keep all our configuration options off the main global variables

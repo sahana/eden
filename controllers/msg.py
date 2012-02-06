@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-""" Messaging Module - Controllers """
+"""
+    Messaging Module - Controllers
+"""
 
 module = request.controller
 resourcename = request.function

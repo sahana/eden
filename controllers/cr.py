@@ -2,10 +2,11 @@
 
 """
     Shelter Registry - Controllers
+
+    @ToDo Search shelters by type, services, location, available space
+    @ToDo Tie in assessments from RAT and requests from RMS.
+    @ToDo Associate persons with shelters (via presence loc == shelter loc?)
 """
-# @ToDo Search shelters by type, services, location, available space
-# @ToDo Tie in assessments from RAT and requests from RMS.
-# @ToDo Associate persons with shelters (via presence loc == shelter loc?)
 
 module = request.controller
 resourcename = request.function

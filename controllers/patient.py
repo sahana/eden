@@ -2,8 +2,6 @@
 
 """
     Patient Tracking
-
-    @author: Fran Boon
 """
 
 module = request.controller
