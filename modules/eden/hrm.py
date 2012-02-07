@@ -1267,9 +1267,9 @@ class S3HRSkillModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no Trainings registered"))
 
-        table.virtualfields.append(HRMTrainingVirtualFields())
-        
-        report_fields = [ 
+        #table.virtualfields.append(HRMTrainingVirtualFields())
+
+        report_fields = [
                          "training_event_id",
                          "person_id",
                          (T("Course"), "training_event_id$course_id"),
@@ -2009,24 +2009,20 @@ def hrm_training_event_represent(id):
 # =============================================================================
 class HRMTrainingVirtualFields:
     """ Virtual fields as dimension classes for reports """
-    extra_fields = ["start_date"]
+
+    extra_fields = ["training_event_id$start_date"]
 
     def month(self):
-        # BROKEN for Report
-        db = current.db
-        s3db = current.s3db
-        te_table = s3db.hrm_training_event
-        query = te_table.id == self.hrm_training.training_event_id
-        record = db( query ).select( te_table.start_date,
-                                     limitby = (0,1) ).first()
-        if record and record.start_date:
-            return "%s/%02d" % (record.start_date.year, record.start_date.month)
+        # Year/Month of the start date of the training event
+        start_date = self.hrm_training_event.start_date
+        if start_date:
+            return "%s/%02d" % (start_date.year, start_date.month)
         else:
             return current.messages.NONE
 
     def year(self):
-        #BROKEN
-        start_date = self.hrm_training.start_date
+        # The year of the training event
+        start_date = self.hrm_training_event.start_date
         if start_date:
             return start_date.year
         else:

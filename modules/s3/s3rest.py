@@ -2923,7 +2923,8 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               skip=skip,
-                                              msince=msince)
+                                              msince=msince,
+                                              marker=marker)
 
                     # Mark as referenced element (for XSLT)
                     if element is not None:
@@ -2950,7 +2951,9 @@ class S3Resource(object):
                           components=None,
                           skip=[],
                           msince=None,
-                          marker=None):
+                          marker=None,
+                          popup_label=None,
+                          popup_fields=None):
         """
             Add a <resource> to the element tree
 
@@ -3755,6 +3758,7 @@ class S3Resource(object):
         xml = manager.xml
         tablename = self.tablename
 
+        distinct = False
         original = selector
         if join is None:
             join = []
@@ -3775,6 +3779,7 @@ class S3Resource(object):
             if tn in self.components:
                 c = self.components[tn]
                 ctn = c.tablename
+                distinct = c.link is not None
                 j = c.get_join()
                 left[ctn] = [c.table.on(j)]
                 tn = ctn
@@ -3893,6 +3898,7 @@ class S3Resource(object):
                     fkey = ktable._id.name
                 left[ktablename] = [ltable.on(table[pkey] == ltable[lkey]),
                                     ktable.on(ltable[rkey] == ktable[fkey])]
+                distinct = True
             else:
                 # Find the referenced table
                 ftype = str(f.type)
@@ -3926,7 +3932,8 @@ class S3Resource(object):
 
             # Resolve the tail
             field = kresource.get_lfield(tail, join=join, left=left)
-            field.update(selector=original)
+            field.update(selector=original,
+                         distinct=field.distinct or distinct)
             return field
         else:
             field = Storage(selector=selector,
@@ -3935,7 +3942,8 @@ class S3Resource(object):
                             colname = "%s.%s" % (tn, fn),
                             field=f,
                             join=join,
-                            left=left)
+                            left=left,
+                            distinct=distinct)
             return field
 
     # -------------------------------------------------------------------------
@@ -4598,9 +4606,9 @@ class S3ResourceFilter:
                 q = ~q
             alias, f = fn.split(".", 1)
             # Extract the required joins
-            qj = q.joins(resource)
+            qj, d = q.joins(resource)
             if qj:
-                distinct = True
+                distinct = distinct or d
                 if alias in joins:
                     joins[alias].update(qj)
                 else:
@@ -4691,9 +4699,11 @@ class S3ResourceFilter:
     @staticmethod
     def _parse_value(value):
         """
-            Parses the value of a URL variable
+            Parses the value(s) of a URL variable, respects
+            quoted values, resolves the NONE keyword
 
             @param value: the value as either string or list of strings
+            @note: does not support quotes within quoted strings
         """
 
         if type(value) is list:
@@ -4838,7 +4848,15 @@ class S3ResourceFilter:
     # -------------------------------------------------------------------------
     def _add_vfltr(self, f, component=None, master=True):
         """
-            @todo: docstring
+            Extend this filter by a virtual filter
+
+            @param f: the filter
+            @param component: name of the component the filter applies for,
+                              None for the master resource
+            @param master: whether to apply the filter to both component
+                           and master (False=filter the component only)
+
+            @status: not tested
         """
 
         resource = self.resource
@@ -4848,7 +4866,9 @@ class S3ResourceFilter:
         else:
             c = None
         if master:
+            alias = resource.alias
             if component and c:
+                alias = c.alias
                 join = c.get_join()
                 if str(join) not in str(self.query):
                     if self.query is not None:
@@ -4861,12 +4881,28 @@ class S3ResourceFilter:
                 self.vfltr &= f
             else:
                 self.vfltr = f
+            qj, d = f.joins(resource)
+            if qj:
+                self.distinct = self.distinct or d
+                if alias in joins:
+                    joins[alias].update(qj)
+                else:
+                    joins[alias] = qj
         return
 
     # -------------------------------------------------------------------------
     def _add_query(self, q, component=None, master=True):
         """
-            @todo: docstring
+            Extend this filter by a DAL filter query
+
+            @param q: the filter query
+            @param component: name of the component the filter query
+                              applies for, None for the master resource
+            @param master: whether to apply the filter query to both
+                           component and master
+                           (False=filter the component only)
+
+            @status: not tested
         """
 
         resource = self.resource
@@ -5145,30 +5181,36 @@ class S3ResourceQuery:
         op = self.op
         l = self.left
         r = self.right
+        distinct = False
         if op in (self.AND, self.OR):
-            joins = l.joins(resource)
-            joins.update(r.joins(resource))
-            return joins
+            ljoins, ld = l.joins(resource)
+            rjoins, rd = r.joins(resource)
+            ljoins.update(rjoins)
+            return (ljoins, ld or rd)
         elif op == self.NOT:
             return l.joins(resource)
         if isinstance(l, S3QueryField):
+            # Try to resolve l against the resource
             try:
                 lfield = l.resolve(resource)
             except:
-                return Storage()
+                return (Storage(), False)
             tname = lfield.tname
             join = lfield.join
+            distinct = lfield.distinct
+            # in filters, we need the left joins in the WHERE clause:
             if lfield.left:
-                for tn in lfield.left:
-                    for q in lfield.left[tn]:
-                        join.append(q.second)
-        return Storage({tname:join})
+                ljoins = lfield.left.values()
+                join.extend([q.second for j in ljoins for q in j])
+            return (Storage({tname:join}), distinct)
+        return(Storage(), False)
 
     # -------------------------------------------------------------------------
     def query(self, resource):
         """
-            Convert this resource query into a DAL query, ignoring virtual
-            fields (result does not contain the joins)
+            Convert this S3ResourceQuery into a DAL query, ignoring virtual
+            fields (the neccessary joins for this query can be constructed
+            with the joins() method)
 
             @param resource: the resource to resolve the query against
         """
@@ -5228,7 +5270,7 @@ class S3ResourceQuery:
         # Resolve the operator ------------------------------------------------
         #
         invert = False
-        squery = self._squery
+        query_bare = self._query_bare
         ftype = str(lfield.type)
         if isinstance(rfield, (list, tuple)) and ftype[:4] != "list":
             if op == self.EQ:
@@ -5239,21 +5281,27 @@ class S3ResourceQuery:
             elif op != self.BELONGS:
                 query = None
                 for v in rfield:
-                    q = squery(op, lfield, v)
+                    q = query_bare(op, lfield, v)
                     if q is not None:
                         if query is None:
                             query = q
                         else:
                             query |= q
                 return query
-        query = squery(op, lfield, rfield)
+        query = query_bare(op, lfield, rfield)
         if invert:
             query = ~(query)
         return query
 
     # -------------------------------------------------------------------------
-    def _squery(self, op, l, r):
-        """ @todo: docstring """
+    def _query_bare(self, op, l, r):
+        """
+            Translate a filter expression into a DAL query
+
+            @param op: the operator
+            @param l: the left operand
+            @param r: the right operand
+        """
 
         if op == self.CONTAINS:
             q = l.contains(r)
@@ -5432,34 +5480,9 @@ class S3ResourceQuery:
             return False
 
     # -------------------------------------------------------------------------
-    def get_value(self, name):
-        """ @todo: docstring """
-
-        db = current.db
-        s3db = current.s3db
-
-        if name[0] == "[" and name[-1] == "]":
-            try:
-                tn, id, fn = name[1:-1].split("/", 2)
-            except:
-                return name
-            table = s3db.table(tn, None)
-            if table is not None:
-                query = (table._id == id)
-                if fn in table.fields:
-                    row = db(query).select(table[fn]).first()
-                else:
-                    row = db(query).select().first()
-                if row and fn in row:
-                    return row[fn]
-                else:
-                    return None
-        return name
-
-    # -------------------------------------------------------------------------
     def represent(self, resource):
         """
-            Represent this query as a string
+            Represent this query as a human-readable string.
 
             @param resource: the resource to resolve the query against
         """

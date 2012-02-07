@@ -1083,7 +1083,7 @@ class S3GISConfigModel(S3Model):
                                     link="gis_layer_symbology",
                                     joinby="symbology_id",
                                     key="layer_id",
-                                    actuate="hide",
+                                    actuate="replace",
                                     autocomplete="name",
                                     autodelete=False))
 
