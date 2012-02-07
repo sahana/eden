@@ -396,13 +396,13 @@ class S3XML(S3Codec):
             return uid
         else:
             if "/" in uid[1:-1]:
-                return uid
-            else:
                 (_domain, _uid) = uid.split("/", 1)
                 if _domain == domain:
                     return _uid
                 else:
                     return uid
+            else:
+                return uid
 
     # Data export =============================================================
     #
