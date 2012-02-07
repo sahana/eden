@@ -126,7 +126,7 @@ if len(pop_list) > 0:
     tablename = "supply_catalog"
     table = db[tablename]
     if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert(name = deployment_settings.get_supply_catalog_default() )
+        table.insert(name = deployment_settings.get_supply_catalog_default() )
 
     # Climate module
     if "climate" in deployment_settings.modules:
@@ -197,7 +197,8 @@ if len(pop_list) > 0:
             bi.perform_tasks(path)
             end = datetime.datetime.now()
             duration = end - start
-            print >> sys.stdout, "Installed Authorisation Roles completed in %s" % (duration)
+            print >> sys.stdout, "Installed Authorisation Roles completed in %s" % \
+                                    (duration)
 
         elif pop_setting == 10:
             # Populate data for user specific data
@@ -208,7 +209,8 @@ if len(pop_list) > 0:
             bi.perform_tasks(path)
             end = datetime.datetime.now()
             duration = end - start
-            print >> sys.stdout, "Installed Private User Data completed in %s" % (duration)
+            print >> sys.stdout, "Installed Private User Data completed in %s" % \
+                                    (duration)
 
         elif pop_setting >= 20:
             # Populate data for a deployment default demo
@@ -245,13 +247,16 @@ if len(pop_list) > 0:
                         if os.path.exists(path):
                             bi.perform_tasks(path)
                         else:
-                            print >> sys.stderr, "Unable to install demo %s no demo directory found" % index
+                            print >> sys.stderr, "Unable to install demo %s no demo directory found" \
+                                                    % index
             if demo == "":
-                print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" % pop_setting
+                print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" \
+                                        % pop_setting
             else:
                 end = datetime.datetime.now()
                 duration = end - start
-                print >> sys.stdout, "Installed demo '%s' completed in %s" % (demo, duration)
+                print >> sys.stdout, "Installed demo '%s' completed in %s" % \
+                                        (demo, duration)
         if _debug:
             for result in bi.resultList:
                 print >> sys.stdout, result

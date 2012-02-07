@@ -53,7 +53,10 @@ class S3Chart(object):
 
         Currently a simple wrapper to matplotlib
     """
+
+    # This folder needs to be writable by the web2py process
     CACHE_PATH = "/%s/static/cache/chart"  %  current.request.application
+
     # -------------------------------------------------------------------------
     def __init__(self, path, width=9, height=6):
         """
@@ -134,11 +137,12 @@ class S3Chart(object):
             if the prefix is None then all files will be deleted
         """
         import os
-        folder = "applications%s/" % (S3Chart.CACHE_PATH)
-        filelist = os.listdir(folder)
-        for file in filelist:
-            if prefix == None or file.startswith(prefix):
-                os.remove("%s%s" % (folder, file))
+        folder = "applications%s/" % S3Chart.CACHE_PATH
+        if os.path.exists(folder):
+            filelist = os.listdir(folder)
+            for file in filelist:
+                if prefix == None or file.startswith(prefix):
+                    os.remove("%s%s" % (folder, file))
 
     # -------------------------------------------------------------------------
     def draw(self, output="xml"):
@@ -172,8 +176,12 @@ class S3Chart(object):
                 stored on the server and a URI used in the src
             """
             image = IMG(_src = cachePath)
-#            base64Img = base64.b64encode(image)
-#            image = IMG(_src="data:image/png;base64,%s" % base64Img)
+            # Convert to base64 inline image
+            # Disabled as not supported by IE8
+            # We now write to a file which can be cached, so is useful if the same image is requested multiple times
+            # (mainly suited to small files anyway as this increases filesize)
+            #base64Img = base64.b64encode(image)
+            #image = IMG(_src="data:image/png;base64,%s" % base64Img)
         else:
             current.response.headers["Content-Type"] = "image/png"
         return image
@@ -308,4 +316,4 @@ class S3Chart(object):
                        prop={"size":10},
                       )
 
-# =============================================================================
+# END =========================================================================

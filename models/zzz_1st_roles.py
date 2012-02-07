@@ -12,11 +12,12 @@ else:
     # The query used here takes 2/3 the time of .count().
     if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
         pop_list = []
-    if not isinstance(pop_list,(list,tuple)):
+    if not isinstance(pop_list, (list, tuple)):
         pop_list = [pop_list]
 # Add core roles as long as at least one populate setting is on
 if len(pop_list) > 0:
 
+    import csv
     def import_role(filename, extraVars=None):
         def parseACL(_acl):
             permissions = _acl.split("|")
@@ -34,7 +35,6 @@ if len(pop_list) > 0:
                     aclValue = aclValue | acl.ALL
             return aclValue
 
-        import csv
         # Check if the source file is accessible
         try:
             openFile = open(filename, "r")
@@ -85,9 +85,14 @@ if len(pop_list) > 0:
                 args[role] = extra_param
         for rulelist in roles.values():
             if rulelist[0] in args:
-                create_role(rulelist[0],rulelist[1],*acls[rulelist[0]],**args[rulelist[0]])
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]],
+                            **args[rulelist[0]])
             else:
-                create_role(rulelist[0],rulelist[1],*acls[rulelist[0]])
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]])
     response.s3.import_role = import_role
 
 
