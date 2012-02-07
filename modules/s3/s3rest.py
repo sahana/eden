@@ -2079,14 +2079,6 @@ class S3Resource(object):
         return self.rfilter.get_filter()
 
     # -------------------------------------------------------------------------
-    def get_left(self):
-        """ Get the effective left joins """
-
-        if self.rfilter is None:
-            self.build_query()
-        return self.rfilter.get_left()
-
-    # -------------------------------------------------------------------------
     def clear_query(self):
         """ Removes the current query (does not remove the set!) """
 
@@ -4840,15 +4832,6 @@ class S3ResourceFilter:
         return self.vfltr
 
     # -------------------------------------------------------------------------
-    def get_left(self):
-        """ Return the effective left joins """
-
-        left = []
-        for joins in self.ljoins.values():
-            left.extend(joins)
-        return left
-
-    # -------------------------------------------------------------------------
     def add_filter(self, f, component=None, master=True):
         """
             Extend this filter
@@ -4938,7 +4921,6 @@ class S3ResourceFilter:
         r = self.cquery
         v = self.cvfltr
         j = self.joins
-        l = self.ljoins
 
         rq = ["..%s: %s" % (key, r[key]) for key in r]
         vq = ["..%s: %s" % (key, v[key].represent(resource)) for key in v]
@@ -4950,14 +4932,9 @@ class S3ResourceFilter:
                 ) for tn in j[alias]])
               ) for alias in j]
 
-        lq = ["..%s:\n%s" % (tn,
-                "\n".join(["....%s" % q for q in l[tn]])
-              ) for tn in l]
-
         rqueries = "\n".join(rq)
         vqueries = "\n".join(vq)
         jqueries = "\n".join(jq)
-        lqueries = "\n".join(lq)
 
         if self.vfltr:
             vf = self.vfltr.represent(resource)
@@ -4975,7 +4952,6 @@ class S3ResourceFilter:
                     "\nComponent queries:\n%s" \
                     "\nComponent virtual filters:\n%s" \
                     "\nJoins:\n%s" \
-                    "\nLeft Joins:\n%s" \
                     "\nEffective query: %s" \
                     "\nEffective virtual filter: %s" % (
                     resource.tablename,
@@ -4985,7 +4961,6 @@ class S3ResourceFilter:
                     rqueries,
                     vqueries,
                     jqueries,
-                    lqueries,
                     self.query,
                     vf)
 
@@ -5187,18 +5162,16 @@ class S3ResourceQuery:
         l = self.left
         r = self.right
         if op in (self.AND, self.OR):
-            joins, ljoins = l.joins(resource)
-            r_joins, r_ljoins = r.joins(resource)
-            joins.update(r_joins)
-            ljoins.update(r_ljoins)
-            return (joins, ljoins)
+            joins = l.joins(resource)
+            joins.update(r.joins(resource))
+            return joins
         elif op == self.NOT:
             return l.joins(resource)
         if isinstance(l, S3QueryField):
             try:
                 lfield = l.resolve(resource)
             except:
-                return (Storage(), None)
+                return Storage()
             tname = lfield.tname
             join = lfield.join
             if lfield.left:
