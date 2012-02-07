@@ -2079,14 +2079,6 @@ class S3Resource(object):
         return self.rfilter.get_filter()
 
     # -------------------------------------------------------------------------
-    def get_left(self):
-        """ Get the effective left joins """
-
-        if self.rfilter is None:
-            self.build_query()
-        return self.rfilter.get_left()
-
-    # -------------------------------------------------------------------------
     def clear_query(self):
         """ Removes the current query (does not remove the set!) """
 
@@ -4203,6 +4195,7 @@ class S3Resource(object):
         query = self.get_query()
         vfltr = self.get_filter()
         rfilter = self.rfilter
+        distinct = self.rfilter.distinct or distinct
 
         db = current.db
         manager = current.manager
@@ -4213,10 +4206,6 @@ class S3Resource(object):
             _left = []
         elif not isinstance(left, list):
             _left = [_left]
-        ljoins = self.get_left()
-        for join in ljoins:
-            if str(join) not in [str(q) for q in _left]:
-                _left.append(join)
 
         if fields is None:
             fields = [f.name for f in self.readable_fields()]
@@ -4376,13 +4365,15 @@ class S3ResourceFilter:
         self.cquery = Storage() # Component queries
         self.cvfltr = Storage() # Component virtual filters
         self.joins = Storage()  # Joins
-        self.ljoins = Storage() # Left joins
 
         self.query = None       # Effective query
         self.vfltr = None       # Effective virtual filter
 
         # cardinality, multiple results expected by default
         self.multiple = True
+
+        # Distinct: needed if this filter contains joins
+        self.distinct = False
 
         andq = self._andq
         andf = self._andf
@@ -4489,11 +4480,11 @@ class S3ResourceFilter:
                 resource.vars = Storage(vars)
 
                 # Parse URL query
-                r, v, j, l = self.parse_url_query(resource, vars)
+                r, v, j, d = self.parse_url_query(resource, vars)
                 self.cquery = r
                 self.cvfltr = v
                 self.joins = j
-                self.ljoins = l
+                self.distinct = d
 
                 # Parse bbox query
                 bbox = self.parse_bbox_query(resource, vars)
@@ -4592,7 +4583,7 @@ class S3ResourceFilter:
         rquery = Storage()
         vfltr = Storage()
         joins = Storage()
-        ljoins = Storage()
+        distinct = False
 
         if vars is None:
             return rquery, vfltr, joins
@@ -4623,13 +4614,13 @@ class S3ResourceFilter:
                 q = ~q
             alias, f = fn.split(".", 1)
             # Extract the required joins
-            qj, lj = q.joins(resource)
-            if alias in joins:
-                joins[alias].update(qj)
-            else:
-                joins[alias] = qj
-            if lj is not None:
-                ljoins.update(lj)
+            qj = q.joins(resource)
+            if qj:
+                distinct = True
+                if alias in joins:
+                    joins[alias].update(qj)
+                else:
+                    joins[alias] = qj
             # Try to translate into a real query
             r = q.query(resource)
             if r is not None:
@@ -4653,7 +4644,7 @@ class S3ResourceFilter:
                 else:
                     query = query & q
                 vfltr[alias] = query
-        return rquery, vfltr, joins, ljoins
+        return rquery, vfltr, joins, distinct
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4796,6 +4787,7 @@ class S3ResourceFilter:
         db = current.db
         model = current.manager.model
         resource = self.resource
+        distinct = self.distinct or distinct
         if resource is None:
             return 0
         table = resource.table
@@ -4805,10 +4797,6 @@ class S3ResourceFilter:
             _left = []
         elif not isinstance(left, list):
             _left = [_left]
-        ljoins = self.get_left()
-        for join in ljoins:
-            if str(join) not in [str(q) for q in _left]:
-                _left.append(join)
         if self.vfltr is None:
             if distinct:
                 rows = db(self.query).select(table._id,
@@ -4844,15 +4832,6 @@ class S3ResourceFilter:
         return self.vfltr
 
     # -------------------------------------------------------------------------
-    def get_left(self):
-        """ Return the effective left joins """
-
-        left = []
-        for joins in self.ljoins.values():
-            left.extend(joins)
-        return left
-
-    # -------------------------------------------------------------------------
     def add_filter(self, f, component=None, master=True):
         """
             Extend this filter
@@ -4874,6 +4853,9 @@ class S3ResourceFilter:
 
     # -------------------------------------------------------------------------
     def _add_vfltr(self, f, component=None, master=True):
+        """
+            @todo: docstring
+        """
 
         resource = self.resource
         if component and component in resource.components:
@@ -4899,6 +4881,9 @@ class S3ResourceFilter:
 
     # -------------------------------------------------------------------------
     def _add_query(self, q, component=None, master=True):
+        """
+            @todo: docstring
+        """
 
         resource = self.resource
         if component and component in resource.components:
@@ -4936,7 +4921,6 @@ class S3ResourceFilter:
         r = self.cquery
         v = self.cvfltr
         j = self.joins
-        l = self.ljoins
 
         rq = ["..%s: %s" % (key, r[key]) for key in r]
         vq = ["..%s: %s" % (key, v[key].represent(resource)) for key in v]
@@ -4948,14 +4932,9 @@ class S3ResourceFilter:
                 ) for tn in j[alias]])
               ) for alias in j]
 
-        lq = ["..%s:\n%s" % (tn,
-                "\n".join(["....%s" % q for q in l[tn]])
-              ) for tn in l]
-
         rqueries = "\n".join(rq)
         vqueries = "\n".join(vq)
         jqueries = "\n".join(jq)
-        lqueries = "\n".join(lq)
 
         if self.vfltr:
             vf = self.vfltr.represent(resource)
@@ -4967,22 +4946,21 @@ class S3ResourceFilter:
         else:
             mvf = ""
 
-        represent = "\nS3ResourceFilter %s" \
+        represent = "\nS3ResourceFilter %s%s" \
                     "\nMaster query: %s" \
                     "\nMaster virtual filter: %s" \
                     "\nComponent queries:\n%s" \
                     "\nComponent virtual filters:\n%s" \
                     "\nJoins:\n%s" \
-                    "\nLeft Joins:\n%s" \
                     "\nEffective query: %s" \
                     "\nEffective virtual filter: %s" % (
                     resource.tablename,
+                    self.distinct and " (distinct)" or "",
                     self.mquery,
                     mvf,
                     rqueries,
                     vqueries,
                     jqueries,
-                    lqueries,
                     self.query,
                     vf)
 
@@ -5184,22 +5162,23 @@ class S3ResourceQuery:
         l = self.left
         r = self.right
         if op in (self.AND, self.OR):
-            joins, ljoins = l.joins(resource)
-            r_joins, r_ljoins = r.joins(resource)
-            joins.update(r_joins)
-            ljoins.update(r_ljoins)
-            return (joins, ljoins)
+            joins = l.joins(resource)
+            joins.update(r.joins(resource))
+            return joins
         elif op == self.NOT:
             return l.joins(resource)
         if isinstance(l, S3QueryField):
             try:
                 lfield = l.resolve(resource)
             except:
-                return (Storage(), None)
+                return Storage()
             tname = lfield.tname
             join = lfield.join
-            ljoins = lfield.left
-        return (Storage({tname:join}), ljoins)
+            if lfield.left:
+                for tn in lfield.left:
+                    for q in lfield.left[tn]:
+                        join.append(q.second)
+        return Storage({tname:join})
 
     # -------------------------------------------------------------------------
     def query(self, resource):

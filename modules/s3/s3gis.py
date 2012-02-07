@@ -1763,12 +1763,9 @@ class GIS(object):
                 marker.height
                 marker.width
 
-            Used by s3xml's gis_encode() for Feeds export
             Used by s3search's search_interactive for search results
-            Used by Marker()
-            @ToDo: Reverse this - have this call Marker()?
-
-            @ToDo: Try this once per Resource if unfiltered
+            Used by s3xml's gis_encode() for Feeds export
+                @ToDo: Try this once per Resource if unfiltered
 
             @param tablename
             @param record
@@ -1776,66 +1773,68 @@ class GIS(object):
             @param gps: return the gps_marker
         """
 
+        if tablename is None:
+            # Default Marker
+            return Marker().as_dict()
+
         # Default GPS Symbol
         DEFAULT = "White Dot"
 
+        db = current.db
+        s3db = current.s3db
+        cache = s3db.cache
+
+        table = s3db.gis_layer_feature
+        gtable = s3db.gis_config
+        mtable = s3db.gis_marker
+        ltable = s3db.gis_layer_symbology
+
+        (module, resource) = tablename.split("_", 1)
+
+        # 1st choice for a Marker is the Feature Layer's
+        query = (table.module == module) & \
+                (table.resource == resource) & \
+                (table.layer_id == ltable.layer_id) & \
+                (gtable.id == current.session.s3.gis_config_id) & \
+                (gtable.symbology_id == ltable.symbology_id)
+
+        layers = db(query).select(ltable.marker_id,
+                                  ltable.gps_marker,
+                                  table.filter_field,
+                                  table.filter_value,
+                                  cache=cache)
+
         _gps_marker = None
         _marker = None
-
-        if tablename is not None:
-            db = current.db
-            s3db = current.s3db
-            cache = s3db.cache
-
-            table = s3db.gis_layer_feature
-            gtable = s3db.gis_config
-            mtable = s3db.gis_marker
-            ltable = s3db.gis_layer_symbology
-
-            (module, resource) = tablename.split("_", 1)
-
-            # 1st choice for a Marker is the Feature Layer's
-            query = (table.module == module) & \
-                    (table.resource == resource) & \
-                    (table.layer_id == ltable.layer_id) & \
-                    (gtable.id == session.s3.gis_config_id) & \
-                    (gtable.symbology_id == ltable.symbology_id)
-
-            layers = db(query).select(ltable.marker_id,
-                                      ltable.gps_marker,
-                                      table.filter_field,
-                                      table.filter_value,
-                                      cache=cache)
-
-            if layers:
-                _gps_marker = None
-                for row in layers:
-                    row = row.gis_layer_feature
-                    lrow = row.gis_layer_symbology
-                    if record and row.filter_field:
-                        # Check if the record matches the filter
-                        if str(record[row.filter_field]) == row.filter_value:
-                            _gps_marker = lrow.gps_marker or DEFAULT
-                            if marker:
-                                query = (mtable.id == lrow.marker_id)
-                                _marker = db(query).select(mtable.image,
-                                                           mtable.height,
-                                                           mtable.width,
-                                                           limitby=(0, 1),
-                                                           cache=cache).first()
-                    else:
-                        # No Filter so we match automatically
-                        _gps_marker = lrow.gps_marker or DEFAULT
+        if layers:
+            _gps_marker = None
+            for row in layers:
+                frow = row.gis_layer_feature
+                srow = row.gis_layer_symbology
+                if record and frow.filter_field:
+                    # Check if the record matches the filter
+                    if str(record[frow.filter_field]) == frow.filter_value:
+                        _gps_marker = srow.gps_marker or DEFAULT
                         if marker:
-                            query = (mtable.id == lrow.marker_id)
+                            query = (mtable.id == srow.marker_id)
                             _marker = db(query).select(mtable.image,
                                                        mtable.height,
                                                        mtable.width,
                                                        limitby=(0, 1),
                                                        cache=cache).first()
-                    if _gps_marker:
-                        # Return the 1st matching marker
-                        break
+                else:
+                    # No Filter so we match automatically
+                    _gps_marker = srow.gps_marker or DEFAULT
+                    if marker:
+                        query = (mtable.id == srow.marker_id)
+                        _marker = db(query).select(mtable.image,
+                                                   mtable.height,
+                                                   mtable.width,
+                                                   limitby=(0, 1),
+                                                   cache=cache).first()
+                if _gps_marker:
+                    # Return the 1st matching marker
+                    break
 
         gps_marker = _gps_marker or DEFAULT
 
@@ -3186,23 +3185,25 @@ class GIS(object):
         # HTML
         ######
         # Catalogue Toolbar
-        if catalogue_toolbar:
-            config_button = SPAN( A(T("Configurations"),
-                                  _href=URL(c="gis", f="config")),
-                                  _class="tab_other" )
-            catalogue_toolbar = DIV(
-                config_button,
-                SPAN( A(T("Layers"),
-                      _href=URL(c="gis", f="map_service_catalogue")),
-                      _class="tab_other" ),
-                SPAN( A(T("Markers"),
-                      _href=URL(c="gis", f="marker")),
-                      _class="tab_other" ),
-                SPAN( A(T("Projections"),
-                      _href=URL(c="gis", f="projection")),
-                      _class="tab_last" ),
-                _class="tabs")
-            html.append(catalogue_toolbar)
+        # if catalogue_toolbar:
+            # @ToDO: Replace this with a Horizontal rednering of the Menu when using narrow themes?
+            # config_button = SPAN( A(T("Configurations"),
+                                  # _href=URL(c="gis", f="config")),
+                                  # _class="tab_other" )
+            # catalogue_toolbar = DIV(
+                # config_button,
+                # SPAN( A(T("Layers"),
+                      # _href=URL(c="gis", f="map_service_catalogue")),
+                      # _class="tab_other" ),
+                # SPAN( A(T("Markers"),
+                      # _href=URL(c="gis", f="marker")),
+                      # _class="tab_other" ),
+                # SPAN( A(T("Projections"),
+                      # _href=URL(c="gis", f="projection")),
+                      # _class="tab_last" ),
+                # _class="tabs")
+            # html.append(catalogue_toolbar)
+        catalogue_toolbar = ""
 
         # Map (Embedded not Window)
         html.append(DIV(_id="map_panel"))
@@ -3936,40 +3937,70 @@ S3.i18n.gis_feature_info = '%s';
 class Marker(object):
     """
         Represents a Map Marker
+
+        @ToDo: Extend so that gis.get_marker() calls this?
     """
 
     def __init__(self, id=None, layer_id=None):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.gis_marker
+        mtable = s3db.gis_marker
+        marker = None
+        config = None
         if id:
-            query = (table.id == id)
-            marker = db(query).select(table.image,
-                                      table.height,
-                                      table.width,
+            # Lookup the Marker details from it's ID
+            query = (mtable.id == id)
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
                                       limitby=(0, 1),
                                       cache=s3db.cache).first()
-        #elif layer_id:
-        else:
+        elif layer_id:
+            # Check if we have a Marker for this Layer
+            config = current.gis.get_config()
+            ltable = s3db.gis_layer_symbology
+            query = (ltable.layer_id == layer_id) & \
+                    (ltable.symbology_id == config.symbology_id) & \
+                    (ltable.marker_id == mtable.id)
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      limitby=(0, 1)).first()
+        if not marker:
             # Default Marker
-            marker = current.gis.get_marker()
-
-        #self.table = table
-        self.image = marker.image
-        self.height = marker.height
-        self.width = marker.width
+            if not config:
+                config = current.gis.get_config()
+            self.image = config.marker_image
+            self.height = config.marker_height
+            self.width = config.marker_width
+        else:
+            self.image = marker.image
+            self.height = marker.height
+            self.width = marker.width
 
         # Always lookup URL client-side
-        #request = current.request
         #self.url = URL(c="static", f="img",
         #               args=["markers", marker.image])
 
     def add_attributes_to_output(self, output):
-
+        """
+            Called by Layer.as_dict()
+        """
         output["marker_image"] = self.image
         output["marker_height"] = self.height
         output["marker_width"] = self.width
+
+    def as_dict(self):
+        """
+            Called by gis.get_marker()
+        """
+        output = Storage(
+                        image = self.image,
+                        height = self.height,
+                        width = self.width,
+                    )
+        return output
 
 # =============================================================================
 class Projection(object):

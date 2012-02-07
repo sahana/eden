@@ -1145,7 +1145,7 @@ def layer_openstreetmap():
         auth.permission.fail()
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load("tablename")
+    s3mgr.load(tablename)
 
     # CRUD Strings
     type = "OpenStreetMap"
@@ -1180,7 +1180,7 @@ def layer_bing():
         auth.permission.fail()
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load("tablename")
+    s3mgr.load(tablename)
 
     # CRUD Strings
     type = "Bing"
@@ -1218,7 +1218,7 @@ def layer_google():
         auth.permission.fail()
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load("tablename")
+    s3mgr.load(tablename)
 
     # CRUD Strings
     type = "Google"

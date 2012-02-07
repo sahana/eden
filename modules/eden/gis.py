@@ -1720,6 +1720,7 @@ class S3LayerEntityModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_entity=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -1873,6 +1874,7 @@ class S3FeatureLayerModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_feature=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -1883,6 +1885,7 @@ class S3FeatureLayerModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_feature=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2038,6 +2041,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_bing=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2066,6 +2070,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_coordinate=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2102,6 +2107,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_geojson=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2112,6 +2118,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_geojson=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2155,6 +2162,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_georss=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2165,6 +2173,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_georss=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2196,6 +2205,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_google=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2245,6 +2255,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_gpx=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2286,6 +2297,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_kml=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2296,6 +2308,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_kml=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2327,6 +2340,7 @@ class S3MapModel(S3Model):
         # self.add_component("gis_config",
                             # gis_layer_js=Storage(
                                     # link="gis_layer_config",
+                                    # pkey="layer_id",
                                     # joinby="layer_id",
                                     # key="config_id",
                                     # actuate="hide",
@@ -2358,6 +2372,7 @@ class S3MapModel(S3Model):
         # self.add_component("gis_config",
                             # gis_layer_mgrs=Storage(
                                     # link="gis_layer_config",
+                                    # pkey="layer_id",
                                     # joinby="layer_id",
                                     # key="config_id",
                                     # actuate="hide",
@@ -2402,6 +2417,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_openstreetmap=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2445,6 +2461,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_tms=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2516,6 +2533,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_wfs=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2594,6 +2612,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_wms=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -3041,7 +3060,8 @@ def gis_rheader(r, tabs=[]):
     elif resourcename == "layer_feature" or \
          resourcename == "layer_georss" or \
          resourcename == "layer_geojson" or \
-         resourcename == "layer_kml" :
+         resourcename == "layer_kml" or \
+         resourcename == "layer_entity" :
         # Tabs
         if not tabs:
             tabs = [(T("Basic Details"), None),
