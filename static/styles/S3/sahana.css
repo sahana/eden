@@ -1516,6 +1516,11 @@ tr.survey_question th{
 div.survey_map-legend td{
     vertical-align: top;
 }
+
+div.survey_scrollable {
+    width:900px;
+    overflow:scroll;
+}
 /* Big Buttons (e.g. RMS) */
 div.question-container {
     text-align:center;
