@@ -1428,7 +1428,7 @@ class S3GISConfigModel(S3Model):
             return current.messages.NONE
 
         return record.name
-        
+
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1867,7 +1867,7 @@ class S3FeatureLayerModel(S3Model):
                                     "popup_fields",
                                     "dir",
                                    ])
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2015,7 +2015,7 @@ class S3MapModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Bing
-        # 
+        #
 
         bing_layer_types = ["aerial", "road", "hybrid"]
 
@@ -2032,7 +2032,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2060,7 +2060,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2096,7 +2096,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2149,7 +2149,7 @@ class S3MapModel(S3Model):
         self.configure(tablename,
                        deduplicate = self.gis_layer_georss_deduplicate,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2190,7 +2190,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2239,7 +2239,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2280,7 +2280,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2321,7 +2321,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         # self.add_component("gis_config",
@@ -2352,7 +2352,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         # self.add_component("gis_config",
@@ -2396,7 +2396,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2439,7 +2439,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2510,7 +2510,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2588,7 +2588,7 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
@@ -2640,7 +2640,7 @@ class S3MapModel(S3Model):
         #
         # We also store a pointer to the resource on a GeoServer co-app:
         # http://docs.geoserver.org/stable/en/user/restconfig/rest-config-api.html#styles
-        
+
         #tablename = "gis_style"
         #table = self.define_table(tablename,
         #                          Field("name", notnull=True, unique=True)
@@ -3022,7 +3022,7 @@ def gis_rheader(r, tabs=[]):
                                 context,
                                 ),
                         ), rheader_tabs)
-    
+
     elif resourcename == "symbology":
         # Tabs
         if not tabs:
@@ -3057,7 +3057,7 @@ def gis_rheader(r, tabs=[]):
                              record.description)
         else:
             description = ""
-        
+
         rheader = DIV(TABLE(
                             TR(TH("%s: " % table.name.label),
                                record.name,
@@ -3089,7 +3089,7 @@ def gis_rheader(r, tabs=[]):
                              record.description)
         else:
             description = ""
-        
+
         rheader = DIV(TABLE(
                             TR(TH("%s: " % table.name.label),
                                record.name,
@@ -3097,6 +3097,8 @@ def gis_rheader(r, tabs=[]):
                             description,
                             ),
                       rheader_tabs)
+    else:
+        rheader = None
 
     return rheader
 

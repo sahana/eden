@@ -393,7 +393,7 @@ class S3Cube(S3CRUD):
                 if name in request.get_vars:
                     value = request.get_vars[name]
         table = self.table
-        lfields, join = resource.get_lfields(list_fields)
+        lfields, join, ljoins = resource.get_lfields(list_fields)
         options = [OPTION(f.label,
                           _value=f.fieldname,
                           _selected= value == f.fieldname and "selected" or None)
@@ -599,7 +599,7 @@ class S3Report:
         self.rfields = rfields
 
         # lfields: rfields resolved into list fields map
-        lfields, join = resource.get_lfields(rfields)
+        lfields, join, ljoins = resource.get_lfields(rfields)
         lfields = Storage([(f.fieldname, f) for f in lfields])
         self.lfields = lfields
 

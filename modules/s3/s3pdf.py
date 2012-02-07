@@ -2955,7 +2955,7 @@ class S3PDFDataSource:
 
         # Retrieve the resource contents
         table = resource.table
-        lfields, joins = resource.get_lfields(list_fields)
+        lfields, joins, ljoins = resource.get_lfields(list_fields)
         fields = [f for f in lfields if f.show]
         headers = [f.label for f in lfields if f.show]
         # @ToDo: make consistent with XLS
