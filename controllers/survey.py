@@ -404,33 +404,55 @@ def series():
 
 def export_all_responses():
     s3mgr.load("survey_series")
+    s3mgr.load("survey_section")
     s3mgr.load("survey_complete")
+    s3 = response.s3
     try:
         import xlwt
     except ImportError:
-        output = s3_rest_controller(module,
-                                resourcename,
-                                rheader=response.s3.survey_series_rheader)
+        output = s3_rest_controller("survey",
+                                    "series",
+                                    rheader=s3.survey_series_rheader)
         return output
     series_id = request.args[0]
     seriesName = response.s3.survey_getSeriesName(series_id)
+    sectionBreak = False
+
     filename = "%s_All_responses.xls" % seriesName
     contentType = ".xls"
     output = StringIO()
     book = xlwt.Workbook(encoding="utf-8")
-    sheet1 = book.add_sheet(T("Responses"))
     # get all questions and write out as a heading
     col = 0
     completeRow = {}
     nextRow = 2
     qstnList = response.s3.survey_getAllQuestionsForSeries(series_id)
+    if len(qstnList) > 256:
+        sectionList = s3.survey_getAllSectionsForSeries(series_id)
+        sectionBreak = True
+    if sectionBreak:
+        sheets = {}
+        cols = {}
+        for section in sectionList:
+            sheetName = section["name"].split(" ")[0]
+            if sheetName not in sheets:
+                sheets[sheetName] = book.add_sheet(sheetName)
+                cols[sheetName] = 0
+    else:
+        sheet = book.add_sheet(T("Responses"))
     for qstn in qstnList:
+        if sectionBreak:
+            sheetName = qstn["section"].split(" ")[0]
+            sheet = sheets[sheetName]
+            col = cols[sheetName]
         row = 0
-        sheet1.write(row,col,qstn["code"])
+        sheet.write(row,col,qstn["code"])
         row += 1
-        sheet1.write(row,col,qstn["name"])
+        widgetObj = s3.survey_getWidgetFromQuestion(qstn["qstn_id"])
+        sheet.write(row,col,widgetObj.fullName())
         # for each question get the response
-        allResponses = response.s3.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"], series_id)
+        allResponses = s3.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
+                                                                  series_id)
         for answer in allResponses:
             value = answer["value"]
             complete_id = answer["complete_id"]
@@ -440,10 +462,12 @@ def export_all_responses():
                 completeRow[complete_id] = nextRow
                 row = nextRow
                 nextRow += 1
-            sheet1.write(row,col,value)
+            sheet.write(row,col,value)
         col += 1
-    sheet1.panes_frozen = True
-    sheet1.horz_split_pos = 2
+        if sectionBreak:
+            cols[sheetName] += 1
+    sheet.panes_frozen = True
+    sheet.horz_split_pos = 2
     book.save(output)
 
 
@@ -992,7 +1016,7 @@ def completed_chart():
     answers = getAnswers(qstnID, seriesID)
     analysisTool = survey_analysis_type[type](qstnID, answers)
     qstnName = analysisTool.qstnWidget.question.name
-    image = analysisTool.drawChart(output="png")
+    image = analysisTool.drawChart(seriesID, output="png")
     return image
 
 def section():

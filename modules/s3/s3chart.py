@@ -53,9 +53,9 @@ class S3Chart(object):
 
         Currently a simple wrapper to matplotlib
     """
-
+    CACHE_PATH = "/%s/static/cache/chart"  %  current.request.application
     # -------------------------------------------------------------------------
-    def __init__(self, width=9, height=6):
+    def __init__(self, path, width=9, height=6):
         """
             Create the base Figure object
             
@@ -79,22 +79,66 @@ class S3Chart(object):
             MATPLOTLIB = False
 
         #from numpy import array
-
+        self.filename = path
         self.width = width
         self.height = height
+        self.asInt = False
         if MATPLOTLIB:
             self.fig = Figure(figsize=(width, height))
         else:
             self.fig = None
 
-    # -------------------------------------------------------------------------
-    def displayAsIntegers(self):
+    @staticmethod
+    def getCachedPath(filename):
+        import os
+        path = "applications"
+        chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
+        fullPath = "%s%s" % (path, chartFile)
+        if os.path.exists(fullPath):
+            return chartFile
+        else:
+            return None
+
+    @staticmethod
+    def getCachedFile(filename):
         """
-            Configure Charts to display Integers
-                - used by the Survey module
-                  @ToDo: Replace with simple attribute?
+            Return the opened cached file, if the file can't be found then
+            return None
         """
-        self.asInt = True
+        chartFile = S3Chart.getCachedPath(filename)
+        if chartFile:
+            try:
+                f = open(chartFile)
+                return f.read()
+            except:
+                # for some reason been unable to get the cached version
+                pass
+        return None
+
+    @staticmethod
+    def storeCachedFile(filename, image):
+        """
+            Save the file in the cache area, and return the path to this file
+        """
+        path = "applications"
+        chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
+        fullPath = "%s%s" % (path, chartFile)
+        f = open(fullPath,"w+")
+        print >> f, image
+        return chartFile
+
+    @staticmethod
+    def purgeCache(prefix=None):
+        """
+            Delete the files in the cache that match the file name prefix,
+            if the prefix is None then all files will be deleted
+        """
+        import os
+        folder = "applications%s/" % (S3Chart.CACHE_PATH)
+        filelist = os.listdir(folder)
+        for file in filelist:
+            if prefix == None or file.startswith(prefix):
+                os.remove("%s%s" % (folder, file))
 
     # -------------------------------------------------------------------------
     def draw(self, output="xml"):
@@ -120,9 +164,16 @@ class S3Chart(object):
         canvas.print_figure(chart.body)
         #return response.body.getvalue()
         image = chart.body.getvalue()
+        cachePath = self.storeCachedFile(self.filename, image)
         if output == "xml":
-            base64Img = base64.b64encode(image)
-            image = IMG(_src="data:image/png;base64,%s" % base64Img)
+            """
+                IE 8 and before has a 32K limit on URIs this can be quickly 
+                gobbled up if the image is too large. So the image will
+                stored on the server and a URI used in the src
+            """
+            image = IMG(_src = cachePath)
+#            base64Img = base64.b64encode(image)
+#            image = IMG(_src="data:image/png;base64,%s" % base64Img)
         else:
             current.response.headers["Content-Type"] = "image/png"
         return image

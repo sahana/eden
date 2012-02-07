@@ -52,6 +52,7 @@ __all__ = ["S3TemplateModel",
            "survey_getTemplateFromSeries",
            "survey_getAllTemplates",
            "survey_getAllWidgetsForTemplate",
+           "survey_getWidgetFromQuestion",
            "survey_getAllSectionsForSeries",
            "survey_getAllSectionsForTemplate",
            "survey_getQuestionFromCode",
@@ -692,7 +693,7 @@ def survey_getAllSectionsForTemplate(template_id):
     return sections
 
 
-def getWidgetFromQuestion(question_id):
+def survey_getWidgetFromQuestion(question_id):
     """
         Function that gets the right widget for the question
     """
@@ -726,7 +727,7 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                                _colspan="2"),
                             _class="survey_section"))
             sectionTitle = question["section"]
-        widgetObj = getWidgetFromQuestion(question["qstn_id"])
+        widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
         if readOnly:
             table.append(TR(TD(question["code"]),
                             TD(widgetObj.type_represent()),
@@ -1231,7 +1232,7 @@ def survey_get_series_questions_of_type(questionList, type):
             questions.append(question)
         elif question["type"] == "Link" or \
              question["type"] == "GridChild":
-            widgetObj = getWidgetFromQuestion(question["qstn_id"])
+            widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
             if widgetObj.getParentType() in types:
                 question["name"] = widgetObj.fullName()
                 questions.append(question)
@@ -1728,6 +1729,52 @@ class S3SeriesModel(S3Model):
         return output
 
     @staticmethod
+    def getChartName():
+        import hashlib
+        request = current.request
+        end_part = "%s_%s" % (request.vars.numericQuestion,
+                              request.vars.labelQuestion
+                             )
+        h = hashlib.sha256()
+        h.update(end_part)
+        encoded_part = h.hexdigest()
+        chartName = "survey_series_%s_%s" % \
+                    (request.vars.series,
+                     encoded_part
+                    )
+        return chartName
+
+    @staticmethod
+    def seriesChartDownload(r, **attr):
+        from gluon.contenttype import contenttype
+
+        s3 = current.response.s3
+        response = current.response
+        request = current.request
+        series_id = request.args[0]
+        seriesName = survey_getSeriesName(series_id)
+        response.headers["Content-Type"] = contenttype(".png")
+        filename = "%s_chart.png" % seriesName
+        response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+
+        chartFile = S3SeriesModel.getChartName()
+        cached = S3Chart.getCachedFile(chartFile)
+        if cached:
+            return cached
+
+        # The cached version doesn't exist so regenerate it
+        output = dict()
+        if "labelQuestion" in request.get_vars:
+            labelQuestion = request.get_vars.labelQuestion
+        if "numericQuestion" in request.get_vars:
+            numQstnList = request.get_vars.numericQuestion
+            if not isinstance(numQstnList,(list,tuple)):
+                numQstnList = [numQstnList]
+        if (numQstnList != None) and (labelQuestion != None):
+            S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion, outputFormat="png")
+        return output["chart"]
+
+    @staticmethod
     def seriesGraph(r, **attr):
         """
 
@@ -1743,7 +1790,43 @@ class S3SeriesModel(S3Model):
         s3 = current.response.s3
         request = current.request
         T = current.T
+        output = dict()
 
+        # Draw the chart
+        if "viewing" in request.vars:
+            dummy, series_id = request.vars.viewing.split(".")
+        elif "series" in request.vars:
+            series_id = request.vars.series
+        else:
+            series_id = r.id
+        chartFile = S3SeriesModel.getChartName()
+        cachePath = S3Chart.getCachedPath(chartFile)
+        if cachePath and request.ajax:
+            return IMG(_src=cachePath)
+        else:
+            numQstnList = None
+            labelQuestion = None
+            if "post_vars" in request and len(request.post_vars) > 0:
+                if "labelQuestion" in request.post_vars:
+                    labelQuestion = request.post_vars.labelQuestion
+                if "numericQuestion" in request.post_vars:
+                    numQstnList = request.post_vars.numericQuestion
+                    if not isinstance(numQstnList,(list,tuple)):
+                        numQstnList = [numQstnList]
+                if (numQstnList != None) and (labelQuestion != None):
+                    S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion)
+        if request.ajax == True and "chart" in output:
+            return output["chart"]
+
+        # retain the rheader
+        rheader = attr.get("rheader", None)
+        if rheader:
+            rheader = rheader(r)
+            output["rheader"] = rheader
+
+        crud_strings = s3.crud_strings["survey_series"]
+
+        # Build the form
         def addQstnChkboxToTR(numQstnList, qstn):
             tr = TR()
             if numQstnList != None and qstn["code"] in numQstnList:
@@ -1762,40 +1845,6 @@ class S3SeriesModel(S3Model):
             tr.append(LABEL(qstn["name"]))
             return tr
 
-        # retain the rheader
-        rheader = attr.get("rheader", None)
-        if rheader:
-            rheader = rheader(r)
-            output = dict(rheader=rheader)
-        else:
-            output = dict()
-
-        crud_strings = s3.crud_strings["survey_series"]
-        # Draw the chart
-        if "viewing" in request.vars:
-            dummy, series_id = request.vars.viewing.split(".")
-        elif "series" in request.vars:
-            series_id = request.vars.series
-        else:
-            series_id = r.id
-        debug = "Series ID %s<br />" % series_id
-        numQstnList = None
-        labelQuestion = None
-        if "post_vars" in request and len(request.post_vars) > 0:
-            if "labelQuestion" in request.post_vars:
-                labelQuestion = request.post_vars.labelQuestion
-            if "numericQuestion" in request.post_vars:
-                numQstnList = request.post_vars.numericQuestion
-                if not isinstance(numQstnList,(list,tuple)):
-                    numQstnList = [numQstnList]
-            debug += "Label: %s<br />Numeric: %s<br />" % (labelQuestion, numQstnList)
-            if (numQstnList != None) and (labelQuestion != None):
-                S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion)
-                if request.ajax == True:
-                    return output["chart"].xml()
-        #output["debug"] = debug
-
-        # Build the form
         if series_id == None:
             return output
         allQuestions = survey_getAllQuestionsForSeries(series_id)
@@ -1865,6 +1914,68 @@ $.post('%s',
         output["title"] = crud_strings.title_analysis_chart
         current.response.view = "survey/series_analysis.html"
         return output
+
+    @staticmethod
+    def drawChart(output, series_id, numQstnList, labelQuestion, outputFormat=None):
+        s3 = current.response.s3
+        T = current.T
+        request = current.request
+
+        getAnswers = survey_getAllAnswersForQuestionInSeries
+        gqstn = survey_getQuestionFromName(labelQuestion, series_id)
+        gqstn_id = gqstn["qstn_id"]
+        ganswers = getAnswers(gqstn_id, series_id)
+        dataList = []
+        legendLabels = []
+        for numericQuestion in numQstnList:
+            if numericQuestion == "Count":
+                # get the count of replies for the label question
+                gqstn_type = gqstn["type"]
+                analysisTool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
+                map = analysisTool.uniqueCount()
+                label = map.keys()
+                data = map.values()
+                legendLabels.append(T("Count of Question"))
+            else:
+                qstn = survey_getQuestionFromCode(numericQuestion, series_id)
+                qstn_id = qstn["qstn_id"]
+                qstn_type = qstn["type"]
+                answers = getAnswers(qstn_id, series_id)
+                analysisTool = survey_analysis_type[qstn_type](qstn_id, answers)
+                label = analysisTool.qstnWidget.question.name
+                if len(label) > 20:
+                    label = "%s..." % label[0:20]
+                legendLabels.append(label)
+                grouped = analysisTool.groupData(ganswers)
+                aggregate = "Sum"
+                filtered = analysisTool.filter(aggregate, grouped)
+                (label, data) = analysisTool.splitGroupedData(filtered)
+            if data != []:
+                dataList.append(data)
+
+        if dataList == []:
+            output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
+        else:
+            chartFile = S3SeriesModel.getChartName()
+            chart = S3Chart(path=chartFile, width=7.2)
+            chart.asInt = True
+            chart.survey_bar(labelQuestion,
+                             dataList,
+                             label,
+                             legendLabels)
+            if outputFormat == None:
+                image = chart.draw()
+            else:
+                image = chart.draw(output=outputFormat)
+            output["chart"] = image
+            chartLink = A("Download",
+                         _href=URL(c="survey",
+                                   f="series",
+                                   args=request.args,
+                                   vars=request.vars
+                                  )
+                         )
+            output["chartDownload"] = chartLink
 
     @staticmethod
     def seriesMap(r, **attr):
@@ -2048,89 +2159,6 @@ $.post('%s',
         current.response.view = "survey/series_map.html"
         return output
 
-    @staticmethod
-    def seriesChartDownload(r, **attr):
-        s3 = current.response.s3
-        response = current.response
-        request = current.request
-        from gluon.contenttype import contenttype
-
-        output = dict()
-        series_id = request.args[0]
-        seriesName = survey_getSeriesName(series_id)
-        if "labelQuestion" in request.get_vars:
-            labelQuestion = request.get_vars.labelQuestion
-        if "numericQuestion" in request.get_vars:
-            numQstnList = request.get_vars.numericQuestion
-            if not isinstance(numQstnList,(list,tuple)):
-                numQstnList = [numQstnList]
-        if (numQstnList != None) and (labelQuestion != None):
-            S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion, outputFormat="png")
-        response.headers["Content-Type"] = contenttype(".png")
-        filename = "%s_chart.png" % seriesName
-        response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
-        return output["chart"]
-
-    @staticmethod
-    def drawChart(output, series_id, numQstnList, labelQuestion, outputFormat=None):
-        s3 = current.response.s3
-        T = current.T
-        request = current.request
-
-        getAnswers = survey_getAllAnswersForQuestionInSeries
-        gqstn = survey_getQuestionFromName(labelQuestion, series_id)
-        gqstn_id = gqstn["qstn_id"]
-        ganswers = getAnswers(gqstn_id, series_id)
-        dataList = []
-        legendLabels = []
-        for numericQuestion in numQstnList:
-            if numericQuestion == "Count":
-                # get the count of replies for the label question
-                gqstn_type = gqstn["type"]
-                analysisTool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
-                map = analysisTool.uniqueCount()
-                label = map.keys()
-                data = map.values()
-                legendLabels.append(T("Count of Question"))
-            else:
-                qstn = survey_getQuestionFromCode(numericQuestion, series_id)
-                qstn_id = qstn["qstn_id"]
-                qstn_type = qstn["type"]
-                answers = getAnswers(qstn_id, series_id)
-                analysisTool = survey_analysis_type[qstn_type](qstn_id, answers)
-                label = analysisTool.qstnWidget.question.name
-                if len(label) > 20:
-                    label = "%s..." % label[0:20]
-                legendLabels.append(label)
-                grouped = analysisTool.groupData(ganswers)
-                aggregate = "Sum"
-                filtered = analysisTool.filter(aggregate, grouped)
-                (label, data) = analysisTool.splitGroupedData(filtered)
-            if data != []:
-                dataList.append(data)
-
-        if dataList == []:
-            output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
-        else:
-            chart = S3Chart(width=7.2)
-            chart.displayAsIntegers()
-            chart.survey_bar(labelQuestion,
-                             dataList,
-                             label,
-                             legendLabels)
-            if outputFormat == None:
-                image = chart.draw()
-            else:
-                image = chart.draw(output=outputFormat)
-            output["chart"] = image
-            chartLink = A("Download",
-                         _href=URL(c="survey",
-                                   f="series",
-                                   args=request.args,
-                                   vars=request.vars
-                                  )
-                         )
-            output["chartDownload"] = chartLink
 
 def survey_serieslist_dataTable_post(r):
     s3 = current.response.s3
@@ -2383,7 +2411,7 @@ def buildSeriesSummary(series_id, posn_offset):
     body = TBODY()
     for question in questions:
         question_id = question["qstn_id"]
-        widgetObj = getWidgetFromQuestion(question_id)
+        widgetObj = survey_getWidgetFromQuestion(question_id)
         br = TR()
         br.append(int(question["posn"])+posn_offset) # add an offset to make all id's +ve
         br.append(question["name"])
@@ -2610,6 +2638,8 @@ class S3CompleteModel(S3Model):
         atable = s3db.survey_answer
         record = rtable[complete_id]
         series_id = record.series_id
+        purgePrefix = "survey_series_%s" % series_id
+        S3Chart.purgeCache(purgePrefix)
         if series_id == None:
             return
         ##################################################################
@@ -2754,7 +2784,7 @@ class S3CompleteModel(S3Model):
             complete_id = form.vars.complete_id
             question_id = form.vars.question_id
             value = form.vars.value
-            widgetObj = getWidgetFromQuestion(question_id)
+            widgetObj = survey_getWidgetFromQuestion(question_id)
             newValue = widgetObj.onaccept(value)
             if newValue != value:
                 query = (atable.question_id == question_id) & \
@@ -2850,7 +2880,7 @@ def get_location_details(complete_id):
         record = db(query & (qsntable.code == locCode)).select(qsntable.id,
                                                                limitby=(0, 1)).first()
         if record:
-            widgetObj = getWidgetFromQuestion(record.id)
+            widgetObj = survey_getWidgetFromQuestion(record.id)
             widgetObj.loadAnswer(complete_id, record.id)
             locations[locCode] = widgetObj
     return locations
@@ -2873,7 +2903,7 @@ def get_default_location(complete_id):
         record = db(query & (qsntable.code == locCode)).select(qsntable.id,
                                                                limitby=(0, 1)).first()
         if record:
-            widgetObj = getWidgetFromQuestion(record.id)
+            widgetObj = survey_getWidgetFromQuestion(record.id)
             break
     if record:
         widgetObj.loadAnswer(complete_id, record.id)
@@ -2963,7 +2993,7 @@ def buildCompletedList(series_id, question_id_list):
     for question_id in question_id_list:
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
                                                    series_id)
-        widgetObj = getWidgetFromQuestion(question_id)
+        widgetObj = survey_getWidgetFromQuestion(question_id)
 
         qtable = s3db.survey_question
         query = (qtable.id == question_id)

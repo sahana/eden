@@ -2853,7 +2853,19 @@ class S3AbstractAnalysis():
                  _class="action-btn")
         return DIV(link, _class="surveyChart%sWidget" % self.type)
 
-    def drawChart(self, output=None, data=None, label=None,
+    def getChartName(self, series_id):
+        import hashlib
+        request = current.request
+        h = hashlib.sha256()
+        h.update(self.qstnWidget.question.code)
+        encoded_part = h.hexdigest()
+        chartName = "survey_series_%s_%s" % \
+                    (series_id,
+                     encoded_part
+                    )
+        return chartName
+
+    def drawChart(self, series_id, output=None, data=None, label=None,
                   xLabel=None, yLabel=None):
         """
             This function will draw the chart using the answer set.
@@ -3088,10 +3100,15 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             return None
         return S3AbstractAnalysis.chartButton(self, series_id)
 
-    def drawChart(self, output="xml",
+    def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
-        chart = current.chart()
-        chart.displayAsIntegers()
+        chartFile = self.getChartName(series_id)
+        cached = current.chart.getCachedFile(chartFile)
+        if cached:
+            return cached
+
+        chart = current.chart(path=chartFile)
+        chart.asInt = True
         if data == None:
             chart.survey_hist(self.qstnWidget.question.name,
                               self.valueList,
@@ -3148,14 +3165,18 @@ class S3OptionAnalysis(S3AbstractAnalysis):
             for (key, value) in self.list.items():
                 self.listp[key] = "%3.1f%%" % round((100.0 * value) / self.cnt,1)
 
-    def drawChart(self, output="xml",
+    def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
+        chartFile = self.getChartName(series_id)
+        cached = current.chart.getCachedFile(chartFile)
+        if cached:
+            return cached
+        chart = current.chart(path=chartFile)
         data = []
         label = []
         for (key, value) in self.list.items():
             data.append(value)
             label.append(key)
-        chart = current.chart()
         chart.survey_pie(self.qstnWidget.question.name,
                          data,
                          label)
@@ -3263,14 +3284,18 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
             for (key, value) in self.list.items():
                 self.listp[key] = "%s%%" %((100 * value) / self.cnt)
 
-    def drawChart(self, output="xml",
+    def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
+        chartFile = self.getChartName(series_id)
+        cached = current.chart.getCachedFile(chartFile)
+        if cached:
+            return cached
+        chart = current.chart(path=chartFile)
         data = []
         label = []
         for (key, value) in self.list.items():
             data.append(value)
             label.append(key)
-        chart = current.chart()
         chart.survey_bar(self.qstnWidget.question.name,
                          data,
                          label,
@@ -3441,9 +3466,9 @@ class S3LinkAnalysis(S3AbstractAnalysis):
     def filter(self, filterType, groupedData):
         return self.widget.filter(filterType, groupedData)
 
-    def drawChart(self, output="xml",
+    def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
-        return self.widget.drawChart(data, label, xLabel, yLabel)
+        return self.widget.drawChart(data, series_id, label, xLabel, yLabel)
 
 
 # -----------------------------------------------------------------------------
