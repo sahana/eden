@@ -159,6 +159,7 @@ if len(pop_list) > 0:
 
     _debug = deployment_settings.get_base_debug()
 
+    grandTotalStart = datetime.datetime.now()
     for pop_setting in pop_list:
         start = datetime.datetime.now()
         bi.clear_tasks()
@@ -252,6 +253,9 @@ if len(pop_list) > 0:
                 end = datetime.datetime.now()
                 duration = end - start
                 print >> sys.stdout, "Installed demo '%s' completed in %s" % (demo, duration)
+        grandTotalEnd = datetime.datetime.now()
+        duration = grandTotalEnd - grandTotalStart
+        print >> sys.stdout, "Pre-populate completed in %s" % (duration)
         if _debug:
             for result in bi.resultList:
                 print >> sys.stdout, result
