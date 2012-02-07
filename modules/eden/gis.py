@@ -1083,7 +1083,7 @@ class S3GISConfigModel(S3Model):
                                     link="gis_layer_symbology",
                                     joinby="symbology_id",
                                     key="layer_id",
-                                    actuate="hide",
+                                    actuate="replace",
                                     autocomplete="name",
                                     autodelete=False))
 
@@ -1884,6 +1884,7 @@ class S3FeatureLayerModel(S3Model):
                             gis_layer_feature=Storage(
                                     link="gis_layer_symbology",
                                     joinby="layer_id",
+                                    pkey="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
                                     autocomplete="name",
@@ -2113,6 +2114,7 @@ class S3MapModel(S3Model):
                             gis_layer_geojson=Storage(
                                     link="gis_layer_symbology",
                                     joinby="layer_id",
+                                    pkey="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
                                     autocomplete="name",
@@ -2165,6 +2167,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_georss=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2297,6 +2300,7 @@ class S3MapModel(S3Model):
                             gis_layer_kml=Storage(
                                     link="gis_layer_symbology",
                                     joinby="layer_id",
+                                    pkey="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
                                     autocomplete="name",
