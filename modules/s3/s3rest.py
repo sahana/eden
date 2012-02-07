@@ -70,7 +70,7 @@ from s3method import S3Method
 from s3import import S3ImportJob
 from s3sync import S3Sync
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3REST: DEBUG MODE"
     def _debug(m):
@@ -2079,6 +2079,14 @@ class S3Resource(object):
         return self.rfilter.get_filter()
 
     # -------------------------------------------------------------------------
+    def get_left(self):
+        """ Get the effective left joins """
+
+        if self.rfilter is None:
+            self.build_query()
+        return self.rfilter.get_left()
+
+    # -------------------------------------------------------------------------
     def clear_query(self):
         """ Removes the current query (does not remove the set!) """
 
@@ -2183,7 +2191,8 @@ class S3Resource(object):
                 start = None
                 limit = None
             if fields is not None:
-                rows = self.sqltable(*fields,
+                fnames = [f.name for f in fields]
+                rows = self.sqltable(fnames,
                                      start=start,
                                      limit=limit,
                                      as_rows=True)
@@ -2192,6 +2201,8 @@ class S3Resource(object):
                                      start=start,
                                      limit=limit,
                                      as_rows=True)
+            if rows is None:
+                rows = []
             if not limitby:
                 self._length = len(rows)
             else:
@@ -3705,6 +3716,8 @@ class S3Resource(object):
 
         lfields = []
         joins = Storage()
+        left = Storage()
+
         # @todo: optimize
         for f in flist:
             # Allow to override the field label
@@ -3715,7 +3728,7 @@ class S3Resource(object):
             if "." not in selector:
                 selector = "%s.%s" % (self.name, selector)
             try:
-                lfield = self.get_lfield(selector, join=None)
+                lfield = self.get_lfield(selector)
             except (KeyError, SyntaxError):
                 continue
             if label is None:
@@ -3727,13 +3740,20 @@ class S3Resource(object):
             lfield.label = label
             if lfield.join:
                 joins[selector] = lfield.join
+            if lfield.left:
+                left.update(lfield.left)
             lfield.show = f in fields
             lfields.append(lfield)
 
-        return (lfields, joins)
+        lefts = []
+        for tn in left:
+            ljoins = left[tn]
+            for lj in ljoins:
+                lefts.append(lj)
+        return (lfields, joins, lefts)
 
     # -------------------------------------------------------------------------
-    def get_lfield(self, selector, join=None):
+    def get_lfield(self, selector, join=None, left=None):
         """
             Resolve a field selector against a resource
 
@@ -3744,12 +3764,12 @@ class S3Resource(object):
                 {
                     selector    => the selector
                     field       => Field instance or None (for virtual fields)
-                    join        => join (for $-references)
+                    join        => inner join (for fk-references)
+                    left        => left outer joins (for component/linktable references)
                     tname       => tablename for the field
                     fname       => fieldname for the field
                     colname     => column name in the row
                 }
-            @todo: optimize
             @todo: rename into something like get_field or parse_field_selector?
         """
 
@@ -3762,6 +3782,8 @@ class S3Resource(object):
         original = selector
         if join is None:
             join = []
+        if left is None:
+            left = Storage()
         if "$" in selector:
             selector, tail = selector.split("$", 1)
         else:
@@ -3775,9 +3797,11 @@ class S3Resource(object):
         if tn and tn != self.name:
             # Build component join
             if tn in self.components:
-                j = self.components[tn].get_join()
-                join.append(j)
-                tn = self.components[tn].tablename
+                c = self.components[tn]
+                ctn = c.tablename
+                j = c.get_join()
+                left[ctn] = [c.table.on(j)]
+                tn = ctn
             else:
                 raise KeyError("%s is not a component of %s" % (tn, tablename))
         else:
@@ -3796,11 +3820,13 @@ class S3Resource(object):
                 f = None
 
         if tail:
+            # Resolve the key
             j = None
+            ltable = None
+            fkey = None
+            ktablename = None
 
             if not f:
-                # Is this a link table?
-
                 # Find the link table name
                 LSEP = ":"
                 lkey = rkey = lname = None
@@ -3813,81 +3839,85 @@ class S3Resource(object):
                         (lkey, lname, rkey) = (lname, rkey, lkey)
                 else:
                     lname = fn
-
-                # Load the link table
-                ltable = s3db.table(lname)
-                if not ltable:
-                    raise KeyError("%s is neither a field nor a link table of %s" % (fn, tn))
-
-                # Find the left key
-                if lkey is not None:
-                    if lkey not in ltable:
+                if ltable is None:
+                    ltable = s3db.table(lname)
+                    if not ltable:
+                        raise SyntaxError("%s.%s is not a foreign key" % (tn, fn))
+                pkey = table._id.name
+                # Check the left key
+                if lkey is None:
+                    search_lkey = True
+                else:
+                    if lkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (lkey, lname))
-                    # Check field type of lkey
                     lkey_field = ltable[lkey]
                     ftype = str(lkey_field.type)
-                    if ftype[:9] != "reference" or ftype[10:] != tn:
-                        raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" %(lname, lkey, tn))
+                    if ftype[:9] == "reference":
+                        _tn = ftype[10:]
+                        if "." in _tn:
+                            _tn, pkey = _tn.split(".", 1)
+                        if _tn != tn:
+                            raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" %(lname, lkey, tn))
+                    else:
+                        raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
+                    search_lkey = False
+                # Check the right key
+                if rkey is None:
+                    search_rkey = True
                 else:
-                    # Find the lkey
-                    for fname in ltable.fields:
-                        field = ltable[fname]
-                        ftype = str(field.type)
-                        if ftype[:9] == "reference":
-                            ktablename = ftype[10:]
-                        else:
-                            continue
-                        if ktablename != tn:
-                            continue
-                        if lkey is not None:
-                            raise SyntaxError("Ambiguous link: please specify left key in %s" % tn)
-                        lkey = fname
-                        lkey_field = field
-                    if lkey is None:
-                        raise SyntaxError("Invalid link: no foreign key for %s in %s" % (tn, lname))
-
-                # Find the right key
-                if rkey is not None:
-                    if rkey not in ltable:
+                    if rkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (rkey, lname))
-                    # Check field type of rkey
                     rkey_field = ltable[rkey]
                     ftype = str(rkey_field.type)
-                    if ftype[:9] != "reference":
-                        raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" %(lname, lkey, tn))
+                    if ftype[:9] == "reference":
+                        ktablename = ftype[10:]
+                        if "." in ktablename:
+                            ktablename, fkey = ktablename.split(".", 1)
                     else:
-                        rtablename = ftype[10:]
-                else:
-                    # Find the rkey
+                        raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
+                    search_rkey = False
+                # Key search
+                if search_lkey or search_rkey:
                     for fname in ltable.fields:
-                        field = ltable[fname]
-                        ftype = str(field.type)
-                        if ftype[:9] == "reference":
-                            ktablename = ftype[10:]
-                        else:
+                        ftype = str(ltable[fname].type)
+                        if ftype[:9] != "reference":
                             continue
-                        if ktablename == tn:
-                            continue
-                        if rkey is not None:
-                            raise SyntaxError("Ambiguous link: please specify right key in %s" % tn)
-                        rkey = fname
-                        rkey_field = field
-                        rtablename = ktablename
+                        ktn = ftype[10:]
+                        key = None
+                        if "." in ktn:
+                            ktn, key = ktn.split(".", 1)
+                        if search_lkey and ktn == tn:
+                            if lkey is not None:
+                                raise SyntaxError("Ambiguous link: please specify left key in %s" % tn)
+                            else:
+                                lkey = fname
+                                if key:
+                                    pkey = key
+                        if search_rkey and ktn != tn:
+                            if rkey is not None:
+                                raise SyntaxError("Ambiguous link: please specify right key in %s" % tn)
+                            else:
+                                ktablename = ktn
+                                rkey = fname
+                                fkey = key
+                    if lkey is None:
+                        raise SyntaxError("Invalid link: no foreign key for %s in %s" % (tn, lname))
+                    else:
+                        lkey_field = ltable[lkey]
                     if rkey is None:
-                        raise SyntaxError("Invalid link: no right key found in" % lname)
-
+                        raise SyntaxError("Invalid link: no foreign key found in" % lname)
+                    else:
+                        rkey_field = ltable[rkey]
                 # Load the referenced table
-                rtable = s3db.table(rtablename)
-                if rtable is None:
-                    raise KeyError("Undefined table: %s" % rtablename)
-
+                ktable = s3db.table(ktablename)
+                if ktable is None:
+                    raise KeyError("Undefined table: %s" % ktablename)
                 # Generate the join
-                j = (ltable[lkey] == table._id) & (ltable[rkey] == rtable._id)
-
-                ktablename = rtablename
-
+                if not fkey:
+                    fkey = ktable._id.name
+                left[ktablename] = [ltable.on(table[pkey] == ltable[lkey]),
+                                    ktable.on(ltable[rkey] == ktable[fkey])]
             else:
-
                 # Find the referenced table
                 ftype = str(f.type)
                 if ftype[:9] == "reference":
@@ -3898,13 +3928,11 @@ class S3Resource(object):
                     multiple = True
                 else:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
-
                 # Find the primary key
                 if "." in ktablename:
                     ktablename, pkey = ktablename.split(".", 1)
                 else:
                     pkey = None
-
                 ktable = s3db.table(ktablename)
                 if ktable is None:
                     raise KeyError("Undefined table %s" % ktablename)
@@ -3913,16 +3941,15 @@ class S3Resource(object):
                 else:
                     pkey = ktable[pkey]
                 j = (f == pkey)
-
-            # Add the join
-            join.append(j)
+                # Add the join
+                join.append(j)
 
             # Define the referenced resource
             prefix, name = ktablename.split("_", 1)
             kresource = manager.define_resource(prefix, name, vars=[])
 
             # Resolve the tail
-            field = kresource.get_lfield(tail, join=join)
+            field = kresource.get_lfield(tail, join=join, left=left)
             field.update(selector=original)
             return field
         else:
@@ -3931,7 +3958,8 @@ class S3Resource(object):
                             fname = fn,
                             colname = "%s.%s" % (tn, fn),
                             field=f,
-                            join=join)
+                            join=join,
+                            left=left)
             return field
 
     # -------------------------------------------------------------------------
@@ -4180,11 +4208,24 @@ class S3Resource(object):
         manager = current.manager
         table = self.table
 
+        _left = left
+        if _left is None:
+            _left = []
+        elif not isinstance(left, list):
+            _left = [_left]
+        ljoins = self.get_left()
+        for join in ljoins:
+            if str(join) not in [str(q) for q in _left]:
+                _left.append(join)
+
         if fields is None:
             fields = [f.name for f in self.readable_fields()]
         if table._id.name not in fields and not no_ids:
             fields.insert(0, table._id.name)
-        lfields, joins = self.get_lfields(fields)
+        lfields, joins, ljoins = self.get_lfields(fields)
+        for join in ljoins:
+            if str(join) not in [str(q) for q in _left]:
+                _left.append(join)
 
         colnames = [f.colname for f in lfields]
         headers = dict(map(lambda f: (f.colname, f.label), lfields))
@@ -4209,8 +4250,8 @@ class S3Resource(object):
                     query &= j
 
         # Left outer joins
-        if left is not None:
-            attributes.update(left=left)
+        if _left:
+            attributes.update(left=_left)
 
         # Fields in the query
         qfields = [f.field for f in lfields if f.field is not None]
@@ -4334,7 +4375,8 @@ class S3ResourceFilter:
         self.mvfltr = None      # Master virtual filter
         self.cquery = Storage() # Component queries
         self.cvfltr = Storage() # Component virtual filters
-        self.joins = ()         # Joins
+        self.joins = Storage()  # Joins
+        self.ljoins = Storage() # Left joins
 
         self.query = None       # Effective query
         self.vfltr = None       # Effective virtual filter
@@ -4447,10 +4489,11 @@ class S3ResourceFilter:
                 resource.vars = Storage(vars)
 
                 # Parse URL query
-                r, v, j = self.parse_url_query(resource, vars)
+                r, v, j, l = self.parse_url_query(resource, vars)
                 self.cquery = r
                 self.cvfltr = v
                 self.joins = j
+                self.ljoins = l
 
                 # Parse bbox query
                 bbox = self.parse_bbox_query(resource, vars)
@@ -4509,7 +4552,7 @@ class S3ResourceFilter:
                     if DELETED in ctable.fields:
                         remaining = ctable[DELETED] != True
                         self.query = andq(self.query, remaining)
-                self.vfltr = andf(cf)
+                self.vfltr = andf(self.vfltr, cf)
 
             # Add all joins
             joined = []
@@ -4549,6 +4592,7 @@ class S3ResourceFilter:
         rquery = Storage()
         vfltr = Storage()
         joins = Storage()
+        ljoins = Storage()
 
         if vars is None:
             return rquery, vfltr, joins
@@ -4579,11 +4623,13 @@ class S3ResourceFilter:
                 q = ~q
             alias, f = fn.split(".", 1)
             # Extract the required joins
-            qj = q.joins(resource)
+            qj, lj = q.joins(resource)
             if alias in joins:
                 joins[alias].update(qj)
             else:
                 joins[alias] = qj
+            if lj is not None:
+                ljoins.update(lj)
             # Try to translate into a real query
             r = q.query(resource)
             if r is not None:
@@ -4607,7 +4653,7 @@ class S3ResourceFilter:
                 else:
                     query = query & q
                 vfltr[alias] = query
-        return rquery, vfltr, joins
+        return rquery, vfltr, joins, ljoins
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4754,15 +4800,24 @@ class S3ResourceFilter:
             return 0
         table = resource.table
         tablename = resource.tablename
+        _left = left
+        if _left is None:
+            _left = []
+        elif not isinstance(left, list):
+            _left = [_left]
+        ljoins = self.get_left()
+        for join in ljoins:
+            if str(join) not in [str(q) for q in _left]:
+                _left.append(join)
         if self.vfltr is None:
             if distinct:
                 rows = db(self.query).select(table._id,
-                                             left=left,
+                                             left=_left,
                                              distinct=distinct)
                 return len(rows)
             else:
                 cnt = table[table._id.name].count()
-                row = db(self.query).select(cnt, left=left).first()
+                row = db(self.query).select(cnt, left=_left).first()
                 if row:
                     return(row[cnt])
                 else:
@@ -4771,7 +4826,7 @@ class S3ResourceFilter:
             list_fields = model.get_config(tablename, "list_fields")
             sqltable = resource.sqltable
             rows = sqltable(fields=list_fields,
-                            left=left,
+                            left=_left,
                             distinct=distinct,
                             as_list=True)
         if rows is None:
@@ -4787,6 +4842,15 @@ class S3ResourceFilter:
     def get_filter(self):
         """ Return the effective virtual filter """
         return self.vfltr
+
+    # -------------------------------------------------------------------------
+    def get_left(self):
+        """ Return the effective left joins """
+
+        left = []
+        for joins in self.ljoins.values():
+            left.extend(joins)
+        return left
 
     # -------------------------------------------------------------------------
     def add_filter(self, f, component=None, master=True):
@@ -4872,6 +4936,7 @@ class S3ResourceFilter:
         r = self.cquery
         v = self.cvfltr
         j = self.joins
+        l = self.ljoins
 
         rq = ["..%s: %s" % (key, r[key]) for key in r]
         vq = ["..%s: %s" % (key, v[key].represent(resource)) for key in v]
@@ -4883,9 +4948,14 @@ class S3ResourceFilter:
                 ) for tn in j[alias]])
               ) for alias in j]
 
+        lq = ["..%s:\n%s" % (tn,
+                "\n".join(["....%s" % q for q in l[tn]])
+              ) for tn in l]
+
         rqueries = "\n".join(rq)
         vqueries = "\n".join(vq)
         jqueries = "\n".join(jq)
+        lqueries = "\n".join(lq)
 
         if self.vfltr:
             vf = self.vfltr.represent(resource)
@@ -4903,6 +4973,7 @@ class S3ResourceFilter:
                     "\nComponent queries:\n%s" \
                     "\nComponent virtual filters:\n%s" \
                     "\nJoins:\n%s" \
+                    "\nLeft Joins:\n%s" \
                     "\nEffective query: %s" \
                     "\nEffective virtual filter: %s" % (
                     resource.tablename,
@@ -4911,6 +4982,7 @@ class S3ResourceFilter:
                     rqueries,
                     vqueries,
                     jqueries,
+                    lqueries,
                     self.query,
                     vf)
 
@@ -5112,19 +5184,22 @@ class S3ResourceQuery:
         l = self.left
         r = self.right
         if op in (self.AND, self.OR):
-            joins = l.joins(resource)
-            joins.update(r.joins(resource))
-            return joins
+            joins, ljoins = l.joins(resource)
+            r_joins, r_ljoins = r.joins(resource)
+            joins.update(r_joins)
+            ljoins.update(r_ljoins)
+            return (joins, ljoins)
         elif op == self.NOT:
             return l.joins(resource)
         if isinstance(l, S3QueryField):
             try:
                 lfield = l.resolve(resource)
             except:
-                return Storage()
+                return (Storage(), None)
             tname = lfield.tname
             join = lfield.join
-        return Storage({tname:join})
+            ljoins = lfield.left
+        return (Storage({tname:join}), ljoins)
 
     # -------------------------------------------------------------------------
     def query(self, resource):

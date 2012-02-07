@@ -347,7 +347,7 @@ class S3PersonModel(S3Model):
                                       "picture",
                                       "gender",
                                       "age_group",
-                                      #(T("Organization"), "hrm_human_resource:organisation_id$name")
+                                      (T("Organization"), "hrm_human_resource:organisation_id$name")
                                      ],
                        onvalidation=self.pr_person_onvalidation,
                        search_method=pr_person_search,
