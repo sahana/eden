@@ -2,10 +2,6 @@
 
 """
     Request Management
-
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @author: Fran Boon
-    @date-created: 2010-09-02
 """
 
 module = request.controller

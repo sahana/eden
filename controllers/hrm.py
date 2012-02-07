@@ -2,9 +2,6 @@
 
 """
     Human Resource Management
-
-    @author: Dominic König <dominic AT aidiq DOT com>
-    @author: Fran Boon <fran AT aidiq DOT com>
 """
 
 module = request.controller

@@ -184,7 +184,7 @@ def organisation():
                 (T("Projects"), "project"),
                 (T("Contacts"), "human_resource"),
                ]
-        rheader = lambda r: eden.org.org_organisation_rheader(r, tabs)
+        rheader = lambda r: s3db.org_rheader(r, tabs)
         return s3_rest_controller("org", resourcename,
                                   rheader=rheader)
 

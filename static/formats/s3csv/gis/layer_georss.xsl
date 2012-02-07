@@ -10,29 +10,48 @@
          Name.................string..........Layer Name
          Description..........string..........Layer Description
          URL..................string..........Layer URL
-         Marker...............string..........Layer Marker Name
-         Enabled..............boolean.........Layer Enabled?
-         Visible..............boolean.........Layer Visible?
+         Symbology............string..........Symbology Name
+         Marker...............string..........Layer Symbology Marker Name
          Folder...............string..........Layer Folder
          Image................string..........Layer Image
+         Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
+         Visible..............boolean.........Layer Visible in SITE_DEFAULT config?
+
+         Needs Importing twice:
+            layer_config
+            layer_symbology
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
+    <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
+    <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+            <!-- GeoRSS Layers -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
+                                                                   col[@field='Name'])[1])]">
+                <xsl:call-template name="Layer"/>
+            </xsl:for-each>
+
             <!-- Markers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('markers',
                                                                    col[@field='Marker'])[1])]">
                 <xsl:call-template name="Marker"/>
             </xsl:for-each>
 
-            <!-- GeoRSS Layers -->
+            <!-- Symbologies -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('symbologies',
+                                                                   col[@field='Symbology'])[1])]">
+                <xsl:call-template name="Symbology"/>
+            </xsl:for-each>
+
+            <!-- Layer Symbologies -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
     </xsl:template>
@@ -40,22 +59,60 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
+        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
 
-        <resource name="gis_layer_georss">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
-            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
-            <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
-            <data field="image"><xsl:value-of select="col[@field='Image']"/></data>
-            <reference field="marker_id" resource="gis_marker">
+        <resource name="gis_layer_symbology">
+            <reference field="layer_id" resource="gis_layer_georss">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Marker"/>
+                    <xsl:value-of select="$Layer"/>
                 </xsl:attribute>
             </reference>
+            <reference field="symbology_id" resource="gis_symbology">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Symbology']"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="marker_id" resource="gis_marker">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Marker']"/>
+                </xsl:attribute>
+            </reference>
+            <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="Layer">
+
+        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
+
+        <resource name="gis_layer_georss">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Layer"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Layer"/></data>
+            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
+            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            <data field="image"><xsl:value-of select="col[@field='Image']"/></data>
+        </resource>
+
+        <resource name="gis_layer_config">
+            <reference field="layer_id" resource="gis_layer_georss">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Layer"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="config_id" resource="gis_config">
+                <xsl:attribute name="uuid">
+                    <xsl:value-of select="'SITE_DEFAULT'"/>
+                </xsl:attribute>
+            </reference>
+            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
+            <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
+        </resource>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -69,6 +126,20 @@
                 <xsl:value-of select="$Marker"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Marker"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="Symbology">
+
+        <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
+    
+        <resource name="gis_symbology">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Symbology"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Symbology"/></data>
         </resource>
     </xsl:template>
 

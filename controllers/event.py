@@ -4,8 +4,6 @@
     Event Module - Controllers
 
     http://eden.sahanafoundation.org/wiki/BluePrintScenario
-
-    @author: Fran Boon
 """
 
 module = request.controller

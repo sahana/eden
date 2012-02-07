@@ -3,9 +3,6 @@
 """
     Supply
 
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2010-08-16
-
     Generic Supply functionality such as catalogs and items that are used across multiple applications
 """
 
