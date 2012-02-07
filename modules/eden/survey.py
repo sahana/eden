@@ -94,6 +94,8 @@ def json2py(jsonstr):
     import gluon.contrib.simplejson as json
     from xml.sax.saxutils import unescape
 
+    if not isinstance(jsonstr, str):
+        return jsonstr
     try:
         jsonstr = unescape(jsonstr, {"u'": '"'})
         jsonstr = unescape(jsonstr, {"'": '"'})
@@ -717,12 +719,14 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
     sectionTitle = ""
     for question in questions:
         if sectionTitle != question["section"]:
-            if table != None:
-                form.append(table)
+            if sectionTitle != "":
                 form.append(P())
                 form.append(HR(_width="90%"))
                 form.append(P())
+            div = DIV(_class="survey_scrollable")
             table = TABLE()
+            div.append(table)
+            form.append(div)
             table.append(TR(TH(question["section"],
                                _colspan="2"),
                             _class="survey_section"))
@@ -739,8 +743,10 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                 widgetObj.loadAnswer(complete_id, question["qstn_id"])
             widget = widgetObj.display(question_id = question["qstn_id"])
             if widget != None:
-                table.append(widget)
-    form.append(table)
+                if isinstance(widget,TABLE):
+                    table.append(TR(TD(widget, _colspan=2)))
+                else:
+                    table.append(widget)
     if not readOnly:
         button = INPUT(_type="submit", _name="Save", _value=T("Save"))
         form.append(button)
