@@ -2731,7 +2731,7 @@ class S3Resource(object):
             @param limit: maximum number of records to export (slicing)
             @param msince: export only records which have been modified
                             after this datetime
-            @param marker: URL of the default map marker
+            @param marker: default GIS marker
             @param dereference: include referenced resources
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
@@ -2802,7 +2802,7 @@ class S3Resource(object):
             @param start: index of the first record to export
             @param limit: maximum number of records to export
             @param msince: minimum modification date of the records
-            @param marker: URL of the default marker
+            @param marker: default GIS marker
             @param skip: list of fieldnames to skip
             @param show_urls: show record URLs in the export
             @param mcomponents: components of the master resource to
@@ -2816,8 +2816,6 @@ class S3Resource(object):
         """
 
         db = current.db
-        gis = current.gis
-        request = current.request
 
         manager = current.manager
         model = manager.model
@@ -2844,8 +2842,10 @@ class S3Resource(object):
         # Load slice
         self.load(start=start, limit=limit)
 
-        # See if we're being called as a GIS Feature Layer
-        (popup_label, popup_fields) = gis.get_popup()
+        layer_id = current.request.get_vars.layer
+        if layer_id:
+            # We're being called as a GIS Feature Layer, so lookup Marker & Popup
+            marker = current.gis.get_marker_and_popup(layer_id, marker)
 
         # Build the tree
         root = etree.Element(xml.TAG.root)
@@ -2869,9 +2869,7 @@ class S3Resource(object):
                                       components=mcomponents,
                                       skip=skip,
                                       msince=msince,
-                                      marker=marker,
-                                      popup_label=popup_label,
-                                      popup_fields=popup_fields)
+                                      marker=marker)
             if element is None:
                 results -= 1
 
@@ -2925,8 +2923,7 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               skip=skip,
-                                              msince=msince,
-                                              marker=marker)
+                                              msince=msince)
 
                     # Mark as referenced element (for XSLT)
                     if element is not None:
@@ -2953,9 +2950,7 @@ class S3Resource(object):
                           components=None,
                           skip=[],
                           msince=None,
-                          marker=None,
-                          popup_label=None,
-                          popup_fields=None):
+                          marker=None):
         """
             Add a <resource> to the element tree
 
@@ -2970,9 +2965,7 @@ class S3Resource(object):
                                resources (tablenames)
             @param skip: fields to skip
             @param msince: the minimum update datetime for exported records
-            @param marker: the GIS default marker URL
-            @param popup_label: the popup label for GIS encoding
-            @param popup_fields: the popup fields for GIS encoding
+            @param marker: the marker for GIS encoding
         """
 
         manager = current.manager
@@ -2998,9 +2991,7 @@ class S3Resource(object):
                                export_map=export_map,
                                url=record_url,
                                msince=msince,
-                               marker=marker,
-                               popup_label=popup_label,
-                               popup_fields=popup_fields)
+                               marker=marker)
         if element is not None:
             add = True
 
@@ -3053,8 +3044,7 @@ class S3Resource(object):
                                              parent=element,
                                              export_map=export_map,
                                              url=crecord_url,
-                                             msince=msince,
-                                             marker=marker)
+                                             msince=msince)
                     if celement is not None:
                         add = True # keep the parent record
                         map_record(crecord, crmap,
@@ -3080,9 +3070,7 @@ class S3Resource(object):
                         export_map=None,
                         url=None,
                         msince=None,
-                        marker=None,
-                        popup_label=None,
-                        popup_fields=None):
+                        marker=None):
         """
             Exports a single record to the element tree.
 
@@ -3093,9 +3081,7 @@ class S3Resource(object):
             @param export_map: the export map of the current request
             @param url: URL of the record
             @param msince: minimum last update time
-            @param marker: GIS marker URL
-            @param popup_label: the popup label for GIS encoding
-            @param popup_fields: the popup fields for GIS encoding
+            @param marker: the marker for GIS encoding
         """
 
         manager = current.manager
@@ -3139,8 +3125,6 @@ class S3Resource(object):
         download_url = manager.s3.download_url
         xml.gis_encode(self, record, rmap,
                        download_url=download_url,
-                       popup_label=popup_label,
-                       popup_fields=popup_fields,
                        marker=marker)
 
         return (element, rmap)

@@ -246,6 +246,7 @@ class GIS(object):
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
         self.gps_symbols = GPS_SYMBOLS
+        self.DEFAULT_SYMBOL = "White Dot"
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
         self.max_allowed_level_num = 4
         self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
@@ -1756,132 +1757,177 @@ class GIS(object):
         return None
 
     # -------------------------------------------------------------------------
-    def get_marker(self, tablename=None, record=None, marker=True, gps=False):
+    @staticmethod
+    def get_marker():
         """
-            Returns the Marker for a Feature
-                marker.image = filename
-                marker.height
-                marker.width
-
-            Used by s3search's search_interactive for search results
-            Used by s3xml's gis_encode() for Feeds export
-                @ToDo: Try this once per Resource if unfiltered
-
-            @param tablename
-            @param record
-            @param marker: return the marker
-            @param gps: return the gps_marker
+            Returns the default Marker
+            - called by S3XML.gis_encode()
         """
 
-        if tablename is None:
-            # Default Marker
-            return Marker().as_dict()
-
-        # Default GPS Symbol
-        DEFAULT = "White Dot"
-
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-
-        table = s3db.gis_layer_feature
-        gtable = s3db.gis_config
-        mtable = s3db.gis_marker
-        ltable = s3db.gis_layer_symbology
-
-        (module, resource) = tablename.split("_", 1)
-
-        # 1st choice for a Marker is the Feature Layer's
-        query = (table.module == module) & \
-                (table.resource == resource) & \
-                (table.layer_id == ltable.layer_id) & \
-                (gtable.id == current.session.s3.gis_config_id) & \
-                (gtable.symbology_id == ltable.symbology_id)
-
-        layers = db(query).select(ltable.marker_id,
-                                  ltable.gps_marker,
-                                  table.filter_field,
-                                  table.filter_value,
-                                  cache=cache)
-
-        _gps_marker = None
-        _marker = None
-        if layers:
-            _gps_marker = None
-            for row in layers:
-                frow = row.gis_layer_feature
-                srow = row.gis_layer_symbology
-                if record and frow.filter_field:
-                    # Check if the record matches the filter
-                    if str(record[frow.filter_field]) == frow.filter_value:
-                        _gps_marker = srow.gps_marker or DEFAULT
-                        if marker:
-                            query = (mtable.id == srow.marker_id)
-                            _marker = db(query).select(mtable.image,
-                                                       mtable.height,
-                                                       mtable.width,
-                                                       limitby=(0, 1),
-                                                       cache=cache).first()
-                else:
-                    # No Filter so we match automatically
-                    _gps_marker = srow.gps_marker or DEFAULT
-                    if marker:
-                        query = (mtable.id == srow.marker_id)
-                        _marker = db(query).select(mtable.image,
-                                                   mtable.height,
-                                                   mtable.width,
-                                                   limitby=(0, 1),
-                                                   cache=cache).first()
-                if _gps_marker:
-                    # Return the 1st matching marker
-                    break
-
-        gps_marker = _gps_marker or DEFAULT
-
-        if marker and not _marker:
-            # Default Marker
-            config = self.get_config()
-            _marker = Storage(image = config.marker_image,
-                              height = config.marker_height,
-                              width = config.marker_width)
-        if not gps:
-            # Just return the marker
-            return _marker
-
-        # Return both
-        return (_marker, gps_marker)
+        return Marker().as_dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_popup():
+    def get_marker_and_popup(layer_id=None, # Used by S3REST: S3Resource.export_tree()
+                             marker=None,   # Used by S3REST: S3Resource.export_tree()
+                             tablename=None,  # Used by S3Search: search_interactive()
+                             record=None      # Used by S3Search: search_interactive()
+                            ):
         """
-            Returns the popup_fields & popup_label for a Map Layer
-            - called by S3REST: S3Resource.export_tree()
+            Returns the marker, popup_fields and popup_label for a Map Layer
+
+            Used by S3REST: S3Resource.export_tree():
+            @param: layer_id - db.gis_layer_feature.id
+            @param: marker - a default marker image (what would provide this?)
+            
+            Used by S3Search: search_interactive():
+            @param: tablename - the tablename for a resource
+            @param: record - the record for a resource
         """
 
-        vars = current.request.vars
+        db = current.db
+        s3db = current.s3db
 
-        popup_label = None
-        popup_fields = None
-        if "layer" in vars:
-            # This is a Map Layer
-            db = current.db
-            s3db = current.s3db
-            layer_id = vars.layer
-            ltable = s3db.gis_layer_feature
-            query = (ltable.id == layer_id)
-            layer = db(query).select(ltable.popup_label,
-                                     ltable.popup_fields,
-                                     cache = s3db.cache,
+        table = s3db.gis_layer_feature
+        ltable = s3db.gis_layer_symbology
+        mtable = s3db.gis_marker
+
+        try:
+            symbology_id = current.response.s3.gis.config.symbology_id
+        except:
+            # Config not initialised yet
+            config = current.gis.get_config()
+            symbology_id = config.symbology_id
+
+        if layer_id:
+            # Feature Layer called by S3REST: S3Resource.export_tree()
+            query = (table.id == layer_id) & \
+                    (table.layer_id == ltable.layer_id) & \
+                    (ltable.marker_id == mtable.id) & \
+                    (ltable.symbology_id == symbology_id)
+            layer = db(query).select(mtable.image,
+                                     ltable.gps_marker,
+                                     table.popup_label,
+                                     table.popup_fields,
                                      limitby=(0, 1)).first()
+
             if layer:
-                popup_label = layer.popup_label
-                popup_fields = layer.popup_fields
+                marker = layer.gis_marker.image
+                gps_marker = layer.gis_layer_symbology.gps_marker
+                frow = layer.gis_layer_feature
+                popup_label = frow.popup_label
+                popup_fields = frow.popup_fields
             else:
+                gps_marker = None
                 popup_label = ""
                 popup_fields = "name"
 
-        return (popup_label, popup_fields)
+            return dict(marker = marker,
+                        gps_marker = gps_marker,
+                        popup_label = popup_label,
+                        popup_fields = popup_fields,
+                        )
+
+        elif tablename:
+            # Search results called by S3Search: search_interactive()
+            (module, resourcename) = tablename.split("_", 1)
+            query = (table.module == module) & \
+                    (table.resource == resourcename) & \
+                    (table.layer_id == ltable.layer_id) & \
+                    (ltable.marker_id == mtable.id) & \
+                    (ltable.symbology_id == symbology_id)
+
+            layers = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      #ltable.gps_marker,
+                                      table.filter_field,
+                                      table.filter_value,
+                                      table.popup_label,
+                                      table.popup_fields,
+                                      cache=s3db.cache)
+            if not record and len(layers) > 1:
+                # We can't provide details for the whole table, but need to do a per-record check
+                return None
+            for row in layers:
+                frow = row.gis_layer_feature
+                if not record or not frow.filter_field:
+                    # We only have 1 row
+                    return dict(marker = row.gis_marker,
+                                #gps_marker = row.gis_layer_symbology.gps_marker,
+                                popup_label = frow.popup_label,
+                                popup_fields = frow.popup_fields,
+                                )
+                # Check if the record matches the filter
+                if str(record[frow.filter_field]) == frow.filter_value:
+                    return dict(marker = row.gis_marker,
+                                #gps_marker = row.gis_layer_symbology.gps_marker,
+                                popup_label = frow.popup_label,
+                                popup_fields = frow.popup_fields,
+                                )
+            # No Feature Layer defined or
+            # Row doesn't match any of the filters
+            # Default Marker
+            return dict(marker = Marker().as_dict(),
+                        #gps_marker = row.gis_layer_symbology.gps_marker,
+                        popup_label = "",
+                        popup_fields = None,
+                        )
+
+        else:
+            s3_debug("gis.get_marker_and_popup", "Invalid arguments")
+            return None
+
+    # -------------------------------------------------------------------------
+    def get_popup_tooltip(self, table, record, popup_label, popup_fields):
+        """
+            Returns the HTML popup_tooltip for a Map feature
+
+            Used by S3XML.gis_encode()
+            Used by S3Search: search_interactive()
+
+            @param: table
+            @param: record
+            @param: popup_label
+            @param: popup_fields
+        """
+
+        if popup_label:
+            tooltip = "(%s)" % current.T(popup_label)
+        else:
+            tooltip = ""
+
+        popup_fields = popup_fields.split("/")
+        fieldname = popup_fields[0]
+        try:
+            value = record[fieldname]
+            if value:
+                field = table[fieldname]
+                # @ToDo: Slow query which would be good to optimise
+                represent = self.get_representation(field, value)
+                # Is this faster than the simpler alternative?
+                #represent = resource.table[fieldname].represent(value)
+                tooltip = "%s %s" % (represent, tooltip)
+        except:
+            # This field isn't in the table
+            pass
+
+        for fieldname in popup_fields:
+            try:
+                if fieldname != popup_fields[0]:
+                    value = record[fieldname]
+                    if value:
+                        field = table[fieldname]
+                        # @ToDo: Slow query which would be
+                        # good to optimise
+                        represent = self.get_representation(field, value)
+                        tooltip = "%s<br />%s" % (tooltip,
+                                                  represent)
+            except:
+                # This field isn't in the table
+                pass
+
+        return tooltip
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3639,8 +3685,6 @@ S3.gis.lon = %s;
         #   Localisation of name/popup_label
         #
         if feature_queries:
-            # Load Model
-            fqtable = s3db.gis_feature_query
             layers_feature_queries = """
 S3.gis.layers_feature_queries = new Array();"""
             counter = -1
@@ -3660,6 +3704,7 @@ S3.gis.layers_feature_queries = new Array();"""
 
             # Push the Features into a temporary table in order to have them accessible via GeoJSON
             # @ToDo: Maintenance Script to clean out old entries (> 24 hours?)
+            fqtable = s3db.gis_feature_query
             cname = "%s_%s_%s" % (name_safe,
                                   request.controller,
                                   request.function)
@@ -3937,8 +3982,6 @@ S3.i18n.gis_feature_info = '%s';
 class Marker(object):
     """
         Represents a Map Marker
-
-        @ToDo: Extend so that gis.get_marker() calls this?
     """
 
     def __init__(self, id=None, layer_id=None):
@@ -4464,7 +4507,7 @@ class GoogleLayer(Layer):
         sublayers = self.sublayers
         if sublayers:
             T = current.T
-            epsg = (Projection().epsg != 900913)
+            epsg = (Projection().epsg == 900913)
             apikey = current.deployment_settings.get_gis_api_google()
             debug = current.session.s3.debug
             add_script = self.scripts.append

@@ -1759,7 +1759,7 @@ def cache_feed():
           make them available to the Map Viewing Client as GeoJSON
 
         The create.georss/create.kml methods are designed to be called
-        asynchronously using Celery: http://celeryproject.org/
+        asynchronously using S3Task
 
         This allows:
         * Feed can be refreshed on a schedule rather than every client request

@@ -612,12 +612,7 @@ class S3XML(S3Codec):
                    rmap,
                    download_url="",
                    marker=None,
-                   shape=None,          # Used by Feature Queries
-                   size=None,           # Used by Feature Queries
-                   colour=None,         # Used by Feature Queries
-                   popup_url=None,      # Used by Feature Queries
-                   popup_label=None,    # Used by Internal Feature Layers & Feature Queries
-                   popup_fields=None):  # Used by Internal Feature Layers
+                   ):
         """
             GIS-encodes location references
 
@@ -625,13 +620,11 @@ class S3XML(S3Codec):
             @param record: the particular record
             @param rmap: list of references to encode
             @param download_url: download URL of this instance
-            @param marker: filename to override filenames in marker URLs
+            @param marker: marker dict or filename
             @param shape: shape as alternative to marker
             @param size: size of shape
             @param colour: colour of shape
             @param popup_url:  URL used for onClick Popup contents
-            @param popup_label:  used to build HTML in the onHover Tooltip
-            @param popup_fields: used to build HTML in the onHover Tooltip
         """
 
         if not current.gis:
@@ -654,10 +647,24 @@ class S3XML(S3Codec):
         download_url = download_url.replace("default/download",
                                             "static/img/markers")
 
+        _marker = None
+        marker_url = None
+        symbol = gis.DEFAULT_SYMBOL
+        popup_label = None
+        popup_fields = None
+        popup_url = None
         if marker:
-            marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
-        else:
-            marker_url = None
+            try:
+                # Dict
+                _marker = marker["marker"]
+                if _marker:
+                    marker_url = "%s/%s" % (download_url, _marker)
+                symbol = marker["gps_marker"]
+                popup_label = marker["popup_label"]
+                popup_fields = marker["popup_fields"]
+            except:
+                # String
+                marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
 
         table = resource.table
         tablename = resource.tablename
@@ -689,70 +696,18 @@ class S3XML(S3Codec):
                 if lat is not None and lon is not None:
                     attr[ATTRIBUTE.lat] = "%.6f" % lat
                     attr[ATTRIBUTE.lon] = "%.6f" % lon
-                    if shape or size or colour:
-                        # Feature Queries (but never used?)
-                        if shape:
-                            attr[ATTRIBUTE.shape] = shape
-                        if size:
-                            attr[ATTRIBUTE.size] = size
-                        if colour:
-                            attr[ATTRIBUTE.colour] = colour
-                        # We don't want a default Marker if these are specified
-                        marker = True
-
-                    # Lookup Marker (Icon) & GPS Symbol
-                    # @ToDo: Return the markers outside the records
-                    #        (as there are many less of them)
-                    #        & use the stylesheet to hook-up appropriately
-                    #        Skip GPS completely for GeoJSON?
-                    (_marker, symbol) = gis.get_marker(tablename=tablename,
-                                                       record=record,
-                                                       gps=True,
-                                                       marker=False if marker else True)
-                    if _marker:
-                        marker_url = "%s/%s" % (download_url, _marker.image)
+                    if not marker_url:
+                        marker = gis.get_marker()
+                        marker_url = "%s/%s" % (download_url, marker.image)
                     attr[ATTRIBUTE.marker] = marker_url
                     attr[ATTRIBUTE.sym] = symbol
                     if popup_fields:
-                        # Internal feature Layers
+                        # Feature Layer
                         # Build the HTML for the onHover Tooltip
-                        T = current.T
-                        popup_fields = popup_fields.split("/")
-                        fieldname = popup_fields[0]
-                        if popup_label:
-                            tooltip = "(%s)" % T(popup_label)
-                        else:
-                            tooltip = ""
-                        try:
-                            value = record[fieldname]
-                            if value:
-                                # @ToDo: Slow query which would be
-                                #        good to optimise
-                                field = table[fieldname]
-                                represent = gis.get_representation(field,
-                                                                   value)
-                                # Is this is faster than the simpler alternative?
-                                #represent = resource.table[fieldname].represent(value)
-                                tooltip = "%s %s" % (represent, tooltip)
-                        except:
-                            # This field isn't in the table
-                            pass
-
-                        for fieldname in popup_fields:
-                            try:
-                                if fieldname != popup_fields[0]:
-                                    value = record[fieldname]
-                                    if value:
-                                        field = table[fieldname]
-                                        # @ToDo: Slow query which would be
-                                        # good to optimise
-                                        represent = gis.get_representation(
-                                                        field, value)
-                                        tooltip = "%s<br />%s" % (tooltip,
-                                                                  represent)
-                            except:
-                                # This field isn't in the table
-                                pass
+                        tooltip = gis.get_popup_tooltip(table,
+                                                        record,
+                                                        popup_label,
+                                                        popup_fields)
                         try:
                             # encode suitable for use as XML attribute
                             tooltip = self.xml_encode(tooltip).decode("utf-8")
@@ -762,11 +717,10 @@ class S3XML(S3Codec):
                             attr[ATTRIBUTE.popup] = tooltip
 
                         # Build the URL for the onClick Popup contents
-                        if not popup_url:
-                            url = URL(resource.prefix,
-                                      resource.name).split(".", 1)[0]
-                            popup_url = "%s/%i.plain" % (url,
-                                                         record.id)
+                        url = URL(resource.prefix,
+                                  resource.name).split(".", 1)[0]
+                        popup_url = "%s/%i.plain" % (url,
+                                                     record.id)
                     elif popup_label:
                         # Feature Queries
                         # This is the pre-generated HTML for the onHover Tooltip
