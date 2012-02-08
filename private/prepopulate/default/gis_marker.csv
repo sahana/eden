@@ -25,7 +25,7 @@ Name,Height,Width,Image
 "staff",40,40,"gis_marker.image.Emergency_Staff_S1.png"
 "temple",33,44,"gis_marker.image.Public_Venue_Temple_S1.png"
 "tsunami",50,50,"gis_marker.image.Hydro_Meteor_Tsunami_ch.png"
-"vehicle",50,50,"gis_marker.image.Emergency_Vehicle_S1.png"
+"vehicle",40,40,"gis_marker.image.Emergency_Vehicle_S1.png"
 "volcano",50,50,"gis_marker.image.Geo_Volcanic_Threat.png"
 "volunteer",40,39,"gis_marker.image.Volunteer.png"
 "water",33,44,"gis_marker.image.Water_Supply_Infrastructure_Theme_S1.png"

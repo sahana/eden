@@ -232,7 +232,7 @@ def activity():
         tabs.append((T("Documents"), "document"))
     else:
         tabs.append((T("Tasks"), "task"))
-        tabs.append((T("Attachments"), "document"))
+        #tabs.append((T("Attachments"), "document"))
 
     doc_table = s3db.table("doc_document", None)
     if doc_table is not None:
@@ -282,7 +282,7 @@ def task():
             table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
             list_fields = s3mgr.model.get_config(tablename,
                                                  "list_fields")
-            list_fields.insert(3, (T("Project"), "project"))
+            list_fields.insert(4, (T("Project"), "project"))
             # Hide the Assignee column (always us)
             list_fields.remove("pe_id")
             # Hide the Status column
