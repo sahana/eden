@@ -1946,10 +1946,14 @@ class S3ProjectTaskModel(S3Model):
     def task_onvalidation(form):
         """ Task form validation """
 
-        if str(form.vars.status) == "3" and not form.vars.pe_id:
+        vars = form.vars
+        if str(vars.status) == "3" and not vars.pe_id:
             form.errors.pe_id = \
                 T("Status 'assigned' requires the %(fieldname)s to not be blank") % \
-                    dict(fieldname=db.project_task.pe_id.label)
+                    dict(fieldname=current.db.project_task.pe_id.label)
+        elif vars.pe_id and str(vars.status) == "2":
+            # Set the Status to 'Assigned' if left at default 'New'
+            vars.status = 3
         return
 
     # -------------------------------------------------------------------------
@@ -2383,13 +2387,11 @@ def task_notify(form):
     """
 
     vars = form.vars
-    if "record" not in form:
-        return
     try:
         pe_id = int(vars.pe_id)
     except TypeError, ValueError:
         return
-    if pe_id != form.record.pe_id:
+    if form.record is None or (pe_id != form.record.pe_id):
         # Assignee has changed
         settings = current.deployment_settings
         if settings.has_module("msg"):
