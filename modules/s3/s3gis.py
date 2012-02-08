@@ -1779,7 +1779,7 @@ class GIS(object):
             Used by S3REST: S3Resource.export_tree():
             @param: layer_id - db.gis_layer_feature.id
             @param: marker - a default marker image (what would provide this?)
-            
+
             Used by S3Search: search_interactive():
             @param: tablename - the tablename for a resource
             @param: record - the record for a resource
@@ -1897,20 +1897,23 @@ class GIS(object):
         else:
             tooltip = ""
 
-        popup_fields = popup_fields.split("/")
-        fieldname = popup_fields[0]
-        try:
-            value = record[fieldname]
-            if value:
-                field = table[fieldname]
-                # @ToDo: Slow query which would be good to optimise
-                represent = self.get_representation(field, value)
-                # Is this faster than the simpler alternative?
-                #represent = resource.table[fieldname].represent(value)
-                tooltip = "%s %s" % (represent, tooltip)
-        except:
-            # This field isn't in the table
-            pass
+        if popup_fields:
+            popup_fields = popup_fields.split("/")
+            fieldname = popup_fields[0]
+            try:
+                value = record[fieldname]
+                if value:
+                    field = table[fieldname]
+                    # @ToDo: Slow query which would be good to optimise
+                    represent = self.get_representation(field, value)
+                    # Is this faster than the simpler alternative?
+                    #represent = resource.table[fieldname].represent(value)
+                    tooltip = "%s %s" % (represent, tooltip)
+            except:
+                # This field isn't in the table
+                pass
+        else:
+            popup_fields = []
 
         for fieldname in popup_fields:
             try:
@@ -4133,7 +4136,7 @@ class Layer(object):
     def as_json(self):
         """
             Output the Layers as JSON
-            
+
             @ToDo: Support layers with SubLayer.as_dict() to pass config
                    dynamically between server & client
         """
@@ -4296,7 +4299,7 @@ class CoordinateLayer(Layer):
             return output
         else:
             return None
-            
+
 # -----------------------------------------------------------------------------
 class FeatureLayer(Layer):
     """
@@ -4522,7 +4525,7 @@ class GoogleLayer(Layer):
                     add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
                     if debug:
                         # Non-debug has this included within GeoExt.js
-                        add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")            
+                        add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")
                 elif epsg:
                     # Earth is the only layer which can run in non-Spherical Mercator
                     # @ToDo: Warning?
@@ -4643,7 +4646,7 @@ class JSLayer(Layer):
         else:
             return None
 
-            
+
 # -----------------------------------------------------------------------------
 class KMLLayer(Layer):
     """

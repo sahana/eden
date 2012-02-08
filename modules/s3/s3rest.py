@@ -70,7 +70,7 @@ from s3method import S3Method
 from s3import import S3ImportJob
 from s3sync import S3Sync
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     print >> sys.stderr, "S3REST: DEBUG MODE"
     def _debug(m):
@@ -3659,7 +3659,7 @@ class S3Resource(object):
         table = self.table
 
         if self.parent and self.linked is None:
-            component = self.parent.components.get(self.name, None)
+            component = self.parent.components.get(self.alias, None)
             if component:
                 fkey = component.fkey
         elif self.linked is not None:
@@ -3791,6 +3791,10 @@ class S3Resource(object):
                 raise KeyError("%s is not a component of %s" % (tn, tablename))
         else:
             tn = tablename
+            if tail:
+                original = "%s$%s" % (fn, tail)
+            else:
+                original = fn
 
         # Load the table
         table = s3db[tn]
@@ -3940,7 +3944,7 @@ class S3Resource(object):
                          distinct=field.distinct or distinct)
             return field
         else:
-            field = Storage(selector=selector,
+            field = Storage(selector=original,
                             tname = tn,
                             fname = fn,
                             colname = "%s.%s" % (tn, fn),

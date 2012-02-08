@@ -53,12 +53,15 @@ class S3PersonEntity(S3Model):
     """ Person Super-Entity """
 
     names = ["pr_pentity",
+             "pr_affiliation",
+             "pr_role",
              "pr_pe_label"]
 
     def model(self):
 
         db = current.db
         T = current.T
+        s3 = current.response.s3
 
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
@@ -66,6 +69,9 @@ class S3PersonEntity(S3Model):
                            org_office = T("Office"),
                            dvi_body = T("Body"))
 
+        # ---------------------------------------------------------------------
+        # Person Super-Entity
+        #
         tablename = "pr_pentity"
         table = self.super_entity(tablename, "pe_id", pe_types,
                                   Field("pe_label", length=128))
@@ -118,11 +124,75 @@ class S3PersonEntity(S3Model):
                                            multiple=False))
 
         # ---------------------------------------------------------------------
+        # Affiliation link table
+        #
+        tablename = "pr_affiliation"
+        table = self.define_table(tablename,
+                                  Field("hierarchy"),
+                                  Field("parent",
+                                        "reference pr_pentity",
+                                        requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                             pr_pentity_represent,
+                                                             sort=True),
+                                        represent = pr_pentity_represent),
+                                  Field("child",
+                                        "reference pr_pentity",
+                                        requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                             pr_pentity_represent,
+                                                             sort=True),
+                                        represent = pr_pentity_represent),
+                                  *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Role
+        #
+        tablename = "pr_role"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity",
+                                                  readable=True,
+                                                  writable=True),
+                                  Field("hierarchy"),
+                                  Field("role"),
+                                  Field("affiliation",
+                                        "reference pr_affiliation",
+                                        requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                        "pr_affiliation.id",
+                                                        self.pr_affiliation_represent,
+                                                        sort=True)),
+                                        represent = self.pr_affiliation_represent),
+                                  *s3.meta_fields())
+
+        table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                         pr_pentity_represent, sort=True)
+        table.pe_id.represent = pr_pentity_represent
+
+        # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
         return Storage(
             pr_pe_label=pr_pe_label,
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_affiliation_represent(affiliation_id):
+
+        db = current.db
+        s3db = current.s3db
+
+        if isinstance(affiliation_id, Row):
+            affiliation = affiliation_id
+        else:
+            atable = s3db.pr_affiliation
+            query = (atable.deleted != True) & \
+                    (atable.id == affiliation_id)
+            affiliation = db(query).select(atable.parent, atable.child,
+                                           limitby=(0, 1)).first()
+        if affiliation:
+            return "%s => %s" % (pr_pentity_represent(affiliation.child),
+                                 pr_pentity_represent(affiliation.parent))
+        else:
+            return current.messages.NONE
 
 # =============================================================================
 class S3PersonModel(S3Model):
