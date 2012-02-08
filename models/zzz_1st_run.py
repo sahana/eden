@@ -123,13 +123,14 @@ if len(pop_list) > 0:
         (field, tablename, field))
 
     # Supply Module
-    tablename = "supply_catalog"
-    table = db[tablename]
-    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-        table.insert(name = deployment_settings.get_supply_catalog_default() )
-
+    if deployment_settings.has_module("supply"):
+        tablename = "supply_catalog"
+        table = db[tablename]
+        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
+            table.insert(name = deployment_settings.get_supply_catalog_default() )
+    
     # Climate module
-    if "climate" in deployment_settings.modules:
+    if deployment_settings.has_module("climate"):
         climate_first_run()
 
     # Ensure DB population committed when running through shell

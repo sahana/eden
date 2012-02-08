@@ -1653,6 +1653,7 @@ class S3ProjectTaskModel(S3Model):
                        orderby="project_task.priority",
                        onvalidation=self.task_onvalidation,
                        create_onaccept=self.task_create_onaccept,
+                       onaccept=self.task_onaccept,
                        search_method=task_search,
                        list_fields=["id",
                                     "priority",
@@ -1952,6 +1953,15 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def task_onaccept(form):
+        """
+            If the task is assigned to someone then notify them
+        """
+
+        task_notify(form)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def task_create_onaccept(form):
         """
             When a Task is created:
@@ -1963,16 +1973,18 @@ class S3ProjectTaskModel(S3Model):
         s3db = current.s3db
         session = current.session
 
+        vars = form.vars
+
         if session.s3.event:
             # Create a link between this Task & the active Event
             etable = s3db.event_task
             etable.insert(event_id=session.s3.event,
-                          task_id=form.vars.id)
+                          task_id=vars.id)
 
         # Find the associated Project
         ptable = db.project_project
         ltable = db.project_task_project
-        query = (ltable.task_id == form.vars.id) & \
+        query = (ltable.task_id == vars.id) & \
                 (ltable.project_id == ptable.id)
         project = db(query).select(ptable.organisation_id,
                                    limitby=(0, 1)).first()
@@ -1985,8 +1997,11 @@ class S3ProjectTaskModel(S3Model):
                                     limitby=(0, 1)).first()
             if role:
                 table = s3db.project_task
-                query = (table.id == form.vars.id)
+                query = (table.id == vars.id)
                 db(query).update(owned_by_organisation=role.owned_by_organisation)
+
+        # Notify Assignee
+        task_notify(form)
 
         return
 
@@ -2061,14 +2076,19 @@ def project_assignee_represent(id):
     if not id:
         return output
 
-    etable = s3db.pr_pentity
-    query = (etable.id == id)
-    record = db(query).select(etable.instance_type,
-                              cache=cache,
-                              limitby=(0, 1)).first()
-    if not record:
-        return output
-    instance_type = record.instance_type
+    if isinstance(id, Row):
+        instance_type = id.instance_type
+        id = id.pe_id
+    else:
+        etable = s3db.pr_pentity
+        query = (etable.id == id)
+        record = db(query).select(etable.instance_type,
+                                  cache=cache,
+                                  limitby=(0, 1)).first()
+        if not record:
+            return output
+
+        instance_type = record.instance_type
 
     table = s3db[instance_type]
     query = (table.pe_id == id)
@@ -2335,6 +2355,29 @@ def project_rheader(r, tabs=[]):
 
     return rheader
 
+# -------------------------------------------------------------------------
+def task_notify(form):
+    """
+        If the task is assigned to someone then notify them
+    """
+
+    vars = form.vars
+    pe_id = int(vars.pe_id)
+    if pe_id != form.record.pe_id:
+        # Assignee has changed
+        settings = current.deployment_settings
+        if settings.has_module("msg"):
+            # Notify assignee
+            subject = "%s: Task assigned to you" % settings.get_system_name_short()
+            url = "%s%s" % (settings.get_base_public_url(),
+                            URL(c="project", f="task", args=vars.id))
+            message = "You have been assigned a Task:\n\n%s\n\n%s\n\n%s" % \
+                (url,
+                 vars.name,
+                 vars.description or "")
+            current.msg.send_by_pe_id(pe_id, subject, message)
+    return
+
 # =============================================================================
 class S3ProjectActivityVirtualfields:
     """ Virtual fields for the project_activity table """
@@ -2478,7 +2521,7 @@ class S3ProjectTaskVirtualfields:
         db = current.db
         s3db = current.s3db
 
-        atable = s3db.project_project
+        atable = s3db.project_activity
         ltable = s3db.project_task_activity
         query = (ltable.deleted != True) & \
                 (ltable.task_id == self.project_task.id) & \
