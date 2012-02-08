@@ -1205,16 +1205,16 @@ def org_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
-    record = r.record
+    tablename, record = s3_rheader_resource(r)
     if record is None:
         # List or Create form: rheader makes no sense here
         return None
 
-    table = r.table
+    table = current.s3db[tablename]
     resourcename = r.name
     T = current.T
 
-    if resourcename == "organisation":
+    if tablename == "org_organisation":
         settings = current.deployment_settings
 
         # Tabs
@@ -1253,7 +1253,7 @@ def org_rheader(r, tabs=[]):
             sectors,
         ), rheader_tabs)
     
-    elif resourcename == "office":
+    elif tablename == "org_office":
         s3 = current.response.s3
 
         tabs = [(T("Basic Details"), None),
