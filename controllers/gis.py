@@ -1098,7 +1098,7 @@ def layer_config():
     if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
         auth.permission.fail()
 
-    return = s3_rest_controller()
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def layer_symbology():
@@ -1107,7 +1107,7 @@ def layer_symbology():
     if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
         auth.permission.fail()
 
-    return = s3_rest_controller()
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def layer_feature():
