@@ -253,14 +253,14 @@ if len(pop_list) > 0:
                 end = datetime.datetime.now()
                 duration = end - start
                 print >> sys.stdout, "Installed demo '%s' completed in %s" % (demo, duration)
-        grandTotalEnd = datetime.datetime.now()
-        duration = grandTotalEnd - grandTotalStart
-        print >> sys.stdout, "Pre-populate completed in %s" % (duration)
         if _debug:
             for result in bi.resultList:
                 print >> sys.stdout, result
         bi.resultList = []
 
+    grandTotalEnd = datetime.datetime.now()
+    duration = grandTotalEnd - grandTotalStart
+    print >> sys.stdout, "Pre-populate completed in %s" % (duration)
     for errorLine in bi.errorList:
         print >> sys.stderr, errorLine
     # Restore table protection

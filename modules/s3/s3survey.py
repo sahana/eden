@@ -664,7 +664,7 @@ class DataMatrixBuilder():
         if "heading" in rules:
             text = rules["heading"]
             if len(parent) == 1:
-                width = max(len(text),matrix.lastCol)+1
+                width = min(len(text),matrix.lastCol)+1
                 height = 1
                 styleName = "styleSectionHeading"
             else:
