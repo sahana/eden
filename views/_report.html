@@ -14,15 +14,16 @@
 <div id='component'>
 {{except:}}
 </div>
+<div>
 {{pass}}
-<div class='form-container'>
-{{try:}}{{=form}}
-{{except:}}{{pass}}
-</div>
-<div id='map'></div>
-{{try:}}{{=H3(subtitle)}}
-{{except:}}{{pass}}
-{{try:}}
+  <div class='form-container'>
+  {{try:}}{{=form}}
+  {{except:}}{{pass}}
+  </div>
+  <div id='map'></div>
+  {{try:}}{{=H3(subtitle)}}
+  {{except:}}{{pass}}
+  {{try:}}
     {{items = items}}
     {{try:}}
         {{if report_data is not None:}}
@@ -41,20 +42,21 @@
             {{pass}}
         </div>
         {{pass}}
-    {{except:}}{{pass}}
-    <div id='chart-container' class='hide'>
-        {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
-        <div id='chart' style='height:400px;'></div>
-    </div>
-    <div id='table-container'>
-        {{include "formats.html"}}
-        {{=items}}
-    </div>
+  {{except:}}{{pass}}
+  <div id='chart-container' class='hide'>
+      {{=A(T("Close"), _href="#", _id="hide-chart", _class="action-lnk")}}
+      <div id='chart' style='height:400px;'></div>
+  </div>
+  <div id='table-container'>
+      {{include "formats.html"}}
+      {{=items}}
+  </div>
 {{except:}}{{pass}}
+</div>
 {{if response.s3.rfooter:}}
-    <div id='rfooter'>
-        {{=XML(response.s3.rfooter)}}
-    </div>
+  <div id='rfooter'>
+    {{=XML(response.s3.rfooter)}}
+  </div>
 {{pass}}
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[

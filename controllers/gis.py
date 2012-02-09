@@ -1092,6 +1092,24 @@ def layer_entity():
     return output
 
 # -----------------------------------------------------------------------------
+def layer_config():
+    """ RESTful CRUD controller """
+
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def layer_symbology():
+    """ RESTful CRUD controller """
+
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def layer_feature():
     """ RESTful CRUD controller """
 

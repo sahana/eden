@@ -1074,7 +1074,6 @@ class S3CRUD(S3Method):
                               for f in table.fields
                               if f in from_table.fields and table[f].writable]
                 # Audit read => this is a read method, finally
-                audit = manager.audit
                 prefix, name = from_table._tablename.split("_", 1)
                 audit("read", prefix, name,
                       record=from_record, representation=format)
@@ -1181,27 +1180,27 @@ class S3CRUD(S3Method):
                           record=record_id, representation=format)
                 logged = True
 
+                vars = form.vars
                 # Update super entity links
-                model.update_super(table, form.vars)
+                model.update_super(table, vars)
 
                 # Update component link
                 if link and link.postprocess is None:
                     resource = link.resource
                     master = link.master
-                    resource.update_link(master, form.vars)
+                    resource.update_link(master, vars)
 
-                # Set record ownership properly
-                if form.vars.id and record_id is None:
-                    manager.auth.s3_set_record_owner(table,
-                                                          form.vars.id)
-
-                # Store session vars
-                if form.vars.id:
+                if vars.id:
                     if record_id is None:
-                        manager.auth.s3_make_session_owner(table,
-                                                                form.vars.id)
-                    self.resource.lastid = str(form.vars.id)
-                    manager.store_session(prefix, name, form.vars.id)
+                        auth = current.auth
+                        # Set record ownership properly
+                        auth.s3_set_record_owner(table,
+                                                 vars.id)
+                        auth.s3_make_session_owner(table,
+                                                   vars.id)
+                    # Store session vars
+                    self.resource.lastid = str(vars.id)
+                    manager.store_session(prefix, name, vars.id)
 
                 # Execute onaccept
                 callback(onaccept, form, tablename=tablename)
@@ -1252,10 +1251,10 @@ class S3CRUD(S3Method):
 
         """
 
-        s3 = current.manager.s3
+        crud_strings = current.manager.s3.crud_strings
 
-        crud_strings = s3.crud_strings.get(tablename, s3.crud_strings)
-        not_found = s3.crud_strings.get(name, None)
+        not_found = crud_strings.get(name, None)
+        crud_strings = crud_strings.get(tablename, crud_strings)
 
         return crud_strings.get(name, not_found)
 
@@ -1501,9 +1500,9 @@ class S3CRUD(S3Method):
         labels = current.manager.LABEL
 
         db = current.db
-        response = current.response
-        custom_actions = response.s3.actions
-        response.s3.actions = None
+        s3 = current.response.s3
+        custom_actions = s3.actions
+        s3.actions = None
 
         auth = current.auth
         has_permission = auth.s3_has_permission
@@ -1518,7 +1517,7 @@ class S3CRUD(S3Method):
 
         # Open-action (Update or Read)
         if editable and has_permission("update", table) and \
-        not auth.permission.ownership_required(table, "update"):
+        not ownership_required(table, "update"):
             if not update_url:
                 update_url = URL(args = args + ["update"])
             s3crud.action_button(labels.UPDATE, update_url)
@@ -1531,7 +1530,7 @@ class S3CRUD(S3Method):
         if deletable and has_permission("delete", table):
             if not delete_url:
                 delete_url = URL(args = args + ["delete"])
-            if auth.permission.ownership_required(table, "delete"):
+            if ownership_required(table, "delete"):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
                 rows = db(query).select(table.id)
@@ -1550,7 +1549,7 @@ class S3CRUD(S3Method):
 
         # Append custom actions
         if custom_actions:
-            response.s3.actions = response.s3.actions + custom_actions
+            s3.actions = s3.actions + custom_actions
 
         return
 

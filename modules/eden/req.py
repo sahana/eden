@@ -590,7 +590,7 @@ $(function() {
                           _id = "list",
                           _class = "dataTable display")
 
-            supply_item_represent = table.item_id_represent
+            supply_item_represent = table.item_id.represent
             item_pack_represent = table.item_pack_id.represent
             for req_item in req_items:
                 # Convert inv item quantity to req item quantity
@@ -769,7 +769,7 @@ class S3RequestItemModel(S3Model):
                                         requires = IS_FLOAT_IN_RANGE(minimum=0)),
                                   Field("pack_value",
                                         "double",
-                                        label = T("Value per Pack")),
+                                        label = T("Est. Value per Pack")),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
                                   currency_type("currency"),
                                   site_id,

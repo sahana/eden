@@ -445,8 +445,8 @@ if auth.permission.format in ("html"):
         project_menu = {
             "menu": [
                 [T("Projects"), False, aURL(f="project"),[
-                    #[T("Add New Project"), False, aURL(p="create", f="project", args="create")],
-                    [T("List Projects"), False, aURL(f="project")],
+                    [T("Add New Project"), False, aURL(p="create", f="project", args="create")],
+                    [T("List All Projects"), False, aURL(f="project")],
                     [T("Open Tasks for Project"), False, aURL(f="project", vars={"tasks":1})],
                 ]],
                 #[T("Tasks"), False, aURL(f="task"),[
