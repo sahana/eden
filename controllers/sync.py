@@ -51,8 +51,7 @@ def repository():
     tabs = [(T("Configuration"), None),
             (T("Resources"), "task"),
             (T("Schedule"), "job"),
-            (T("Log"), "log"),
-            (T("Manual Sync"), "now")
+            (T("Log"), "log")
            ]
 
     s3mgr.model.set_method("sync", "repository",
@@ -85,7 +84,7 @@ def repository():
         return output
     response.s3.postp = postp
 
-    rheader = lambda r: sync_rheader(r, tabs=tabs)
+    rheader = lambda r: s3db.sync_rheader(r, tabs=tabs)
     output = s3_rest_controller(prefix, resourcename, rheader=rheader)
     return output
 

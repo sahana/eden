@@ -3791,6 +3791,10 @@ class S3Resource(object):
                 raise KeyError("%s is not a component of %s" % (tn, tablename))
         else:
             tn = tablename
+            if tail:
+                original = "%s$%s" % (fn, tail)
+            else:
+                original = fn
 
         # Load the table
         table = s3db[tn]
@@ -3940,7 +3944,7 @@ class S3Resource(object):
                          distinct=field.distinct or distinct)
             return field
         else:
-            field = Storage(selector=selector,
+            field = Storage(selector=original,
                             tname = tn,
                             fname = fn,
                             colname = "%s.%s" % (tn, fn),

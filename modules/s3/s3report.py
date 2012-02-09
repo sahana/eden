@@ -395,8 +395,8 @@ class S3Cube(S3CRUD):
         table = self.table
         lfields, join, ljoins = resource.get_lfields(list_fields)
         options = [OPTION(f.label,
-                          _value=f.fieldname,
-                          _selected= value == f.fieldname and "selected" or None)
+                          _value=f.selector,
+                          _selected= value == f.selector and "selected" or None)
                    for f in lfields
                     if (f.field is None or f.field.name != table._id.name) and f.show]
         if len(options) < 2:
@@ -600,7 +600,7 @@ class S3Report:
 
         # lfields: rfields resolved into list fields map
         lfields, join, ljoins = resource.get_lfields(rfields)
-        lfields = Storage([(f.fieldname, f) for f in lfields])
+        lfields = Storage([(f.selector, f) for f in lfields])
         self.lfields = lfields
 
         return
@@ -1198,7 +1198,7 @@ class S3ContingencyTable(TABLE):
         fields = get_config(key, list_fields)
         if fields:
             for f in fields:
-                if isinstance(f, (tuple, list)) and f[1] == lf.fieldname:
+                if isinstance(f, (tuple, list)) and f[1] == lf.selector:
                     return f[0]
         if lf:
             return lf.label
