@@ -252,7 +252,7 @@ class ViewDebate(DetailView):
         debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         
         # Check debate dates
-        if datetime.date.today() >= debate.end_date or debate.start_date < datetime.date.today():
+        if datetime.date.today() >= debate.end_date or datetime.date.today() <  debate.start_date:
             self.template_name = 'debate/debate_outdated.html'
             #return Debate.objects.none()
         
