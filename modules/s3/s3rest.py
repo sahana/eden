@@ -148,7 +148,7 @@ class S3RequestManager(object):
 
         # Toolkits
         self.audit = current.s3_audit
-        self.auth = current.auth
+        self.auth = auth = current.auth
         self.gis = current.gis
 
         # Register
@@ -172,7 +172,7 @@ class S3RequestManager(object):
         self.search = S3Method()
 
         # Hooks
-        self.permit = self.auth.s3_has_permission
+        self.permit = auth.s3_has_permission
         self.messages = None
         self.import_prep = None
         self.log = None
@@ -666,7 +666,7 @@ class S3Request(object):
                                                 include_deleted=include_deleted)
 
         self.tablename = self.resource.tablename
-        self.table = self.resource.table
+        table = self.table = self.resource.table
 
         # Try to load the master record
         self.record = None
@@ -676,7 +676,8 @@ class S3Request(object):
             self.resource.load()
             if len(self.resource) == 1:
                 self.record = self.resource.records().first()
-                self.id = self.record.id
+                id = table._id.name
+                self.id = self.record[id]
                 manager.store_session(self.resource.prefix,
                                       self.resource.name,
                                       self.id)
@@ -1874,7 +1875,7 @@ class S3Resource(object):
 
         # Authorization hooks
         self.permit = manager.permit
-        self.accessible_query = manager.auth.s3_accessible_query
+        self.accessible_query = current.auth.s3_accessible_query
 
         # Audit hook
         self.audit = manager.audit
@@ -2212,7 +2213,8 @@ class S3Resource(object):
                 else:
                     rows = self.select(table.ALL)
                 self._length = len(rows)
-        self._ids = [row.id for row in rows]
+        id = table._id.name
+        self._ids = [row[id] for row in rows]
         uid = manager.xml.UID
         if uid in table.fields:
             self._uids = [row[uid] for row in rows]
@@ -2256,6 +2258,7 @@ class S3Resource(object):
 
             @returns: number of records deleted
 
+            @todo: Fix for Super Entities where we need row[table._id.name]
             @todo: optimize
         """
 
@@ -2273,9 +2276,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self.select(table.id, table.uuid)
+            rows = self.select(table._id, table.uuid)
         else:
-            rows = self.select(table.id)
+            rows = self.select(table._id)
 
         if not rows:
             # No rows in this resource => return success here
@@ -3428,9 +3431,9 @@ class S3Resource(object):
             UID = xml.UID
             if id and UID in table:
                 if not isinstance(id, (tuple, list)):
-                    query = (table.id == id)
+                    query = (table._id == id)
                 else:
-                    query = (table.id.belongs(id))
+                    query = (table._id.belongs(id))
                 originals = db(query).select(table[UID])
                 uids = [row[UID] for row in originals]
                 matches = []
@@ -3532,8 +3535,9 @@ class S3Resource(object):
                     req = req.other
                 if not isinstance(req, IS_ONE_OF):
                     raise RuntimeError, "not isinstance(req, IS_ONE_OF)"
-                rows = db().select(db[req.ktable][req.kfield],
-                                   orderby=~db[req.ktable][req.kfield],
+                kfield = db[req.ktable][req.kfield]
+                rows = db().select(kfield,
+                                   orderby=~kfield,
                                    limitby=(0, 1))
                 res = []
                 for row in rows:
@@ -4652,7 +4656,8 @@ class S3ResourceFilter:
         tablename = resource.tablename
         fields = table.fields
 
-        if tablename == "gis_feature_query":
+        if tablename == "gis_feature_query" or \
+           tablename == "gis_cache":
             gtable = table
         else:
             gtable = current.s3db.gis_location

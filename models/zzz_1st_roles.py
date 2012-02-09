@@ -135,7 +135,8 @@ if len(pop_list) > 0:
                 # Since we specify a Table ACL for Anonymous, we also need 1 for Authenticated
                 dict(t="org_organisation", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                 dict(c="hms", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                dict(c="cr", uacl=acl.READ|acl.CREATE, oacl=default_oacl))
+                dict(c="cr", uacl=acl.READ|acl.CREATE, oacl=default_oacl)
+                )
 
     # If we don't have OrgAuth active, then Authenticated users:
     # Have access to all Orgs, Sites & the Inventory & Requests thereof
@@ -143,11 +144,6 @@ if len(pop_list) > 0:
                 dict(c="asset", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                 dict(c="inv", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                 dict(c="req", uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=default_oacl),
-                # Allow authenticated users to manage their personal details
-                dict(c="vol", f="index", uacl=acl.READ),
-                dict(c="vol", f="person", uacl=acl.CREATE, oacl=default_oacl),
-                # Allow authenticated users to view details of their tasks
-                dict(c="vol", f="task", uacl=acl.READ),
                 # Allow authenticated users to view the Certificate Catalog
                 dict(t="hrm_certificate", uacl=acl.READ),
                 # HRM access is controlled to just HR Staff, except for:
@@ -157,7 +153,8 @@ if len(pop_list) > 0:
                 dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
                 dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
                 dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
-                dict(c="hrm", f="skill", uacl=acl.READ, oacl=acl.READ))
+                dict(c="hrm", f="skill", uacl=acl.READ, oacl=acl.READ)
+                )
 
     create_role("Anonymous",
                 "Unauthenticated users",

@@ -1205,6 +1205,8 @@ def org_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
+    # Need to use this format as otherwise /inv/incoming?viewing=org_office.x
+    # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
     if record is None:
         # List or Create form: rheader makes no sense here

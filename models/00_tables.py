@@ -58,7 +58,7 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
         user = db(table.id == id).select(table.email,
                                          table.image,
                                          limitby=(0, 1),
-                                         cache=(cache.ram, 10)).first()
+                                         cache=s3db.cache).first()
         if user:
             email = user.email.strip().lower()
             image = user.image
@@ -66,14 +66,14 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
         user = db(table.id == id).select(table.pe_id,
                                          table.picture,
                                          limitby=(0, 1),
-                                         cache=(cache.ram, 10)).first()
+                                         cache=s3db.cache).first()
         if user:
             image = user.picture
             ctable = db.pr_contact
             query = (ctable.pe_id == id) & (ctable.contact_method == "EMAIL")
             email = db(query).select(ctable.value,
                                      limitby=(0, 1),
-                                     cache=(cache.ram, 10)).first()
+                                     cache=s3db.cache).first()
             if email:
                 email = email.value
 
