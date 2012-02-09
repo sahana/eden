@@ -37,6 +37,7 @@ import eden.dvi
 import eden.support
 import eden.survey
 import eden.hms
+import eden.sync
 #import eden.patient
 
 # =============================================================================
@@ -238,6 +239,7 @@ response.s3.all_meta_field_names = [field.name for field in
 scheduler_task_id = S3ReusableField("scheduler_task_id",
                                     "reference %s" % s3base.S3Task.TASK_TABLENAME,
                                     ondelete="CASCADE")
+s3.scheduler_task_id = scheduler_task_id
 
 # =============================================================================
 # Reusable roles fields for map layer permissions management (GIS)

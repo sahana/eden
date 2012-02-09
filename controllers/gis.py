@@ -960,7 +960,7 @@ def marker():
         return True
     response.s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(rheader=s3db.gis_rheader)
 
 # -----------------------------------------------------------------------------
 def projection():

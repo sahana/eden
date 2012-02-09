@@ -641,20 +641,23 @@ class S3Request(object):
             cnames = None
 
         # Append component ID to the URL query
-        if self.component_name and self.component_id:
-            varname = "%s.id" % self.component_name
+        component_name = self.component_name
+        component_id = self.component_id
+        if component_name and component_id:
+            # @ToDo: Fix for SuperEntity components
+            varname = "%s.id" % component_name
             if varname in vars:
                 var = vars[varname]
                 if not isinstance(var, (list, tuple)):
                     var = [var]
-                var.append(self.component_id)
+                var.append(component_id)
                 vars[varname] = var
             else:
-                vars[varname] = self.component_id
+                vars[varname] = component_id
 
         # Define the target resource
         _filter = current.response[manager.HOOKS].filter # manager.HOOKS="s3"
-        components = self.component_name
+        components = component_name
         if components is None:
             components = cnames
         self.resource = manager.define_resource(self.prefix,
@@ -3659,7 +3662,7 @@ class S3Resource(object):
         table = self.table
 
         if self.parent and self.linked is None:
-            component = self.parent.components.get(self.name, None)
+            component = self.parent.components.get(self.alias, None)
             if component:
                 fkey = component.fkey
         elif self.linked is not None:
@@ -3791,6 +3794,10 @@ class S3Resource(object):
                 raise KeyError("%s is not a component of %s" % (tn, tablename))
         else:
             tn = tablename
+            if tail:
+                original = "%s$%s" % (fn, tail)
+            else:
+                original = fn
 
         # Load the table
         table = s3db[tn]
@@ -3940,7 +3947,7 @@ class S3Resource(object):
                          distinct=field.distinct or distinct)
             return field
         else:
-            field = Storage(selector=selector,
+            field = Storage(selector=original,
                             tname = tn,
                             fname = fn,
                             colname = "%s.%s" % (tn, fn),

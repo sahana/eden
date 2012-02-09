@@ -82,19 +82,21 @@ class S3OrganisationModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         SELECT_LOCATION = messages.SELECT_LOCATION
 
+        define_table = self.define_table
+
         # ---------------------------------------------------------------------
         # Sector
         # (Cluster in UN-style terminology)
         #
         tablename = "org_sector"
-        table = self.define_table(tablename,
-                                  Field("abrv", length=64,
-                                        notnull=True, unique=True,
-                                        label=T("Abbreviation")),
-                                  Field("name", length=128,
-                                        notnull=True, unique=True,
-                                        label=T("Name")),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             Field("abrv", length=64,
+                                   notnull=True, unique=True,
+                                   label=T("Abbreviation")),
+                             Field("name", length=128,
+                                   notnull=True, unique=True,
+                                   label=T("Name")),
+                             *s3.meta_fields())
 
         # CRUD strings
         if settings.get_ui_cluster():
@@ -149,13 +151,13 @@ class S3OrganisationModel(S3Model):
         # (Cluster) Subsector
         #
         tablename = "org_subsector"
-        table = self.define_table(tablename,
-                                  sector_id(),
-                                  Field("abrv", length=64,
-                                        notnull=True, unique=True,
-                                        label=T("Abbreviation")),
-                                  Field("name", length=128, label=T("Name")),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             sector_id(),
+                             Field("abrv", length=64,
+                                   notnull=True, unique=True,
+                                   label=T("Abbreviation")),
+                             Field("name", length=128, label=T("Name")),
+                             *s3.meta_fields())
 
         # CRUD strings
         if settings.get_ui_cluster():
@@ -211,60 +213,58 @@ class S3OrganisationModel(S3Model):
         # Organisations
         #
         tablename = "org_organisation"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  #Field("privacy", "integer", default=0),
-                                  #Field("archived", "boolean", default=False),
-                                  Field("name", notnull=True, unique=True,
-                                        length=128,           # Mayon Compatibility
-                                        label = T("Name")),
-                                  Field("acronym", length=8, label = T("Acronym"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Acronym"),
-                                                                        T("Acronym of the organization's name, eg. IFRC.")))),
-                                  Field("type", "integer", label = T("Type"),
-                                        #readable = False,
-                                        #writable = False,
-                                        requires = IS_NULL_OR(IS_IN_SET(organisation_type_opts)),
-                                        represent = lambda opt: \
-                                            organisation_type_opts.get(opt, UNKNOWN_OPT)),
-
-                                  sector_id(
-                                            #readable = False,
-                                            #writable = False,
-                                            ),
-                                  #Field("registration", label=T("Registration")),    # Registration Number
-
-                                  Field("region",
-                                        #readable = False,
-                                        #writable = False,
-                                        label=T("Region")),
-                                  Field("country", "string", length=2,
-                                        #readable = False,
-                                        #writable = False,
-                                        label = T("Home Country"),
-                                        requires = IS_NULL_OR(IS_IN_SET_LAZY(
-                                            lambda: gis.get_countries(key_type="code"),
-                                            zero = SELECT_LOCATION)),
-                                        represent = lambda code: \
-                                            gis.get_country(code, key_type="code") or UNKNOWN_OPT),
-                                  Field("website", label = T("Website"),
-                                        requires = IS_NULL_OR(IS_URL()),
-                                        represent = s3_url_represent),
-                                  Field("twitter",                        # deprecated by contact component
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Twitter"),
-                                                                        T("Twitter ID or #hashtag")))),
-                                  Field("donation_phone", label = T("Donation Phone #"),
-                                        #readable = False,
-                                        #writable = False,
-                                        requires = IS_NULL_OR(s3_phone_requires),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Donation Phone #"),
-                                                                        T("Phone number to donate to this organization's relief efforts.")))),
-                                  s3.comments(),
-                                  #document_id(), # Better to have multiple Documents on a Tab
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             self.super_link("pe_id", "pr_pentity"),
+                             #Field("privacy", "integer", default=0),
+                             #Field("archived", "boolean", default=False),
+                             Field("name", notnull=True, unique=True,
+                                   length=128,           # Mayon Compatibility
+                                   label = T("Name")),
+                             Field("acronym", length=8, label = T("Acronym"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Acronym"),
+                                                                   T("Acronym of the organization's name, eg. IFRC.")))),
+                             Field("type", "integer", label = T("Type"),
+                                   #readable = False,
+                                   #writable = False,
+                                   requires = IS_NULL_OR(IS_IN_SET(organisation_type_opts)),
+                                   represent = lambda opt: \
+                                       organisation_type_opts.get(opt, UNKNOWN_OPT)),
+                             sector_id(
+                                       #readable = False,
+                                       #writable = False,
+                                      ),
+                             #Field("registration", label=T("Registration")),    # Registration Number
+                             Field("region",
+                                   #readable = False,
+                                   #writable = False,
+                                   label=T("Region")),
+                             Field("country", "string", length=2,
+                                   #readable = False,
+                                   #writable = False,
+                                   label = T("Home Country"),
+                                   requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                                        lambda: gis.get_countries(key_type="code"),
+                                                                  zero = SELECT_LOCATION)),
+                                   represent = lambda code: \
+                                        gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                             Field("website", label = T("Website"),
+                                   requires = IS_NULL_OR(IS_URL()),
+                                   represent = s3_url_represent),
+                             Field("twitter",                        # deprecated by contact component
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Twitter"),
+                                                                   T("Twitter ID or #hashtag")))),
+                             Field("donation_phone", label = T("Donation Phone #"),
+                                   #readable = False,
+                                   #writable = False,
+                                   requires = IS_NULL_OR(s3_phone_requires),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Donation Phone #"),
+                                                                   T("Phone number to donate to this organization's relief efforts.")))),
+                             s3.comments(),
+                             #document_id(), # Better to have multiple Documents on a Tab
+                             *s3.meta_fields())
 
         # CRUD strings
         ADD_ORGANIZATION = T("Add Organization")
@@ -395,6 +395,17 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
+        # Affiliates
+        self.add_component("pr_affiliation",
+                           org_organisation=Storage(name="affiliate",
+                                                    pkey="pe_id",
+                                                    joinby="parent"))
+
+        # Affiliation
+        self.add_component("pr_affiliation",
+                           org_organisation=Storage(pkey="pe_id",
+                                                    joinby="child"))
+
         # Staff
         self.add_component("hrm_human_resource",
                            org_organisation="organisation_id")
@@ -458,6 +469,16 @@ class S3OrganisationModel(S3Model):
                                                      _title="%s|%s" % (ADD_DONOR,
                                                                        ADD_DONOR_HELP))),
                                    ondelete = "RESTRICT")
+
+        # ---------------------------------------------------------------------
+        # Organisation <-> User
+        #
+        utable = current.auth.settings.table_user
+        tablename = "org_organisation_user"
+        table = define_table(tablename,
+                             Field("user_id", utable),
+                             organisation_id(),
+                             *s3.meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -1254,7 +1275,7 @@ def org_rheader(r, tabs=[]):
             website,
             sectors,
         ), rheader_tabs)
-    
+
     elif tablename == "org_office":
         s3 = current.response.s3
 
