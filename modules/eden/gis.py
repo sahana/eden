@@ -959,6 +959,17 @@ class S3GISConfigModel(S3Model):
                                                                           T("If neither are defined, then the Default Marker is used.")))),
                                     ondelete = "RESTRICT")
 
+        # Components
+        # Layers
+        self.add_component("gis_layer_entity",
+                            gis_marker=Storage(
+                                    link="gis_layer_symbology",
+                                    joinby="marker_id",
+                                    key="layer_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
         self.configure(tablename,
                        onvalidation=self.gis_marker_onvalidation,
                        deduplicate=self.gis_marker_deduplicate)
@@ -1083,6 +1094,16 @@ class S3GISConfigModel(S3Model):
                                     link="gis_layer_symbology",
                                     joinby="symbology_id",
                                     key="layer_id",
+                                    actuate="replace",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # Markers
+        self.add_component("gis_marker",
+                            gis_symbology=Storage(
+                                    link="gis_layer_symbology",
+                                    joinby="symbology_id",
+                                    key="marker_id",
                                     actuate="replace",
                                     autocomplete="name",
                                     autodelete=False))
@@ -3043,6 +3064,22 @@ def gis_rheader(r, tabs=[]):
                         ), rheader_tabs)
 
     elif resourcename == "symbology":
+        # Tabs
+        if not tabs:
+            tabs = [(T("Basic Details"), None),
+                    (T("Layers"), "layer_entity"),
+                    (T("Markers"), "marker"),
+                   ]
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.name.label),
+                                record.name),
+                            ),
+                      rheader_tabs)
+
+    elif resourcename == "marker":
         # Tabs
         if not tabs:
             tabs = [(T("Basic Details"), None),

@@ -70,7 +70,7 @@ from s3method import S3Method
 from s3import import S3ImportJob
 from s3sync import S3Sync
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3REST: DEBUG MODE"
     def _debug(m):
@@ -641,20 +641,23 @@ class S3Request(object):
             cnames = None
 
         # Append component ID to the URL query
-        if self.component_name and self.component_id:
-            varname = "%s.id" % self.component_name
+        component_name = self.component_name
+        component_id = self.component_id
+        if component_name and component_id:
+            # @ToDo: Fix for SuperEntity components
+            varname = "%s.id" % component_name
             if varname in vars:
                 var = vars[varname]
                 if not isinstance(var, (list, tuple)):
                     var = [var]
-                var.append(self.component_id)
+                var.append(component_id)
                 vars[varname] = var
             else:
-                vars[varname] = self.component_id
+                vars[varname] = component_id
 
         # Define the target resource
         _filter = current.response[manager.HOOKS].filter # manager.HOOKS="s3"
-        components = self.component_name
+        components = component_name
         if components is None:
             components = cnames
         self.resource = manager.define_resource(self.prefix,
