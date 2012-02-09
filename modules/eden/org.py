@@ -395,6 +395,17 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
+        # Affiliates
+        self.add_component("pr_affiliation",
+                           org_organisation=Storage(name="affiliate",
+                                                    pkey="pe_id",
+                                                    joinby="parent"))
+
+        # Affiliation
+        self.add_component("pr_affiliation",
+                           org_organisation=Storage(pkey="pe_id",
+                                                    joinby="child"))
+
         # Staff
         self.add_component("hrm_human_resource",
                            org_organisation="organisation_id")
@@ -1254,7 +1265,7 @@ def org_rheader(r, tabs=[]):
             website,
             sectors,
         ), rheader_tabs)
-    
+
     elif tablename == "org_office":
         s3 = current.response.s3
 

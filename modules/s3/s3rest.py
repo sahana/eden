@@ -70,7 +70,7 @@ from s3method import S3Method
 from s3import import S3ImportJob
 from s3sync import S3Sync
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     print >> sys.stderr, "S3REST: DEBUG MODE"
     def _debug(m):
@@ -3659,7 +3659,7 @@ class S3Resource(object):
         table = self.table
 
         if self.parent and self.linked is None:
-            component = self.parent.components.get(self.name, None)
+            component = self.parent.components.get(self.alias, None)
             if component:
                 fkey = component.fkey
         elif self.linked is not None:

@@ -315,6 +315,18 @@ def pentity():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def affiliation():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def role():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def tooltip():
     """ Ajax tooltips """
 
