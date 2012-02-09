@@ -3806,7 +3806,9 @@ class S3Resource(object):
         else:
             if fn == "uid":
                 fn = xml.UID
-            if fn in table.fields:
+            if fn == "id":
+                f = table._id
+            elif fn in table.fields:
                 f = table[fn]
             else:
                 f = None
