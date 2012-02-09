@@ -70,7 +70,7 @@ from s3method import S3Method
 from s3import import S3ImportJob
 from s3sync import S3Sync
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3REST: DEBUG MODE"
     def _debug(m):
@@ -3803,7 +3803,9 @@ class S3Resource(object):
         else:
             if fn == "uid":
                 fn = xml.UID
-            if fn in table.fields:
+            if fn == "id":
+                f = table._id
+            elif fn in table.fields:
                 f = table[fn]
             else:
                 f = None

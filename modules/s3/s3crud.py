@@ -1279,7 +1279,7 @@ class S3CRUD(S3Method):
             if "modified_by" in table.fields:
                 fields.append(table.modified_by)
 
-            query = table.id==record_id
+            query = table._id == record_id
             record = db(query).select(limitby=(0, 1), *fields).first()
 
             try:
@@ -1533,7 +1533,7 @@ class S3CRUD(S3Method):
             if ownership_required(table, "delete"):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
-                rows = db(query).select(table.id)
+                rows = db(query).select(table._id)
                 restrict = [str(row.id) for row in rows]
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn", restrict=restrict)
@@ -1746,7 +1746,7 @@ class S3CRUD(S3Method):
                     callback(onvalidation, _form, tablename=component)
                     # Update the record if no errors
                     if not _form.errors:
-                        db(table.id == selected).update(**_form.vars)
+                        db(table._id == selected).update(**_form.vars)
                     else:
                         form.errors.update(_form.errors)
                         return
