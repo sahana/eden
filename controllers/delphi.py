@@ -994,25 +994,27 @@ def comment_parse(comment, comments, solution_id=None):
         @param: solution_id - a reference ID: optional solution commented on
     """
 
+    author = B(T("Anonymous"))
     if comment.created_by:
         utable = s3db.auth_user
-        query = (utable.id == comment.created_by)
-        user = db(query).select(utable.email,
-                                utable.person_uuid,
-                                limitby=(0, 1)).first()
         ptable = s3db.pr_person
-        query = (ptable.uuid == user.person_uuid)
-        person = db(query).select(ptable.first_name,
-                                  ptable.middle_name,
-                                  ptable.last_name,
-                                  limitby=(0, 1)).first()
-        username = s3_fullname(person)
-        email = user.email.strip().lower()
-        hash = md5.new(email).hexdigest()
-        url = "http://www.gravatar.com/%s" % hash
-        author = B(A(username, _href=url, _target="top"))
-    else:
-        author = B(T("Anonymous"))
+        ltable = s3db.pr_person_user
+        query = (utable.id == comment.created_by)
+        left = [ltable.on(ltable.user_id == utable.id),
+                ptable.on(ptable.pe_id == ltable.pe_id)]
+        row = db(query).select(utable.email,
+                               ptable.first_name,
+                               ptable.middle_name,
+                               ptable.last_name,
+                               left=left, limitby=(0, 1)).first()
+        if row:
+            person = row.pr_person
+            user = row[utable._tablename]
+            username = s3_fullname(person)
+            email = user.email.strip().lower()
+            hash = md5.new(email).hexdigest()
+            url = "http://www.gravatar.com/%s" % hash
+            author = B(A(username, _href=url, _target="top"))
     if not solution_id and comment.solution_id:
         solution = "re: %s" % s3db.delphi_solution_represent(comment.solution_id)
         header = DIV(author, " ", solution)

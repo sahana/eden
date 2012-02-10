@@ -44,17 +44,19 @@ def register_onaccept(form):
 
     if deployment_settings.has_module("delphi"):
         # Add user as a participant of the default problem group
-        query = (db.pr_person.id == person) & \
-            (db.pr_person.uuid == auth.settings.table_user.person_uuid)
-        user_id = db(query).select(db.auth_user.id,
-                                   limitby=(0, 1)).first().id
-        s3mgr.load("delphi_group")
-        table = db.delphi_group
-        query = (table.deleted == False)
+        utable = auth.settings.table_user
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        query = (ptable.id == person) & \
+                (ptable.pe_id == ltable.pe_id) & \
+                (ltable.user_id == utable.id)
+        user_id = db(query).select(utable.id, limitby=(0, 1)).first().id
+        table = s3db.delphi_group
+        query = (table.deleted != True)
         group = db(query).select(table.id,
                                  limitby=(0, 1)).first()
         if group:
-            table = db.delphi_membership
+            table = s3db.delphi_membership
             table.insert(group_id=group.id,
                          user_id=user_id,
                          status=3)

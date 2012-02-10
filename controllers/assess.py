@@ -120,13 +120,9 @@ def rat():
     def prep(r):
         if r.interactive:
             # Pre-populate staff ID
-            if auth.is_logged_in():
-                query = (db.pr_person.uuid == session.auth.user.person_uuid) & \
-                        (db.hrm_human_resource.person_id == db.pr_person.id)
-                staff_id = db(query).select(db.hrm_human_resource.id,
-                                            limitby=(0, 1)).first()
-                if staff_id:
-                    r.table.staff_id.default = staff_id.id
+            staff_id = auth.s3_logged_in_human_resource()
+            if staff_id:
+                r.table.staff_id.default = staff_id.id
 
             if r.method == "create":
                 # If this assessment is being created as a component of a shelter,

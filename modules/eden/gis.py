@@ -3030,17 +3030,11 @@ def gis_rheader(r, tabs=[]):
             pe_id = record.pe_id
             if pe_id:
                 auth = current.auth
-                if auth.is_logged_in():
-                    # Is this the user's personal config?
-                    ptable = s3db.pr_person
-                    query = (ptable.uuid == auth.user.person_uuid)
-                    pe = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1),
-                                          cache=s3db.cache).first()
-                    if pe_id == pe.pe_id:
-                        context = T("Personal")
-
-                context = s3db.pr_pentity_represent(record.pe_id, show_label=False)
+                # Is this the user's personal config?
+                if auth.user and auth.user.pe_id == pe_id:
+                    context = T("Personal")
+                else:
+                    context = s3db.pr_pentity_represent(pe_id, show_label=False)
 
             region_location_id = record.region_location_id
             if region_location_id:

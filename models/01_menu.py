@@ -65,15 +65,15 @@ if auth.permission.format in ("html"):
                     URL(c="default", f="user/profile")],
                     [T("Personal Data"), False,
                     URL(c="pr", f="person",
-                        vars={"person.uid" : auth.user.person_uuid})],
+                        vars={"person.pe_id" : auth.user.pe_id})],
                     [T("Contact Details"), False,
                     URL(c="pr", f="person",
                         args="contact",
-                        vars={"person.uid" : auth.user.person_uuid})],
+                        vars={"person.pe_id" : auth.user.pe_id})],
                     #[T("Subscriptions"), False,
                     # URL(c="pr", f="person",
                     #     args="pe_subscription",
-                    #     vars={"person.uid" : auth.user.person_uuid})],
+                    #     vars={"person.pe_id" : auth.user.pe_id})],
                     [T("Change Password"), False,
                     URL(c="default", f="user/change_password")],
                     ["----", False, None],
@@ -240,10 +240,8 @@ if auth.permission.format in ("html"):
         query = (table.pe_id == None)
         if auth.is_logged_in():
             # @ToDo: Search for OUs too (API call)
-            ptable = s3db.pr_person
-            query = query | ((table.pe_id == ptable.pe_id) & \
-                             (ptable.uuid == auth.user.person_uuid))
-        query = query & (table.config_id == ctable.id)
+            query |= (table.pe_id == auth.user.pe_id)
+        query &= (table.config_id == ctable.id)
         configs = db(query).select(ctable.id,
                                    ctable.name,
                                    cache=cache)
