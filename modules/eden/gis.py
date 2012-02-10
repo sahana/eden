@@ -3018,10 +3018,9 @@ def gis_layer_represent(id, link=True):
         represent = "[layer %d] (%s)" % (id, instance_type_nice)
 
     if link and layer:
-        if not id:
-            query = (table.layer_id == layer.layer_id)
-            id = db(query).select(table.id,
-                                  limitby=(0, 1)).first()
+        query = (table.layer_id == layer.layer_id)
+        id = db(query).select(table.id,
+                              limitby=(0, 1)).first().id
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href = URL(c=c, f=f,

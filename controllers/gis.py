@@ -926,10 +926,36 @@ def config():
                     msg_record_modified=LAYER_UPDATED,
                     msg_record_deleted=T("Layer removed from Config"),
                     msg_list_empty=T("No Layers currently defined in this Config"))
-                if r.method != "update":
+                table =  s3db.gis_layer_entity
+                ltable = s3db.gis_layer_config
+                if r.method == "update":
+                    # Existing records don't need to chaneg the layer pointed to (confusing UI & adds validation overheads)
+                    ltable.layer_id.writable = False
+                    # Hide irrelevant fields
+                    query = (table.layer_id == r.component_id)
+                    type = db(query).select(table.instance_type,
+                                            limitby=(0, 1)).first().instance_type
+                    if type in ("gis_layer_coordinate",
+                                "gis_layer_feature",
+                                "gis_layer_geojson",
+                                "gis_layer_georss",
+                                "gis_layer_gpx",
+                                "gis_layer_kml",
+                                "gis_layer_mgrs",
+                                "gis_layer_wfs",
+                                ):
+                        field = ltable.base
+                        field.readable = False
+                        field.writable = False
+                    elif type in ("gis_layer_bing",
+                                  "gis_layer_google",
+                                  "gis_layer_tms",
+                                  ):
+                        field = ltable.visible
+                        field.readable = False
+                        field.writable = False
+                else:
                     # Only show Layers not yet in this config
-                    table =  s3db.gis_layer_entity
-                    ltable = s3db.gis_layer_config
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (ltable.config_id == r.id)
@@ -2745,8 +2771,7 @@ def potlatch2():
 
     else:
         session.warning = T("To edit OpenStreetMap, you need to edit the OpenStreetMap settings in your Map Config")
-        redirect(URL(c="pr", f="person",
-                     args=["config"],
+        redirect(URL(c="pr", f="person", args=["config"]))
 
 # =============================================================================
 def proxy():
