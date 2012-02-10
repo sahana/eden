@@ -970,9 +970,7 @@ class GIS(object):
                 # Read personalised config, if available.
                 auth = current.auth
                 if auth.is_logged_in():
-                    prtable = s3db.pr_person
-                    query = (prtable.uuid == auth.user.person_uuid) & \
-                            (ctable.pe_id == prtable.pe_id) & \
+                    query = (ctable.pe_id == auth.user.pe_id) & \
                             (mtable.id == stable.marker_id) & \
                             (stable.id == ctable.symbology_id) & \
                             (ptable.id == ctable.projection_id)

@@ -64,9 +64,7 @@ if deployment_settings.get_gis_menu():
                           vars={"_config":1})])
     ctable = db.gis_config
     if auth.user:
-        ptable = db.pr_person
-        query = (ptable.uuid == auth.user.person_uuid) & \
-                (ctable.pe_id == ptable.pe_id)
+        query = (ctable.pe_id == auth.user.pe_id)
         personal_config = db(query).select(ctable.id,
                                            limitby=(0, 1)).first()
         if personal_config:

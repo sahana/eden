@@ -206,13 +206,9 @@ def cr_shelter_prep(r):
                 db.assess_rat.location_id.default = r.record.location_id
                 db.assess_rat.location_id.comment = ""
                 # Set defaults
-                if auth.is_logged_in():
-                    query = (s3db.pr_person.uuid == session.auth.user.person_uuid) & \
-                            (s3db.hrm_human_resource.person_id == db.pr_person.id)
-                    staff_id = db(query).select(db.hrm_human_resource.id,
-                                                limitby=(0, 1)).first()
-                    if staff_id:
-                        db.assess_rat.staff_id.default = staff_id.id
+                staff_id = auth.s3_logged_in_human_resource()
+                if staff_id:
+                    db.assess_rat.staff_id.default = staff_id.id
 
             elif r.component.name == "presence":
                 if deployment_settings.get_ui_camp():

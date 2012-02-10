@@ -63,18 +63,25 @@ class S3PersonEntity(S3Model):
         T = current.T
         s3 = current.response.s3
 
+        define_table = self.define_table
+        super_entity = self.super_entity
+        super_link = self.super_link
+        super_key = self.super_key
+        configure = self.configure
+        add_component = self.add_component
+
+        # ---------------------------------------------------------------------
+        # Person Super-Entity
+        #
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
                            org_organisation = T("Organization"),
                            org_office = T("Office"),
                            dvi_body = T("Body"))
 
-        # ---------------------------------------------------------------------
-        # Person Super-Entity
-        #
         tablename = "pr_pentity"
-        table = self.super_entity(tablename, "pe_id", pe_types,
-                                  Field("pe_label", length=128))
+        table = super_entity(tablename, "pe_id", pe_types,
+                             Field("pe_label", length=128))
 
         # Search method
         pentity_search = S3PentitySearch(name = "pentity_search_simple",
@@ -85,11 +92,11 @@ class S3PersonEntity(S3Model):
         pentity_search.pentity_represent = pr_pentity_represent
 
         # Resource configuration
-        self.configure(tablename,
-                       editable=False,
-                       deletable=False,
-                       listadd=False,
-                       search_method=pentity_search)
+        configure(tablename,
+                  editable=False,
+                  deletable=False,
+                  listadd=False,
+                  search_method=pentity_search)
 
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
@@ -98,69 +105,79 @@ class S3PersonEntity(S3Model):
                                                             "pr_pentity.pe_label")))
 
         # Components
-        pe_id = self.super_key(table)
-        self.add_component("pr_contact_emergency", pr_pentity=pe_id)
-        self.add_component("pr_address", pr_pentity=pe_id)
-        self.add_component("pr_pimage", pr_pentity=pe_id)
-        self.add_component("pr_contact", pr_pentity=pe_id)
-        self.add_component("pr_note", pr_pentity=pe_id)
-        self.add_component("pr_physical_description",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
-        self.add_component("dvi_identification",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
-        self.add_component("dvi_effects",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
-        self.add_component("dvi_checklist",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
+        pe_id = super_key(table)
+        add_component("pr_contact_emergency", pr_pentity=pe_id)
+        add_component("pr_address", pr_pentity=pe_id)
+        add_component("pr_pimage", pr_pentity=pe_id)
+        add_component("pr_contact", pr_pentity=pe_id)
+        add_component("pr_note", pr_pentity=pe_id)
+        add_component("pr_physical_description",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+        add_component("dvi_identification",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+        add_component("dvi_effects",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+        add_component("dvi_checklist",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
         # Map Configs
         #   - Personalised configurations
         #   - OU configurations (Organisation/Branch/Facility/Team)
-        self.add_component("gis_config",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
+        add_component("gis_config",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+
+        # ---------------------------------------------------------------------
+        # Person <-> User
+        #
+        utable = current.auth.settings.table_user
+        tablename = "pr_person_user"
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("user_id", utable),
+                             *s3.meta_fields())
 
         # ---------------------------------------------------------------------
         # Affiliation link table
         #
         tablename = "pr_affiliation"
-        table = self.define_table(tablename,
-                                  Field("hierarchy"),
-                                  Field("parent",
-                                        "reference pr_pentity",
-                                        requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                                             pr_pentity_represent,
-                                                             sort=True),
-                                        represent = pr_pentity_represent),
-                                  Field("child",
-                                        "reference pr_pentity",
-                                        requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                                             pr_pentity_represent,
-                                                             sort=True),
-                                        represent = pr_pentity_represent),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             Field("hierarchy"),
+                             Field("parent",
+                                   "reference pr_pentity",
+                                   requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                        pr_pentity_represent,
+                                                        sort=True),
+                                   represent = pr_pentity_represent),
+                             Field("child",
+                                   "reference pr_pentity",
+                                   requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                        pr_pentity_represent,
+                                                        sort=True),
+                                   represent = pr_pentity_represent),
+                             *s3.meta_fields())
 
         # ---------------------------------------------------------------------
         # Role
         #
         tablename = "pr_role"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity",
-                                                  readable=True,
-                                                  writable=True),
-                                  Field("hierarchy"),
-                                  Field("role"),
-                                  Field("affiliation",
-                                        "reference pr_affiliation",
-                                        requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                        "pr_affiliation.id",
-                                                        self.pr_affiliation_represent,
-                                                        sort=True)),
-                                        represent = self.pr_affiliation_represent),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity",
+                                        readable=True,
+                                        writable=True),
+                             Field("hierarchy"),
+                             Field("role"),
+                             Field("affiliation",
+                                   "reference pr_affiliation",
+                                   requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                "pr_affiliation.id",
+                                                self.pr_affiliation_represent,
+                                                sort=True)),
+                                   represent = self.pr_affiliation_represent),
+                             *s3.meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent, sort=True)
@@ -464,16 +481,6 @@ class S3PersonModel(S3Model):
         add_component("hrm_experience", pr_person="person_id")
         # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
-
-        # ---------------------------------------------------------------------
-        # Person <-> User
-        #
-        utable = current.auth.settings.table_user
-        tablename = "pr_person_user"
-        table = define_table(tablename,
-                             Field("user_id", utable),
-                             person_id(),
-                             *s3.meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

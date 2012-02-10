@@ -420,10 +420,10 @@ class S3Msg(object):
             if not vars.pe_id:
                 session.error = T("Please enter the recipient(s)")
                 redirect(url)
-            table = s3db.pr_person
-            query = (table.uuid == auth.user.person_uuid)
-            sender_pe_id = db(query).select(table.pe_id,
-                                            limitby=(0, 1)).first().pe_id
+            if auth.user:
+                sender_pe_id = auth.user.pe_id
+            else:
+                return
             if self.send_by_pe_id(vars.pe_id,
                                   vars.subject,
                                   vars.message,
@@ -1332,9 +1332,10 @@ class S3Compose(S3CRUD):
                 recipients = vars.pe_id
 
         table = s3db.pr_person
-        query = (table.uuid == auth.user.person_uuid)
-        sender_pe_id = db(query).select(table.pe_id,
-                                        limitby=(0, 1)).first().pe_id
+        if auth.user:
+            sender_pe_id = auth.user.pe_id
+        else:
+            return
         if msg.send_by_pe_id(recipients,
                              vars.subject,
                              vars.message,

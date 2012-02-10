@@ -48,25 +48,21 @@ def index():
                                     _style="font-weight:bold;",
                                     _href=URL(c="pr", f="person",
                                               args=["config"],
-                                              vars={"person.uid":auth.user.person_uuid})))
+                                              vars={"person.pe_id":auth.user.pe_id})))
         else:
             table = s3db.gis_config
             query = (table.id == config_id)
             config = db(query).select(table.pe_id,
                                       limitby=(0, 1)).first()
             if config and config.pe_id:
-                table = s3db.pr_person
-                query = (table.uuid == auth.user.person_uuid)
-                person = db(query).select(table.pe_id,
-                                          limitby=(0, 1)).first()
-                if person and person.pe_id == config.pe_id:
+                if auth.user and auth.user.pe_id == config.pe_id:
                     pconfig = T("You are using a personal map configuration. To edit your personal configuration, click %(here)s") % \
                                 dict(here=A(T("here"),
                                             _class="marron",
                                             _style="font-weight:bold;",
                                             _href=URL(c="pr", f="person",
                                                       args=["config"],
-                                                      vars={"person.uid":auth.user.person_uuid})))
+                                                      vars={"person.pe_id":auth.user.pe_id})))
 
     return dict(map=map, breadcrumbs=breadcrumbs, pconfig=pconfig)
 
@@ -405,7 +401,7 @@ def location():
         # We've been called from the Location Selector widget
         table.addr_street.readable = table.addr_street.writable = False
 
-        
+
     country = S3ReusableField("country", "string", length=2,
                               label = T("Country"),
                               requires = IS_NULL_OR(IS_IN_SET_LAZY(
@@ -909,16 +905,11 @@ def config():
                     # @ToDo: ideal would be to have the SITE_DEFAULT (with any OU configs overlaid) on the left-hand side & then they can see what they wish to override on the right-hand side
                     # - could be easier to put the currently-effective config into the form fields, however then we have to save all this data
                     # - if each field was readable & you clicked on it to make it editable (like RHoK pr_contact), that would solve this
-                    ptable = s3db.pr_person
-                    query = (ptable.uuid == auth.user.person_uuid)
                     # For Lists
-                    response.s3.filter = query & (s3db.gis_config.pe_id == ptable.pe_id)
+                    response.s3.filter = query & (s3db.gis_config.pe_id == pe_id)
                     # For Create forms
-                    pe = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1),
-                                          cache=s3db.cache).first()
                     field = r.table.pe_id
-                    field.default = pe.pe_id
+                    field.default = pe_id
                     field.writable = False
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(
@@ -1735,8 +1726,6 @@ def layer_kml():
                                                          not_filter_opts=[row.config_id for row in rows]
                                                          )
             elif r.component_name == "symbology":
-                ltable = s3db.gis_layer_symbology
-                field = ltable.gps_marker
                 field.readable = False
                 field.writable = False
                 if r.method != "update":
@@ -2758,7 +2747,6 @@ def potlatch2():
         session.warning = T("To edit OpenStreetMap, you need to edit the OpenStreetMap settings in your Map Config")
         redirect(URL(c="pr", f="person",
                      args=["config"],
-                     vars={"person.uid":auth.user.person_uuid}))
 
 # =============================================================================
 def proxy():
