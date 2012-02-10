@@ -659,7 +659,7 @@ class S3XML(S3Codec):
                 _marker = marker["marker"]
                 if _marker:
                     marker_url = "%s/%s" % (download_url, _marker)
-                symbol = marker["gps_marker"]
+                symbol = marker["gps_marker"] or symbol
                 popup_label = marker["popup_label"]
                 popup_fields = marker["popup_fields"]
             except:
