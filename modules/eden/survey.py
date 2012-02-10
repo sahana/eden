@@ -94,6 +94,8 @@ def json2py(jsonstr):
     import gluon.contrib.simplejson as json
     from xml.sax.saxutils import unescape
 
+    if not isinstance(jsonstr, str):
+        return jsonstr
     try:
         jsonstr = unescape(jsonstr, {"u'": '"'})
         jsonstr = unescape(jsonstr, {"'": '"'})
