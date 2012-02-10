@@ -1069,40 +1069,56 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        manager = current.manager
+        s3db = current.s3db
         deployment_settings = current.deployment_settings
 
         user_id = form.vars.id
+        if not user_id:
+            return None
+
         # Add to 'Authenticated' role
         authenticated = self.id_group("Authenticated")
         self.add_membership(authenticated, user_id)
 
-        organisation_id = form.vars.get("organisation_id", None)
-        owned_by_organisation = self.s3_lookup_org_role(organisation_id)
-        # For admin/user/create
+        # Link to organisation, lookup org role
+        organisation_id = self.s3_link_to_organisation(form.vars)
+        if organisation_id:
+            owned_by_organisation = self.s3_lookup_org_role(organisation_id)
+        else:
+            owned_by_organisation = None
+
+        # For admin/user/create, lookup facility role
         site_id = form.vars.get("site_id", None)
-        owned_by_facility = self.s3_lookup_site_role(site_id)
+        if site_id:
+            owned_by_facility = self.s3_lookup_site_role(site_id)
+        else:
+            owned_by_facility = None
 
         # Add to Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(form.vars, # user
                                            owned_by_organisation,
                                            owned_by_facility)
 
-        if organisation_id and "hrm_human_resource" in db:
+        htable = s3db.table("hrm_human_resource")
+        if htable and organisation_id:
+
             # Create an HRM entry, if one doesn't already exist
-            table = s3db.hrm_human_resource
-            query = (table.person_id == person_id) & \
-                    (table.organisation_id == organisation_id)
-            if not db(query).select(table.id,
-                                    limitby=(0, 1)).first():
-                id = table.insert(person_id=person_id,
-                                  organisation_id=organisation_id,
-                                  owned_by_organisation=owned_by_organisation,
-                                  owned_by_facility=owned_by_facility
-                                )
+            query = (htable.person_id == person_id) & \
+                    (htable.organisation_id == organisation_id)
+            row = db(query).select(htable.id, limitby=(0, 1)).first()
+
+            if not row:
+                id = htable.insert(person_id=person_id,
+                                   organisation_id=organisation_id,
+                                   owned_by_user=user_id,
+                                   owned_by_organisation=owned_by_organisation,
+                                   owned_by_facility=owned_by_facility)
                 record = Storage(id=id)
-                current.manager.model.update_super(s3db.hrm_human_resource, record)
+                manager.model.update_super(htable, record)
+
             if owned_by_organisation:
-                # Add to the Org Access Role
+                # Add user to the Org Access Role
                 table = self.settings.table_membership
                 query = (table.deleted != True) & \
                         (table.user_id == user_id) & \
@@ -1111,8 +1127,9 @@ class AuthS3(Auth):
                                         limitby=(0, 1)).first():
                     table.insert(user_id=user_id,
                                  group_id=owned_by_organisation)
+
             if owned_by_facility:
-                # Add to the Site Access Role
+                # Add user to the Site Access Role
                 table = self.settings.table_membership
                 query = (table.deleted != True) & \
                         (table.user_id == user_id) & \
@@ -1124,6 +1141,51 @@ class AuthS3(Auth):
 
         # Return person_id for init scripts
         return person_id
+
+    # -------------------------------------------------------------------------
+    def s3_link_to_organisation(self, user):
+        """
+            Link a user account to an organisation
+
+            @param user: the user account record (= form.vars in s3_register)
+        """
+
+        db = current.db
+        s3db = current.s3db
+        manager = current.manager
+
+        organisation_id = user.organisation_id
+        if not organisation_id:
+            otable = s3db.org_organisation
+            name = user.get("organisation_name", None)
+            acronym = user.get("organisation_acronym", None)
+            if name:
+                # Create new organisation
+                organisation_id = otable.insert(name=name,
+                                                acronym=acronym)
+                # Update the super-entities
+                record = Storage(id=organisation_id)
+                manager.model.update_super(otable, record)
+                # Set record ownership
+                self.s3_set_record_owner(otable, organisation_id)
+                user.organisation_id = organisation_id
+                # Update user record
+                query = (utable.id == user_id)
+                db(query).update(organisation_id=organisation_id)
+
+        if not organisation_id:
+            return None
+        # Create link (if it doesn't exist)
+        user_id = user.id
+        ltable = s3db.org_organisation_user
+        if ltable:
+            query = (ltable.user_id == user_id) & \
+                    (ltable.organisation_id == organisation_id)
+            row = db(query).select(ltable.id, limitby=(0, 1)).first()
+            if not row:
+                ltable.insert(user_id=user_id,
+                              organisation_id=organisation_id)
+        return organisation_id
 
     # -------------------------------------------------------------------------
     def s3_link_to_person(self,
@@ -1283,7 +1345,6 @@ class AuthS3(Auth):
                                     priority = 2,
                                     value = mobile,
                                     **owner)
-
                         person_ids.append(new_id)
 
                     # Set pe_id if this is the current user
@@ -1296,8 +1357,7 @@ class AuthS3(Auth):
             return person_ids
 
     # -------------------------------------------------------------------------
-    def s3_approver(self,
-                    user):
+    def s3_approver(self, user):
         """
             Returns the Approver for a new Registration &
             the organisation_id field
@@ -1426,14 +1486,12 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
 
-        HR_TABLE = "hrm_human_resource"
-        manager.load(HR_TABLE)
-        try:
-            htable = db[HR_TABLE]
-        except:
-            # HRM module disabled, skip
+        htable = s3db.table("hrm_human_resource")
+        if htable is None:
+            # HR module disabled: skip
             return
         rtable = self.settings.table_group
         mtable = self.settings.table_membership
