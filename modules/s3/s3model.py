@@ -7,7 +7,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @author: Dominic König <dominic[at]aidiq.com>
+    @author: Dominic Kï¿½nig <dominic[at]aidiq.com>
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -1102,6 +1102,8 @@ class S3ModelExtensions(object):
         """
 
         db = current.db
+        s3db = current.s3db
+
         if not hasattr(supertable, "_tablename"):
             # tablename passed instead of Table
             supertable = S3Model.table(supertable)
@@ -1114,7 +1116,7 @@ class S3ModelExtensions(object):
         if entry:
             instance_type = entry.instance_type
             prefix, name = instance_type.split("_", 1)
-            instancetable = db[entry.instance_type]
+            instancetable = s3db[entry.instance_type]
             query = instancetable.uuid == entry.uuid
             record = db(query).select(instancetable.id,
                                       limitby=(0, 1)).first()

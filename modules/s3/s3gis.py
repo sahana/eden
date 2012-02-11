@@ -246,6 +246,7 @@ class GIS(object):
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
         self.gps_symbols = GPS_SYMBOLS
+        self.DEFAULT_SYMBOL = "White Dot"
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
         self.max_allowed_level_num = 4
         self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
@@ -357,16 +358,21 @@ class GIS(object):
         """
 
         response = current.response
-        session = current.session
         public_url = current.deployment_settings.get_base_public_url()
 
         warning = ""
 
-        if len(url) > len(public_url) and url[:len(public_url)] == public_url:
+        local = False
+        if not url.startswith("http"):
+            local = True
+            url = "%s%s" % (public_url, url)
+        elif len(url) > len(public_url) and url[:len(public_url)] == public_url:
+            local = True
+        if local:
             # Keep Session for local URLs
             cookie = Cookie.SimpleCookie()
             cookie[response.session_id_name] = response.session_id
-            session._unlock(response)
+            current.session._unlock(response)
             try:
                 file = fetch(url, cookie=cookie)
             except urllib2.URLError:
@@ -386,43 +392,93 @@ class GIS(object):
                 warning = "HTTPError"
                 return warning
 
-            if file[:2] == "PK":
-                # Unzip
-                fp = StringIO(file)
-                myfile = zipfile.ZipFile(fp)
-                try:
-                    file = myfile.read("doc.kml")
-                except: # Naked except!
-                    file = myfile.read(myfile.infolist()[0].filename)
-                myfile.close()
+        if file[:2] == "PK":
+            # Unzip
+            fp = StringIO(file)
+            myfile = zipfile.ZipFile(fp)
+            files = myfile.infolist()
+            main = None
+            candidates = []
+            for _file in files:
+                filename = _file.filename
+                if filename == "doc.kml":
+                    main = filename
+                elif filename[-4:] == ".kml":
+                    candidates.append(filename)
+            if not main:
+                if candidates:
+                    # Any better way than this to guess which KML file is the main one?
+                    main = candidates[0]
+                else:
+                    response.error = "KMZ contains no KML Files!"
+                    return ""
+            # Write files to cache (other than the main one)
+            request = current.request
+            path = os.path.join(request.folder, "static", "cache", "kml")
+            if not os.path.exists(path):
+                os.makedirs(path)
+            filenames = []
+            for _file in files:
+                filename = _file.filename
+                if filename != main:
+                    if "/" in filename:
+                        _filename = filename.split("/")
+                        dir = os.path.join(path, _filename[0])
+                        if not os.path.exists(dir):
+                            os.mkdir(dir)
+                        _filepath = os.path.join(path, *_filename)
+                    else:
+                        _filepath = os.path.join(path, filename)
 
-            # Check for NetworkLink
-            if "<NetworkLink>" in file:
+                    try:
+                        f = open(_filepath, "wb")
+                    except:
+                        # Trying to write the Folder
+                        pass
+                    else:
+                        filenames.append(filename)
+                        __file = myfile.read(filename)
+                        f.write(__file)
+                        f.close()
+
+            # Now read the main one (to parse)
+            file = myfile.read(main)
+            myfile.close()
+
+        # Check for NetworkLink
+        if "<NetworkLink>" in file:
+            try:
                 # Remove extraneous whitespace
-                #file = " ".join(file.split())
-                try:
-                    parser = etree.XMLParser(recover=True, remove_blank_text=True)
-                    tree = etree.XML(file, parser)
-                    # Find contents of href tag (must be a better way?)
-                    url = ""
-                    for element in tree.iter():
-                        if element.tag == "{%s}href" % KML_NAMESPACE:
-                            url = element.text
-                    if url:
-                        # Follow NetworkLink (synchronously)
-                        warning2 = self.fetch_kml(url, filepath)
-                        warning += warning2
-                except (etree.XMLSyntaxError,):
-                    e = sys.exc_info()[1]
-                    warning += "<ParseError>%s %s</ParseError>" % (e.line, e.errormsg)
+                parser = etree.XMLParser(recover=True, remove_blank_text=True)
+                tree = etree.XML(file, parser)
+                # Find contents of href tag (must be a better way?)
+                url = ""
+                for element in tree.iter():
+                    if element.tag == "{%s}href" % KML_NAMESPACE:
+                        url = element.text
+                if url:
+                    # Follow NetworkLink (synchronously)
+                    warning2 = self.fetch_kml(url, filepath)
+                    warning += warning2
+            except (etree.XMLSyntaxError,):
+                e = sys.exc_info()[1]
+                warning += "<ParseError>%s %s</ParseError>" % (e.line, e.errormsg)
 
-            # Check for Overlays
-            if "<GroundOverlay>" in file:
-                warning += "GroundOverlay"
-            if "<ScreenOverlay>" in file:
-                warning += "ScreenOverlay"
+        # Check for Overlays
+        if "<GroundOverlay>" in file:
+            warning += "GroundOverlay"
+        if "<ScreenOverlay>" in file:
+            warning += "ScreenOverlay"
 
-        # Write file to cache
+        for filename in filenames:
+            replace = "%s/%s" % (URL(c="static", f="cache", args=["kml"]),
+                                 filename)
+            # Rewrite all references to point to the correct place
+            # need to catch <Icon><href> (which could be done via lxml)
+            # & also <description><![CDATA[<img src=" (which can't)
+            file = file.replace(filename, replace)
+
+        # Write main file to cache
         f = open(filepath, "w")
         f.write(file)
         f.close()
@@ -914,9 +970,7 @@ class GIS(object):
                 # Read personalised config, if available.
                 auth = current.auth
                 if auth.is_logged_in():
-                    prtable = s3db.pr_person
-                    query = (prtable.uuid == auth.user.person_uuid) & \
-                            (ctable.pe_id == prtable.pe_id) & \
+                    query = (ctable.pe_id == auth.user.pe_id) & \
                             (mtable.id == stable.marker_id) & \
                             (stable.id == ctable.symbology_id) & \
                             (ptable.id == ctable.projection_id)
@@ -1756,133 +1810,180 @@ class GIS(object):
         return None
 
     # -------------------------------------------------------------------------
-    def get_marker(self, tablename=None, record=None, marker=True, gps=False):
+    @staticmethod
+    def get_marker():
         """
-            Returns the Marker for a Feature
-                marker.image = filename
-                marker.height
-                marker.width
-
-            Used by s3xml's gis_encode() for Feeds export
-            Used by s3search's search_interactive for search results
-            Used by Marker()
-            @ToDo: Reverse this - have this call Marker()?
-
-            @ToDo: Try this once per Resource if unfiltered
-
-            @param tablename
-            @param record
-            @param marker: return the marker
-            @param gps: return the gps_marker
+            Returns the default Marker
+            - called by S3XML.gis_encode()
         """
 
-        # Default GPS Symbol
-        DEFAULT = "White Dot"
-
-        _gps_marker = None
-        _marker = None
-
-        if tablename is not None:
-            db = current.db
-            s3db = current.s3db
-            cache = s3db.cache
-
-            table = s3db.gis_layer_feature
-            gtable = s3db.gis_config
-            mtable = s3db.gis_marker
-            ltable = s3db.gis_layer_symbology
-
-            (module, resource) = tablename.split("_", 1)
-
-            # 1st choice for a Marker is the Feature Layer's
-            query = (table.module == module) & \
-                    (table.resource == resource) & \
-                    (table.layer_id == ltable.layer_id) & \
-                    (gtable.id == session.s3.gis_config_id) & \
-                    (gtable.symbology_id == ltable.symbology_id)
-
-            layers = db(query).select(ltable.marker_id,
-                                      ltable.gps_marker,
-                                      table.filter_field,
-                                      table.filter_value,
-                                      cache=cache)
-
-            if layers:
-                _gps_marker = None
-                for row in layers:
-                    row = row.gis_layer_feature
-                    lrow = row.gis_layer_symbology
-                    if record and row.filter_field:
-                        # Check if the record matches the filter
-                        if str(record[row.filter_field]) == row.filter_value:
-                            _gps_marker = lrow.gps_marker or DEFAULT
-                            if marker:
-                                query = (mtable.id == lrow.marker_id)
-                                _marker = db(query).select(mtable.image,
-                                                           mtable.height,
-                                                           mtable.width,
-                                                           limitby=(0, 1),
-                                                           cache=cache).first()
-                    else:
-                        # No Filter so we match automatically
-                        _gps_marker = lrow.gps_marker or DEFAULT
-                        if marker:
-                            query = (mtable.id == lrow.marker_id)
-                            _marker = db(query).select(mtable.image,
-                                                       mtable.height,
-                                                       mtable.width,
-                                                       limitby=(0, 1),
-                                                       cache=cache).first()
-                    if _gps_marker:
-                        # Return the 1st matching marker
-                        break
-
-        gps_marker = _gps_marker or DEFAULT
-
-        if marker and not _marker:
-            # Default Marker
-            config = self.get_config()
-            _marker = Storage(image = config.marker_image,
-                              height = config.marker_height,
-                              width = config.marker_width)
-        if not gps:
-            # Just return the marker
-            return _marker
-
-        # Return both
-        return (_marker, gps_marker)
+        return Marker().as_dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_popup():
+    def get_marker_and_popup(layer_id=None, # Used by S3REST: S3Resource.export_tree()
+                             marker=None,   # Used by S3REST: S3Resource.export_tree()
+                             tablename=None,  # Used by S3Search: search_interactive()
+                             record=None      # Used by S3Search: search_interactive()
+                            ):
         """
-            Returns the popup_fields & popup_label for a Map Layer
-            - called by S3REST: S3Resource.export_tree()
+            Returns the marker, popup_fields and popup_label for a Map Layer
+
+            Used by S3REST: S3Resource.export_tree():
+            @param: layer_id - db.gis_layer_feature.id
+            @param: marker - a default marker image (what would provide this?)
+
+            Used by S3Search: search_interactive():
+            @param: tablename - the tablename for a resource
+            @param: record - the record for a resource
         """
 
-        vars = current.request.vars
+        db = current.db
+        s3db = current.s3db
 
-        popup_label = None
-        popup_fields = None
-        if "layer" in vars:
-            # This is a Map Layer
-            db = current.db
-            s3db = current.s3db
-            layer_id = vars.layer
-            ltable = s3db.gis_layer_feature
-            query = (ltable.id == layer_id)
-            layer = db(query).select(ltable.popup_label,
-                                     ltable.popup_fields,
-                                     cache = s3db.cache,
+        table = s3db.gis_layer_feature
+        ltable = s3db.gis_layer_symbology
+        mtable = s3db.gis_marker
+
+        try:
+            symbology_id = current.response.s3.gis.config.symbology_id
+        except:
+            # Config not initialised yet
+            config = current.gis.get_config()
+            symbology_id = config.symbology_id
+
+        if layer_id:
+            # Feature Layer called by S3REST: S3Resource.export_tree()
+            query = (table.id == layer_id) & \
+                    (table.layer_id == ltable.layer_id) & \
+                    (ltable.marker_id == mtable.id) & \
+                    (ltable.symbology_id == symbology_id)
+            layer = db(query).select(mtable.image,
+                                     ltable.gps_marker,
+                                     table.popup_label,
+                                     table.popup_fields,
                                      limitby=(0, 1)).first()
+
             if layer:
-                popup_label = layer.popup_label
-                popup_fields = layer.popup_fields
+                marker = layer.gis_marker.image
+                gps_marker = layer.gis_layer_symbology.gps_marker
+                frow = layer.gis_layer_feature
+                popup_label = frow.popup_label
+                popup_fields = frow.popup_fields
             else:
+                gps_marker = None
                 popup_label = ""
                 popup_fields = "name"
 
-        return (popup_label, popup_fields)
+            return dict(marker = marker,
+                        gps_marker = gps_marker,
+                        popup_label = popup_label,
+                        popup_fields = popup_fields,
+                        )
+
+        elif tablename:
+            # Search results called by S3Search: search_interactive()
+            (module, resourcename) = tablename.split("_", 1)
+            query = (table.module == module) & \
+                    (table.resource == resourcename) & \
+                    (table.layer_id == ltable.layer_id) & \
+                    (ltable.marker_id == mtable.id) & \
+                    (ltable.symbology_id == symbology_id)
+
+            layers = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      #ltable.gps_marker,
+                                      table.filter_field,
+                                      table.filter_value,
+                                      table.popup_label,
+                                      table.popup_fields,
+                                      cache=s3db.cache)
+            if not record and len(layers) > 1:
+                # We can't provide details for the whole table, but need to do a per-record check
+                return None
+            for row in layers:
+                frow = row.gis_layer_feature
+                if not record or not frow.filter_field:
+                    # We only have 1 row
+                    return dict(marker = row.gis_marker,
+                                #gps_marker = row.gis_layer_symbology.gps_marker,
+                                popup_label = frow.popup_label,
+                                popup_fields = frow.popup_fields,
+                                )
+                # Check if the record matches the filter
+                if str(record[frow.filter_field]) == frow.filter_value:
+                    return dict(marker = row.gis_marker,
+                                #gps_marker = row.gis_layer_symbology.gps_marker,
+                                popup_label = frow.popup_label,
+                                popup_fields = frow.popup_fields,
+                                )
+            # No Feature Layer defined or
+            # Row doesn't match any of the filters
+            # Default Marker
+            return dict(marker = Marker().as_dict(),
+                        #gps_marker = row.gis_layer_symbology.gps_marker,
+                        popup_label = "",
+                        popup_fields = None,
+                        )
+
+        else:
+            s3_debug("gis.get_marker_and_popup", "Invalid arguments")
+            return None
+
+    # -------------------------------------------------------------------------
+    def get_popup_tooltip(self, table, record, popup_label, popup_fields):
+        """
+            Returns the HTML popup_tooltip for a Map feature
+
+            Used by S3XML.gis_encode()
+            Used by S3Search: search_interactive()
+
+            @param: table
+            @param: record
+            @param: popup_label
+            @param: popup_fields
+        """
+
+        if popup_label:
+            tooltip = "(%s)" % current.T(popup_label)
+        else:
+            tooltip = ""
+
+        if popup_fields:
+            popup_fields = popup_fields.split("/")
+            fieldname = popup_fields[0]
+            try:
+                value = record[fieldname]
+                if value:
+                    field = table[fieldname]
+                    # @ToDo: Slow query which would be good to optimise
+                    represent = self.get_representation(field, value)
+                    # Is this faster than the simpler alternative?
+                    #represent = resource.table[fieldname].represent(value)
+                    tooltip = "%s %s" % (represent, tooltip)
+            except:
+                # This field isn't in the table
+                pass
+        else:
+            popup_fields = []
+
+        for fieldname in popup_fields:
+            try:
+                if fieldname != popup_fields[0]:
+                    value = record[fieldname]
+                    if value:
+                        field = table[fieldname]
+                        # @ToDo: Slow query which would be
+                        # good to optimise
+                        represent = self.get_representation(field, value)
+                        tooltip = "%s<br />%s" % (tooltip,
+                                                  represent)
+            except:
+                # This field isn't in the table
+                pass
+
+        return tooltip
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3186,23 +3287,25 @@ class GIS(object):
         # HTML
         ######
         # Catalogue Toolbar
-        if catalogue_toolbar:
-            config_button = SPAN( A(T("Configurations"),
-                                  _href=URL(c="gis", f="config")),
-                                  _class="tab_other" )
-            catalogue_toolbar = DIV(
-                config_button,
-                SPAN( A(T("Layers"),
-                      _href=URL(c="gis", f="map_service_catalogue")),
-                      _class="tab_other" ),
-                SPAN( A(T("Markers"),
-                      _href=URL(c="gis", f="marker")),
-                      _class="tab_other" ),
-                SPAN( A(T("Projections"),
-                      _href=URL(c="gis", f="projection")),
-                      _class="tab_last" ),
-                _class="tabs")
-            html.append(catalogue_toolbar)
+        # if catalogue_toolbar:
+            # @ToDO: Replace this with a Horizontal rednering of the Menu when using narrow themes?
+            # config_button = SPAN( A(T("Configurations"),
+                                  # _href=URL(c="gis", f="config")),
+                                  # _class="tab_other" )
+            # catalogue_toolbar = DIV(
+                # config_button,
+                # SPAN( A(T("Layers"),
+                      # _href=URL(c="gis", f="map_service_catalogue")),
+                      # _class="tab_other" ),
+                # SPAN( A(T("Markers"),
+                      # _href=URL(c="gis", f="marker")),
+                      # _class="tab_other" ),
+                # SPAN( A(T("Projections"),
+                      # _href=URL(c="gis", f="projection")),
+                      # _class="tab_last" ),
+                # _class="tabs")
+            # html.append(catalogue_toolbar)
+        catalogue_toolbar = ""
 
         # Map (Embedded not Window)
         html.append(DIV(_id="map_panel"))
@@ -3638,8 +3741,6 @@ S3.gis.lon = %s;
         #   Localisation of name/popup_label
         #
         if feature_queries:
-            # Load Model
-            fqtable = s3db.gis_feature_query
             layers_feature_queries = """
 S3.gis.layers_feature_queries = new Array();"""
             counter = -1
@@ -3659,6 +3760,7 @@ S3.gis.layers_feature_queries = new Array();"""
 
             # Push the Features into a temporary table in order to have them accessible via GeoJSON
             # @ToDo: Maintenance Script to clean out old entries (> 24 hours?)
+            fqtable = s3db.gis_feature_query
             cname = "%s_%s_%s" % (name_safe,
                                   request.controller,
                                   request.function)
@@ -3942,34 +4044,62 @@ class Marker(object):
 
         db = current.db
         s3db = current.s3db
-        table = s3db.gis_marker
+        mtable = s3db.gis_marker
+        marker = None
+        config = None
         if id:
-            query = (table.id == id)
-            marker = db(query).select(table.image,
-                                      table.height,
-                                      table.width,
+            # Lookup the Marker details from it's ID
+            query = (mtable.id == id)
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
                                       limitby=(0, 1),
                                       cache=s3db.cache).first()
-        #elif layer_id:
-        else:
+        elif layer_id:
+            # Check if we have a Marker for this Layer
+            config = current.gis.get_config()
+            ltable = s3db.gis_layer_symbology
+            query = (ltable.layer_id == layer_id) & \
+                    (ltable.symbology_id == config.symbology_id) & \
+                    (ltable.marker_id == mtable.id)
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      limitby=(0, 1)).first()
+        if not marker:
             # Default Marker
-            marker = current.gis.get_marker()
-
-        #self.table = table
-        self.image = marker.image
-        self.height = marker.height
-        self.width = marker.width
+            if not config:
+                config = current.gis.get_config()
+            self.image = config.marker_image
+            self.height = config.marker_height
+            self.width = config.marker_width
+        else:
+            self.image = marker.image
+            self.height = marker.height
+            self.width = marker.width
 
         # Always lookup URL client-side
-        #request = current.request
         #self.url = URL(c="static", f="img",
         #               args=["markers", marker.image])
 
     def add_attributes_to_output(self, output):
-
+        """
+            Called by Layer.as_dict()
+        """
         output["marker_image"] = self.image
         output["marker_height"] = self.height
         output["marker_width"] = self.width
+
+    def as_dict(self):
+        """
+            Called by gis.get_marker()
+        """
+        output = Storage(
+                        image = self.image,
+                        height = self.height,
+                        width = self.width,
+                    )
+        return output
 
 # =============================================================================
 class Projection(object):
@@ -4059,7 +4189,7 @@ class Layer(object):
     def as_json(self):
         """
             Output the Layers as JSON
-            
+
             @ToDo: Support layers with SubLayer.as_dict() to pass config
                    dynamically between server & client
         """
@@ -4222,7 +4352,7 @@ class CoordinateLayer(Layer):
             return output
         else:
             return None
-            
+
 # -----------------------------------------------------------------------------
 class FeatureLayer(Layer):
     """
@@ -4433,7 +4563,7 @@ class GoogleLayer(Layer):
         sublayers = self.sublayers
         if sublayers:
             T = current.T
-            epsg = (Projection().epsg != 900913)
+            epsg = (Projection().epsg == 900913)
             apikey = current.deployment_settings.get_gis_api_google()
             debug = current.session.s3.debug
             add_script = self.scripts.append
@@ -4448,7 +4578,7 @@ class GoogleLayer(Layer):
                     add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
                     if debug:
                         # Non-debug has this included within GeoExt.js
-                        add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")            
+                        add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")
                 elif epsg:
                     # Earth is the only layer which can run in non-Spherical Mercator
                     # @ToDo: Warning?
@@ -4569,7 +4699,7 @@ class JSLayer(Layer):
         else:
             return None
 
-            
+
 # -----------------------------------------------------------------------------
 class KMLLayer(Layer):
     """
@@ -4580,9 +4710,12 @@ class KMLLayer(Layer):
     js_array = "S3.gis.layers_kml"
 
     def __init__(self):
+        "Set up the KML cache, should be done once per request"
         super(KMLLayer, self).__init__()
 
-        "Set up the KML cache, should be done once per request"
+        # Needed for gis.download_kml()
+        self.table = current.s3db[self.tablename]
+
         # Can we cache downloaded KML feeds?
         # Needed for unzipping & filtering as well
         # @ToDo: Should we move this folder to static to speed up access to cached content?

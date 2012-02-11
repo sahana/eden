@@ -1219,12 +1219,11 @@ class S3Search(S3CRUD):
         settings = current.deployment_settings
         db = current.db
         s3db = current.s3db
+        gis = current.gis
         manager = current.manager
         table = self.table
         tablename = self.tablename
-        gis = current.gis
-        T = current.T
-
+ 
         vars = request.get_vars
 
         # Get representation
@@ -1344,6 +1343,8 @@ class S3Search(S3CRUD):
         # Remove the dataTables search box to avoid confusion
         s3.dataTable_NobFilter = True
 
+        _location = "location_id" in r.target()[2]
+        _site = "site_id" in r.target()[2]
         if items:
             if not s3.no_sspag:
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
@@ -1369,33 +1370,49 @@ class S3Search(S3CRUD):
                     s3.start = 0
                     s3.limit = limit
 
-            if r.http == "POST" and not errors:
-                query = None
-                if "location_id" in r.target()[2]:
-                    query = (table.location_id == s3db.gis_location.id)
-                elif "site_id" in r.target()[2]:
-                    stable = s3db.org_site
-                    query = (table.site_id == stable.id) & \
-                            (stable.location_id == s3db.gis_location.id)
-                if query:
-                    resource.add_filter(query)
-                    features = resource.select()
-                    # @ToDo: Check if we need to calculate this per-record when we have differential markers
-                    marker = gis.get_marker(tablename=tablename)
+            # @ToDo: Don't wait for a POST as 1st screen includes (unfiltered) results now
+            #if r.http == "POST" and not errors:
+            query = None
+            if _location:
+                query = (table.location_id == s3db.gis_location.id)
+            elif _site:
+                stable = s3db.org_site
+                query = (table.site_id == stable.id) & \
+                        (stable.location_id == s3db.gis_location.id)
+            if query:
+                resource.add_filter(query)
+                features = resource.select()
+                # get the Marker & Popup details per-Layer if we can
+                marker = gis.get_marker_and_popup(tablename=tablename)
+                if marker:
+                    popup_label = marker["popup_label"]
+                    popup_fields = marker["popup_fields"]
+                    marker = marker["marker"]
 
-                    for feature in features:
-                        # @ToDo: Add popup_label to each row (DRY'd from xml.gis_encode())
-                        # Add a popup_url per feature
-                        feature.popup_url = "%s.plain" % URL(r.prefix,r.name,
-                                                             args=feature[tablename].id)
-                        # @ToDo: Differential Markers
-                        #feature.marker = marker
+                for feature in features:
+                    record = feature[tablename]
+                    # Add a popup_url per feature
+                    feature.popup_url = "%s.plain" % URL(r.prefix, r.name,
+                                                         args=record.id)
+                    if not marker:
+                        # We need to add the marker individually to each feature
+                        _marker = gis.get_marker_and_popup(tablename=tablename,
+                                                           record=record)
+                        feature.marker = _marker["marker"]
+                        popup_label = _marker["popup_label"]
+                        popup_fields = _marker["popup_fields"]
 
-                    feature_queries = [{"name"   : T("Search results"),
-                                        "query"  : features,
-                                        "marker" : marker}]
-                    # Calculate an appropriate BBox
-                    bounds = gis.get_bounds(features=features)
+                    # Build the HTML for the onHover Tooltip
+                    feature.popup_label = gis.get_popup_tooltip(table,
+                                                                record,
+                                                                popup_label,
+                                                                popup_fields)
+
+                feature_queries = [{"name"   : current.T("Search results"),
+                                    "query"  : features,
+                                    "marker" : marker}]
+                # Calculate an appropriate BBox
+                bounds = gis.get_bounds(features=features)
 
         elif not items:
             items = self.crud_string(tablename, "msg_no_match")
@@ -1403,7 +1420,7 @@ class S3Search(S3CRUD):
         output["items"] = items
         output["sortby"] = sortby
 
-        if "location_id" in r.target()[2] or "site_id" in r.target()[2]:
+        if _location or _site:
             # Add a map for search results
             # (this same map is also used by the Map Search Widget, if-present)
             if bounds:

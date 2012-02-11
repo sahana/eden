@@ -53,13 +53,26 @@ class S3PersonEntity(S3Model):
     """ Person Super-Entity """
 
     names = ["pr_pentity",
+             "pr_affiliation",
+             "pr_role",
              "pr_pe_label"]
 
     def model(self):
 
         db = current.db
         T = current.T
+        s3 = current.response.s3
 
+        define_table = self.define_table
+        super_entity = self.super_entity
+        super_link = self.super_link
+        super_key = self.super_key
+        configure = self.configure
+        add_component = self.add_component
+
+        # ---------------------------------------------------------------------
+        # Person Super-Entity
+        #
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
                            org_organisation = T("Organization"),
@@ -67,8 +80,8 @@ class S3PersonEntity(S3Model):
                            dvi_body = T("Body"))
 
         tablename = "pr_pentity"
-        table = self.super_entity(tablename, "pe_id", pe_types,
-                                  Field("pe_label", length=128))
+        table = super_entity(tablename, "pe_id", pe_types,
+                             Field("pe_label", length=128))
 
         # Search method
         pentity_search = S3PentitySearch(name = "pentity_search_simple",
@@ -79,11 +92,11 @@ class S3PersonEntity(S3Model):
         pentity_search.pentity_represent = pr_pentity_represent
 
         # Resource configuration
-        self.configure(tablename,
-                       editable=False,
-                       deletable=False,
-                       listadd=False,
-                       search_method=pentity_search)
+        configure(tablename,
+                  editable=False,
+                  deletable=False,
+                  listadd=False,
+                  search_method=pentity_search)
 
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
@@ -92,30 +105,83 @@ class S3PersonEntity(S3Model):
                                                             "pr_pentity.pe_label")))
 
         # Components
-        pe_id = self.super_key(table)
-        self.add_component("pr_contact_emergency", pr_pentity=pe_id)
-        self.add_component("pr_address", pr_pentity=pe_id)
-        self.add_component("pr_pimage", pr_pentity=pe_id)
-        self.add_component("pr_contact", pr_pentity=pe_id)
-        self.add_component("pr_note", pr_pentity=pe_id)
-        self.add_component("pr_physical_description",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
-        self.add_component("dvi_identification",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
-        self.add_component("dvi_effects",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
-        self.add_component("dvi_checklist",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
+        pe_id = super_key(table)
+        add_component("pr_contact_emergency", pr_pentity=pe_id)
+        add_component("pr_address", pr_pentity=pe_id)
+        add_component("pr_pimage", pr_pentity=pe_id)
+        add_component("pr_contact", pr_pentity=pe_id)
+        add_component("pr_note", pr_pentity=pe_id)
+        add_component("pr_physical_description",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+        add_component("dvi_identification",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+        add_component("dvi_effects",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+        add_component("dvi_checklist",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
         # Map Configs
         #   - Personalised configurations
         #   - OU configurations (Organisation/Branch/Facility/Team)
-        self.add_component("gis_config",
-                           pr_pentity=dict(joinby=pe_id,
-                                           multiple=False))
+        add_component("gis_config",
+                      pr_pentity=dict(joinby=pe_id,
+                                      multiple=False))
+
+        # ---------------------------------------------------------------------
+        # Person <-> User
+        #
+        utable = current.auth.settings.table_user
+        tablename = "pr_person_user"
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("user_id", utable),
+                             *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Affiliation link table
+        #
+        tablename = "pr_affiliation"
+        table = define_table(tablename,
+                             Field("hierarchy"),
+                             Field("parent",
+                                   "reference pr_pentity",
+                                   requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                        pr_pentity_represent,
+                                                        sort=True),
+                                   represent = pr_pentity_represent),
+                             Field("child",
+                                   "reference pr_pentity",
+                                   requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                        pr_pentity_represent,
+                                                        sort=True),
+                                   represent = pr_pentity_represent),
+                             *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Role
+        #
+        tablename = "pr_role"
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity",
+                                        readable=True,
+                                        writable=True),
+                             Field("hierarchy"),
+                             Field("role"),
+                             Field("affiliation",
+                                   "reference pr_affiliation",
+                                   requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                "pr_affiliation.id",
+                                                self.pr_affiliation_represent,
+                                                sort=True)),
+                                   represent = self.pr_affiliation_represent),
+                             *s3.meta_fields())
+
+        table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                         pr_pentity_represent, sort=True)
+        table.pe_id.represent = pr_pentity_represent
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -124,11 +190,33 @@ class S3PersonEntity(S3Model):
             pr_pe_label=pr_pe_label,
         )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_affiliation_represent(affiliation_id):
+
+        db = current.db
+        s3db = current.s3db
+
+        if isinstance(affiliation_id, Row):
+            affiliation = affiliation_id
+        else:
+            atable = s3db.pr_affiliation
+            query = (atable.deleted != True) & \
+                    (atable.id == affiliation_id)
+            affiliation = db(query).select(atable.parent, atable.child,
+                                           limitby=(0, 1)).first()
+        if affiliation:
+            return "%s => %s" % (pr_pentity_represent(affiliation.child),
+                                 pr_pentity_represent(affiliation.parent))
+        else:
+            return current.messages.NONE
+
 # =============================================================================
 class S3PersonModel(S3Model):
     """ Persons and Groups """
 
     names = ["pr_person",
+             "pr_person_user",
              "pr_gender",
              "pr_gender_opts",
              "pr_age_group",
@@ -153,6 +241,10 @@ class S3PersonModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         SELECT_LOCATION = messages.SELECT_LOCATION
+
+        define_table = self.define_table
+        super_link = self.super_link
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Person
@@ -214,96 +306,96 @@ class S3PersonModel(S3Model):
         s3_date_format = settings.get_L10n_date_format()
 
         tablename = "pr_person"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  self.super_link("track_id", "sit_trackable"),
-                                  location_id(readable=False,
-                                              writable=False),       # base location
-                                  pe_label(comment = DIV(DIV(_class="tooltip",
-                                                             _title="%s|%s" % (T("ID Tag Number"),
-                                                                               T("Number or Label on the identification tag this person is wearing (if any)."))))),
-                                  Field("missing", "boolean",
-                                        readable=False,
-                                        writable=False,
-                                        default=False,
-                                        represent = lambda missing: \
-                                                    (missing and ["missing"] or [""])[0]),
-                                  Field("volunteer", "boolean",
-                                        readable=False,
-                                        writable=False,
-                                        default=False),
-                                  Field("first_name", notnull=True,
-                                        length=64, # Mayon Compatibility
-                                        # NB Not possible to have an IS_NAME() validator here
-                                        # http://eden.sahanafoundation.org/ticket/834
-                                        requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
-                                        comment =  DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("First name"),
-                                                                         T("The first or only name of the person (mandatory)."))),
-                                        label = T("First Name")),
-                                  Field("middle_name",
-                                        length=64, # Mayon Compatibility
-                                        label = T("Middle Name")),
-                                  Field("last_name",
-                                        length=64, # Mayon Compatibility
-                                        label = T("Last Name"),
-                                        requires = last_name_validate),
-                                  Field("initials",
-                                        length=8,
-                                        label = T("Initials")),
-                                  Field("preferred_name",
-                                        label = T("Preferred Name"),
-                                        comment = DIV(DIV(_class="tooltip",
-                                                          _title="%s|%s" % (T("Preferred Name"),
-                                                                            T("The name to be used when calling for or directly addressing the person (optional).")))),
-                                        length=64), # Mayon Compatibility
-                                  Field("local_name",
-                                        label = T("Local Name"),
-                                        comment = DIV(DIV(_class="tooltip",
-                                                          _title="%s|%s" % (T("Local Name"),
-                                                                            T("Name of the person in local language and script (optional)."))))),
-                                  pr_gender(label = T("Gender")),
-                                  Field("date_of_birth", "date",
-                                        label = T("Date of Birth"),
-                                        requires = [IS_EMPTY_OR(IS_DATE_IN_RANGE(
-                                                        format = s3_date_format,
-                                                        maximum=request.utcnow.date(),
-                                                        error_message="%s %%(max)s!" %
-                                                                      T("Enter a valid date before")))],
-                                        widget = S3DateWidget(past=1320,  # Months, so 110 years
-                                                              future=0)),
-                                  pr_age_group(label = T("Age group")),
-                                  Field("nationality",
-                                        requires = IS_NULL_OR(IS_IN_SET_LAZY(
-                                                        lambda: gis.get_countries(key_type="code"),
-                                                        zero = SELECT_LOCATION)),
-                                        label = T("Nationality"),
-                                        comment = DIV(DIV(_class="tooltip",
-                                                          _title="%s|%s" % (T("Nationality"),
-                                                                            T("Nationality of the person.")))),
-                                        represent = lambda code: \
-                                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT),
-                                  Field("occupation",
-                                        label = T("Profession"),
-                                        length=128), # Mayon Compatibility
-                                  Field("picture", "upload",
-                                        autodelete=True,
-                                        label = T("Picture"),
-                                        requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                               error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 300x300 pixels!"))),
-                                        represent = lambda image: image and \
-                                                                  DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                                     args=image),
-                                                                            _height=60,
-                                                                            _alt=T("View Picture")),
-                                                                            _href=URL(c="default", f="download",
-                                                                                      args=image))) or
-                                                                  T("No Picture"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Picture"),
-                                                                        T("Upload an image file here.")))),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             super_link("track_id", "sit_trackable"),
+                             location_id(readable=False,
+                                         writable=False),       # base location
+                             pe_label(comment = DIV(DIV(_class="tooltip",
+                                                        _title="%s|%s" % (T("ID Tag Number"),
+                                                                          T("Number or Label on the identification tag this person is wearing (if any)."))))),
+                             Field("missing", "boolean",
+                                   readable=False,
+                                   writable=False,
+                                   default=False,
+                                   represent = lambda missing: \
+                                               (missing and ["missing"] or [""])[0]),
+                             Field("volunteer", "boolean",
+                                   readable=False,
+                                   writable=False,
+                                   default=False),
+                             Field("first_name", notnull=True,
+                                   length=64, # Mayon Compatibility
+                                   # NB Not possible to have an IS_NAME() validator here
+                                   # http://eden.sahanafoundation.org/ticket/834
+                                   requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
+                                   comment =  DIV(_class="tooltip",
+                                                  _title="%s|%s" % (T("First name"),
+                                                                    T("The first or only name of the person (mandatory)."))),
+                                   label = T("First Name")),
+                             Field("middle_name",
+                                   length=64, # Mayon Compatibility
+                                   label = T("Middle Name")),
+                             Field("last_name",
+                                   length=64, # Mayon Compatibility
+                                   label = T("Last Name"),
+                                   requires = last_name_validate),
+                             Field("initials",
+                                   length=8,
+                                   label = T("Initials")),
+                             Field("preferred_name",
+                                   label = T("Preferred Name"),
+                                   comment = DIV(DIV(_class="tooltip",
+                                                     _title="%s|%s" % (T("Preferred Name"),
+                                                                       T("The name to be used when calling for or directly addressing the person (optional).")))),
+                                   length=64), # Mayon Compatibility
+                             Field("local_name",
+                                   label = T("Local Name"),
+                                    comment = DIV(DIV(_class="tooltip",
+                                                        _title="%s|%s" % (T("Local Name"),
+                                                                        T("Name of the person in local language and script (optional)."))))),
+                             pr_gender(label = T("Gender")),
+                             Field("date_of_birth", "date",
+                                   label = T("Date of Birth"),
+                                   requires = [IS_EMPTY_OR(IS_DATE_IN_RANGE(
+                                                format = s3_date_format,
+                                                maximum=request.utcnow.date(),
+                                                error_message="%s %%(max)s!" %
+                                                              T("Enter a valid date before")))],
+                                   widget = S3DateWidget(past=1320,  # Months, so 110 years
+                                                         future=0)),
+                             pr_age_group(label = T("Age group")),
+                             Field("nationality",
+                                   requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                                                lambda: gis.get_countries(key_type="code"),
+                                                zero = SELECT_LOCATION)),
+                                   label = T("Nationality"),
+                                   comment = DIV(DIV(_class="tooltip",
+                                                     _title="%s|%s" % (T("Nationality"),
+                                                                       T("Nationality of the person.")))),
+                                   represent = lambda code: \
+                                               gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                             Field("occupation",
+                                   label = T("Profession"),
+                                   length=128), # Mayon Compatibility
+                             Field("picture", "upload",
+                                   autodelete=True,
+                                   label = T("Picture"),
+                                   requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
+                                                                   error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 300x300 pixels!"))),
+                                   represent = lambda image: image and \
+                                                        DIV(A(IMG(_src=URL(c="default", f="download",
+                                                                           args=image),
+                                                                  _height=60,
+                                                                  _alt=T("View Picture")),
+                                                                  _href=URL(c="default", f="download",
+                                                                            args=image))) or
+                                                            T("No Picture"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Picture"),
+                                                                   T("Upload an image file here.")))),
+                             s3.comments(),
+                             *s3.meta_fields())
 
         # CRUD Strings
         ADD_PERSON = current.messages.ADD_PERSON
@@ -347,7 +439,7 @@ class S3PersonModel(S3Model):
                                       "picture",
                                       "gender",
                                       "age_group",
-                                      #(T("Organization"), "hrm_human_resource:organisation_id$name")
+                                      (T("Organization"), "hrm_human_resource:organisation_id$name")
                                      ],
                        onvalidation=self.pr_person_onvalidation,
                        search_method=pr_person_search,
@@ -374,21 +466,21 @@ class S3PersonModel(S3Model):
                                     widget = S3PersonAutocompleteWidget())
 
         # Components
-        self.add_component("pr_group_membership", pr_person="person_id")
-        self.add_component("pr_identity", pr_person="person_id")
-        self.add_component("pr_save_search", pr_person="person_id")
-        self.add_component("msg_subscription", pr_person="person_id")
+        add_component("pr_group_membership", pr_person="person_id")
+        add_component("pr_identity", pr_person="person_id")
+        add_component("pr_save_search", pr_person="person_id")
+        add_component("msg_subscription", pr_person="person_id")
 
         # Add HR Record as component of Persons
-        self.add_component("hrm_human_resource", pr_person="person_id")
+        add_component("hrm_human_resource", pr_person="person_id")
 
         # Add Skills as components of Persons
-        self.add_component("hrm_certification", pr_person="person_id")
-        self.add_component("hrm_competency", pr_person="person_id")
-        self.add_component("hrm_credential", pr_person="person_id")
-        self.add_component("hrm_experience", pr_person="person_id")
+        add_component("hrm_certification", pr_person="person_id")
+        add_component("hrm_competency", pr_person="person_id")
+        add_component("hrm_credential", pr_person="person_id")
+        add_component("hrm_experience", pr_person="person_id")
         # @ToDo: Double link table to show the Courses attended?
-        self.add_component("hrm_training", pr_person="person_id")
+        add_component("hrm_training", pr_person="person_id")
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

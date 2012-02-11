@@ -37,6 +37,7 @@ import eden.dvi
 import eden.support
 import eden.survey
 import eden.hms
+import eden.sync
 #import eden.patient
 
 # =============================================================================
@@ -58,7 +59,7 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
         user = db(table.id == id).select(table.email,
                                          table.image,
                                          limitby=(0, 1),
-                                         cache=(cache.ram, 10)).first()
+                                         cache=s3db.cache).first()
         if user:
             email = user.email.strip().lower()
             image = user.image
@@ -66,14 +67,14 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
         user = db(table.id == id).select(table.pe_id,
                                          table.picture,
                                          limitby=(0, 1),
-                                         cache=(cache.ram, 10)).first()
+                                         cache=s3db.cache).first()
         if user:
             image = user.picture
             ctable = db.pr_contact
             query = (ctable.pe_id == id) & (ctable.contact_method == "EMAIL")
             email = db(query).select(ctable.value,
                                      limitby=(0, 1),
-                                     cache=(cache.ram, 10)).first()
+                                     cache=s3db.cache).first()
             if email:
                 email = email.value
 
@@ -238,6 +239,7 @@ response.s3.all_meta_field_names = [field.name for field in
 scheduler_task_id = S3ReusableField("scheduler_task_id",
                                     "reference %s" % s3base.S3Task.TASK_TABLENAME,
                                     ondelete="CASCADE")
+s3.scheduler_task_id = scheduler_task_id
 
 # =============================================================================
 # Reusable roles fields for map layer permissions management (GIS)

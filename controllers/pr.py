@@ -109,7 +109,9 @@ def person():
     """ RESTful CRUD controller """
 
     # Enable this to allow migration of users between instances
-    #response.s3.filter = (s3db.pr_person.uuid == db.auth_user.person_uuid) & (db.auth_user.registration_key != "disabled")
+    #response.s3.filter = (s3db.pr_person.pe_id == s3db.pr_person_user.pe_id) & \
+                         #(s3db.auth_user.id == s3db.pr_person_user.user_id) & \
+                         #(s3db.auth_user.registration_key != "disabled")
 
     def prep(r):
         if r.representation == "json" and \
@@ -310,6 +312,18 @@ def presence():
 
 # -----------------------------------------------------------------------------
 def pentity():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def affiliation():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def role():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()

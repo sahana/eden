@@ -614,10 +614,7 @@ def contact():
     ptable = s3db.pr_person
 
     if auth.is_logged_in() or auth.basic():
-        query = (ptable.uuid == auth.user.person_uuid)
-        person = db(query).select(ptable.pe_id,
-                                  limitby=(0, 1)).first().pe_id
-        response.s3.filter = (table.pe_id == person)
+        response.s3.filter = (table.pe_id == auth.user.pe_id)
     else:
         redirect(URL(c="default", f="user", args="login",
             vars={"_next":URL(c="msg", f="contact")}))
@@ -631,11 +628,8 @@ def contact():
 
     def msg_contact_onvalidation(form):
         """ This onvalidation method adds the person id to the record """
-        ptable = s3db.pr_person
-        query = (ptable.uuid == auth.user.person_uuid)
-        person = db(query).select(ptable.pe_id,
-                                  limitby=(0, 1)).first().pe_id
-        form.vars.pe_id = person
+        if auth.user:
+            form.vars.pe_id = auth.user.pe_id
 
     s3mgr.configure(table._tablename,
                     onvalidation=msg_contact_onvalidation)
@@ -643,14 +637,8 @@ def contact():
     def msg_contact_restrict_access(r):
         """ The following restricts update and delete access to contacts not owned by the user """
         if r.id :
-            table = s3db.pr.contact
-            ptable = s3db.pr_person
-            query = (ptable.uuid == auth.user.person_uuid)
-            person = db(query).select(ptable.pe_id,
-                                      limitby=(0, 1)).first().pe_id
-            query = (table.id == r.id)
-            if person == db(query).select(table.pe_id,
-                                          limitby=(0, 1)).first().pe_id:
+            pe_id = r.record.pe_id
+            if auth.user and auth.user.pe_id == pe_id:
                 return True
             else:
                 session.error = T("Access denied")
@@ -881,20 +869,16 @@ def subscription_messages():
             # Check if the message is not empty
             message = check_updates(sub.user_id)
             if message == None:
-                return
-            person_id = auth.s3_user_to_person(sub.user_id)
-            ptable = s3db.pr_person
-            rows = db(ptable.id == person_id).select()
-            for row in rows:
-                pe_id = row.pe_id
-                break
-            msg.send_by_pe_id(pe_id,
-                              subject="Subscription Updates",
-                              message=message,
-                              sender_pe_id = None,
-                              pr_message_method = "EMAIL",
-                              sender="noreply@sahana.com",
-                              fromaddress="sahana@sahana.com")
+                continue
+            pe_id = auth.s3_user_pe_id(sub.user_id)
+            if pe_id:
+                msg.send_by_pe_id(pe_id,
+                                  subject="Subscription Updates",
+                                  message=message,
+                                  sender_pe_id = None,
+                                  pr_message_method = "EMAIL",
+                                  sender="noreply@sahana.com",
+                                  fromaddress="sahana@sahana.com")
     return
 
 

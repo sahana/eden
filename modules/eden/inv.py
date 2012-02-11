@@ -1075,9 +1075,9 @@ def inv_recv_rheader(r):
                 rfooter.append(dc_btn)
 
                 if record.status != SHIP_STATUS_CANCEL:
-                    if auth.s3_has_permission("delete",
-                                              "inv_recv",
-                                              record_id=record.id):
+                    if current.auth.s3_has_permission("delete",
+                                                      "inv_recv",
+                                                      record_id=record.id):
                         cancel_btn = A( T("Cancel Shipment"),
                                         _href = URL(c = "inv",
                                                     f = "recv_cancel",

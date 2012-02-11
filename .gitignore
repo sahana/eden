@@ -11,7 +11,7 @@
 /uploads/*
 /private/prepopulate/user/*
 /static/scripts/tools/compiler.jar
-/static/cache/chart/*
+/static/cache/*
 /tests/selenium/results/*
 /tests/selenium/scripts/diagTestResults.txt
 /tests/selenium/server/selenium-server.jar

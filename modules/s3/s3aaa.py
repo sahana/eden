@@ -193,8 +193,6 @@ class AuthS3(Auth):
                 # with username (not used by default in Sahana)
                 settings.table_user = db.define_table(
                     settings.table_user_name,
-                    Field("person_uuid", length=64, default="",
-                          readable=False, writable=False),
                     Field("first_name", length=128, default="",
                           label=messages.label_first_name),
                     Field("last_name", length=128, default="",
@@ -238,8 +236,6 @@ class AuthS3(Auth):
                 # with email-address (Sahana default)
                 settings.table_user = db.define_table(
                     settings.table_user_name,
-                    Field("person_uuid", length=64, default="",
-                          readable=False, writable=False),
                     Field("first_name", length=128, default="",
                           label=messages.label_first_name),
                     Field("last_name", length=128, default="",
@@ -463,16 +459,39 @@ class AuthS3(Auth):
                                        last_visit=request.now,
                                        expiration=self.settings.expiration)
                 self.user = user
-                # Add the Roles to session.s3
-                roles = []
-                query = (table_membership.deleted != True) & \
-                        (table_membership.user_id == user_id)
-                set = db(query).select(table_membership.group_id)
-                session.s3.roles = [s.group_id for s in set]
-
+                self.set_roles()
                 return user
-
         return False
+
+    # -------------------------------------------------------------------------
+    def set_roles(self):
+        """
+            Update session roles and pe_id for the current user
+        """
+
+        if self.user:
+            db = current.db
+            session = current.session
+
+            table_user = self.settings.table_user
+            table_membership = self.settings.table_membership
+            user_id = self.user.id
+
+            # Add the Roles to session.s3
+            roles = []
+            query = (table_membership.deleted != True) & \
+                    (table_membership.user_id == user_id)
+            rows = db(query).select(table_membership.group_id)
+            session.s3.roles = [s.group_id for s in rows]
+
+            # Set pe_id for current user
+            ltable = current.s3db.pr_person_user
+            if ltable is not None:
+                query = (ltable.user_id == user_id)
+                row = db(query).select(ltable.pe_id, limitby=(0, 1)).first()
+                if row:
+                    session.auth.user["pe_id"] = row.pe_id
+        return
 
     # -------------------------------------------------------------------------
     def set_cookie(self):
@@ -617,6 +636,7 @@ class AuthS3(Auth):
             session.auth = Storage(user=user, last_visit=request.now,
                                    expiration=self.settings.expiration)
             self.user = user
+            self.set_roles()
             # Read their language from the Profile
             language = user.language
             current.T.force(language)
@@ -1049,40 +1069,56 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        manager = current.manager
+        s3db = current.s3db
         deployment_settings = current.deployment_settings
 
         user_id = form.vars.id
+        if not user_id:
+            return None
+
         # Add to 'Authenticated' role
         authenticated = self.id_group("Authenticated")
         self.add_membership(authenticated, user_id)
 
-        organisation_id = form.vars.get("organisation_id", None)
-        owned_by_organisation = self.s3_lookup_org_role(organisation_id)
-        # For admin/user/create
+        # Link to organisation, lookup org role
+        organisation_id = self.s3_link_to_organisation(form.vars)
+        if organisation_id:
+            owned_by_organisation = self.s3_lookup_org_role(organisation_id)
+        else:
+            owned_by_organisation = None
+
+        # For admin/user/create, lookup facility role
         site_id = form.vars.get("site_id", None)
-        owned_by_facility = self.s3_lookup_site_role(site_id)
+        if site_id:
+            owned_by_facility = self.s3_lookup_site_role(site_id)
+        else:
+            owned_by_facility = None
 
         # Add to Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(form.vars, # user
                                            owned_by_organisation,
                                            owned_by_facility)
 
-        if organisation_id and "hrm_human_resource" in db:
+        htable = s3db.table("hrm_human_resource")
+        if htable and organisation_id:
+
             # Create an HRM entry, if one doesn't already exist
-            table = s3db.hrm_human_resource
-            query = (table.person_id == person_id) & \
-                    (table.organisation_id == organisation_id)
-            if not db(query).select(table.id,
-                                    limitby=(0, 1)).first():
-                id = table.insert(person_id=person_id,
-                                  organisation_id=organisation_id,
-                                  owned_by_organisation=owned_by_organisation,
-                                  owned_by_facility=owned_by_facility
-                                )
+            query = (htable.person_id == person_id) & \
+                    (htable.organisation_id == organisation_id)
+            row = db(query).select(htable.id, limitby=(0, 1)).first()
+
+            if not row:
+                id = htable.insert(person_id=person_id,
+                                   organisation_id=organisation_id,
+                                   owned_by_user=user_id,
+                                   owned_by_organisation=owned_by_organisation,
+                                   owned_by_facility=owned_by_facility)
                 record = Storage(id=id)
-                current.manager.model.update_super(s3db.hrm_human_resource, record)
+                manager.model.update_super(htable, record)
+
             if owned_by_organisation:
-                # Add to the Org Access Role
+                # Add user to the Org Access Role
                 table = self.settings.table_membership
                 query = (table.deleted != True) & \
                         (table.user_id == user_id) & \
@@ -1091,8 +1127,9 @@ class AuthS3(Auth):
                                         limitby=(0, 1)).first():
                     table.insert(user_id=user_id,
                                  group_id=owned_by_organisation)
+
             if owned_by_facility:
-                # Add to the Site Access Role
+                # Add user to the Site Access Role
                 table = self.settings.table_membership
                 query = (table.deleted != True) & \
                         (table.user_id == user_id) & \
@@ -1106,6 +1143,51 @@ class AuthS3(Auth):
         return person_id
 
     # -------------------------------------------------------------------------
+    def s3_link_to_organisation(self, user):
+        """
+            Link a user account to an organisation
+
+            @param user: the user account record (= form.vars in s3_register)
+        """
+
+        db = current.db
+        s3db = current.s3db
+        manager = current.manager
+
+        organisation_id = user.organisation_id
+        if not organisation_id:
+            otable = s3db.org_organisation
+            name = user.get("organisation_name", None)
+            acronym = user.get("organisation_acronym", None)
+            if name:
+                # Create new organisation
+                organisation_id = otable.insert(name=name,
+                                                acronym=acronym)
+                # Update the super-entities
+                record = Storage(id=organisation_id)
+                manager.model.update_super(otable, record)
+                # Set record ownership
+                self.s3_set_record_owner(otable, organisation_id)
+                user.organisation_id = organisation_id
+                # Update user record
+                query = (utable.id == user_id)
+                db(query).update(organisation_id=organisation_id)
+
+        if not organisation_id:
+            return None
+        # Create link (if it doesn't exist)
+        user_id = user.id
+        ltable = s3db.org_organisation_user
+        if ltable:
+            query = (ltable.user_id == user_id) & \
+                    (ltable.organisation_id == organisation_id)
+            row = db(query).select(ltable.id, limitby=(0, 1)).first()
+            if not row:
+                ltable.insert(user_id=user_id,
+                              organisation_id=organisation_id)
+        return organisation_id
+
+    # -------------------------------------------------------------------------
     def s3_link_to_person(self,
                           user=None,
                           owned_by_organisation=None,
@@ -1113,22 +1195,21 @@ class AuthS3(Auth):
         """
             Links user accounts to person registry entries
 
+            @param user: the user record
+            @param owned_by_organisation: the role of the owner organisation
+            @param owned_by_facility: the role of the owner facility
+
             Policy for linking to pre-existing person records:
 
-            If:
-                - a person record with exactly the same person_uuid exists,
-            or:
-                - a person record with exactly the same first name and
-                  last name exists, which has a contact information record
-                  with exactly the same email address as used in the user
-                  account, and which is not linked to another user account,
+            If a person record with exactly the same first name and
+            last name exists, which has a contact information record
+            with exactly the same email address as used in the user
+            account, and is not linked to another user account, then
+            this person record will be linked to this user account.
 
-                then this person record will be linked to this user account,
-
-            otherwise:
-                - a new person record is created, and a new email contact
-                  record with the email address from the user record is
-                  registered for that person
+            Otherwise, a new person record is created, and a new email
+            contact record with the email address from the user record
+            is registered for that person.
         """
 
         db = current.db
@@ -1141,108 +1222,134 @@ class AuthS3(Auth):
         ttable = s3db.sit_trackable
         gtable = s3db.gis_config
 
-        if user is None:
-            users = db(utable.person_uuid == None).select(utable.ALL)
-        elif "person_uuid" in user:
-            query = (utable.person_uuid == user.person_uuid)
-            person_id = db(query).select(utable.id,
-                                         limitby=(0, 1)).first()
-            if person_id:
-                # We already have a link
-                return person_id
-            else:
-                users = [user]
-        else:
-            users = [user]
+        ltable = s3db.pr_person_user
 
-        person_ids = []
-        for user in users:
+        left = [ltable.on(ltable.user_id == utable.id),
+                ptable.on(ptable.pe_id == ltable.pe_id)]
+        if user is not None:
+            if not isinstance(user, (list, tuple)):
+                user = [user]
+            user_ids = [u.id for u in user]
+            query = (utable.id.belongs(user_ids))
+        else:
+            query = (utable.id != None)
+        users = db(query).select(utable.id,
+                                 utable.first_name,
+                                 utable.last_name,
+                                 utable.email,
+                                 ltable.pe_id,
+                                 ptable.id,
+                                 left=left, distinct=True)
+
+        utn = utable._tablename
+
+        person_ids = [] # Collect the person IDs
+        for u in users:
+
+            person = u.pr_person
+            if person.id is not None:
+                person_ids.append(person.id)
+                continue
+
+            user = u[utn]
+
+            owner = Storage(owned_by_user=user.id,
+                            owned_by_organisation=owned_by_organisation,
+                            owned_by_facility=owned_by_facility)
+
             if "email" in user:
 
+                # Try to find a matching person record
                 first_name = user.first_name
                 last_name = user.last_name
                 email = user.email.lower()
-
                 query = (ptable.first_name == first_name) & \
                         (ptable.last_name == last_name) & \
                         (ctable.pe_id == ptable.pe_id) & \
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.value.lower() == email)
                 person = db(query).select(ptable.id,
-                                          ptable.uuid,
                                           ptable.pe_id).first()
-                if person:
-                    person_ids.append(person.id)
-                    if not db(utable.person_uuid == person.uuid).count():
-                        db(utable.id == user.id).update(person_uuid=person.uuid)
-                        # Assign ownership of the Person record
-                        person.update_record(owned_by_user=user.id,
-                                             owned_by_organisation=owned_by_organisation,
-                                             owned_by_facility=owned_by_facility)
-                        # Assign ownership of the Contact record(s)
-                        query = (ctable.pe_id == person.pe_id)
-                        db(query).update(owned_by_user = user.id,
-                                         owned_by_organisation=owned_by_organisation,
-                                         owned_by_facility=owned_by_facility)
-                        # Assign ownership of the Address record(s)
-                        query = (atable.pe_id == person.pe_id)
-                        db(query).update(owned_by_user = user.id,
-                                         owned_by_organisation=owned_by_organisation,
-                                         owned_by_facility=owned_by_facility)
-                        # Assign ownership of the Config record(s)
-                        query = (gtable.pe_id == person.pe_id)
-                        db(query).update(owned_by_user = user.id,
-                                         owned_by_organisation=owned_by_organisation,
-                                         owned_by_facility=owned_by_facility)
-                        # HR records
-                        self.s3_register_staff(user.id, person.id)
-                        if self.user and self.user.id == user.id:
-                            self.user.person_uuid = person.uuid
-                        continue
 
+                if person and \
+                   not db(ltable.pe_id == person.pe_id).count():
+                    # Match found, and it isn't linked to another user account
+
+                    # Insert a link
+                    ltable.insert(user_id=user.id, pe_id=person.pe_id)
+
+                    # Assign ownership of the Person record
+                    person.update_record(**owner)
+
+                    # Assign ownership of the Contact record(s)
+                    query = (ctable.pe_id == person.pe_id)
+                    db(query).update(**owner)
+
+                    # Assign ownership of the Address record(s)
+                    query = (atable.pe_id == person.pe_id)
+                    db(query).update(**owner)
+
+                    # Assign ownership of the Config record(s)
+                    query = (gtable.pe_id == person.pe_id)
+                    db(query).update(**owner)
+
+                    # HR records
+                    self.s3_register_staff(user.id, person.id)
+
+                    # Set pe_id if this is the current user
+                    if self.user and self.user.id == user.id:
+                        self.user.pe_id = person.pe_id
+
+                    person_ids.append(person.id)
+                    continue
+
+                # Create a PE
                 pe_id = etable.insert(instance_type="pr_person",
                                       deleted=False)
+                # Create a TE
                 track_id = ttable.insert(instance_type="pr_person",
                                          deleted=False)
                 if pe_id:
-                    new_id = ptable.insert(
-                        pe_id = pe_id,
-                        track_id = track_id,
-                        first_name = user.first_name,
-                        last_name = user.last_name,
-                        modified_by = user.id,
-                        owned_by_user = user.id,
-                        owned_by_organisation=owned_by_organisation,
-                        owned_by_facility=owned_by_facility)
+
+                    # Create a new person record
+                    new_id = ptable.insert(pe_id = pe_id,
+                                           track_id = track_id,
+                                           first_name = first_name,
+                                           last_name = last_name,
+                                           modified_by = user.id,
+                                           **owner)
+
                     if new_id:
-                        person_ids.append(new_id)
+
+                        # Insert a link
+                        ltable.insert(user_id=user.id, pe_id=pe_id)
+
+                        # Register the new person UUID in the PE and TE
                         person_uuid = ptable[new_id].uuid
-                        db(utable.id == user.id).update(person_uuid=person_uuid)
                         db(etable.id == pe_id).update(uuid=person_uuid)
                         db(ttable.id == track_id).update(uuid=person_uuid)
+
                         # Add the email to pr_contact
                         ctable.insert(pe_id = pe_id,
                                       contact_method = "EMAIL",
                                       priority = 1,
                                       value = email,
-                                      owned_by_user = user.id,
-                                      owned_by_organisation=owned_by_organisation,
-                                      owned_by_facility=owned_by_facility)
+                                      **owner)
+
                         # Add the mobile to pr_contact
-                        mobile = current.request.vars.get("mobile",
-                                                                   None)
+                        mobile = current.request.vars.get("mobile", None)
                         if mobile:
                             ctable.insert(
                                     pe_id = pe_id,
                                     contact_method = "SMS",
                                     priority = 2,
                                     value = mobile,
-                                    owned_by_user = user.id,
-                                    owned_by_organisation=owned_by_organisation,
-                                    owned_by_facility=owned_by_facility)
+                                    **owner)
+                        person_ids.append(new_id)
 
-                if self.user and self.user.id == user.id:
-                    self.user.person_uuid = person_uuid
+                    # Set pe_id if this is the current user
+                    if self.user and self.user.id == user.id:
+                        self.user.pe_id = pe_id
 
         if len(person_ids) == 1:
             return person_ids[0]
@@ -1250,8 +1357,7 @@ class AuthS3(Auth):
             return person_ids
 
     # -------------------------------------------------------------------------
-    def s3_approver(self,
-                    user):
+    def s3_approver(self, user):
         """
             Returns the Approver for a new Registration &
             the organisation_id field
@@ -1380,14 +1486,12 @@ class AuthS3(Auth):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
 
-        HR_TABLE = "hrm_human_resource"
-        manager.load(HR_TABLE)
-        try:
-            htable = db[HR_TABLE]
-        except:
-            # HRM module disabled, skip
+        htable = s3db.table("hrm_human_resource")
+        if htable is None:
+            # HR module disabled: skip
             return
         rtable = self.settings.table_group
         mtable = self.settings.table_membership
@@ -1806,52 +1910,22 @@ class AuthS3(Auth):
 
 
     # -------------------------------------------------------------------------
-    def s3_user_to_person(self, user_id):
+    def s3_user_pe_id(self, user_id):
         """
-            Get the person_id for a given user_id
+            Get the person pe_id for a user ID
 
-            @param user_id: the user record ID
-            @returns: the person record ID for this user ID
-
-            @note: unsafe method - do not expose to users
+            @param user_id: the user ID
         """
 
         db = current.db
         s3db = current.s3db
-        ptable = s3db.pr_person
-        utable = self.settings.table_user
-        query = (utable.id == user_id) & \
-                (utable.person_uuid == ptable.uuid)
-        record = db(query).select(ptable.id,
-                                  limitby=(0, 1)).first()
-        if record:
-            return record.id
-        else:
-            return None
 
-    # -------------------------------------------------------------------------
-    def s3_person_to_user(self, person_id):
-        """
-            Get the user_id for a given person_id
-
-            @param person_id: the person record ID
-            @returns: the user record ID associated with this person record
-
-            @note: unsafe method - do not expose to users
-        """
-
-        db = current.db
-        s3db = current.s3db
-        ptable = s3db.pr_person
-        utable = self.settings.table_user
-        query = (ptable.id == person_id) & \
-                (ptable.uuid == utable.person_uuid)
-        record = db(query).select(utable.id,
-                                  limitby=(0, 1)).first()
-        if record:
-            return record.id
-        else:
-            return None
+        ltable = s3db.pr_person_user
+        query = (ltable.user_id == user_id)
+        row = db(query).select(ltable.pe_id, limitby=(0, 1)).first()
+        if row:
+            return row.pe_id
+        return None
 
     # -------------------------------------------------------------------------
     def s3_logged_in_person(self):
@@ -1865,7 +1939,7 @@ class AuthS3(Auth):
 
         if self.s3_logged_in():
             try:
-                query = (ptable.uuid == self.user.person_uuid)
+                query = (ptable.pe_id == self.user.pe_id)
             except AttributeError:
                 # Prepop
                 pass
@@ -1874,7 +1948,6 @@ class AuthS3(Auth):
                                           limitby=(0, 1)).first()
                 if record:
                     return record.id
-
         return None
 
     # -------------------------------------------------------------------------
@@ -1886,22 +1959,21 @@ class AuthS3(Auth):
         db = current.db
         s3db = current.s3db
         ptable = s3db.pr_person
-        hrtable = s3db.hrm_human_resource
+        htable = s3db.hrm_human_resource
 
         if self.s3_logged_in():
             try:
-                query = (hrtable.person_id == ptable.id) & \
-                        (ptable.uuid == self.user.person_uuid)
+                query = (htable.person_id == ptable.id) & \
+                        (ptable.pe_id == self.user.pe_id)
             except AttributeError:
                 # Prepop
                 pass
             else:
-                record = db(query).select(hrtable.id,
-                                          orderby =~hrtable.modified_on,
+                record = db(query).select(htable.id,
+                                          orderby =~htable.modified_on,
                                           limitby=(0, 1)).first()
                 if record:
                     return record.id
-
         return None
 
     # -------------------------------------------------------------------------

@@ -43,7 +43,6 @@
 
     <xsl:template match="/">
         <s3xml>
-            <xsl:apply-templates select="table/row"/>
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('survey_template',
                                                         col[@field='Template'])[1])]">
@@ -54,6 +53,7 @@
                                                         col[@field='Series'])[1])]">
                 <xsl:call-template name="Series"/>
             </xsl:for-each>
+            <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
 
@@ -124,7 +124,7 @@
                     <xsl:value-of select="col[@field='Template']"/>
                 </xsl:attribute>
             </reference>
-            <!-- Link to Organisation -->
+            <!-- Link to Organisation (Not working currently as Orgs not included in file) -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$OrgName"/>

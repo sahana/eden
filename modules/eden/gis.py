@@ -959,6 +959,17 @@ class S3GISConfigModel(S3Model):
                                                                           T("If neither are defined, then the Default Marker is used.")))),
                                     ondelete = "RESTRICT")
 
+        # Components
+        # Layers
+        self.add_component("gis_layer_entity",
+                            gis_marker=Storage(
+                                    link="gis_layer_symbology",
+                                    joinby="marker_id",
+                                    key="layer_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
         self.configure(tablename,
                        onvalidation=self.gis_marker_onvalidation,
                        deduplicate=self.gis_marker_deduplicate)
@@ -1087,6 +1098,16 @@ class S3GISConfigModel(S3Model):
                                     autocomplete="name",
                                     autodelete=False))
 
+        # Markers
+        self.add_component("gis_marker",
+                            gis_symbology=Storage(
+                                    link="gis_layer_symbology",
+                                    joinby="symbology_id",
+                                    key="marker_id",
+                                    actuate="replace",
+                                    autocomplete="name",
+                                    autodelete=False))
+
         self.configure(tablename,
                        deduplicate=self.gis_symbology_deduplicate)
 
@@ -1182,8 +1203,11 @@ class S3GISConfigModel(S3Model):
         # Reusable field - used by Events & Scenarios
         config_id = S3ReusableField("config_id", db.gis_config,
                                     #readable=False,
+                                    #writable=False,
+                                    requires = IS_ONE_OF(db,
+                                                         "gis_config.id",
+                                                         "%(name)s"),
                                     represent = self.gis_config_represent,
-                                    writable=False,
                                     label = T("Map Configuration"),
                                     ondelete = "RESTRICT")
 
@@ -1428,7 +1452,7 @@ class S3GISConfigModel(S3Model):
             return current.messages.NONE
 
         return record.name
-        
+
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1720,6 +1744,7 @@ class S3LayerEntityModel(S3Model):
         self.add_component("gis_config",
                             gis_layer_entity=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -1867,12 +1892,13 @@ class S3FeatureLayerModel(S3Model):
                                     "popup_fields",
                                     "dir",
                                    ])
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_feature=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -1883,6 +1909,7 @@ class S3FeatureLayerModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_feature=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2015,7 +2042,7 @@ class S3MapModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Bing
-        # 
+        #
 
         bing_layer_types = ["aerial", "road", "hybrid"]
 
@@ -2032,12 +2059,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_bing=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2060,12 +2088,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_coordinate=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2096,12 +2125,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_geojson=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2112,6 +2142,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_geojson=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2149,12 +2180,13 @@ class S3MapModel(S3Model):
         self.configure(tablename,
                        deduplicate = self.gis_layer_georss_deduplicate,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_georss=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2165,6 +2197,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_georss=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2190,12 +2223,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_google=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2239,12 +2273,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_gpx=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2279,13 +2314,15 @@ class S3MapModel(S3Model):
                                   *s3.meta_fields())
 
         self.configure(tablename,
+                       deduplicate = self.gis_layer_kml_deduplicate,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_kml=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2296,6 +2333,7 @@ class S3MapModel(S3Model):
         self.add_component("gis_symbology",
                             gis_layer_kml=Storage(
                                     link="gis_layer_symbology",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="symbology_id",
                                     actuate="hide",
@@ -2321,12 +2359,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         # self.add_component("gis_config",
                             # gis_layer_js=Storage(
                                     # link="gis_layer_config",
+                                    # pkey="layer_id",
                                     # joinby="layer_id",
                                     # key="config_id",
                                     # actuate="hide",
@@ -2352,12 +2391,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         # self.add_component("gis_config",
                             # gis_layer_mgrs=Storage(
                                     # link="gis_layer_config",
+                                    # pkey="layer_id",
                                     # joinby="layer_id",
                                     # key="config_id",
                                     # actuate="hide",
@@ -2396,12 +2436,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_openstreetmap=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2439,12 +2480,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_tms=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2510,12 +2552,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_wfs=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2588,12 +2631,13 @@ class S3MapModel(S3Model):
 
         self.configure(tablename,
                        super_entity="gis_layer_entity")
-                       
+
         # Components
         # Configs
         self.add_component("gis_config",
                             gis_layer_wms=Storage(
                                     link="gis_layer_config",
+                                    pkey="layer_id",
                                     joinby="layer_id",
                                     key="config_id",
                                     actuate="hide",
@@ -2640,7 +2684,7 @@ class S3MapModel(S3Model):
         #
         # We also store a pointer to the resource on a GeoServer co-app:
         # http://docs.geoserver.org/stable/en/user/restconfig/rest-config-api.html#styles
-        
+
         #tablename = "gis_style"
         #table = self.define_table(tablename,
         #                          Field("name", notnull=True, unique=True)
@@ -2671,6 +2715,37 @@ class S3MapModel(S3Model):
         if item.id:
             return
         if item.tablename == "gis_layer_georss":
+            # Match if url is identical
+            table = item.table
+            data = item.data
+            url = data.url
+            query = (table.url == url)
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_kml_deduplicate(item):
+        """
+          This callback will be called when importing Symbology records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+
+        """
+
+        db = current.db
+
+        if item.id:
+            return
+        if item.tablename == "gis_layer_kml":
             # Match if url is identical
             table = item.table
             data = item.data
@@ -2943,10 +3018,9 @@ def gis_layer_represent(id, link=True):
         represent = "[layer %d] (%s)" % (id, instance_type_nice)
 
     if link and layer:
-        if not id:
-            query = (table.layer_id == layer.layer_id)
-            id = db(query).select(table.id,
-                                  limitby=(0, 1)).first()
+        query = (table.layer_id == layer.layer_id)
+        id = db(query).select(table.id,
+                              limitby=(0, 1)).first().id
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href = URL(c=c, f=f,
@@ -2990,17 +3064,11 @@ def gis_rheader(r, tabs=[]):
             pe_id = record.pe_id
             if pe_id:
                 auth = current.auth
-                if auth.is_logged_in():
-                    # Is this the user's personal config?
-                    ptable = s3db.pr_person
-                    query = (ptable.uuid == auth.user.person_uuid)
-                    pe = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1),
-                                          cache=s3db.cache).first()
-                    if pe_id == pe.pe_id:
-                        context = T("Personal")
-
-                context = s3db.pr_pentity_represent(record.pe_id, show_label=False)
+                # Is this the user's personal config?
+                if auth.user and auth.user.pe_id == pe_id:
+                    context = T("Personal")
+                else:
+                    context = s3db.pr_pentity_represent(pe_id, show_label=False)
 
             region_location_id = record.region_location_id
             if region_location_id:
@@ -3022,8 +3090,24 @@ def gis_rheader(r, tabs=[]):
                                 context,
                                 ),
                         ), rheader_tabs)
-    
+
     elif resourcename == "symbology":
+        # Tabs
+        if not tabs:
+            tabs = [(T("Basic Details"), None),
+                    (T("Layers"), "layer_entity"),
+                    (T("Markers"), "marker"),
+                   ]
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.name.label),
+                                record.name),
+                            ),
+                      rheader_tabs)
+
+    elif resourcename == "marker":
         # Tabs
         if not tabs:
             tabs = [(T("Basic Details"), None),
@@ -3041,7 +3125,8 @@ def gis_rheader(r, tabs=[]):
     elif resourcename == "layer_feature" or \
          resourcename == "layer_georss" or \
          resourcename == "layer_geojson" or \
-         resourcename == "layer_kml" :
+         resourcename == "layer_kml" or \
+         resourcename == "layer_entity" :
         # Tabs
         if not tabs:
             tabs = [(T("Basic Details"), None),
@@ -3057,7 +3142,7 @@ def gis_rheader(r, tabs=[]):
                              record.description)
         else:
             description = ""
-        
+
         rheader = DIV(TABLE(
                             TR(TH("%s: " % table.name.label),
                                record.name,
@@ -3089,7 +3174,7 @@ def gis_rheader(r, tabs=[]):
                              record.description)
         else:
             description = ""
-        
+
         rheader = DIV(TABLE(
                             TR(TH("%s: " % table.name.label),
                                record.name,
@@ -3097,6 +3182,8 @@ def gis_rheader(r, tabs=[]):
                             description,
                             ),
                       rheader_tabs)
+    else:
+        rheader = None
 
     return rheader
 

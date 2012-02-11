@@ -53,7 +53,10 @@ class S3Chart(object):
 
         Currently a simple wrapper to matplotlib
     """
+
+    # This folder needs to be writable by the web2py process
     CACHE_PATH = "/%s/static/cache/chart"  %  current.request.application
+
     # -------------------------------------------------------------------------
     def __init__(self, path, width=9, height=6):
         """
@@ -137,11 +140,12 @@ class S3Chart(object):
             if the prefix is None then all files will be deleted
         """
         import os
-        folder = "applications%s/" % (S3Chart.CACHE_PATH)
-        filelist = os.listdir(folder)
-        for file in filelist:
-            if prefix == None or file.startswith(prefix):
-                os.remove("%s%s" % (folder, file))
+        folder = "applications%s/" % S3Chart.CACHE_PATH
+        if os.path.exists(folder):
+            filelist = os.listdir(folder)
+            for file in filelist:
+                if prefix == None or file.startswith(prefix):
+                    os.remove("%s%s" % (folder, file))
 
     # -------------------------------------------------------------------------
     def draw(self, output="xml"):

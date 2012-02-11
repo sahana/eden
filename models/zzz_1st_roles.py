@@ -12,11 +12,12 @@ else:
     # The query used here takes 2/3 the time of .count().
     if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
         pop_list = []
-    if not isinstance(pop_list,(list,tuple)):
+    if not isinstance(pop_list, (list, tuple)):
         pop_list = [pop_list]
 # Add core roles as long as at least one populate setting is on
 if len(pop_list) > 0:
 
+    import csv
     def import_role(filename, extraVars=None):
         def parseACL(_acl):
             permissions = _acl.split("|")
@@ -34,7 +35,6 @@ if len(pop_list) > 0:
                     aclValue = aclValue | acl.ALL
             return aclValue
 
-        import csv
         # Check if the source file is accessible
         try:
             openFile = open(filename, "r")
@@ -85,9 +85,14 @@ if len(pop_list) > 0:
                 args[role] = extra_param
         for rulelist in roles.values():
             if rulelist[0] in args:
-                create_role(rulelist[0],rulelist[1],*acls[rulelist[0]],**args[rulelist[0]])
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]],
+                            **args[rulelist[0]])
             else:
-                create_role(rulelist[0],rulelist[1],*acls[rulelist[0]])
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]])
     response.s3.import_role = import_role
 
 
@@ -130,7 +135,8 @@ if len(pop_list) > 0:
                 # Since we specify a Table ACL for Anonymous, we also need 1 for Authenticated
                 dict(t="org_organisation", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                 dict(c="hms", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                dict(c="cr", uacl=acl.READ|acl.CREATE, oacl=default_oacl))
+                dict(c="cr", uacl=acl.READ|acl.CREATE, oacl=default_oacl)
+                )
 
     # If we don't have OrgAuth active, then Authenticated users:
     # Have access to all Orgs, Sites & the Inventory & Requests thereof
@@ -138,11 +144,6 @@ if len(pop_list) > 0:
                 dict(c="asset", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                 dict(c="inv", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                 dict(c="req", uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=default_oacl),
-                # Allow authenticated users to manage their personal details
-                dict(c="vol", f="index", uacl=acl.READ),
-                dict(c="vol", f="person", uacl=acl.CREATE, oacl=default_oacl),
-                # Allow authenticated users to view details of their tasks
-                dict(c="vol", f="task", uacl=acl.READ),
                 # Allow authenticated users to view the Certificate Catalog
                 dict(t="hrm_certificate", uacl=acl.READ),
                 # HRM access is controlled to just HR Staff, except for:
@@ -152,7 +153,8 @@ if len(pop_list) > 0:
                 dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
                 dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
                 dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
-                dict(c="hrm", f="skill", uacl=acl.READ, oacl=acl.READ))
+                dict(c="hrm", f="skill", uacl=acl.READ, oacl=acl.READ)
+                )
 
     create_role("Anonymous",
                 "Unauthenticated users",

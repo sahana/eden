@@ -1195,9 +1195,7 @@ div#component {
 
 /* Resource Footer */
 div#rfooter {
-	margin-top: 35px;
-	border-top: 1px solid #006699;
-	padding-top: 10px;
+	padding: 15px 0;
 }
 
 /* Last Update Meta-data */

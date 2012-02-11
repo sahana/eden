@@ -312,6 +312,7 @@ class S3HRModel(S3Model):
 
         htable = self.hrm_human_resource
         ptable = self.pr_person
+        ltable = self.pr_person_user
         utable = db.auth_user
 
         user = None
@@ -331,7 +332,8 @@ class S3HRModel(S3Model):
                 return
 
             query = (ptable.id == person_id) & \
-                    (utable.person_uuid == ptable.uuid)
+                    (ltable.pe_id == ptable.pe_id) & \
+                    (utable.id == ptable.user_id)
             user = db(query).select(utable.id,
                                     limitby=(0, 1)).first()
         if not user:
@@ -352,6 +354,7 @@ class S3HRModel(S3Model):
 
         utable = auth.settings.table_user
         ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
         mtable = s3db.auth_membership
         htable = s3db.hrm_human_resource
         stable = s3db.org_site
@@ -374,7 +377,8 @@ class S3HRModel(S3Model):
 
         # Add record owner (user)
         query = (ptable.id == record.person_id) & \
-                (utable.person_uuid == ptable.uuid)
+                (ltable.pe_id == ptable.pe_id) & \
+                (utable.id == ltable.user_id)
         user = db(query).select(utable.id,
                                 utable.organisation_id,
                                 limitby=(0, 1)).first()
@@ -1268,8 +1272,8 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Trainings registered"))
 
         table.virtualfields.append(HRMTrainingVirtualFields())
-        
-        report_fields = [ 
+
+        report_fields = [
                          "training_event_id",
                          "person_id",
                          (T("Course"), "training_event_id$course_id"),
@@ -2009,24 +2013,28 @@ def hrm_training_event_represent(id):
 # =============================================================================
 class HRMTrainingVirtualFields:
     """ Virtual fields as dimension classes for reports """
-    extra_fields = ["start_date"]
+
+    extra_fields = ["training_event_id$start_date"]
 
     def month(self):
-        # BROKEN for Report
-        db = current.db
-        s3db = current.s3db
-        te_table = s3db.hrm_training_event
-        query = te_table.id == self.hrm_training.training_event_id
-        record = db( query ).select( te_table.start_date,
-                                     limitby = (0,1) ).first()
-        if record and record.start_date:
-            return "%s/%02d" % (record.start_date.year, record.start_date.month)
+        # Year/Month of the start date of the training event
+        try:
+            start_date = self.hrm_training_event.start_date
+        except AttributeError:
+            # not available
+            start_date = None
+        if start_date:
+            return "%s/%02d" % (start_date.year, start_date.month)
         else:
             return current.messages.NONE
 
     def year(self):
-        #BROKEN
-        start_date = self.hrm_training.start_date
+        # The year of the training event
+        try:
+            start_date = self.hrm_training_event.start_date
+        except AttributeError:
+            # not available
+            start_date = None
         if start_date:
             return start_date.year
         else:
