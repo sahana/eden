@@ -644,7 +644,6 @@ class S3Request(object):
         component_name = self.component_name
         component_id = self.component_id
         if component_name and component_id:
-            # @ToDo: Fix for SuperEntity components
             varname = "%s.id" % component_name
             if varname in vars:
                 var = vars[varname]
@@ -3691,20 +3690,22 @@ class S3Resource(object):
 
         # Collect the extra fields
         flist = list(fields)
+        append = flist.append
         for vtable in table.virtualfields:
-            try:
+            if hasattr(vtable, "extra_fields"):
                 extra_fields = vtable.extra_fields
                 for ef in extra_fields:
                     if ef not in flist:
-                        flist.append(ef)
-            except:
-                continue
+                        append(ef)
 
         lfields = []
         joins = Storage()
         left = Storage()
 
-        # @todo: optimize
+        append = lfields.append
+        name = self.name
+        get_lfield = self.get_lfield
+
         for f in flist:
             # Allow to override the field label
             if isinstance(f, tuple):
@@ -3712,9 +3713,9 @@ class S3Resource(object):
             else:
                 label, selector = None, f
             if "." not in selector:
-                selector = "%s.%s" % (self.name, selector)
+                selector = "%s.%s" % (name, selector)
             try:
-                lfield = self.get_lfield(selector)
+                lfield = get_lfield(selector)
             except (KeyError, SyntaxError):
                 continue
             if label is None:
@@ -3729,13 +3730,14 @@ class S3Resource(object):
             if lfield.left:
                 left.update(lfield.left)
             lfield.show = f in fields
-            lfields.append(lfield)
+            append(lfield)
 
         lefts = []
+        append = lefts.append
         for tn in left:
             ljoins = left[tn]
             for lj in ljoins:
-                lefts.append(lj)
+                append(lj)
         return (lfields, joins, lefts)
 
     # -------------------------------------------------------------------------
@@ -3806,7 +3808,9 @@ class S3Resource(object):
         else:
             if fn == "uid":
                 fn = xml.UID
-            if fn in table.fields:
+            if fn == "id":
+                f = table._id
+            elif fn in table.fields:
                 f = table[fn]
             else:
                 f = None

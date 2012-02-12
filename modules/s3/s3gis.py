@@ -358,16 +358,21 @@ class GIS(object):
         """
 
         response = current.response
-        session = current.session
         public_url = current.deployment_settings.get_base_public_url()
 
         warning = ""
 
-        if len(url) > len(public_url) and url[:len(public_url)] == public_url:
+        local = False
+        if not url.startswith("http"):
+            local = True
+            url = "%s%s" % (public_url, url)
+        elif len(url) > len(public_url) and url[:len(public_url)] == public_url:
+            local = True
+        if local:
             # Keep Session for local URLs
             cookie = Cookie.SimpleCookie()
             cookie[response.session_id_name] = response.session_id
-            session._unlock(response)
+            current.session._unlock(response)
             try:
                 file = fetch(url, cookie=cookie)
             except urllib2.URLError:
@@ -387,43 +392,93 @@ class GIS(object):
                 warning = "HTTPError"
                 return warning
 
-            if file[:2] == "PK":
-                # Unzip
-                fp = StringIO(file)
-                myfile = zipfile.ZipFile(fp)
-                try:
-                    file = myfile.read("doc.kml")
-                except: # Naked except!
-                    file = myfile.read(myfile.infolist()[0].filename)
-                myfile.close()
+        if file[:2] == "PK":
+            # Unzip
+            fp = StringIO(file)
+            myfile = zipfile.ZipFile(fp)
+            files = myfile.infolist()
+            main = None
+            candidates = []
+            for _file in files:
+                filename = _file.filename
+                if filename == "doc.kml":
+                    main = filename
+                elif filename[-4:] == ".kml":
+                    candidates.append(filename)
+            if not main:
+                if candidates:
+                    # Any better way than this to guess which KML file is the main one?
+                    main = candidates[0]
+                else:
+                    response.error = "KMZ contains no KML Files!"
+                    return ""
+            # Write files to cache (other than the main one)
+            request = current.request
+            path = os.path.join(request.folder, "static", "cache", "kml")
+            if not os.path.exists(path):
+                os.makedirs(path)
+            filenames = []
+            for _file in files:
+                filename = _file.filename
+                if filename != main:
+                    if "/" in filename:
+                        _filename = filename.split("/")
+                        dir = os.path.join(path, _filename[0])
+                        if not os.path.exists(dir):
+                            os.mkdir(dir)
+                        _filepath = os.path.join(path, *_filename)
+                    else:
+                        _filepath = os.path.join(path, filename)
 
-            # Check for NetworkLink
-            if "<NetworkLink>" in file:
+                    try:
+                        f = open(_filepath, "wb")
+                    except:
+                        # Trying to write the Folder
+                        pass
+                    else:
+                        filenames.append(filename)
+                        __file = myfile.read(filename)
+                        f.write(__file)
+                        f.close()
+
+            # Now read the main one (to parse)
+            file = myfile.read(main)
+            myfile.close()
+
+        # Check for NetworkLink
+        if "<NetworkLink>" in file:
+            try:
                 # Remove extraneous whitespace
-                #file = " ".join(file.split())
-                try:
-                    parser = etree.XMLParser(recover=True, remove_blank_text=True)
-                    tree = etree.XML(file, parser)
-                    # Find contents of href tag (must be a better way?)
-                    url = ""
-                    for element in tree.iter():
-                        if element.tag == "{%s}href" % KML_NAMESPACE:
-                            url = element.text
-                    if url:
-                        # Follow NetworkLink (synchronously)
-                        warning2 = self.fetch_kml(url, filepath)
-                        warning += warning2
-                except (etree.XMLSyntaxError,):
-                    e = sys.exc_info()[1]
-                    warning += "<ParseError>%s %s</ParseError>" % (e.line, e.errormsg)
+                parser = etree.XMLParser(recover=True, remove_blank_text=True)
+                tree = etree.XML(file, parser)
+                # Find contents of href tag (must be a better way?)
+                url = ""
+                for element in tree.iter():
+                    if element.tag == "{%s}href" % KML_NAMESPACE:
+                        url = element.text
+                if url:
+                    # Follow NetworkLink (synchronously)
+                    warning2 = self.fetch_kml(url, filepath)
+                    warning += warning2
+            except (etree.XMLSyntaxError,):
+                e = sys.exc_info()[1]
+                warning += "<ParseError>%s %s</ParseError>" % (e.line, e.errormsg)
 
-            # Check for Overlays
-            if "<GroundOverlay>" in file:
-                warning += "GroundOverlay"
-            if "<ScreenOverlay>" in file:
-                warning += "ScreenOverlay"
+        # Check for Overlays
+        if "<GroundOverlay>" in file:
+            warning += "GroundOverlay"
+        if "<ScreenOverlay>" in file:
+            warning += "ScreenOverlay"
 
-        # Write file to cache
+        for filename in filenames:
+            replace = "%s/%s" % (URL(c="static", f="cache", args=["kml"]),
+                                 filename)
+            # Rewrite all references to point to the correct place
+            # need to catch <Icon><href> (which could be done via lxml)
+            # & also <description><![CDATA[<img src=" (which can't)
+            file = file.replace(filename, replace)
+
+        # Write main file to cache
         f = open(filepath, "w")
         f.write(file)
         f.close()
@@ -915,9 +970,7 @@ class GIS(object):
                 # Read personalised config, if available.
                 auth = current.auth
                 if auth.is_logged_in():
-                    prtable = s3db.pr_person
-                    query = (prtable.uuid == auth.user.person_uuid) & \
-                            (ctable.pe_id == prtable.pe_id) & \
+                    query = (ctable.pe_id == auth.user.pe_id) & \
                             (mtable.id == stable.marker_id) & \
                             (stable.id == ctable.symbology_id) & \
                             (ptable.id == ctable.projection_id)
@@ -4657,9 +4710,12 @@ class KMLLayer(Layer):
     js_array = "S3.gis.layers_kml"
 
     def __init__(self):
+        "Set up the KML cache, should be done once per request"
         super(KMLLayer, self).__init__()
 
-        "Set up the KML cache, should be done once per request"
+        # Needed for gis.download_kml()
+        self.table = current.s3db[self.tablename]
+
         # Can we cache downloaded KML feeds?
         # Needed for unzipping & filtering as well
         # @ToDo: Should we move this folder to static to speed up access to cached content?

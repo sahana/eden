@@ -1094,7 +1094,7 @@ class S3GISConfigModel(S3Model):
                                     link="gis_layer_symbology",
                                     joinby="symbology_id",
                                     key="layer_id",
-                                    actuate="replace",
+                                    actuate="hide",
                                     autocomplete="name",
                                     autodelete=False))
 
@@ -1203,8 +1203,11 @@ class S3GISConfigModel(S3Model):
         # Reusable field - used by Events & Scenarios
         config_id = S3ReusableField("config_id", db.gis_config,
                                     #readable=False,
+                                    #writable=False,
+                                    requires = IS_ONE_OF(db,
+                                                         "gis_config.id",
+                                                         "%(name)s"),
                                     represent = self.gis_config_represent,
-                                    writable=False,
                                     label = T("Map Configuration"),
                                     ondelete = "RESTRICT")
 
@@ -2311,6 +2314,7 @@ class S3MapModel(S3Model):
                                   *s3.meta_fields())
 
         self.configure(tablename,
+                       deduplicate = self.gis_layer_kml_deduplicate,
                        super_entity="gis_layer_entity")
 
         # Components
@@ -2723,6 +2727,37 @@ class S3MapModel(S3Model):
                 item.method = item.METHOD.UPDATE
         return
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_kml_deduplicate(item):
+        """
+          This callback will be called when importing Symbology records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+
+        """
+
+        db = current.db
+
+        if item.id:
+            return
+        if item.tablename == "gis_layer_kml":
+            # Match if url is identical
+            table = item.table
+            data = item.data
+            url = data.url
+            query = (table.url == url)
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
 # =============================================================================
 def name_field():
     T = current.T
@@ -2983,10 +3018,9 @@ def gis_layer_represent(id, link=True):
         represent = "[layer %d] (%s)" % (id, instance_type_nice)
 
     if link and layer:
-        if not id:
-            query = (table.layer_id == layer.layer_id)
-            id = db(query).select(table.id,
-                                  limitby=(0, 1)).first()
+        query = (table.layer_id == layer.layer_id)
+        id = db(query).select(table.id,
+                              limitby=(0, 1)).first().id
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href = URL(c=c, f=f,
@@ -3030,17 +3064,11 @@ def gis_rheader(r, tabs=[]):
             pe_id = record.pe_id
             if pe_id:
                 auth = current.auth
-                if auth.is_logged_in():
-                    # Is this the user's personal config?
-                    ptable = s3db.pr_person
-                    query = (ptable.uuid == auth.user.person_uuid)
-                    pe = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1),
-                                          cache=s3db.cache).first()
-                    if pe_id == pe.pe_id:
-                        context = T("Personal")
-
-                context = s3db.pr_pentity_represent(record.pe_id, show_label=False)
+                # Is this the user's personal config?
+                if auth.user and auth.user.pe_id == pe_id:
+                    context = T("Personal")
+                else:
+                    context = s3db.pr_pentity_represent(pe_id, show_label=False)
 
             region_location_id = record.region_location_id
             if region_location_id:

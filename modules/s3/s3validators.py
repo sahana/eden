@@ -39,7 +39,6 @@ __all__ = ["single_phone_number_pattern",
            "IS_INT_AMOUNT",
            "IS_FLOAT_AMOUNT",
            "IS_HTML_COLOUR",
-           "THIS_NOT_IN_DB",
            "IS_UTC_OFFSET",
            "IS_UTC_DATETIME",
            "IS_UTC_DATETIME_IN_RANGE",
@@ -61,6 +60,15 @@ from datetime import datetime, timedelta
 from gluon import current, Field,  IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE
 from gluon.validators import Validator
 from gluon.storage import Storage
+
+def translate(text):
+    if text is None:
+        return None
+    elif isinstance(text, (str, unicode)):
+        from globals import current
+        if hasattr(current, "T"):
+            return str(current.T(text))
+    return str(text)
 
 def options_sorter(x, y):
     return (str(x[1]).upper() > str(y[1]).upper() and 1) or -1
@@ -245,39 +253,6 @@ class IS_HTML_COLOUR(IS_MATCH):
 
 
 # -----------------------------------------------------------------------------
-class THIS_NOT_IN_DB(object):
-    """
-        Unused currently since doesn't quite work.
-        See: http://groups.google.com/group/web2py/browse_thread/thread/27b14433976c0540
-    """
-    def __init__(self,
-                 dbset,
-                 field,
-                 this,
-                 error_message = "value already in database!"
-                ):
-        if hasattr(dbset, "define_table"):
-            current.dbset = dbset()
-        else:
-            current.dbset = dbset
-        self.field = field
-        self.value = this
-        self.error_message = error_message
-        self.record_id = 0
-    def set_self_id(self, id):
-        self.record_id = id
-    def __call__(self, value):
-        tablename, fieldname = str(self.field).split(".")
-        field = current.dbset._db[tablename][fieldname]
-        rows = current.dbset(field == self.value).select(limitby=(0, 1))
-        if len(rows)>0 and str(rows[0].id) != str(self.record_id):
-            return (self.value, self.error_message)
-        return (value, None)
-
-
-# IS_ONE_OF_EMPTY -------------------------------------------------------------------
-# by sunneach 2010-02-03
-# copy of nursix's IS_ONE_OF with removed 'options' method
 regex1 = re.compile("[\w_]+\.[\w_]+")
 regex2 = re.compile("%\((?P<name>[^\)]+)\)s")
 
@@ -326,8 +301,7 @@ class IS_ONE_OF_EMPTY(Validator):
             self.dbset = dbset()
         else:
             self.dbset = dbset
-        self.field = field
-        (ktable, kfield) = str(self.field).split(".")
+        (ktable, kfield) = str(field).split(".")
         if not label:
             label = "%%(%s)s" % kfield
         if isinstance(label, str):
@@ -452,32 +426,19 @@ class IS_ONE_OF_EMPTY(Validator):
             self.theset = None
             self.labels = None
 
-    #Removed as we don't want any options downloaded unnecessarily
+    # Removed as we don't want any options downloaded unnecessarily
     #def options(self):
 
     def __call__(self, value):
 
         try:
-            _table = self.dbset._db[self.ktable]
-            deleted_q = ("deleted" in _table) and (_table["deleted"] == False) or False
+            table = self.dbset._db[self.ktable]
+            deleted_q = ("deleted" in table) and (table["deleted"] == False) or False
             filter_opts_q = False
-            if self.filterby and self.filterby in _table:
+            if self.filterby and self.filterby in table:
                 if self.filter_opts:
-                    filter_opts_q = _table[self.filterby].belongs(self.filter_opts)
+                    filter_opts_q = table[self.filterby].belongs(self.filter_opts)
 
-            # For a list field, Web2py now packs elements in "|x|y|" by itself,
-            # so that is no longer done here. The unpacking is left in for now,
-            # in case someone enters a list by hand that way, or in case we get
-            # here from the JSON widget over in s3widgets...
-            # Note that on the way in, nothing checks that the values supplied
-            # for a list:reference actually exist in the target table -- that
-            # is only "assured" by sending out an option list containing only
-            # valid ids.  But what if someone constructs a request by hand?
-            # Or what if some of the ids get deleted between the time the form
-            # goes out and when it gets submitted?  I just left a form sitting
-            # for about 10 hours (longer than session expiration, even), and it
-            # was accepted.  So it's actually not that wildly impossible that
-            # an id in the list would be gone.
             if self.multiple:
                 if isinstance(value, list):
                     values = value
@@ -496,7 +457,7 @@ class IS_ONE_OF_EMPTY(Validator):
                         return (value, self.error_message)
                 else:
                     for v in values:
-                        q = (_table[self.kfield] == v)
+                        q = (table[self.kfield] == v)
                         query = query is not None and query | q or q
                     if filter_opts_q != False:
                         query = query is not None and \
@@ -517,7 +478,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 values = [value]
                 query = None
                 for v in values:
-                    q = (_table[self.kfield] == v)
+                    q = (table[self.kfield] == v)
                     query = query is not None and query | q or q
                 if filter_opts_q != False:
                     query = query is not None and \
@@ -536,9 +497,7 @@ class IS_ONE_OF_EMPTY(Validator):
         return (value, self.error_message)
 
 
-# IS_ONE_OF -------------------------------------------------------------------
-# added 2009-08-23 by nursix
-# converted to subclass 2010-02-03 by sunneach: NO CHANGES in the method bodies
+# -----------------------------------------------------------------------------
 class IS_ONE_OF(IS_ONE_OF_EMPTY):
 
     """
@@ -579,30 +538,28 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
     """
 
     def __call__(self, value):
-        db = current.db
-        translate = lambda m: m # workaround
         value = str(value)
         if not value.strip():
             return (value, translate(self.error_message))
         if value in self.allowed_override:
             return (value, None)
         (tablename, fieldname) = str(self.field).split(".")
-        _table = db[tablename]
-        field = _table[fieldname]
-        field = db[tablename][fieldname]
+        dbset = self.dbset
+        table = dbset.db[tablename]
+        field = table[fieldname]
         query = (field == value)
-        if "deleted" in _table:
-            query = (_table["deleted"] == False) & query
-        rows = db(query).select(limitby=(0, 1))
+        rows = dbset(query,
+                     ignore_common_filters = self.ignore_common_filters).select(limitby=(0, 1))
+        if "deleted" in table:
+            query = (table["deleted"] == False) & query
         if len(rows) > 0:
             if isinstance(self.record_id, dict):
                 for f in self.record_id:
                     if str(getattr(rows[0], f)) != str(self.record_id[f]):
                         return (value, translate(self.error_message))
-            elif str(rows[0].id) != str(self.record_id):
-                return (value, translate(self.error_message))
+            elif str(rows[0][table._id.name]) != str(self.record_id):
+                    return (value, translate(self.error_message))
         return (value, None)
-
 
 # -----------------------------------------------------------------------------
 class IS_LOCATION(Validator):

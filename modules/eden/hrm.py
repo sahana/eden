@@ -312,6 +312,7 @@ class S3HRModel(S3Model):
 
         htable = self.hrm_human_resource
         ptable = self.pr_person
+        ltable = self.pr_person_user
         utable = db.auth_user
 
         user = None
@@ -331,7 +332,8 @@ class S3HRModel(S3Model):
                 return
 
             query = (ptable.id == person_id) & \
-                    (utable.person_uuid == ptable.uuid)
+                    (ltable.pe_id == ptable.pe_id) & \
+                    (utable.id == ptable.user_id)
             user = db(query).select(utable.id,
                                     limitby=(0, 1)).first()
         if not user:
@@ -352,6 +354,7 @@ class S3HRModel(S3Model):
 
         utable = auth.settings.table_user
         ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
         mtable = s3db.auth_membership
         htable = s3db.hrm_human_resource
         stable = s3db.org_site
@@ -374,7 +377,8 @@ class S3HRModel(S3Model):
 
         # Add record owner (user)
         query = (ptable.id == record.person_id) & \
-                (utable.person_uuid == ptable.uuid)
+                (ltable.pe_id == ptable.pe_id) & \
+                (utable.id == ltable.user_id)
         user = db(query).select(utable.id,
                                 utable.organisation_id,
                                 limitby=(0, 1)).first()

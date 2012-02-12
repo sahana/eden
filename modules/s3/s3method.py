@@ -201,9 +201,11 @@ class S3Method(object):
             # Component
             if not r.multiple and not r.component_id:
                 resource = r.component
+                table = resource.table
+                pkey = table._id.name
                 resource.load(start=0, limit=1)
                 if len(resource):
-                    r.component_id = resource.records().first().id
+                    r.component_id = resource.records().first()[pkey]
             component_id = r.component_id
             if not r.link:
                 return component_id
