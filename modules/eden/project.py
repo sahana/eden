@@ -1468,7 +1468,7 @@ class S3ProjectTaskModel(S3Model):
             #99: T("unspecified")
         }
 
-        project_task_active_statuses = [2, 3, 4, 5]
+        project_task_active_statuses = [2, 3]
         project_task_priority_opts = {
             1:T("Urgent"),
             2:T("High"),
