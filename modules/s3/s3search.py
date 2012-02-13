@@ -1211,6 +1211,7 @@ class S3Search(S3CRUD):
         """
 
         # Get environment
+        T = current.T
         session = current.session
         request = self.request
         response = current.response
@@ -1343,8 +1344,8 @@ class S3Search(S3CRUD):
         # Remove the dataTables search box to avoid confusion
         s3.dataTable_NobFilter = True
 
-        _location = "location_id" in r.target()[2]
-        _site = "site_id" in r.target()[2]
+        _location = "location_id" in table
+        _site = "site_id" in table
         if items:
             if not s3.no_sspag:
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
@@ -1408,7 +1409,7 @@ class S3Search(S3CRUD):
                                                                 popup_label,
                                                                 popup_fields)
 
-                feature_queries = [{"name"   : current.T("Search results"),
+                feature_queries = [{"name"   : T("Search results"),
                                     "query"  : features,
                                     "marker" : marker}]
                 # Calculate an appropriate BBox
@@ -1420,9 +1421,32 @@ class S3Search(S3CRUD):
         output["items"] = items
         output["sortby"] = sortby
 
+        if isinstance(items, DIV):
+            list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % request.application),
+                                 _title=T("Export in PDF format"),
+                                 _href=r.url(method="", representation="pdf", vars=session.s3.filter)),
+                               A(IMG(_src="/%s/static/img/icon-xls.png" % request.application),
+                                 _title=T("Export in XLS format"),
+                                 _href=r.url(method="", representation="xls", vars=session.s3.filter)),
+                               A(IMG(_src="/%s/static/img/RSS_16.png" % request.application),
+                                 _title=T("Export in RSS format"),
+                                 _href=r.url(method="", representation="rss", vars=session.s3.filter)),
+                               _id="list_formats")
+        else:
+            list_formats = ""
+
         if _location or _site:
             # Add a map for search results
             # (this same map is also used by the Map Search Widget, if-present)
+            if list_formats:
+                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % request.application),
+                                     _title=T("Export in KML format"),
+                                     _href=r.url(method="", representation="kml", vars=session.s3.filter)),
+                                    )
+                list_formats.append(A(IMG(_src="/%s/static/img/silk/map.png" % request.application),
+                                     _title=T("Show on Map"),
+                                     _id="gis_datatables_map-btn"),
+                                    )
             if bounds:
                 # We have some features returned
                 map_popup = gis.show_map(
@@ -1449,12 +1473,25 @@ class S3Search(S3CRUD):
                                         )
             s3.dataTableMap = map_popup
 
+        if "pe_id" in table or "person_id" in table:
+            # Provide the ability to Message person entities in search results
+            if list_formats:
+                list_formats.append(A(IMG(_src="/%s/static/img/silk/email.png" % request.application),
+                                     _title=T("Send Message"),
+                                     _href=r.url(method="compose", vars=session.s3.filter)),
+                                    )
+
+        output["list_formats"] = list_formats
+
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
         output["subtitle"] = self.crud_string(tablename, "msg_match")
 
         # View
         response.view = self._view(r, "search.html")
+
+        # RHeader gets added later in S3Method()
+
         return output
 
     # -------------------------------------------------------------------------
