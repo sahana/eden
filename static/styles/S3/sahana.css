@@ -843,6 +843,9 @@ div#table-container td.totals_header {
     margin-bottom: 10px;
     margin-right: 10px;
 }
+#list_formats a {
+    padding: 1px;
+}
 
 /* dataTables Styling */
 /* Bring in line with export formats */
@@ -1119,7 +1122,7 @@ span.tab_other {
 div.tabs span.tab_here {
 	display: inline;
     position: relative;
-    bottom: -1px;
+    bottom: 1px;
     background: #f0f3f4;
     border-width: 2px 1px 0 3px;
     border-style: solid;

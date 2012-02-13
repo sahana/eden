@@ -233,7 +233,6 @@ function s3_tb_remove(){
 }
 
 // ============================================================================
-// @author: Michael Howden (michael@sahanafoundation.org)
 function S3ConfirmClick(ElementID, Message) {
 	// @param ElementID: the ID of the element which will be clicked
 	// @param Message: the Message displayed in the confirm dialog
@@ -251,7 +250,6 @@ function S3ConfirmClick(ElementID, Message) {
 
 // ============================================================================
 // Code to warn on exit without saving
-// @author: Michael Howden (michael@sahanafoundation.org)
 function S3SetNavigateAwayConfirm() {
     window.onbeforeunload = function() {
         return S3.i18n.unsaved_changes;

@@ -39,8 +39,9 @@ from gluon import *
 from gluon.serializers import json
 
 from s3crud import S3CRUD
-from s3validators import *
+from s3navigation import s3_search_tabs
 from s3utils import s3_debug
+from s3validators import *
 from s3widgets import CheckboxesWidgetS3
 
 __all__ = ["S3SearchWidget",
@@ -1422,18 +1423,23 @@ class S3Search(S3CRUD):
         output["sortby"] = sortby
 
         if isinstance(items, DIV):
+            filter = session.s3.filter
             list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % request.application),
                                  _title=T("Export in PDF format"),
-                                 _href=r.url(method="", representation="pdf", vars=session.s3.filter)),
+                                 _href=r.url(method="", representation="pdf", vars=filter)),
                                A(IMG(_src="/%s/static/img/icon-xls.png" % request.application),
                                  _title=T("Export in XLS format"),
-                                 _href=r.url(method="", representation="xls", vars=session.s3.filter)),
+                                 _href=r.url(method="", representation="xls", vars=filter)),
                                A(IMG(_src="/%s/static/img/RSS_16.png" % request.application),
                                  _title=T("Export in RSS format"),
-                                 _href=r.url(method="", representation="rss", vars=session.s3.filter)),
+                                 _href=r.url(method="", representation="rss", vars=filter)),
                                _id="list_formats")
+            tabs = [(T("List"), None),
+                    #(T("Export"), "export")
+                    ]
         else:
             list_formats = ""
+            tabs = []
 
         if _location or _site:
             # Add a map for search results
@@ -1441,12 +1447,10 @@ class S3Search(S3CRUD):
             if list_formats:
                 list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % request.application),
                                      _title=T("Export in KML format"),
-                                     _href=r.url(method="", representation="kml", vars=session.s3.filter)),
+                                     _href=r.url(method="", representation="kml", vars=filter)),
                                     )
-                list_formats.append(A(IMG(_src="/%s/static/img/silk/map.png" % request.application),
-                                     _title=T("Show on Map"),
-                                     _id="gis_datatables_map-btn"),
-                                    )
+            if tabs:
+                tabs.append((T("Map"), "map"))
             if bounds:
                 # We have some features returned
                 map_popup = gis.show_map(
@@ -1475,12 +1479,14 @@ class S3Search(S3CRUD):
 
         if "pe_id" in table or "person_id" in table:
             # Provide the ability to Message person entities in search results
-            if list_formats:
-                list_formats.append(A(IMG(_src="/%s/static/img/silk/email.png" % request.application),
-                                     _title=T("Send Message"),
-                                     _href=r.url(method="compose", vars=session.s3.filter)),
-                                    )
+            if tabs:
+                tabs.append((T("Message"), "compose"))
 
+        # Search Tabs
+        search_tabs = s3_search_tabs(r, tabs)
+        output["search_tabs"] = search_tabs
+
+        # List Formats
         output["list_formats"] = list_formats
 
         # Title and subtitle

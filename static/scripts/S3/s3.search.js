@@ -1,8 +1,5 @@
 /**
-    Search Static JS Code
-
-    @author: Michael Howden (michael@sahanafoundation.org)
-    @date-created: 2011-06-11
+    S3Search Static JS Code
 */
 // ============================================================================
 function fncSearchAutocompleteTimer() {
@@ -16,7 +13,6 @@ function fncSearchAutocompleteTimer() {
 };
 
 function fncSearchAutocompleteAjax(selSearchDiv) {
-
 
     // Cancel previous request
     try {
