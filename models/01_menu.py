@@ -405,7 +405,7 @@ if auth.permission.format in ("html"):
                     False, aURL(f="beneficiary",
                                 args="report",
                                 vars=Storage(rows="project_id",
-                                            cols="bnf_type$name",
+                                            cols="beneficiary_type_id$name",
                                             fact="number",
                                             aggregate="sum"))],
                     [T("Funding"), False, aURL(f="organisation", args="report")],

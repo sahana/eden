@@ -31,7 +31,7 @@ def inv_item_controller():
 # -----------------------------------------------------------------------------
 def inv_recv_controller():
     """ RESTful CRUD controller """
-
+    tablename = "inv_recv"
     table = s3db.inv_recv
 
     # Limit site_id to sites the user has permissions for
@@ -69,7 +69,7 @@ def inv_recv_controller():
 # -----------------------------------------------------------------------------
 def inv_send_controller():
     """ RESTful CRUD controller """
-
+    tablename = "inv_send"
     table = s3db.inv_send
 
     # Limit site_id to sites the user has permissions for
