@@ -1,0 +1,12 @@
+Template,Section,Posn,Method,Rules
+Emergency Damage and Needs,Background Information,1,1,"[[{'heading': 'Emergency Damage & Needs Assessment Form'}], ['EDN-2'], ['EDN-7']]"
+Emergency Damage and Needs,Observations,2,1,"[['EDN-8'], ['EDN-9'], ['EDN-10'], ['EDN-11'], ['EDN-12'], ['EDN-13'], ['EDN-14'], ['EDN-15'], ['EDN-16'], ['EDN-17']]"
+Emergency Damage and Needs,Damage,3,1,"[['EDN-18'], ['EDN-19'], ['EDN-20'], ['EDN-21'], ['EDN-22'], ['EDN-23']]"
+Emergency Damage and Needs,Livelihood,4,1,[['EDN-24']]
+Emergency Damage and Needs,Health and WatSan,5,1,"[['EDN-25'], ['EDN-26'], ['EDN-27'], ['EDN-28'], ['EDN-29'], ['EDN-30'], ['EDN-31'], ['EDN-32'], ['EDN-33'], ['EDN-34'], ['EDN-35'], ['EDN-36'], ['EDN-37'], ['EDN-38'], ['EDN-39'], ['EDN-40'], ['EDN-41'], ['EDN-42'], ['EDN-43'], ['EDN-44'], ['EDN-45']]"
+Emergency Damage and Needs,Sanitation,6,1,"[['EDN-46'], ['EDN-47'], ['EDN-48']]"
+Emergency Damage and Needs,Availability,7,1,[['EDN-49']]
+Emergency Damage and Needs,Impact,8,1,[['EDN-50']]
+Emergency Damage and Needs,Action,9,1,"[['EDN-51'], ['EDN-52'], ['EDN-53']]"
+Emergency Damage and Needs,Needs,10,1,[['EDN-54']]
+Emergency Damage and Needs,Recommendations,11,1,"[['EDN-55'], ['EDN-56'], ['EDN-57'], ['EDN-58'], ['EDN-59']]"

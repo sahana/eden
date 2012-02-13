@@ -142,7 +142,7 @@ def project():
         return output
     response.s3.postp = postp
 
-    rheader = eden.project.project_rheader
+    rheader = s3db.project_rheader
     return s3_rest_controller(module, resourcename,
                               rheader=rheader,
                               interactive_report=True,
@@ -243,7 +243,7 @@ def activity():
         doc_table.person_id.writable = False
         doc_table.location_id.writable = False
 
-    rheader = lambda r: response.s3.project_rheader(r, tabs)
+    rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
                               rheader=rheader,
                               csv_template="activity")
@@ -438,7 +438,7 @@ def task():
         return output
     response.s3.postp = postp
 
-    return s3_rest_controller(rheader=response.s3.project_rheader)
+    return s3_rest_controller(rheader=s3db.project_rheader)
 
 # =============================================================================
 def milestone():
@@ -506,7 +506,7 @@ def discuss(r, **attr):
     id = r.id
 
     # Add the RHeader to maintain consistency with the other pages
-    rheader = response.s3.project_rheader(r)
+    rheader = s3db.project_rheader(r)
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
     response.s3.scripts.append(ckeditor)

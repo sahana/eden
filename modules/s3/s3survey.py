@@ -664,7 +664,7 @@ class DataMatrixBuilder():
         if "heading" in rules:
             text = rules["heading"]
             if len(parent) == 1:
-                width = max(len(text),matrix.lastCol)+1
+                width = min(len(text),matrix.lastCol)+1
                 height = 1
                 styleName = "styleSectionHeading"
             else:
@@ -2320,7 +2320,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         if "complete_id" in self.question:
             complete_id = self.question.complete_id
         self.getMetaData()
-        table = []
+        table = TABLE()
         if self.data != None:
             tr = TR(_class="survey_question")
             tr.append(TH(self.subtitle))
@@ -2345,7 +2345,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                         tr.append(childWidget.subDisplay())
                 table.append(tr)
                 posn += 1
-        return table
+        return TABLE(table, _border=3)
 
     def getMatrixSize(self, maxWidth = 20):
         self._store_metadata()

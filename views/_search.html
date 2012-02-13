@@ -9,31 +9,21 @@
 </div>
 <div>
 {{pass}}
-<div id='map'></div>
 <div class='form-container'>
 {{try:}}{{=form}}
 {{except:}}{{pass}}
 </div>
 <div><br /></div>
-<div id='table-container'>
 {{try:}}
   {{if items:}}
   {{=H3(subtitle)}}{{pass}}
 {{except:}}{{pass}}
-<div id='list_formats'>
-{{try:}}
-{{if isinstance(items, DIV):}}
-<a href='{{=r.url(method="", representation="pdf", vars=session.s3.filter)}}' title='{{=T("Export in PDF format")}}'><img src='/{{=request.application}}/static/img/pdficon_small.gif'/></a>
-<a href='{{=r.url(method="", representation="xls", vars=session.s3.filter)}}' title='{{=T("Export in XLS format")}}'><img src='/{{=request.application}}/static/img/icon-xls.png'/></a>
-<a href='{{=r.url(method="", representation="rss", vars=session.s3.filter)}}' title='{{=T("Export in RSS format")}}'><img src='/{{=request.application}}/static/img/RSS_16.png'/></a>
-{{if "location_id" in r.target()[2] or "site_id" in r.target()[2]:}}
-  <a href='{{=r.url(method="", representation="kml", vars=session.s3.filter)}}' title='{{=T("Export in KML format")}}'><img src='/{{=request.application}}/static/img/kml_icon.png'/></a>
-  <a id='gis_datatables_map-btn' title='{{=T("Show on Map")}}'><img src='/{{=request.application}}/static/img/silk/map.png'/></a>{{pass}}
-{{if "pe_id" in r.target()[2] or "person_id" in r.target()[2]:}}
-  <a href='{{=r.url(method="compose", vars=session.s3.filter)}}' title='{{=T("Send Message")}}'><img src='/{{=request.application}}/static/img/silk/email.png'/></a>{{pass}}
-{{pass}}
+<div id='map'></div>
+<div id='table-container'>
+{{try:}}{{=search_tabs}}
 {{except:}}{{pass}}
-</div>
+{{try:}}{{=list_formats}}
+{{except:}}{{pass}}
 {{try:}}{{=items}}
 {{except:}}{{pass}}
 </div>

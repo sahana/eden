@@ -1,0 +1,10 @@
+Template,Section,Posn,Method,Rules
+MCRS,Background Information,1,1,[['MCRS-2']]
+MCRS,Descriptions,2,1,"[[{'heading': '1.   Affected VDC and population descriptions'}], ['MCRS-6-']]"
+MCRS,Volunteers,3,1,"[[{'heading': '2.   Number of volunteers mobilized for FA, PSP as well as rapid assessment'}], ['MCRS-7-']]"
+MCRS,Damage,4,1,"[[{'heading': '3.   Damaged community and individual property'}], ['MCRS-8-']]"
+MCRS,Health,5,1,"[[{'heading': '4.   Possible health hazards( possibility of disease out break- consultation/advice is needed from TMO, HP, WHO, UNFPA, UNICEF and other organizations working in field)'}], ['MCRS-9-']]"
+MCRS,Access,6,1,"[[{'heading': '5.   Access (what means can be used to reach beneficiaries, general security situation, people perception on relief management)'}], ['MCRS-10']]"
+MCRS,Recommendations,7,1,"[[{'heading': '6.   Recommendations for immediate actions'}], ['MCRS-11']]"
+MCRS,Problems,8,1,"[[{'heading': '7.   Constraints/problems'}], ['MCRS-12']]"
+MCRS,Conclusions,9,1,"[[{'heading': '8. Conclusions'}], ['MCRS-13'], ['MCRS-4'], ['MCRS-5']]"

@@ -3,8 +3,6 @@
 """
     S3 Microsoft Excel codec
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2011 (c) Sahana Software Foundation
     @license: MIT
 

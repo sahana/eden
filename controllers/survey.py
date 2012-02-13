@@ -603,9 +603,8 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
                                   showSectionLabels = False,
                                   layoutBlocks = layoutBlocks
                                  )
-#    if DEBUG:
-#        print >> sys.stdout, "preliminaryMatrix layoutBlocks"
-#        print >> sys.stdout, layoutBlocks
+#    print >> sys.stdout, "preliminaryMatrix layoutBlocks"
+#    print >> sys.stdout, layoutBlocks
     if not justified:
         return preliminaryMatrix
     ######################################################################
@@ -614,9 +613,8 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
     # each widget that is being printed
     ######################################################################
     layoutBlocks.align()
-#    if DEBUG:
-#        print >> sys.stdout, "Aligned layoutBlocks"
-#        print >> sys.stdout, layoutBlocks
+#    print >> sys.stdout, "Aligned layoutBlocks"
+#    print >> sys.stdout, layoutBlocks
     ######################################################################
     # Now rebuild the matrix with the spacing for each widget set up so
     # that the document will be fully justified
@@ -631,9 +629,8 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
                                    langDict,
                                    showSectionLabels = False,
                                   )
-#    if DEBUG:
-#        f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
-#        print >> f, matrix1
+#    f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
+#    print >> f, matrix1
     return (matrix1, matrix2)
 
 def series_export_word(widgetList, langDict, title, logo):

@@ -3,8 +3,6 @@
 """
     S3 Encoder/Decoder Base Class
 
-    @author: Dominic König <dominic[at]aidiq[dot]com>
-
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
 

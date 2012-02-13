@@ -403,7 +403,13 @@ class S3Importer(S3CRUD):
             else:
                 if single_pass:
                     current.session.flash = self.messages.file_uploaded
-                    redirect(URL(r=self.request, f=self.function, args=["import"]))
+                    # For a single pass retain the vars from the original URL 
+                    next_URL = URL(r=self.request,
+                                   f=self.function,
+                                   args=["import"],
+                                   vars=current.request.get_vars
+                                  )
+                    redirect(next_URL)
                 s3.dataTable_vars = {"job" : upload_id}
                 return self.display_job(upload_id)
         return output
@@ -683,9 +689,14 @@ class S3Importer(S3CRUD):
             template = None
         if template is not None:
             url = URL(r=request, c="static", f="formats", args=args)
-            form[0][0].insert(0, TR(TD(A(self.messages.download_template,
-                                         _href=url)),
-                                    _id="template__row"))
+            try:
+                # only add the download link if the template can be opened
+                open("%s/../%s" % (r.folder, url))
+                form[0][0].insert(0, TR(TD(A(self.messages.download_template,
+                                             _href=url)),
+                                        _id="template__row"))
+            except:
+                pass
 
         if form.accepts(r.post_vars, session,
                         formname="upload_form"):

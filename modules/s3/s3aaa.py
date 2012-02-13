@@ -4,9 +4,6 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @author: Dominic König <dominic[at]aidiq[dot]com>
-    @author: Fran Boon <fran[at]aidiq[dot]com>
-
     @copyright: (c) 2010-2012 Sahana Software Foundation
     @license: MIT
 

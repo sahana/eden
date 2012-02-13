@@ -913,23 +913,23 @@ def config():
                     field.writable = False
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(
-                    title_create=T("Add Layer to Config"),
-                    title_display=LAYER_DETAILS,
-                    title_list=LAYERS,
-                    title_update=EDIT_LAYER,
-                    subtitle_create=T("Add New Layer to Config"),
-                    subtitle_list=T("List Layers in Config"),
-                    label_list_button=T("List Layers in Config"),
-                    label_create_button=ADD_LAYER,
-                    label_delete_button = T("Remove Layer from Config"),
-                    msg_record_created=LAYER_ADDED,
-                    msg_record_modified=LAYER_UPDATED,
-                    msg_record_deleted=T("Layer removed from Config"),
-                    msg_list_empty=T("No Layers currently defined in this Config"))
+                    title_create = T("Add Layer Configuration for this Profile"),
+                    title_display = LAYER_DETAILS,
+                    title_list = LAYERS,
+                    title_update = EDIT_LAYER,
+                    subtitle_create = T("Add New Layer Configuration"),
+                    subtitle_list = T("List Layer Configurations in Profile"),
+                    label_list_button = T("List Layer Configurations in Profile"),
+                    label_create_button = ADD_LAYER,
+                    label_delete_button = T("Remove Layer Configuration from Profile"),
+                    msg_record_created = LAYER_ADDED,
+                    msg_record_modified = LAYER_UPDATED,
+                    msg_list_empty = T("No Layers currently configured in this Profile"),
+                )
                 table =  s3db.gis_layer_entity
                 ltable = s3db.gis_layer_config
                 if r.method == "update":
-                    # Existing records don't need to chaneg the layer pointed to (confusing UI & adds validation overheads)
+                    # Existing records don't need to change the layer pointed to (confusing UI & adds validation overheads)
                     ltable.layer_id.writable = False
                     # Hide irrelevant fields
                     query = (table.layer_id == r.component_id)
@@ -991,28 +991,43 @@ def symbology():
     # Pre-process
     def prep(r):
         if r.interactive:
-            if r.component_name == "layer_entity" and r.method != "update":
-                # Only show Layers not yet in this symbology
-                table =  s3db.gis_layer_entity
-                ltable = s3db.gis_layer_symbology
-                # Find the records which are used
-                query = (ltable.layer_id == table.layer_id) & \
-                        (ltable.config_id == r.id)
-                rows = db(query).select(table.layer_id)
-                # Filter them out
-                # Restrict Layers to those which have Markers
-                ltable.layer_id.requires = IS_ONE_OF(db,
-                                                     "gis_layer_entity.layer_id",
-                                                     s3db.gis_layer_represent,
-                                                     filterby="instance_type",
-                                                     filter_opts=("gis_layer_feature",
-                                                                  "gis_layer_georss",
-                                                                  "gis_layer_geojson",
-                                                                  "gis_layer_kml",
-                                                                  ),
-                                                     not_filterby="layer_id",
-                                                     not_filter_opts=[row.layer_id for row in rows]
-                                                    )
+            if r.component_name == "layer_entity":
+                s3.crud_strings[tablename] = Storage(
+                    title_create=T("Configure Layer for this Symbology"),
+                    title_display=LAYER_DETAILS,
+                    title_list=LAYERS,
+                    title_update=EDIT_LAYER,
+                    subtitle_create=T("Add New Layer to Symbology"),
+                    subtitle_list=T("List Layers in Symbology"),
+                    label_list_button=T("List Layers in Symbology"),
+                    label_create_button=ADD_LAYER,
+                    label_delete_button = T("Remove Layer from Symbology"),
+                    msg_record_created=LAYER_ADDED,
+                    msg_record_modified=LAYER_UPDATED,
+                    msg_record_deleted=T("Layer removed from Symbology"),
+                    msg_list_empty=T("No Layers currently defined in this Symbology"))
+                if r.method != "update":
+                    # Only show Layers not yet in this symbology
+                    table =  s3db.gis_layer_entity
+                    ltable = s3db.gis_layer_symbology
+                    # Find the records which are used
+                    query = (ltable.layer_id == table.layer_id) & \
+                            (ltable.config_id == r.id)
+                    rows = db(query).select(table.layer_id)
+                    # Filter them out
+                    # Restrict Layers to those which have Markers
+                    ltable.layer_id.requires = IS_ONE_OF(db,
+                                                         "gis_layer_entity.layer_id",
+                                                         s3db.gis_layer_represent,
+                                                         filterby="instance_type",
+                                                         filter_opts=("gis_layer_feature",
+                                                                      "gis_layer_georss",
+                                                                      "gis_layer_geojson",
+                                                                      "gis_layer_kml",
+                                                                      ),
+                                                         not_filterby="layer_id",
+                                                         not_filter_opts=[row.layer_id for row in rows]
+                                                        )
 
         return True
     response.s3.prep = prep
@@ -1123,6 +1138,77 @@ def layer_entity():
     s3mgr.model.set_method(module, resourcename,
                            method="disable",
                            action=disable_layer)
+
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "config":
+                ltable = s3db.gis_layer_config
+                # Hide irrelevant fields
+                type = r.record.instance_type
+                if type in ("gis_layer_coordinate",
+                            "gis_layer_feature",
+                            "gis_layer_geojson",
+                            "gis_layer_georss",
+                            "gis_layer_gpx",
+                            "gis_layer_kml",
+                            "gis_layer_mgrs",
+                            "gis_layer_wfs",
+                            ):
+                    field = ltable.base
+                    field.readable = False
+                    field.writable = False
+                elif type in ("gis_layer_bing",
+                              "gis_layer_google",
+                              "gis_layer_tms",
+                              ):
+                    field = ltable.visible
+                    field.readable = False
+                    field.writable = False
+                if r.method =="update":
+                    # Existing records don't need to change the config pointed to (confusing UI & adds validation overheads)
+                    ltable.config_id.writable = False
+                else:
+                    # Only show Symbologies not yet defined for this Layer
+                    table =  s3db.gis_config
+                    # Find the records which are used
+                    query = (ltable.config_id == table.id) & \
+                            (ltable.layer_id == r.id)
+                    rows = db(query).select(table.id)
+                    # Filter them out
+                    ltable.config_id.requires = IS_ONE_OF(db,
+                                                          "gis_config.id",
+                                                          "%(name)s",
+                                                          not_filterby="id",
+                                                          not_filter_opts=[row.id for row in rows]
+                                                        )
+                
+            elif r.component_name == "symbology":
+                ltable = s3db.gis_layer_symbology
+                # Hide irrelevant fields
+                type = r.record.instance_type
+                if type != "gis_layer_feature":
+                    field = ltable.gps_marker
+                    field.readable = False
+                    field.writable = False
+                if r.method =="update":
+                    # Existing records don't need to change the symbology pointed to (confusing UI & adds validation overheads)
+                    ltable.symbology_id.writable = False
+                else:
+                    # Only show Symbologies not yet defined for this Layer
+                    table =  s3db.gis_symbology
+                    # Find the records which are used
+                    query = (ltable.symbology_id == table.id) & \
+                            (ltable.layer_id == r.id)
+                    rows = db(query).select(table.id)
+                    # Filter them out
+                    ltable.symbology_id.requires = IS_ONE_OF(db,
+                                                             "gis_symbology.id",
+                                                             "%(name)s",
+                                                             not_filterby="id",
+                                                             not_filter_opts=[row.id for row in rows]
+                                                            )
+        return True
+    response.s3.prep = prep
 
     # Post-processor
     def postp(r, output):
