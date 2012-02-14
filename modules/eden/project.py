@@ -800,7 +800,7 @@ class S3ProjectModel(S3Model):
             try:
                 query = (table.name.lower() == name.lower())
             except AttributeError, exception:
-                s3_debug("project_deduplicate", exception)
+                s3_debug("project_deduplicate", exception.message)
             else:
                 duplicate = current.db(query).select(table.id,
                                                      limitby=(0, 1)).first()
