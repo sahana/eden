@@ -492,6 +492,7 @@ class S3BulkImporter(object):
                 duration = duration.total_seconds()/60
             except AttributeError:
                 # older Python
+                from __future__ import division
                 duration = (duration.microseconds + (duration.seconds + duration.days * 24 * 3600) * 10**6) / 10**6
             msg = "   %s import job completed in %s mins" % \
                 (csvName, '{:.2f}'.format(duration))
