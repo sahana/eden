@@ -293,8 +293,8 @@ class S3Cube(S3CRUD):
                         TD(select_cols),
                     ),
                     TR(
-                        TD(LABEL("Fact:"), _class="w2p_fl"),
-                        TD(LABEL("Aggregation Method:"), _class="w2p_fl")
+                        TD(LABEL("Value:"), _class="w2p_fl"),
+                        TD(LABEL("Function for Value:"), _class="w2p_fl")
                     ),
                     TR(
                         TD(select_fact),

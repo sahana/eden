@@ -254,8 +254,6 @@ class S3ProjectModel(S3Model):
                                    writable=False if drr else True,
                                    label = T("Budget")),
                              sector_id(
-                                       readable=False,
-                                       writable=False,
                                        widget=lambda f, v: \
                                        CheckboxesWidget.widget(f, v, cols=3)),
                               countries_id(
@@ -313,6 +311,12 @@ class S3ProjectModel(S3Model):
             next = "organisation"
         else:
             next = "activity"
+            
+        if drr:
+            table.virtualfields.append(S3ProjectVirtualfields())
+            organisation_field =  (T("Lead Organisation"), "organisation")
+        else:
+            organisation_field = "organisation_id"
         configure(tablename,
                   super_entity="doc_entity",
                   deduplicate=self.project_project_deduplicate,
@@ -322,10 +326,13 @@ class S3ProjectModel(S3Model):
                                   args=["[id]", next]),
                   list_fields=["id",
                                "name",
-                               "organisation_id",
-                               #"countries_id",
+                               organisation_field,
+                               "sector_id",
                                "start_date",
                                "end_date",
+                               "countries_id",
+                               "multi_hazard_id",
+                               "multi_theme_id",
                                ])
         # Reusable Field
         project_id = S3ReusableField("project_id", db.project_project,
@@ -1121,7 +1128,7 @@ class S3ProjectDRRModel(S3Model):
         # Resource Configuration?
 
         # Reusable Field
-        bnf_type = S3ReusableField("bnf_type", db.project_beneficiary_type,
+        beneficiary_type_id = S3ReusableField("beneficiary_type_id", db.project_beneficiary_type,
                                    requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                    "project_beneficiary_type.id",
                                                                    self.beneficiary_type_represent)),
@@ -1130,7 +1137,7 @@ class S3ProjectDRRModel(S3Model):
                                    comment = s3_popup_comment(c="project",
                                                               f="beneficiary_type",
                                                               title=ADD_BNF_TYPE,
-                                                              tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Beneficiary Type'.")),
+                                                              tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
                                    ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
@@ -1142,7 +1149,7 @@ class S3ProjectDRRModel(S3Model):
                                   project_id(readable=False,
                                              writable=False),
                                   activity_id(comment=None),
-                                  bnf_type(),
+                                  beneficiary_type_id(),
                                   Field("number", "integer",
                                         label = T("Quantity"),
                                         requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999))),
@@ -1172,10 +1179,24 @@ class S3ProjectDRRModel(S3Model):
             msg_record_deleted = T("Beneficiaries Deleted"),
             msg_list_empty = T("No Beneficiaries Found")
         )
+        
+        table.virtualfields.append(S3ProjectBeneficiaryVirtualfields())
 
         # Search Method?
 
         # Resource Configuration
+        report_fields=[
+                      "activity_id",
+                      (T("Beneficiary Type"), "beneficiary_type_id"),
+                      "project_id",
+                      "project_id$multi_hazard_id",
+                      "project_id$multi_theme_id",
+                      "activity_id$multi_activity_type_id"
+                     ]
+        lh = current.gis.get_location_hierarchy()
+        if lh:
+            lh = [(lh[opt], opt) for opt in lh]
+            report_fields.extend(lh)
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,
@@ -1183,20 +1204,12 @@ class S3ProjectDRRModel(S3Model):
                             S3SearchOptionsWidget(field=["project_id"],
                                                   name="project",
                                                   label=T("Project")),
-                            S3SearchOptionsWidget(field=["bnf_type"],
-                                                  name="bnf_type",
+                            S3SearchOptionsWidget(field=["beneficiary_type_id"],
+                                                  name="beneficiary_type_id",
                                                   label=T("Beneficiary Type")),
                         ],
-                        report_rows=[
-                                      "activity_id",
-                                      "project_id",
-                                      "project_id$multi_hazard_id",
-                                      "project_id$multi_theme_id",
-                                      "activity_id$multi_activity_type_id"
-                                     ],
-                        report_cols=[
-                                      (T("Beneficiary Type"), "bnf_type"),
-                                     ],
+                        report_rows=report_fields,
+                        report_cols=report_fields,
                         report_fact=["number"],
                         report_method=["sum"])
 
@@ -1343,13 +1356,13 @@ class S3ProjectDRRModel(S3Model):
         if item.id:
             return
         if item.tablename == "project_beneficiary" and \
-            "bnf_type" in item.data and \
+            "beneficiary_type_id" in item.data and \
             "activity_id" in item.data:
             # Match beneficiary by type and activity_id
             table = item.table
-            bnf_type = item.data.bnf_type
+            beneficiary_type_id = item.data.beneficiary_type_id
             activity_id = item.data.activity_id
-            query = (table.bnf_type == bnf_type) & \
+            query = (table.beneficiary_type_id == beneficiary_type_id) & \
                     (table.activity_id == activity_id)
             duplicate = db(query).select(table.id,
                                             limitby=(0, 1)).first()
@@ -2467,6 +2480,30 @@ def task_notify(form):
     return
 
 # =============================================================================
+class S3ProjectVirtualfields:
+    """ Virtual fields for the project_activity table """
+
+    def organisation(self):
+        """ Name of the lead organisation of the project """
+
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        otable = s3db.org_organisation
+        ltable = s3db.project_organisation
+        LEAD_ROLE = s3.project_organisation_lead_role
+        query = (ltable.deleted != True) & \
+                (ltable.project_id == self.project_project.id) & \
+                (ltable.role == LEAD_ROLE) & \
+                (ltable.organisation_id == otable.id)
+        org = db(query).select(otable.name,
+                               limitby=(0, 1)).first()
+        if org:
+            return org.name
+        else:
+            return None
+# =============================================================================
 class S3ProjectActivityVirtualfields:
     """ Virtual fields for the project_activity table """
 
@@ -2536,6 +2573,105 @@ class S3ProjectActivityVirtualfields:
             return parents["L3"]
         else:
             return None
+
+# =============================================================================
+class S3ProjectBeneficiaryVirtualfields:
+    """ Virtual fields for the project_beneficiary table """
+
+    extra_fields = ["activity_id"]
+
+    def L0(self):
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        atable = s3db.project_activity
+        query = (atable.id == self.project_beneficiary.activity_id)
+        activity = db(query).select(atable.location_id,
+                                    limitby=(0, 1)).first()
+
+        if activity:
+            parents = Storage()
+            parents = current.gis.get_parent_per_level(parents,
+                                                       activity.location_id,
+                                                       ids=False,
+                                                       names=True)
+            if "L0" in parents:
+                return parents["L0"]
+            else:
+                return current.messages.NONE
+        else:
+            return current.messages.NONE
+
+
+    def L1(self):
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        atable = s3db.project_activity
+        query = (atable.id == self.project_beneficiary.activity_id)
+        activity = db(query).select(atable.location_id,
+                                    limitby=(0, 1)).first()
+
+        if activity:
+            parents = Storage()
+            parents = current.gis.get_parent_per_level(parents,
+                                                       activity.location_id,
+                                                       ids=False,
+                                                       names=True)
+            if "L1" in parents:
+                return parents["L1"]
+            else:
+                return current.messages.NONE
+        else:
+            return current.messages.NONE
+
+    def L2(self):
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        atable = s3db.project_activity
+        query = (atable.id == self.project_beneficiary.activity_id)
+        activity = db(query).select(atable.location_id,
+                                    limitby=(0, 1)).first()
+
+        if activity:
+            parents = Storage()
+            parents = current.gis.get_parent_per_level(parents,
+                                                       activity.location_id,
+                                                       ids=False,
+                                                       names=True)
+            if "L2" in parents:
+                return parents["L2"]
+            else:
+                return current.messages.NONE
+        else:
+            return current.messages.NONE
+
+    def L3(self):
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        atable = s3db.project_activity
+        query = (atable.id == self.project_beneficiary.activity_id)
+        activity = db(query).select(atable.location_id,
+                                    limitby=(0, 1)).first()
+
+        if activity:
+            parents = Storage()
+            parents = current.gis.get_parent_per_level(parents,
+                                                       activity.location_id,
+                                                       ids=False,
+                                                       names=True)
+            if "L3" in parents:
+                return parents["L3"]
+            else:
+                return current.messages.NONE
+        else:
+            return current.messages.NONE
 
 # =============================================================================
 class S3ProjectActivityContactVirtualFields:

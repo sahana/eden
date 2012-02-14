@@ -1002,6 +1002,7 @@ def inv_recv_rheader(r):
 
             T = current.T
             s3 = current.response.s3
+            auth = current.auth
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "recv_item"),
@@ -1043,7 +1044,7 @@ def inv_recv_rheader(r):
             rfooter = TAG[""]()
 
             if record.status == SHIP_STATUS_IN_PROCESS:
-                if current.auth.s3_has_permission("update",
+                if auth.s3_has_permission("update",
                                                   "inv_recv",
                                                   record_id=record.id):
                     recv_btn = A( T("Receive Shipment"),
