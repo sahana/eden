@@ -104,6 +104,7 @@ class S3ProjectModel(S3Model):
         add_component = self.add_component
         configure = self.configure
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Theme
@@ -197,7 +198,7 @@ class S3ProjectModel(S3Model):
 
         tablename = "project_project"
         table = define_table(tablename,
-                             self.super_link("doc_id", "doc_entity"),
+                             super_link("doc_id", "doc_entity"),
                              # drr uses the separate project_organisation table
                              organisation_id(
                                           readable=False if drr else True,
@@ -218,14 +219,19 @@ class S3ProjectModel(S3Model):
                                    ),
                              Field("description", "text",
                                    label = T("Description")),
+                             # NB There is additional client-side validation for start/end date in the Controller
                              Field("start_date", "date",
                                    label = T("Start date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
                              Field("end_date", "date",
                                    label = T("End date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
                              Field("duration",
                                    readable=False,
                                    writable=False,
@@ -443,7 +449,7 @@ class S3ProjectModel(S3Model):
         #
         tablename = "project_activity"
         table = define_table(tablename,
-                             self.super_link("doc_id", "doc_entity"),
+                             super_link("doc_id", "doc_entity"),
                              project_id(),
                              Field("name",
                                    label = T("Short Description"),

@@ -57,6 +57,9 @@ class S3PatientModel(S3Model):
 
         messages = current.messages
         
+        s3_date_format = current.deployment_settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+
         # ---------------------------------------------------------------------
         # Patients
 
@@ -79,8 +82,18 @@ class S3PatientModel(S3Model):
                                               label = T("Current Location Treating Hospital")),
                                   Field("phone", requires=s3_phone_requires,
                                         label=T("Current Location Phone Number")),
-                                  Field("treatment_date", "date", label=T("Date of Treatment")),
-                                  Field("return_date", "date", label=T("Expected Return Home")),
+                                  Field("treatment_date", "date",
+                                        label=T("Date of Treatment"),
+                                        represent = s3_date_represent,
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                        widget = S3DateWidget()
+                                        ),
+                                  Field("return_date", "date",
+                                        label=T("Expected Return Home"),
+                                        represent = s3_date_represent,
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                        widget = S3DateWidget()
+                                       ),
                                   s3.comments(),
                                   *s3.meta_fields())
 

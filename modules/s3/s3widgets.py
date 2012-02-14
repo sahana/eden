@@ -104,8 +104,6 @@ class S3DateWidget(FormWidget):
     """
         Standard Date widget, but with a modified yearRange to support Birth dates
 
-        @author: Fran Boon (fran@aidiq.com)
-
         @ToDo: Fix for US-style date formats
     """
 
@@ -117,7 +115,7 @@ class S3DateWidget(FormWidget):
 
         if not format:
             # default: "yy-mm-dd"
-            format = current.deployment_settings.get_L10n_date_format().replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd")
+            format = current.deployment_settings.get_L10n_date_format().replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd").replace("%b", "M")
         self.format = format
         self.past = past
         self.future = future
@@ -160,8 +158,6 @@ class S3DateTimeWidget(FormWidget):
     """
         Standard DateTime widget, based on the widget above, but instead of using
         jQuery datepicker we use Anytime.
-
-        @author: Fran Boon (fran@aidiq.com)
     """
 
     def __init__(self,
@@ -310,8 +306,6 @@ class S3UploadWidget(UploadWidget):
             - This now been included as standard within Web2Py from r2867
             - Leaving this unused example in the codebase so that we can easily
               amend this if we wish to later
-
-        @author: Fran Boon (fran@aidiq.com)
     """
 
     @staticmethod
@@ -362,8 +356,6 @@ class S3AutocompleteWidget(FormWidget):
 
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
-
-        @author: Fran Boon (fran@aidiq.com)
     """
 
     def __init__(self,
@@ -520,7 +512,6 @@ class S3LocationAutocompleteWidget(FormWidget):
         the location create form).
         S3LocationSelectorWidget may be more appropriate for specific locations.
 
-        @author: Fran Boon (fran@aidiq.com)
         @todo: .represent for the returned data
         @todo: Refreshes any dropdowns as-necessary (post_process)
     """
@@ -606,8 +597,6 @@ class S3OrganisationAutocompleteWidget(FormWidget):
         Renders an org_organisation SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses name & acronym fields
 
-        @author: Fran Boon (fran@aidiq.com)
-
         @ToDo: Add an option to hide the widget completely when using the Org from the Profile
                - i.e. prevent user overrides
     """
@@ -664,8 +653,6 @@ class S3PersonAutocompleteWidget(FormWidget):
     """
         Renders a pr_person SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses 3 name fields
-
-        @author: Fran Boon (fran@aidiq.com)
 
         @ToDo: Migrate to template (initial attempt failed)
     """
@@ -825,8 +812,6 @@ class S3SiteAutocompleteWidget(FormWidget):
         Renders an org_site SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses name & type fields
         in the represent
-
-        @author: Fran Boon (fran@aidiq.com)
     """
 
     def __init__(self,
@@ -1108,8 +1093,6 @@ class S3LocationDropdownWidget(FormWidget):
     """
         Renders a dropdown for an Lx level of location hierarchy
 
-        For LA this is used for States
-        For Trunk this could be useful for Countries
     """
 
     def __init__(self, level="L0", default=None, empty=False):
@@ -1202,8 +1185,6 @@ class S3LocationSelectorWidget(FormWidget):
                 Active Tab: 'View Location Details' (Fields are read-only)
                 Inactive Tab: 'Edit Location Details' (Fields are writable)
                 @ToDo: Inactive Tab: 'Move Location': Defaults to Searching for an Existing Location, with a button to 'Create New Location'
-
-        @author: Fran Boon (fran@aidiq.com)
 
         @see: http://eden.sahanafoundation.org/wiki/BluePrintGISLocationSelector
     """
@@ -1900,8 +1881,6 @@ class S3CheckboxesWidget(OptionsWidget):
         Generates a TABLE tag with <num_column> columns of INPUT
         checkboxes (multiple allowed)
 
-        @author: Michael Howden (michael@aidiq.com)
-
         help_lookup_table_name_field will display tooltip help
 
         :param db: int -
@@ -2039,8 +2018,6 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         Standard MultipleOptionsWidget, but using the jQuery UI:
         http://www.quasipartikel.at/multiselect/
         static/scripts/S3/ui.multiselect.js
-
-        @author: Fran Boon (fran@aidiq.com)
     """
 
     def __init__(self):
@@ -2085,8 +2062,6 @@ class S3ACLWidget(CheckboxesWidget):
 
     """
         Widget class for ACLs
-
-        @author: Dominic König <dominic@aidiq.com>
 
         @todo: add option dependency logic (JS)
         @todo: configurable vertical/horizontal alignment
@@ -2409,11 +2384,12 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
 # -----------------------------------------------------------------------------
 class S3AutocompleteOrAddWidget(FormWidget):
-    """This widget searches for or adds an object. It contains:
+    """
+        This widget searches for or adds an object. It contains:
 
-    - an autocomplete field which can be used to search for an existing object.
-    - an add widget which is used to add an object.
-        It fills the field with that object after successful addition
+        - an autocomplete field which can be used to search for an existing object.
+        - an add widget which is used to add an object.
+            It fills the field with that object after successful addition
     """
     def __init__(
         self,
@@ -2434,15 +2410,16 @@ class S3AutocompleteOrAddWidget(FormWidget):
 
 # -----------------------------------------------------------------------------
 class S3AddObjectWidget(FormWidget):
-    """This widget displays an inline form loaded via AJAX on demand.
+    """
+        This widget displays an inline form loaded via AJAX on demand.
 
-    In the browser:
-        A load request must made to this widget to enable it.
-        The load request must include:
-            - a URL for the form
+        In the browser:
+            A load request must made to this widget to enable it.
+            The load request must include:
+                - a URL for the form
 
-        after a successful submission, the response callback is handed the
-        response.
+            after a successful submission, the response callback is handed the
+            response.
     """
     def __init__(
         self,
@@ -2632,8 +2609,6 @@ $(function () {
 class S3SearchAutocompleteWidget(FormWidget):
     """
         Uses the s3Search Module
-
-        @author: Michael Howden (michael@aidiq.com)
     """
 
     def __init__(self,

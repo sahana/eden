@@ -129,11 +129,12 @@ class S3InventoryModel(S3Model):
                                   #Field("pack_quantity",
                                   #      "double",
                                   #      compute = record_pack_quantity), # defined in 06_supply
-                                  Field("expiry_date",
-                                        "date",
+                                  Field("expiry_date", "date",
                                         label = T("Expiry Date"),
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
-                                        represent = s3_date_represent),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget()
+                                        ),
                                   # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                                   #Field("status"),
                                   s3.comments(),
@@ -353,18 +354,18 @@ class S3IncomingModel(S3Model):
 
         tablename = "inv_recv"
         table = self.define_table(tablename,
-                                  Field("eta",
-                                        "date",
+                                  Field("eta", "date",
                                         label = T("Date Expected"),
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
+                                        widget = S3DateWidget()
                                         ),
-                                  Field("date",
-                                        "date",
+                                  Field("date", "date",
                                         label = T("Date Received"),
                                         writable = False,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
+                                        widget = S3DateWidget(),
                                         #readable = False # unless the record is locked
                                         ),
                                   Field("type",
@@ -731,12 +732,12 @@ class S3DistributionModel(S3Model):
         #
         tablename = "inv_send"
         table = self.define_table(tablename,
-                                  Field("date",
-                                        "date",
+                                  Field("date", "date",
                                         label = T("Date Sent"),
                                         writable = False,
-                                        #requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
+                                        widget = S3DateWidget()
                                         ),
                                   person_id(name = "sender_id",
                                             label = T("Sent By"),
@@ -752,11 +753,11 @@ class S3DistributionModel(S3Model):
                                              #              _title="%s|%s" % (T("From Warehouse"),
                                              #                                T("Enter some characters to bring up a list of possible matches"))),
                                             represent=org_site_represent),
-                                  Field("delivery_date",
-                                        "date",
+                                  Field("delivery_date", "date",
                                         label = T("Est. Delivery Date"),
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
+                                        widget = S3DateWidget()
                                         ),
                                   Field("to_site_id",
                                         self.org_site,

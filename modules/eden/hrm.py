@@ -115,18 +115,18 @@ class S3HRModel(S3Model):
                                             hrm_status_opts.get(opt,
                                                                 UNKNOWN_OPT)),
                                   # Contract
-                                  Field("start_date",
-                                        "date",
-                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
-                                        widget = S3DateWidget(),
+                                  Field("start_date", "date",
                                         label = T("Start Date"),
-                                        represent = s3_date_represent),
-                                  Field("end_date",
-                                        "date",
                                         requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
-                                        widget = S3DateWidget(),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget()
+                                        ),
+                                  Field("end_date", "date",
                                         label = T("End Date"),
-                                        represent = s3_date_represent),
+                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget()
+                                        ),
                                   # Base location + Site
                                   location_id(label=T("Base Location"),
                                               readable=False,
@@ -1057,11 +1057,17 @@ class S3HRSkillModel(S3Model):
                                             hrm_performance_opts.get(opt,
                                                                      UNKNOWN_OPT)),
                                   Field("date_received", "date",
+                                        label = T("Date Received"),
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
-                                        label = T("Date Received")),
+                                        widget = S3DateWidget(),
+                                        ),
                                   Field("date_expires", "date",   # @ToDo: Widget to make this process easier (date received + 6/12 months)
+                                        label = T("Expiry Date"),
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
-                                        label = T("Expiry Date")),
+                                        widget = S3DateWidget(),
+                                        ),
                                   *s3.meta_fields())
 
         s3.crud_strings[tablename] = Storage(
@@ -1358,7 +1364,12 @@ class S3HRSkillModel(S3Model):
                                   certificate_id(),
                                   Field("number", label=T("License Number")),
                                   #Field("status", label=T("Status")),
-                                  Field("date", "date", label=T("Expiry Date")),
+                                  Field("date", "date",
+                                        label=T("Expiry Date"),
+                                        represent = s3_date_represent,
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                        widget = S3DateWidget()
+                                        ),
                                   Field("image", "upload", label=T("Scanned Copy")),
                                   # This field can only be filled-out by specific roles
                                   # Once this has been filled-out then the other fields are locked
@@ -1474,15 +1485,17 @@ class S3HRSkillModel(S3Model):
                                   person_id(),
                                   organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                   Field("start_date", "date",
+                                        label=T("Start Date"),
                                         requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         widget = S3DateWidget(),
-                                        label=T("Start Date")),
+                                        ),
                                   Field("end_date", "date",
+                                        label=T("End Date"),
                                         requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         widget = S3DateWidget(),
-                                        label=T("End Date")),
+                                        ),
                                   Field("hours", "integer",
                                         label=T("Hours")),
                                   Field("place",              # We could make this an event_id?
