@@ -1122,7 +1122,7 @@ span.tab_other {
 div.tabs span.tab_here {
 	display: inline;
     position: relative;
-    bottom: 1px;
+    bottom: 0px;
     background: #f0f3f4;
     border-width: 2px 1px 0 3px;
     border-style: solid;

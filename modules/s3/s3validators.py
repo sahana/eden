@@ -550,8 +550,7 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
         query = (field == value)
         if "deleted" in table:
             query = (table["deleted"] == False) & query
-        rows = dbset(query,
-                     ignore_common_filters = self.ignore_common_filters).select(limitby=(0, 1))
+        rows = dbset(query).select(limitby=(0, 1))
         if len(rows) > 0:
             if isinstance(self.record_id, dict):
                 for f in self.record_id:
