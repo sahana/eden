@@ -841,7 +841,7 @@ class S3XML(S3Codec):
                 value = encode_iso_datetime(v).decode("utf-8")
             elif fieldtype in ("date", "time"):
                 value = str(formatter(v)).decode("utf-8")
-            if represent is not None:
+            if represent is not None and fieldtype != "id":
                 text = _repr(table, f, v)
             elif value is not None:
                 text = xml_encode(value)
