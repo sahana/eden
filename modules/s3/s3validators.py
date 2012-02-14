@@ -548,8 +548,7 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
         table = dbset.db[tablename]
         field = table[fieldname]
         query = (field == value)
-        rows = dbset(query,
-                     ignore_common_filters = self.ignore_common_filters).select(limitby=(0, 1))
+        rows = dbset(query).select(limitby=(0, 1))
         if "deleted" in table:
             query = (table["deleted"] == False) & query
         if len(rows) > 0:
