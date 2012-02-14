@@ -327,7 +327,6 @@ def task():
                         listadd=False)
         try:
             # Add Virtual Fields
-            table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
             list_fields = s3mgr.model.get_config(tablename,
                                                  "list_fields")
             list_fields.insert(4, (T("Project"), "project"))
@@ -357,39 +356,9 @@ def task():
         s3.crud_strings[tablename].title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
         s3.crud_strings[tablename].msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
         # Add Virtual Fields
-        table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
         list_fields.insert(2, (T("Activity"), "activity"))
-        # task_search = s3base.S3Search(
-                # advanced = (s3base.S3SearchSimpleWidget(
-                    # name = "task_search_text_advanced",
-                    # label = T("Search"),
-                    # comment = T("Search for a Task by description."),
-                    # field = [ "name",
-                              # "description",
-                            # ]
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_activity",
-                        # label = T("Activity"),
-                        # field = ["activity"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_assignee",
-                        # label = T("Assigned To"),
-                        # field = ["pe_id"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchMinMaxWidget(
-                        # name="task_search_date_due",
-                        # method="range",
-                        # label=T("Date Due"),
-                        # field=["date_due"]
-                    # )
-                # )
-            # )
         s3mgr.configure(tablename,
                         # Block Add until we get the injectable component lookups
                         insertable=False,
@@ -404,47 +373,10 @@ def task():
     else:
         s3.crud_strings[tablename].title_list = T("All Tasks")
         s3.crud_strings[tablename].title_search = T("All Tasks")
-        # Add Virtual Fields
-        table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
-        # task_search = s3base.S3Search(
-                # advanced = (s3base.S3SearchSimpleWidget(
-                    # name = "task_search_text_advanced",
-                    # label = T("Search"),
-                    # comment = T("Search for a Task by description."),
-                    # field = [ "name",
-                              # "description",
-                            # ]
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_project",
-                        # label = T("Project"),
-                        # field = ["project"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_activity",
-                        # label = T("Activity"),
-                        # field = ["activity"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_assignee",
-                        # label = T("Assigned To"),
-                        # field = ["pe_id"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchMinMaxWidget(
-                        # name="task_search_date_due",
-                        # method="range",
-                        # label=T("Date Due"),
-                        # field=["date_due"]
-                    # )
-                # )
-            # )
         s3mgr.configure(tablename,
                         # Block Add until we get the injectable component lookups
                         insertable=False,
@@ -453,7 +385,6 @@ def task():
                                                          name="project",
                                                          label=T("Project"))
                         ],
-                        #search_method=search,
                         list_fields=list_fields)
         if "open" in request.get_vars:
             # Show Only Open Tasks

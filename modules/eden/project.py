@@ -103,6 +103,7 @@ class S3ProjectModel(S3Model):
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -211,7 +212,8 @@ class S3ProjectModel(S3Model):
                                    # and key-based de-duplication (i.e. before field validation)
                                    unique = True,
                                    requires = [IS_NOT_EMPTY(error_message=T("Please fill this!")),
-                                               IS_NOT_ONE_OF(db, "project_project.name")]),
+                                               IS_NOT_ONE_OF(db, "project_project.name")]
+                                   ),
                              Field("code",
                                    label = T("Code"),
                                    readable=False,
@@ -236,9 +238,9 @@ class S3ProjectModel(S3Model):
                                    readable=False,
                                    writable=False,
                                    label = T("Duration")),
-                              Field("calendar",
+                             Field("calendar",
                                    readable=False if drr else True,
-                                  writable=False if drr else True,
+                                   writable=False if drr else True,
                                    label = T("Calendar"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    comment = DIV(_class="tooltip",
@@ -258,12 +260,14 @@ class S3ProjectModel(S3Model):
                                        #writable=False,
                                        widget=lambda f, v: \
                                        CheckboxesWidget.widget(f, v, cols=3)),
-                              countries_id(
+                             countries_id(
                                           readable=drr,
                                           writable=drr
                                          ),
-                             multi_hazard_id(readable=drr,
-                                             writable=drr),
+                             multi_hazard_id(
+                                            readable=drr,
+                                            writable=drr
+                                            ),
                              multi_theme_id(
                                             readable=drr,
                                             writable=drr
@@ -276,7 +280,7 @@ class S3ProjectModel(S3Model):
                                                                    multiple = True)),
                                    represent = self.hfa_opts_represent,
                                    widget = CheckboxesWidgetS3.widget),
-                              Field("objectives", "text",
+                             Field("objectives", "text",
                                    readable = drr,
                                    writable = drr,
                                    label = T("Objectives")),
@@ -288,7 +292,7 @@ class S3ProjectModel(S3Model):
 
         # CRUD Strings
         ADD_PROJECT = T("Add Project")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_PROJECT,
             title_display = T("Project Details"),
             title_list = T("List Projects"),
@@ -306,7 +310,68 @@ class S3ProjectModel(S3Model):
             msg_record_deleted = T("Project deleted"),
             msg_list_empty = T("No Projects currently registered"))
 
-        # Search Method?
+        # Search Method
+        if settings.get_ui_cluster():
+            sector = T("Cluster")
+        else:
+            sector = T("Sector")
+        if drr:
+            project_search = S3Search(
+                    advanced = (
+                        S3SearchSimpleWidget(
+                            name = "project_search_text_advanced",
+                            label = T("Description"),
+                            comment = T("Search for a Project by description."),
+                            field = [ "name",
+                                      "description",
+                                    ]
+                        ),
+                        S3SearchOptionsWidget(
+                            name = "project_search_sector",
+                            label = sector,
+                            field = ["sector_id"],
+                            cols = 4
+                        ),
+                        S3SearchOptionsWidget(
+                            name = "project_search_hazard",
+                            label = T("Hazard"),
+                            field = ["multi_hazard_id"],
+                            cols = 4
+                        ),
+                        S3SearchOptionsWidget(
+                            name = "project_search_theme",
+                            label = T("Theme"),
+                            field = ["multi_theme_id"],
+                            cols = 4
+                        ),
+                        S3SearchOptionsWidget(
+                            name = "project_search_hfa",
+                            label = T("HFA"),
+                            field = ["hfa"],
+                            cols = 4
+                        ),
+                    )
+                )
+        else:
+            project_search = S3Search(
+                    advanced = (
+                        S3SearchSimpleWidget(
+                            name = "project_search_text_advanced",
+                            label = T("Description"),
+                            comment = T("Search for a Project by description."),
+                            field = [ "name",
+                                      "description",
+                                    ]
+                        ),
+                        S3SearchOptionsWidget(
+                            name = "project_search_sector",
+                            label = sector,
+                            field = ["sector_id"],
+                            cols = 4
+                        ),
+                    )
+                )
+            
 
         # Resource Configuration
         if drr:
@@ -341,6 +406,7 @@ class S3ProjectModel(S3Model):
                   onaccept=self.project_project_onaccept,
                   create_next=URL(c="project", f="project",
                                   args=["[id]", next]),
+                  search_method=project_search,
                   list_fields=list_fields)
 
         # Reusable Field
@@ -403,7 +469,7 @@ class S3ProjectModel(S3Model):
         # CRUD Strings
         ADD_ACTIVITY_TYPE = T("Add Activity Type")
         LIST_ACTIVITY_TYPES = T("List of Activity Types")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ACTIVITY_TYPE,
             title_display = T("Activity Type"),
             title_list = LIST_ACTIVITY_TYPES,
@@ -500,7 +566,7 @@ class S3ProjectModel(S3Model):
         if pca:
             ADD_ACTIVITY = T("Add Community")
             LIST_ACTIVITIES = T("List Communities")
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = ADD_ACTIVITY,
                 title_display = T("Community Details"),
                 title_list = LIST_ACTIVITIES,
@@ -521,7 +587,7 @@ class S3ProjectModel(S3Model):
         else:
             ADD_ACTIVITY = T("Add Activity")
             LIST_ACTIVITIES = T("List Activities")
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = ADD_ACTIVITY,
                 title_display = T("Activity Details"),
                 title_list = LIST_ACTIVITIES,
@@ -653,7 +719,7 @@ class S3ProjectModel(S3Model):
             LIST_OF_CONTACTS = T("Community Contacts")
         else:
             LIST_OF_CONTACTS = T("Contacts")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_CONTACT,
             title_display = T("Contact Details"),
             title_list = LIST_CONTACTS,
@@ -797,8 +863,11 @@ class S3ProjectModel(S3Model):
             # Match project by name (all-lowercase)
             table = item.table
             name = item.data.name
-            if name:
+            try:
                 query = (table.name.lower() == name.lower())
+            except AttributeError, exception:
+                s3_debug("project_deduplicate", exception.message)
+            else:
                 duplicate = current.db(query).select(table.id,
                                                      limitby=(0, 1)).first()
                 if duplicate:
@@ -1424,6 +1493,7 @@ class S3ProjectTaskModel(S3Model):
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -1448,7 +1518,7 @@ class S3ProjectTaskModel(S3Model):
 
         # CRUD Strings
         ADD_MILESTONE = T("Add Milestone")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_MILESTONE,
             title_display = T("Milestone Details"),
             title_list = T("List Milestones"),
@@ -1611,7 +1681,7 @@ class S3ProjectTaskModel(S3Model):
         # CRUD Strings
         ADD_TASK = T("Add Task")
         LIST_TASKS = T("List Tasks")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_TASK,
             title_display = T("Task Details"),
             title_list = LIST_TASKS,
@@ -1634,19 +1704,18 @@ class S3ProjectTaskModel(S3Model):
         # Search Method
         task_search = S3Search(
                 advanced = (
-                    # These require the Virtual Fields which are added only in Controller
-                    # S3SearchOptionsWidget(
-                        # name = "task_search_project",
-                        # label = T("Project"),
-                        # field = ["project"],
-                        # cols = 3
-                    # ),
-                    # S3SearchOptionsWidget(
-                        # name = "task_search_activity",
-                        # label = T("Activity"),
-                        # field = ["activity"],
-                        # cols = 3
-                    # ),
+                    S3SearchOptionsWidget(
+                        name = "task_search_project",
+                        label = T("Project"),
+                        field = ["project"],
+                        cols = 3
+                    ),
+                    S3SearchOptionsWidget(
+                        name = "task_search_activity",
+                        label = T("Activity"),
+                        field = ["activity"],
+                        cols = 3
+                    ),
                     S3SearchOptionsWidget(
                         name = "task_search_priority",
                         label = T("Priority"),
@@ -1870,7 +1939,7 @@ class S3ProjectTaskModel(S3Model):
 
         # CRUD Strings
         ADD_TIME = T("Log Time Spent")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_TIME,
             title_display = T("Logged Time Details"),
             title_list = T("List Logged Time"),

@@ -904,6 +904,7 @@ class S3GISConfigModel(S3Model):
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -933,7 +934,7 @@ class S3GISConfigModel(S3Model):
         # CRUD Strings
         ADD_MARKER = T("Add Marker")
         LIST_MARKERS = T("List Markers")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_MARKER,
             title_display = T("Marker Details"),
             title_list = T("Markers"),
@@ -1010,7 +1011,7 @@ class S3GISConfigModel(S3Model):
         # CRUD Strings
         ADD_PROJECTION = T("Add Projection")
         LIST_PROJECTIONS = T("List Projections")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_PROJECTION,
             title_display = T("Projection Details"),
             title_list = T("Projections"),
@@ -1067,7 +1068,7 @@ class S3GISConfigModel(S3Model):
 
         ADD_SYMBOLOGY = T("Add Symbology")
         LIST_SYMBOLOGIES = T("List Symbologies")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_SYMBOLOGY,
             title_display = T("Symbology"),
             title_list = T("Symbologies"),
@@ -1222,7 +1223,7 @@ class S3GISConfigModel(S3Model):
 
         ADD_CONFIG = T("Add Map Configuration")
         LIST_CONFIGS = T("List Map Configurations")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_CONFIG,
             title_display = T("Map Configuration"),
             title_list = T("Map Configurations"),
@@ -1294,7 +1295,7 @@ class S3GISConfigModel(S3Model):
         # CRUD Strings
         # ADD_MENU = T("Add Menu Entry")
         # LIST_MENUS = T("List Menu Entries")
-        # s3.crud_strings[tablename] = Storage(
+        # crud_strings[tablename] = Storage(
             # title_create = ADD_MENU,
             # title_display = T("Menu Entry Details"),
             # title_list = T("Menu Entries"),
@@ -1707,6 +1708,7 @@ class S3LayerEntityModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
+        crud_strings = s3.crud_strings
         define_table = self.define_table
 
         # =====================================================================
@@ -1737,7 +1739,7 @@ class S3LayerEntityModel(S3Model):
                                   ##roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                                 )
 
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
                     title_create = T("Add Layer"),
                     title_display = T("Layer Details"),
                     title_list = T("Layers"),
@@ -1806,8 +1808,10 @@ class S3LayerEntityModel(S3Model):
                              Field("base", "boolean", default=False,
                                    label=T("Default Base layer?")),
                              *s3.meta_fields())
-
-        s3.crud_strings[tablename] = Storage(
+        # Default to the Layer -> Config view
+        # sinne there are many diff layers
+        # - override for single Config -> Layer
+        crud_strings[tablename] = Storage(
                     title_create = T("Add Profile Configuration for this Layer"),
                     title_display = T("Profile Configuration"),
                     title_list = T("Profile Configurations"),
@@ -1839,7 +1843,10 @@ class S3LayerEntityModel(S3Model):
                                                                    zero=T("Use default")))),
                              *s3.meta_fields())
 
-        s3.crud_strings[tablename] = Storage(
+        # Default to the Layer -> Symbology view
+        # since there are many diff layers
+        # - override for single Symbology -> Layer
+        crud_strings[tablename] = Storage(
                     title_create = T("Add Symbology for Layer"),
                     title_display = T("Symbology"),
                     title_list = T("Symbologies"),

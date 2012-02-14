@@ -82,6 +82,9 @@ class S3OrganisationModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         SELECT_LOCATION = messages.SELECT_LOCATION
 
+        add_component = self.add_component
+        configure = self.configure
+        crud_strings = s3.crud_strings
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -101,7 +104,7 @@ class S3OrganisationModel(S3Model):
         # CRUD strings
         if settings.get_ui_cluster():
             SECTOR = T("Cluster")
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = T("Add Cluster"),
                 title_display = T("Cluster Details"),
                 title_list = T("List Clusters"),
@@ -118,7 +121,7 @@ class S3OrganisationModel(S3Model):
                 msg_list_empty = T("No Clusters currently registered"))
         else:
             SECTOR = T("Sector")
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = T("Add Sector"),
                 title_display = T("Sector Details"),
                 title_list = T("List Sectors"),
@@ -134,7 +137,7 @@ class S3OrganisationModel(S3Model):
                 msg_record_deleted = T("Sector deleted"),
                 msg_list_empty = T("No Sectors currently registered"))
 
-        self.configure("org_sector", deduplicate=self.org_sector_deduplicate)
+        configure("org_sector", deduplicate=self.org_sector_deduplicate)
 
         sector_id = S3ReusableField("sector_id", "list:reference org_sector",
                                     sortby="abrv",
@@ -162,7 +165,7 @@ class S3OrganisationModel(S3Model):
         # CRUD strings
         if settings.get_ui_cluster():
             SUBSECTOR = T("Cluster Subsector")
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = T("Add Cluster Subsector"),
                 title_display = T("Cluster Subsector Details"),
                 title_list = T("List Cluster Subsectors"),
@@ -179,7 +182,7 @@ class S3OrganisationModel(S3Model):
                 msg_list_empty = T("No Cluster Subsectors currently registered"))
         else:
             SUBSECTOR = T("Subsector")
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = T("Add Subsector"),
                 title_display = T("Subsector Details"),
                 title_list = T("List Subsectors"),
@@ -206,8 +209,8 @@ class S3OrganisationModel(S3Model):
                                        #comment = Script to filter the sector_subsector drop down
                                        ondelete = "RESTRICT")
 
-        self.configure("org_subsector", deduplicate=self.org_sector_deduplicate)
-        self.add_component("org_subsector", org_sector="sector_id")
+        configure("org_subsector", deduplicate=self.org_sector_deduplicate)
+        add_component("org_subsector", org_sector="sector_id")
 
         # =============================================================================
         # Organisations
@@ -269,7 +272,7 @@ class S3OrganisationModel(S3Model):
         # CRUD strings
         ADD_ORGANIZATION = T("Add Organization")
         LIST_ORGANIZATIONS = T("List Organizations")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ORGANIZATION,
             title_display = T("Organization Details"),
             title_list = LIST_ORGANIZATIONS,
@@ -380,40 +383,40 @@ class S3OrganisationModel(S3Model):
                 )
             )
 
-        self.configure(tablename,
-                       super_entity = "pr_pentity",
-                       search_method=organisation_search,
-                       deduplicate=self.organisation_deduplicate,
-                       list_fields = ["id",
-                                      "name",
-                                      "acronym",
-                                      "type",
-                                      "sector_id",
-                                      "country",
-                                      "website"
-                                    ])
+        configure(tablename,
+                  super_entity = "pr_pentity",
+                  search_method=organisation_search,
+                  deduplicate=self.organisation_deduplicate,
+                  list_fields = ["id",
+                                 "name",
+                                 "acronym",
+                                 "type",
+                                 "sector_id",
+                                 "country",
+                                 "website"
+                                ])
 
         # Components
 
         # Affiliates
-        self.add_component("pr_affiliation",
-                           org_organisation=Storage(name="affiliate",
-                                                    pkey="pe_id",
-                                                    joinby="parent"))
+        add_component("pr_affiliation",
+                      org_organisation=Storage(name="affiliate",
+                                               pkey="pe_id",
+                                               joinby="parent"))
 
         # Affiliation
-        self.add_component("pr_affiliation",
-                           org_organisation=Storage(pkey="pe_id",
-                                                    joinby="child"))
+        add_component("pr_affiliation",
+                      org_organisation=Storage(pkey="pe_id",
+                                               joinby="child"))
 
         # Staff
-        self.add_component("hrm_human_resource",
-                           org_organisation="organisation_id")
+        add_component("hrm_human_resource",
+                      org_organisation="organisation_id")
 
         # Projects
         if settings.get_project_drr():
-            self.add_component("project_project",
-                               org_organisation=Storage(
+            add_component("project_project",
+                          org_organisation=Storage(
                                     link="project_organisation",
                                     joinby="organisation_id",
                                     key="project_id",
@@ -421,26 +424,26 @@ class S3OrganisationModel(S3Model):
                                     autocomplete="name",
                                     autodelete=False))
         else:
-            self.add_component("project_project",
-                               org_organisation="organisation_id")
+            add_component("project_project",
+                          org_organisation="organisation_id")
 
         # Documents
-        self.add_component("doc_document", org_organisation="organisation_id")
-        self.add_component("doc_image", org_organisation="organisation_id")
+        add_component("doc_document", org_organisation="organisation_id")
+        add_component("doc_image", org_organisation="organisation_id")
 
         # Assets
         # @ToDo
-        #self.add_component("asset_asset",
-                           #org_organisation = "donated_by_id")
+        #add_component("asset_asset",
+                      #org_organisation = "donated_by_id")
 
         # Requests
-        #self.add_component("req_req",
-                           #org_organisation = "donated_by_id")
+        #add_component("req_req",
+                       #org_organisation = "donated_by_id")
 
         # -----------------------------------------------------------------------------
         # Enable this to allow migration of users between instances
-        #self.add_component(db.auth_user,
-        #                   org_organisation="organisation_id")
+        #add_component(db.auth_user,
+        #              org_organisation="organisation_id")
 
         # -----------------------------------------------------------------------------
         # Donors are a type of Organization
