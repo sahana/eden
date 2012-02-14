@@ -486,7 +486,8 @@ class S3BulkImporter(object):
             end = datetime.datetime.now()
             duration = end - start
             csvName = task[3][task[3].rfind("/")+1:]
-            msg = "   %s import job completed in %s" % (csvName, duration)
+            msg = "   %s import job completed in %s mins" % \
+                (csvName, '{:.2f}'.format(duration.total_seconds()/60))
             self.resultList.append(msg)
 
 
