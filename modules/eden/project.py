@@ -314,9 +314,24 @@ class S3ProjectModel(S3Model):
             
         if drr:
             table.virtualfields.append(S3ProjectVirtualfields())
-            organisation_field =  (T("Lead Organisation"), "organisation")
+            list_fields=["id",
+                         "name",
+                         (T("Lead Organisation"), "organisation"),
+                         "sector_id",
+                         "start_date",
+                         "end_date",
+                         "countries_id",
+                         "multi_hazard_id",
+                         "multi_theme_id",
+                        ]
         else:
-            organisation_field = "organisation_id"
+            list_fields=["id",
+                         "name",
+                         "organisation_id",
+                         "start_date",
+                         "end_date",
+                        ]
+
         configure(tablename,
                   super_entity="doc_entity",
                   deduplicate=self.project_project_deduplicate,
@@ -324,16 +339,8 @@ class S3ProjectModel(S3Model):
                   onaccept=self.project_project_onaccept,
                   create_next=URL(c="project", f="project",
                                   args=["[id]", next]),
-                  list_fields=["id",
-                               "name",
-                               organisation_field,
-                               "sector_id",
-                               "start_date",
-                               "end_date",
-                               "countries_id",
-                               "multi_hazard_id",
-                               "multi_theme_id",
-                               ])
+                  list_fields=list_fields)
+
         # Reusable Field
         project_id = S3ReusableField("project_id", db.project_project,
                                      sortby="name",
@@ -2481,7 +2488,7 @@ def task_notify(form):
 
 # =============================================================================
 class S3ProjectVirtualfields:
-    """ Virtual fields for the project_activity table """
+    """ Virtual fields for the project_project table """
 
     def organisation(self):
         """ Name of the lead organisation of the project """
@@ -2503,6 +2510,7 @@ class S3ProjectVirtualfields:
             return org.name
         else:
             return None
+
 # =============================================================================
 class S3ProjectActivityVirtualfields:
     """ Virtual fields for the project_activity table """
