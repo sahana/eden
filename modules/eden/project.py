@@ -797,8 +797,11 @@ class S3ProjectModel(S3Model):
             # Match project by name (all-lowercase)
             table = item.table
             name = item.data.name
-            if name:
+            try:
                 query = (table.name.lower() == name.lower())
+            except AttributeError, exception:
+                s3_debug("project_deduplicate", exception)
+            else:
                 duplicate = current.db(query).select(table.id,
                                                      limitby=(0, 1)).first()
                 if duplicate:

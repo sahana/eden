@@ -55,6 +55,7 @@ from gluon.tools import Crud
 
 import gluon.contrib.simplejson as json
 
+from s3utils import s3_debug
 from s3validators import IS_UTC_OFFSET
 
 DEBUG = False
@@ -489,7 +490,8 @@ class S3BulkImporter(object):
             msg = "   %s import job completed in %s mins" % \
                 (csvName, '{:.2f}'.format(duration.total_seconds()/60))
             self.resultList.append(msg)
-
+            if current.session.s3.debug:
+                s3_debug(msg)
 
     def execute_special_task(self, task):
         start = datetime.datetime.now()
