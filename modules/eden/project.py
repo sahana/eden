@@ -210,8 +210,11 @@ class S3ProjectModel(S3Model):
                                    # no filter) in order to allow both automatic indexing (faster)
                                    # and key-based de-duplication (i.e. before field validation)
                                    unique = True,
-                                   requires = [IS_NOT_EMPTY(error_message=T("Please fill this!")),
-                                               IS_NOT_ONE_OF(db, "project_project.name")]),
+                                   requires = IS_NOT_EMPTY(error_message=T("Name cannot be blank!"))
+                                   # This validator causes issues on the Server for some reason.
+                                   #requires = [IS_NOT_EMPTY(error_message=T("Please fill this!")),
+                                   #            IS_NOT_ONE_OF(db, "project_project.name")]
+                                   ),
                              Field("code",
                                    label = T("Code"),
                                    readable=False,
