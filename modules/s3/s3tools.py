@@ -487,8 +487,14 @@ class S3BulkImporter(object):
             end = datetime.datetime.now()
             duration = end - start
             csvName = task[3][task[3].rfind("/")+1:]
+            try:
+                # Python-2.7
+                duration = duration.total_seconds()/60
+            except AttributeError:
+                # older Python
+                duration = (duration.microseconds + (duration.seconds + duration.days * 24 * 3600) * 10**6) / 10**6
             msg = "   %s import job completed in %s mins" % \
-                (csvName, '{:.2f}'.format(duration.total_seconds()/60))
+                (csvName, '{:.2f}'.format(duration))
             self.resultList.append(msg)
             if current.session.s3.debug:
                 s3_debug(msg)
