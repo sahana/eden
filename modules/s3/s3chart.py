@@ -127,7 +127,7 @@ class S3Chart(object):
         chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
         fullPath = "%s%s" % (path, chartFile)
         try:
-            f = open(fullPath,"w+")
+            f = open(fullPath, "w+")
             print >> f, image
         except:
             return None
@@ -171,11 +171,9 @@ class S3Chart(object):
         canvas.print_figure(chart.body)
         #return response.body.getvalue()
         image = chart.body.getvalue()
-        """
-            IE 8 and before has a 32K limit on URIs this can be quickly 
-            gobbled up if the image is too large. So the image will
-            stored on the server and a URI used in the src
-        """
+        # IE 8 and before has a 32K limit on URIs this can be quickly 
+        # gobbled up if the image is too large. So the image will
+        # stored on the server and a URI used in the src
         cachePath = self.storeCachedFile(self.filename, image)
         if output == "xml":
             if cachePath != None:

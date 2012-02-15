@@ -3,8 +3,6 @@
 """
     S3 Navigation Module
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
 
@@ -32,9 +30,10 @@
 """
 
 __all__ = ["S3Menu",
+           "s3_popup_comment",
            "s3_rheader_tabs",
            "s3_rheader_resource",
-           "s3_popup_comment"]
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -242,8 +241,6 @@ class S3ComponentTabs:
 
         rheader_tabs = []
 
-        tablist = []
-
         tabs = [t for t in self.tabs if t.active(r)]
 
         # Check whether there is a tab for this resource method (no component)
@@ -404,5 +401,86 @@ class S3ComponentTab:
                k in get_vars and get_vars[k] != v:
                 return False
         return True
+
+# =============================================================================
+def s3_search_tabs(r, tabs=[], vars={}):
+    """
+        Constructs a DIV of format links for a S3Search result
+
+        @param tabs: the tabs as list of tuples (title, method)
+
+        Methods supported:
+            None - list view
+            map - map view
+            compose - message compose form
+    """
+
+    search_tabs = S3SearchTabs(tabs)
+    return search_tabs.render(r)
+
+# =============================================================================
+class S3SearchTabs:
+
+    def __init__(self, tabs=[], vars={}):
+
+        self.tabs = [S3SearchTab(t, vars) for t in tabs]
+
+    # -------------------------------------------------------------------------
+    def render(self, r):
+
+        search_tabs = []
+
+        tabs = self.tabs
+
+        vars = r.get_vars
+
+        for i in xrange(len(tabs)):
+
+            tab = tabs[i]
+            title = tab.title
+            method = tab.method
+
+            if i == len(tabs)-1:
+                _class = "tab_last"
+            else:
+                _class = "tab_other"
+
+            here = False
+            if method == "map":
+                # This is actioned in static/scripts/S3/s3.dataTables.js
+                # - the map features are already in-place from S3Search.search_interactive()
+                _id = "gis_datatables_map-btn"
+                _href = "#"
+            elif method == "compose":
+                _id = "gis_datatables_compose_tab"
+                _href = r.url(method="compose", vars=current.session.s3.filter)
+            else:
+                # List View, defaults to active
+                here = True
+                _id = "gis_datatables_list_tab"
+                _href = "#"
+
+            if here:
+                _class = "tab_here"
+
+            search_tabs.append(SPAN(A(tab.title, _id=_id, _href=_href),
+                                    _class=_class))
+
+        if search_tabs:
+            search_tabs = DIV(search_tabs, _class="tabs")
+        else:
+            search_tabs = ""
+        return search_tabs
+
+# =============================================================================
+class S3SearchTab:
+
+    def __init__(self, tab, vars={}):
+
+        title, method = tab[:2]
+
+        self.title = title
+        self.method = method
+        self.vars = vars
 
 # END =========================================================================

@@ -133,7 +133,55 @@ def project():
     # Post-process
     def postp(r, output):
         if r.interactive:
-            if not r.component and not deployment_settings.get_project_drr():
+            if not r.component:
+                # Do extra client-side validation
+                # This part needs to be able to support multiple L10n_date_format
+                #var datePattern = /^(19|20)\d\d([-\/.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])$/;
+                #if ( (start_date && !(datePattern.test(start_date))) | (end_date && !(datePattern.test(end_date))) ) {
+                #    error_msg = '%s';
+                #    jQuery('#project_project_start_date__row > td').last().text(error_msg);
+                #    jQuery('#project_project_start_date__row > td').last().addClass('red');
+                #    return false;
+                #}
+                validate = True
+                date_format = deployment_settings.get_L10n_date_format()
+                if date_format == T("%Y-%m-%d"):
+                    # Default
+                    start_date_string = "start_date[0], start_date[1], start_date[2]"
+                    end_date_string = "end_date[0], end_date[1], end_date[2]"
+                elif date_format == T("%m-%d-%Y"):
+                    # US Style
+                    start_date_string = "start_date[2], start_date[0], start_date[1]"
+                    end_date_string = "end_date[2], end_date[0], end_date[1]"
+                elif date_format == T("%d-%b-%Y"):
+                    # Unsortable 'Pretty' style
+                    start_date_string = "start_date[0] + ' ' + start_date[1] + ' ' + start_date[2]"
+                    end_date_string = "end_date[0] + ' ' + end_date[1] + ' ' + end_date[2]"
+                else:
+                    # Unknown format - don't add extra validation
+                    validate = False
+                script = """$('.form-container > form').submit(function () {
+    var start_date = this.start_date.value;
+    var end_date = this.end_date.value;
+    start_date = start_date.split('-');
+    start_date = new Date(%s);
+    end_date = end_date.split('-');
+    end_date = new Date(%s);
+    if (start_date > end_date) {
+        var error_msg = '%s';
+        jQuery('#project_project_end_date__row > td').last().text(error_msg);
+        jQuery('#project_project_end_date__row > td').last().addClass('red');
+        return false;
+    } else {
+        return true;
+    }
+});""" % (start_date_string,
+          end_date_string,
+          T("End date should be after start date"))
+                if validate:
+                    response.s3.jquery_ready.append(script)
+
+            if not deployment_settings.get_project_drr():
                 read_url = URL(args=["[id]", "task"])
                 update_url = URL(args=["[id]", "task"])
                 s3mgr.crud.action_buttons(r,
@@ -142,7 +190,7 @@ def project():
         return output
     response.s3.postp = postp
 
-    rheader = eden.project.project_rheader
+    rheader = s3db.project_rheader
     return s3_rest_controller(module, resourcename,
                               rheader=rheader,
                               interactive_report=True,
@@ -243,7 +291,7 @@ def activity():
         doc_table.person_id.writable = False
         doc_table.location_id.writable = False
 
-    rheader = lambda r: response.s3.project_rheader(r, tabs)
+    rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
                               rheader=rheader,
                               csv_template="activity")
@@ -279,7 +327,6 @@ def task():
                         listadd=False)
         try:
             # Add Virtual Fields
-            table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
             list_fields = s3mgr.model.get_config(tablename,
                                                  "list_fields")
             list_fields.insert(4, (T("Project"), "project"))
@@ -309,39 +356,9 @@ def task():
         s3.crud_strings[tablename].title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
         s3.crud_strings[tablename].msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
         # Add Virtual Fields
-        table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
         list_fields.insert(2, (T("Activity"), "activity"))
-        # task_search = s3base.S3Search(
-                # advanced = (s3base.S3SearchSimpleWidget(
-                    # name = "task_search_text_advanced",
-                    # label = T("Search"),
-                    # comment = T("Search for a Task by description."),
-                    # field = [ "name",
-                              # "description",
-                            # ]
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_activity",
-                        # label = T("Activity"),
-                        # field = ["activity"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_assignee",
-                        # label = T("Assigned To"),
-                        # field = ["pe_id"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchMinMaxWidget(
-                        # name="task_search_date_due",
-                        # method="range",
-                        # label=T("Date Due"),
-                        # field=["date_due"]
-                    # )
-                # )
-            # )
         s3mgr.configure(tablename,
                         # Block Add until we get the injectable component lookups
                         insertable=False,
@@ -356,47 +373,10 @@ def task():
     else:
         s3.crud_strings[tablename].title_list = T("All Tasks")
         s3.crud_strings[tablename].title_search = T("All Tasks")
-        # Add Virtual Fields
-        table.virtualfields.append(eden.project.S3ProjectTaskVirtualfields())
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
-        # task_search = s3base.S3Search(
-                # advanced = (s3base.S3SearchSimpleWidget(
-                    # name = "task_search_text_advanced",
-                    # label = T("Search"),
-                    # comment = T("Search for a Task by description."),
-                    # field = [ "name",
-                              # "description",
-                            # ]
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_project",
-                        # label = T("Project"),
-                        # field = ["project"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_activity",
-                        # label = T("Activity"),
-                        # field = ["activity"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchOptionsWidget(
-                        # name = "task_search_assignee",
-                        # label = T("Assigned To"),
-                        # field = ["pe_id"],
-                        # cols = 2
-                    # ),
-                    # s3base.S3SearchMinMaxWidget(
-                        # name="task_search_date_due",
-                        # method="range",
-                        # label=T("Date Due"),
-                        # field=["date_due"]
-                    # )
-                # )
-            # )
         s3mgr.configure(tablename,
                         # Block Add until we get the injectable component lookups
                         insertable=False,
@@ -405,7 +385,6 @@ def task():
                                                          name="project",
                                                          label=T("Project"))
                         ],
-                        #search_method=search,
                         list_fields=list_fields)
         if "open" in request.get_vars:
             # Show Only Open Tasks
@@ -438,7 +417,7 @@ def task():
         return output
     response.s3.postp = postp
 
-    return s3_rest_controller(rheader=response.s3.project_rheader)
+    return s3_rest_controller(rheader=s3db.project_rheader)
 
 # =============================================================================
 def milestone():
@@ -506,7 +485,7 @@ def discuss(r, **attr):
     id = r.id
 
     # Add the RHeader to maintain consistency with the other pages
-    rheader = response.s3.project_rheader(r)
+    rheader = s3db.project_rheader(r)
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
     response.s3.scripts.append(ckeditor)

@@ -3992,16 +3992,16 @@ class S3Resource(object):
             dfields = []
             pkey = table._id.name
             for f in table.fields:
-                if f == pkey or \
-                f == UID or \
-                f in skip or \
-                f in IGNORE_FIELDS:
-                    continue
+                if f == UID or \
+                   f in skip or \
+                   f in IGNORE_FIELDS:
+                    if f != pkey or not manager.show_ids:
+                        continue
 
                 ftype = str(table[f].type)
                 if (ftype[:9] == "reference" or \
                     ftype[:14] == "list:reference") and \
-                f not in FIELDS_TO_ATTRIBUTES:
+                    f not in FIELDS_TO_ATTRIBUTES:
                     rfields.append(f)
                 else:
                     dfields.append(f)

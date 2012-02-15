@@ -59,6 +59,15 @@ class S3DocumentLibrary(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        s3_date_format = current.deployment_settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+
+        # Shortcuts
+        add_component = self.add_component
+        configure = self.configure
+        define_table = self.define_table
+        super_link = self.super_link
+
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
@@ -73,36 +82,41 @@ class S3DocumentLibrary(S3Model):
         doc_entity = self.super_entity(tablename, "doc_id", entity_types)
 
         # Components
-        self.add_component("doc_document", doc_entity=self.super_key(doc_entity))
-        self.add_component("doc_image", doc_entity=self.super_key(doc_entity))
+        add_component("doc_document", doc_entity=self.super_key(doc_entity))
+        add_component("doc_image", doc_entity=self.super_key(doc_entity))
 
         # ---------------------------------------------------------------------
         # Documents
         #
         tablename = "doc_document"
-        table = self.define_table(tablename,
-                                  self.super_link("site_id", "org_site"),
-                                  self.super_link("doc_id", doc_entity),
-                                  Field("name", length=128,
-                                        notnull=True,
-                                        label=T("Name")),
-                                  Field("file", "upload", autodelete=True),
-                                  Field("url", label=T("URL"),
-                                        requires = [IS_NULL_OR(IS_URL()),
-                                                    IS_NULL_OR(IS_NOT_ONE_OF(db,
-                                                                             "%s.url" % tablename))],
-                                        represent = lambda url: \
-                                                    url and A(url,_href=url) or NONE),
-                                  person_id(label=T("Author"),
-                                                  comment=person_comment(T("Author"),
-                                                                         T("The Author of this Document (optional)"))),
-                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  Field("date", "date", label = T("Date Published")),
-                                  location_id(),
-                                  s3.comments(),
-                                  #Field("entered", "boolean", label=T("Entered")),
-                                  Field("checksum", readable=False, writable=False),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("site_id", "org_site"),
+                             super_link("doc_id", doc_entity),
+                             Field("name", length=128,
+                                   notnull=True,
+                                   label=T("Name")),
+                             Field("file", "upload", autodelete=True),
+                             Field("url", label=T("URL"),
+                                   requires = [IS_NULL_OR(IS_URL()),
+                                               IS_NULL_OR(IS_NOT_ONE_OF(db,
+                                                                        "%s.url" % tablename))],
+                                   represent = lambda url: \
+                                               url and A(url,_href=url) or NONE),
+                             person_id(label=T("Author"),
+                                             comment=person_comment(T("Author"),
+                                                                    T("The Author of this Document (optional)"))),
+                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             Field("date", "date",
+                                   label = T("Date Published"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
+                             location_id(),
+                             s3.comments(),
+                             #Field("entered", "boolean", label=T("Entered")),
+                             Field("checksum", readable=False, writable=False),
+                             *s3.meta_fields())
 
         # Field configuration
         table.file.represent = lambda file, table=table: \
@@ -137,9 +151,9 @@ class S3DocumentLibrary(S3Model):
         # Search Method?
 
         # Resource Configuration
-        self.configure(tablename,
-                       #mark_required=["file"],
-                       onvalidation=self.document_onvalidation)
+        configure(tablename,
+                  #mark_required=["file"],
+                  onvalidation=self.document_onvalidation)
 
         # Reusable Field
         document_comment = DIV(A(ADD_DOCUMENT,
@@ -173,33 +187,38 @@ class S3DocumentLibrary(S3Model):
         }
 
         tablename = "doc_image"
-        table = self.define_table(tablename,
-                                  self.super_link("site_id", "org_site"),
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  self.super_link("doc_id", doc_entity),
-                                  Field("name", length=128,
-                                        notnull=True,
-                                        label=T("Name")),
-                                  Field("file", "upload", autodelete=True,
-                                        requires = IS_NULL_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))),
-                                        # upload folder needs to be visible to the download() function as well as the upload
-                                        uploadfolder = os.path.join(request.folder,
-                                                                    "uploads",
-                                                                    "images")),
-                                  Field("url", label=T("URL"),
-                                        requires = IS_NULL_OR(IS_URL())),
-                                  Field("type", "integer",
-                                        requires = IS_IN_SET(doc_image_type_opts, zero=None),
-                                        default = 1,
-                                        label = T("Image Type"),
-                                        represent = lambda opt: doc_image_type_opts.get(opt, UNKNOWN_OPT)),
-                                  person_id(label=T("Author")),
-                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  location_id(),
-                                  Field("date", "date", label = T("Date Taken")),
-                                  s3.comments(),
-                                  Field("checksum", readable=False, writable=False),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("site_id", "org_site"),
+                             super_link("pe_id", "pr_pentity"),
+                             super_link("doc_id", doc_entity),
+                             Field("name", length=128,
+                                   notnull=True,
+                                   label=T("Name")),
+                             Field("file", "upload", autodelete=True,
+                                   requires = IS_NULL_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))),
+                                   # upload folder needs to be visible to the download() function as well as the upload
+                                   uploadfolder = os.path.join(request.folder,
+                                                               "uploads",
+                                                               "images")),
+                             Field("url", label=T("URL"),
+                                   requires = IS_NULL_OR(IS_URL())),
+                             Field("type", "integer",
+                                   requires = IS_IN_SET(doc_image_type_opts, zero=None),
+                                   default = 1,
+                                   label = T("Image Type"),
+                                   represent = lambda opt: doc_image_type_opts.get(opt, UNKNOWN_OPT)),
+                             person_id(label=T("Author")),
+                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             location_id(),
+                             Field("date", "date",
+                                   label = T("Date Taken"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
+                             s3.comments(),
+                             Field("checksum", readable=False, writable=False),
+                             *s3.meta_fields())
 
         # Field configuration
         table.file.represent = doc_image_represent
@@ -226,9 +245,9 @@ class S3DocumentLibrary(S3Model):
         # Search Method
 
         # Resource Configuration
-        self.configure(tablename,
-                       onvalidation=lambda form: \
-                                    self.document_onvalidation(form, document=False))
+        configure(tablename,
+                  onvalidation=lambda form: \
+                                self.document_onvalidation(form, document=False))
 
         # Reusable field
         #image_id = S3ReusableField("image_id", db.doc_image,

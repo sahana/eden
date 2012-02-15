@@ -39,8 +39,9 @@ from gluon import *
 from gluon.serializers import json
 
 from s3crud import S3CRUD
-from s3validators import *
+from s3navigation import s3_search_tabs
 from s3utils import s3_debug
+from s3validators import *
 from s3widgets import CheckboxesWidgetS3
 
 __all__ = ["S3SearchWidget",
@@ -183,7 +184,7 @@ class S3SearchWidget(object):
                 # Do not add queries for empty tables
                 if not db(ktable.id > 0).select(ktable.id,
                                                 limitby=(0, 1)).first():
-                    continue
+                   continue
 
             # Master queries
             # @todo: update this for new QueryBuilder (S3ResourceFilter)
@@ -369,7 +370,8 @@ class S3SearchMinMaxWidget(S3SearchWidget):
 
         search_field = self.search_field.values()
         if not search_field:
-            raise SyntaxError("No valid search field specified")
+            return SPAN(T("no options available"),
+                        _style="color:#AAA; font-style:italic;")
 
         search_field = search_field[0][0]
 
@@ -737,13 +739,16 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
     """
         Displays a search widget which allows the user to search for records
         by selecting a location from a specified level in the hierarchy.
+        - works only for tables with s3.address_fields() in
+          i.e. Sites & pr_address
     """
 
-    def __init__(self, name=None, **attr):
+    def __init__(self, name=None, level=None, **attr):
         """
             Configures the search option
 
-            @param field: name(s) of the fields to search in
+            @param name: name of the search widget
+            @param level: hierarchy level to search
 
             @keyword comment: a comment for the search widget
         """
@@ -752,11 +757,13 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
 
         self.other = None
 
-        config = gis.get_config()
-        field = config.search_level or "L0"
-        self.field = [field]
+        if not level:
+            config = gis.get_config()
+            level = config.search_level or "L0"
 
-        label = gis.get_location_hierarchy(level=field)
+        self.field = [level]
+
+        label = gis.get_location_hierarchy(level=level)
 
         self.attr = Storage(attr)
         self.attr["label"] = label
@@ -1211,6 +1218,7 @@ class S3Search(S3CRUD):
         """
 
         # Get environment
+        T = current.T
         session = current.session
         request = self.request
         response = current.response
@@ -1343,8 +1351,8 @@ class S3Search(S3CRUD):
         # Remove the dataTables search box to avoid confusion
         s3.dataTable_NobFilter = True
 
-        _location = "location_id" in r.target()[2]
-        _site = "site_id" in r.target()[2]
+        _location = "location_id" in table
+        _site = "site_id" in table
         if items:
             if not s3.no_sspag:
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
@@ -1408,7 +1416,7 @@ class S3Search(S3CRUD):
                                                                 popup_label,
                                                                 popup_fields)
 
-                feature_queries = [{"name"   : current.T("Search results"),
+                feature_queries = [{"name"   : T("Search results"),
                                     "query"  : features,
                                     "marker" : marker}]
                 # Calculate an appropriate BBox
@@ -1420,9 +1428,35 @@ class S3Search(S3CRUD):
         output["items"] = items
         output["sortby"] = sortby
 
+        if isinstance(items, DIV):
+            filter = session.s3.filter
+            list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % request.application),
+                                 _title=T("Export in PDF format"),
+                                 _href=r.url(method="", representation="pdf", vars=filter)),
+                               A(IMG(_src="/%s/static/img/icon-xls.png" % request.application),
+                                 _title=T("Export in XLS format"),
+                                 _href=r.url(method="", representation="xls", vars=filter)),
+                               A(IMG(_src="/%s/static/img/RSS_16.png" % request.application),
+                                 _title=T("Export in RSS format"),
+                                 _href=r.url(method="", representation="rss", vars=filter)),
+                               _id="list_formats")
+            tabs = [(T("List"), None),
+                    #(T("Export"), "export")
+                    ]
+        else:
+            list_formats = ""
+            tabs = []
+
         if _location or _site:
             # Add a map for search results
             # (this same map is also used by the Map Search Widget, if-present)
+            if list_formats:
+                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % request.application),
+                                     _title=T("Export in KML format"),
+                                     _href=r.url(method="", representation="kml", vars=filter)),
+                                    )
+            if tabs:
+                tabs.append((T("Map"), "map"))
             if bounds:
                 # We have some features returned
                 map_popup = gis.show_map(
@@ -1449,12 +1483,27 @@ class S3Search(S3CRUD):
                                         )
             s3.dataTableMap = map_popup
 
+        if "pe_id" in table or "person_id" in table:
+            # Provide the ability to Message person entities in search results
+            if tabs:
+                tabs.append((T("Message"), "compose"))
+
+        # Search Tabs
+        search_tabs = s3_search_tabs(r, tabs)
+        output["search_tabs"] = search_tabs
+
+        # List Formats
+        output["list_formats"] = list_formats
+
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
         output["subtitle"] = self.crud_string(tablename, "msg_match")
 
         # View
         response.view = self._view(r, "search.html")
+
+        # RHeader gets added later in S3Method()
+
         return output
 
     # -------------------------------------------------------------------------

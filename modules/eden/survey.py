@@ -1557,12 +1557,16 @@ class S3SeriesModel(S3Model):
                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                  Field("logo", "string", default="", length=512),
                                  Field("language", "string", default="en", length=8),
-                                 Field("start_date",
-                                       "date",
+                                 Field("start_date", "date",
                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                        represent = s3_date_represent,
+                                       widget = S3DateWidget(),
                                        default=None),
-                                 Field("end_date", "date", default=None),
+                                 Field("end_date", "date",
+                                       requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                       represent = s3_date_represent,
+                                       widget = S3DateWidget(),
+                                       default=None),
                                  *s3.meta_fields())
 
         # CRUD Strings

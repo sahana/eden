@@ -1,8 +1,9 @@
-// S3.checkboxes.widget.js
-
-// JS function which is used by the S3CheckboxesWidget
-// @author: Michael Howden (michael@aidiq.com)
-// @date: 2010-05-18
+// 
+/**
+ * S3.checkboxes.widget.js
+ * 
+ * JS function which is used by the S3CheckboxesWidget
+ */
 
 jQuery(document).ready(function() {    
     jQuery(".s3_checkbox_label").cluetip({activation: "hover",  

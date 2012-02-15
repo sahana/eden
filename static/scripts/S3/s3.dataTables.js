@@ -450,6 +450,18 @@ Ext.onReady(function(){
             S3.gis.mapWin.show();
             // Disable the crosshair on the Map Selector
             $('.olMapViewport').removeClass('crosshair');
+            // Set the Tab to show as active
+            $("#gis_datatables_map-btn").parent().addClass("tab_here");
+            // Deactivate the list Tab
+            $("#gis_datatables_list_tab").parent().removeClass("tab_here").addClass("tab_other");
+            // Set to revert if Map closed
+            $("div.x-tool-close").click( function(evt) {
+                // Set the Tab to show as inactive
+                $("#gis_datatables_map-btn").parent().removeClass("tab_here").addClass("tab_other");
+                // Activate the list Tab
+                $("#gis_datatables_list_tab").parent().removeClass("tab_other").addClass("tab_here");
+            });
+            // @ToDo: Close Map Window & revert if Tab clicked
         });
     }
     var s3_search_mapButton = Ext.get('gis_search_map-btn');

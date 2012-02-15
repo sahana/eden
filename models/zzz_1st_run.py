@@ -274,11 +274,24 @@ if len(pop_list) > 0:
             else:
                 end = datetime.datetime.now()
                 duration = end - start
-                print >> sys.stdout, "Installed demo '%s' completed in %s" % \
-                                        (demo, duration)
-        if _debug:
-            for result in bi.resultList:
-                print >> sys.stdout, result
+                try:
+                    # Python-2.7
+                    duration = '{:.2f}'.format(duration.total_seconds()/60)
+                    print >> sys.stdout, "Installed demo '%s' completed in %s mins" % \
+                                            (demo, duration)
+                except AttributeError:
+                    # older Python
+                    print >> sys.stdout, "Installed demo '%s' completed in %s" % \
+                                            (demo, duration)
+        grandTotalEnd = datetime.datetime.now()
+        duration = grandTotalEnd - grandTotalStart
+        try:
+            # Python-2.7
+            duration = '{:.2f}'.format(duration.total_seconds()/60)
+            print >> sys.stdout, "Pre-populate completed in %s mins" % duration
+        except AttributeError:
+            # older Python
+            print >> sys.stdout, "Pre-populate completed in %s" % duration
         bi.resultList = []
 
     grandTotalEnd = datetime.datetime.now()

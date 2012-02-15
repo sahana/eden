@@ -180,6 +180,9 @@ deployment_settings.L10n.religions = {
 # Make last name in person/user records mandatory
 #deployment_settings.L10n.mandatory_lastname = True
 
+# Add thousands separator to numbers, eg. 1,000,000
+deployment_settings.L10n.thousands_separator = True
+
 # Finance settings
 #deployment_settings.fin.currencies = {
 #    "USD" :T("United States Dollars"),
