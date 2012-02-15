@@ -631,9 +631,8 @@ class S3ProjectModel(S3Model):
             append((T("Hazard"), "project_id$multi_hazard_id"))
             append((T("HFA"), "project_id$hfa"))
             lh = current.gis.get_location_hierarchy()
-            if lh:
-                lh = [(lh[opt], opt) for opt in lh]
-                report_fields.extend(lh)
+            lh = [(lh[opt], opt) for opt in lh]
+            report_fields.extend(lh)
             append("location_id")
         else:
             append((T("Time Estimated"), "time_estimated"))
@@ -1271,9 +1270,8 @@ class S3ProjectDRRModel(S3Model):
                       "activity_id$multi_activity_type_id"
                      ]
         lh = current.gis.get_location_hierarchy()
-        if lh:
-            lh = [(lh[opt], opt) for opt in lh]
-            report_fields.extend(lh)
+        lh = [(lh[opt], opt) for opt in lh]
+        report_fields.extend(lh)
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,

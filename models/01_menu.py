@@ -607,7 +607,7 @@ if auth.permission.format in ("html"):
                 [T("Training Report"), False, aURL(c="hrm",
                                                    f="training",
                                                    args=["report"],
-                                                   vars=dict(rows="course_id",
+                                                   vars=dict(rows="training_event_id$course_id",
                                                              cols="month",
                                                              fact="person_id",
                                                              aggregate="count"))],

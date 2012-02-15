@@ -184,7 +184,7 @@ class S3SearchWidget(object):
                 # Do not add queries for empty tables
                 if not db(ktable.id > 0).select(ktable.id,
                                                 limitby=(0, 1)).first():
-                    continue
+                   continue
 
             # Master queries
             # @todo: update this for new QueryBuilder (S3ResourceFilter)
@@ -370,7 +370,8 @@ class S3SearchMinMaxWidget(S3SearchWidget):
 
         search_field = self.search_field.values()
         if not search_field:
-            raise SyntaxError("No valid search field specified")
+            return SPAN(T("no options available"),
+                        _style="color:#AAA; font-style:italic;")
 
         search_field = search_field[0][0]
 
@@ -738,13 +739,15 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
     """
         Displays a search widget which allows the user to search for records
         by selecting a location from a specified level in the hierarchy.
+        - works only for tables with s3.address_fields() in
+          i.e. Sites & pr_address
     """
 
     def __init__(self, name=None, level=None, **attr):
         """
             Configures the search option
 
-            @param field: name(s) of the fields to search in
+            @param name: name of the search widget
             @param level: hierarchy level to search
 
             @keyword comment: a comment for the search widget
@@ -756,12 +759,11 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
 
         if not level:
             config = gis.get_config()
-            field = config.search_level or "L0"
-        else:
-            field = level
-        self.field = [field]
+            level = config.search_level or "L0"
 
-        label = gis.get_location_hierarchy(level=field)
+        self.field = [level]
+
+        label = gis.get_location_hierarchy(level=level)
 
         self.attr = Storage(attr)
         self.attr["label"] = label
