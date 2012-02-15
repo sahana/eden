@@ -270,20 +270,23 @@ def human_resource():
             # Assume volunteers only between 12-81
             s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
 
-            r.table.site_id.comment = DIV(DIV(_class="tooltip",
-                                              _title="%s|%s|%s" % (T("Facility"),
-                                                                   T("The site where this position is based."),
-                                                                   T("Enter some characters to bring up a list of possible matches."))))
+            table = r.table
+            table.site_id.comment = DIV(DIV(_class="tooltip",
+                                            _title="%s|%s|%s" % (T("Facility"),
+                                                                 T("The site where this position is based."),
+                                                                 T("Enter some characters to bring up a list of possible matches."))))
             if r.method != "read":
                 # Don't want to see in Create forms
                 # inc list_create (list_fields over-rides)
-                r.table.status.writable = False
-                r.table.status.readable = False
+                field = table.status
+                field.writable = False
+                field.readable = False
 
             if r.method == "create" and r.component is None:
                 if group in (1, 2):
-                    table.type.readable = False
-                    table.type.writable = False
+                    field = table.type
+                    field.readable = False
+                    field.writable = False
             elif r.representation == "plain":
                 # Don't redirect Map popups
                 pass

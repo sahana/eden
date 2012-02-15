@@ -129,7 +129,7 @@ class S3DateWidget(FormWidget):
             value = (value != None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
-        
+
         attr["_class"] = "date"
 
         selector = str(field).replace(".", "_")

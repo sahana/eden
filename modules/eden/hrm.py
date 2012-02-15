@@ -1290,36 +1290,37 @@ class S3HRSkillModel(S3Model):
                          "training_event_id",
                          "person_id",
                          (T("Course"), "training_event_id$course_id"),
-                         # "month", Month Virtual Field Broken
+                         (T("Month"), "month"),
                         ]
 
         # Resource Configuration
         configure(tablename,
                   report_filter=[
-                            #S3SearchOptionsWidget(
-                            #    name = "training_search_course",
-                            #    label = T("Course"),
-                            #    field = ["training_event_id$course_id"],
-                            #    cols = 3
-                            #),
-                            #S3SearchLocationHierarchyWidget(
-                            #                      name="training_search_L1",
-                            #                      field=["training_event_id$location_id"],
-                            #                      label=s3db.org_office.L1.label,
-                            #                      represent ="%(name)s",
-                            #                      cols = 3,
-                            #                      ),
-                            #S3SearchMinMaxWidget(
-                            #                     name="training_search_date",
-                            #                     method="range",
-                            #                     label=T("Date"),
-                            #                     field=["training_event_id$start_date"]
-                            #                    ),
+                            # S3SearchLocationHierarchyWidget(
+                                                  # name="training_search_L1",
+                                                  # record=["person_id$location_id"],
+                                                  # level="L1",
+                                                  # represent ="%(name)s",
+                                                  # cols = 3,
+                                                  # ),
+                            # S3SearchLocationHierarchyWidget(
+                                                  # name="training_search_L2",
+                                                  # record=["person_id$location_id"],
+                                                  # level="L2",
+                                                  # represent ="%(name)s",
+                                                  # cols = 3,
+                                                  # ),
+                            S3SearchMinMaxWidget(
+                                                 name="training_search_date",
+                                                 method="range",
+                                                 label=T("Date"),
+                                                 field=["training_event_id$start_date"]
+                                                ),
                         ],
                   report_rows = report_fields,
                   report_cols = report_fields,
                   report_fact = report_fields,
-                  report_method=["count","list"])
+                  report_method=["count", "list"])
 
         # =====================================================================
         # Certificates
