@@ -658,11 +658,12 @@ class S3IncomingModel(S3Model):
         table.site_id.label = T("By Warehouse")
         table.site_id.represent = s3db.org_site_represent
 
-        return S3PDF(r,
-                     componentname = "recv_item",
-                     formname = T("Goods Received Note"),
-                     filename = T("GRN"),
-                     **attr)
+        exporter = S3PDF()
+        return exporter(r,
+                        componentname = "recv_item",
+                        formname = T("Goods Received Note"),
+                        filename = T("GRN"),
+                        **attr)
 
     # -------------------------------------------------------------------------
     @staticmethod

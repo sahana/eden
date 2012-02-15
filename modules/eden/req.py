@@ -261,6 +261,9 @@ class S3RequestModel(S3Model):
         #elif settings.has_module("cr"):
         #    table.type.default = 4
 
+        if not settings.get_req_use_req_number():
+            table.request_number.readable = False
+            table.request_number.writable = False
 
         # CRUD strings
         ADD_REQUEST = T("Make Request")
