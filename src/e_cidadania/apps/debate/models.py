@@ -56,7 +56,7 @@ class Debate(models.Model):
         return self.title
     
     def is_active(self):
-        if datetime.date.today() >= self.end_date or self.start_date < datetime.date.today():
+        if datetime.date.today() >= self.end_date or datetime.date.today() <= self.start_date:
             return False
         else:
             return True
