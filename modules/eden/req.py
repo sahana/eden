@@ -106,16 +106,18 @@ class S3RequestModel(S3Model):
             1:T("Low")
         }
 
-        req_type_opts = {
-            9:T("Other")
-        }
+        req_types_deployed = settings.get_req_req_type()
+        if "Other" in req_types_deployed:
+            req_type_opts = {9:T("Other")}
+        else:
+            req_type_opts = {}
 
-        if settings.has_module("inv"):
+        if settings.has_module("inv") and "Stock" in req_types_deployed:
             # Number hardcoded in controller
             req_type_opts[1] = settings.get_req_type_inv_label()
         #if settings.has_module("asset"):
         #    req_type_opts[2] = T("Assets")
-        if settings.has_module("hrm"):
+        if settings.has_module("hrm") and "People" in req_types_deployed:
             req_type_opts[3] = settings.get_req_type_hrm_label()
         #if settings.has_module("cr"):
         #    req_type_opts[4] = T("Shelter")
