@@ -6,15 +6,35 @@
         <li><a href="{% url 'signup' %}">{% trans "Sign up" %}</a></li>
     {% endif %}
 </ul>
+
+<ul class="nav pull-right">
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %}<b class="caret"></b></a>
+        <ul class="dropdown-menu">
+	        {% for lang in LANGUAGES %}
+	            <li>
+                    <form name="setLang{{ lang.1}}" action="/i18n/setlang/" method="POST">{% csrf_token %}
+                        <input name="next" type="hidden" value="/" />
+                        <input type="hidden" name="language" value="{{ lang.0 }}" />
+                        <a href="#" onclick="document.setLang{{ lang.1 }}.submit();return false;">{{ lang.1 }}</a>
+                    </form>
+                </li>
+            {% endfor %}    
+	    </ul>
+    </li>
+</ul>
+
 {% if user.is_authenticated %}
-    <ul class="nav secondary-nav">
-        <li class="dropdown" data-dropdown="dropdown">
-            <a href="#" class="dropdown-toggle">
+    <ul class="nav pull-right">
+        <li><a href="{% url 'profile_overview' %}">{% trans "Profile" %}</a></li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                 {% if user.get_profile.firstname %}
                     {{ user.get_profile.firstname }} {{ user.get_profile.surname }}
 	            {% else %}
 	                {{ user.username }}
 	            {% endif %}
+	            <b class="caret"></b>
 	        </a>
 	        <ul class="dropdown-menu">
 	            {% if user.is_staff %}
@@ -28,8 +48,7 @@
         </li>
     </ul>
 {% endif %}
-
-<form action="/i18n/setlang/" method="post" class="pull-right">{% csrf_token %}
+<!--<form action="/i18n/setlang/" method="post" class="pull-left">{% csrf_token %}
     <input name="next" type="hidden" value="/" />
     <select id="language" name="language" onchange="this.form.submit()">
         <option>{% trans "Language" %}</option>
@@ -37,5 +56,4 @@
             <option value="{{ lang.0 }}">{{ lang.1 }}</option>
         {% endfor %}
     </select>
-    <a href="{% url 'profile_overview' %}">{% trans "Profile" %}</a>
-</form>
+</form>-->
