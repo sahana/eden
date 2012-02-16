@@ -17,6 +17,12 @@
          Office Street address..........optional.....office street address
          Office City....................optional.....office city
          Office Post code...............optional.....office post code
+         Base...........................required.....office name
+         Base Lat.......................optional.....office latitude
+         Base Lon.......................optional.....office longitude
+         Base Street address............optional.....office street address
+         Base City......................optional.....office city
+         Office Post code...............optional.....office post code
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
          Last Name......................required.....person last name
@@ -280,6 +286,8 @@
 
         <xsl:param name="OrgName"/>
         <xsl:param name="OfficeName"/>
+        
+        <xsl:variable name="BaseName" select="col[@field='Base']/text()"/>
 
         <xsl:variable name="type">
             <xsl:choose>
@@ -316,6 +324,31 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+            
+            <!-- In-line Base Location Reference (volunteers only) -->
+            <reference field="location_id" resource="gis_location">
+                <resource name="gis_location">
+                    <data field="name"><xsl:value-of select="$BaseName"/></data>
+                    <xsl:if test="col[@field='Base Lat']!=''">
+                        <data field="lat"><xsl:value-of select="col[@field='Base Lat']"/></data>
+                    </xsl:if>
+                    <xsl:if test="col[@field='Base Lon']!=''">
+                        <data field="lon"><xsl:value-of select="col[@field='Base Lon']"/></data>
+                    </xsl:if>
+                    <xsl:if test="col[@field='Base Street address']!=''">
+                        <data field="addr_street">
+                            <xsl:value-of select="concat(
+                                                    col[@field='Base Street address'], ', ',
+                                                    col[@field='Base City'])"/>
+                        </data>
+                    </xsl:if>
+                    <xsl:if test="col[@field='Base Post code']!=''">
+                        <data field="addr_postcode">
+                            <xsl:value-of select="col[@field='Base Post code']"/>
+                        </data>
+                    </xsl:if>
+                </resource>
+            </reference>
         </resource>
 
     </xsl:template>
