@@ -298,23 +298,22 @@ class S3RequestModel(S3Model):
                                  represent = self.req_represent,
                                  label = T("Request"),
                                  ondelete = "CASCADE")
+        list_fields = ["id",
+                       "type",
+                       "event_id",]
 
+        if settings.get_req_use_req_number():
+            list_fields.append("request_number")
+        list_fields.append("priority")
+        list_fields.append("commit_status")
+        list_fields.append("transit_status")
+        list_fields.append("fulfil_status")
+        list_fields.append("date_required")
         self.configure(tablename,
                        onaccept = self.req_onaccept,
                        deduplicate = self.req_req_duplicate,
-                       list_fields = ["id",
-                                      "type",
-                                      "event_id",
-                                      "request_number",
-                                      "priority",
-                                      "commit_status",
-                                      "transit_status",
-                                      "fulfil_status",
-                                      #"date",
-                                      "date_required",
-                                      #"requester_id",
-                                      #"comments",
-                                    ])
+                       list_fields = list_fields
+                      )
 
         # Script to inject into Pages which include Request create forms
         req_help_msg = ""
