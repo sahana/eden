@@ -69,6 +69,13 @@ STATIC_ROOT = cwd + '/static/'
 STATIC_URL = '/static'
 ADMIN_MEDIA_PREFIX = STATIC_URL + '/grappelli/'
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake'
+    }
+}
+
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',

@@ -131,7 +131,6 @@ class Document(models.Model):
         return extension[1].upper()
 
     def get_file_size(self):
-        print self.docfile.size
         if self.docfile.size < 1023:
             return str(self.docfile.size) + " Bytes"
         elif self.docfile.size >= 1024 and self.docfile.size <= 1048575:
