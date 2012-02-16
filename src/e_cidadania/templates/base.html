@@ -53,12 +53,12 @@
         </div>
         
         {% if messages %}
-            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}" style="margin-top:40px;">
-                <a class="close" data-dismiss="alert" href="#">x</a>
-                {% for message in messages %}
-                    {{ message|safe }}
-                {% endfor %}
-            </div>
+            {% for message in messages %}
+                <div class="alert fade in {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin-top:40px;">
+                    <a class="close" data-dismiss="alert" href="#">x</a>
+                        {{ message|safe }}
+                </div>
+            {% endfor %}
         {% endif %}
     
         <div id="jsnotify" class="hidden">
