@@ -10,24 +10,20 @@
     <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
 {% endblock %}
 
-{% block extrajs %}
-    <script src="{{ STATIC_URL }}/js/bootstrap-modal.js" type="text/javascript"></script>
-{% endblock %}
-
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{{ debate.title}}</h4>
         </div>
     </div>
     
     <div class="row">
-        <div class="span8">
+        <div class="span6">
             <p><strong>{% trans "Description:" %}</strong> {{ debate.description }}</p>
             <p><strong>{% trans "Scope:" %}</strong> {{ debate.scope }}</p>
         </div>
-        <div class="span8">
+        <div class="span6">
             <p><strong>{% trans "Start date:" %}</strong> {% if debate.start_date %}{{ debate.start_date }}{% else %}{% trans "No date"%}{% endif %}</p>
             <p><strong>{% trans "End date:" %}</strong> {% if debate.end_date %}{{ debate.end_date }}{% else %}{% trans "No date"%}{% endif %}</p>
         </div>
@@ -38,13 +34,13 @@
 {% block freewidth %}
 
     <div class="row">
-        <div class="span16 specialmargin">
+        <div class="span12 specialmargin">
             <div id="debate-number" class="hidden">{{ debate.pk }}</div>
             <div id="last-note" class="hidden">{{ lastnote }}</div>
             
             <div id="debate">
                 
-                <table id="debate{{ debate.pk }}" cellspacing="0">
+                <table id="debate{{ debate.pk }}" cellspacing="0" style="width:100%;">
                     <thead>
                         <tr id="debate{{ debate.pk }}-headers">
                             <th id="corner" class="corner-criteria"></th>
@@ -72,9 +68,9 @@
                                                         {% endif %}
                                                     </div>
                                                     <p class="note-text">{{ note.title }}</p>
-                                                    <span id="view-note" class="label hidden"><a href="#" onclick="viewNote(this)" data-controls-modal="view-current-note" data-backdrop="true" data-keyboard="true">{% trans "View" %}</a></span>
+                                                    <span id="view-note" class="label hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
                                                     {% if note.author == request.user %}
-                                                        <span id="edit-note" class="label hidden"><a href="#" onclick="editNote(this)" data-controls-modal="edit-current-note" data-backdrop="true" data-keyboard="true">{% trans "Edit" %}</a></span>
+                                                        <span id="edit-note" class="label hidden"><a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a></span>
                                                     {% endif %}
                                                 </div>
                                             {% endif %}
@@ -90,7 +86,7 @@
 
                 <div id="edit-current-note" class="modal hide fade" style="display: none; ">
                     <div class="modal-header">
-                        <a href="#" class="close">×</a>
+                        <a class="close" data-dismiss="modal">×</a>
                         <h3>{% trans "Edit note" %}</h3>
                     </div>
                     <div class="modal-body">
@@ -115,13 +111,13 @@
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <a href="#" onclick="saveNote()" class="btn primary">{% trans "Save" %}</a>
+                        <a href="#" onclick="saveNote()" class="btn btn-primary">{% trans "Save" %}</a>
                     </div>
                 </div>
 
                 <div id="view-current-note" class="modal hide fade" style="display: none; ">
                     <div class="modal-header">
-                        <a href="#" class="close">×</a>
+                        <a class="close" data-dismiss="modal">×</a>
                         <h3>{% trans "View note" %}</h3>
                     </div>
                     <div class="modal-body">
@@ -132,7 +128,7 @@
                     </div>
                 </div>
 
-                <span class="btn primary small" id="new-note" onclick="createNote()">{% trans "Add new note" %}</span>
+                <span class="btn btn-primary small" id="new-note" onclick="createNote()">{% trans "Add new note" %}</span>
                 <div id="sortable-dispatcher"></div>
                 
             </div>

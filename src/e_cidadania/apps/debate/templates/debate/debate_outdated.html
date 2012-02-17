@@ -12,14 +12,14 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{% trans "Can't view this debate" %}</h4>
             <p>{% trans "It seems that the debate you're trying to access is either <strong>not started</strong> or it <strong>expired</strong>." %}</p>
             <div class="row">
-                <div class="span8">
+                <div class="span6">
                     <h6>{% trans "Started on:" %}</h6> {{ debate.start_date }}
                 </div>
-                <div class="span8">
+                <div class="span6">
                     <h6>{% trans "Finished on:" %}</h6> {{ debate.end_date }}
                 </div>
             </div>
