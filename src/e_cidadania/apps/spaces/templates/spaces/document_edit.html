@@ -5,15 +5,16 @@
 {% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
 
+{% block space %}
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+{% endblock %}
+
 {% block content %}
 
-    {% block centercol %}
-        <div class="grid_16">
-    
-            <div id="contenttitles">
-                {% trans "Edit document" %}
-            </div>
-      
+    <div class="row">
+        <div class="span12">
+            <h3>{% trans "Edit document" %}</h3>
+            
             <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
 
                 <div class="clearfix"> 
@@ -65,12 +66,12 @@
                 {{ form.author.as_hidden }}
         
                 <hr />
-                <a href="{{ get_place.get_absolute_url }}" class="btn small danger">&laquo; {% trans "Go back" %}</a>
-                <input class="btn small primary" type="submit" value="{% trans 'Save' %}" />
+                <a href="{{ get_place.get_absolute_url }}" class="btn btn-small btn-danger">&laquo; {% trans "Go back" %}</a>
+                <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Save' %}" />
                 
             </form>
         </div>
-    {% endblock %}
+    </div>
 
 {% endblock %}
 
