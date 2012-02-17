@@ -18,9 +18,9 @@
                            data-content="{{ space.description|removetags:'p'|safe }}"
                            data-original-title="{{ space.name }}">{{ space.name }}</a>
                         {% if space.public %}
-                            <span class="label success">{% trans "Public" %}</span>
+                            <span class="label label-success">{% trans "Public" %}</span>
                         {% else %}
-                            <span class="label important">{% trans "Private" %}</span>
+                            <span class="label label-important">{% trans "Private" %}</span>
                         {% endif %}
                     </li>
                 {% empty %}
