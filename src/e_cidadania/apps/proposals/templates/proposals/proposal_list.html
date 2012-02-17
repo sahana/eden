@@ -9,7 +9,7 @@
 {% block content %}
 
     <div class="row">
-        <div class="span11">
+        <div class="span8">
             {% for p in object_list %}
                 <div id="proposal-wrapper">
                     {% if perms.proposals.add_proposal %}
@@ -61,7 +61,7 @@
                 </div>
             {% endif %}
         </div>
-        <div class="span5">
+        <div class="span4">
             <h4>Empty space!</h4>
         </div>
     </div>

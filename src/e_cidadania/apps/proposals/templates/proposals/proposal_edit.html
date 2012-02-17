@@ -18,13 +18,13 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{% trans "Edit proposal" %}</h4>
         </div>
     </div>
     
     <div class="row">
-        <div class="span11">
+        <div class="span8">
             <form action="" method="post">{% csrf_token %}
       
                 {{ form.non_field_errors }}
@@ -134,12 +134,12 @@
                 {% endif %}
                 
                 <hr />
-                <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Go back" %}</a>
-                <input class="btn small primary" type="submit" value="{% trans 'Publish' %}" />
+                <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
+                <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />
     
             </form>
         </div>
-        <div class="span5">
+        <div class="span4">
             <h4>Empty space!</h4>
         </div>
     </div>

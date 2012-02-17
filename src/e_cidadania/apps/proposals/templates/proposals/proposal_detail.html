@@ -49,13 +49,13 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <div class="row proposal-wrapper">
                 <div class="span1">
                     <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ support_votes_count }}</p>
-                    <button style="margin-left:-15px;" onclick="upvote({{ proposal.id }})" class="btn small" {% if user in proposal.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
+                    <button style="margin-left:-15px;" onclick="upvote({{ proposal.id }})" class="btn btn-small" {% if user in proposal.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
                 </div>
-                <div class="span14">
+                <div class="span10">
                     <div class="proposal-title">{{ proposal.title }}</div>
                     <div class="proposal-message">{{ proposal.description|safe }}</div>
                     <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
