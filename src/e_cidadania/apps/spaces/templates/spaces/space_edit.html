@@ -9,13 +9,13 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{% trans "Edit space" %} {{ get_place.name }}</h4>
         </div>
     </div>
     
     <div class="row">
-        <div class="span11">
+        <div class="span8">
             <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
                 
                 {% if form.non_field_errors %}
@@ -215,11 +215,11 @@
                 {% endfor %}
             
                 <hr />
-                <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Cancel" %}</a>
-                <input class="btn small primary " type="submit" value="{% trans 'Save' %}" />
+                <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Cancel" %}</a>
+                <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Save' %}" />
             </form>
         </div>
-        <div class="span5">
+        <div class="span4">
             <h4>Empty space!</h4>
         </div>
     </div>
