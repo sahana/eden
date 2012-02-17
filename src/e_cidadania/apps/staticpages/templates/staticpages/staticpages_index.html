@@ -4,14 +4,18 @@
 {% block title %}{{ page.name }}{% endblock %}
     
 {% block content %}
-    <div class="grid_16">
-        {{ page.content|safe }}
-      
-        <hr />
-        <a href="{% url 'site-index' %}" class="btn small">&laquo; {% trans "Go back" %}</a>
 
-        <div class="pageinfo">
-            {% trans "last updated" %} {{ page.last_update }}
+    <div class="row">
+        <div class="span12">
+            {{ page.content|safe }}
+      
+            <hr />
+            <a href="{% url 'site-index' %}" class="btn small">&laquo; {% trans "Go back" %}</a>
+
+            <div class="pageinfo">
+                {% trans "last updated" %} {{ page.last_update }}
+            </div>
         </div>
     </div>
+
 {% endblock %}

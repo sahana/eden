@@ -4,8 +4,12 @@
 {% block title %}{% blocktrans %}{{ user }}'s Dashboard{% endblocktrans %}{% endblock %}
 
 {% block content %}
-  <div class="grid_16">
-	  <h3>{% trans "Your profile information has been updated successfully" %}.</h3>
-	  <p><a href="{% url 'profile-overview' %}">{% trans "Go back to your profile" %}</p>
-	</div>
+
+    <div class="row">
+        <div class="span12">
+            <h3>{% trans "Your profile information has been updated successfully" %}.</h3>
+            <p><a href="{% url 'profile-overview' %}">{% trans "Go back to your profile" %}</p>
+        </div>
+    </div>
+
 {% endblock %}

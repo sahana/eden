@@ -2,12 +2,11 @@
 {% load i18n %}
 
 {% block title %}{% trans "User login" %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
   
 <div class="row" style="margin-top:100px;margin-bottom:100px;">
-    <div class="span6 offset5">
+    <div class="span3 offset3">
 	        <form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8" class="form-stacked">{% csrf_token %}
 	          <fieldset>
 		          <legend>{% trans "User login" %}</legend>
@@ -39,7 +38,7 @@
 	        <p><input type="submit" class="btn" value="{% trans 'Login' %}" /></p>
 	    </form>
     </div>
-    <div class="span5">
+    <div class="span4 offset2">
         <h4>{% trans "Helpful links" %}</h4>
         <a href="{% url 'password_reset' %}">{% trans "Recover your password" %}</a><br />
         <a href="{% url 'signup' %}">{% trans "Sign up!" %}</a><br />

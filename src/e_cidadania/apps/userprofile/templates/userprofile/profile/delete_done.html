@@ -2,14 +2,17 @@
 {% load i18n %}
 
 {% block title %}{% trans "Profile removed" %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-    <div id="contenttitles">{% trans "Personal data removed" %}</div>
-    <div class="grid_16">{% trans "Your profile information has been removed successfully." %}
-        <div></br></br>
+
+    <div class="row">
+        <div class="span12">
+            <h3>{% trans "Personal data removed" %}</h3>
+            
+            <p>{% trans "Your profile information has been removed successfully." %}</p>
             <a href="/">&laquo; {% trans "Back to home page" %}</a></br>
             <a href="{% url 'profile-overview' %}">&laquo; {% trans "Back to your profile" %}</a>
         </div>
     </div>
+
 {% endblock %}

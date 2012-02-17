@@ -2,29 +2,34 @@
 {% load i18n %}
 
 {% block title %}{% blocktrans %}{{ user }}'s Dashboard{% endblocktrans %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-	<form action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
-	{{ form.errors }}
-	{% csrf_token %}
-	<fieldset>
-		<div id="contenttitles">{% trans "Define your location" %}</div>
-		<div class="grid_11">
-		    <h3 for="id_country">{% trans "Country" %}</h3>
-		    <p>{{ form.country }}</p>
-		    {% if GOOGLE_MAPS_API_KEY %}
-			    <div class="mapinfo">
-				    <h3>{% trans "Location" %}</h3>
-				    <p id="location_info">{{ user.get_profile.location }}</p>
-				    <h3 for="map">{% trans "Position" %}</h3>
-				    <div id="map"></div>
-			    </div>
-			    <div style="margin-left:10px;">{{ form.location }} {{ form.latitude }} {{ form.longitude }}</div>
-			    <!-- <div style="display: none;" id="apikey">{{ GOOGLE_MAPS_API_KEY }}</div> -->
-		    {% endif %}
-		    <input type="submit" value="{% trans 'Save' %}" style="margin:12px 0 10px 12px;"/>
-	    </div>
-	</fieldset>
-	</form>
+
+    <div class="row">
+        <div class="span12">
+            <form action="{{ request.path_info }}" method="post" enctype="multipart/form-data">
+	            {{ form.errors }}
+	            {% csrf_token %}
+	            <fieldset>
+		            <div id="contenttitles">{% trans "Define your location" %}</div>
+		            <div class="span12">
+		                <h3 for="id_country">{% trans "Country" %}</h3>
+		                <p>{{ form.country }}</p>
+		                {% if GOOGLE_MAPS_API_KEY %}
+			                <div class="mapinfo">
+				                <h3>{% trans "Location" %}</h3>
+				                <p id="location_info">{{ user.get_profile.location }}</p>
+				                <h3 for="map">{% trans "Position" %}</h3>
+				                <div id="map"></div>
+			                </div>
+			                <div style="margin-left:10px;">{{ form.location }} {{ form.latitude }} {{ form.longitude }}</div>
+			                <!-- <div style="display: none;" id="apikey">{{ GOOGLE_MAPS_API_KEY }}</div> -->
+		                {% endif %}
+		                <input type="submit" value="{% trans 'Save' %}" style="margin:12px 0 10px 12px;"/>
+	                </div>
+            	</fieldset>
+	        </form>
+        </div>
+    </div>
+    
 {% endblock %}

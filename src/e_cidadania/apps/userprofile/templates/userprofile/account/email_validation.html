@@ -16,13 +16,13 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{% trans "Add e-mail" %}</h4>
             <p>{% trans "Insert the new e-mail address. An e-mail will be send to it for testing and confirmation" %}.</p>
         </div>
     </div>
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <form action="" method="post" accept-charset="utf-8">
                 <legend>{% if user.email %}{% trans "E-mail change" %}{% else %}{% trans "Add e-mail" %}{% endif %}</legend>
                 <label for="id_email">{% trans 'New e-mail address' %}</label>

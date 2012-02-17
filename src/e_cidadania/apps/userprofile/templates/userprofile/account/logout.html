@@ -2,14 +2,17 @@
 {% load i18n %}
 
 {% block title %}{% trans "Logged out" %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-    <div class="grid_16">
-    	<h3>{% trans "Logged out" %}</h3>
-    	<p class="large">{% trans "You've been logged out" %}. (<a href="{% url 'profile_overview' %}">{% trans 'Log in again' %}</a>)</p>
-
-        <hr />
-        <a href="{% url 'site-index' %}" class="btn small">&laquo; {% trans "Go back" %}</a>
+    
+    <div class="row">
+        <div class="span12">
+        	<h3>{% trans "Logged out" %}</h3>
+        	<p class="large">{% trans "You've been logged out" %}. (<a href="{% url 'profile_overview' %}">{% trans 'Log in again' %}</a>)</p>
+    
+            <hr />
+            <a href="{% url 'site-index' %}" class="btn small">&laquo; {% trans "Go back" %}</a>
+        </div>
     </div>
+    
 {% endblock %}

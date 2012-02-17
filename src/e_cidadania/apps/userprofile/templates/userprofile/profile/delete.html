@@ -2,21 +2,23 @@
 {% load i18n %}
 
 {% block title %}{% trans "Delete personal information" %}{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-    <div class="grid_16">{% trans "Remove profile" %}</div>
-        <div id="contentinside">
+
+    <div class="row">
+        <div class="span12">
             <p>{% trans "It erases all your private data except your username. You can refill the information later if you want to." %}</p>
             
-            <form action="" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <fieldset>
-                <h3>{% trans "Delete your personal information" %}</h3>
-		    	<p><label for="remove">{% trans "Are you sure?" %}</label>
-		    	   <input id="remove" type="submit" value="{% trans "Yes" %}" />
-		    	</p>
-		    </fieldset>
-	    </form>
+            <form action="" method="post" enctype="multipart/form-data">{% csrf_token %}
+                <fieldset>
+                    <h3>{% trans "Delete your personal information" %}</h3>
+		    	    <p>
+		    	        <label for="remove">{% trans "Are you sure?" %}</label>
+		    	        <input id="remove" type="submit" value="{% trans "Yes" %}" />
+		    	    </p>
+		        </fieldset>
+	        </form>
         </div>
+    </div>
+
 {% endblock %}

@@ -7,7 +7,7 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <form action="" method="post" accept-charset="utf-8">
                 {% csrf_token %}
                 <h4>{% trans "User registration" %}</h4>
@@ -82,16 +82,9 @@
                     </div>
                 </div>
 
-                <p><input type="submit" value="{% trans 'Register' %}" class="btn large" /></p>
+                <p><input type="submit" value="{% trans 'Register' %}" class="btn btn-large" /></p>
             </form>
         </div>
     </div>
 
-{% endblock %}
-
-{% block content-related %}
-	<div class="box">
-		<h3>{% trans "Register a new account" %}</h3>
-		<p>{% trans "Joining this community is quick and easy. You only need to fill the form to get access to all the private content" %}.</p>
-	</div>
 {% endblock %}

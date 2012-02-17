@@ -3,9 +3,8 @@
 {% load avatars %}
 
 {% block title %}{{ profile.user }}'s public profile{% endblock %}
-{% block robots %}noindex,nofollow{% endblock %}
 
-{% block content %}
+{% block extrajs %}
     {% if GOOGLE_MAPS_API_KEY and user.get_profile.location %}
         <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
         <meta name="viewport" content="initial-scale=1.0, user-scalable=yes">
@@ -26,25 +25,31 @@
             };
         </script>
     {% endif %}
-	
-	<div id="contenttitles">{% blocktrans with profile.user as user %}Public profile of {{ user }}{% endblocktrans %}</div>
+{% endblock %}
 
-    <div class="grid_16">
-      <img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
-		  <ul>
-		  	<li>{% trans "Username" %}: {{ profile.user }}</li></br>
-		  	{% if profile.country %}
-		    	<li>{% trans "Country" %}: {{ profile.get_country_display }}</li></br>
-		  	{% endif %}
-		  	{% if profile.location %}
-		    	<li>{% trans "Location" %}: {{ profile.location }}</li>
-		  	{% endif %}
-		  </ul>
-	  </div>
+{% block content %}
+
+	<div class="row">
+	    <div class="span12">
+	        <h3>{% blocktrans with profile.user as user %}Public profile of {{ user }}{% endblocktrans %}</h3>
+	        
+	        <img class="border top" alt="{{ profile.user }}" src="{% avatar 96 profile.user %}" />
+		    <ul>
+		  	    <li>{% trans "Username" %}: {{ profile.user }}</li></br>
+		  	    {% if profile.country %}
+		    	    <li>{% trans "Country" %}: {{ profile.get_country_display }}</li></br>
+		  	    {% endif %}
+		  	    {% if profile.location %}
+		    	    <li>{% trans "Location" %}: {{ profile.location }}</li>
+		  	    {% endif %}
+		    </ul>
 	
-	  {% if profile.latitude and profile.longitude %}
-	    <div class="span-10">
-		    <div id="location"></div>
+	        {% if profile.latitude and profile.longitude %}
+	            <div class="span-10">
+		            <div id="location"></div>
+	            </div>
+	        {% endif %}
 	    </div>
-	  {% endif %}
+	</div>
+	
 {% endblock %}
