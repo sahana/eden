@@ -6,16 +6,16 @@
 {% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
 
+{% block space %}
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+{% endblock %}
 
 {% block content %}
 
-    {% block centercol %}
-        <div class="grid_11">
-    
-            <div id="contenttitles">
-                {% trans "Create new event" %}
-            </div>
-      
+    <div class="row">
+        <div class="span8">
+            <h3>{% trans "Create new event" %}</h3>
+            
             <form enctype="" action="" method="post">{% csrf_token %}
         
                 {% if form.non_field_errors %}
@@ -125,28 +125,23 @@
                 {{ form.event_author.as_hidden }}
 
                 <hr />
-                <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Cancel" %}</a>
-                <input class="btn small primary " type="submit" value="{% trans 'Create' %}" />
+                <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Cancel" %}</a>
+                <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Create' %}" />
 
             </form>
         </div>
-
-    {% endblock %}
-
-    {% block rightcol %}
-        <div class="grid_5">
-            <div id="widget">
-                <h2>{% trans "How do events work?"%}</h2>
-                <ul class="instructions">
-                    <li><strong>{% trans "Title" %}:</strong> {% trans "A descriptive title of the event. Be concise."%}</li>
-                    <li><strong>{% trans "Description" %}:</strong> {% trans "A short resume of the points treated in the event." %}</li>
-                    <li><strong>{% trans "Location" %}:</strong> {% trans "Where does the event took place." %}</li>
-                    <li><strong>{% trans "event type" %}:</strong> {% trans "Type of event."%}</li>
-                    <li><strong>{% trans "event date" %}:</strong> {% trans "Date when the event took place."%}</li>
-                </ul>
-            </div>
+        
+        <div class="span4">
+            <h4>{% trans "How do events work?"%}</h4>
+            <ul class="instructions">
+                <li><strong>{% trans "Title" %}:</strong> {% trans "A descriptive title of the event. Be concise."%}</li>
+                <li><strong>{% trans "Description" %}:</strong> {% trans "A short resume of the points treated in the event." %}</li>
+                <li><strong>{% trans "Location" %}:</strong> {% trans "Where does the event took place." %}</li>
+                <li><strong>{% trans "event type" %}:</strong> {% trans "Type of event."%}</li>
+                <li><strong>{% trans "event date" %}:</strong> {% trans "Date when the event took place."%}</li>
+            </ul>
         </div>
-    {% endblock %}
+    </div>
 
 {% endblock %}
 

@@ -5,15 +5,16 @@
 {% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
 
+{% block space %}
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+{% endblock %}
+
 {% block content %}
 
-    {% block centercol %}
-        <div class="grid_16">
-    
-            <div id="contenttitles">
-                {% trans "Event list" %}
-            </div>
-      
+    <div class="row">
+        <div class="span12">
+            <h3>{% trans "Event list" %}</h3>
+            
             {% for event in event_list %}
                 <p><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></p>
                 <p>{% trans "Published" %} {{ event.event_date }}</p>
@@ -22,10 +23,7 @@
             {% endfor %}
       
             <hr />
-            <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
-        </div>
-    
-        {% if is_paginated %}
+            {% if is_paginated %}
             <div class="pagination">
                 <span class="page-links">
                     {% if page_obj.has_previous %}
@@ -39,7 +37,10 @@
                     {% endif %}
                 </span>
             </div>
-        {% endif %}
-    {% endblock %}
+            {% endif %}
+            <a href="{{ get_place.get_absolute_url }}" class="btn small">&laquo; {% trans "Go back" %}</a>
+            
+        </div>
+    </div>
 
 {% endblock %}
