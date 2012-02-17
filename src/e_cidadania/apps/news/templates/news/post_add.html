@@ -25,13 +25,13 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{% trans "Add new post" %}</h4>
         </div>
     </div>
     
     <div class="row">
-        <div class="span11">
+        <div class="span8">
             <form action="" method="post">{% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -109,12 +109,12 @@
             {{ form.space.as_hidden }}
 
             <hr />
-            <a href="{{ get_place.get_absolute_url }}" class="btn danger small">&laquo; {% trans "Go back" %}</a>
-            <input class="btn small primary" type="submit" value="{% trans 'Publish' %}" />
+            <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
+            <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />
         
            </form>
         </div>
-        <div class="span5">
+        <div class="span4">
             <h4>{% trans "How to add new posts" %}</h4>
             <ul class="instructions">
                 <li><strong>{% trans "Title:" %}</strong> {% trans "An spectacular title! (100 characters)" %}</li>

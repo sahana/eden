@@ -29,7 +29,7 @@
 {% block content %}
 
     <div class="row">
-        <div class="span16">
+        <div class="span12">
             <h4>{% trans "News archive" %}</h4>
             {% for post in post_list %}
                 {% ifchanged post.pub_date|date:"F" %}

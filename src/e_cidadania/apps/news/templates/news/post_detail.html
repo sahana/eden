@@ -28,7 +28,7 @@
 {% block content %}
 
     <div class="row">
-        <div class="span11">
+        <div class="span8">
             <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a>
                 {% if perms.news.edit_post %}
                     <a href="{% url 'edit-post' get_place.url news.id %}">
@@ -49,7 +49,7 @@
             <p>{% render_comment_list for news %}</p>
             <p>{% render_comment_form for news %}</p>
         </div>
-        <div class="span5">
+        <div class="span4">
             <h4>{% trans "Recent posts" %}</h4>
             <h4>{% trans "Related posts" %}</h4>
             <h4>{% trans "Share this post" %}</h4>
