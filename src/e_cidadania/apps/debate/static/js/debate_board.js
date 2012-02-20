@@ -159,6 +159,7 @@ function saveNote() {
             noteid: noteID,
             title: $("input[name='notename']").val(),
             message: $("textarea#id_note_message").val()
+//            message: $("td#cke_contents_id_note_message .cke_show_borders").text()
         }
     });
 
