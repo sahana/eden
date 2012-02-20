@@ -294,6 +294,9 @@ if len(pop_list) > 0:
             print >> sys.stdout, "Pre-populate completed in %s" % duration
         bi.resultList = []
 
+    grandTotalEnd = datetime.datetime.now()
+    duration = grandTotalEnd - grandTotalStart
+    print >> sys.stdout, "Pre-populate completed in %s" % (duration)
     for errorLine in bi.errorList:
         print >> sys.stderr, errorLine
     # Restore table protection
