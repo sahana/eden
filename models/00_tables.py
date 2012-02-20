@@ -418,7 +418,7 @@ s3.lx_onvalidation = lx_onvalidation
 def lx_update(table, record_id):
     """
         Write the Lx fields from the Location
-        - used by hrm_human_resource
+        - used by hrm_human_resource & pr_address
 
         @ToDo: Allow the reverse operation.
         If these fields are populated then create/update the location

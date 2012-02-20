@@ -14,7 +14,7 @@
          Office Lon.....................optional.....office longitude
          Office Street address..........optional.....office street address
          Office City....................optional.....office city
-         Office Post code...............optional.....office post code
+         Office Postcode................optional.....office postcode
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
          Last Name......................optional.....person last name (required in some deployments)
@@ -26,6 +26,7 @@
          Office Phone...................optional.....office phone number
          Skype..........................optional.....person skype ID
          Home Address...................optional.....person home address
+         Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
          Home Lon.......................optional.....person home address longitude
          Home L1........................optional.....person home address L1
@@ -127,52 +128,53 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
 
-        <resource name="org_office">
+        <xsl:if test="$OfficeName!=''">
+            <resource name="org_office">
 
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
-            </xsl:attribute>
-
-            <data field="name"><xsl:value-of select="$OfficeName"/></data>
-
-            <!-- Link to Organisation -->
-            <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
+                    <xsl:value-of select="$OfficeName"/>
                 </xsl:attribute>
-            </reference>
 
-            <xsl:choose>
-                <!-- Don't create null locations which over-write good locations imported via office.csv -->
-                <xsl:when test="col[@field='Office Street address'] or col[@field='Office Lat']">
-                    <!-- In-line Location Reference -->
-                    <reference field="location_id" resource="gis_location">
-                        <resource name="gis_location">
-                            <data field="name"><xsl:value-of select="$OfficeName"/></data>
-                            <xsl:if test="col[@field='Office Lat']!=''">
-                                <data field="lat"><xsl:value-of select="col[@field='Office Lat']"/></data>
-                            </xsl:if>
-                            <xsl:if test="col[@field='Office Lon']!=''">
-                                <data field="lon"><xsl:value-of select="col[@field='Office Lon']"/></data>
-                            </xsl:if>
-                            <xsl:if test="col[@field='Office Street address']!=''">
-                                <data field="addr_street">
-                                    <xsl:value-of select="concat(
-                                                            col[@field='Office Street address'], ', ',
-                                                            col[@field='Office City'])"/>
-                                </data>
-                            </xsl:if>
-                            <xsl:if test="col[@field='Office Post code']!=''">
-                                <data field="addr_postcode">
-                                    <xsl:value-of select="col[@field='Office Post code']"/>
-                                </data>
-                            </xsl:if>
-                        </resource>
-                    </reference>
-                </xsl:when>
-            </xsl:choose>
-        </resource>
+                <data field="name"><xsl:value-of select="$OfficeName"/></data>
 
+                <!-- Link to Organisation -->
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                </reference>
+
+                <xsl:choose>
+                    <!-- Don't create null locations which over-write good locations imported via office.csv -->
+                    <xsl:when test="col[@field='Office Street address'] or col[@field='Office Lat']">
+                        <!-- In-line Location Reference -->
+                        <reference field="location_id" resource="gis_location">
+                            <resource name="gis_location">
+                                <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                                <xsl:if test="col[@field='Office Lat']!=''">
+                                    <data field="lat"><xsl:value-of select="col[@field='Office Lat']"/></data>
+                                </xsl:if>
+                                <xsl:if test="col[@field='Office Lon']!=''">
+                                    <data field="lon"><xsl:value-of select="col[@field='Office Lon']"/></data>
+                                </xsl:if>
+                                <xsl:if test="col[@field='Office Street address']!=''">
+                                    <data field="addr_street">
+                                        <xsl:value-of select="concat(
+                                                                col[@field='Office Street address'], ', ',
+                                                                col[@field='Office City'])"/>
+                                    </data>
+                                </xsl:if>
+                                <xsl:if test="col[@field='Office Postcode']!=''">
+                                    <data field="addr_postcode">
+                                        <xsl:value-of select="col[@field='Office Postcode']"/>
+                                    </data>
+                                </xsl:if>
+                            </resource>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -322,13 +324,26 @@
                 <!-- Link to Location -->
                 <xsl:call-template name="LocationReference"/>
 
-                <reference field="location_id" resource="gis_location">
-                    <data field="name"><xsl:value-of select="col[@field='Home Address']"/></data>
-                    <data field="addr_street">
-                        <xsl:value-of select="col[@field='Home Address']"/>
-                    </data>
-                    
-                </reference>
+                <!-- Populate the fields directly which are normally populated onvalidation -->
+                <data field="building_name"><xsl:value-of select="col[@field='Home Address']"/></data>
+                <data field="address">
+                    <xsl:value-of select="col[@field='Home Address']"/>
+                </data>
+                <data field="postcode">
+                    <xsl:value-of select="col[@field='Home Postcode']"/>
+                </data>
+                <data field="L0">
+                    <xsl:value-of select="col[@field='Home Country']"/>
+                </data>
+                <data field="L1">
+                    <xsl:value-of select="col[@field='Home L1']"/>
+                </data>
+                <data field="L2">
+                    <xsl:value-of select="col[@field='Home L2']"/>
+                </data>
+                <data field="L3">
+                    <xsl:value-of select="col[@field='Home L3']"/>
+                </data>
             </resource>
         </xsl:if>
 
@@ -553,6 +568,7 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$Address"/></data>
                 <data field="addr_street"><xsl:value-of select="$Address"/></data>
+                <data field="addr_postcode"><xsl:value-of select="col[@field='Home Postcode']"/></data>
                 <data field="lat"><xsl:value-of select="col[@field='Home Lat']"/></data>
                 <data field="lon"><xsl:value-of select="col[@field='Home Lon']"/></data>
             </resource>
