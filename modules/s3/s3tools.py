@@ -397,7 +397,14 @@ class S3BulkImporter(object):
         function = details[1].strip('" ')
         csv = None
         if len(details) == 3:
-            csv = os.path.join(path, details[2].strip('" '))
+            fileName = details[2].strip('" ')
+            (csvPath, csvFile) = os.path.split(fileName)
+            if csvPath != "":
+                path = os.path.join(current.request.folder,
+                                    "private",
+                                    "prepopulate",
+                                    csvPath)
+            csv = os.path.join(path, csvFile)
         extraArgs = None
         if len(details) == 4:
             extraArgs = details[3].strip('" ')
@@ -517,8 +524,16 @@ class S3BulkImporter(object):
                 self.errorList.append(error)
             end = datetime.datetime.now()
             duration = end - start
-            msg = "   %s import job completed in %s" % (fun, duration)
+            try:
+                # Python-2.7
+                duration = '{:.2f}'.format(duration.total_seconds()/60)
+                msg = "%s import job completed in %s mins" % (fun, duration)
+            except AttributeError:
+                # older Python
+                msg = "%s import job completed in %s" % (fun, duration)
             self.resultList.append(msg)
+            if current.session.s3.debug:
+                s3_debug(msg)
 
     def clear_tasks(self):
         """ Clear the importTask list """

@@ -179,10 +179,6 @@ class S3Chart(object):
             if cachePath != None:
                 image = IMG(_src = cachePath)
             else:
-                # Convert to base64 inline image
-                # Disabled as not supported by IE8
-                # We now write to a file which can be cached, so is useful if the same image is requested multiple times
-                # (mainly suited to small files anyway as this increases filesize)
                 base64Img = base64.b64encode(image)
                 image = IMG(_src="data:image/png;base64,%s" % base64Img)
         else:
@@ -319,4 +315,4 @@ class S3Chart(object):
                        prop={"size":10},
                       )
 
-# END =========================================================================
+# =============================================================================

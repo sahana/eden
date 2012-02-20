@@ -106,16 +106,18 @@ class S3RequestModel(S3Model):
             1:T("Low")
         }
 
-        req_type_opts = {
-            9:T("Other")
-        }
+        req_types_deployed = settings.get_req_req_type()
+        if "Other" in req_types_deployed:
+            req_type_opts = {9:T("Other")}
+        else:
+            req_type_opts = {}
 
-        if settings.has_module("inv"):
+        if settings.has_module("inv") and "Stock" in req_types_deployed:
             # Number hardcoded in controller
             req_type_opts[1] = settings.get_req_type_inv_label()
         #if settings.has_module("asset"):
         #    req_type_opts[2] = T("Assets")
-        if settings.has_module("hrm"):
+        if settings.has_module("hrm") and "People" in req_types_deployed:
             req_type_opts[3] = settings.get_req_type_hrm_label()
         #if settings.has_module("cr"):
         #    req_type_opts[4] = T("Shelter")
@@ -261,6 +263,9 @@ class S3RequestModel(S3Model):
         #elif settings.has_module("cr"):
         #    table.type.default = 4
 
+        if not settings.get_req_use_req_number():
+            table.request_number.readable = False
+            table.request_number.writable = False
 
         # CRUD strings
         ADD_REQUEST = T("Make Request")
@@ -293,23 +298,22 @@ class S3RequestModel(S3Model):
                                  represent = self.req_represent,
                                  label = T("Request"),
                                  ondelete = "CASCADE")
+        list_fields = ["id",
+                       "type",
+                       "event_id",]
 
+        if settings.get_req_use_req_number():
+            list_fields.append("request_number")
+        list_fields.append("priority")
+        list_fields.append("commit_status")
+        list_fields.append("transit_status")
+        list_fields.append("fulfil_status")
+        list_fields.append("date_required")
         self.configure(tablename,
                        onaccept = self.req_onaccept,
                        deduplicate = self.req_req_duplicate,
-                       list_fields = ["id",
-                                      "type",
-                                      "event_id",
-                                      "request_number",
-                                      "priority",
-                                      "commit_status",
-                                      "transit_status",
-                                      "fulfil_status",
-                                      #"date",
-                                      "date_required",
-                                      #"requester_id",
-                                      #"comments",
-                                    ])
+                       list_fields = list_fields
+                      )
 
         # Script to inject into Pages which include Request create forms
         req_help_msg = ""

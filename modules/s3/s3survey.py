@@ -2400,9 +2400,10 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         row += 1
         needHeading = True
         # Merge the top left cells
+        subtitle = survey_T(self.subtitle,self.langDict)
         cell = MatrixElement(startrow,
                              startcol,
-                             "",
+                             subtitle,
                              style="styleSubHeader"
                             )
         cell.merge(labelWidth - 1,0)
