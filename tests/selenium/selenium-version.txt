@@ -1,8 +1,0 @@
-Installed version of selenium-server is 2.3.0
-- the directory has been renamed server
-
-Installed version of selenium-python-client is 2.3.0
-- file selenium.py has been copied to the script directory
-
-Installed version of HTMLTestRunner.py is 0.8.2
-- file has been copied to the script directory

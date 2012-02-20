@@ -150,7 +150,6 @@
     <xsl:template match="row">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OrgAcronym" select="col[@field='Acronym']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
         <xsl:variable name="RoomName" select="col[@field='Location']/text()"/>
@@ -214,7 +213,7 @@
                 <data field="site_or_location" value="1"/>
                 <reference field="organisation_id" resource="org_organisation">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgAcronym"/>
+                        <xsl:value-of select="$OrgName"/>
                     </xsl:attribute>
                 </reference>
                 <reference field="site_id" resource="org_office">
@@ -261,10 +260,12 @@
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgAcronym"/>
+                <xsl:value-of select="$OrgName"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$OrgName"/></data>
-            <data field="acronym"><xsl:value-of select="$OrgAcronym"/></data>
+            <xsl:if test="$OrgAcronym!=''">
+                <data field="acronym"><xsl:value-of select="$OrgAcronym"/></data>
+            </xsl:if>
         </resource>
     </xsl:template>
 
@@ -272,7 +273,6 @@
     <xsl:template name="Office">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OrgAcronym" select="col[@field='Acronym']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
         <xsl:variable name="OfficeLocation" select="concat('Location:', $OrgName, '|', $OfficeName)"/>
@@ -294,7 +294,7 @@
             </xsl:if>
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgAcronym"/>
+                    <xsl:value-of select="$OrgName"/>
                 </xsl:attribute>
             </reference>
             <reference field="location_id" resource="gis_location">

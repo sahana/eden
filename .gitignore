@@ -15,7 +15,6 @@
 /tests/selenium/results/*
 /tests/selenium/scripts/diagTestResults.txt
 /tests/selenium/server/selenium-server.jar
-/tests/selenium/results/*
 /tests/selenium/tests/*
 /tests/unit/*.pdf
 .DS_Store

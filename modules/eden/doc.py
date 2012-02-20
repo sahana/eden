@@ -64,8 +64,10 @@ class S3DocumentLibrary(S3Model):
 
         # Shortcuts
         add_component = self.add_component
+        comments = s3.comments
         configure = self.configure
         define_table = self.define_table
+        meta_fields = s3.meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -103,8 +105,8 @@ class S3DocumentLibrary(S3Model):
                                    represent = lambda url: \
                                                url and A(url,_href=url) or NONE),
                              person_id(label=T("Author"),
-                                             comment=person_comment(T("Author"),
-                                                                    T("The Author of this Document (optional)"))),
+                                       comment=person_comment(T("Author"),
+                                                              T("The Author of this Document (optional)"))),
                              organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                              Field("date", "date",
                                    label = T("Date Published"),
@@ -113,10 +115,10 @@ class S3DocumentLibrary(S3Model):
                                    widget = S3DateWidget()
                                    ),
                              location_id(),
-                             s3.comments(),
+                             comments(),
                              #Field("entered", "boolean", label=T("Entered")),
                              Field("checksum", readable=False, writable=False),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         table.file.represent = lambda file, table=table: \
@@ -216,9 +218,9 @@ class S3DocumentLibrary(S3Model):
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
-                             s3.comments(),
+                             comments(),
                              Field("checksum", readable=False, writable=False),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         table.file.represent = doc_image_represent

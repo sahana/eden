@@ -1569,10 +1569,11 @@ class S3ProjectTaskModel(S3Model):
             8: T("Duplicate"),
             9: T("Completed"),
             10: T("Verified"),
+            11: T("Reopened"),
             #99: T("unspecified")
         }
 
-        project_task_active_statuses = [2, 3]
+        project_task_active_statuses = [2, 3, 11]
         project_task_priority_opts = {
             1:T("Urgent"),
             2:T("High"),
