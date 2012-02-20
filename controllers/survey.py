@@ -975,8 +975,8 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
 
     sheet1.protect = True
     sheetA.protect = True
-#    for i in range(26):
-#        sheetA.col(i).width = 0
+    for i in range(26):
+        sheetA.col(i).width = 0
     sheetA.write(0,
                  26,
                  unicode(T("Please do not remove this sheet")),

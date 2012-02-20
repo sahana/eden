@@ -395,7 +395,7 @@ class S3PersonModel(S3Model):
                                                  _title="%s|%s" % (T("Picture"),
                                                                    T("Upload an image file here.")))),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *(s3.lx_fields() + s3.meta_fields()))
 
         # CRUD Strings
         ADD_PERSON = current.messages.ADD_PERSON
@@ -523,6 +523,9 @@ class S3PersonModel(S3Model):
             if age != ag:
                 form.errors.age_group = T("Age group does not match actual age.")
                 return False
+
+        # Populate the Lx fields
+        current.response.s3.lx_onvalidation(form)
 
         return True
 
@@ -934,6 +937,14 @@ class S3PersonComponents(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
+        # Shortcuts
+        comments = s3.comments
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
+        super_link = self.super_link
+
         # ---------------------------------------------------------------------
         # Address
         #
@@ -944,20 +955,19 @@ class S3PersonComponents(S3Model):
             9:T("other")
         }
 
-        resourcename = "address"
         tablename = "pr_address"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("type", "integer",
-                                        requires = IS_IN_SET(pr_address_type_opts, zero=None),
-                                        widget = RadioWidget.widget,
-                                        default = 1,
-                                        label = T("Address Type"),
-                                        represent = lambda opt: \
-                                                    pr_address_type_opts.get(opt, UNKNOWN_OPT)),
-                                  location_id(),
-                                  s3.comments(),
-                                  *(s3.address_fields() + s3.meta_fields()))
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("type", "integer",
+                                   requires = IS_IN_SET(pr_address_type_opts, zero=None),
+                                   widget = RadioWidget.widget,
+                                   default = 1,
+                                   label = T("Address Type"),
+                                   represent = lambda opt: \
+                                               pr_address_type_opts.get(opt, UNKNOWN_OPT)),
+                              location_id(),
+                              comments(),
+                              *(s3.address_fields() + meta_fields()))
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
@@ -972,7 +982,7 @@ class S3PersonComponents(S3Model):
         # CRUD Strings
         ADD_ADDRESS = T("Add Address")
         LIST_ADDRESS = T("List of addresses")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ADDRESS,
             title_display = T("Address Details"),
             title_list = LIST_ADDRESS,
@@ -988,19 +998,19 @@ class S3PersonComponents(S3Model):
             msg_list_empty = T("There is no address for this person yet. Add new address."))
 
         # Resource configuration
-        self.configure(tablename,
-                       onvalidation=s3.address_onvalidation,
-                       list_fields = ["id",
-                                      "type",
-                                      #"building_name",
-                                      "address",
-                                      "postcode",
-                                      #"L4",
-                                      "L3",
-                                      "L2",
-                                      "L1",
-                                      "L0"
-                                     ])
+        configure(tablename,
+                  onvalidation=s3.address_onvalidation,
+                  list_fields = ["id",
+                                 "type",
+                                 #"building_name",
+                                 "address",
+                                 "postcode",
+                                 #"L4",
+                                 "L3",
+                                 "L2",
+                                 "L1",
+                                 "L0"
+                                ])
 
         # ---------------------------------------------------------------------
         # Image
@@ -1014,49 +1024,48 @@ class S3PersonComponents(S3Model):
             9:T("other")
         }
 
-        resourcename = "pimage"
         tablename = "pr_pimage"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("type", "integer",
-                                        requires = IS_IN_SET(pr_pimage_type_opts, zero=None),
-                                        default = 1,
-                                        label = T("Image Type"),
-                                        represent = lambda opt: pr_pimage_type_opts.get(opt,
-                                                                                        UNKNOWN_OPT)),
-                                  Field("title", label=T("Title"),
-                                        requires = IS_NOT_EMPTY(),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Title"),
-                                                                        T("Specify a descriptive title for the image.")))),
-                                  Field("image", "upload", autodelete=True,
-                                        represent = lambda image: image and \
-                                                    DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                       args=image),
-                                                              _height=60, _alt=T("View Image")),
-                                                              _href=URL(c="default", f="download",
-                                                                        args=image))) or T("No Image"),
-                                        comment =  DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("Image"),
-                                                                         T("Upload an image file here. If you don't upload an image file, then you must specify its location in the URL field.")))),
-                                  Field("url",
-                                        label = T("URL"),
-                                        represent = lambda url: url and \
-                                                                DIV(A(IMG(_src=url, _height=60), _href=url)) or T("None"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("URL"),
-                                                                        T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
-                                  Field("description",
-                                        label=T("Description"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Description"),
-                                                                        T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("type", "integer",
+                                   requires = IS_IN_SET(pr_pimage_type_opts, zero=None),
+                                   default = 1,
+                                   label = T("Image Type"),
+                                   represent = lambda opt: pr_pimage_type_opts.get(opt,
+                                                                                   UNKNOWN_OPT)),
+                             Field("title", label=T("Title"),
+                                   requires = IS_NOT_EMPTY(),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Title"),
+                                                                   T("Specify a descriptive title for the image.")))),
+                             Field("image", "upload", autodelete=True,
+                                   represent = lambda image: image and \
+                                              DIV(A(IMG(_src=URL(c="default", f="download",
+                                                                  args=image),
+                                                         _height=60, _alt=T("View Image")),
+                                                         _href=URL(c="default", f="download",
+                                                                   args=image))) or T("No Image"),
+                                   comment =  DIV(_class="tooltip",
+                                                  _title="%s|%s" % (T("Image"),
+                                                                    T("Upload an image file here. If you don't upload an image file, then you must specify its location in the URL field.")))),
+                             Field("url",
+                                   label = T("URL"),
+                                   represent = lambda url: url and \
+                                                           DIV(A(IMG(_src=url, _height=60), _href=url)) or T("None"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("URL"),
+                                                                   T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
+                             Field("description",
+                                   label=T("Description"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Description"),
+                                                                   T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
+                             comments(),
+                             *meta_fields())
 
         # CRUD Strings
         LIST_IMAGES = T("List Images")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Image"),
             title_display = T("Image Details"),
             title_list = LIST_IMAGES,
@@ -1073,16 +1082,16 @@ class S3PersonComponents(S3Model):
             msg_list_empty = T("No Images currently registered"))
 
         # Resource configuration
-        self.configure(tablename,
-                       onvalidation = self.pr_pimage_onvalidation,
-                       mark_required = ["url", "image"],
-                       list_fields=["id",
-                                    "title",
-                                    "type",
-                                    "image",
-                                    "url",
-                                    "description"
-                                   ])
+        configure(tablename,
+                  onvalidation = self.pr_pimage_onvalidation,
+                  mark_required = ["url", "image"],
+                  list_fields=["id",
+                               "title",
+                               "type",
+                               "image",
+                               "url",
+                               "description"
+                              ])
 
         # ---------------------------------------------------------------------
         # Identity
@@ -1107,25 +1116,24 @@ class S3PersonComponents(S3Model):
             99:T("other")
         }
 
-        resourcename = "identity"
         tablename = "pr_identity"
-        table = self.define_table(tablename,
-                                  person_id(label = T("Person")),
-                                  Field("type", "integer",
-                                        requires = IS_IN_SET(pr_id_type_opts, zero=None),
-                                        default = 1,
-                                        label = T("ID type"),
-                                        represent = lambda opt: \
-                                                    pr_id_type_opts.get(opt,
-                                                                        UNKNOWN_OPT)),
-                                  Field("value"),
-                                  Field("description"),
-                                  Field("country_code", length=4),
-                                  Field("ia_name", label = T("Issuing Authority")),
-                                  #Field("ia_subdivision"), # Name of issuing authority subdivision
-                                  #Field("ia_code"), # Code of issuing authority (if any)
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             person_id(label = T("Person")),
+                             Field("type", "integer",
+                                   requires = IS_IN_SET(pr_id_type_opts, zero=None),
+                                   default = 1,
+                                   label = T("ID type"),
+                                   represent = lambda opt: \
+                                               pr_id_type_opts.get(opt,
+                                                                   UNKNOWN_OPT)),
+                             Field("value"),
+                             Field("description"),
+                             Field("country_code", length=4),
+                             Field("ia_name", label = T("Issuing Authority")),
+                             #Field("ia_subdivision"), # Name of issuing authority subdivision
+                             #Field("ia_code"), # Code of issuing authority (if any)
+                             comments(),
+                             *meta_fields())
 
         # Field configuration
         table.value.requires = [IS_NOT_EMPTY(),
@@ -1133,7 +1141,7 @@ class S3PersonComponents(S3Model):
 
         # CRUD Strings
         ADD_IDENTITY = T("Add Identity")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_IDENTITY,
             title_display = T("Identity Details"),
             title_list = T("Known Identities"),
@@ -1149,14 +1157,14 @@ class S3PersonComponents(S3Model):
             msg_list_empty = T("No Identities currently registered"))
 
         # Resource configuration
-        self.configure(tablename,
-                       list_fields=["id",
-                                    "type",
-                                    "type",
-                                    "value",
-                                    "country_code",
-                                    "ia_name"
-                                    ])
+        configure(tablename,
+                  list_fields=["id",
+                               "type",
+                               "type",
+                               "value",
+                               "country_code",
+                               "ia_name"
+                               ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

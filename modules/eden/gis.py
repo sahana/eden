@@ -73,6 +73,7 @@ class S3LocationModel(S3Model):
 
         # Shortcuts
         define_table = self.define_table
+        meta_fields = s3.meta_fields
 
         # ---------------------------------------------------------------------
         # Locations
@@ -183,7 +184,7 @@ class S3LocationModel(S3Model):
                                     requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                              s3.comments(),
                              format=gis_location_represent,
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Default the owning role to Authenticated. This can be used to allow the site
         # to control whether authenticated users get to create / update locations, or
@@ -323,7 +324,7 @@ class S3LocationModel(S3Model):
                                      s3.l10n_languages.get(opt,
                                                            UNKNOWN_OPT)),
                              Field("name_l10n", label = T("Name")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -562,17 +563,19 @@ class S3LocationModel(S3Model):
                     min_lon = _parent.lon_min
                     max_lat = _parent.lat_max
                     max_lon = _parent.lon_max
-                    base_error = T("Sorry that location appears to be outside the area of the Parent.")
+                    base_error = T("Sorry location %(location)s appears to be outside the area of the Parent.") % dict(location=vars.name)
                     lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
                                                   str(min_lat), str(max_lat))
                     lon_error = "%s: %s & %s" % (T("Longitude should be between"),
                                                  str(min_lon), str(max_lon))
                     if (lat > max_lat) or (lat < min_lat):
                         response.error = base_error
+                        s3_debug(base_error)
                         form.errors["lat"] = lat_error
                         return
                     elif (lon > max_lon) or (lon < min_lon):
                         response.error = base_error
+                        s3_debug(base_error)
                         form.errors["lon"] = lon_error
                         return
 
@@ -586,17 +589,19 @@ class S3LocationModel(S3Model):
                     min_lon = config.min_lon or -180
                     max_lat = config.max_lat or 90
                     max_lon = config.max_lon or 180
-                    base_error = T("Sorry that location appears to be outside the area supported by this deployment.")
+                    base_error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % dict(location=vars.name)
                     lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
                                                   str(min_lat), str(max_lat))
                     lon_error = "%s: %s & %s" % (T("Longitude should be between"),
                                                  str(min_lon), str(max_lon))
                     if (lat > max_lat) or (lat < min_lat):
                         response.error = base_error
+                        s3_debug(base_error)
                         form.errors["lat"] = lat_error
                         return
                     elif (lon > max_lon) or (lon < min_lon):
                         response.error = base_error
+                        s3_debug(base_error)
                         form.errors["lon"] = lon_error
                         return
 
@@ -906,6 +911,7 @@ class S3GISConfigModel(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        meta_fields = s3.meta_fields
         super_link = self.super_link
 
         # =====================================================================
@@ -929,7 +935,7 @@ class S3GISConfigModel(S3Model):
                                                              _height=40))] or [""])[0]),
                              Field("height", "integer", writable=False), # In Pixels, for display purposes
                              Field("width", "integer", writable=False),  # We could get size client-side using Javascript's Image() class, although this is unreliable!
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # CRUD Strings
         ADD_MARKER = T("Add Marker")
@@ -1006,7 +1012,7 @@ class S3GISConfigModel(S3Model):
                                    label = T("Units"),
                                    requires = IS_IN_SET(["m", "degrees"],
                                                         zero=None)),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # CRUD Strings
         ADD_PROJECTION = T("Add Projection")
@@ -1064,7 +1070,7 @@ class S3GISConfigModel(S3Model):
                                    notnull=True, unique=True),
                              marker_id(label = T("Default Marker"),
                                        empty=False),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         ADD_SYMBOLOGY = T("Add Symbology")
         LIST_SYMBOLOGIES = T("List Symbologies")
@@ -1208,7 +1214,7 @@ class S3GISConfigModel(S3Model):
                                    # @ToDo: Remove default once we have cascading working
                                    default = 22),
 
-                              *s3.meta_fields())
+                              *meta_fields())
 
         # Reusable field - used by Events & Scenarios
         config_id = S3ReusableField("config_id", db.gis_config,
@@ -1289,7 +1295,7 @@ class S3GISConfigModel(S3Model):
         table = define_table(tablename,
                              config_id(),
                              super_link("pe_id", "pr_pentity"),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Initially will be populated only when a Personal config is created
         # CRUD Strings
@@ -1710,6 +1716,7 @@ class S3LayerEntityModel(S3Model):
         add_component = self.add_component
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        meta_fields = s3.meta_fields
 
         # =====================================================================
         #  Layer Entity
@@ -1807,7 +1814,7 @@ class S3LayerEntityModel(S3Model):
                                    label=T("On by default?")),
                              Field("base", "boolean", default=False,
                                    label=T("Default Base layer?")),
-                             *s3.meta_fields())
+                             *meta_fields())
         # Default to the Layer -> Config view
         # sinne there are many diff layers
         # - override for single Config -> Layer
@@ -1841,7 +1848,7 @@ class S3LayerEntityModel(S3Model):
                                    # This is the list of GPS Markers for Garmin devices
                                    requires = IS_NULL_OR(IS_IN_SET(current.gis.gps_symbols,
                                                                    zero=T("Use default")))),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Default to the Layer -> Symbology view
         # since there are many diff layers
@@ -2078,6 +2085,7 @@ class S3MapModel(S3Model):
         add_component = self.add_component
         configure = self.configure
         define_table = self.define_table
+        meta_fields = s3.meta_fields
 
         # ---------------------------------------------------------------------
         # GIS Feature Queries
@@ -2101,7 +2109,7 @@ class S3MapModel(S3Model):
                                    requires=IS_NULL_OR(IS_IN_SET(["circle", "square", "star", "x", "cross", "triangle"]))),
                              Field("size", "integer"),
                              Field("colour", requires=IS_NULL_OR(IS_HTML_COLOUR())),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # GPS Waypoints
@@ -2114,7 +2122,7 @@ class S3MapModel(S3Model):
         #                     Field("category", length=128,
         #                           label = T("Category")),
         #                     location_id(),
-        #                     *s3.meta_fields())
+        #                     *meta_fields())
 
         # ---------------------------------------------------------------------
         # GPS Tracks (stored as 1 record per point)
@@ -2122,7 +2130,7 @@ class S3MapModel(S3Model):
         #table = define_table(tablename,
         #                     location_id(),
         #                     #track_id(),        # link to the uploaded file?
-        #                     *s3.meta_fields())
+        #                     *meta_fields())
 
         # ---------------------------------------------------------------------
         # Bing
@@ -2139,7 +2147,7 @@ class S3MapModel(S3Model):
                                    requires=IS_IN_SET(bing_layer_types)),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2168,7 +2176,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2205,7 +2213,7 @@ class S3MapModel(S3Model):
                              cluster_threshold()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2259,7 +2267,7 @@ class S3MapModel(S3Model):
                              cluster_threshold()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   deduplicate = self.gis_layer_georss_deduplicate,
@@ -2303,7 +2311,7 @@ class S3MapModel(S3Model):
                                    requires=IS_IN_SET(google_layer_types)),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2353,7 +2361,7 @@ class S3MapModel(S3Model):
                              cluster_threshold()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2395,7 +2403,7 @@ class S3MapModel(S3Model):
                              cluster_threshold()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   deduplicate = self.gis_layer_kml_deduplicate,
@@ -2439,7 +2447,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2471,7 +2479,7 @@ class S3MapModel(S3Model):
                                                                  T("The URL to access the service.")))),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2516,7 +2524,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2560,7 +2568,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2632,7 +2640,7 @@ class S3MapModel(S3Model):
                              #Field("editable", "boolean", default=False, label=T("Editable?")),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   super_entity="gis_layer_entity")
@@ -2709,7 +2717,7 @@ class S3MapModel(S3Model):
                              #Field("legend_format", label=T("Legend Format"), requires = IS_NULL_OR(IS_IN_SET(gis_layer_wms_img_formats))),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                             *s3.meta_fields())
+                             *meta_fields())
 
         #table.url.requires = [IS_URL, IS_NOT_EMPTY()]
 
@@ -2744,7 +2752,7 @@ class S3MapModel(S3Model):
                              Field("lon", "double"),
                              Field("marker"),    # Used by KML
                              Field("source", requires=IS_NULL_OR(IS_URL())),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Store downloaded KML feeds on the filesystem
         # @ToDo: Migrate to DB instead (using above gis_cache)
@@ -2756,7 +2764,7 @@ class S3MapModel(S3Model):
                                    uploadfolder = os.path.join(request.folder,
                                                                "uploads",
                                                                "gis_cache")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Below tables are not yet implemented
@@ -2772,7 +2780,7 @@ class S3MapModel(S3Model):
         #tablename = "gis_style"
         #table = define_table(tablename,
         #                     Field("name", notnull=True, unique=True)
-        #                     *s3.meta_fields())
+        #                     *meta_fields())
         #db.gis_style.name.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "gis_style.name")]
 
         # ---------------------------------------------------------------------

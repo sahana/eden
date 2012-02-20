@@ -1,0 +1,60 @@
+Selenium provides the ability to test Sahana Eden through a web browser.
+
+# ============
+# Installation
+# ============
+1) Install Selenium Python Client Driver into your running Python:
+http://selenium.googlecode.com/svn/trunk/docs/api/py/index.html
+pip install -U selenium
+or
+wget http://pypi.python.org/packages/source/s/selenium/selenium-2.19.1.tar.gz
+tar zxvf selenium-2.19.1.tar.gz
+cd selenium-2.19.1
+python setup.py install
+
+2) Selenium Server should be downloaded & put somewhere where your control script can find it:
+wget http://selenium.googlecode.com/files/selenium-server-standalone-2.19.0.jar
+
+3) Configure management scripts
+e.g. Win32 ones provided:
+selenium.cmd
+test.cmd
+
+# ==================
+# Running Test Suite
+# ==================
+Before running the Selenium scripts, you should put your database into a known state:
+clean
+
+For the whole test suite, it is assumed that you are using:
+deployment_settings.base.prepopulate = 2
+
+Run the whole test suite for the 'eden' application:
+test
+Run the whole test suite for the 'myapp' application:
+test myapp
+Run a single test for the 'eden'application:
+test eden myscript
+
+# =============
+# Writing Tests
+# =============
+Initially tests can be developed by non-technical users using Selenium IDE.
+
+However these may need to be reworked to be more integrated.
+
+The key is to make tests which are as least fragile as possible through:
+* Localisation
+* Deployment_Settings
+* Theme
+
+This suggests refactoring tests to centralise common elements into a library to mean fixes should only happen in 1 place.
+
+There are a number of possible selectors to use to find your elements.
+The 'ID' may be the most stable:
+http://selenium.googlecode.com/svn/trunk/docs/api/py/selenium/selenium.selenium.html
+
+An example has been created: skeleton.py
+
+Style suggestion:
+http://code.google.com/p/selenium/wiki/PageObjects

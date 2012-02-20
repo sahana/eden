@@ -532,20 +532,28 @@ class S3SearchOptionsWidget(S3SearchWidget):
         else:
             value = None
 
-        field_type = str(resource.table[field].type)
+        try:
+            _field = resource.table[field]
+        except:
+            field_type = "virtual"
+            raise NotImplementedError
+        else:
+            field_type = str(_field.type)
+
         if field_type == "boolean":
             opt_keys = (True, False)
         else:
             # Find unique values of options for that field
-            rows = resource.select(resource.table[field], groupby = resource.table[field])
+            rows = resource.select(_field, groupby = _field)
             if field_type.startswith("list"):
                 opt_keys = []
                 for row in rows:
-                    if row[field] != None:
+                    rfield = row[field]
+                    if rfield != None:
                         try:
-                            _opt_keys = row[field].split("|")
+                            _opt_keys = rfield.split("|")
                         except:
-                            _opt_keys = row[field]
+                            _opt_keys = rfield
                         for opt_key in _opt_keys:
                             opt_keys.append(opt_key)
             else:
@@ -564,7 +572,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         represent = self.attr.represent
         # Fallback to the field's represent
         if not represent or field_type[:9] != "reference":
-            represent = resource.table[field].represent
+            represent = _field.represent
 
         # Execute, if callable
         if callable(represent):
@@ -719,11 +727,18 @@ class S3SearchOptionsWidget(S3SearchWidget):
         if value:
             if not isinstance(value, (list, tuple)):
                 value = [value]
-            field_type = str(resource.table[field].type)
-            if field_type.startswith("list"):
-                query = (resource.table[field].contains(value))
+            try:
+                _field = resource.table[field]
+            except:
+                field_type = "virtual"
+                raise NotImplementedError
             else:
-                query = (resource.table[field].belongs(value))
+                field_type = str(_field.type)
+
+            if field_type.startswith("list"):
+                query = (_field.contains(value))
+            else:
+                query = (_field.belongs(value))
             if kfield:
                 # This is searching a referenced resource
                 # Add join query

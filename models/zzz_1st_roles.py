@@ -39,7 +39,7 @@ if len(pop_list) > 0:
         try:
             openFile = open(filename, "r")
         except IOError:
-            return "Unable to open file %s" % csv
+            return "Unable to open file %s" % filename
         acl = auth.permission
         reader = csv.DictReader(openFile)
         roles = {}

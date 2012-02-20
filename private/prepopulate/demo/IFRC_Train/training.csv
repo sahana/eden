@@ -1,13 +1,142 @@
-"Course","Organisation","Facility","Start","End","Hours","First Name","Last Name","Sex","Email"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-08-01,2011-08-01,8,"Diana","Zolo","Mr.","diana.zolo@gmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-10-01,2011-10-01,8,"Mafalda","Hildeberto","Mr.","mafalda.hildeberto@gmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-10-01,2011-10-01,8,"Liliana","Soares","Mr.","liliana.soares@yahoo.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-11-01,2011-11-01,8,"Carlota","Moniz","Mr.","carlota.moniz@hotmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-11-01,2011-11-01,8,"Soraia","Arriaga","Mr.","soraia.arriaga@gmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-11-01,2011-11-01,8,"Alexandra","Rosmaninho","Mr.","alexandra.rosmaninho@gmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-12-01,2011-12-01,8,"Paulo","Polainos","Mr.","paulo.polainos@yahoo.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-12-01,2011-12-01,8,"Joel","Uva","Mr.","joel.uva@hotmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-12-01,2011-12-01,8,"Eduardo","Rilo","Mr.","eduardo.rilo@gmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-12-01,2011-12-01,8,"Marcelo","Otilia","Mr.","marcelo.otilia@gmail.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-12-01,2011-12-01,8,"Kevin","Polido","Mr.","kevin.polido@yahoo.com"
-"Basic First Aid","Timor-Leste Red Cross Society","Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2011-12-01,2011-12-01,8,"Vanessa","Mondego","Ms.","vanessa.mondego@hotmail.com"
+Course,Organisation,Facility,Start,End,Hours,Sex,First Name,Last Name,Email
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,José,Hugo,josé.hugo@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Durcelina,de Almeida,durcelina.dealmeida@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Sebastiao,da Costa,sebastiao.dacosta@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Apolinario,da Silva,apolinario.dasilva@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Agostinho,Boavida,agostinho.boavida@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Ms.,Mariano,de Jesus ,mariano.dejesus@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Lino,Palat,lino.palat@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Jose,da Costa Belo,jose.dacostabelo@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Ainaro Branch Office,2/01/12,3/01/12,16,Mr.,Leonito,Martins,leonito.martins@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Ms.,Mario,Moniz,mario.moniz@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Ms.,Jessica,Rafael,jessica.rafael@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Ms.,Ercia,da Costa Mariz,ercia.dacostamariz@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Abelito,de Jesus,abelito.dejesus@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Ms.,Severina,Marques,severina.marques@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Eli,Dias Gomes,eli.diasgomes@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Januario,Ximenes,januario.ximenes@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,José,Hugo,josé.hugo@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Joaquim,de Carvalho,joaquim.decarvalho@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Sergio,Freitas,sergio.freitas@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Donato,Pinheiro,donato.pinheiro@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Andreia,Sereno,andreia.sereno@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Paulo,Guterres,paulo.guterres@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Lospalos Branch Office,5/01/12,6/01/12,16,Mr.,Marcelo,Otilia,marcelo.otilia@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Maria,Pascoela,maria.pascoela@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Apolonius,Alex,apolonius.alex@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Juvenal,Barreto,juvenal.barreto@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Januario,Ximenes,januario.ximenes@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Abel,Mali Mau,abel.malimau@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Ms.,Meliana,Cardoso,meliana.cardoso@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Afonso,Alves,afonso.alves@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Johanes,Bosco  Soares,johanes.boscosoares@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Agusto,Noel Sila,agusto.noelsila@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Mónica,Soares,mónica.soares@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Adelino,Caldeira,adelino.caldeira@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Mr.,Mariano,da Costa Belo,mariano.dacostabelo@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Manatuto Branch Office,9/01/12,10/01/12,16,Ms.,Andreia,Sereno,andreia.sereno@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Ms.,Guido,Belo,guido.belo@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Fernando,Goncalves,fernando.goncalves@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Cláudia,Horta,cláudia.horta@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Cesar,Bruno,cesar.bruno@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Florinda,da Costa,florinda.dacosta@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Emilio,dos Santos,emilio.dossantos@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Apolonius,Alex,apolonius.alex@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Clementino,Amaral ,clementino.amaral@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Eduardo,Rilo,eduardo.rilo@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Ahmad,Jaelani,ahmad.jaelani@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Ms.,Venancio,Soares,venancio.soares@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Ms.,Jose,da Silva,jose.dasilva@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Ms.,Joaninha,de Jesus,joaninha.dejesus@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Same Branch Office,12/01/12,13/01/12,16,Mr.,Liliana,Soares,liliana.soares@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Francisco,Rogerio,francisco.rogerio@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Hermengildo,Rente,hermengildo.rente@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Antonio,dos Santos,antonio.dossantos@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Maria,Pascoela,maria.pascoela@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Lauriano,da Costa,lauriano.dacosta@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Ms.,Joao,Baptista,joao.baptista@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Paul,Salvador,paul.salvador@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Ms.,Jaime,de Fatima ,jaime.defatima@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Ms.,Meliana,Cardoso,meliana.cardoso@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Ms.,Nuno,Gouveia Leite,nuno.gouveialeite@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Sergio,Freitas,sergio.freitas@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Paulo,Antonio Belo,paulo.antoniobelo@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Joao,Baptista,joao.baptista@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Ms.,Xanana,Cabecinhas,xanana.cabecinhas@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Ms.,Rosa,Fernandes Baptista,rosa.fernandesbaptista@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Maria,de Jesus,maria.dejesus@gmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Florinda,da Costa,florinda.dacosta@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Carlota,Moniz,carlota.moniz@hotmail.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Maria,Idalina,maria.idalina@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Alcino,Martins,alcino.martins@yahoo.com
+Basics of First Aid,Timor-Leste Red Cross Society,Viqueque Branch Office,2/02/12,2/02/12,16,Mr.,Alegria,de Araujo,alegria.dearaujo@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Ms.,Aleixo,Rodriques,aleixo.rodriques@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Leonito,Martins,leonito.martins@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Ms.,Alegria,de Araujo,alegria.dearaujo@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Maria,Idalina,maria.idalina@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Marcelo,Otilia,marcelo.otilia@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Clementino,Amaral ,clementino.amaral@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Lourenco,Liub,lourenco.liub@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Dominikus,Elo,dominikus.elo@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Mariana,Moio,mariana.moio@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Lino,Palat,lino.palat@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Marcus,Quefi,marcus.quefi@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Joao,Baptista,joao.baptista@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Ainaro Branch Office,23/01/12,23/01/12,4,Mr.,Daniela,Adevinha,daniela.adevinha@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Ms.,Aleixo,Rodriques,aleixo.rodriques@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Leonito,Martins,leonito.martins@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Ms.,Alegria,de Araujo,alegria.dearaujo@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Maria,Idalina,maria.idalina@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Marcelo,Otilia,marcelo.otilia@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Clementino,Amaral ,clementino.amaral@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Lourenco,Liub,lourenco.liub@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Dominikus,Elo,dominikus.elo@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Mariana,Moio,mariana.moio@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Lino,Palat,lino.palat@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Marcus,Quefi,marcus.quefi@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Joao,Baptista,joao.baptista@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Lospalos Branch Office,30/01/12,30/01/12,4,Mr.,Daniela,Adevinha,daniela.adevinha@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Duarte,Baros,duarte.baros@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Maria,Pascoela,maria.pascoela@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Jose,da Silva,jose.dasilva@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Eli,Dias Gomes,eli.diasgomes@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Mariana,Moio,mariana.moio@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Augusto,Brites,augusto.brites@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Juvenal,Barreto,juvenal.barreto@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Maria,Gorette,maria.gorette@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Mario,dos Santos,mario.dossantos@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Ms.,Paulo,Antonio Belo,paulo.antoniobelo@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Mafalda,Gohan,mafalda.gohan@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Ms.,Andreia,Sereno,andreia.sereno@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Ms.,Dinis,Gomes,dinis.gomes@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Diana,Zolo,diana.zolo@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Manatuto Branch Office,6/02/12,6/02/12,4,Mr.,Johanes,Bosco  Soares,johanes.boscosoares@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Ms.,Duarte,de Deus,duarte.dedeus@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Ms.,Sandra,Maria,sandra.maria@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Mr.,Alexandra,Botelheiro,alexandra.botelheiro@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Mr.,Apolonius,Alex,apolonius.alex@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Ms.,Guido,Belo,guido.belo@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Mr.,Maria,Gorette,maria.gorette@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Mr.,Clementino,Amaral ,clementino.amaral@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Ms.,Venancio,Soares,venancio.soares@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Same Branch Office,13/02/12,13/02/12,4,Ms.,Ahmad,Jaelani,ahmad.jaelani@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Alcino,Martins,alcino.martins@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Telma,Otilia,telma.otilia@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Januario,Ximenes,januario.ximenes@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Maria,Pascoela,maria.pascoela@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Nuno,Gouveia Leite,nuno.gouveialeite@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Duarte,de Deus,duarte.dedeus@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Jaime,de Fatima ,jaime.defatima@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Carlota,Moniz,carlota.moniz@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Joel,Uva,joel.uva@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Elly ,Ramos,elly.ramos@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Martinho,Jose da C.,martinho.josedac.@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Maria,de Jesus,maria.dejesus@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Dinis,Gomes,dinis.gomes@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Joana,Diamentino,joana.diamentino@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Florinda,da Costa,florinda.dacosta@hotmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Rosa,Fernandes Baptista,rosa.fernandesbaptista@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Ms.,Rita,Peneda,rita.peneda@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,George,Maria,george.maria@yahoo.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Orlando,de Carvalho,orlando.decarvalho@gmail.com
+Introduction to Community Based Health and First Aid (CBHFA),Timor-Leste Red Cross Society,Viqueque Branch Office,20/02/12,20/02/12,4,Mr.,Francisco,Rogerio,francisco.rogerio@yahoo.com

@@ -1,9 +1,9 @@
 /*****************************************************************************
  *  FILE:  anytime.js - The Any+Time(TM) JavaScript Library (source)
  *
- *  VERSION: 4.1112H
+ *  VERSION: 4.1112K
  *
- *  Copyright 2008-2010 Andrew M. Andrews III (www.AMA3.com). Some Rights 
+ *  Copyright 2008-2011 Andrew M. Andrews III (www.AMA3.com). Some Rights 
  *  Reserved. This work licensed under the Creative Commons Attribution-
  *  Noncommercial-Share Alike 3.0 Unported License except in jurisdicitons
  *  for which the license has been ported by Creative Commons International,
@@ -95,6 +95,19 @@ var AnyTime =
   	{
   		return this.each( function(i) { AnyTime.noPicker( this.id ); } );
   	}
+
+  	//  Add methods to jQuery to change the earliest and latest times using
+  	//  the typical jQuery approach.
+  	
+  	jQuery.prototype.AnyTime_setEarliest = function( options )
+    {
+  		return this.each( function(i) { AnyTime.setEarliest( this.id, options ); } );
+    }
+  	
+  	jQuery.prototype.AnyTime_setLatest = function( options )
+    {
+  		return this.each( function(i) { AnyTime.setLatest( this.id, options ); } );
+    }
   	
   	//	Add special methods to jQuery to compute the height and width
 	//	of picker components differently for Internet Explorer 6.x
@@ -1303,7 +1316,7 @@ AnyTime.picker = function( id, options )
 	//  if one does not already exist.
 	
     if ( __pickers[id] )
-    	throw 'Cannot create another AnyTime picker for "'+id+'"';
+    	throw 'Cannot create another AnyTime.picker for "'+id+'"';
 
 	var _this = null;
 
@@ -2223,13 +2236,13 @@ AnyTime.picker = function( id, options )
 		dismiss: function(event)
 		{
 			this.ajax();
-			this.div.hide();
 			if ( __iframe )
 				__iframe.hide();
 			if ( this.yDiv )
 				this.dismissYDiv();
 			if ( this.oDiv )
 				this.dismissODiv();
+			this.div.hide();
 			this.lostFocus = true;
 		},
 	
@@ -3111,6 +3124,26 @@ AnyTime.picker = function( id, options )
 		},
 		  
 		//---------------------------------------------------------------------
+		//  .setEarliest() changes the earliest time.
+		//---------------------------------------------------------------------
+		
+		setEarliest: function(newTime)
+		{
+        this.earliest = newTime;
+        this.set(this.time);
+		},
+		  
+		//---------------------------------------------------------------------
+		//  .setLatest() changes the latest time.
+		//---------------------------------------------------------------------
+		
+		setLatest: function(newTime)
+		{
+        this.latest = newTime;
+        this.set(this.time);
+		},
+		  
+		//---------------------------------------------------------------------
 		//  .showPkr() displays the picker and sets the focus psuedo-
 		//	element. The current value in the input field is used to initialize
 		//	the picker.
@@ -3654,9 +3687,36 @@ AnyTime.picker = function( id, options )
 	
 } // AnyTime.picker = 
 
+//=============================================================================
+//  AnyTime.setEarliest()
+//
+//  Updates the earliest date/time for the picker attached to a specified
+//  text field.
+//=============================================================================
+
+AnyTime.setEarliest = function( id, newTime )
+{
+  __pickers[id].setEarliest(newTime)
+};
+
+
+//=============================================================================
+//  AnyTime.setLatest()
+//
+//  Updates the latest date/time for the picker attached to a specified
+//  text field.
+//=============================================================================
+
+AnyTime.setLatest = function( id, newTime )
+{
+  __pickers[id].setLatest(newTime)
+};
+
+
 })(jQuery); // function($)...
 
 
 //
 //  END OF FILE
 //
+

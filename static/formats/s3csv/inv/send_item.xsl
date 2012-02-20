@@ -23,7 +23,7 @@
          sender.................unused (will change to human resource)
          date...................inv_send.date
          delivery_date..........inv_send.delivery_date
-         to_location_id.........inv_send.to_location_id -> gis_location.name
+         to_site_id.............inv_send.to_site_id
          status.................inv_send.status
          recipient..............unused (will change to human resource)
          inv_send.comments......inv_send.comments

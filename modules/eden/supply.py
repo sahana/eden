@@ -448,9 +448,10 @@ class S3SupplyModel(S3Model):
         self.add_component("supply_item_pack",
                            supply_item="item_id")
 
-        # Alternative Items as component of Items
-        self.add_component("supply_item_alt",
-                           supply_item="item_id")
+        if settings.get_supply_use_alt_name():
+            # Alternative Items as component of Items
+            self.add_component("supply_item_alt",
+                               supply_item="item_id")
 
         # Inventory Items as component of Items
         self.add_component("inv_inv_item",
@@ -1112,6 +1113,7 @@ S3FilterFieldChange({
         db = current.db
         s3db = current.s3db
         request = current.request
+        settings = current.deployment_settings
 
         item_id = form.vars.id
 

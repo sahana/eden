@@ -317,26 +317,14 @@ currency_type = S3ReusableField("currency_type", "string",
 response.s3.currency_type = currency_type
 
 # =============================================================================
-# Addresses
+# Lx
 #
 # These fields are populated onaccept from location_id
+# - for many reads to fewer writes, this is faster than Virtual Fields
 #
 # Labels that vary by country are set by gis.update_table_hierarchy_labels()
-# @ToDo; Add Postcode to this
 #
 
-address_building_name = S3ReusableField("building_name",
-                                        label=T("Building Name"),
-                                        readable=False,
-                                        writable=False)
-address_address = S3ReusableField("address",
-                                  label=T("Address"),
-                                  readable=False,
-                                  writable=False)
-address_postcode = S3ReusableField("postcode",
-                                   label=deployment_settings.get_ui_label_postcode(),
-                                   readable=False,
-                                   writable=False)
 address_L4 = S3ReusableField("L4",
                              #label=gis.get_location_hierarchy("L4"),
                              readable=False,
@@ -359,7 +347,139 @@ address_L0 = S3ReusableField("L0",
                              readable=False,
                              writable=False)
 
+# -----------------------------------------------------------------------------
+def lx_fields():
+    # return multiple reusable fields
+    fields = (
+            address_L4(),
+            address_L3(),
+            address_L2(),
+            address_L1(),
+            address_L0(),
+           )
+    return fields
 
+s3.lx_fields = lx_fields
+
+# -----------------------------------------------------------------------------
+# Hide Lx fields in Create forms
+# inc list_create (list_fields over-rides)
+def lx_hide(table):
+    table.L4.readable = False
+    table.L3.readable = False
+    table.L2.readable = False
+    table.L1.readable = False
+    table.L0.readable = False
+    return
+
+s3.lx_hide = lx_hide
+
+# -----------------------------------------------------------------------------
+def lx_onvalidation(form):
+    """
+        Write the Lx fields from the Location
+        - used by pr_person, hrm_training, irs_ireport
+
+        @ToDo: Allow the reverse operation.
+        If these fields are populated then create/update the location
+    """
+
+    vars = form.vars
+    if "location_id" in vars and vars.location_id:
+        table = s3db.gis_location
+        query = (table.id == vars.location_id)
+        location = db(query).select(table.name,
+                                    table.level,
+                                    table.parent,
+                                    table.path,
+                                    limitby=(0, 1)).first()
+        if location:
+            if location.level == "L0":
+                vars.L0 = location.name
+            elif location.level == "L1":
+                vars.L1 = location.name
+                if location.parent:
+                    query = (table.id == location.parent)
+                    country = db(query).select(table.name,
+                                               limitby=(0, 1)).first()
+                    if country:
+                        vars.L0 = country.name
+            else:
+                # Get Names of ancestors at each level
+                vars = gis.get_parent_per_level(vars,
+                                                vars.location_id,
+                                                feature=location,
+                                                ids=False,
+                                                names=True)
+
+s3.lx_onvalidation = lx_onvalidation
+
+# -----------------------------------------------------------------------------
+def lx_update(table, record_id):
+    """
+        Write the Lx fields from the Location
+        - used by hrm_human_resource
+
+        @ToDo: Allow the reverse operation.
+        If these fields are populated then create/update the location
+    """
+
+    if "location_id" in table:
+
+        locations = s3db.gis_location
+        query = (table.id == record_id) & \
+                (locations.id == table.location_id)
+        location = db(query).select(locations.name,
+                                    locations.level,
+                                    locations.parent,
+                                    locations.path,
+                                    limitby=(0, 1)).first()
+        if location:
+            vars = Storage()
+            if location.level == "L0":
+                vars.L0 = location.name
+            elif location.level == "L1":
+                vars.L1 = location.name
+                if location.parent:
+                    query = (locations.id == location.parent)
+                    country = db(query).select(locations.name,
+                                               limitby=(0, 1)).first()
+                    if country:
+                        vars.L0 = country.name
+            else:
+                # Get Names of ancestors at each level
+                vars = gis.get_parent_per_level(vars,
+                                                vars.location_id,
+                                                feature=location,
+                                                ids=False,
+                                                names=True)
+            # Update record
+            db(table.id == record_id).update(**vars)
+
+s3.lx_update = lx_update
+
+# =============================================================================
+# Addresses
+#
+# These fields are populated onaccept from location_id
+#
+# @ToDo: Add Postcode to gis.update_table_hierarchy_labels()
+#
+
+address_building_name = S3ReusableField("building_name",
+                                        label=T("Building Name"),
+                                        readable=False,
+                                        writable=False)
+address_address = S3ReusableField("address",
+                                  label=T("Address"),
+                                  readable=False,
+                                  writable=False)
+address_postcode = S3ReusableField("postcode",
+                                   label=deployment_settings.get_ui_label_postcode(),
+                                   readable=False,
+                                   writable=False)
+
+# -----------------------------------------------------------------------------
 def address_fields():
     # return multiple reusable fields
     fields = (
@@ -373,8 +493,10 @@ def address_fields():
             address_L0(),
            )
     return fields
+
 s3.address_fields = address_fields
 
+# -----------------------------------------------------------------------------
 # Hide Address fields in Create forms
 # inc list_create (list_fields over-rides)
 def address_hide(table):
@@ -387,11 +509,13 @@ def address_hide(table):
     table.L0.readable = False
     table.postcode.readable = False
     return
+
 s3.address_hide = address_hide
 
+# -----------------------------------------------------------------------------
 def address_onvalidation(form):
     """
-        Write the Postcode & Street Address fields from the Location
+        Write the Address fields from the Location
         - used by pr_address, org_office & cr_shelter
 
         @ToDo: Allow the reverse operation.
@@ -399,7 +523,7 @@ def address_onvalidation(form):
     """
 
     vars = form.vars
-    if "location_id" in vars:
+    if "location_id" in vars and vars.location_id:
         table = s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == vars.location_id)
@@ -435,9 +559,10 @@ def address_onvalidation(form):
 
 s3.address_onvalidation = address_onvalidation
 
+# -----------------------------------------------------------------------------
 def address_update(table, record_id):
     """
-        Write the Postcode & Street Address fields from the Location
+        Write the Address fields from the Location
         - used by asset_asset
 
         @ToDo: Allow the reverse operation.

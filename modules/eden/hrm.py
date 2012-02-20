@@ -132,7 +132,7 @@ class S3HRModel(S3Model):
                                               readable=False,
                                               writable=False),
                                   site_id,
-                                  *s3.meta_fields())
+                                  *(s3.lx_fields() + s3.meta_fields()))
 
         hrm_human_resource_requires = IS_NULL_OR(IS_ONE_OF(db,
                                             "hrm_human_resource.id",
@@ -168,6 +168,16 @@ class S3HRModel(S3Model):
                         field=["organisation_id"],
                         represent ="%(name)s",
                         cols = 3
+                      ),
+                      S3SearchLocationHierarchyWidget(
+                        name="human_resource_search_L1",
+                        level="L1",
+                        cols = 3,
+                      ),
+                      S3SearchLocationHierarchyWidget(
+                        name="human_resource_search_L2",
+                        level="L2",
+                        cols = 3,
                       ),
                       S3SearchLocationWidget(
                         name="human_resource_search_map",
@@ -346,7 +356,7 @@ class S3HRModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm_human_resource_onaccept(form):
-        """ On-accept routine for HR records """
+        """ On-accept for HR records """
 
         db = current.db
         s3db = current.s3db
@@ -368,6 +378,7 @@ class S3HRModel(S3Model):
         data = Storage()
 
         # For Staff, update the location ID from the selected site
+        site = None
         if record.type == 1 and record.site_id:
             query = (stable._id == record.site_id)
             site = db(query).select(stable.location_id,
@@ -389,6 +400,10 @@ class S3HRModel(S3Model):
         if not data:
             return
         record.update_record(**data)
+
+        if site:
+            # Populate the Lx fields
+            current.response.s3.lx_update(htable, record.id)
 
         if record.organisation_id:
             if user and not user.organisation_id:
@@ -690,6 +705,7 @@ class S3HRSkillModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
+        gis = current.gis
         s3 = current.response.s3
         session = current.session
         settings = current.deployment_settings
@@ -714,6 +730,7 @@ class S3HRSkillModel(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        meta_fields = s3.meta_fields
         s3_has_role = auth.s3_has_role
         super_link = self.super_link
 
@@ -729,7 +746,7 @@ class S3HRSkillModel(S3Model):
                                    length=64,
                                    label=T("Name")),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Skill Type"),
@@ -784,7 +801,7 @@ class S3HRSkillModel(S3Model):
                                    length=64,    # Mayon compatibility
                                    label=T("Name")),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Skill"),
@@ -876,7 +893,7 @@ class S3HRSkillModel(S3Model):
                                                  _title="%s|%s" % (T("Priority"),
                                                                    T("Priority from 1 to 9. 1 is most preferred.")))),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Competency Rating"),
@@ -929,7 +946,7 @@ class S3HRSkillModel(S3Model):
                                              comment = None,
                                              writable = False),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Skill"),
@@ -968,7 +985,7 @@ class S3HRSkillModel(S3Model):
         #                                              _title="%s|%s" % (T("Priority"),
         #                                                                T("Priority from 1 to 9. 1 is most preferred.")))),
         #                          s3.comments(),
-        #                          *s3.meta_fields())
+        #                          *meta_fields())
 
         #crud_strings[tablename] = Storage(
         #    title_create = T("Add Skill Provision"),
@@ -1074,7 +1091,7 @@ class S3HRSkillModel(S3Model):
                                    represent = s3_date_represent,
                                    widget = S3DateWidget(),
                                    ),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Credential"),
@@ -1102,7 +1119,7 @@ class S3HRSkillModel(S3Model):
                                    length=128,
                                    notnull=True,
                                    label=T("Name")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Course"),
@@ -1173,7 +1190,7 @@ class S3HRSkillModel(S3Model):
                              # human_resource_id?
                              #Field("instructor",
                              #      label=T("Instructor")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field Options
         table.site_id.readable = True
@@ -1261,7 +1278,7 @@ class S3HRSkillModel(S3Model):
                                                                 NONE),
                                    writable=False),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Suitable for use when adding a Training to a Person
         # The ones when adding a Participant to an Event are done in the Controller
@@ -1291,31 +1308,29 @@ class S3HRSkillModel(S3Model):
                          "person_id",
                          (T("Course"), "training_event_id$course_id"),
                          (T("Month"), "month"),
+                         # (gis.get_location_hierarchy("L1"), "L1"),
+                         # (gis.get_location_hierarchy("L2"), "L2"),
                         ]
 
         # Resource Configuration
         configure(tablename,
                   report_filter=[
                             # S3SearchLocationHierarchyWidget(
-                                                  # name="training_search_L1",
-                                                  # record=["person_id$location_id"],
-                                                  # level="L1",
-                                                  # represent ="%(name)s",
-                                                  # cols = 3,
-                                                  # ),
+                                # name="training_search_L1",
+                                # level="L1",
+                                # cols = 3,
+                            # ),
                             # S3SearchLocationHierarchyWidget(
-                                                  # name="training_search_L2",
-                                                  # record=["person_id$location_id"],
-                                                  # level="L2",
-                                                  # represent ="%(name)s",
-                                                  # cols = 3,
-                                                  # ),
+                                # name="training_search_L2",
+                                # level="L2",
+                                # cols = 3,
+                            # ),
                             S3SearchMinMaxWidget(
-                                                 name="training_search_date",
-                                                 method="range",
-                                                 label=T("Date"),
-                                                 field=["training_event_id$start_date"]
-                                                ),
+                                name="training_search_date",
+                                method="range",
+                                label=T("Date"),
+                                field=["training_event_id$start_date"]
+                            ),
                         ],
                   report_rows = report_fields,
                   report_cols = report_fields,
@@ -1339,7 +1354,7 @@ class S3HRSkillModel(S3Model):
                                              label=T("Certifying Organization")),
                              Field("expiry", "integer",
                                    label = T("Expiry (months)")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Certificate"),
@@ -1407,7 +1422,7 @@ class S3HRSkillModel(S3Model):
                                              comment = None,
                                              writable = False),
                              s3.comments(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         configure(tablename,
                   list_fields = ["id",
@@ -1447,7 +1462,7 @@ class S3HRSkillModel(S3Model):
                              certificate_id(),
                              skill_id(),
                              competency_id(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Skill Equivalence"),
@@ -1479,7 +1494,7 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              course_id(),
                              certificate_id(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Course Certificate"),
@@ -1529,7 +1544,7 @@ class S3HRSkillModel(S3Model):
                                    label=T("Hours")),
                              Field("place",              # We could make this an event_id?
                                    label=T("Place")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Mission"),
@@ -2056,7 +2071,35 @@ def hrm_training_event_represent(id):
 class HRMTrainingVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["training_event_id$start_date"]
+    extra_fields = ["training_event_id$start_date",
+                    #"person_id$location_id",
+                    ]
+
+    # def L1(self):
+        ##L1 of the Participant
+        # try:
+            # location = self.pr_person.location_id
+        # except AttributeError:
+            ##not available
+            # location = None
+        # if location:
+            # locations = current.gis.get_parents_of_level([location], "L1")
+            # return locations[0]
+        # else:
+            # return current.messages.NONE
+
+    # def L2(self):
+        ##L2 of the Participant
+        # try:
+            # location = self.pr_person.location_id
+        # except AttributeError:
+            ##not available
+            # location = None
+        # if location:
+            # locations = current.gis.get_parents_of_level([location], "L2")
+            # return locations[0]
+        # else:
+            # return current.messages.NONE
 
     def month(self):
         # Year/Month of the start date of the training event

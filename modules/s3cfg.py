@@ -433,6 +433,12 @@ class S3Config(Storage):
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)
+    def get_supply_use_alt_name(self):
+        return self.supply.get("use_alt_name", True)
+    def get_req_use_req_number(self):
+        return self.req.get("use_req_number", True)
+    def get_req_req_type(self):
+        return self.req.get("req_type", ["Stock", "People", "Other"])
 
     # -------------------------------------------------------------------------
     # Inventory Management Setting

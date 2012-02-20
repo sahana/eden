@@ -780,6 +780,28 @@ class GIS(object):
         return results
 
     # -------------------------------------------------------------------------
+    def get_parents_of_level(self, locations, level):
+        """
+            Given a list of gis_location.ids, return a list of the Parents of
+            the given Level (Lx)
+
+            - used by S3Report
+        """
+
+        output = []
+
+        if not locations or not level:
+            return output
+
+        while locations:
+            # Recursively pull out good records & try parents agaian
+            (newoutput, locations) = self._get_parents_of_level(locations, level)
+            for id in newoutput:
+                output.append(id)
+
+        return output
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def _get_parents_of_level(locations, level):
         """
@@ -831,28 +853,6 @@ class GIS(object):
                         tryagain.append(parent)
 
         return (output, tryagain)
-
-    # -------------------------------------------------------------------------
-    def get_parents_of_level(self, locations, level):
-        """
-            Given a list of gis_location.ids, return a list of the Parents of
-            the given Level (Lx)
-
-            - used by S3Report
-        """
-
-        output = []
-
-        if not locations or not level:
-            return output
-
-        while locations:
-            # Recursively pull out good records & try parents agaian
-            (newoutput, locations) = self._get_parents_of_level(locations, level)
-            for id in newoutput:
-                output.append(id)
-
-        return output
 
     # -------------------------------------------------------------------------
     def update_table_hierarchy_labels(self, tablename=None):
@@ -3233,11 +3233,11 @@ class GIS(object):
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments
         vars = request.vars
-        if "lat" in vars:
+        if "lat" in vars and vars.lat:
             lat = float(vars.lat)
         if lat is None or lat == "":
             lat = config.lat
-        if "lon" in vars:
+        if "lon" in vars and vars.lon:
             lon = float(vars.lon)
         if lon is None or lon == "":
             lon = config.lon
