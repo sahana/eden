@@ -1089,7 +1089,8 @@ class S3OfficeModel(S3Model):
     @staticmethod
     def org_office_deduplicate(item):
         """
-            Import item deduplication, match by name and location_id (if given)
+            Import item deduplication, match by name
+                (Adding location_id doesn't seem to be a good idea)
 
             @param item: the S3ImportItem instance
         """
@@ -1103,23 +1104,23 @@ class S3OfficeModel(S3Model):
             name = "name" in item.data and item.data.name
             query = (table.name.lower() == name.lower())
             location_id = None
-            if "location_id" in item.data:
-                location_id = item.data.location_id
-                # This doesn't find deleted records:
-                query = query & (table.location_id == location_id)
+            # if "location_id" in item.data:
+                # location_id = item.data.location_id
+                ## This doesn't find deleted records:
+                # query = query & (table.location_id == location_id)
             duplicate = db(query).select(table.id,
                                          limitby=(0, 1)).first()
-            if duplicate is None and location_id:
-                # Search for deleted offices with this name
-                query = (table.name.lower() == name.lower()) & \
-                        (table.deleted == True)
-                row = db(query).select(table.id, table.deleted_fk,
-                                       limitby=(0, 1)).first()
-                if row:
-                    fkeys = json.loads(row.deleted_fk)
-                    if "location_id" in fkeys and \
-                       str(fkeys["location_id"]) == str(location_id):
-                        duplicate = row
+            # if duplicate is None and location_id:
+                ## Search for deleted offices with this name
+                # query = (table.name.lower() == name.lower()) & \
+                        # (table.deleted == True)
+                # row = db(query).select(table.id, table.deleted_fk,
+                                       # limitby=(0, 1)).first()
+                # if row:
+                    # fkeys = json.loads(row.deleted_fk)
+                    # if "location_id" in fkeys and \
+                       # str(fkeys["location_id"]) == str(location_id):
+                        # duplicate = row
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE

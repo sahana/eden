@@ -203,7 +203,6 @@ class S3HRModel(S3Model):
                        search_method = human_resource_search,
                        onaccept = self.hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,
-                       onvalidation = self.hrm_human_resource_onvalidation,
                        deduplicate=self.hrm_human_resource_deduplicate)
 
         # ---------------------------------------------------------------------
@@ -379,6 +378,7 @@ class S3HRModel(S3Model):
         data = Storage()
 
         # For Staff, update the location ID from the selected site
+        site = None
         if record.type == 1 and record.site_id:
             query = (stable._id == record.site_id)
             site = db(query).select(stable.location_id,
@@ -401,6 +401,10 @@ class S3HRModel(S3Model):
             return
         record.update_record(**data)
 
+        if site:
+            # Populate the Lx fields
+            current.response.s3.lx_update(htable, record.id)
+
         if record.organisation_id:
             if user and not user.organisation_id:
                 # Set the Organisation in the Profile, if not already set
@@ -409,16 +413,6 @@ class S3HRModel(S3Model):
             if user:
                 # Set/retract the staff role
                 S3HRModel.hrm_update_staff_role(record, user_id)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_human_resource_onvalidation(form):
-        """ On-validation for HR records """
-
-        # Populate the Lx fields
-        current.response.s3.lx_onvalidation(form)
-
-        return True
 
     # -------------------------------------------------------------------------
     @staticmethod

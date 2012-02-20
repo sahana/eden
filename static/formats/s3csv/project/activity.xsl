@@ -105,6 +105,7 @@
 
         <xsl:call-template name="ContactPerson"/>
 
+        <!-- Locations -->
         <xsl:call-template name="Locations"/>
     </xsl:template>
 

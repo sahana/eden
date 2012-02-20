@@ -385,7 +385,7 @@ def lx_onvalidation(form):
     """
 
     vars = form.vars
-    if "location_id" in vars:
+    if "location_id" in vars and vars.location_id:
         table = s3db.gis_location
         query = (table.id == vars.location_id)
         location = db(query).select(table.name,
@@ -405,8 +405,6 @@ def lx_onvalidation(form):
                     if country:
                         vars.L0 = country.name
             else:
-                if location.level is None:
-                    vars.building_name = location.name
                 # Get Names of ancestors at each level
                 vars = gis.get_parent_per_level(vars,
                                                 vars.location_id,
@@ -415,6 +413,50 @@ def lx_onvalidation(form):
                                                 names=True)
 
 s3.lx_onvalidation = lx_onvalidation
+
+# -----------------------------------------------------------------------------
+def lx_update(table, record_id):
+    """
+        Write the Lx fields from the Location
+        - used by hrm_human_resource
+
+        @ToDo: Allow the reverse operation.
+        If these fields are populated then create/update the location
+    """
+
+    if "location_id" in table:
+
+        locations = s3db.gis_location
+        query = (table.id == record_id) & \
+                (locations.id == table.location_id)
+        location = db(query).select(locations.name,
+                                    locations.level,
+                                    locations.parent,
+                                    locations.path,
+                                    limitby=(0, 1)).first()
+        if location:
+            vars = Storage()
+            if location.level == "L0":
+                vars.L0 = location.name
+            elif location.level == "L1":
+                vars.L1 = location.name
+                if location.parent:
+                    query = (locations.id == location.parent)
+                    country = db(query).select(locations.name,
+                                               limitby=(0, 1)).first()
+                    if country:
+                        vars.L0 = country.name
+            else:
+                # Get Names of ancestors at each level
+                vars = gis.get_parent_per_level(vars,
+                                                vars.location_id,
+                                                feature=location,
+                                                ids=False,
+                                                names=True)
+            # Update record
+            db(table.id == record_id).update(**vars)
+
+s3.lx_update = lx_update
 
 # =============================================================================
 # Addresses
@@ -481,7 +523,7 @@ def address_onvalidation(form):
     """
 
     vars = form.vars
-    if "location_id" in vars:
+    if "location_id" in vars and vars.location_id:
         table = s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == vars.location_id)

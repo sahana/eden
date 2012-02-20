@@ -136,26 +136,11 @@
 
     <xsl:template name="Locations">
 
-        <xsl:variable name="Warehouse" select="col[@field='Name']/text()"/>
+        <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='State']/text()"/>
         <xsl:variable name="l2" select="col[@field='District']/text()"/>
         <xsl:variable name="l3" select="col[@field='City']/text()"/>
-
-        <!-- L0 location -->
-        <!-- Cannot be updated, so would produce validation errors -->
-        <!--
-        <resource name="gis_location">
-            <xsl:attribute name="uuid">
-                <xsl:text>urn:iso:std:iso:3166:-1:code:</xsl:text>
-                <xsl:call-template name="iso2countryname">
-                    <xsl:with-param name="country" select="$l0"/>
-                </xsl:call-template>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$l0"/></data>
-            <data field="level"><xsl:text>L0</xsl:text></data>
-        </resource>
-        -->
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -252,10 +237,10 @@
             </resource>
         </xsl:if>
 
-        <!-- Warehouse Location -->
+        <!-- Office Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$Warehouse"/>
+                <xsl:value-of select="$OfficeName"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l3!=''">
@@ -287,7 +272,7 @@
                     </reference>
                 </xsl:otherwise>
             </xsl:choose>
-            <data field="name"><xsl:value-of select="$Warehouse"/></data>
+            <data field="name"><xsl:value-of select="$OfficeName"/></data>
             <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
             <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
             <data field="addr_street">
