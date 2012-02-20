@@ -664,7 +664,8 @@ class S3IncomingModel(S3Model):
                         componentname = "recv_item",
                         formname = T("Goods Received Note"),
                         filename = T("GRN"),
-                        **attr)
+                        **attr
+                       )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -682,11 +683,13 @@ class S3IncomingModel(S3Model):
         table.site_id.label = T("By Warehouse")
         table.site_id.represent = s3dborg_site_represent
 
-        return S3PDF(r,
-                     componentname = "recv_item",
-                     formname = T("Donation Certificate"),
-                     filename = T("DC"),
-                     **attr)
+        exporter = S3PDF()
+        return exporter(r,
+                        componentname = "recv_item",
+                        formname = T("Donation Certificate"),
+                        filename = T("DC"),
+                        **attr
+                       )
 
 
 # =============================================================================
@@ -913,11 +916,13 @@ class S3DistributionModel(S3Model):
         table = s3db.inv_recv
         table.date.readable = True
 
-        return S3PDF(r,
-                     componentname = "send_item",
-                     formname = T("Consignment Note"),
-                     filename = "CN",
-                     **attr)
+        exporter = S3PDF()
+        return exporter(r,
+                        componentname = "send_item",
+                        formname = T("Consignment Note"),
+                        filename = "CN",
+                        **attr
+                       )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1064,14 +1069,14 @@ def inv_recv_rheader(r):
             else:
                 grn_btn = A( T("Goods Received Note"),
                               _href = URL(f = "recv",
-                                          args = [record.id, "form.pdf"]
+                                          args = [record.id, "list.pdf"]
                                           ),
                               _class = "action-btn"
                               )
                 rfooter.append(grn_btn)
                 dc_btn = A( T("Donation Certificate"),
                               _href = URL(f = "recv",
-                                          args = [record.id, "cert.pdf"]
+                                          args = [record.id, "list.pdf"]
                                           ),
                               _class = "action-btn"
                               )
@@ -1159,9 +1164,9 @@ def inv_send_rheader(r):
                     rfooter.append(send_btn)
                     rfooter.append(send_btn_confirm)
             else:
-                cn_btn = A( T("Consignment Note"),
+                cn_btn = A( T("Waybill"),
                               _href = URL(f = "send",
-                                          args = [record.id, "form.pdf"]
+                                          args = [record.id, "list.pdf"]
                                           ),
                               _class = "action-btn"
                               )
