@@ -1216,17 +1216,16 @@ class S3PersonComponents(S3Model):
                     # Update the Lx fields
                     lx_update(table, person.id)
 
-            if person and vars.type == 1: # Home Address
+            if person and str(vars.type) == "1": # Home Address
                 # Also check for any Volunteer HRM record(s)
                 htable = s3db.hrm_human_resource
                 ptable = s3db.pr_person
-                query = (htable.person_id == ptable.id) & \
-                        (ptable.pe_id == person.id) & \
+                query = (htable.person_id == person.id) & \
                         (htable.type == 2) & \
-                        (htable.deleted == False)
+                        (htable.deleted != True)
                 hrs = db(query).select(htable.id)
                 for hr in hrs:
-                    db(htable.id == hr.id).update(location_id == location_id)
+                    db(htable.id == hr.id).update(location_id=location_id)
                     # Update the Lx fields
                     lx_update(htable, hr.id)
         return
