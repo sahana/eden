@@ -1216,15 +1216,15 @@ class S3PersonComponents(S3Model):
                     # Update the Lx fields
                     lx_update(table, person.id)
 
-            if person and vars.type == 1: # Home Address
+            if person and str(vars.type) == "1": # Home Address
                 # Also check for any Volunteer HRM record(s)
                 htable = s3db.hrm_human_resource
                 query = (htable.person_id == person.id) & \
                         (htable.type == 2) & \
-                        (htable.deleted == False)
+                        (htable.deleted != True)
                 hrs = db(query).select(htable.id)
                 for hr in hrs:
-                    db(htable.id == hr.id).update(location_id == location_id)
+                    db(htable.id == hr.id).update(location_id=location_id)
                     # Update the Lx fields
                     lx_update(htable, hr.id)
         return
@@ -2197,6 +2197,9 @@ def pr_rheader(r, tabs=[]):
 
     T = current.T
     db = current.db
+    s3db = current.s3db
+    gis = current.gis
+    s3 = current.response.s3
 
     if "viewing" in r.vars:
         tablename, record_id = r.vars.viewing.rsplit(".", 1)
@@ -2226,7 +2229,7 @@ def pr_rheader(r, tabs=[]):
                        "%s" % s3.pr_gender_opts.get(person.gender, T("unknown"))),
 
                     TR(TH("%s: " % T("Nationality")),
-                       "%s" % (current.gis.get_country(person.nationality, key_type="code") or T("unknown")),
+                       "%s" % (gis.get_country(person.nationality, key_type="code") or T("unknown")),
                        TH("%s: " % T("Age Group")),
                        "%s" % s3.pr_age_group_opts.get(person.age_group, T("unknown"))),
 
@@ -2236,7 +2239,7 @@ def pr_rheader(r, tabs=[]):
         elif tablename == "pr_group":
             group = record
             if group:
-                table = current.s3db.pr_group_membership
+                table = s3db.pr_group_membership
                 query = (table.group_id == record.id) & \
                         (table.group_head == True)
                 leader = db(query).select(table.person_id,

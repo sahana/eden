@@ -242,7 +242,7 @@
 
         <xsl:param name="OrgName"/>
         <xsl:param name="OfficeName"/>
-        
+
         <xsl:variable name="type">
             <xsl:choose>
                 <xsl:when test="col[@field='Type']='staff' or
@@ -323,6 +323,9 @@
             <resource name="pr_address">
                 <!-- Link to Location -->
                 <xsl:call-template name="LocationReference"/>
+
+                <!-- Home address -->
+                <data field="type">1</data>
 
                 <!-- Populate the fields directly which are normally populated onvalidation -->
                 <data field="building_name"><xsl:value-of select="col[@field='Home Address']"/></data>
