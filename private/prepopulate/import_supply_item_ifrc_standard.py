@@ -1,12 +1,21 @@
 # Script to import all
 #
-# run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_supply_item_ifrc_standard.py
+# run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_supply_item_ifrc_standard.py complete
 #
 # Equivalent to PrePop:
 # supply,item_category,supply_item_category_ifrc_standard.csv,item_category_ifrc_standard.xsl  
 # supply,item,supply_item_ifrc_standard.csv, item_ifrc_standard.xsl
 
+import sys
 import time
+
+args = sys.argv
+if args[1:]:
+    # The 1st argument is taken to be the type
+    set = args[1]
+else:
+    # default to sample
+    set = "sample"
 
 secs = time.mktime(time.localtime())
 
@@ -27,9 +36,17 @@ resource.import_xml(File,
                     format="csv",
                     stylesheet=stylesheet)
 File.close()
-import_file = os.path.join(import_dir, "supply_item_ifrc_standard_sample.csv") # Sample of 100 Items
-#import_file = os.path.join(import_dir, "supply_item_eic.csv") # EIC ~3,000 Items
-#import_file = os.path.join(import_dir, "supply_item_ifrc_standard.csv") # Complete ~11,000 Items
+
+if set == "sample":
+    # Sample of 100 Items
+    import_file = os.path.join(import_dir, "supply_item_ifrc_standard_sample.csv")
+elif set == "eic":
+    # EIC ~3,000 Items
+    import_file = os.path.join(import_dir, "supply_item_eic.csv")
+elif set == "complete":
+    # Complete ~11,000 Items
+    import_file = os.path.join(import_dir, "supply_item_ifrc_standard.csv")
+
 stylesheet = os.path.join(stylesheet_dir, "item_ifrc_standard.xsl")
 resource = s3mgr.define_resource("supply", "item")
 File = open(import_file, "r")

@@ -890,6 +890,7 @@ class GIS(object):
             # These tables store location hierarchy info for XSLT export.
             # Labels are used for PDF & XLS Reports
             tables = ["org_office",
+                      #"pr_person",
                       "pr_address",
                       "cr_shelter",
                       "asset_asset",

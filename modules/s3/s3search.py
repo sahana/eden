@@ -758,12 +758,12 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
           i.e. Sites & pr_address
     """
 
-    def __init__(self, name=None, level=None, **attr):
+    def __init__(self, name=None, field=None, **attr):
         """
             Configures the search option
 
             @param name: name of the search widget
-            @param level: hierarchy level to search
+            @param field: field containing a hierarchy level to search
 
             @keyword comment: a comment for the search widget
         """
@@ -772,11 +772,17 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
 
         self.other = None
 
-        if not level:
+        if field:
+            if field.find("$") != -1:
+                kfield, level = field.split("$")
+            else:
+                level = field
+        else:
+            # Default to the currently active gis_config
             config = gis.get_config()
-            level = config.search_level or "L0"
+            field = level = config.search_level or "L0"
 
-        self.field = [level]
+        self.field = [field]
 
         label = gis.get_location_hierarchy(level=level)
 
