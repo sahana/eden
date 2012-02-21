@@ -2181,6 +2181,7 @@ def pr_rheader(r, tabs=[]):
 
     T = current.T
     db = current.db
+    s3db = current.s3db
     gis = current.gis
     s3 = current.response.s3
 
