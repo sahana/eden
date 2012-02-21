@@ -1192,9 +1192,9 @@ class S3GISConfigModel(S3Model):
                              Field("lon", "double",
                                    requires = IS_NULL_OR(IS_LON())),
                              projection_id(
-                                   # @ToDo: Remove default once we have cascading working
                                    empty=False,
-                                   default=900913
+                                   # Nice if we could get this set to epsg field
+                                   #default=900913
                                    ),
                              symbology_id(),
                              Field("wmsbrowser_url"),
@@ -1266,7 +1266,7 @@ class S3GISConfigModel(S3Model):
                   update_ondelete=self.gis_config_ondelete,
                   subheadings = {
                        T("Map Settings"): "zoom",
-                       T("CRUD Settings"): "default_location_id",
+                       T("Form Settings"): "default_location_id",
                    },
                   list_fields = ["id",
                                  "name",

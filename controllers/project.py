@@ -324,10 +324,11 @@ def task():
                            action=discuss)
 
     statuses = response.s3.project_task_active_statuses
+    crud_strings = s3.crud_strings[tablename]
     if "mine" in request.get_vars:
         # Show the Open Tasks for this User
-        s3.crud_strings[tablename].title_list = T("My Open Tasks")
-        s3.crud_strings[tablename].msg_list_empty = T("No Tasks Assigned")
+        crud_strings.title_list = T("My Open Tasks")
+        crud_strings.msg_list_empty = T("No Tasks Assigned")
         s3mgr.configure(tablename,
                         copyable=False,
                         listadd=False)
@@ -358,9 +359,9 @@ def task():
         except:
             session.error = T("Project not Found")
             redirect(URL(args=None, vars=None))
-        s3.crud_strings[tablename].title_list = T("Open Tasks for %(project)s") % dict(project=name)
-        s3.crud_strings[tablename].title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
-        s3.crud_strings[tablename].msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
+        crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
+        crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
+        crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
         # Add Virtual Fields
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
@@ -377,8 +378,8 @@ def task():
                              (ltable.task_id == table.id) & \
                              (table.status.belongs(statuses))
     else:
-        s3.crud_strings[tablename].title_list = T("All Tasks")
-        s3.crud_strings[tablename].title_search = T("All Tasks")
+        crud_strings.title_list = T("All Tasks")
+        crud_strings.title_search = T("All Tasks")
         list_fields = s3mgr.model.get_config(tablename,
                                              "list_fields")
         list_fields.insert(2, (T("Project"), "project"))
@@ -394,7 +395,7 @@ def task():
                         list_fields=list_fields)
         if "open" in request.get_vars:
             # Show Only Open Tasks
-            s3.crud_strings[tablename].title_list = T("All Open Tasks")
+            crud_strings.title_list = T("All Open Tasks")
             response.s3.filter = (table.status.belongs(statuses))
 
     # Pre-process

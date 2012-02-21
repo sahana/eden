@@ -29,7 +29,7 @@
          Type............................type
          Category........................supply_catalog_item.item_category_id
          Name............................supply_item.name
-         Location........................asset_log.room_id
+         Room............................asset_log.room_id
          Assigned To.....................pr_person.first_name
          Brand...........................supply_brand.brand_id
          Model...........................supply_item.model
@@ -65,7 +65,7 @@
                                                          col[@field='Office']/text())"/>
     <xsl:key name="rooms" match="row" use="concat(col[@field='Organisation']/text(), '|',
                                                          col[@field='Office']/text(), '|',
-                                                         col[@field='Location']/text())"/>
+                                                         col[@field='Room']/text())"/>
     <xsl:key name="persons" match="row" use="col[@field='Assigned To']/text()"/>
     <xsl:key name="brands" match="row" use="col[@field='Brand']/text()"/>
     <xsl:key name="catalogs" match="row" use="col[@field='Catalog']/text()"/>
@@ -99,7 +99,7 @@
                                         generate-id(key('rooms',
                                                         concat(col[@field='Organisation']/text(), '|',
                                                                col[@field='Office']/text(), '|',
-                                                               col[@field='Location']/text()))[1])]">
+                                                               col[@field='Room']/text()))[1])]">
                 <xsl:call-template name="Room"/>
             </xsl:for-each>
 
@@ -152,7 +152,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
-        <xsl:variable name="RoomName" select="col[@field='Location']/text()"/>
+        <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
         <xsl:variable name="RoomID" select="concat($OrgName, '|', $OfficeName, '|', $RoomName)"/>
 
         <xsl:variable name="CatalogName" select="col[@field='Catalog']/text()"/>
@@ -200,6 +200,7 @@
                 </xsl:attribute>
             </reference>
             <resource name="asset_log">
+                <!-- Set Base -->
                 <data field="status" value="1"/>
                 <xsl:choose>
                     <xsl:when test="$Date!=''">
@@ -209,7 +210,9 @@
                         <data field="datetime">2000-01-01T00:00:00</data>
                     </xsl:otherwise>
                 </xsl:choose>
+                <!-- Good Condition -->
                 <data field="cond" value="1"/>
+                <!-- Site -->
                 <data field="site_or_location" value="1"/>
                 <reference field="organisation_id" resource="org_organisation">
                     <xsl:attribute name="tuid">
@@ -275,14 +278,6 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
-        <xsl:variable name="OfficeLocation" select="concat('Location:', $OrgName, '|', $OfficeName)"/>
-
-        <resource name="gis_location">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeLocation"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OfficeName"/></data>
-        </resource>
 
         <resource name="org_office">
             <xsl:attribute name="tuid">
@@ -295,11 +290,6 @@
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$OrgName"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="location_id" resource="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OfficeLocation"/>
                 </xsl:attribute>
             </reference>
         </resource>
@@ -329,7 +319,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$CategoryID"/>
             </xsl:attribute>
-            <data field="code"><xsl:value-of select="substring($CategoryName/text(),1,16)"/></data>
+            <data field="code"><xsl:value-of select="substring($CategoryName,1,16)"/></data>
             <data field="name"><xsl:value-of select="$CategoryName"/></data>
             <reference field="catalog_id" resource="supply_catalog">
                 <xsl:attribute name="tuid">
@@ -419,7 +409,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
-        <xsl:variable name="RoomName" select="col[@field='Location']/text()"/>
+        <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
         <xsl:variable name="RoomID" select="concat($OrgName, '|', $OfficeName, '|', $RoomName)"/>
 
         <xsl:if test="$RoomName!=''">

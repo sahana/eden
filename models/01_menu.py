@@ -695,9 +695,7 @@ if auth.permission.format in ("html"):
         # ---------------------------------------------------------------------
         "asset": {
             "menu": [
-                #[T("Home"), False, aURL(c="asset", f="index")],
-                [T("Assets"), False, aURL(c="asset", f="asset"),
-                [
+                [T("Assets"), False, aURL(c="asset", f="asset"), [
                     [T("New"), False, aURL(p="create", c="asset", f="asset",
                                            args="create")],
                     [T("List All"), False, aURL(c="asset", f="asset")],
@@ -705,15 +703,14 @@ if auth.permission.format in ("html"):
                                               args="search")],
                     [T("Report"), False, aURL(c="asset", f="asset",
                                               args=["report"],
-                                              vars=dict(rows="L1",
-                                                        cols="category",
-                                                        fact="datetime",
+                                              vars=dict(rows="item_id$item_category_id",
+                                                        cols="L1",
+                                                        fact="number",
                                                         aggregate="count"))],
                     [T("Import"), False, aURL(p="create", c="asset", f="asset",
                                               args="import")],
                 ]],
-                [T("Items"), False, aURL(c="asset", f="item"),
-                [
+                [T("Items"), False, aURL(c="asset", f="item"), [
                     [T("New"), False, aURL(p="create", c="asset", f="item",
                                            args="create")],
                     [T("List All"), False, aURL(c="asset", f="item")],
@@ -852,13 +849,13 @@ if auth.permission.format in ("html"):
         # ---------------------------------------------------------------------
         "doc": {
             "menu": [
-                [T("Documents"), False, aURL(f="document"),[
+                [T("Documents"), False, aURL(f="document"), [
                     [T("New"), False, aURL(p="create", f="document",
                                            args="create")],
                     [T("List All"), False, aURL(f="document")],
                     #[T("Search"), False, aURL(f="ireport", args="search")]
                 ]],
-                [T("Photos"), False, aURL(f="image"),[
+                [T("Photos"), False, aURL(f="image"), [
                     [T("New"), False, aURL(p="create", f="image",
                                            args="create")],
                     [T("List All"), False, aURL(f="image")],
@@ -872,7 +869,7 @@ if auth.permission.format in ("html"):
         "dvi": {
             "menu": [
                 #[T("Home"), False, URL(f="index")],
-                [T("Body Recovery"), False, aURL(f="recreq"),[
+                [T("Body Recovery"), False, aURL(f="recreq"), [
                     [T("New Request"),
                     False, aURL(p="create", f="recreq",
                                 args="create")],

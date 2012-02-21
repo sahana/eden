@@ -426,13 +426,14 @@ def lx_update(table, record_id):
 
     if "location_id" in table:
 
-        locations = s3db.gis_location
+        ltable = s3db.gis_location
         query = (table.id == record_id) & \
-                (locations.id == table.location_id)
-        location = db(query).select(locations.name,
-                                    locations.level,
-                                    locations.parent,
-                                    locations.path,
+                (ltable.id == table.location_id)
+        location = db(query).select(ltable.id,
+                                    ltable.name,
+                                    ltable.level,
+                                    ltable.parent,
+                                    ltable.path,
                                     limitby=(0, 1)).first()
         if location:
             vars = Storage()
@@ -441,15 +442,15 @@ def lx_update(table, record_id):
             elif location.level == "L1":
                 vars.L1 = location.name
                 if location.parent:
-                    query = (locations.id == location.parent)
-                    country = db(query).select(locations.name,
+                    query = (ltable.id == location.parent)
+                    country = db(query).select(ltable.name,
                                                limitby=(0, 1)).first()
                     if country:
                         vars.L0 = country.name
             else:
                 # Get Names of ancestors at each level
                 vars = gis.get_parent_per_level(vars,
-                                                vars.location_id,
+                                                location.id,
                                                 feature=location,
                                                 ids=False,
                                                 names=True)
@@ -571,16 +572,17 @@ def address_update(table, record_id):
 
     if "location_id" in table:
 
-        locations = s3db.gis_location
+        ltable = s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == record_id) & \
-                (locations.id == table.location_id)
-        location = db(query).select(locations.addr_street,
-                                    locations.addr_postcode,
-                                    locations.name,
-                                    locations.level,
-                                    locations.parent,
-                                    locations.path,
+                (ltable.id == table.location_id)
+        location = db(query).select(ltable.id,
+                                    ltable.addr_street,
+                                    ltable.addr_postcode,
+                                    ltable.name,
+                                    ltable.level,
+                                    ltable.parent,
+                                    ltable.path,
                                     limitby=(0, 1)).first()
         if location:
             vars = Storage()
@@ -591,8 +593,8 @@ def address_update(table, record_id):
             elif location.level == "L1":
                 vars.L1 = location.name
                 if location.parent:
-                    query = (locations.id == location.parent)
-                    country = db(query).select(locations.name,
+                    query = (ltable.id == location.parent)
+                    country = db(query).select(ltable.name,
                                                limitby=(0, 1)).first()
                     if country:
                         vars.L0 = country.name
@@ -601,7 +603,7 @@ def address_update(table, record_id):
                     vars.building_name = location.name
                 # Get Names of ancestors at each level
                 vars = gis.get_parent_per_level(vars,
-                                                vars.location_id,
+                                                location.id,
                                                 feature=location,
                                                 ids=False,
                                                 names=True)

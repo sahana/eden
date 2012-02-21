@@ -1160,7 +1160,7 @@ def org_organisation_represent(id, showlink=False, acronym=True):
     return represent
 
 # =============================================================================
-def org_site_represent(id, default_label="[no label]", link = True):
+def org_site_represent(id, link=True):
     """ Represent a Facility in option fields or list views """
 
     db = current.db

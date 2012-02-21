@@ -221,6 +221,8 @@ class S3AssetModel(S3Model):
                                    label = T("Asset"),
                                    ondelete = "RESTRICT")
 
+        table.virtualfields.append(AssetVirtualFields())
+
         # Search Method
         asset_search = S3Search(
             # Advanced Search only
@@ -251,18 +253,52 @@ class S3AssetModel(S3Model):
                         label=T("Map"),
                     ),
                     S3SearchOptionsWidget(
-                        name="asset_search_item",
-                        field=["item_id"],
+                        name="asset_search_item_category",
+                        field=["item_id$item_category_id"],
+                        label=T("Category"),
                         cols = 3
                     ),
             ))
 
-        # Update owned_by_role to the site's owned_by_role
+        hierarchy = current.gis.get_location_hierarchy()
+        report_fields = [
+                         "number",
+                         (T("Category"), "item_id$item_category_id"),
+                         (T("Item"), "item_id"),
+                         (T("Facility"), "site"),
+                         (hierarchy["L1"], "L1"),
+                         (hierarchy["L2"], "L2"),
+                        ]
+
+        # Resource Configuration
         configure(tablename,
                   super_entity=("supply_item_entity", "sit_trackable"),
                   search_method = asset_search,
+                  report_filter=[
+                            S3SearchLocationHierarchyWidget(
+                                name="asset_search_L1",
+                                field="L1",
+                                cols = 3
+                            ),
+                            S3SearchLocationHierarchyWidget(
+                                name="asset_search_L2",
+                                field="L2",
+                                cols = 3
+                            ),
+                            S3SearchOptionsWidget(
+                                name="asset_search_item_category",
+                                field=["item_id$item_category_id"],
+                                label=T("Category"),
+                                cols = 3
+                            ),
+                        ],
+                  report_rows = report_fields,
+                  report_cols = report_fields,
+                  report_fact = report_fields,
+                  report_method=["count", "list"],
                   list_fields=["id",
                                "number",
+                               "item_id$item_category_id",
                                "item_id",
                                "type",
                                "purchase_date",
@@ -514,18 +550,20 @@ $(document).ready(function() {
 
         ltable = s3db.asset_log
 
-        r = form.vars
-        asset_id = ltable[r.id].asset_id
+        vars = form.vars
+        query = (ltable.id == vars.id)
+        asset_id = db(query).select(ltable.asset_id,
+                                    limitby=(0, 1)).first().asset_id
         current_log = asset_get_current_log(asset_id)
 
-        status = int(form.vars.status or request.vars.status)
+        status = int(vars.status or request.vars.status)
         request.get_vars.pop("status", None)
         type = request.get_vars.pop("type", None)
-        r.datetime = r.datetime.replace(tzinfo=None)
+        vars.datetime = vars.datetime.replace(tzinfo=None)
 
-        if r.datetime and \
+        if vars.datetime and \
             (not current_log.datetime or \
-             current_log.datetime <= r.datetime):
+             current_log.datetime <= vars.datetime):
             # This is a current assignment
             atable = s3db.asset_asset
             asset_tracker = tracker(atable, asset_id)
@@ -533,36 +571,36 @@ $(document).ready(function() {
             if status == ASSET_LOG_SET_BASE:
                 # Set Base Location
                 asset_tracker.set_base_location(tracker(s3db.org_site,
-                                                        r.site_id))
+                                                        vars.site_id))
                 # Populate the address fields
                 s3.address_update(atable, asset_id)
             if status == ASSET_LOG_ASSIGN:
                 if type == "person":#
-                    if r.check_in_to_person:
-                        asset_tracker.check_in(s3db.pr_person, r.person_id,
-                                               timestmp = r.datetime)
+                    if vars.check_in_to_person:
+                        asset_tracker.check_in(s3db.pr_person, vars.person_id,
+                                               timestmp = vars.datetime)
                     else:
-                        asset_tracker.set_location(r.person_id,
-                                                   timestmp = r.datetime)
+                        asset_tracker.set_location(vars.person_id,
+                                                   timestmp = vars.datetime)
                     # Update main record for component
                     query = (atable.id == asset_id)
-                    db(query).update(assigned_to_id=r.person_id)
+                    db(query).update(assigned_to_id=vars.person_id)
 
                 elif type == "site":
-                    asset_tracker.check_in(s3db.org_site, r.site_id,
-                                           timestmp = r.datetime)
+                    asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                           timestmp = vars.datetime)
                 elif type == "organisation":
-                    if r.site_or_location == SITE:
-                        asset_tracker.check_in(s3db.org_site, r.site_id,
-                                               timestmp = r.datetime)
-                    if r.site_or_location == LOCATION:
-                        asset_tracker.set_location(r.location_id,
-                                                   timestmp = r.datetime)
+                    if vars.site_or_location == SITE:
+                        asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                               timestmp = vars.datetime)
+                    if vars.site_or_location == LOCATION:
+                        asset_tracker.set_location(vars.location_id,
+                                                   timestmp = vars.datetime)
 
             if status == ASSET_LOG_RETURN:
                 # Set location to base location
                 asset_tracker.set_location(asset_tracker,
-                                           timestmp = r.datetime)
+                                           timestmp = vars.datetime)
         return
 
 
@@ -601,15 +639,17 @@ $(document).ready(function() {
             status = 0
 
         if status and status != "None":
-            table.status.default = status
-            table.status.readable = False
-            table.status.writable = False
+            field = table.status
+            field.default = status
+            field.readable = False
+            field.writable = False
         elif current_log:
             table.status.default = current_log.status
 
+        crud_strings = s3.crud_strings.asset_log
         if status == ASSET_LOG_SET_BASE:
-            s3.crud_strings.asset_log.subtitle_create = T("Set Base Site")
-            s3.crud_strings.asset_log.msg_record_created = T("Base Site Set")
+            crud_strings.subtitle_create = T("Set Base Site")
+            crud_strings.msg_record_created = T("Base Site Set")
             table.by_person_id.label = T("Set By")
             table.site_id.writable = True
             table.site_id.requires = IS_ONE_OF(db, "org_site.id",
@@ -624,8 +664,8 @@ $(document).ready(function() {
             table.location_id.writable = False
 
         elif status == ASSET_LOG_RETURN:
-            s3.crud_strings.asset_log.subtitle_create = T("Return")
-            s3.crud_strings.asset_log.msg_record_created = T("Returned")
+            crud_strings.subtitle_create = T("Return")
+            crud_strings.msg_record_created = T("Returned")
             table.person_id.label = T("Returned From")
             table.person_id.default = current_log.person_id
             table.site_or_location.readable = False
@@ -639,8 +679,8 @@ $(document).ready(function() {
             type = request.vars.type
             # table["%s_id" % type].required = True
             if type == "person":#
-                s3.crud_strings.asset_log.subtitle_create = T("Assign to Person")
-                s3.crud_strings.asset_log.msg_record_created = T("Assigned to Person")
+                crud_strings.subtitle_create = T("Assign to Person")
+                crud_strings.msg_record_created = T("Assigned to Person")
                 table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
                                                         table.person_id.represent,
                                                         orderby="pr_person.first_name",
@@ -649,35 +689,38 @@ $(document).ready(function() {
                 table.check_in_to_person.readable = True
                 table.check_in_to_person.writable = True
             elif type == "site":
-                s3.crud_strings.asset_log.subtitle_create = T("Assign to Site")
-                s3.crud_strings.asset_log.msg_record_created = T("Assigned to Site")
-                table["site_id"].requires = IS_ONE_OF(db, "org_site.id",
+                crud_strings.subtitle_create = T("Assign to Site")
+                crud_strings.msg_record_created = T("Assigned to Site")
+                table["site_id"].requires = IS_ONE_OF(db, "org_site.site_id",
                                                       table.site_id.represent)
-                table.site_or_location.readable = False
-                table.site_or_location.writable = False
+                field = table.site_or_location
+                field.readable = False
+                field.writable = False
+                field.default = SITE
                 table.location_id.readable = False
                 table.location_id.writable = False
             elif type == "organisation":
-                s3.crud_strings.asset_log.subtitle_create = T("Assign to Organization")
-                s3.crud_strings.asset_log.msg_record_created = T("Assigned to Organization")
+                crud_strings.subtitle_create = T("Assign to Organization")
+                crud_strings.msg_record_created = T("Assigned to Organization")
                 table["organisation_id"].requires = IS_ONE_OF(db, "org_organisation.id",
                                                               table.organisation_id.represent,
                                                               orderby="org_organisation.name",
                                                               sort=True)
                 table.site_or_location.required = True
         elif "status" in request.get_vars:
-            s3.crud_strings.asset_log.subtitle_create = T("Update Status")
-            s3.crud_strings.asset_log.msg_record_created = T("Status Updated")
+            crud_strings.subtitle_create = T("Update Status")
+            crud_strings.msg_record_created = T("Status Updated")
             table.person_id.label = T("Updated By")
-            table.status.readable = True
-            table.status.writable = True
-            table.status.requires = IS_IN_SET({ASSET_LOG_CHECK    : T("Check"),
-                                               ASSET_LOG_REPAIR   : T("Repair"),
-                                               ASSET_LOG_DONATED  : T("Donated"),
-                                               ASSET_LOG_LOST     : T("Lost"),
-                                               ASSET_LOG_STOLEN   : T("Stolen"),
-                                               ASSET_LOG_DESTROY  : T("Destroyed"),
-                                              })
+            field = table.status
+            field.readable = True
+            field.writable = True
+            field.requires = IS_IN_SET({ASSET_LOG_CHECK    : T("Check"),
+                                        ASSET_LOG_REPAIR   : T("Repair"),
+                                        ASSET_LOG_DONATED  : T("Donated"),
+                                        ASSET_LOG_LOST     : T("Lost"),
+                                        ASSET_LOG_STOLEN   : T("Stolen"),
+                                        ASSET_LOG_DESTROY  : T("Destroyed"),
+                                       })
 
 # =============================================================================
 def asset_get_current_log(asset_id):
@@ -836,5 +879,28 @@ def asset_rheader(r):
                          )
             return rheader
     return None
+
+# =============================================================================
+class AssetVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    def site(self):
+        # The site of the asset
+        try:
+            location_id = self.asset_asset.location_id
+        except AttributeError:
+            # not available
+            location_id = None
+        if location_id:
+            s3db = current.s3db
+            stable = s3db.org_site
+            query = (stable.location_id == location_id)
+            site = current.db(query).select(stable.name,
+                                            stable.site_id,
+                                            stable.instance_type,
+                                            limitby=(0, 1)).first()
+            if site:
+                return s3db.org_site_represent(site, link=False)
+        return current.messages.NONE
 
 # END =========================================================================

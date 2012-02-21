@@ -322,14 +322,6 @@ class S3IRSModel(S3Model):
             msg_record_deleted = T("Incident Report deleted"),
             msg_list_empty = T("No Incident Reports currently registered"))
 
-        hierarchy = current.gis.get_location_hierarchy()
-        report_fields = [
-                         "category",
-                         "datetime",
-                         (hierarchy["L1"], "L1"),
-                         (hierarchy["L2"], "L2"),
-                        ]
-
         ireport_search = S3Search(
             advanced=(
                     S3SearchSimpleWidget(
@@ -364,6 +356,14 @@ class S3IRSModel(S3Model):
                         field=["datetime"]
                     ),
             ))
+
+        hierarchy = current.gis.get_location_hierarchy()
+        report_fields = [
+                         "category",
+                         "datetime",
+                         (hierarchy["L1"], "L1"),
+                         (hierarchy["L2"], "L2"),
+                        ]
 
         # Resource Configuration
         configure(tablename,

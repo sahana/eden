@@ -905,11 +905,13 @@ def config():
                     # @ToDo: ideal would be to have the SITE_DEFAULT (with any OU configs overlaid) on the left-hand side & then they can see what they wish to override on the right-hand side
                     # - could be easier to put the currently-effective config into the form fields, however then we have to save all this data
                     # - if each field was readable & you clicked on it to make it editable (like RHoK pr_contact), that would solve this
+                    pe_id = auth.user.pe_id
                     # For Lists
-                    response.s3.filter = query & (s3db.gis_config.pe_id == pe_id)
+                    response.s3.filter = (s3db.gis_config.pe_id == pe_id)
                     # For Create forms
                     field = r.table.pe_id
                     field.default = pe_id
+                    field.readable = False
                     field.writable = False
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(

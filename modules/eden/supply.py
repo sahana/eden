@@ -85,22 +85,31 @@ class S3SupplyModel(S3Model):
         organisation_id = self.org_organisation_id
         organisation_represent = self.org_organisation_represent
 
+        # Shortcuts
+        add_component = self.add_component
+        comments = s3.comments
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
+        super_link = self.super_link
+
         # =====================================================================
         # Brand
         #
         tablename = "supply_brand"
-        table = self.define_table(tablename,
-                                  Field("name", length=128,
-                                        notnull=True,
-                                        unique=True,
-                                        label = T("Name")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             Field("name", length=128,
+                                   notnull=True,
+                                   unique=True,
+                                   label = T("Name")),
+                             comments(),
+                             *meta_fields())
 
         # CRUD strings
         ADD_BRAND = T("Add Brand")
         LIST_BRAND = T("List Brands")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_BRAND,
             title_display = T("Brand Details"),
             title_list = LIST_BRAND,
@@ -140,19 +149,19 @@ class S3SupplyModel(S3Model):
         # Catalog (of Items)
         #
         tablename = "supply_catalog"
-        table = self.define_table(tablename,
-                                  Field("name", length=128,
-                                        notnull=True,
-                                        unique=True,
-                                        label = T("Name")),
-                                  organisation_id(),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             Field("name", length=128,
+                                   notnull=True,
+                                   unique=True,
+                                   label = T("Name")),
+                             organisation_id(),
+                             comments(),
+                             *meta_fields())
 
         # CRUD strings
         ADD_CATALOG = T("Add Catalog")
         LIST_CATALOG = T("List Catalogs")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_CATALOG,
             title_display = T("Catalog Details"),
             title_list = LIST_CATALOG,
@@ -194,47 +203,45 @@ class S3SupplyModel(S3Model):
                     ondelete = "RESTRICT")
 
         # Categories as component of Catalogs
-        self.add_component("supply_item_category",
-                           supply_catalog="catalog_id")
+        add_component("supply_item_category", supply_catalog="catalog_id")
 
         # Catalog Items as component of Catalogs
-        self.add_component("supply_catalog_item",
-                           supply_catalog="catalog_id")
+        add_component("supply_catalog_item", supply_catalog="catalog_id")
 
         # =====================================================================
         # Item Category
         #
         tablename = "supply_item_category"
-        table = self.define_table(tablename,
-                                  catalog_id(),
-                                  #Field("level", "integer"),
-                                  Field("parent_item_category_id",
-                                        "reference supply_item_category",
-                                        label = T("Parent"),
-                                        ondelete = "RESTRICT"),
-                                  Field("code", length=16,
-                                        label = T("Code"),
-                                        required = True),
-                                  Field("name", length=128,
-                                        label = T("Name")
-                                        ),
-                                  Field("can_be_asset", "boolean",
-                                        default=True,
-                                        readable=settings.has_module("asset"),
-                                        writable=settings.has_module("asset"),
-                                        label=T("Items in Category can be Assets")),
-                                  Field("is_vehicle", "boolean",
-                                        default=False,
-                                        readable=settings.has_module("vehicle"),
-                                        writable=settings.has_module("vehicle"),
-                                        label=T("Items in Category are Vehicles")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             catalog_id(),
+                             #Field("level", "integer"),
+                             Field("parent_item_category_id",
+                                   "reference supply_item_category",
+                                   label = T("Parent"),
+                                   ondelete = "RESTRICT"),
+                             Field("code", length=16,
+                                   label = T("Code"),
+                                   required = True),
+                             Field("name", length=128,
+                                   label = T("Name")
+                                   ),
+                             Field("can_be_asset", "boolean",
+                                   default=True,
+                                   readable=settings.has_module("asset"),
+                                   writable=settings.has_module("asset"),
+                                   label=T("Items in Category can be Assets")),
+                             Field("is_vehicle", "boolean",
+                                   default=False,
+                                   readable=settings.has_module("vehicle"),
+                                   writable=settings.has_module("vehicle"),
+                                   label=T("Items in Category are Vehicles")),
+                             comments(),
+                             *meta_fields())
 
         # CRUD strings
         ADD_ITEM_CATEGORY = T("Add Item Category")
         LIST_ITEM_CATEGORIES = T("List Item Categories")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ITEM_CATEGORY,
             title_display = T("Item Category Details"),
             title_list = LIST_ITEM_CATEGORIES,
@@ -281,8 +288,8 @@ class S3SupplyModel(S3Model):
                                            ondelete = "RESTRICT")
 
         # Categories as component of Categories
-        self.add_component("supply_item_category",
-                           supply_item_category="parent_item_category_id")
+        add_component("supply_item_category",
+                      supply_item_category="parent_item_category_id")
 
         # =====================================================================
         # Item
@@ -291,60 +298,60 @@ class S3SupplyModel(S3Model):
         #  Instances of these become Inventory Items & Request items
         #
         tablename = "supply_item"
-        table = self.define_table(tablename,
-                                  Field("name",
-                                        required = True,
-                                        label = T("Name"),
-                                        length=128, notnull=True),
-                                  Field("code",
-                                        label = T("Code"),
-                                        length=16),
-                                  Field("um",
-                                        length=128,
-                                        label = T("Unit of Measure"),
-                                        notnull=True,
-                                        default = "piece"),
-                                  # Needed to auto-create a catalog_item
-                                  item_category_id("item_category_id",
-                                                   requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                          "supply_item_category.id",
-                                                          "%(name)s",
-                                                          sort=True,
-                                                          filterby = "catalog_id",
-                                                          filter_opts = [1])
-                                                        )
-                                                    ),
-                                  brand_id(),
-                                  Field("model",
-                                        label = T("Model/Type"),
-                                        length=128),
-                                  Field("year",
-                                        "integer",
-                                        label = T("Year of Manufacture")),
-                                  Field("weight",
-                                        "double",
-                                        label = T("Weight (kg)"),
-                                        ),
-                                  Field("length",
-                                        "double",
-                                        label = T("Length (m)"),
-                                        ),
-                                  Field("width",
-                                        "double",
-                                        label = T("Width (m)"),
-                                        ),
-                                  Field("height",
-                                        "double",
-                                        label = T("Height (m)"),
-                                        ),
-                                  Field("volume",
-                                        "double",
-                                        label = T("Volume (m3)"),
-                                        ),
-                                  # These comments do *not* pull through to an Inventory's Items or a Request's Items
-                                  s3.comments(),
-                                  *s3.meta_fields()
-                                )
+        table = define_table(tablename,
+                             Field("name",
+                                   required = True,
+                                   label = T("Name"),
+                                   length=128, notnull=True),
+                             Field("code",
+                                   label = T("Code"),
+                                   length=16),
+                             Field("um",
+                                   length=128,
+                                   label = T("Unit of Measure"),
+                                   notnull=True,
+                                   default = "piece"),
+                             # Needed to auto-create a catalog_item
+                             item_category_id("item_category_id",
+                                              requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                     "supply_item_category.id",
+                                                     "%(name)s",
+                                                     sort=True,
+                                                     filterby = "catalog_id",
+                                                     filter_opts = [1])
+                                                   )
+                                               ),
+                             brand_id(),
+                             Field("model",
+                                   label = T("Model/Type"),
+                                   length=128),
+                             Field("year",
+                                   "integer",
+                                   label = T("Year of Manufacture")),
+                             Field("weight",
+                                   "double",
+                                   label = T("Weight (kg)"),
+                                   ),
+                             Field("length",
+                                   "double",
+                                   label = T("Length (m)"),
+                                   ),
+                             Field("width",
+                                   "double",
+                                   label = T("Width (m)"),
+                                   ),
+                             Field("height",
+                                   "double",
+                                   label = T("Height (m)"),
+                                   ),
+                             Field("volume",
+                                   "double",
+                                   label = T("Volume (m3)"),
+                                   ),
+                             # These comments do *not* pull through to an Inventory's Items or a Request's Items
+                             comments(),
+                             *meta_fields()
+                            )
 
         # Categories in Progress
         #table.item_category_id_0.label = T("Category")
@@ -354,7 +361,7 @@ class S3SupplyModel(S3Model):
         # CRUD strings
         ADD_ITEM = T("Add Item")
         LIST_ITEMS = T("List Items")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ITEM,
             title_display = T("Item Details"),
             title_list = LIST_ITEMS,
@@ -436,38 +443,31 @@ class S3SupplyModel(S3Model):
             )
         )
 
-        self.configure(tablename,
-                       onaccept = self.supply_item_onaccept,
-                       search_method = item_search)
+        configure(tablename,
+                  onaccept = self.supply_item_onaccept,
+                  search_method = item_search)
 
         # Catalog Items as component of Items
-        self.add_component("supply_catalog_item",
-                           supply_item="item_id")
+        add_component("supply_catalog_item", supply_item="item_id")
 
         # Packs as component of Items
-        self.add_component("supply_item_pack",
-                           supply_item="item_id")
+        add_component("supply_item_pack", supply_item="item_id")
 
         if settings.get_supply_use_alt_name():
             # Alternative Items as component of Items
-            self.add_component("supply_item_alt",
-                               supply_item="item_id")
+            add_component("supply_item_alt", supply_item="item_id")
 
         # Inventory Items as component of Items
-        self.add_component("inv_inv_item",
-                           supply_item="item_id")
+        add_component("inv_inv_item", supply_item="item_id")
 
         # Order Items as component of Items
-        self.add_component("inv_recv_item",
-                           supply_item="item_id")
+        add_component("inv_recv_item", supply_item="item_id")
 
         # Procurement Plan Items as component of Items
-        self.add_component("proc_plan_item",
-                           supply_item="item_id")
+        add_component("proc_plan_item", supply_item="item_id")
 
         # Request Items as component of Items
-        self.add_component("req_req_item",
-                           supply_item="item_id")
+        add_component("req_req_item", supply_item="item_id")
 
         # =====================================================================
         # Catalog Item
@@ -485,21 +485,21 @@ $(document).ready(function() {
     });
 });""")
         tablename = "supply_catalog_item"
-        table = self.define_table(tablename,
-                                  catalog_id(),
-                                  item_category_id("item_category_id",
-                                                   #label = T("Group"),
-                                                   # Filters item_category_id based on catalog_id
-                                                   script = script,
-                                                 ),
-                                  supply_item_id(script = None), # No Item Pack Filter
-                                  s3.comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             catalog_id(),
+                             item_category_id("item_category_id",
+                                              #label = T("Group"),
+                                              # Filters item_category_id based on catalog_id
+                                              script = script,
+                                            ),
+                             supply_item_id(script = None), # No Item Pack Filter
+                             comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
+                             *meta_fields())
 
         # CRUD strings
         ADD_ITEM = T("Add Catalog Item")
         LIST_ITEMS = T("List Catalog Items")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ITEM,
             title_display = T("Item Catalog Details"),
             title_list = LIST_ITEMS,
@@ -571,8 +571,8 @@ $(document).ready(function() {
             )
         )
 
-        self.configure(tablename,
-                       search_method = catalog_item_search)
+        configure(tablename,
+                  search_method = catalog_item_search)
 
         # ---------------------------------------------------------------------
         # Calculate once, instead of for each record
@@ -593,24 +593,24 @@ $(document).ready(function() {
         #  Items can be distributed in different containers
         #
         tablename = "supply_item_pack"
-        table = self.define_table(tablename,
-                                  supply_item_id(empty=False),
-                                  Field("name", length=128,
-                                        default = T("piece"),
-                                        notnull=True, # Ideally this would reference another table for normalising Pack names
-                                        label = T("Name"),
-                                        ),
-                                  Field("quantity", "double",
-                                        notnull=True,
-                                        label = T("Quantity"),
-                                        ),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             supply_item_id(empty=False),
+                             Field("name", length=128,
+                                   default = T("piece"),
+                                   notnull=True, # Ideally this would reference another table for normalising Pack names
+                                   label = T("Name"),
+                                   ),
+                             Field("quantity", "double",
+                                   notnull=True,
+                                   label = T("Quantity"),
+                                   ),
+                             comments(),
+                             *meta_fields())
 
         # CRUD strings
         ADD_ITEM_PACK = T("Add Item Pack")
         LIST_ITEM_PACK = T("List Item Packs")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ITEM_PACK,
             title_display = T("Item Pack Details"),
             title_list = LIST_ITEM_PACK,
@@ -679,11 +679,11 @@ S3FilterFieldChange({
         #    else:
         #        return None
 
-        # Inventory items as component of Packs
-        self.add_component("inv_inv_item",
-                           supply_item_pack="item_pack_id")
+        configure(tablename,
+                  deduplicate=self.item_pack_duplicate)
 
-        self.configure("supply_item_pack", deduplicate=self.item_pack_duplicate)
+        # Inventory items as component of Packs
+        add_component("inv_inv_item", supply_item_pack="item_pack_id")
 
         # =====================================================================
         # Alternative Items
@@ -692,28 +692,28 @@ S3FilterFieldChange({
         #  suitable alternatives
         #
         tablename = "supply_item_alt"
-        table = self.define_table(tablename,
-                                  supply_item_id(notnull=True),
-                                  Field("quantity",
-                                        "double",
-                                        label = T("Quantity"),
-                                        comment = DIV(_class = "tooltip",
-                                                      _title = "%s|%s" %
-                                                            (T("Quantity"),
-                                                             T("The number of Units of Measure of the Alternative Items which is equal to One Unit of Measure of the Item")
-                                                            )
-                                                    ),
-                                        default = 1,
-                                        notnull=True),
-                                  supply_item_id("alt_item_id",
-                                                 notnull=True),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             supply_item_id(notnull=True),
+                             Field("quantity",
+                                   "double",
+                                   label = T("Quantity"),
+                                   comment = DIV(_class = "tooltip",
+                                                 _title = "%s|%s" %
+                                                       (T("Quantity"),
+                                                        T("The number of Units of Measure of the Alternative Items which is equal to One Unit of Measure of the Item")
+                                                       )
+                                               ),
+                                   default = 1,
+                                   notnull=True),
+                             supply_item_id("alt_item_id",
+                                            notnull=True),
+                             comments(),
+                             *meta_fields())
 
         # CRUD strings
         ADD_ALT_ITEM = T("Add Alternative Item")
         LIST_ALT_ITEM = T("List Alternative Items")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ALT_ITEM,
             title_display = T("Alternative Item Details"),
             title_list = LIST_ALT_ITEM,
@@ -791,17 +791,17 @@ S3FilterFieldChange({
                                   )
 
         # ---------------------------------------------------------------------
-        item_id = self.super_link("item_entity_id", "supply_item_entity",
-                                  #writable = True,
-                                  #readable = True,
-                                  #label = T("Status"),
-                                  #represent = item_represent,
-                                  # Comment these to use a Dropdown & not an Autocomplete
-                                  #widget = S3ItemAutocompleteWidget(),
-                                  #comment = DIV(_class="tooltip",
-                                  #              _title="%s|%s" % (T("Item"),
-                                  #                                T("Enter some characters to bring up a list of possible matches")))
-                                )
+        item_id = super_link("item_entity_id", "supply_item_entity",
+                             #writable = True,
+                             #readable = True,
+                             #label = T("Status"),
+                             #represent = item_represent,
+                             # Comment these to use a Dropdown & not an Autocomplete
+                             #widget = S3ItemAutocompleteWidget(),
+                             #comment = DIV(_class="tooltip",
+                             #              _title="%s|%s" % (T("Item"),
+                             #                                T("Enter some characters to bring up a list of possible matches")))
+                            )
 
         # ---------------------------------------------------------------------
         # Item Search Method
@@ -836,8 +836,8 @@ S3FilterFieldChange({
             ))
 
         # ---------------------------------------------------------------------
-        self.configure(tablename,
-                       search_method = item_entity_search)
+        configure(tablename,
+                  search_method = item_entity_search)
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)

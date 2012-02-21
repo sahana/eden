@@ -434,7 +434,11 @@ class S3Cube(S3CRUD):
                        if m in supported_methods]
         else:
             methods = supported_methods.items()
-        options = [OPTION(m[1], _value=m[0]) for m in methods]
+        selected = current.request.vars.aggregate
+        options = [OPTION(m[1],
+                          _value=m[0],
+                          _selected= m[0] == selected and "selected" or None)
+                   for m in methods]
         if len(options) < 2:
             options[0].update(_selected="selected")
         else:

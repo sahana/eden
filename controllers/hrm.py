@@ -310,7 +310,7 @@ def human_resource():
                         "url": URL(f="compose",
                                    vars = {"hrm_id": "[id]"}),
                         "_class": "action-btn",
-                        "label": str(T("Send Notification"))})
+                        "label": str(T("Send Message"))})
         elif r.representation == "plain":
             # Map Popups
             output = hrm_map_popup(r)
