@@ -365,26 +365,47 @@ class S3HRModel(S3Model):
         utable = auth.settings.table_user
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
-        mtable = s3db.auth_membership
         htable = s3db.hrm_human_resource
-        stable = s3db.org_site
 
         # Get the full record
-        if form.vars.id:
-            record = htable[form.vars.id]
+        id = form.vars.id
+        if id:
+            query = (htable.id == id)
+            record = db(query).select(htable.id,
+                                      htable.type,
+                                      htable.person_id,
+                                      htable.site_id,
+                                      htable.organisation_id,
+                                      # Needed by hrm_update_staff_role()
+                                      htable.owned_by_organisation,
+                                      htable.owned_by_facility,
+                                      htable.deleted,
+                                      htable.deleted_fk,
+                                      limitby=(0, 1)).first()
         else:
             return
 
         data = Storage()
 
-        # For Staff, update the location ID from the selected site
-        site = None
         if record.type == 1 and record.site_id:
+            # Staff: update the location ID from the selected site
+            stable = s3db.org_site
             query = (stable._id == record.site_id)
             site = db(query).select(stable.location_id,
                                     limitby=(0, 1)).first()
             if site:
                 data.location_id = site.location_id
+        elif record.type == 2:
+            # Volunteer: update the location ID from the Home Address
+            atable = s3db.pr_address
+            query = (atable.pe_id == ptable.pe_id) & \
+                    (ptable.id == record.person_id) & \
+                    (atable.type == 1) & \
+                    (atable.deleted == False)
+            address = db(query).select(atable.location_id,
+                                       limitby=(0, 1)).first()
+            if address:
+                data.location_id = address.location_id
 
         # Add record owner (user)
         query = (ptable.id == record.person_id) & \
@@ -401,7 +422,7 @@ class S3HRModel(S3Model):
             return
         record.update_record(**data)
 
-        if site:
+        if data.location_id:
             # Populate the Lx fields
             current.response.s3.lx_update(htable, record.id)
 
