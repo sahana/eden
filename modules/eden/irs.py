@@ -54,6 +54,14 @@ class S3IRSModel(S3Model):
 
         datetime_represent = S3DateTime.datetime_represent
 
+        # Shortcuts
+        add_component = self.add_component
+        configure = self.configure
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
+        set_method = self.set_method
+        super_link = self.super_link
+
         # ---------------------------------------------------------------------
         # List of Incident Categories
         # The keys are based on the Canadian ems.incident hierarchy, with a few extra general versions added to 'other'
@@ -193,17 +201,17 @@ class S3IRSModel(S3Model):
 
         # This Table defines which Categories are visible to end-users
         tablename = "irs_icategory"
-        table = self.define_table(tablename,
-                                  Field("code", label = T("Category"),
-                                        requires = IS_IN_SET_LAZY(lambda: \
-                                            sort_dict_by_values(irs_incident_type_opts)),
-                                        represent = lambda opt: \
-                                            irs_incident_type_opts.get(opt, opt)),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             Field("code", label = T("Category"),
+                                   requires = IS_IN_SET_LAZY(lambda: \
+                                        sort_dict_by_values(irs_incident_type_opts)),
+                                   represent = lambda opt: \
+                                        irs_incident_type_opts.get(opt, opt)),
+                             *meta_fields())
 
-        self.configure(tablename,
-                       onvalidation=self.irs_icategory_onvalidation,
-                       list_fields=[ "code" ])
+        configure(tablename,
+                  onvalidation=self.irs_icategory_onvalidation,
+                  list_fields=[ "code" ])
 
         # ---------------------------------------------------------------------
         # Reports
@@ -221,81 +229,80 @@ class S3IRSModel(S3Model):
         #    8201:T("Rescue")
         #}
         tablename = "irs_ireport"
-        table = self.define_table(tablename,
-                                  self.super_link("sit_id", "sit_situation"),
-                                  self.super_link("doc_id", "doc_entity"),
-                                  Field("name", label = T("Short Description"),
-                                        requires = IS_NOT_EMPTY()),
-                                  Field("message", "text", label = T("Message"),
-                                        represent = lambda text: \
-                                            s3_truncate(text, length=48, nice=True)),
-                                  Field("category", label = T("Category"),
-                                        # The full set available to Admins & Imports/Exports
-                                        # (users use the subset by over-riding this in the Controller)
-                                        requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
-                                            sort_dict_by_values(irs_incident_type_opts))),
-                                        # Use this instead if a simpler set of Options required
-                                        #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
-                                        represent = lambda opt: \
-                                            irs_incident_type_opts.get(opt, opt)),
-                                  # Better to use a plain text field than to clutter the PR
-                                  Field("person",
-                                        readable = False,
-                                        writable = False,
-                                        label = T("Reporter Name"),
-                                        comment = (T("At/Visited Location (not virtual)"))),
-                                  Field("contact",
-                                        readable = False,
-                                        writable = False,
-                                        label = T("Contact Details")),
-                                  Field("datetime", "datetime",
-                                        default = request.utcnow,
-                                        label = T("Date/Time of Alert"),
-                                        widget = S3DateTimeWidget(future=0),
-                                        represent = lambda val: datetime_represent(val, utc=True),
-                                        requires = [IS_NOT_EMPTY(),
-                                                    IS_UTC_DATETIME(allow_future=False)]),
-                                  Field("expiry", "datetime",
-                                        #readable = False,
-                                        #writable = False,
-                                        label = T("Expiry Date/Time"),
-                                        widget = S3DateTimeWidget(past=0),
-                                        represent = lambda val: datetime_represent(val, utc=True),
-                                        requires = IS_NULL_OR(IS_UTC_DATETIME())
-                                       ),
-                                  location_id(),
-                                  Field("verified", "boolean",    # Ushahidi-compatibility
-                                        # We don't want these visible in Create forms
-                                        # (we override in Update forms in controller)
-                                        readable = False,
-                                        writable = False,
-                                        label = T("Verified?"),
-                                        represent = lambda verified: \
-                                              (T("No"),
-                                               T("Yes"))[verified == True]),
-                                  # @ToDo: Move this to Events?
-                                  # Then display here as a Virtual Field
-                                  Field("dispatch", "datetime",
-                                        # We don't want these visible in Create forms
-                                        # (we override in Update forms in controller)
-                                        readable = False,
-                                        writable = False,
-                                        label = T("Date/Time of Dispatch"),
-                                        widget = S3DateTimeWidget(future=0),
-                                        requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False))),
-                                  Field("closed", "boolean",
-                                        # We don't want these visible in Create forms
-                                        # (we override in Update forms in controller)
-                                        default = False,
-                                        readable = False,
-                                        writable = False,
-                                        label = T("Closed?"),
-                                        represent = lambda closed: \
-                                              (T("No"),
-                                               T("Yes"))[closed == True]),
-                                  s3.comments(),
-                                  *s3.meta_fields())
-
+        table = define_table(tablename,
+                             super_link("sit_id", "sit_situation"),
+                             super_link("doc_id", "doc_entity"),
+                             Field("name", label = T("Short Description"),
+                                   requires = IS_NOT_EMPTY()),
+                             Field("message", "text", label = T("Message"),
+                                   represent = lambda text: \
+                                       s3_truncate(text, length=48, nice=True)),
+                             Field("category", label = T("Category"),
+                                   # The full set available to Admins & Imports/Exports
+                                   # (users use the subset by over-riding this in the Controller)
+                                   requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
+                                       sort_dict_by_values(irs_incident_type_opts))),
+                                   # Use this instead if a simpler set of Options required
+                                   #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
+                                   represent = lambda opt: \
+                                       irs_incident_type_opts.get(opt, opt)),
+                             # Better to use a plain text field than to clutter the PR
+                             Field("person",
+                                   readable = False,
+                                   writable = False,
+                                   label = T("Reporter Name"),
+                                   comment = (T("At/Visited Location (not virtual)"))),
+                             Field("contact",
+                                   readable = False,
+                                   writable = False,
+                                   label = T("Contact Details")),
+                             Field("datetime", "datetime",
+                                   default = request.utcnow,
+                                   label = T("Date/Time of Alert"),
+                                   widget = S3DateTimeWidget(future=0),
+                                   represent = lambda val: datetime_represent(val, utc=True),
+                                   requires = [IS_NOT_EMPTY(),
+                                               IS_UTC_DATETIME(allow_future=False)]),
+                             Field("expiry", "datetime",
+                                   #readable = False,
+                                   #writable = False,
+                                   label = T("Expiry Date/Time"),
+                                   widget = S3DateTimeWidget(past=0),
+                                   represent = lambda val: datetime_represent(val, utc=True),
+                                   requires = IS_NULL_OR(IS_UTC_DATETIME())
+                                  ),
+                             location_id(),
+                             Field("verified", "boolean",    # Ushahidi-compatibility
+                                   # We don't want these visible in Create forms
+                                   # (we override in Update forms in controller)
+                                   readable = False,
+                                   writable = False,
+                                   label = T("Verified?"),
+                                   represent = lambda verified: \
+                                         (T("No"),
+                                          T("Yes"))[verified == True]),
+                             # @ToDo: Move this to Events?
+                             # Then display here as a Virtual Field
+                             Field("dispatch", "datetime",
+                                   # We don't want these visible in Create forms
+                                   # (we override in Update forms in controller)
+                                   readable = False,
+                                   writable = False,
+                                   label = T("Date/Time of Dispatch"),
+                                   widget = S3DateTimeWidget(future=0),
+                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False))),
+                             Field("closed", "boolean",
+                                   # We don't want these visible in Create forms
+                                   # (we override in Update forms in controller)
+                                   default = False,
+                                   readable = False,
+                                   writable = False,
+                                   label = T("Closed?"),
+                                   represent = lambda closed: \
+                                         (T("No"),
+                                          T("Yes"))[closed == True]),
+                             s3.comments(),
+                             *(s3.lx_fields() + meta_fields()))
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
         LIST_INC_REPORTS = T("List Incident Reports")
@@ -315,49 +322,122 @@ class S3IRSModel(S3Model):
             msg_record_deleted = T("Incident Report deleted"),
             msg_list_empty = T("No Incident Reports currently registered"))
 
-        self.configure(tablename,
-                       super_entity = ("sit_situation", "doc_entity"),
-                       # Open tabs after creation
-                       create_next = URL(args=["[id]", "update"]),
-                       update_next = URL(args=["[id]", "update"]),
-                       list_fields = ["id",
-                                      "name",
-                                      "category",
-                                      "datetime",
-                                      "location_id",
-                                      #"organisation_id",
-                                      "verified",
-                                      "message",
-                                    ])
+        hierarchy = current.gis.get_location_hierarchy()
+        report_fields = [
+                         "category",
+                         "datetime",
+                         (hierarchy["L1"], "L1"),
+                         (hierarchy["L2"], "L2"),
+                        ]
+
+        ireport_search = S3Search(
+            advanced=(
+                    S3SearchSimpleWidget(
+                        name = "incident_search_simple",
+                        label = T("Description"),
+                        comment = T("You can search by description. You may use % as wildcard. Press 'Search' without input to list all incidents."),
+                        field = ["name",
+                                 "message",
+                                 "comments",
+                                ]
+                    ),
+                    S3SearchLocationHierarchyWidget(
+                        name="incident_search_L1",
+                        field="L1",
+                        cols = 3,
+                    ),
+                    S3SearchLocationHierarchyWidget(
+                        name="incident_search_L2",
+                        field="L2",
+                        cols = 3,
+                    ),
+                    S3SearchOptionsWidget(
+                        name="incident_search_category",
+                        field=["category"],
+                        label = T("Category"),
+                        cols = 3,
+                    ),
+                    S3SearchMinMaxWidget(
+                        name="incident_search_date",
+                        method="range",
+                        label=T("Date"),
+                        field=["datetime"]
+                    ),
+            ))
+
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = ("sit_situation", "doc_entity"),
+                  # Open tabs after creation
+                  create_next = URL(args=["[id]", "update"]),
+                  update_next = URL(args=["[id]", "update"]),
+                  search_method = ireport_search,
+                  report_filter=[
+                            S3SearchLocationHierarchyWidget(
+                                name="incident_search_L1",
+                                field="L1",
+                                cols = 3,
+                            ),
+                            S3SearchLocationHierarchyWidget(
+                                name="incident_search_L2",
+                                field="L2",
+                                cols = 3,
+                            ),
+                            S3SearchOptionsWidget(
+                                name="incident_search_category",
+                                field=["category"],
+                                label = T("Category"),
+                                cols = 3,
+                            ),
+                            S3SearchMinMaxWidget(
+                                name="incident_search_date",
+                                method="range",
+                                label=T("Date"),
+                                field=["datetime"]
+                            ),
+                        ],
+                  report_rows = report_fields,
+                  report_cols = report_fields,
+                  report_fact = report_fields,
+                  report_method=["count", "list"],
+                  list_fields = ["id",
+                                 "name",
+                                 "category",
+                                 "datetime",
+                                 "location_id",
+                                 #"organisation_id",
+                                 "verified",
+                                 "message",
+                                ])
 
         # Components
         # Tasks
-        self.add_component("project_task",
-                           irs_ireport=Storage(link="project_task_ireport",
-                                               joinby="ireport_id",
-                                               key="task_id",
-                                               actuate="replace",
-                                               autocomplete="name",
-                                               autodelete=False))
+        add_component("project_task",
+                      irs_ireport=Storage(link="project_task_ireport",
+                                          joinby="ireport_id",
+                                          key="task_id",
+                                          actuate="replace",
+                                          autocomplete="name",
+                                          autodelete=False))
 
         # Vehicles
-        self.add_component("asset_asset",
-                           irs_ireport=Storage(
-                                link="irs_ireport_vehicle",
-                                joinby="ireport_id",
-                                key="asset_id",
-                                name="vehicle",
-                                # Dispatcher doesn't need to Add/Edit records, just Link
-                                actuate="link",
-                                autocomplete="name",
-                                autodelete=False))
+        add_component("asset_asset",
+                      irs_ireport=Storage(
+                            link="irs_ireport_vehicle",
+                            joinby="ireport_id",
+                            key="asset_id",
+                            name="vehicle",
+                            # Dispatcher doesn't need to Add/Edit records, just Link
+                            actuate="link",
+                            autocomplete="name",
+                            autodelete=False))
 
         if settings.has_module("vehicle"):
             link_table = "irs_ireport_vehicle_human_resource"
         else:
             link_table = "irs_ireport_human_resource"
-        self.add_component("hrm_human_resource",
-                           irs_ireport=Storage(
+        add_component("hrm_human_resource",
+                      irs_ireport=Storage(
                                     link=link_table,
                                     joinby="ireport_id",
                                     key="human_resource_id",
@@ -379,28 +459,29 @@ class S3IRSModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Custom Methods
-        self.set_method("irs_ireport",
-                        method="dispatch",
-                        action=self.irs_dispatch)
+        set_method("irs_ireport",
+                   method="dispatch",
+                   action=self.irs_dispatch)
 
-        self.set_method("irs_ireport",
-                        method="timeline",
-                        action=self.irs_timeline)
+        set_method("irs_ireport",
+                   method="timeline",
+                   action=self.irs_timeline)
 
-        self.set_method("irs_ireport",
-                        method="ushahidi",
-                        action=self.irs_ushahidi_import)
+        set_method("irs_ireport",
+                   method="ushahidi",
+                   action=self.irs_ushahidi_import)
 
         if settings.has_module("fire"):
             create_next = URL(args=["[id]", "human_resource"])
         else:
             create_next = URL(args=["[id]", "update"])
 
-        self.configure("irs_ireport",
-                       create_onaccept=self.ireport_onaccept,
-                       create_next=create_next,
-                       update_next=URL(args=["[id]", "update"])
-                       )
+        configure("irs_ireport",
+                  create_onaccept=self.ireport_onaccept,
+                  onvalidation=s3.lx_onvalidation,
+                  create_next=create_next,
+                  update_next=URL(args=["[id]", "update"])
+                  )
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

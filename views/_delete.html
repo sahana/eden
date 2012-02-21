@@ -1,10 +1,7 @@
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
 <div id='rheader'>
-{{try:}}
- {{=XML(rheader)}}
+{{try:}}{{=XML(rheader)}}
  </div>
  <div id='component'>
 {{except:}}
@@ -12,21 +9,15 @@
 <div>
  {{pass}}
 	<div id='map'></div>
-	{{try:}}
-	{{=showadd_btn}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=showadd_btn}}
+	{{except:}}{{pass}}
 	<div class='form-container'>
-	{{try:}}
-	 {{=form}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=form}}
+	{{except:}}{{pass}}
 	</div>
 	<div id='table-container'>
-	{{try:}}
-	 {{=items}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=items}}
+	{{except:}}{{pass}}
 	</div>
 </div>
 {{include "dataTables.html"}}

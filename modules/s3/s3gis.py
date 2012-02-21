@@ -511,13 +511,12 @@ class GIS(object):
 
         config = self.get_config()
 
+        # When a map is displayed that focuses on a collection of points, the map is zoomed to show just the region bounding the points.
         # Minimum Bounding Box
-        # When a map is displayed that focuses on a collection of points, the map is zoomed to show just the region bounding the points.
-        # This value gives a minimum width and height in degrees for the region shown. Without this, a map showing a single point would not show any extent around that point. After the map is displayed, it can be zoomed as desired.
-        bbox_min_size = 0.01
+        # - gives a minimum width and height in degrees for the region shown. Without this, a map showing a single point would not show any extent around that point. After the map is displayed, it can be zoomed as desired.
+        bbox_min_size = 0.03
         # Bounding Box Insets
-        # When a map is displayed that focuses on a collection of points, the map is zoomed to show just the region bounding the points.
-        # This value adds a small mount of distance outside the points. Without this, the outermost points would be on the bounding box, and might not be visible.
+        # - adds a small amount of distance outside the points. Without this, the outermost points would be on the bounding box, and might not be visible.
         bbox_inset = 0.007
 
         if len(features) > 0:
@@ -1086,6 +1085,7 @@ class GIS(object):
                       table[level]]
         else:
             fields = [table.uuid,
+                      table.L1,
                       table.L2,
                       table.L3,
                       table.L4,
@@ -1379,7 +1379,7 @@ class GIS(object):
         """
             Return a quick representation for a Field based on it's value
             - faster than field.represent(value)
-            Used by s3xml's gis_encode()
+            Used by get_popup_tooltip()
 
             @ToDo: Move out of S3GIS
         """
@@ -1396,7 +1396,12 @@ class GIS(object):
         represent = value
 
         # If the field is a FK, then check for specials
-        if (tablename, fieldname) in s3db.pr_person._referenced_by:
+        if fieldname == "type":
+            if tablename == "hrm_human_resource":
+                represent = s3db.hrm_type_opts.get(value, "")
+            elif tablename == "org_office":
+                represent = s3db.org_office_type_opts.get(value, "")
+        elif (tablename, fieldname) in s3db.pr_person._referenced_by:
             represent = s3_fullname(value)
         elif (tablename, fieldname) in hrtable._referenced_by:
             # e.g. assess_rat - convert to Organisation
@@ -1412,24 +1417,6 @@ class GIS(object):
                                               cache=cache).first()
                 if _represent:
                     represent = _represent.name
-        elif fieldname == "type":
-            if tablename == "hrm_human_resource":
-                # @ToDo: DRY by moving to a Module (s3cfg?)
-                hrm_type_opts = {
-                    1: T("staff"),
-                    2: T("volunteer")
-                }
-                represent = hrm_type_opts.get(value, "")
-            elif tablename == "org_office":
-                # @ToDo: DRY by moving to a Module (s3cfg?)
-                org_office_type_opts = {
-                    1:T("Headquarters"),
-                    2:T("Regional"),
-                    3:T("Country"),
-                    4:T("Satellite Office"),
-                    5:T("Warehouse"),       # Don't change this number, as it affects the Inv module
-                }
-                represent = org_office_type_opts.get(value, "")
         elif field.type[:9] == "reference":
             try:
                 tablename = field.type[10:]
@@ -1441,6 +1428,9 @@ class GIS(object):
             except: # @ToDo: provide specific exception
                 # Keep the default from earlier
                 pass
+        elif field.type.startswith("list"):
+            # Value isn't going to be useful here - do the normal represent
+            represent = field.represent(value)
 
         return represent
 

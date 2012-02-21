@@ -187,13 +187,14 @@ class S3Cube(S3CRUD):
 
                 # Other output options ----------------------------------------
                 #
-                response.s3.dataTable_iDisplayLength = 50
-                response.s3.no_formats = True
-                response.s3.no_sspag = True
+                s3 = response.s3
+                s3.dataTable_iDisplayLength = 50
+                s3.no_formats = True
+                s3.no_sspag = True
                 if r.http == "GET":
                     _show = "%s"
                     _hide = "%s hide"
-                response.s3.actions = []
+                s3.actions = []
                 output.update(sortby=[[0,'asc']])
 
             else:
@@ -217,13 +218,14 @@ class S3Cube(S3CRUD):
         # Complete the page ---------------------------------------------------
         #
         if representation == "html":
-            title = self.crud_string(self.tablename, "title_report")
+            crud_string = self.crud_string
+            title = crud_string(self.tablename, "title_report")
             if not title:
-                title = self.crud_string(self.tablename, "title_list")
+                title = crud_string(self.tablename, "title_list")
 
-            subtitle = self.crud_string(self.tablename, "subtitle_report")
+            subtitle = crud_string(self.tablename, "subtitle_report")
             if not subtitle:
-                subtitle = self.crud_string(self.tablename, "subtitle_list")
+                subtitle = crud_string(self.tablename, "subtitle_list")
 
             # @todo: move JavaScript into s3.report.js
             if form is not None:
@@ -245,7 +247,9 @@ class S3Cube(S3CRUD):
             else:
                 form = ""
 
-            output.update(title=title, subtitle=subtitle, form=form)
+            output["title"] = title
+            output["subtitle"] = subtitle
+            output["form"] = form
             response.view = self._view(r, "report.html")
 
         return output
@@ -258,19 +262,21 @@ class S3Cube(S3CRUD):
         resource = self.resource
 
         # Get list_fields
-        list_fields = self._config("list_fields")
+        _config = self._config
+        list_fields = _config("list_fields")
         if not list_fields:
             list_fields = [f.name for f in resource.readable_fields()]
 
-        report_rows = self._config("report_rows", list_fields)
-        report_cols = self._config("report_cols", list_fields)
-        report_fact = self._config("report_fact", list_fields)
+        report_rows = _config("report_rows", list_fields)
+        report_cols = _config("report_cols", list_fields)
+        report_fact = _config("report_fact", list_fields)
 
-        select_rows = self._select_field(report_rows, _id="rows", _name="rows")
-        select_cols = self._select_field(report_cols, _id="cols", _name="cols")
-        select_fact = self._select_field(report_fact, _id="fact", _name="fact")
+        _select_field = self._select_field
+        select_rows = _select_field(report_rows, _id="rows", _name="rows")
+        select_cols = _select_field(report_cols, _id="cols", _name="cols")
+        select_fact = _select_field(report_fact, _id="fact", _name="fact")
 
-        methods = self._config("report_method")
+        methods = _config("report_method")
         select_method = self._select_method(methods,
                                             _id="aggregate",
                                             _name="aggregate")

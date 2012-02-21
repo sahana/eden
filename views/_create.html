@@ -1,14 +1,9 @@
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
-{{try:}}
-{{=s3_ocr_buttons(r)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
+{{try:}}{{=s3_ocr_buttons(r)}}
+{{except:}}{{pass}}
 <div id='rheader'>
-{{try:}}
- {{=XML(rheader)}}
+{{try:}}{{=XML(rheader)}}
  </div>
  <div id='component'>
 {{except:}}
@@ -16,14 +11,10 @@
 <div>
  {{pass}}
 	{{include "key.html"}}
-	{{try:}}
-	 {{=H3(subtitle)}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=H3(subtitle)}}
+	{{except:}}{{pass}}
 	<div class='form-container'>
-	{{try:}}
-	 {{=form}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=form}}
+	{{except:}}{{pass}}
 	</div>
 </div>

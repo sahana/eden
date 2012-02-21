@@ -313,7 +313,11 @@ class IS_ONE_OF_EMPTY(Validator):
             fields = ["%s.%s" % (ktable, k) for k in ks]
         else:
             ks = [kfield]
-            fields =[str(f) for f in self.dbset._db[ktable]]
+            try:
+                table = self.dbset._db[ktable]
+            except:
+                table = current.s3db[ktable]
+            fields =[str(f) for f in table]
         self.fields = fields
         self.label = label
         self.ktable = ktable

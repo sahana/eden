@@ -71,6 +71,7 @@ class S3ProjectModel(S3Model):
              "project_project",
              "project_activity_type",
              "project_activity",
+             "project_activity_contact",
              "project_project_id",
              "project_activity_id",
              "project_hfa_opts",
@@ -105,6 +106,7 @@ class S3ProjectModel(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        meta_fields = s3.meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -119,7 +121,7 @@ class S3ProjectModel(S3Model):
                                    unique=True),
                              Field("comments"),
                              format = "%(name)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration?
 
@@ -158,7 +160,7 @@ class S3ProjectModel(S3Model):
                                    unique=True),
                              Field("comments"),
                              format="%(name)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration?
 
@@ -286,7 +288,7 @@ class S3ProjectModel(S3Model):
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              format="%(name)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration?
 
@@ -462,7 +464,7 @@ class S3ProjectModel(S3Model):
                              Field("name", length=128,
                                    notnull=True, unique=True),
                              format="%(name)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration?
 
@@ -554,7 +556,7 @@ class S3ProjectModel(S3Model):
                                                         T("hours"))),
                              s3.comments(),
                              format="%(name)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         if pca:
@@ -564,6 +566,8 @@ class S3ProjectModel(S3Model):
 
         # CRUD Strings
         if pca:
+            ACTIVITY = T("Community")
+            ACTIVITY_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
             ADD_ACTIVITY = T("Add Community")
             LIST_ACTIVITIES = T("List Communities")
             crud_strings[tablename] = Storage(
@@ -585,6 +589,8 @@ class S3ProjectModel(S3Model):
                 msg_list_empty = T("No Communities Found")
             )
         else:
+            ACTIVITY = T("Activity")
+            ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
             ADD_ACTIVITY = T("Add Activity")
             LIST_ACTIVITIES = T("List Activities")
             crud_strings[tablename] = Storage(
@@ -664,11 +670,11 @@ class S3ProjectModel(S3Model):
                                                   s3_get_db_field_value(tablename = "project_activity",
                                                                         fieldname = "name",
                                                                         look_up_value = id),
-                                      label = T("Activity"),
+                                      label = ACTIVITY,
                                       comment = s3_popup_comment(c="project",
                                                                  f="activity",
                                                                  title=ADD_ACTIVITY,
-                                                                 tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")),
+                                                                 tooltip=ACTIVITY_TOOLTIP),
                                       ondelete = "CASCADE")
 
         # Components
@@ -707,7 +713,7 @@ class S3ProjectModel(S3Model):
                              person_id(widget=S3AddPersonWidget(),
                                        requires=IS_ADD_PERSON_WIDGET(),
                                        comment=None),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         table.virtualfields.append(S3ProjectActivityContactVirtualFields())
 
@@ -734,8 +740,15 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Contacts Found"))
 
         # Resource configuration
+        hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
-                  list_fields=["person_id",
+                  list_fields=["activity_id",
+                               (T("Project"), "activity_id$project_id"),
+                               "person_id",
+                               (hierarchy["L0"], "person_id$L0"),
+                               (hierarchy["L1"], "person_id$L1"),
+                               (hierarchy["L2"], "person_id$L2"),
+                               (hierarchy["L3"], "person_id$L3"),
                                (T("Email"), "email"),
                                (T("Mobile Phone"), "sms")])
 

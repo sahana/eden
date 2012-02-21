@@ -133,7 +133,8 @@ class S3CRUD(S3Method):
         output = dict()
 
         # Get table configuration
-        insertable = self._config("insertable", True)
+        _config = self._config
+        insertable = _config("insertable", True)
         if not insertable:
             if r.method is not None:
                 r.error(405, self.resource.ERROR.BAD_METHOD)
@@ -148,10 +149,10 @@ class S3CRUD(S3Method):
                 return dict(form=None)
 
         # Get callbacks
-        onvalidation = self._config("create_onvalidation") or \
-                       self._config("onvalidation")
-        onaccept = self._config("create_onaccept") or \
-                   self._config("onaccept")
+        onvalidation = _config("create_onvalidation") or \
+                       _config("onvalidation")
+        onaccept = _config("create_onaccept") or \
+                   _config("onaccept")
 
         if r.interactive:
 
@@ -160,18 +161,20 @@ class S3CRUD(S3Method):
             # Set view
             if representation in ("popup", "iframe"):
                 response.view = self._view(r, "popup.html")
-                output.update(caller=request.vars.caller)
+                output["caller"] = request.vars.caller
             else:
                 response.view = self._view(r, "create.html")
 
             # Title and subtitle
+            crud_string = self.crud_string
             if r.component:
-                title = self.crud_string(r.tablename, "title_display")
-                subtitle = self.crud_string(tablename, "subtitle_create")
-                output.update(title=title, subtitle=subtitle)
+                title = crud_string(r.tablename, "title_display")
+                subtitle = crud_string(tablename, "subtitle_create")
+                output["title"] = title
+                output["subtitle"] = subtitle
             else:
-                title = self.crud_string(tablename, "title_create")
-                output.update(title=title)
+                title = crud_string(tablename, "title_create")
+                output["title"] = title
 
             # Component join
             link = None
@@ -180,13 +183,15 @@ class S3CRUD(S3Method):
                     link = self._embed_component(resource, record=r.id)
                     pkey = resource.pkey
                     fkey = resource.fkey
-                    table[fkey].comment = None
-                    table[fkey].default = r.record[pkey]
-                    table[fkey].update = r.record[pkey]
+                    field = table[fkey]
+                    value = r.record[pkey]
+                    field.comment = None
+                    field.default = value
+                    field.update = value
                     if r.http=="POST":
-                        r.post_vars.update({fkey: r.record[pkey]})
-                    table[fkey].readable = False
-                    table[fkey].writable = False
+                        r.post_vars.update({fkey: value})
+                    field.readable = False
+                    field.writable = False
                 else:
                     link = Storage(resource=resource.link, master=r.record)
 
@@ -224,7 +229,7 @@ class S3CRUD(S3Method):
                         map_fields = map_fields.split(",")
 
             # Success message
-            message = self.crud_string(self.tablename, "msg_record_created")
+            message = crud_string(self.tablename, "msg_record_created")
 
             # Copy formkey if un-deleting a duplicate
             if "id" in request.post_vars:
@@ -252,7 +257,7 @@ class S3CRUD(S3Method):
                                 format=representation)
 
             # Insert subheadings
-            subheadings = self._config("subheadings")
+            subheadings = _config("subheadings")
             if subheadings:
                 self.insert_subheadings(form, tablename, subheadings)
 
@@ -267,15 +272,15 @@ class S3CRUD(S3Method):
                 form.append(SCRIPT("S3EnableNavigateAwayConfirm();"))
 
             # Put the form into output
-            output.update(form=form)
+            output["form"] = form
 
             # Buttons
             buttons = self.insert_buttons(r, "list")
             if buttons:
-                output.update(buttons)
+                output["buttons"] = buttons
 
             # Redirection
-            create_next = self._config("create_next")
+            create_next = _config("create_next")
             if session.s3.rapid_data_entry and not r.component:
                 create_next = r.url()
 
@@ -311,7 +316,7 @@ class S3CRUD(S3Method):
             except:
                 session.error = T("Unable to parse CSV file or file contains invalid data")
             else:
-                session.flash = T("Data uploaded")
+                session.confirmation = T("Data uploaded")
 
         elif representation == "pdf":
             exporter = S3PDF()
@@ -346,9 +351,10 @@ class S3CRUD(S3Method):
 
         output = dict()
 
-        editable = self._config("editable", True)
-        deletable = self._config("deletable", True)
-        list_fields = self._config("list_fields")
+        _config = self._config
+        editable = _config("editable", True)
+        deletable = _config("deletable", True)
+        list_fields = _config("list_fields")
 
         # List fields
         if not list_fields:
@@ -387,14 +393,15 @@ class S3CRUD(S3Method):
                     return self.update(r, **attr)
 
             # Form configuration
-            subheadings = self._config("subheadings")
+            subheadings = _config("subheadings")
 
             # Title and subtitle
-            title = self.crud_string(r.tablename, "title_display")
-            output.update(title=title)
+            crud_string = self.crud_string
+            title = crud_string(r.tablename, "title_display")
+            output["title"] = title
             if r.component:
-                subtitle = self.crud_string(tablename, "title_display")
-                output.update(subtitle=subtitle)
+                subtitle = crud_string(tablename, "title_display")
+                output["subtitle"] = subtitle
 
             # Item
             if record_id:
@@ -404,27 +411,28 @@ class S3CRUD(S3Method):
                 if subheadings:
                     self.insert_subheadings(item, self.tablename, subheadings)
             else:
-                item = self.crud_string(tablename, "msg_list_empty")
+                item = crud_string(tablename, "msg_list_empty")
 
             # View
             if representation == "html":
                 response.view = self._view(r, "display.html")
-                output.update(item=item)
+                output["item"] = item
             elif representation in ("popup", "iframe"):
                 response.view = self._view(r, "popup.html")
                 caller = attr.get("caller", None)
-                output.update(form=item, caller=caller)
+                output["form"] = item
+                output["caller"] = caller
 
             # Buttons
             buttons = self.insert_buttons(r, "edit", "delete", "list",
                                           record_id=record_id)
             if buttons:
-                output.update(buttons)
+                output["buttons"] = buttons
 
             # Last update
             last_update = self.last_update()
             if last_update:
-                output.update(last_update)
+                output["last_update"] = last_update
 
         elif representation == "plain":
             # Hide empty fields from popups on map
@@ -438,7 +446,7 @@ class S3CRUD(S3Method):
             item = self.sqlform(record_id=record_id,
                                 readonly=True,
                                 format=representation)
-            output.update(item=item)
+            output["item"] = item
 
             # Edit Link
             EDIT = T("Edit")
@@ -448,7 +456,11 @@ class S3CRUD(S3Method):
                 if href_edit:
                     edit_btn = A(EDIT, _href=href_edit,
                                  _id="edit-btn", _target="_blank")
-                    output.update(edit_btn=edit_btn)
+                    output["edit_btn"] = edit_btn
+
+            # Title and subtitle
+            title = self.crud_string(r.tablename, "title_display")
+            output["title"] = title
 
             response.view = "plain.html"
 
@@ -465,7 +477,7 @@ class S3CRUD(S3Method):
             return exporter(r, **attr)
 
         elif representation == "xls":
-            list_fields = self._config("list_fields")
+            list_fields = _config("list_fields")
             exporter = resource.exporter.xls
             return exporter(resource, list_fields=list_fields)
 
@@ -502,14 +514,15 @@ class S3CRUD(S3Method):
         output = dict()
 
         # Get table configuration
-        editable = self._config("editable", True)
-        deletable = self._config("deletable", True)
+        _config = self._config
+        editable = _config("editable", True)
+        deletable = _config("deletable", True)
 
         # Get callbacks
-        onvalidation = self._config("update_onvalidation") or \
-                       self._config("onvalidation")
-        onaccept = self._config("update_onaccept") or \
-                   self._config("onaccept")
+        onvalidation = _config("update_onvalidation") or \
+                       _config("onvalidation")
+        onaccept = _config("update_onaccept") or \
+                   _config("onaccept")
 
         # Get the target record ID
         record_id = self._record_id(r)
@@ -531,7 +544,7 @@ class S3CRUD(S3Method):
         if r.interactive:
 
             # Form configuration
-            subheadings = self._config("subheadings")
+            subheadings = _config("subheadings")
 
             # Set view
             if representation == "html":
@@ -540,13 +553,15 @@ class S3CRUD(S3Method):
                 response.view = self._view(r, "popup.html")
 
             # Title and subtitle
+            crud_string = self.crud_string
             if r.component:
-                title = self.crud_string(r.tablename, "title_display")
-                subtitle = self.crud_string(self.tablename, "title_update")
-                output.update(title=title, subtitle=subtitle)
+                title = crud_string(r.tablename, "title_display")
+                subtitle = crud_string(self.tablename, "title_update")
+                output["title"] = title
+                output["subtitle"] = subtitle
             else:
-                title = self.crud_string(self.tablename, "title_update")
-                output.update(title=title)
+                title = crud_string(self.tablename, "title_update")
+                output["title"] = title
 
             # Component join
             link = None
@@ -555,18 +570,20 @@ class S3CRUD(S3Method):
                     link = self._embed_component(resource, record=r.id)
                     pkey = resource.pkey
                     fkey = resource.fkey
-                    table[fkey].comment = None
-                    table[fkey].default = r.record[pkey]
-                    table[fkey].update = r.record[pkey]
+                    field = table[fkey]
+                    value = r.record[pkey]
+                    field.comment = None
+                    field.default = value
+                    field.update = value
                     if r.http=="POST":
-                        r.post_vars.update({fkey: r.record[pkey]})
-                    table[fkey].readable = False
-                    table[fkey].writable = False
+                        r.post_vars.update({fkey: value})
+                    field.readable = False
+                    field.writable = False
                 else:
                     link = Storage(resource=resource.link, master=r.record)
 
             # Success message
-            message = self.crud_string(self.tablename, "msg_record_modified")
+            message = crud_string(self.tablename, "msg_record_modified")
 
             # Get the form
             form = self.sqlform(record_id=record_id,
@@ -591,21 +608,21 @@ class S3CRUD(S3Method):
                 form.append(SCRIPT("S3EnableNavigateAwayConfirm();"))
 
             # Put form into output
-            output.update(form=form)
+            output["form"] = form
 
             # Add delete and list buttons
             buttons = self.insert_buttons(r, "delete",
                                           record_id=record_id)
             if buttons:
-                output.update(buttons)
+                output["buttons"] = buttons
 
             # Last update
             last_update = self.last_update()
             if last_update:
-                output.update(last_update)
+                output["last_update"] = last_update
 
             # Redirection
-            update_next = self._config("update_next")
+            update_next = _config("update_next")
             if representation in ("popup", "iframe"):
                 self.next = None
             elif not update_next:
@@ -733,6 +750,7 @@ class S3CRUD(S3Method):
         request = self.request
         response = current.response
         manager = current.manager
+        s3 = response.s3
 
         resource = self.resource
         table = self.table
@@ -743,15 +761,16 @@ class S3CRUD(S3Method):
         output = dict()
 
         # Get table-specific parameters
-        orderby = self._config("orderby", None)
-        sortby = self._config("sortby", [[1, 'asc']])
-        linkto = self._config("linkto", None)
-        insertable = self._config("insertable", True)
-        listadd = self._config("listadd", True)
-        addbtn = self._config("addbtn", False)
-        list_fields = self._config("list_fields")
-        report_groupby = self._config("report_groupby")
-        report_hide_comments = self._config("report_hide_comments")
+        _config = self._config
+        orderby = _config("orderby", None)
+        sortby = _config("sortby", [[1, 'asc']])
+        linkto = _config("linkto", None)
+        insertable = _config("insertable", True)
+        listadd = _config("listadd", True)
+        addbtn = _config("addbtn", False)
+        list_fields = _config("list_fields")
+        report_groupby = _config("report_groupby")
+        report_hide_comments = _config("report_hide_comments")
 
         # Check permission to read in this table
         authorised = self._permitted()
@@ -801,15 +820,15 @@ class S3CRUD(S3Method):
                     f.represent = self.truncate
 
         # Filter
-        if response.s3.filter is not None:
-            resource.add_filter(response.s3.filter)
+        if s3.filter is not None:
+            resource.add_filter(s3.filter)
 
         if r.interactive:
 
             left = []
 
             # SSPag?
-            if not response.s3.no_sspag:
+            if not s3.no_sspag:
                 limit = 1
                 session.s3.filter = request.get_vars
                 if orderby is None:
@@ -828,21 +847,21 @@ class S3CRUD(S3Method):
             # Custom view
             response.view = self._view(r, "list.html")
 
+            crud_string = self.crud_string
             if insertable:
                 if listadd:
                     # Add a hidden add-form and a button to activate it
                     form = self.create(r, **attr).get("form", None)
                     if form is not None:
-                        output.update(form=form)
-                        addtitle = self.crud_string(tablename,
-                                                    "subtitle_create")
-                        output.update(addtitle=addtitle)
+                        output["form"] = form
+                        addtitle = crud_string(tablename, "subtitle_create")
+                        output["addtitle"] = addtitle
                         showadd_btn = self.crud_button(
                                             None,
                                             tablename=tablename,
                                             name="label_create_button",
                                             _id="show-add-btn")
-                        output.update(showadd_btn=showadd_btn)
+                        output["showadd_btn"] = showadd_btn
                         # Switch to list_create view
                         response.view = self._view(r, "list_create.html")
 
@@ -850,7 +869,7 @@ class S3CRUD(S3Method):
                     # Add an action-button linked to the create view
                     buttons = self.insert_buttons(r, "add")
                     if buttons:
-                        output.update(buttons)
+                        output["buttons"] = buttons
 
             # Get the list
             items = resource.sqltable(fields=list_fields,
@@ -865,11 +884,11 @@ class S3CRUD(S3Method):
             # In SSPag, send the first 20 records together with the initial
             # response (avoids the dataTables Ajax request unless the user
             # tries nagivating around)
-            if not response.s3.no_sspag and items:
+            if not s3.no_sspag and items:
                 totalrows = resource.count()
                 if totalrows:
-                    if response.s3.dataTable_iDisplayLength:
-                        limit = 2 * response.s3.dataTable_iDisplayLength
+                    if s3.dataTable_iDisplayLength:
+                        limit = 2 * s3.dataTable_iDisplayLength
                     else:
                         limit = 50
                     sqltable =  resource.sqltable(left=left,
@@ -885,16 +904,17 @@ class S3CRUD(S3Method):
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
                     response.aadata = json(aadata)
-                    response.s3.start = 0
-                    response.s3.limit = limit
+                    s3.start = 0
+                    s3.limit = limit
 
             # Title and subtitle
             if r.component:
-                title = self.crud_string(r.tablename, "title_display")
+                title = crud_string(r.tablename, "title_display")
             else:
-                title = self.crud_string(self.tablename, "title_list")
-            subtitle = self.crud_string(self.tablename, "subtitle_list")
-            output.update(title=title, subtitle=subtitle)
+                title = crud_string(self.tablename, "title_list")
+            subtitle = crud_string(self.tablename, "subtitle_list")
+            output["title"] = title
+            output["subtitle"] = subtitle
 
             # Empty table - or just no match?
             if not items:
@@ -906,18 +926,19 @@ class S3CRUD(S3Method):
                 # This is faster:
                 if available_records.select(self.table.id,
                                             limitby=(0, 1)).first():
-                    items = self.crud_string(self.tablename, "msg_no_match")
+                    items = crud_string(self.tablename, "msg_no_match")
                 else:
-                    items = self.crud_string(self.tablename, "msg_list_empty")
+                    items = crud_string(self.tablename, "msg_list_empty")
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
                     del output["subtitle"]
                     items = ""
-                    response.s3.no_formats = True
+                    s3.no_formats = True
 
             # Update output
-            output.update(items=items, sortby=sortby)
+            output["items"] = items
+            output["sortby"] = sortby
 
         elif representation == "aadata":
 
@@ -926,7 +947,7 @@ class S3CRUD(S3Method):
 
             # Get the master query for SSPag
             if session.s3.filter is not None:
-                resource.build_query(filter=response.s3.filter,
+                resource.build_query(filter=s3.filter,
                                      vars=session.s3.filter)
 
             displayrows = totalrows = resource.count(distinct=distinct)
@@ -947,7 +968,7 @@ class S3CRUD(S3Method):
             if r.method == "search" and not orderby:
                 orderby = fields[0]
             if orderby is None:
-                orderby = self._config("orderby", None)
+                orderby = _config("orderby", None)
 
             # Echo
             sEcho = int(vars.sEcho or 0)

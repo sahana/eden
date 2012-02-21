@@ -8,8 +8,7 @@
 {{try:}}{{=s3_ocr_buttons(r)}}
 {{except:}}{{pass}}
 <div id='rheader'>
-{{try:}}
-    {{=XML(rheader)}}
+{{try:}}{{=XML(rheader)}}
 </div>
 <div id='component'>
 {{except:}}
@@ -23,8 +22,7 @@
   <div id='map'></div>
   {{try:}}{{=H3(subtitle)}}
   {{except:}}{{pass}}
-  {{try:}}
-    {{items = items}}
+  {{try:}}{{items = items}}
     {{try:}}
         {{if report_data is not None:}}
         {{response.s3.actions=None}}

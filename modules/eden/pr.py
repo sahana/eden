@@ -1219,9 +1219,7 @@ class S3PersonComponents(S3Model):
             if person and vars.type == 1: # Home Address
                 # Also check for any Volunteer HRM record(s)
                 htable = s3db.hrm_human_resource
-                ptable = s3db.pr_person
-                query = (htable.person_id == ptable.id) & \
-                        (ptable.pe_id == person.id) & \
+                query = (htable.person_id == person.id) & \
                         (htable.type == 2) & \
                         (htable.deleted == False)
                 hrs = db(query).select(htable.id)

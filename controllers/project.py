@@ -297,6 +297,12 @@ def activity():
                               csv_template="activity")
 
 # -----------------------------------------------------------------------------
+def activity_contact():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def report():
     """
         RESTful CRUD controller

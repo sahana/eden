@@ -1,46 +1,32 @@
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
 <div id='rheader'>
-{{try:}}
- {{=rheader}}
+{{try:}}{{=rheader}}
  </div>
   <div id='component'>
 {{except:}}
   </div>
   <div>
  {{pass}}
-	{{try:}}
-	 {{=H3(subtitle)}}
-	{{except:}}
-	{{pass}}
-	{{try:}}
-	 {{=delete_btn}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=H3(subtitle)}}
+	{{except:}}{{pass}}
+	{{try:}}{{=delete_btn}}
+	{{except:}}{{pass}}
 	{{include "last_update.html"}}
-	{{try:}}
-	 {{include}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{include}}
+	{{except:}}{{pass}}
 	{{try:}}
 	 <p>
 	 {{=edit_btn}}
 	 </p>
-	{{except:}}
-	{{pass}}
+	{{except:}}{{pass}}
 	<div id='map'></div>
 	<div class='item-container'>
-	{{try:}}
-	 {{=item}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=item}}
+	{{except:}}{{pass}}
 	</div>
-	{{try:}}
-	 {{=list_btn}}
-	{{except:}}
-	{{pass}}
+	{{try:}}{{=list_btn}}
+	{{except:}}{{pass}}
 </div>
 {{if response.s3.rfooter:}}
   <div id='rfooter'>

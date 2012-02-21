@@ -1,19 +1,11 @@
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
-{{try:}}
- {{=H3(subtitle)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
+{{try:}}{{=H3(subtitle)}}
+{{except:}}{{pass}}
 {{include "key.html"}}
 <div class='form-container'>
-{{try:}}
- {{=form}}
-{{except:}}
-{{pass}}
+{{try:}}{{=form}}
+{{except:}}{{pass}}
 </div>
-{{try:}}
- {{=list_btn}}
-{{except:}}
-{{pass}}
+{{try:}}{{=list_btn}}
+{{except:}}{{pass}}

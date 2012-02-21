@@ -878,6 +878,10 @@ class S3RoomModel(S3Model):
 # =============================================================================
 class S3OfficeModel(S3Model):
 
+    names = ["org_office",
+             "org_office_type_opts",
+            ]
+
     def model(self):
 
         T = current.T

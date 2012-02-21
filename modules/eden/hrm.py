@@ -46,6 +46,7 @@ class S3HRModel(S3Model):
     names = ["hrm_human_resource",
              "hrm_human_resource_id",
              "hrm_human_resource_search",
+             "hrm_type_opts"
             ]
 
     def model(self):
@@ -210,7 +211,8 @@ class S3HRModel(S3Model):
         #
         return Storage(
                     hrm_human_resource_id = human_resource_id,
-                    hrm_human_resource_search = human_resource_search
+                    hrm_human_resource_search = human_resource_search,
+                    hrm_type_opts = hrm_type_opts
                 )
 
     # -------------------------------------------------------------------------
@@ -222,7 +224,7 @@ class S3HRModel(S3Model):
         return S3SearchSimpleWidget(
                     name = "human_resource_search_simple_%s" % type,
                     label = T("Name"),
-                    comment = T("You can search by jon title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+                    comment = T("You can search by job title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
                     field = ["person_id$first_name",
                              "person_id$middle_name",
                              "person_id$last_name",
@@ -726,7 +728,6 @@ class S3HRSkillModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-        gis = current.gis
         s3 = current.response.s3
         session = current.session
         settings = current.deployment_settings
@@ -1325,14 +1326,15 @@ class S3HRSkillModel(S3Model):
 
         table.virtualfields.append(HRMTrainingVirtualFields())
 
+        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "training_event_id",
                          "person_id",
                          (T("Course"), "training_event_id$course_id"),
                          (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
-                         (gis.get_location_hierarchy("L1"), "person_id$L1"),
-                         (gis.get_location_hierarchy("L2"), "person_id$L2"),
+                         (hierarchy["L1"], "person_id$L1"),
+                         (hierarchy["L2"], "person_id$L2"),
                         ]
 
         # Resource Configuration
