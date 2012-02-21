@@ -524,9 +524,6 @@ class S3PersonModel(S3Model):
                 form.errors.age_group = T("Age group does not match actual age.")
                 return False
 
-        # Populate the Lx fields
-        current.response.s3.lx_onvalidation(form)
-
         return True
 
     # -------------------------------------------------------------------------
@@ -775,7 +772,9 @@ class S3GroupModel(S3Model):
 class S3ContactModel(S3Model):
     """ Person Contacts """
 
-    names = ["pr_contact"]
+    names = ["pr_contact",
+             "pr_contact_emergency"
+             ]
 
     def model(self):
 
@@ -785,8 +784,12 @@ class S3ContactModel(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        messages = current.messages
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        comments = s3.comments
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Contact
@@ -798,28 +801,28 @@ class S3ContactModel(S3Model):
         contact_methods = msg.CONTACT_OPTS
 
         tablename = "pr_contact"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("contact_method",
-                                        length=32,
-                                        requires = IS_IN_SET(contact_methods,
-                                                             zero=None),
-                                        default = "SMS",
-                                        label = T("Contact Method"),
-                                        represent = lambda opt: \
-                                                    contact_methods.get(opt, UNKNOWN_OPT)),
-                                  Field("value",
-                                        label= T("Value"),
-                                        notnull=True,
-                                        requires = IS_NOT_EMPTY()),
-                                  Field("priority", "integer",
-                                        label= T("Priority"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Priority"),
-                                                                        T("What order to be contacted in."))),
-                                        requires = IS_IN_SET(range(1, 10), zero=None)),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("contact_method",
+                                   length=32,
+                                   requires = IS_IN_SET(contact_methods,
+                                                        zero=None),
+                                   default = "SMS",
+                                   label = T("Contact Method"),
+                                   represent = lambda opt: \
+                                               contact_methods.get(opt, UNKNOWN_OPT)),
+                             Field("value",
+                                   label= T("Value"),
+                                   notnull=True,
+                                   requires = IS_NOT_EMPTY()),
+                             Field("priority", "integer",
+                                   label= T("Priority"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Priority"),
+                                                                   T("What order to be contacted in."))),
+                                   requires = IS_IN_SET(range(1, 10), zero=None)),
+                             comments(),
+                             *meta_fields())
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
@@ -859,17 +862,17 @@ class S3ContactModel(S3Model):
         # Emergency Contact Information
         #
         tablename = "pr_contact_emergency"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("name",
-                                        label= T("Name")),
-                                  Field("relationship",
-                                        label= T("Relationship")),
-                                  Field("phone",
-                                        label = T("Phone"),
-                                        requires = IS_NULL_OR(s3_phone_requires)),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("name",
+                                   label= T("Name")),
+                             Field("relationship",
+                                   label= T("Relationship")),
+                             Field("phone",
+                                   label = T("Phone"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             comments(),
+                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -965,9 +968,9 @@ class S3PersonComponents(S3Model):
                                    label = T("Address Type"),
                                    represent = lambda opt: \
                                                pr_address_type_opts.get(opt, UNKNOWN_OPT)),
-                              location_id(),
-                              comments(),
-                              *(s3.address_fields() + meta_fields()))
+                             location_id(),
+                             comments(),
+                             *(s3.address_fields() + meta_fields()))
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
@@ -999,10 +1002,10 @@ class S3PersonComponents(S3Model):
 
         # Resource configuration
         configure(tablename,
+                  onaccept=self.address_onaccept,
                   onvalidation=s3.address_onvalidation,
                   list_fields = ["id",
                                  "type",
-                                 #"building_name",
                                  "address",
                                  "postcode",
                                  #"L4",
@@ -1177,22 +1180,37 @@ class S3PersonComponents(S3Model):
         """
             Updates the Base Location to be the same as the Address
 
-            NB This doesn't apply globally but is only activated for
-            specific parts of the workflow
+            If the base location hasn't yet been set or if this is specifically
+            requested
         """
 
         s3db = current.s3db
-
         request = current.request
-        tracker = S3Tracker()
-        pe_table = s3db.pe_pentity
 
-        if "location_id" in form.vars and \
-           "base_location" in request.vars and \
-           request.vars.base_location == "on":
-            location_id = form.vars.location_id
-            pe_id = request.post_vars.pe_id
-            tracker(pe_table, pe_id).set_base_location(location_id)
+        vars = form.vars
+        location_id = vars.location_id
+
+        if location_id:
+            pe_id = vars.pe_id
+            table = s3db.pr_person
+            if "base_location" in request.vars and \
+               request.vars.base_location == "on":
+                # Specifically requested
+                S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
+                pe = current.db(table.pe_id == pe_id).select(table.id).first()
+                if pe:
+                    # Update the Lx fields
+                    current.response.s3.lx_update(table, pe.id)
+            else:
+                # Check if a base location already exists
+                pe = current.db(table.pe_id == pe_id).select(table.id,
+                                                             table.location_id).first()
+                if pe and not pe.location_id:
+                    # Hasn't yet been set so use this
+                    S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
+                    # Update the Lx fields
+                    current.response.s3.lx_update(table, pe.id)
+
         return
 
     # -------------------------------------------------------------------------
