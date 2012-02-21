@@ -1221,7 +1221,7 @@ class S3PersonComponents(S3Model):
                 htable = s3db.hrm_human_resource
                 ptable = s3db.pr_person
                 query = (htable.person_id == ptable.id) & \
-                        (ptable.pe_id == pe.id) & \
+                        (ptable.pe_id == person.id) & \
                         (htable.type == 2) & \
                         (htable.deleted == False)
                 hrs = db(query).select(htable.id)

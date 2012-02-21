@@ -171,12 +171,12 @@ class S3HRModel(S3Model):
                       ),
                       S3SearchLocationHierarchyWidget(
                         name="human_resource_search_L1",
-                        level="L1",
+                        field="L1",
                         cols = 3,
                       ),
                       S3SearchLocationHierarchyWidget(
                         name="human_resource_search_L2",
-                        level="L2",
+                        field="L2",
                         cols = 3,
                       ),
                       S3SearchLocationWidget(
@@ -748,6 +748,7 @@ class S3HRSkillModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
+        comments = s3.comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -766,7 +767,7 @@ class S3HRSkillModel(S3Model):
                              Field("name", notnull=True, unique=True,
                                    length=64,
                                    label=T("Name")),
-                             s3.comments(),
+                             comments(),
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -821,7 +822,7 @@ class S3HRSkillModel(S3Model):
                              Field("name", notnull=True, unique=True,
                                    length=64,    # Mayon compatibility
                                    label=T("Name")),
-                             s3.comments(),
+                             comments(),
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -913,7 +914,7 @@ class S3HRSkillModel(S3Model):
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Priority"),
                                                                    T("Priority from 1 to 9. 1 is most preferred.")))),
-                             s3.comments(),
+                             comments(),
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -966,7 +967,7 @@ class S3HRSkillModel(S3Model):
                                              widget = S3OrganisationAutocompleteWidget(default_from_profile = True),
                                              comment = None,
                                              writable = False),
-                             s3.comments(),
+                             comments(),
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -1005,7 +1006,7 @@ class S3HRSkillModel(S3Model):
         #                                comment = DIV(_class="tooltip",
         #                                              _title="%s|%s" % (T("Priority"),
         #                                                                T("Priority from 1 to 9. 1 is most preferred.")))),
-        #                          s3.comments(),
+        #                          comments(),
         #                          *meta_fields())
 
         #crud_strings[tablename] = Storage(
@@ -1298,7 +1299,7 @@ class S3HRSkillModel(S3Model):
                                        hrm_performance_opts.get(opt,
                                                                 NONE),
                                    writable=False),
-                             s3.comments(),
+                             comments(),
                              *meta_fields())
 
         # Suitable for use when adding a Training to a Person
@@ -1328,24 +1329,31 @@ class S3HRSkillModel(S3Model):
                          "training_event_id",
                          "person_id",
                          (T("Course"), "training_event_id$course_id"),
+                         (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
-                         # (gis.get_location_hierarchy("L1"), "L1"),
-                         # (gis.get_location_hierarchy("L2"), "L2"),
+                         (gis.get_location_hierarchy("L1"), "person_id$L1"),
+                         (gis.get_location_hierarchy("L2"), "person_id$L2"),
                         ]
 
         # Resource Configuration
         configure(tablename,
                   report_filter=[
-                            # S3SearchLocationHierarchyWidget(
-                                # name="training_search_L1",
-                                # level="L1",
-                                # cols = 3,
-                            # ),
-                            # S3SearchLocationHierarchyWidget(
-                                # name="training_search_L2",
-                                # level="L2",
-                                # cols = 3,
-                            # ),
+                            S3SearchLocationHierarchyWidget(
+                                name="training_search_L1",
+                                field="person_id$L1",
+                                cols = 3,
+                            ),
+                            S3SearchLocationHierarchyWidget(
+                                name="training_search_L2",
+                                field="person_id$L2",
+                                cols = 3,
+                            ),
+                            S3SearchOptionsWidget(
+                                name="training_search_site",
+                                field=["training_event_id$site_id"],
+                                label = T("Facility"),
+                                cols = 3,
+                            ),
                             S3SearchMinMaxWidget(
                                 name="training_search_date",
                                 method="range",
@@ -1442,7 +1450,7 @@ class S3HRSkillModel(S3Model):
                                              widget = S3OrganisationAutocompleteWidget(default_from_profile = True),
                                              comment = None,
                                              writable = False),
-                             s3.comments(),
+                             comments(),
                              *meta_fields())
 
         configure(tablename,
@@ -2093,34 +2101,7 @@ class HRMTrainingVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
     extra_fields = ["training_event_id$start_date",
-                    #"person_id$location_id",
                     ]
-
-    # def L1(self):
-        ##L1 of the Participant
-        # try:
-            # location = self.pr_person.location_id
-        # except AttributeError:
-            ##not available
-            # location = None
-        # if location:
-            # locations = current.gis.get_parents_of_level([location], "L1")
-            # return locations[0]
-        # else:
-            # return current.messages.NONE
-
-    # def L2(self):
-        ##L2 of the Participant
-        # try:
-            # location = self.pr_person.location_id
-        # except AttributeError:
-            ##not available
-            # location = None
-        # if location:
-            # locations = current.gis.get_parents_of_level([location], "L2")
-            # return locations[0]
-        # else:
-            # return current.messages.NONE
 
     def month(self):
         # Year/Month of the start date of the training event
