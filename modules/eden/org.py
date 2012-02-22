@@ -399,17 +399,6 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
-        # Affiliates
-        add_component("pr_affiliation",
-                      org_organisation=Storage(name="affiliate",
-                                               pkey="pe_id",
-                                               joinby="parent"))
-
-        # Affiliation
-        add_component("pr_affiliation",
-                      org_organisation=Storage(pkey="pe_id",
-                                               joinby="child"))
-
         # Staff
         add_component("hrm_human_resource",
                       org_organisation="organisation_id")
