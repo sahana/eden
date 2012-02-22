@@ -354,7 +354,7 @@ class S3TemplateModel(S3Model):
             for (descriptor, value) in metadata.items():
                 qstn_metadata_table.insert(question_id = qstn_id,
                                            descriptor = descriptor,
-                                           value = value 
+                                           value = value
                                           )
         # Add these questions to the section: "Background Information"
         sectable = s3db.survey_section
@@ -1534,6 +1534,7 @@ class S3SeriesModel(S3Model):
         tablename = "survey_series"
         template_id = self.survey_template_id
         person_id = self.pr_person_id
+        pr_person_comment = self.pr_person_comment
         organisation_id = self.org_organisation_id
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
@@ -1553,7 +1554,10 @@ class S3SeriesModel(S3Model):
                                        readable=True,
                                        writable=False),
                                  template_id(empty=False),
-                                 person_id(),
+                                 person_id(comment=pr_person_comment(
+                                                        T("Person"),
+                                                        T("Type the first few characters of one of the Person's names."),
+                                                        child="person_id")),
                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                  Field("logo", "string", default="", length=512),
                                  Field("language", "string", default="en", length=8),
@@ -2282,7 +2286,7 @@ def survey_series_rheader(r, tabs=[]):
                                   )
             tranForm.append(export_xls_btn)
             try:
-                # only add the Export to Word button up if PyRTF is installed 
+                # only add the Export to Word button up if PyRTF is installed
                 from PyRTF import Document
                 export_rtf_btn = INPUT(_type="submit",
                                        _id="export_rtf_btn",
