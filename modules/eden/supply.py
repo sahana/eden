@@ -74,7 +74,7 @@ class S3SupplyModel(S3Model):
              "supply_item_duplicate_fields",
              "supply_item_pack_virtualfields",
             ]
-    
+
     def model(self):
 
         T = current.T
@@ -1068,7 +1068,7 @@ S3FilterFieldChange({
         """
 
         tablename = job.tablename
-        
+
         s3db = current.s3db
 
         if tablename == "supply_item":
@@ -1109,7 +1109,7 @@ S3FilterFieldChange({
             Create a catalog_item for this item
             Update the UM (Unit of Measure) in the supply_item_pack table
         """
-        
+
         db = current.db
         s3db = current.s3db
         request = current.request
