@@ -1253,6 +1253,7 @@ class S3HRSkillModel(S3Model):
                              # human_resource_id?
                              #Field("instructor",
                              #      label=T("Instructor")),
+                             comments(),
                              *meta_fields())
 
         # Field Options
@@ -1307,6 +1308,48 @@ class S3HRSkillModel(S3Model):
                                             widget = S3AutocompleteWidget("hrm",
                                                                           "training_event")
                                             )
+
+        training_event_search = S3Search(
+            advanced=(
+                      S3SearchSimpleWidget(
+                        name = "training_event_search_simple",
+                        label = T("Text"),
+                        comment = T("You can search by course name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
+                        field = ["course_id$name",
+                                 "comments",
+                                ]
+                    ),
+                    # S3SearchLocationHierarchyWidget(
+                      # name="training_event_search_L1",
+                      # field="site_id$L1",
+                      # cols = 3,
+                    # ),
+                    # S3SearchLocationHierarchyWidget(
+                      # name="training_event_search_L2",
+                      # field="site_id$L2",
+                      # cols = 3,
+                    # ),
+                    S3SearchLocationWidget(
+                      name="training_event_search_map",
+                      label=T("Map"),
+                    ),
+                    S3SearchOptionsWidget(
+                      name="training_event_search_site",
+                      label=T("Facility"),
+                      field=["site_id"]
+                    ),
+                    S3SearchMinMaxWidget(
+                      name="training_event_search_date",
+                      method="range",
+                      label=T("Date"),
+                      field=["start_date"]
+                    ),
+            ))
+
+        # Resource Configuration
+        configure(tablename,
+                  search_method=training_event_search
+                )
 
         # Participants of events
         add_component("pr_person",

@@ -125,6 +125,7 @@ class S3LocationModel(S3Model):
                                    readable=False,
                                    writable=False),
                              Field("level", length=2, label = T("Level"),
+                                   requires = IS_NULL_OR(IS_IN_SET(hierarchy_level_keys)),
                                    represent = self.gis_level_represent),
                              # @ToDo: If level is known, filter on higher than that?
                              # If strict, filter on next higher level?
