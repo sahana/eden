@@ -184,6 +184,11 @@ class S3HRModel(S3Model):
                         name="human_resource_search_map",
                         label=T("Map"),
                       ),
+                      S3SearchOptionsWidget(
+                        name="human_resource_search_site",
+                        label=T("Facility"),
+                        field=["site_id"]
+                      ),
                       S3SearchSkillsWidget(
                         name="human_resource_search_skills",
                         label=T("Skills"),
@@ -198,13 +203,44 @@ class S3HRModel(S3Model):
                       #),
             ))
 
+        hierarchy = current.gis.get_location_hierarchy()
+        report_fields = [
+                         #"organisation_id",
+                         "person_id",
+                         "site_id",
+                         (hierarchy["L1"], "L1"),
+                         (hierarchy["L2"], "L2"),
+                        ]
+
         self.configure(tablename,
                        super_entity = "sit_trackable",
                        deletable = False,
                        search_method = human_resource_search,
                        onaccept = self.hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,
-                       deduplicate=self.hrm_human_resource_deduplicate)
+                       deduplicate=self.hrm_human_resource_deduplicate,
+                       report_filter=[
+                            S3SearchLocationHierarchyWidget(
+                                name="human_resource_search_L1",
+                                field="L1",
+                                cols = 3,
+                            ),
+                            S3SearchLocationHierarchyWidget(
+                                name="human_resource_search_L2",
+                                field="L2",
+                                cols = 3,
+                            ),
+                            S3SearchOptionsWidget(
+                                name="human_resource_search_site",
+                                label=T("Facility"),
+                                field=["site_id"]
+                            ),
+                        ],
+                       report_rows = report_fields,
+                       report_cols = report_fields,
+                       report_fact = report_fields,
+                       report_method=["count", "list"],
+                  )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
