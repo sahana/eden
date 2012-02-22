@@ -189,11 +189,11 @@ class S3HRModel(S3Model):
                         label=T("Facility"),
                         field=["site_id"]
                       ),
-                      S3SearchSkillsWidget(
-                        name="human_resource_search_skills",
-                        label=T("Skills"),
-                        field=["skill_id"]
-                      ),
+                      # S3SearchSkillsWidget(
+                        # name="human_resource_search_skills",
+                        # label=T("Skills"),
+                        # field=["skill_id"]
+                      # ),
                       # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
                       #S3SearchMinMaxWidget(
                       #  name="human_resource_search_date",
@@ -203,11 +203,14 @@ class S3HRModel(S3Model):
                       #),
             ))
 
+        table.virtualfields.append(HRMVirtualFields())
+
         hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          #"organisation_id",
                          "person_id",
                          "site_id",
+                         (T("Training"), "course"),
                          (hierarchy["L1"], "L1"),
                          (hierarchy["L2"], "L2"),
                         ]
@@ -515,7 +518,7 @@ class S3HRJobModel(S3Model):
     names = ["hrm_job_role",
              "hrm_job_role_id",
              #"hrm_position",
-             #hrm_position_id,
+             #"hrm_position_id",
             ]
 
     def model(self):
@@ -2136,6 +2139,33 @@ def hrm_training_event_represent(id):
 #    return represent
 
 # =============================================================================
+class HRMVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    def course(self):
+        """ Which Training Courses the person has attended """
+        try:
+            person_id = self.hrm_human_resource.person_id
+        except AttributeError:
+            # not available
+            person_id = None
+        if person_id:
+            s3db = current.s3db
+            table = s3db.hrm_training
+            etable = s3db.hrm_training_event
+            ctable = s3db.hrm_course
+            query = (table.person_id == person_id) & \
+                    (table.training_event_id == etable.id) & \
+                    (etable.course_id == ctable.id)
+            courses = current.db(query).select(ctable.name)
+            if courses:
+                output = []
+                for course in courses:
+                    output.append(course.name)
+                    return output
+        return current.messages.NONE
+
+# =============================================================================
 class HRMTrainingVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
@@ -2143,7 +2173,7 @@ class HRMTrainingVirtualFields:
                     ]
 
     def month(self):
-        # Year/Month of the start date of the training event
+        """ Year/Month of the start date of the training event """
         try:
             start_date = self.hrm_training_event.start_date
         except AttributeError:

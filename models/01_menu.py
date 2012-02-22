@@ -578,7 +578,7 @@ if auth.permission.format in ("html"):
                                           f="human_resource",
                                           args=["report"],
                                           vars=Storage(group="volunteer",
-                                                       rows="L2",
+                                                       rows="course",
                                                        cols="L1",
                                                        fact="person_id",
                                                        aggregate="count"))],
