@@ -170,12 +170,18 @@ def incoming():
     # Defined in the Model for use from Multiple Controllers for unified menus
     return inv_incoming()
 
-# -----------------------------------------------------------------------------
-def req_match():
+# =============================================================================
+def match():
     """ Match Requests """
 
-    s3mgr.load("req_req")
-    return response.s3.req_match()
+    return req_match()
+
+# -----------------------------------------------------------------------------
+#def req_match():
+#    """ Match Requests """
+#
+#    s3mgr.load("req_req")
+#    return response.s3.req_match()
 
 # =============================================================================
 def inv_item():
@@ -594,6 +600,8 @@ def send_process():
 
     send_id = request.args[0]
     stable = s3db.inv_send
+    otable = s3db.org_office
+ 
     if not auth.s3_has_permission("update",
                                   stable,
                                   record_id=send_id):
@@ -696,10 +704,17 @@ def send_process():
         # Go to the Site which has sent these items
         (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
                                                               site_id)
-
-        redirect(URL(c = prefix,
-                     f = resourcename,
-                     args = [id, "inv_item"]))
+        query = (otable.id == id)
+        otype = db(query).select(otable.type, limitby = (0, 1)).first()
+        if otype and otype.type == 5:
+            url = URL(c = "inv",
+                     f = "warehouse",
+                     args = [id, "inv_item"])
+        else:
+            url = URL(c = "org",
+                     f = "office",
+                     args = [id, "inv_item"])
+        redirect(url)
 
 # -----------------------------------------------------------------------------
 def send_cancel():
