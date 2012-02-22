@@ -381,6 +381,7 @@ class S3HRModel(S3Model):
                                       # Needed by hrm_update_staff_role()
                                       htable.owned_by_organisation,
                                       htable.owned_by_facility,
+                                      htable.status,
                                       htable.deleted,
                                       htable.deleted_fk,
                                       limitby=(0, 1)).first()
