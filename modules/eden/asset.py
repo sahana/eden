@@ -412,7 +412,7 @@ class S3AssetModel(S3Model):
                              person_id("by_person_id",
                                        label = T("Assigned By"),               # This can either be the Asset controller if signed-out from the store
                                        default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
-                                       comment = self.pr_person_comment(child="by_person_id")),
+                                       comment = self.pr_person_comment(child="by_person_id"),
                                       ),
                              comments(),
                              *meta_fields())
