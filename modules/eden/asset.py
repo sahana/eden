@@ -111,7 +111,7 @@ class S3AssetModel(S3Model):
         #supplier_id = self.proc_supplier_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        
+
         vehicle = settings.has_module("vehicle")
 
         s3_date_format = settings.get_L10n_date_format()
@@ -141,7 +141,7 @@ class S3AssetModel(S3Model):
 
         ctable = self.supply_item_category
         itable = self.supply_item
-        
+
         tablename = "asset_asset"
         table = define_table(tablename,
                              super_link("track_id", "sit_trackable"),
@@ -186,7 +186,8 @@ class S3AssetModel(S3Model):
                              # Populated onaccept of the log to make a component tab
                              person_id("assigned_to_id",
                                        readable=False,
-                                       writable=False),
+                                       writable=False,
+                                       comment=self.pr_person_comment(child="assigned_to_id")),
                              comments(),
                              *(s3.address_fields() + meta_fields()))
 
@@ -411,6 +412,7 @@ class S3AssetModel(S3Model):
                              person_id("by_person_id",
                                        label = T("Assigned By"),               # This can either be the Asset controller if signed-out from the store
                                        default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
+                                       comment = self.pr_person_comment(child="by_person_id"),
                                       ),
                              comments(),
                              *meta_fields())

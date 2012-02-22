@@ -55,7 +55,8 @@ class S3PersonEntity(S3Model):
     names = ["pr_pentity",
              "pr_affiliation",
              "pr_role",
-             "pr_pe_label"]
+             "pr_pe_label",
+             "pr_pe_types"]
 
     def model(self):
 
@@ -70,6 +71,10 @@ class S3PersonEntity(S3Model):
         configure = self.configure
         add_component = self.add_component
 
+        YES = T("yes") #current.messages.YES
+        NO = T("no") #current.messages.NO
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
@@ -81,6 +86,7 @@ class S3PersonEntity(S3Model):
 
         tablename = "pr_pentity"
         table = super_entity(tablename, "pe_id", pe_types,
+                             Field("type"),
                              Field("pe_label", length=128))
 
         # Search method
@@ -141,73 +147,137 @@ class S3PersonEntity(S3Model):
                              *s3.meta_fields())
 
         # ---------------------------------------------------------------------
-        # Affiliation link table
+        # Role (Affiliates Group)
+        #
+        hierarchy_types = {
+            1:T("Business"),      # business hierarchy (reporting units)
+            2:T("Membership"),    # membership hierarchy (non-reporting)
+            3:T("Association"),   # other non-reporting hierarchy
+            9:T("None")           # no hierarchy
+        }
+        tablename = "pr_role"
+        table = define_table(tablename,
+                             # The "parent" entity
+                             super_link("pe_id", "pr_pentity",
+                                        label=T("Corporate Entity"),
+                                        readable=True,
+                                        writable=True),
+                             # Hierarchy type
+                             Field("hierarchy", "integer",
+                                   requires = IS_IN_SET(hierarchy_types, zero=None),
+                                   represent = lambda opt: \
+                                               hierarchy_types.get(opt, UNKNOWN_OPT)),
+                             # Role name
+                             Field("role", notnull=True),
+                             # Reporting (business-) units of the parent entity?
+                             Field("unit", "boolean",
+                                   label = T("Reporting Role?"),
+                                   default = False,
+                                   represent = lambda opt: opt and YES or NO),
+                             # Path, for faster lookups (not implemented yet)
+                             Field("path",
+                                   readable = False,
+                                   writable = False),
+                             # Type filter, type of entities which can have this role
+                             Field("entity_type", "string",
+                                   requires = IS_IN_SET(pe_types, zero=T("ANY")),
+                                   represent = lambda opt: pe_types.get(opt, UNKNOWN_OPT)),
+                             # Subtype filter, if the entity type defines its own type
+                             Field("sub_type", "integer",
+                                   readable = False,
+                                   writable = False),
+                             *s3.meta_fields())
+
+        # Field configuration
+        table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                                         pr_pentity_represent, sort=True)
+        table.pe_id.represent = pr_pentity_represent
+
+        # CRUD Strings
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Role"),
+            title_display = T("Role Details"),
+            title_list = T("Roles"),
+            title_update = T("Edit Role"),
+            title_search = T("Search Roles"),
+            subtitle_create = T("Add New Role"),
+            subtitle_list = T("List of Roles"),
+            label_list_button = T("List Roles"),
+            label_create_button = T("Add Role"),
+            label_delete_button = T("Delete Role"),
+            msg_record_created = T("Role added"),
+            msg_record_modified = T("Role updated"),
+            msg_record_deleted = T("Role deleted"),
+            msg_list_empty = T("No Roles defined"))
+
+        # Reusable fields
+        role_id = S3ReusableField("role_id", db.pr_role,
+                                  requires = IS_ONE_OF(db, "pr_role.id",
+                                                       self.pr_role_represent),
+                                  represent = self.pr_role_represent,
+                                  label = T("Role"),
+                                  ondelete = "CASCADE")
+
+        # ---------------------------------------------------------------------
+        # Affiliation
         #
         tablename = "pr_affiliation"
         table = define_table(tablename,
-                             Field("hierarchy"),
-                             Field("parent",
-                                   "reference pr_pentity",
-                                   requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                                        pr_pentity_represent,
-                                                        sort=True),
-                                   represent = pr_pentity_represent),
-                             Field("child",
-                                   "reference pr_pentity",
-                                   requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                                        pr_pentity_represent,
-                                                        sort=True),
-                                   represent = pr_pentity_represent),
-                             *s3.meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Role
-        #
-        tablename = "pr_role"
-        table = define_table(tablename,
+                             role_id(),
                              super_link("pe_id", "pr_pentity",
+                                        label=T("Entity"),
                                         readable=True,
                                         writable=True),
-                             Field("hierarchy"),
-                             Field("role"),
-                             Field("affiliation",
-                                   "reference pr_affiliation",
-                                   requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                "pr_affiliation.id",
-                                                self.pr_affiliation_represent,
-                                                sort=True)),
-                                   represent = self.pr_affiliation_represent),
                              *s3.meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent, sort=True)
         table.pe_id.represent = pr_pentity_represent
 
+        # CRUD Strings
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Affiliation"),
+            title_display = T("Affiliation Details"),
+            title_list = T("Affiliations"),
+            title_update = T("Edit Affiliation"),
+            title_search = T("Search Affiliations"),
+            subtitle_create = T("Add New Affiliation"),
+            subtitle_list = T("List of Affiliations"),
+            label_list_button = T("List Affiliations"),
+            label_create_button = T("Add Affiliation"),
+            label_delete_button = T("Delete Affiliation"),
+            msg_record_created = T("Affiliation added"),
+            msg_record_modified = T("Affiliation updated"),
+            msg_record_deleted = T("Affiliation deleted"),
+            msg_list_empty = T("No Affiliations defined"))
+
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
         return Storage(
+            pr_pe_types=pe_types,
             pr_pe_label=pr_pe_label,
         )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def pr_affiliation_represent(affiliation_id):
+    def pr_role_represent(role_id):
+        """
+            Represent an entity role
+
+            @param role_id: the pr_role record ID
+        """
 
         db = current.db
         s3db = current.s3db
 
-        if isinstance(affiliation_id, Row):
-            affiliation = affiliation_id
-        else:
-            atable = s3db.pr_affiliation
-            query = (atable.deleted != True) & \
-                    (atable.id == affiliation_id)
-            affiliation = db(query).select(atable.parent, atable.child,
-                                           limitby=(0, 1)).first()
-        if affiliation:
-            return "%s => %s" % (pr_pentity_represent(affiliation.child),
-                                 pr_pentity_represent(affiliation.parent))
+        table = s3db.pr_role
+        role = db(table.id == role_id).select(table.role,
+                                              table.pe_id,
+                                              limitby=(0, 1)).first()
+        if role:
+            entity = pr_pentity_represent(role.pe_id)
+            return "%s: %s" % (entity, role.role)
         else:
             return current.messages.NONE
 
@@ -449,7 +519,8 @@ class S3PersonModel(S3Model):
 
         person_id_comment = pr_person_comment(
                                     T("Person"),
-                                    T("Type the first few characters of one of the Person's names."))
+                                    T("Type the first few characters of one of the Person's names."),
+                                    child="person_id")
 
         person_id = S3ReusableField("person_id", db.pr_person,
                                     sortby = ["first_name", "middle_name", "last_name"],
@@ -1450,8 +1521,9 @@ class S3PersonPresence(S3Model):
                                   person_id("observer",
                                             label=T("Observer"),
                                             default = auth.s3_logged_in_person(),
-                                            comment=pr_person_comment(T("Observer"),
-                                                                      T("Person who has actually seen the person/group."))),
+                                            comment=pr_person_comment(title=T("Observer"),
+                                                                      comment=T("Person who has actually seen the person/group."),
+                                                                      child="observer")),
                                   Field("shelter_id", "integer",
                                         readable = False,
                                         writable = False),
@@ -2263,16 +2335,18 @@ def pr_rheader(r, tabs=[]):
     return None
 
 # =============================================================================
-pr_person_comment = lambda title, comment, caller=None, child=None: \
-                        DIV(A(current.messages.ADD_PERSON,
-                              _class="colorbox",
-                              _href=URL(c="pr", f="person", args="create",
-                              vars=dict(format="popup",
-                                        caller=caller,
-                                        child=child)),
-                              _target="top",
-                              _title=current.messages.ADD_PERSON),
-                            DIV(DIV(_class="tooltip",
-                                    _title="%s|%s" % (title, comment))))
+def pr_person_comment(title=None, comment=None, caller=None, child=None):
+
+    T = current.T
+    if title is None:
+        title = T("Person")
+    if comment is None:
+        comment = T("Type the first few characters of one of the Person's names.")
+    if child is None:
+        child = "person_id"
+    return s3_popup_comment(c="pr", f="person",
+                            vars=dict(caller=caller, child=child),
+                            title=current.messages.ADD_PERSON,
+                            tooltip="%s|%s" % (title, comment))
 
 # END =========================================================================

@@ -354,7 +354,7 @@ class S3TemplateModel(S3Model):
             for (descriptor, value) in metadata.items():
                 qstn_metadata_table.insert(question_id = qstn_id,
                                            descriptor = descriptor,
-                                           value = value 
+                                           value = value
                                           )
         # Add these questions to the section: "Background Information"
         sectable = s3db.survey_section
@@ -1534,6 +1534,7 @@ class S3SeriesModel(S3Model):
         tablename = "survey_series"
         template_id = self.survey_template_id
         person_id = self.pr_person_id
+        pr_person_comment = self.pr_person_comment
         organisation_id = self.org_organisation_id
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
@@ -2282,7 +2283,7 @@ def survey_series_rheader(r, tabs=[]):
                                   )
             tranForm.append(export_xls_btn)
             try:
-                # only add the Export to Word button up if PyRTF is installed 
+                # only add the Export to Word button up if PyRTF is installed
                 from PyRTF import Document
                 export_rtf_btn = INPUT(_type="submit",
                                        _id="export_rtf_btn",

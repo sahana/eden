@@ -1207,7 +1207,8 @@ class S3CommitModel(S3Model):
                                         represent = s3_date_represent),
                                   person_id("committer_id",
                                             default = auth.s3_logged_in_person(),
-                                            label = T("Committed By") ),
+                                            label = T("Committed By"),
+                                            comment = self.pr_person_comment(child="committer_id")),
                                   s3.comments(),
                                   *s3.meta_fields())
 

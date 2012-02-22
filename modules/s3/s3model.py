@@ -993,20 +993,20 @@ class S3ModelExtensions(object):
             @param record: the instance record
         """
 
-        # Get tablename and record
-        tablename = table._tablename
-        id = record.get("id", None)
-        _record = current.db(table.id == id).select(table.ALL,
-                                                    limitby=(0, 1)).first()
-        if not _record:
-            return True
-
         # Get all super-entities of this table
+        tablename = table._tablename
         supertable = self.get_config(tablename, "super_entity")
         if not supertable:
             return True
         elif not isinstance(supertable, (list, tuple)):
             supertable = [supertable]
+
+        # Get the record
+        id = record.get("id", None)
+        _record = current.db(table.id == id).select(table.ALL,
+                                                    limitby=(0, 1)).first()
+        if not _record:
+            return True
 
         super_keys = Storage()
         for s in supertable:

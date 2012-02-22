@@ -377,7 +377,8 @@ class S3IncomingModel(S3Model):
                                         ),
                                   person_id(name = "recipient_id",
                                             label = T("Received By"),
-                                            default = auth.s3_logged_in_person()),
+                                            default = auth.s3_logged_in_person(),
+                                            comment = self.pr_person_comment(child="recipient_id")),
                                   self.super_link("site_id", "org_site",
                                                   label=T("By Facility"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
@@ -408,6 +409,7 @@ class S3IncomingModel(S3Model):
                                   #Field("from_person"), # Text field, because lookup to pr_person record is unnecessarily complex workflow
                                   person_id(name = "sender_id",
                                             label = T("Sent By Person"),
+                                            comment = self.pr_person_comment(child="sender_id"),
                                             ),
                                   Field("status",
                                         "integer",
@@ -745,7 +747,8 @@ class S3DistributionModel(S3Model):
                                         ),
                                   person_id(name = "sender_id",
                                             label = T("Sent By"),
-                                            default = auth.s3_logged_in_person()),
+                                            default = auth.s3_logged_in_person(),
+                                            comment = self.pr_person_comment(child="sender_id")),
                                   self.super_link("site_id", "org_site",
                                              label = T("From Warehouse"),
                                              default = auth.user.site_id if auth.is_logged_in() else None,
@@ -784,7 +787,8 @@ class S3DistributionModel(S3Model):
                                         writable = False,
                                         ),
                                   person_id(name = "recipient_id",
-                                            label = T("To Person")),
+                                            label = T("To Person"),
+                                            comment = self.pr_person_comment(child="recipient_id")),
                                   s3.comments(),
                                   *s3.meta_fields())
 
