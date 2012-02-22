@@ -412,6 +412,7 @@ def site():
     """
         @todo: Avoid redirect
     """
+    s3mgr.load("org_site")
     if len(request.args):
         site_id = request.args[0]
         site_r = db.org_site[site_id]
