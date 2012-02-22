@@ -287,7 +287,7 @@ class S3FireStationModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        
+
         shift_table = s3db.fire_shift
         if not isinstance(shift, Row):
             query = (shift_table.id == shift)

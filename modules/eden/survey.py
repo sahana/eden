@@ -1554,10 +1554,7 @@ class S3SeriesModel(S3Model):
                                        readable=True,
                                        writable=False),
                                  template_id(empty=False),
-                                 person_id(comment=pr_person_comment(
-                                                        T("Person"),
-                                                        T("Type the first few characters of one of the Person's names."),
-                                                        child="person_id")),
+                                 person_id(),
                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
                                  Field("logo", "string", default="", length=512),
                                  Field("language", "string", default="en", length=8),
