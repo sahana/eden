@@ -273,7 +273,16 @@ $.widget( "ui.autocomplete", {
 	},
 
 	_setOption: function( key, value ) {
-		this._super( "_setOption", key, value );
+        // this._super._setOption( key, value );
+		this.options[ key ] = value;
+		if ( key === "disabled" ) {
+			this.widget()
+				[ value ? "addClass" : "removeClass"](
+					this.widgetBaseClass + "-disabled" + " " +
+					"ui-state-disabled" )
+				.attr( "aria-disabled", value );
+		}
+        // Additional tasks
 		if ( key === "source" ) {
 			this._initSource();
 		}
