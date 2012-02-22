@@ -1252,7 +1252,7 @@ class S3Search(S3CRUD):
         manager = current.manager
         table = self.table
         tablename = self.tablename
- 
+
         vars = request.get_vars
 
         # Get representation
@@ -2530,7 +2530,7 @@ class S3PentitySearch(S3Search):
 
         # AT: group
         if filter and value:
-            gtable = s3db.pr_group 
+            gtable = s3db.pr_group
             field = gtable.name
             query = field.lower().like("%" + value + "%")
             resource.clear_query()
