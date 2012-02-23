@@ -181,7 +181,7 @@ deployment_settings.L10n.religions = {
 #deployment_settings.L10n.mandatory_lastname = True
 
 # Add thousands separator to numbers, eg. 1,000,000
-deployment_settings.L10n.thousands_separator = True
+#deployment_settings.L10n.thousands_separator = True
 
 # Finance settings
 #deployment_settings.fin.currencies = {
@@ -326,6 +326,8 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.req.show_quantity_transit = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
+#deployment_settings.req.use_req_number = False
+#deployment_settings.req.req_type = ["Stock"]
 
 # Custom Crud Strings for specific req_req types
 #deployment_settings.req.req_crud_strings = dict()
@@ -372,6 +374,7 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.inv.shipment_name = "order"
 
 # Supply
+#deployment_settings.supply.use_alt_name = False
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 

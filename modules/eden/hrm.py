@@ -146,11 +146,13 @@ class S3HRModel(S3Model):
                                             sortby = ["type", "status"],
                                             requires = hrm_human_resource_requires,
                                             represent = hrm_human_resource_represent,
-                                            widget = S3SearchAutocompleteWidget(tablename="hrm_human_resource",
-                                                                                represent=lambda id: \
-                                                                                    hrm_human_resource_represent(id,
-                                                                                                                 none_value = None),
-                                                                                ),
+                                            widget = S3PersonAutocompleteWidget(),
+                                            comment = T("Enter some characters to bring up a list of possible matches"),
+                                            #widget = S3SearchAutocompleteWidget(tablename="hrm_human_resource",
+                                            #                                    represent=lambda id: \
+                                            #                                        hrm_human_resource_represent(id,
+                                            #                                                                     none_value = None),
+                                            #                                    ),
                                             label = T("Human Resource"),
                                             ondelete = "SET NULL")
 
@@ -455,6 +457,7 @@ class S3HRModel(S3Model):
                 (utable.id == ltable.user_id)
         user = db(query).select(utable.id,
                                 utable.organisation_id,
+                                utable.site_id,
                                 limitby=(0, 1)).first()
         if user:
             user_id = user.id
@@ -468,14 +471,19 @@ class S3HRModel(S3Model):
             # Populate the Lx fields
             current.response.s3.lx_update(htable, record.id)
 
-        if record.organisation_id:
-            if user and not user.organisation_id:
+        if user and record.organisation_id:
+            profile = dict()
+            if not user.organisation_id:
                 # Set the Organisation in the Profile, if not already set
+                profile["organisation_id"] = record.organisation_id
+            if not user.site_id:
+                # Set the Site in the Profile, if not already set
+                profile["site_id"] = record.site_id
+            if profile:
                 query = (utable.id == user.id)
-                db(query).update(organisation_id=record.organisation_id)
-            if user:
-                # Set/retract the staff role
-                S3HRModel.hrm_update_staff_role(record, user_id)
+                db(query).update(**profile)
+            # Set/retract the staff role
+            S3HRModel.hrm_update_staff_role(record, user_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
