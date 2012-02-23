@@ -33,7 +33,9 @@ __all__ = ["S3PersonEntity",
            "S3PersonModel",
            "S3GroupModel",
            "S3ContactModel",
-           "S3PersonComponents",
+           "S3PersonAddressModel",
+           "S3PersonImageModel",
+           "S3PersonIdentityModel",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
@@ -308,7 +310,6 @@ class S3PersonModel(S3Model):
         location_id = self.gis_location_id
 
         messages = current.messages
-        NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         SELECT_LOCATION = messages.SELECT_LOCATION
 
@@ -529,8 +530,7 @@ class S3PersonModel(S3Model):
                                                                     orderby="pr_person.first_name",
                                                                     sort=True,
                                                                     error_message=T("Person must be specified!"))),
-                                    represent = lambda id, row=None: (id and \
-                                                   [pr_person_represent(id)] or [NONE])[0],
+                                    represent = pr_person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
                                     ondelete = "RESTRICT",
@@ -992,12 +992,10 @@ class S3ContactModel(S3Model):
         return
 
 # =============================================================================
-class S3PersonComponents(S3Model):
-    """ Addresses, Images and Identities for Persons """
+class S3PersonAddressModel(S3Model):
+    """ Addresses for Persons """
 
-    names = ["pr_address",
-             "pr_pimage",
-             "pr_identity"]
+    names = ["pr_address"]
 
     def model(self):
 
@@ -1006,18 +1004,9 @@ class S3PersonComponents(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        person_id = self.pr_person_id
         location_id = self.gis_location_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
-        # Shortcuts
-        comments = s3.comments
-        configure = self.configure
-        crud_strings = s3.crud_strings
-        define_table = self.define_table
-        meta_fields = s3.meta_fields
-        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Address
@@ -1030,18 +1019,18 @@ class S3PersonComponents(S3Model):
         }
 
         tablename = "pr_address"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             Field("type", "integer",
-                                   requires = IS_IN_SET(pr_address_type_opts, zero=None),
-                                   widget = RadioWidget.widget,
-                                   default = 1,
-                                   label = T("Address Type"),
-                                   represent = lambda opt: \
-                                               pr_address_type_opts.get(opt, UNKNOWN_OPT)),
-                             location_id(),
-                             comments(),
-                             *(s3.address_fields() + meta_fields()))
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("type", "integer",
+                                        requires = IS_IN_SET(pr_address_type_opts, zero=None),
+                                        widget = RadioWidget.widget,
+                                        default = 1,
+                                        label = T("Address Type"),
+                                        represent = lambda opt: \
+                                                    pr_address_type_opts.get(opt, UNKNOWN_OPT)),
+                                  location_id(),
+                                  s3.comments(),
+                                  *(s3.address_fields() + s3.meta_fields()))
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
@@ -1056,7 +1045,7 @@ class S3PersonComponents(S3Model):
         # CRUD Strings
         ADD_ADDRESS = T("Add Address")
         LIST_ADDRESS = T("List of addresses")
-        crud_strings[tablename] = Storage(
+        s3.crud_strings[tablename] = Storage(
             title_create = ADD_ADDRESS,
             title_display = T("Address Details"),
             title_list = LIST_ADDRESS,
@@ -1072,173 +1061,19 @@ class S3PersonComponents(S3Model):
             msg_list_empty = T("There is no address for this person yet. Add new address."))
 
         # Resource configuration
-        configure(tablename,
-                  onaccept=self.address_onaccept,
-                  onvalidation=s3.address_onvalidation,
-                  list_fields = ["id",
-                                 "type",
-                                 "address",
-                                 "postcode",
-                                 #"L4",
-                                 "L3",
-                                 "L2",
-                                 "L1",
-                                 "L0"
-                                ])
-
-        # ---------------------------------------------------------------------
-        # Image
-        #
-        pr_pimage_type_opts = {
-            1:T("Photograph"),
-            2:T("Sketch"),
-            3:T("Fingerprint"),
-            4:T("X-Ray"),
-            5:T("Document Scan"),
-            9:T("other")
-        }
-
-        tablename = "pr_pimage"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             Field("type", "integer",
-                                   requires = IS_IN_SET(pr_pimage_type_opts, zero=None),
-                                   default = 1,
-                                   label = T("Image Type"),
-                                   represent = lambda opt: pr_pimage_type_opts.get(opt,
-                                                                                   UNKNOWN_OPT)),
-                             Field("title", label=T("Title"),
-                                   requires = IS_NOT_EMPTY(),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Title"),
-                                                                   T("Specify a descriptive title for the image.")))),
-                             Field("image", "upload", autodelete=True,
-                                   represent = lambda image: image and \
-                                              DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                  args=image),
-                                                         _height=60, _alt=T("View Image")),
-                                                         _href=URL(c="default", f="download",
-                                                                   args=image))) or T("No Image"),
-                                   comment =  DIV(_class="tooltip",
-                                                  _title="%s|%s" % (T("Image"),
-                                                                    T("Upload an image file here. If you don't upload an image file, then you must specify its location in the URL field.")))),
-                             Field("url",
-                                   label = T("URL"),
-                                   represent = lambda url: url and \
-                                                           DIV(A(IMG(_src=url, _height=60), _href=url)) or T("None"),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("URL"),
-                                                                   T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
-                             Field("description",
-                                   label=T("Description"),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Description"),
-                                                                   T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
-                             comments(),
-                             *meta_fields())
-
-        # CRUD Strings
-        LIST_IMAGES = T("List Images")
-        crud_strings[tablename] = Storage(
-            title_create = T("Image"),
-            title_display = T("Image Details"),
-            title_list = LIST_IMAGES,
-            title_update = T("Edit Image Details"),
-            title_search = T("Search Images"),
-            subtitle_create = T("Add New Image"),
-            subtitle_list = T("Images"),
-            label_list_button = LIST_IMAGES,
-            label_create_button = T("Add Image"),
-            label_delete_button = T("Delete Image"),
-            msg_record_created = T("Image added"),
-            msg_record_modified = T("Image updated"),
-            msg_record_deleted = T("Image deleted"),
-            msg_list_empty = T("No Images currently registered"))
-
-        # Resource configuration
-        configure(tablename,
-                  onvalidation = self.pr_pimage_onvalidation,
-                  mark_required = ["url", "image"],
-                  list_fields=["id",
-                               "title",
-                               "type",
-                               "image",
-                               "url",
-                               "description"
-                              ])
-
-        # ---------------------------------------------------------------------
-        # Identity
-        #
-        # http://docs.oasis-open.org/emergency/edxl-have/cs01/xPIL-types.xsd
-        # <xs:simpleType name="DocumentTypeList">
-        #  <xs:enumeration value="Passport"/>
-        #  <xs:enumeration value="DriverLicense"/>
-        #  <xs:enumeration value="CreditCard"/>
-        #  <xs:enumeration value="BankCard"/>
-        #  <xs:enumeration value="KeyCard"/>
-        #  <xs:enumeration value="AccessCard"/>
-        #  <xs:enumeration value="IdentificationCard"/>
-        #  <xs:enumeration value="Certificate"/>
-        #  <xs:enumeration value="MileageProgram"/>
-        #
-        pr_id_type_opts = {
-            1:T("Passport"),
-            2:T("National ID Card"),
-            3:T("Driving License"),
-            #4:T("Credit Card"),
-            99:T("other")
-        }
-
-        tablename = "pr_identity"
-        table = define_table(tablename,
-                             person_id(label = T("Person")),
-                             Field("type", "integer",
-                                   requires = IS_IN_SET(pr_id_type_opts, zero=None),
-                                   default = 1,
-                                   label = T("ID type"),
-                                   represent = lambda opt: \
-                                               pr_id_type_opts.get(opt,
-                                                                   UNKNOWN_OPT)),
-                             Field("value"),
-                             Field("description"),
-                             Field("country_code", length=4),
-                             Field("ia_name", label = T("Issuing Authority")),
-                             #Field("ia_subdivision"), # Name of issuing authority subdivision
-                             #Field("ia_code"), # Code of issuing authority (if any)
-                             comments(),
-                             *meta_fields())
-
-        # Field configuration
-        table.value.requires = [IS_NOT_EMPTY(),
-                                IS_NOT_ONE_OF(db, "%s.value" % tablename)]
-
-        # CRUD Strings
-        ADD_IDENTITY = T("Add Identity")
-        crud_strings[tablename] = Storage(
-            title_create = ADD_IDENTITY,
-            title_display = T("Identity Details"),
-            title_list = T("Known Identities"),
-            title_update = T("Edit Identity"),
-            title_search = T("Search Identity"),
-            subtitle_create = T("Add New Identity"),
-            subtitle_list = T("Current Identities"),
-            label_list_button = T("List Identities"),
-            label_create_button = ADD_IDENTITY,
-            msg_record_created = T("Identity added"),
-            msg_record_modified = T("Identity updated"),
-            msg_record_deleted = T("Identity deleted"),
-            msg_list_empty = T("No Identities currently registered"))
-
-        # Resource configuration
-        configure(tablename,
-                  list_fields=["id",
-                               "type",
-                               "type",
-                               "value",
-                               "country_code",
-                               "ia_name"
-                               ])
+        self.configure(tablename,
+                       onaccept=self.address_onaccept,
+                       onvalidation=s3.address_onvalidation,
+                       list_fields = ["id",
+                                      "type",
+                                      "address",
+                                      "postcode",
+                                      #"L4",
+                                      "L3",
+                                      "L2",
+                                      "L1",
+                                      "L0"
+                                    ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -1300,6 +1135,108 @@ class S3PersonComponents(S3Model):
                     lx_update(htable, hr.id)
         return
 
+
+# =============================================================================
+class S3PersonImageModel(S3Model):
+    """ Images for Persons """
+
+    names = ["pr_pimage"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        request = current.request
+        s3 = current.response.s3
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Image
+        #
+        pr_pimage_type_opts = {
+            1:T("Photograph"),
+            2:T("Sketch"),
+            3:T("Fingerprint"),
+            4:T("X-Ray"),
+            5:T("Document Scan"),
+            9:T("other")
+        }
+
+        tablename = "pr_pimage"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("type", "integer",
+                                        requires = IS_IN_SET(pr_pimage_type_opts, zero=None),
+                                        default = 1,
+                                        label = T("Image Type"),
+                                        represent = lambda opt: pr_pimage_type_opts.get(opt,
+                                                                                        UNKNOWN_OPT)),
+                                  Field("title", label=T("Title"),
+                                        requires = IS_NOT_EMPTY(),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Title"),
+                                                                        T("Specify a descriptive title for the image.")))),
+                                  Field("image", "upload", autodelete=True,
+                                        represent = lambda image: image and \
+                                                   DIV(A(IMG(_src=URL(c="default", f="download",
+                                                                       args=image),
+                                                              _height=60, _alt=T("View Image")),
+                                                              _href=URL(c="default", f="download",
+                                                                        args=image))) or T("No Image"),
+                                        comment =  DIV(_class="tooltip",
+                                                       _title="%s|%s" % (T("Image"),
+                                                                         T("Upload an image file here. If you don't upload an image file, then you must specify its location in the URL field.")))),
+                                  Field("url",
+                                        label = T("URL"),
+                                        represent = lambda url: url and \
+                                                                DIV(A(IMG(_src=url, _height=60), _href=url)) or T("None"),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("URL"),
+                                                                       T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
+                                   Field("description",
+                                        label=T("Description"),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Description"),
+                                                                        T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # CRUD Strings
+        LIST_IMAGES = T("List Images")
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Image"),
+            title_display = T("Image Details"),
+            title_list = LIST_IMAGES,
+            title_update = T("Edit Image Details"),
+            title_search = T("Search Images"),
+            subtitle_create = T("Add New Image"),
+            subtitle_list = T("Images"),
+            label_list_button = LIST_IMAGES,
+            label_create_button = T("Add Image"),
+            label_delete_button = T("Delete Image"),
+            msg_record_created = T("Image added"),
+            msg_record_modified = T("Image updated"),
+            msg_record_deleted = T("Image deleted"),
+            msg_list_empty = T("No Images currently registered"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       onvalidation = self.pr_pimage_onvalidation,
+                       mark_required = ["url", "image"],
+                       list_fields=["id",
+                                    "title",
+                                    "type",
+                                    "image",
+                                    "url",
+                                    "description"
+                                   ])
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to response.s3
+        #
+        return Storage()
+
     # -------------------------------------------------------------------------
     @staticmethod
     def pr_pimage_onvalidation(form):
@@ -1325,6 +1262,102 @@ class S3PersonComponents(S3Model):
             form.errors.image = \
             form.errors.url = T("Either file upload or image URL required.")
         return
+
+# =============================================================================
+class S3PersonIdentityModel(S3Model):
+    """ Identities for Persons """
+
+    names = ["pr_identity"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        request = current.request
+        s3 = current.response.s3
+
+        person_id = self.pr_person_id
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Identity
+        #
+        # http://docs.oasis-open.org/emergency/edxl-have/cs01/xPIL-types.xsd
+        # <xs:simpleType name="DocumentTypeList">
+        #  <xs:enumeration value="Passport"/>
+        #  <xs:enumeration value="DriverLicense"/>
+        #  <xs:enumeration value="CreditCard"/>
+        #  <xs:enumeration value="BankCard"/>
+        #  <xs:enumeration value="KeyCard"/>
+        #  <xs:enumeration value="AccessCard"/>
+        #  <xs:enumeration value="IdentificationCard"/>
+        #  <xs:enumeration value="Certificate"/>
+        #  <xs:enumeration value="MileageProgram"/>
+        #
+        pr_id_type_opts = {
+            1:T("Passport"),
+            2:T("National ID Card"),
+            3:T("Driving License"),
+            #4:T("Credit Card"),
+            99:T("other")
+        }
+
+        tablename = "pr_identity"
+        table = self.define_table(tablename,
+                                  person_id(label = T("Person")),
+                                  Field("type", "integer",
+                                        requires = IS_IN_SET(pr_id_type_opts, zero=None),
+                                        default = 1,
+                                        label = T("ID type"),
+                                        represent = lambda opt: \
+                                                    pr_id_type_opts.get(opt,
+                                                                        UNKNOWN_OPT)),
+                                  Field("value"),
+                                  Field("description"),
+                                  Field("country_code", length=4),
+                                  Field("ia_name", label = T("Issuing Authority")),
+                                  #Field("ia_subdivision"), # Name of issuing authority subdivision
+                                  #Field("ia_code"), # Code of issuing authority (if any)
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # Field configuration
+        table.value.requires = [IS_NOT_EMPTY(),
+                                IS_NOT_ONE_OF(db, "%s.value" % tablename)]
+
+        # CRUD Strings
+        ADD_IDENTITY = T("Add Identity")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_IDENTITY,
+            title_display = T("Identity Details"),
+            title_list = T("Known Identities"),
+            title_update = T("Edit Identity"),
+            title_search = T("Search Identity"),
+            subtitle_create = T("Add New Identity"),
+            subtitle_list = T("Current Identities"),
+            label_list_button = T("List Identities"),
+            label_create_button = ADD_IDENTITY,
+            msg_record_created = T("Identity added"),
+            msg_record_modified = T("Identity updated"),
+            msg_record_deleted = T("Identity deleted"),
+            msg_list_empty = T("No Identities currently registered"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       list_fields=["id",
+                                    "type",
+                                    "type",
+                                    "value",
+                                    "country_code",
+                                    "ia_name"
+                                   ])
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to response.s3
+        #
+        return Storage()
+
 
 # =============================================================================
 class S3SavedSearch(S3Model):
@@ -2236,6 +2269,9 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
 def pr_person_represent(id):
     """ Representation """
 
+    if not id:
+        return current.messages.NONE
+
     db = current.db
     s3db = current.s3db
     cache = current.cache
@@ -2248,16 +2284,16 @@ def pr_person_represent(id):
             id = person.id
         else:
             person = db(table.id == id).select(table.first_name,
-                                                table.middle_name,
-                                                table.last_name,
-                                                limitby=(0, 1)).first()
+                                               table.middle_name,
+                                               table.last_name,
+                                               limitby=(0, 1)).first()
         if person:
             return s3_fullname(person)
         else:
             return None
 
     name = cache.ram("pr_person_%s" % id,
-                        lambda: _represent(id), time_expire=10)
+                     lambda: _represent(id), time_expire=10)
     return name
 
 # =============================================================================

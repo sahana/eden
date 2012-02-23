@@ -707,6 +707,9 @@ class S3ProjectModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Activity Contact Person
         #
+        # @ToDo: This is a Community Contact nmot an Activity contact,l so
+        #        should be renamed when we add proper Communities
+        #
         tablename = "project_activity_contact"
         table = define_table(tablename,
                              activity_id(),

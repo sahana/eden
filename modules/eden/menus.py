@@ -856,7 +856,12 @@ class S3OptionsMenu:
                         M("List All"),
                         M("Open Incidents", vars={"open":1}),
                         M("Timeline", args="timeline"),
-                        #M("Search", m="search")
+                        M("Search", m="search"),
+                        M("Report", m="report",
+                          vars=dict(rows="L1",
+                                    cols="category",
+                                    fact="datetime",
+                                    aggregate="count"))
                     ),
                     M("Incident Categories", f="icategory", restrict=[ADMIN])(
                         M("New", m="create"),
@@ -1040,9 +1045,12 @@ class S3OptionsMenu:
         settings = current.deployment_settings
         if settings.get_project_community_activity():
             list_activities_label = "List All Communities"
+            list_activity_contacts_label = "List All Community Contacts"
             import_activities_label = "Import Project Communities"
         else:
             list_activities_label = "List All Activities"
+            # @ToDo: These should always be Community Contacts as that's what they are...however they shouldn't link to Activities...
+            list_activity_contacts_label = "List All Activity Contacts"
             import_activities_label = "Import Project Activities"
 
         project_menu = M(c="project")
@@ -1053,6 +1061,7 @@ class S3OptionsMenu:
                         M("Add New Project", m="create"),
                         M("List All Projects", f="project"),
                         M(list_activities_label, f="activity"),
+                        M(list_activity_contacts_label, f="activity_contact"),
                         M("Search", m="search"),
                     ),
                     M("Reports", f="report")(
