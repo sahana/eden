@@ -1138,6 +1138,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
         def email_validate(value, person_id):
             error_message = T("This email-address is already registered.")
             if not value:
+                email_required = current.deployment_settings.get_hrm_email_required()
+                if email_required:
+                    error_message = T("Please enter a valid email address.")
+                    return (value, error_message)
                 return (value, None)
             value = value.strip()
             query = (table.deleted != True) & \
