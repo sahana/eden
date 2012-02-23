@@ -2331,7 +2331,7 @@ def project_rheader(r, tabs=[]):
         admin = auth.s3_has_role(ADMIN)
         #staff = auth.s3_has_role("STAFF")
         staff = True
-        if admin or drr:
+        if staff or drr:
             append((T("Communities") if pca else T("Activities"), "activity"))
         if staff and not drr:
             append((T("Milestones"), "milestone"))
@@ -2339,7 +2339,7 @@ def project_rheader(r, tabs=[]):
             append((T("Tasks"), "task"))
         if drr:
             append((T("Documents"), "document"))
-        elif admin:
+        elif staff:
             append((T("Attachments"), "document"))
         if record.calendar:
             append((T("Calendar"), "timeline"))
