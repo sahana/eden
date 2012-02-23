@@ -593,6 +593,9 @@ def person():
         if deployment_settings.has_module("asset"):
             tabs.append((T("Assets"), "asset"))
 
+    # Upload for configuration (add replace option)
+    response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+
     # Import pre-process
     def import_prep(data, group=group):
         """
@@ -703,9 +706,10 @@ def hrm_rheader(r, tabs=[]):
             rheader_tabs = s3_rheader_tabs(r, tabs)
             person = r.record
             if person:
-                rheader = DIV(s3_avatar_represent(person.id,
-                                                  "pr_person",
-                                                  _class="fleft"),
+                rheader = DIV(DIV(s3_avatar_represent(person.id,
+                                                      "pr_person",
+                                                      _class="fleft"),
+                                  _style="padding-bottom:10px;"),
                               TABLE(
                     TR(TH(s3_fullname(person))),
                     ), rheader_tabs)
