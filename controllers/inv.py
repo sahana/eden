@@ -126,6 +126,7 @@ def warehouse():
                     htable.organisation_id.writable = False
 
                 elif r.component.name == "req":
+                    s3db.req_prep()
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
