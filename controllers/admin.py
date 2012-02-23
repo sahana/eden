@@ -7,10 +7,6 @@
 module = request.controller
 resourcename = request.function
 
-# Options Menu (available in all Functions' Views)
-# - can Insert/Delete items from default menus within a function, if required.
-s3_menu(module)
-
 # S3 framework functions
 # -----------------------------------------------------------------------------
 def index():

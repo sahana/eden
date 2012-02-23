@@ -3954,7 +3954,7 @@ S3.i18n.gis_feature_info = '%s';
             toolbar,
             "S3.gis.map_height = %i;\n" % map_height,
             "S3.gis.map_width = %i;\n" % map_width,
-            "S3.gis.zoom = %i;\n" % zoom,
+            "S3.gis.zoom = %i;\n" % (zoom or 1),
             center,
             "S3.gis.projection = '%i';\n" % projection,
             "S3.gis.units = '%s';\n" % units,

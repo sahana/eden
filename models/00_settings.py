@@ -166,7 +166,7 @@ messages["NOT_APPLICABLE"] = "N/A"
 messages["ADD_PERSON"] = "Add Person"
 messages["ADD_LOCATION"] = "Add Location"
 messages["SELECT_LOCATION"] = "Select a location"
-    
+
 for u in messages:
     if isinstance(messages[u], str):
         globals()[u] = T(messages[u])
@@ -544,6 +544,7 @@ s3.messages.confirmation_email = "%s %s %s %s. %s." % (T("Welcome to the"),
 # Valid Extensions for Image Upload fields
 IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
 s3.IMAGE_EXTENSIONS = IMAGE_EXTENSIONS
+
 # -----------------------------------------------------------------------------
 # List of Nations (ISO-3166-1 Country Codes)
 # @ToDo: Pull this list from the list of L0s in the database

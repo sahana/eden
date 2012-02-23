@@ -373,14 +373,14 @@ class S3ProjectModel(S3Model):
                         ),
                     )
                 )
-            
+
 
         # Resource Configuration
         if drr:
             next = "organisation"
         else:
             next = "activity"
-            
+
         if drr:
             table.virtualfields.append(S3ProjectVirtualfields())
             list_fields=["id",
@@ -1268,7 +1268,7 @@ class S3ProjectDRRModel(S3Model):
             msg_record_deleted = T("Beneficiaries Deleted"),
             msg_list_empty = T("No Beneficiaries Found")
         )
-        
+
         table.virtualfields.append(S3ProjectBeneficiaryVirtualfields())
 
         # Search Method?
@@ -1716,18 +1716,20 @@ class S3ProjectTaskModel(S3Model):
         # Search Method
         task_search = S3Search(
                 advanced = (
-                    S3SearchOptionsWidget(
-                        name = "task_search_project",
-                        label = T("Project"),
-                        field = ["project"],
-                        cols = 3
-                    ),
-                    S3SearchOptionsWidget(
-                        name = "task_search_activity",
-                        label = T("Activity"),
-                        field = ["activity"],
-                        cols = 3
-                    ),
+                    # Virtual fields not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                        #name = "task_search_project",
+                        #label = T("Project"),
+                        #field = ["project"],
+                        #cols = 3
+                    #),
+                    # Virtual fields not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                        #name = "task_search_activity",
+                        #label = T("Activity"),
+                        #field = ["activity"],
+                        #cols = 3
+                    #),
                     S3SearchOptionsWidget(
                         name = "task_search_priority",
                         label = T("Priority"),

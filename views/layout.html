@@ -87,17 +87,17 @@
 </head>
 <body>
     <div id='menu_modules'>
-        {{=MENUS3(response.menu, _id="modulenav")}}
+        {{=current.menu.main}}
     </div>
     <div class='colmask fullpage'>
-      {{if response.menu_options:}}
+        {{if current.menu.options is not None:}}
         <div class='aside'>
             <div id='menu_options'>
-                {{=MENUS3(response.menu_options, _id="subnav")}}
+                {{=current.menu.options}}
             </div>
         </div>
-      {{pass}}
-        <div {{if response.menu_options:}}class='rightside'{{pass}}>
+        {{pass}}
+        <div {{if current.menu.options is not None:}}class='rightside'{{pass}}>
             <div class='col1'>
                 {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
                 {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}

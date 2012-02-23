@@ -2431,11 +2431,14 @@ class S3Permission(object):
         [DELETE, "DELETE"]])
 
     # Method string <-> required permission
-    METHODS = Storage(
-        create = CREATE,
-        read = READ,
-        update = UPDATE,
-        delete = DELETE)
+    METHODS = Storage({
+        "create": CREATE,
+        "import": CREATE,
+        "read": READ,
+        "report": READ,
+        "search": READ,
+        "update": UPDATE,
+        "delete": DELETE})
 
     # Policy helpers
     most_permissive = lambda self, acl: \

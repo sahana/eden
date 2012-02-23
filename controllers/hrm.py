@@ -40,6 +40,7 @@ def org_filter():
 # =============================================================================
 @auth.requires_login()
 def s3_menu_prep():
+    # @todo: rewrite this for new framework
     """ Application Menu """
 
     # Module Name
@@ -61,7 +62,7 @@ def s3_menu_prep():
     else:
         session.s3.hrm.mode = "personal"
 
-s3_menu(module, prep=s3_menu_prep)
+s3_menu_prep()
 
 # =============================================================================
 def index():

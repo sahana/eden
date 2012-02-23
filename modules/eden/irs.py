@@ -832,7 +832,7 @@ S3.timeline.now = '""", now.isoformat(), """';
                         TD(INPUT(_type="checkbox", _name="ignore_errors", _id="ignore_errors"))),
                         TR("", INPUT(_type="submit", _value=T("Import")))))
 
-            label_list_btn = s3base.S3CRUD.crud_string(r.tablename, "title_list")
+            label_list_btn = S3CRUD.crud_string(r.tablename, "title_list")
             list_btn = A(label_list_btn,
                          _href=r.url(method="", vars=None),
                          _class="action-btn")

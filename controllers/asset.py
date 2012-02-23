@@ -12,8 +12,6 @@ resourcename = request.function
 if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """ Module Home Page """

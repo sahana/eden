@@ -10,8 +10,6 @@ resourcename = request.function
 if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -91,7 +89,7 @@ def req_item_packs():
     """
 
     table = s3db.supply_item_pack
-    ritable = s3db.req_req_item 
+    ritable = s3db.req_req_item
     query = (ritable.id == request.args[0]) & \
             (ritable.item_id == table.item_id)
 

@@ -19,8 +19,6 @@ DETAILS = str(T("Details"))
 
 action = lambda l, u: dict(label=str(l), url=str(u), _class="action-btn")
 
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """ Home Page """
@@ -33,7 +31,7 @@ def index():
     prefix = "pr"
     resourcename = "person"
     tablename = "%s_%s" % (prefix, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     report_url = URL(c="mpr", f=resourcename,
                      args=["[id]", "note"],
@@ -92,7 +90,6 @@ def index():
                                 module_name=module_name)
     response.view = "mpr/index.html"
     response.title = module_name
-    s3_menu(module)
     return output
 
 # -----------------------------------------------------------------------------
@@ -101,7 +98,7 @@ def person():
 
     prefix = "pr"
     tablename = "%s_%s" % (prefix, resourcename)
-    table = db[tablename]
+    table = s3db[tablename]
 
     s3.crud_strings[tablename].update(
         title_display = T("Missing Person Details"),
@@ -209,7 +206,6 @@ def person():
     rheader = lambda r: s3db.pr_rheader(r, tabs=mpr_tabs)
 
     output = s3_rest_controller("pr", resourcename, rheader=rheader)
-    s3_menu(module)
     return output
 
 # -----------------------------------------------------------------------------

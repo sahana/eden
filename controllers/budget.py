@@ -19,9 +19,6 @@ resourcename = request.function
 if module not in deployment_settings.modules or not deployment_settings.has_module("project"):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 # Define the Model
 # @ToDo: Move to modules/eden/budget.py

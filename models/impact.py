@@ -16,7 +16,7 @@ if deployment_settings.has_module("assess"):
         """ Load the Impact tables as-needed """
 
         sector_id = s3db.org_sector_id
-        ireport_id = s3db.ireport_id
+        ireport_id = s3db.irs_ireport_id
 
         # Load the models we depend on
         if deployment_settings.has_module("assess"):
@@ -81,8 +81,7 @@ if deployment_settings.has_module("assess"):
         # =====================================================================
         # Impact
         # Load model
-        s3mgr.load("irs_ireport")
-        ireport_id = response.s3.ireport_id
+        ireport_id = s3db.irs_ireport_id
 
         resourcename = "impact"
         tablename = "%s_%s" % (module, resourcename)

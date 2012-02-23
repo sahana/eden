@@ -10,8 +10,6 @@ module = request.controller
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 module_name = deployment_settings.modules[module].name_nice
 
 def index():
