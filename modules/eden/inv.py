@@ -750,7 +750,7 @@ class S3DistributionModel(S3Model):
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="sender_id")),
                                   self.super_link("site_id", "org_site",
-                                             label = T("From Warehouse"),
+                                             label = T("From Facility"),
                                              default = auth.user.site_id if auth.is_logged_in() else None,
                                              readable = True,
                                              writable = True,

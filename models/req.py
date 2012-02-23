@@ -18,7 +18,7 @@ req_item_inv_item_btn = dict(url = URL(c = "req",
                                            args = ["[id]"]
                                         ),
                                  _class = "action-btn",
-                                 label = str(T("Find")), # Change to Fulfil? Match?
+                                 label = str(T("Request from Facility")), # Change to Fulfil? Match?
                                 )
 
 # -----------------------------------------------------------------------------
@@ -31,11 +31,15 @@ def req_controller():
 
     req_table = s3db.req_req
 
-    # Set the req_item site_id (Requested From)
-    # @ToDo: What does this do? Where does it get called from?
+    # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
     if "req_item_id" in request.vars and "inv_item_id" in request.vars:
-        site_id = s3db.inv_inv_item[request.vars.inv_item_id].site_id
+        inv_item = s3db.inv_inv_item[request.vars.inv_item_id]
+        site_id = inv_item.site_id
+        item_id = inv_item.item_id
         s3db.req_req_item[request.vars.req_item_id] = dict(site_id = site_id)
+        response.confirmation = T("%(item)s requested from %(site)s" % {"item":s3db.supply_item_represent(item_id, show_link = False),
+                                                                        "site":s3db.org_site_represent(site_id, link=False)
+                                                                        })
 
     default_type = request.vars.default_type
     if default_type:
@@ -44,6 +48,8 @@ def req_controller():
         type_field.writable = False
 
     def prep(r):
+        
+        s3db.req_prep()
 
         # Remove type from list_fields
         list_fields = s3mgr.model.get_config("req_req",
