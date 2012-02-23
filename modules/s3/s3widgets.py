@@ -124,6 +124,13 @@ class S3DateWidget(FormWidget):
 
         response = current.response
 
+        # Need to convert value into ISO-format
+        # (widget expects ISO, but value comes in custom format)
+        format=current.deployment_settings.get_L10n_date_format()
+        v, error = IS_DATE_IN_RANGE(format=format)(value)
+        if not error:
+            value = v.isoformat()
+
         default = dict(
             _type = "text",
             value = (value != None and str(value)) or "",
