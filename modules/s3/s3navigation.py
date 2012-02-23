@@ -1256,9 +1256,8 @@ class S3ComponentTabs:
                     function = r.function
             else:
                 function = tab.function
-            if function == r.name or \
-               (function == r.function and "viewing" in _vars):
-                   here = r.method == component or not mtab
+            if function == r.name or function == r.function:
+                here = r.method == component or not mtab
             if component:
                 if r.component and r.component.alias == component and vars_match:
                     here = True
