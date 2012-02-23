@@ -527,6 +527,17 @@ s3mgr.csv_formats = ["hrf", "s3csv"]
 
 s3mgr.ROWSPERPAGE = 20
 
+#######
+# Menus
+#######
+
+# Import menus and layouts
+from eden.menus import *
+from eden.layouts import *
+
+# Create a Storage for menus
+current.menu = Storage(main=MM(), options=None)
+
 ##########
 # Messages
 ##########

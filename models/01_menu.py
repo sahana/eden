@@ -7,20 +7,11 @@
 if auth.permission.format in ("html"):
 
     # =========================================================================
-    # Import default menu structures and layouts
-    #
-    from eden.menus import *
-    from eden.layouts import *
-
-    # Create a Storage for menus
-    menu = current.menu = Storage()
-
-    # =========================================================================
     # Application main menu
     # -> To customize, replace the standard components by the desired items
     # -> Put right-hand menu options in reverse order!
     #
-    menu.main = MM()(
+    current.menu.main(
 
         # Standard modules-menu
         S3MainMenu.menu_modules(),
@@ -54,22 +45,5 @@ if auth.permission.format in ("html"):
         #"prefix": menu structure
 
     }
-
-    # =========================================================================
-    # Compose the option menu
-    #
-    controller = request.controller
-    if controller not in s3_menu_dict:
-        # Fall back to standard menu for this controller
-        menu.options = S3OptionsMenu(controller).menu
-    else:
-        # Use custom menu
-        menu.options = s3_menu_dict[controller]
-
-    # Add breadcrumbs
-    current.menu.breadcrumbs = S3OptionsMenu.breadcrumbs
-
-else:
-    current.menu = Storage(main=None, options=None)
 
 # END =========================================================================
