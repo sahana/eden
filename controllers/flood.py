@@ -12,9 +12,6 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 # Define the Model
 # @ToDo: Move to modules/eden/flood.py

@@ -56,9 +56,6 @@ if deployment_settings.get_security_policy() not in (1, 2, 3, 4, 5, 6, 7):
 
 module = "admin"
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
 ignore_rw = True
 response.view = "admin/appadmin.html"
 #response.menu = [[T("design"), False, URL(a="admin", c="default", f="design",

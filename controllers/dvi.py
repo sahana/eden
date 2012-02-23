@@ -16,6 +16,7 @@ s3mgr.load("dvi_body")
 
 # -----------------------------------------------------------------------------
 def s3_menu_postp():
+    # @todo: rewrite this for new framework
     menu_selected = []
     body_id = s3mgr.get_session("dvi", "body")
     if body_id:
@@ -49,8 +50,6 @@ def s3_menu_postp():
     if menu_selected:
         menu_selected = [T("Open recent"), True, None, menu_selected]
         response.menu_options.append(menu_selected)
-
-s3_menu(module, s3_menu_postp)
 
 # -----------------------------------------------------------------------------
 def index():

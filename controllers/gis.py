@@ -9,9 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
+# @todo: rewrite this for new framework:
 #if not deployment_settings.get_security_map() or s3_has_role(MAP_ADMIN):
 #   response.menu_options.append([T("Service Catalogue"), False, URL(f="map_service_catalogue")])
 #   # Not yet ready for Production
@@ -1185,7 +1183,7 @@ def layer_entity():
                                                           not_filterby="id",
                                                           not_filter_opts=[row.id for row in rows]
                                                         )
-                
+
             elif r.component_name == "symbology":
                 ltable = s3db.gis_layer_symbology
                 # Hide irrelevant fields
@@ -1362,7 +1360,7 @@ def layer_openstreetmap():
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
                                                          )
-            
+
         return True
     response.s3.prep = prep
 
@@ -1415,7 +1413,7 @@ def layer_bing():
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
                                                          )
-            
+
         return True
     response.s3.prep = prep
 

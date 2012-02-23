@@ -403,7 +403,7 @@ class S3Importer(S3CRUD):
             else:
                 if single_pass:
                     current.session.flash = self.messages.file_uploaded
-                    # For a single pass retain the vars from the original URL 
+                    # For a single pass retain the vars from the original URL
                     next_URL = URL(r=self.request,
                                    f=self.function,
                                    args=["import"],

@@ -10,9 +10,6 @@ module = request.controller
 prefix = "sync" # common table prefix
 module_name = T("Synchronization")
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """

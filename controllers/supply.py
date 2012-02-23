@@ -12,8 +12,6 @@ resourcename = request.function
 if not (deployment_settings.has_module("inv") or deployment_settings.has_module("asset")):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 # =============================================================================
 def index():
     """

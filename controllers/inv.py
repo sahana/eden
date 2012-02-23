@@ -13,8 +13,6 @@ resourcename = request.function
 if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -601,7 +599,7 @@ def send_process():
     send_id = request.args[0]
     stable = s3db.inv_send
     otable = s3db.org_office
- 
+
     if not auth.s3_has_permission("update",
                                   stable,
                                   record_id=send_id):

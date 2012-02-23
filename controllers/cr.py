@@ -17,9 +17,6 @@ if module not in deployment_settings.modules:
 # Load Models
 s3mgr.load("cr_shelter")
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
 # S3 framework functions
 # -----------------------------------------------------------------------------
 def index():
@@ -223,14 +220,16 @@ def cr_shelter_prep(r):
                 db.pr_presence.location_id.comment = ""
                 db.pr_presence.proc_desc.readable = db.pr_presence.proc_desc.writable = False
                 # AT: Add Person
+                s3db.table("pr_group", None)
+                add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create_button")
                 db.pr_presence.pe_id.comment = \
                     DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
-                        DIV(A(s3.crud_strings.pr_group.label_create_button,
+                        DIV(A(add_group_label,
                               _class="colorbox",
                               _href=URL(c="pr", f="group", args="create",
                                         vars=dict(format="popup", child="pe_id")),
                               _target="top",
-                              _title=s3.crud_strings.pr_group.label_create_button),
+                              _title=add_group_label),
                             DIV(_class="tooltip",
                                 _title="%s|%s" % (T("Create Group Entry"),
                                                   T("Create a group entry in the registry.")))

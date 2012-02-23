@@ -388,9 +388,19 @@ class S3RequestManager(object):
             if not xml_escape and val is not None:
                 ftype = str(field.type)
                 if ftype in ("string", "text"):
-                    val = text = xml_encode(unicode(val))
+                    try:
+                        val = unicode(val)
+                    except:
+                        val = unicode(val.decode("utf-8"))
+                    val = text = xml_encode(val)
                 elif ftype == "list:string":
-                    val = text = [xml_encode(unicode(v)) for v in val]
+                    vals = []
+                    for v in val:
+                        try:
+                            vals.append(xml_encode(unicode(v)))
+                        except:
+                            vals.append(xml_encode(unicode(v.decode("utf-8"))))
+                    val = text = vals
 
         # Get text representation
         if field.represent:
@@ -407,7 +417,7 @@ class S3RequestManager(object):
             if val is None:
                 text = NONE
             elif fname == "comments" and not extended_comments:
-                ur = unicode(text, "utf8")
+                ur = unicode(text)
                 if len(ur) > 48:
                     text = "%s..." % ur[:45].encode("utf8")
             else:
