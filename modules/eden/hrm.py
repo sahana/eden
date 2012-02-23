@@ -1227,8 +1227,8 @@ class S3HRSkillModel(S3Model):
                                     comment = course_help,
                                     ondelete = "RESTRICT",
                                     # Comment this to use a Dropdown & not an Autocomplete
-                                    widget = S3AutocompleteWidget("hrm",
-                                                                  "course")
+                                    #widget = S3AutocompleteWidget("hrm",
+                                    #                              "course")
                                 )
 
         # =========================================================================
@@ -1348,6 +1348,9 @@ class S3HRSkillModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  create_next = URL(c="hrm",
+                                    f="training_event",
+                                    args=["[id]", "participant"]),
                   search_method=training_event_search
                 )
 
@@ -1371,7 +1374,13 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_training"
         table = define_table(tablename,
-                             person_id(),
+                             person_id( #@ToDo: Create a way to add new people to training as staff/volunteers
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Participant"),
+                                                                        T("Start typing the Participant's name.")
+                                                                        )
+                                                      )
+                                            ),
                              training_event_id(),
                              # This field can only be filled-out by specific roles
                              # Once this has been filled-out then the other fields are locked
@@ -1382,7 +1391,9 @@ class S3HRSkillModel(S3Model):
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 NONE),
-                                   writable=False),
+                                   readable=False,
+                                   writable=False
+                                   ),
                              comments(),
                              *meta_fields())
 

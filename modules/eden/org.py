@@ -1319,9 +1319,9 @@ def org_rheader(r, tabs=[]):
                           ),
                       rheader_tabs)
 
-        if r.component and r.component.name == "req":
+        #if r.component and r.component.name == "req":
             # Inject the helptext script
-            rheader.append(s3.req_helptext_script)
+            #rheader.append(s3.req_helptext_script)
 
     return rheader
 
