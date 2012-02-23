@@ -485,10 +485,15 @@ class S3BulkImporter(object):
             except SyntaxError, e:
                 self.errorList.append("WARNING: import error - %s" % e)
                 return
-            # @todo: check result (=JSON message) for import errors
-            # and report them to stderr
 
-            db.commit()
+            if not resource.error:
+                db.commit()
+            else:
+                # Must roll back if there was an error!
+                error = resource.error
+                self.errorList.append("%s: %s" % (resource.tablename, error))
+                db.rollback()
+
             # Restore the view
             response.view = view
             end = datetime.datetime.now()
