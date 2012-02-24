@@ -3198,7 +3198,12 @@ class GIS(object):
         self.cluster_distance = 2    # pixels
         self.cluster_threshold = 2   # minimum # of features to form a cluster
 
+        # Support bookmarks (such as from the control)
+        # - these over-ride the arguments
+        vars = request.vars
+
         # Read configuration
+        config = self.get_config()
         if height:
             map_height = height
         else:
@@ -3218,28 +3223,23 @@ class GIS(object):
         else:
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
+            # Use Lat/Lon to center instead
+            if "lat" in vars and vars.lat:
+                lat = float(vars.lat)
+            if lat is None or lat == "":
+                lat = config.lat
+            if "lon" in vars and vars.lon:
+                lon = float(vars.lon)
+            if lon is None or lon == "":
+                lon = config.lon
 
-        config = self.get_config()
-
-        # Support bookmarks (such as from the control)
-        # - these over-ride the arguments
-        vars = request.vars
-        if "lat" in vars and vars.lat:
-            lat = float(vars.lat)
-        if lat is None or lat == "":
-            lat = config.lat
-        if "lon" in vars and vars.lon:
-            lon = float(vars.lon)
-        if lon is None or lon == "":
-            lon = config.lon
         if "zoom" in request.vars:
             zoom = int(vars.zoom)
         if not zoom:
             zoom = config.zoom
+
         if not projection:
             projection = config.epsg
-
-
         if projection not in (900913, 4326):
             # Test for Valid Projection file in Proj4JS library
             projpath = os.path.join(

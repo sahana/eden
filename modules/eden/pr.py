@@ -542,16 +542,19 @@ class S3PersonModel(S3Model):
         add_component("pr_save_search", pr_person="person_id")
         add_component("msg_subscription", pr_person="person_id")
 
-        # Add HR Record as component of Persons
+        # HR Record as component of Persons
         add_component("hrm_human_resource", pr_person="person_id")
 
-        # Add Skills as components of Persons
+        # Skills as components of Persons
         add_component("hrm_certification", pr_person="person_id")
         add_component("hrm_competency", pr_person="person_id")
         add_component("hrm_credential", pr_person="person_id")
         add_component("hrm_experience", pr_person="person_id")
         # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
+        
+        # Assets as component of persons
+        add_component("asset_asset", pr_person="assigned_to_id")
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

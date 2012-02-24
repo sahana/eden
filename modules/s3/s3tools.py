@@ -491,7 +491,11 @@ class S3BulkImporter(object):
             else:
                 # Must roll back if there was an error!
                 error = resource.error
-                self.errorList.append("%s: %s" % (resource.tablename, error))
+                self.errorList.append("%s - %s: %s" % (
+                                      task[3], resource.tablename, error))
+                errors = current.manager.xml.collect_errors(resource)
+                if errors:
+                    self.errorList.extend(errors)
                 db.rollback()
 
             # Restore the view
@@ -554,8 +558,6 @@ class S3BulkImporter(object):
                 self.execute_import_task(task)
             elif task[0] == 2:
                 self.execute_special_task(task)
-
-
 
 # =============================================================================
 

@@ -752,15 +752,15 @@ class S3IRSModel(S3Model):
                 # URL
                 link = URL(args=[row.id])
                 events.append({'start': start,
-                                       'end': end,
-                                       'title': row.name,
-                                       'caption': row.message or "",
-                                       'description': row.message or "",
-                                       'image': image or "",
-                                       'link': link or ""
-                                       # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                                       #'color' : 'blue'
-                                    })
+                               'end': end,
+                               'title': row.name,
+                               'caption': row.message or "",
+                               'description': row.message or "",
+                               'image': image or "",
+                               'link': link or ""
+                               # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                               #'color' : 'blue'
+                            })
             data["events"] = events
             data = json.dumps(data)
 

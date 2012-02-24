@@ -4739,13 +4739,17 @@ class S3ResourceFilter:
             elif c == "," and not quote:
                 if w == "NONE":
                     w = None
-                vlist.append(w.strip('"'))
+                else:
+                    w = w.strip('"')
+                vlist.append(w)
                 w = ""
             else:
                 w += c
         if w == "NONE":
             w = None
-        vlist.append(w.strip('"'))
+        else:
+            w = w.strip('"')
+        vlist.append(w)
         if len(vlist) == 1:
             return vlist[0]
         return vlist

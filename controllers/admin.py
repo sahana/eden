@@ -118,14 +118,15 @@ def user():
 
     # Custom Methods
     role_manager = s3base.S3RoleManager()
-    s3mgr.model.set_method(module, resourcename, method="roles",
-                           action=role_manager)
+    set_method = s3mgr.model.set_method
+    set_method(module, resourcename, method="roles",
+               action=role_manager)
 
-    s3mgr.model.set_method(module, resourcename, method="disable",
-                           action=disable_user)
+    set_method(module, resourcename, method="disable",
+               action=disable_user)
 
-    s3mgr.model.set_method(module, resourcename, method="approve",
-                           action=approve_user)
+    set_method(module, resourcename, method="approve",
+               action=approve_user)
 
     # CRUD Strings
     ADD_USER = T("Add User")

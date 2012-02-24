@@ -1633,6 +1633,47 @@ class S3XML(S3Codec):
             return json.dumps(root_dict)
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def collect_errors(job):
+        """
+            Collect errors from an error tree
+
+            @param job: the import job, resource or error tree as Element
+        """
+
+        errors = []
+
+        try:
+            if isinstance(job, etree._Element):
+                error_tree = job
+            else:
+                error_tree = job.error_tree
+        except AttributeError:
+            return errors
+        if error_tree is None:
+            return errors
+
+        elements = error_tree.xpath(".//*[@error]")
+        for element in elements:
+            if element.tag in ("data", "reference"):
+                resource = element.getparent()
+                value = element.get("value")
+                if not value:
+                    value = element.text
+                error = "%s, %s: '%s' (value='%s')" % (
+                            resource.get("name", None),
+                            element.get("field", None),
+                            element.get("error", None),
+                            value)
+            elif element.tag == "resource":
+                error = "%s: %s" % (element.get("name", None),
+                                    element.get("error", None))
+            else:
+                error = "%s" % element.get("error", None)
+            errors.append(error)
+        return errors
+
+    # -------------------------------------------------------------------------
     @classmethod
     def csv2tree(cls, source,
                  resourcename=None,

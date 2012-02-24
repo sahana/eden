@@ -959,7 +959,7 @@ class S3Importer(S3CRUD):
         else:
             # Job created
             job_id = job.job_id
-            errors = self._collect_errors(job)
+            errors = current.manager.xml.collect_errors(job)
             if errors:
                 response.s3.error_report = errors
             query = (self.upload_table.id == upload_id)
@@ -1404,7 +1404,7 @@ class S3Importer(S3CRUD):
         if rows:
             details.append(TBODY(rows))
         # Add error messages, if present
-        errors = self._collect_errors(element)
+        errors = current.manager.xml.collect_errors(element)
         if errors:
             details.append(TFOOT(TR(TH("%s:" % T("Errors")),
                                    TD(UL([LI(e) for e in errors])))))
@@ -1599,36 +1599,6 @@ class S3Importer(S3CRUD):
         self.resource.table = self.table
         self.resource.tablename = self.tablename
         self.resource.clear_query()
-
-    # -------------------------------------------------------------------------
-    def _collect_errors(self, job):
-
-        errors = []
-
-        try:
-            if isinstance(job, etree._Element):
-                error_tree = job
-            else:
-                error_tree = job.error_tree
-        except AttributeError:
-            return errors
-        if error_tree is None:
-            return errors
-
-        elements = error_tree.xpath(".//*[@error]")
-        for element in elements:
-            if element.tag in ("data", "reference"):
-                resource = element.getparent()
-                error = "%s, %s: %s" % (resource.get("name", None),
-                                        element.get("field", None),
-                                        element.get("error", None))
-            elif element.tag == "resource":
-                error = "%s: %s" % (element.get("name", None),
-                                    element.get("error", None))
-            else:
-                error = "%s" % element.get("error", None)
-            errors.append(error)
-        return errors
 
     # -------------------------------------------------------------------------
     def __define_table(self):

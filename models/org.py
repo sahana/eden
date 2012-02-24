@@ -123,6 +123,8 @@ def org_office_controller():
         elif r.representation == "plain":
             # Map popups want less clutter
             table.obsolete.readable = False
+            if r.record.type == 5:
+                s3.crud_strings[tablename].title_display = T("Warehouse Details")
 
         if r.record and deployment_settings.has_module("hrm"):
             # Cascade the organisation_id from the office to the staff

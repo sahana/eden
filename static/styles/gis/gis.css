@@ -171,5 +171,12 @@
 */
  
 /* Popups */
-#georsspopup h2 { margin: 0; }
-#kmlpopup h2 { margin: 0; }
+div.olFramedCloudPopupContent label {
+    padding-right: 5px;
+}
+#georsspopup h2 {
+    margin: 0;
+}
+#kmlpopup h2 {
+    margin: 0;
+}
