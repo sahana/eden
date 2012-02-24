@@ -93,7 +93,7 @@ class S3HRModel(S3Model):
                                   # Administrative data
                                   organisation_id(widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                                   empty=False),
-                                  person_id(widget=S3AddPersonWidget(),
+                                  person_id(widget=S3AddPersonWidget(controller="hrm"),
                                             requires=IS_ADD_PERSON_WIDGET(),
                                             comment=None),
                                   Field("type", "integer",

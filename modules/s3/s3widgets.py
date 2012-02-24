@@ -2214,7 +2214,12 @@ class S3AddPersonWidget(FormWidget):
         It relies on JS code in static/S3/s3.select_person.js
     """
 
-    def __init__(self, select_existing = True):
+    def __init__(self,
+                 controller = None,
+                 select_existing = True):
+
+        # Controller to retrieve the person record
+        self.controller = controller
         self.select_existing = select_existing
 
     def __call__(self, field, value, **attributes):
@@ -2240,6 +2245,11 @@ class S3AddPersonWidget(FormWidget):
             _class ="box_top"
         else:
             _class = "hidden"
+
+        if self.controller is None:
+            controller = request.controller
+        else:
+            controller = self.controller
 
         # Select from registry buttons
         select_row = TR(TD(A(T("Select from registry"),
@@ -2269,7 +2279,7 @@ class S3AddPersonWidget(FormWidget):
                         TD(),
                         _id="select_from_registry_row",
                         _class=_class,
-                        _controller=request.controller,
+                        _controller=controller,
                         _field=real_input,
                         _value=str(value))
 

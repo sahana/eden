@@ -462,21 +462,6 @@ def time():
     return s3_rest_controller()
 
 # =============================================================================
-def person():
-    """ Person controller for AddPersonWidget """
-
-    def prep(r):
-        if r.representation != "s3json":
-            # Do not serve other representations here
-            return False
-        else:
-            s3mgr.show_ids = True
-        return True
-    response.s3.prep = prep
-
-    return s3_rest_controller("pr", resourcename)
-
-# =============================================================================
 # Comments
 # =============================================================================
 def discuss(r, **attr):

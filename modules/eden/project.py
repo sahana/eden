@@ -713,7 +713,7 @@ class S3ProjectModel(S3Model):
         tablename = "project_activity_contact"
         table = define_table(tablename,
                              activity_id(),
-                             person_id(widget=S3AddPersonWidget(),
+                             person_id(widget=S3AddPersonWidget(controller="pr"),
                                        requires=IS_ADD_PERSON_WIDGET(),
                                        comment=None),
                              *meta_fields())
