@@ -491,7 +491,8 @@ class S3BulkImporter(object):
             else:
                 # Must roll back if there was an error!
                 error = resource.error
-                self.errorList.append("%s: %s" % (resource.tablename, error))
+                self.errorList.append("%s - %s: %s" % (
+                                      task[3], resource.tablename, error))
                 errors = current.manager.xml.collect_errors(resource)
                 if errors:
                     self.errorList.extend(errors)
