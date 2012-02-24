@@ -433,6 +433,8 @@ def person():
         hr = table[hr_id]
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
+            # Also inform the back-end of this finding
+            request.get_vars["group"] = group
 
     org = session.s3.hrm.org
     if org is not None:
