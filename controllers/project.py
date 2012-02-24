@@ -179,12 +179,12 @@ def project():
                 if validate:
                     response.s3.jquery_ready.append(script)
 
-            if not deployment_settings.get_project_drr():
-                read_url = URL(args=["[id]", "task"])
-                update_url = URL(args=["[id]", "task"])
-                s3mgr.crud.action_buttons(r,
-                                          read_url=read_url,
-                                          update_url=update_url)
+                if not deployment_settings.get_project_drr():
+                    read_url = URL(args=["[id]", "task"])
+                    update_url = URL(args=["[id]", "task"])
+                    s3mgr.crud.action_buttons(r,
+                                              read_url=read_url,
+                                              update_url=update_url)
         return output
     response.s3.postp = postp
 
