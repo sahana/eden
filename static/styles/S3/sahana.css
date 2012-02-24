@@ -679,7 +679,6 @@ div.form-container form select {
     margin: 2px 0 2px 0;
 }
 div.form-container form input[type="checkbox"],
-
 div.form-container form input[type="radio"] {
     padding: 1px;
     margin: 2px 5px;
@@ -868,7 +867,7 @@ div.dataTables_filter {
     width: auto;
     float: left;
     /* margin-left: 50px; */
-    margin-bottom:4px;
+    margin-bottom: 4px;
 }
 
 div.dataTables_processing {
@@ -1212,7 +1211,7 @@ div#last_update {
 /* Action Buttons */
 .delete-btn,
 .action-btn {
-    cursor:pointer;
+    cursor: pointer;
     text-decoration: none;
     font-weight:bold;
     color: #ffffff;
@@ -1224,8 +1223,8 @@ div#last_update {
     margin: 2px;
     z-index: 500;
     white-space: nowrap;
-    -moz-border-radius:2px;
-    -webkit-border-radius:2px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
 }
 .delete-btn:hover,
 .action-btn:hover {
