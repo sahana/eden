@@ -412,7 +412,7 @@ class S3PDF(S3Method):
                     self.addrHeader(self.resource,
                                     list_fields,
                                     report_hide_comments)
-                    self.addTable(self.resource.components[componentname].resource,
+                    self.addTable(self.resource.components[componentname],
                                   list_fields=list_fields,
                                   report_groupby=report_groupby,
                                   report_hide_comments=report_hide_comments)
@@ -3458,6 +3458,7 @@ class S3PDFRHeader():
         self.raw_data = raw_data
         self.list_fields = list_fields
         self.hideComments = hide_comments
+        self.report_groupby = None
         self.data = []
         self.subheadingList = []
         self.labels = []
@@ -3488,8 +3489,12 @@ class S3PDFRHeader():
             return None
         else:
             for index in range(len(self.data[0])):
-                self.rheader.append([self.data[0][index],
-                                     self.data[1][index]]
+                try:
+                    value = data[index]
+                except:
+                    value = "-"
+                self.rheader.append([self.data[0],
+                                     value]
                                    )
         content = []
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),

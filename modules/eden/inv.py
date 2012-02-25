@@ -224,9 +224,9 @@ $(document).ready(function() {
                        super_entity = "supply_item_entity",
                        search_method = inv_item_search,
                        report_filter = report_filter,
-                       report_rows = ["item_id"],
-                       report_cols = ["site_id"],
-                       report_fact = ["quantity"],
+                       report_rows = ["item_id","currency"],
+                       report_cols = ["site_id","currency"],
+                       report_fact = ["quantity", "pack_value"],
                        report_method=["sum"],
                        report_groupby = self.inv_inv_item.site_id,
                        report_hide_comments = True
