@@ -123,7 +123,9 @@ def inv_send_controller():
     response.s3.prep = prep
 
     output = s3_rest_controller("inv", "send",
-                                rheader=eden.inv.inv_send_rheader)
+                                rheader=eden.inv.inv_send_rheader,
+                                componentname="inv_send_item",
+                               )
     return output
 
 

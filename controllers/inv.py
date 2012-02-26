@@ -284,6 +284,12 @@ def send():
 
     # Defined in the Model for use from Multiple Controllers for unified menus
     return inv_send_controller()
+# -----------------------------------------------------------------------------
+def send_item():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
 
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):

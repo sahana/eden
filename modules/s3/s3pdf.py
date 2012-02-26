@@ -3488,12 +3488,12 @@ class S3PDFRHeader():
         if len(self.data) == 0:
             return None
         else:
-            for index in range(len(self.data[0])):
+            for index in range(len(self.labels)):
                 try:
-                    value = data[index]
+                    value = data[0][index]
                 except:
                     value = "-"
-                self.rheader.append([self.data[0],
+                self.rheader.append([self.labels[index],
                                      value]
                                    )
         content = []
@@ -3506,7 +3506,7 @@ class S3PDFRHeader():
         table = Table(self.rheader,
                       repeatRows=1,
                       style=style,
-                      hAlign="LEFT"
+                      hAlign="LEFT",
                      )
         content.append(table)
         return content
