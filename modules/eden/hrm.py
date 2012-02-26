@@ -1412,7 +1412,7 @@ class S3HRSkillModel(S3Model):
             title_display = T("Training Details"),
             title_list = T("Trainings"),
             title_update = T("Edit Training"),
-            title_search = T("Search Trainings"),
+            title_search = T("Search Training Participants"),
             title_report = T("Training Report"),
             title_upload = T("Import Training Participants"),
             subtitle_create = T("Add Training"),
@@ -1428,6 +1428,49 @@ class S3HRSkillModel(S3Model):
 
         table.virtualfields.append(HRMTrainingVirtualFields())
 
+        training_search = S3Search(
+            advanced=(
+                      S3SearchSimpleWidget(
+                        name = "training_search_simple",
+                        label = T("Text"),
+                        comment = T("You can search by trainee name, course name or comments. You may use % as wildcard. Press 'Search' without input to list all trainees."),
+                        field = ["person_id$first_name",
+                                 "person_id$last_name",
+                                 "training_event_id$course_id$name",
+                                 "comments",
+                                ]
+                    ),
+                    S3SearchLocationHierarchyWidget(
+                      name="training_search_L1",
+                      field="person_id$L1",
+                      cols = 3,
+                    ),
+                    S3SearchLocationHierarchyWidget(
+                      name="training_search_L2",
+                      field="person_id$L2",
+                      cols = 3,
+                    ),
+                    # Can't currently have an Options widget search through a double layer of references
+                    # Anyay, would we want to search by training location?
+                    # Would Office of Staff be a better filter?
+                    # S3SearchOptionsWidget(
+                      # name="training_search_site",
+                      # label=T("Facility"),
+                      # field=["training_event_id$course_id$site_id"]
+                    # ),
+                    S3SearchOptionsWidget(
+                      name="training_search_course",
+                      label=T("Course"),
+                      field=["training_event_id$course_id"]
+                    ),
+                    S3SearchMinMaxWidget(
+                      name="training_search_date",
+                      method="range",
+                      label=T("Date"),
+                      field=["training_event_id$start_date"]
+                    ),
+            ))
+
         hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "training_event_id",
@@ -1441,6 +1484,7 @@ class S3HRSkillModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  search_method = training_search,
                   report_filter=[
                             S3SearchLocationHierarchyWidget(
                                 name="training_search_L1",

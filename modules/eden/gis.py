@@ -2974,8 +2974,8 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
         # We aren't going to use the represent, so skip making it.
         represent_text = T("Show on Map")
     else:
-        # The basic location representation is the name, but extra info is useful.
         if location.level:
+            # The basic location representation for Lx is the name, but extra info is useful.
             level_name = None
             if location.level == "L0":
                 level_name = T("Country")
@@ -3012,7 +3012,8 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
 
         else:
             # Specific location:
-            # For extra info, try street address, lat/lon, and OSM id...
+            # Provide just extra info (otherwise this duplicates the Resource Name)
+            # Street address or lat/lon
             extra = ""
             if location.addr_street:
                 # Get the 1st line of the street address.
@@ -3022,12 +3023,12 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
                 extra = lat_lon_represent(location)
             if (not extra) and location.parent:
                 extra = parent_represent(location)
-            # If we have no name, but we have an OSM ID then use that
-            if (not extra) and location.osm_id:
-                extra = ("OSM ID %s" % location.osm_id)
         extra = extra.strip().strip(", ")
         if extra:
-            represent_text = "%s (%s)" % (location.name, extra)
+            if location.level:
+                represent_text = "%s (%s)" % (location.name, extra)
+            else:
+                represent_text = extra
         elif location.name:
             represent_text = location.name
         else:

@@ -448,15 +448,14 @@ class S3CRUD(S3Method):
                                 format=representation)
             output["item"] = item
 
-            # Edit Link
-            EDIT = T("Edit")
-            authorised = self._permitted(method="update")
-            if authorised and editable:
-                href_edit = r.url(method="update", representation="html")
-                if href_edit:
-                    edit_btn = A(EDIT, _href=href_edit,
-                                 _id="edit-btn", _target="_blank")
-                    output["edit_btn"] = edit_btn
+            # Details Link
+            authorised = self._permitted(method="read")
+            if authorised:
+                href = r.url(method="read", representation="html")
+                if href:
+                    details_btn = A(T("Show Details"), _href=href,
+                                    _id="details-btn", _target="_blank")
+                    output["details_btn"] = details_btn
 
             # Title and subtitle
             title = self.crud_string(r.tablename, "title_display")
@@ -482,7 +481,7 @@ class S3CRUD(S3Method):
             return exporter(resource, list_fields=list_fields)
 
         elif representation == "json":
-            exporter = S3Exporter(manager)
+            exporter = S3Exporter()
             return exporter.json(resource)
 
         else:

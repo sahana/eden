@@ -126,7 +126,8 @@ Ext.onReady(function(){
             if (!lat || !lon) {
                 // Enable the crosshair on the Map Selector
                 $('.olMapViewport').addClass('crosshair');
-                // @ToDo: Enable the Control
+                // Enable the Control
+                S3.gis.pointButton.control.activate()
             }
         });
     }
@@ -432,8 +433,17 @@ function s3_gis_l0_select() {
                 for (level = 1; level < 6; level++) {
                     var _level = 'L' + level;
                     if (data[_level]) {
+                        // Replace the label
                         $('#gis_location_' + _level + '_label__row label').text(data[_level] + ':');
                         s3_gis_show_level(level);
+                        // Replace the Help Tip
+                        var tooltip = $('#gis_location_' + _level + '__row div.tooltip');
+                        var old_title = tooltip.attr('title');
+                        var parts = old_title.split('|');
+                        var newtitle = data[_level] + '|' + parts[1]+ '|' + parts[2];
+                        tooltip.attr('title', newtitle);
+                        // Re-apply Cluetip so that it sees the new value
+                        tooltip.cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
                     } else {
                         s3_gis_hide_level(level);
                     }

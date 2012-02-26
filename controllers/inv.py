@@ -97,6 +97,8 @@ def warehouse():
         ))
     s3mgr.configure(tablename,
                     search_method = warehouse_search)
+
+    # CRUD pre-process
     def prep(r):
         if r.interactive and r.tablename == "org_office":
 
@@ -139,6 +141,18 @@ def warehouse():
             r.resource.add_filter((s3db.org_office.obsolete != True))
         return True
     response.s3.prep = prep
+
+    # CRUD post-process
+    def postp(r, output):
+        if r.interactive and not r.component and r.method != "import":
+            # Change Action buttons to open Stock Tab by default
+            read_url = URL(f="warehouse", args=["[id]", "inv_item"])
+            update_url = URL(f="warehouse", args=["[id]", "inv_item"])
+            s3mgr.crud.action_buttons(r,
+                                      read_url=read_url,
+                                      update_url=update_url)
+        return output
+    response.s3.postp = postp
 
     rheader = s3db.org_rheader
 

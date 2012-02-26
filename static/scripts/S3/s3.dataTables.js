@@ -446,8 +446,11 @@ Ext.onReady(function(){
                 // Disable the polygon control
                 S3.gis.polygonButton.disable();
             }
-            // Bounds should be set already by the search results
             S3.gis.mapWin.show();
+            // Zoom to Bounds set by the search results
+            if ( S3.gis.bounds ) {
+                map.zoomToExtent(S3.gis.bounds);
+            }
             // Disable the crosshair on the Map Selector
             $('.olMapViewport').removeClass('crosshair');
             // Set the Tab to show as active

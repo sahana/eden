@@ -74,6 +74,7 @@ def project():
         doc_table.person_id.writable = False
         doc_table.location_id.writable = False
 
+    # Pre-process
     def prep(r):
         btable = s3db.project_beneficiary
         btable.activity_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
@@ -271,6 +272,24 @@ def activity():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
+    # Pre-process
+    def prep(r):
+        if r.representation == "plain":
+            s3.crud_strings[tablename].title_display = T("Project Details")
+        elif r.interactive:
+            if r.component is not None:
+                if r.component_name == "document":
+                    doc_table = s3db.doc_document
+                    doc_table.organisation_id.readable = False
+                    doc_table.person_id.readable = False
+                    doc_table.location_id.readable = False
+                    doc_table.organisation_id.writable = False
+                    doc_table.person_id.writable = False
+                    doc_table.location_id.writable = False
+
+        return True
+    response.s3.prep = prep
+
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact")]
     if drr:
@@ -279,15 +298,6 @@ def activity():
     else:
         tabs.append((T("Tasks"), "task"))
         #tabs.append((T("Attachments"), "document"))
-
-    doc_table = s3db.table("doc_document", None)
-    if doc_table is not None:
-        doc_table.organisation_id.readable = False
-        doc_table.person_id.readable = False
-        doc_table.location_id.readable = False
-        doc_table.organisation_id.writable = False
-        doc_table.person_id.writable = False
-        doc_table.location_id.writable = False
 
     rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
