@@ -1,1 +1,1 @@
-warehouse,sender,date,delivery_date,to_site_id,status,recipient,inv_send.comments,item,item_pack,quantity,request,inv_send_item.comments
+"warehouse","sender","date","delivery_date","to_site_id","status","recipient","inv_send.comments","item","item_pack","item_model","quantity","request_date","request_quantity","inv_send_item.comments"

@@ -209,7 +209,6 @@ def templateRead():
     response.s3.postp = postp
     r = s3mgr.parse_request(module, resourcename, args=[template_id])
     output  = r(method = "read", rheader=s3.survey_template_rheader)
-    del output["list_btn"] # Remove the list button
     return output
 
 def templateSummary():

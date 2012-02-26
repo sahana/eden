@@ -1,0 +1,9 @@
+"warehouse","sender","date","delivery_date","to_site_id","status","recipient","inv_send.comments","item","item_pack","item_model","quantity","request_date","request_quantity","inv_send_item.comments"
+"Ainaro Warehouse","Maria Hugo","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Jerry Cans","Piece",,150,24/02/12,1000,
+"Ainaro Warehouse","Maria Hugo","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Hygiene Kits","Unit",,50,24/02/12,250,
+"Ainaro Warehouse","Maria Hugo","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Blankets","Piece",,100,24/02/12,5000,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Orlando Ximenes","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Plastic Sheets","m2",,700,24/02/12,750,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Orlando Ximenes","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Jerry Cans","Piece",,800,24/02/12,1000,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Orlando Ximenes","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Hygiene Kits","Unit",,200,24/02/12,250,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Orlando Ximenes","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Blankets","Piece",,4500,24/02/12,5000,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Orlando Ximenes","28/02/12",,"Cruz Vermelha de Timor-Leste (CVTL) National Headquarters",2,"Isabel de Carvalho",,"Kitchen Sets","Unit",,5000,24/02/12,8000,
