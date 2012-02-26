@@ -548,7 +548,7 @@ $(document).ready(function() {
         s3db = current.s3db
         request = current.request
         s3 = current.response.s3
-        tracker = current.s3tracker
+        tracker = S3Tracker()
 
         ltable = s3db.asset_log
 

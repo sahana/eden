@@ -40,8 +40,10 @@ class S3SituationModel(S3Model):
     """
     """
 
-    #names = [
-    #    ]
+    names = ["sit_situation",
+             "sit_trackable",
+             "sit_presence",
+             ]
 
     def model(self):
 
@@ -49,6 +51,9 @@ class S3SituationModel(S3Model):
         s3 = current.response.s3
 
         location_id = self.gis_location_id
+
+        configure = self.configure
+        super_entity = self.super_entity
 
         # Situation Super-Entity ----------------------------------------------
         #
@@ -59,12 +64,12 @@ class S3SituationModel(S3Model):
         )
 
         tablename = "sit_situation"
-        table = self.super_entity(tablename, "sit_id", situation_types,
-                                  Field("datetime", "datetime"),
-                                  location_id())
+        table = super_entity(tablename, "sit_id", situation_types,
+                             Field("datetime", "datetime"),
+                             location_id())
 
-        self.configure(tablename,
-                       editable=False, deletable=False, listadd=False)
+        configure(tablename,
+                  editable=False, deletable=False, listadd=False)
 
         # Trackable Types -----------------------------------------------------
         #
@@ -79,14 +84,14 @@ class S3SituationModel(S3Model):
         )
 
         tablename = "sit_trackable"
-        sit_trackable = self.super_entity(tablename, "track_id",
-                                          trackable_types,
-                                          Field("track_timestmp", "datetime",
-                                                readable=False,
-                                                writable=False))
+        sit_trackable = super_entity(tablename, "track_id",
+                                     trackable_types,
+                                     Field("track_timestmp", "datetime",
+                                           readable=False,
+                                           writable=False))
 
-        self.configure(tablename,
-                       editable=False, deletable=False, listadd=False)
+        configure(tablename,
+                  editable=False, deletable=False, listadd=False)
 
         # Presence Records for trackables -------------------------------------
         #

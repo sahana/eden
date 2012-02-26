@@ -8,8 +8,6 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -4664,24 +4662,20 @@ class S3ResourceFilter:
         """
             Generate a Query from a URL boundary box query
 
+            Supports multiple bboxes, but optimised for the usual case of just 1
+
             @param resource: the resource
             @param vars: the URL get vars
         """
-
-        table = resource.table
-        tablename = resource.tablename
-        fields = table.fields
-
-        if tablename == "gis_feature_query" or \
-           tablename == "gis_cache":
-            gtable = table
-        else:
-            gtable = current.s3db.gis_location
 
         bbox_query = None
         if vars:
             for k in vars:
                 if k[:4] == "bbox":
+                    table = resource.table
+                    tablename = resource.tablename
+                    fields = table.fields
+
                     fname = None
                     if k.find(".") != -1:
                         fname = k.split(".")[1]
@@ -4700,6 +4694,12 @@ class S3ResourceFilter:
                         # Badly-formed bbox - ignore
                         continue
                     else:
+                        if tablename == "gis_feature_query" or \
+                           tablename == "gis_cache":
+                            gtable = table
+                        else:
+                            gtable = current.s3db.gis_location
+
                         bbox_filter = (gtable.lon > float(minLon)) & \
                                       (gtable.lon < float(maxLon)) & \
                                       (gtable.lat > float(minLat)) & \

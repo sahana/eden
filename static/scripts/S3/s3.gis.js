@@ -649,8 +649,11 @@ function addToolbar() {
     }
 
     // Google Earth
-    if (S3.gis.Google && S3.gis.Google.Earth) {
-        addGoogleEarthControl(toolbar);
-    }
-
+    try {
+        // Only load Google layers if GoogleAPI downloaded ok
+        // - allow rest of map to work offline
+        if (S3.gis.Google.Earth) {
+            google & addGoogleEarthControl(toolbar);
+        }
+    } catch(err) {};
 }

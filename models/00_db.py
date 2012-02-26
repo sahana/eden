@@ -153,10 +153,6 @@ current.manager = s3mgr
 msg = s3base.S3Msg()
 current.msg = msg
 
-# Tracking System
-s3tracker = s3base.S3Tracker()
-current.s3tracker = s3tracker
-
 # Charting
 s3chart = s3base.S3Chart
 current.chart = s3chart

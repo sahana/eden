@@ -2936,10 +2936,16 @@ def proxy():
                 headers = {"Content-Type": request["wsgi"].environ["CONTENT_TYPE"]}
                 body = request.body.read(length)
                 r = urllib2.Request(url, body, headers)
-                y = urllib2.urlopen(r)
+                try:
+                    y = urllib2.urlopen(r)
+                except urllib2.URLError:
+                    raise(HTTP(400, "Unable to reach host %s" % r))
             else:
                 # GET
-                y = urllib2.urlopen(url)
+                try:
+                    y = urllib2.urlopen(url)
+                except urllib2.URLError:
+                    raise(HTTP(400, "Unable to reach host %s" % url))
 
             # Check for allowed content types
             i = y.info()
