@@ -63,7 +63,10 @@ def inv_recv_controller():
     response.s3.prep = prep
 
     output = s3_rest_controller("inv", "recv",
-                                rheader=eden.inv.inv_recv_rheader)
+                                rheader=eden.inv.inv_recv_rheader,
+                                componentname="inv_recv_item",
+                                report_hide_comments=True,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -125,6 +128,7 @@ def inv_send_controller():
     output = s3_rest_controller("inv", "send",
                                 rheader=eden.inv.inv_send_rheader,
                                 componentname="inv_send_item",
+                                report_hide_comments=True
                                )
     return output
 
