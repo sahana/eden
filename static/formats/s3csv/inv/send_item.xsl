@@ -72,6 +72,10 @@
                          col[@field='item_model'], '/',
                          col[@field='item_pack'])"/>
 
+<!-- ***********************************************************************
+    At this stage we don't need to worry about the request record
+    keep this code here just incase it is useful...
+
     <xsl:key name="req_req"
              match="row"
              use="concat(col[@field='recipient'], '/',
@@ -84,6 +88,7 @@
                          col[@field='inv_item'], '/',
                          col[@field='request_quantity'])"/>
 
+    ************************************************************************ -->
     <xsl:key name="inv_send"
              match="row"
              use="concat(col[@field='sender'], '/',
@@ -157,12 +162,18 @@
             <!-- ******************************************************************
                  Search for each inventory send and create a unique req_req record
                  ****************************************************************** -->
+
+            <!-- *****************************************************************
+                At this stage we don't need to worry about the request record
+                keep this code here just incase it is useful...
+
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('req_req',
                                                         concat(col[@field='recipient'], '/',
                                                                col[@field='request_date']))[1])]">
                 <xsl:call-template name="Request"/>
             </xsl:for-each>
+                 ****************************************************************** -->
             <!-- ******************************************************************
                  Search for each inventory send and create a unique inv_send record
                  ****************************************************************** -->
@@ -176,6 +187,11 @@
             <!-- ******************************************************************
                  Search for each request item and create a unique req_item record
                  ****************************************************************** -->
+
+            <!-- ******************************************************************
+                At this stage we don't need to worry about the request record
+                keep this code here just incase it is useful...
+
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('req_item',
                                                         concat(col[@field='recipient'], '/',
@@ -184,6 +200,7 @@
                                                                col[@field='request_quantity']))[1])]">
                 <xsl:call-template name="RequestItem"/>
             </xsl:for-each>
+                 ****************************************************************** -->
         </s3xml>
     </xsl:template>
 
@@ -253,11 +270,16 @@
                 </xsl:attribute>
             </reference>
             <!-- Link to req_item -->
+            <!-- ******************************************************************
+                At this stage we don't need to worry about the request record
+                keep this code here just incase it is useful...
+
             <reference field="req_item_id" resource="req_req_item">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$item_tuid"/>
                 </xsl:attribute>
             </reference>
+                 ****************************************************************** -->
 
             <data field="quantity"><xsl:value-of select="$quantity"/></data>
             <data field="comments"><xsl:value-of select="$comments"/></data>

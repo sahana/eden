@@ -888,6 +888,7 @@ class S3DistributionModel(S3Model):
                 )
 
     # ---------------------------------------------------------------------
+    @staticmethod
     def inv_send_represent(id):
         """
         """

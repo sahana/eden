@@ -1,1 +1,1 @@
-"warehouse","eta","date","type","recipient","from_location","organisation","sender","status","inv_recv.comments","item","item_pack","quantity","request","inv_recv_item.comments"
+"destination","eta","date","type","recipient","from_location","organisation","sender","status","inv_recv.comments","item","item_pack","item_model","quantity","request","inv_recv_item.comments"
