@@ -560,6 +560,7 @@ class S3ProjectModel(S3Model):
 
         # Field configuration
         if pca:
+            table.name.label = T("Name") # for list_fields
             table.name.readable = False
             table.name.writable = False
             table.name.requires = None
@@ -657,7 +658,14 @@ class S3ProjectModel(S3Model):
                   deduplicate=self.project_activity_deduplicate,
                   report_rows=report_fields,
                   report_cols=report_fields,
-                  report_fact=report_fields)
+                  report_fact=report_fields,
+                  list_fields = ["name",
+                                 "project_id",
+                                 #"location_id",
+                                 "multi_activity_type_id",
+                                 "comments"
+                                 ]
+                  )
 
         # Reusable Field
         activity_id = S3ReusableField("activity_id", db.project_activity,
