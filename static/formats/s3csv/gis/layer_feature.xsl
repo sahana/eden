@@ -19,8 +19,9 @@
          REST Filter..........string..........Layer Filter (for Map JS calling back to server)
          Filter Field.........string..........Layer Filter Field (for exports to determine Marker)
          Filter Value.........string..........Layer Filter Value (for exports to determine Marker)
+         Trackable............boolean.........Layer Trackable
          Folder...............string..........Layer Folder
-         Enaled...............boolean.........Layer Enabled in SITE_DEFAULT config?
+         Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
          Visible..............boolean.........Layer Visible in SITE_DEFAULT config?
 
          Needs Importing twice:
@@ -98,6 +99,9 @@
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="module"><xsl:value-of select="col[@field='Module']"/></data>
             <data field="resource"><xsl:value-of select="col[@field='Resource']"/></data>
+            <xsl:if test="col[@field='Trackable']">
+                <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
+            </xsl:if>
             <data field="filter"><xsl:value-of select="col[@field='REST Filter']"/></data>
             <data field="filter_field"><xsl:value-of select="col[@field='Filter Field']"/></data>
             <data field="filter_value"><xsl:value-of select="col[@field='Filter Value']"/></data>

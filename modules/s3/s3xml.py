@@ -48,6 +48,7 @@ from gluon.storage import Storage
 import gluon.contrib.simplejson as json
 
 from s3codec import S3Codec
+from s3track import S3Trackable
 
 try:
     from lxml import etree
@@ -627,10 +628,11 @@ class S3XML(S3Codec):
             @param popup_url:  URL used for onClick Popup contents
         """
 
-        if not current.gis:
+        gis = current.gis
+
+        if not gis:
             return
 
-        gis = current.gis
         db = current.db
         s3db = current.s3db
 
@@ -686,9 +688,25 @@ class S3XML(S3Codec):
                 r_id = r.id[0]
             else:
                 continue # Multi-reference
-            LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
-                                                  ktable[LONFIELD],
-                                                  limitby=(0, 1))
+
+            LatLon = None
+            if "track" in current.request.get_vars:
+                # Use S3Track
+                try:
+                    tracker = S3Trackable(table, record_id=record.id)
+                except SyntaxError:
+                    pass
+                else:
+                    gtable = s3db.gis_location
+                    LatLon = tracker.get_location(as_rows=True,
+                                                  _fields=[gtable.lat,
+                                                           gtable.lon])
+
+            if not LatLon:
+                # Normal Location lookup
+                LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
+                                                      ktable[LONFIELD],
+                                                      limitby=(0, 1))
             if LatLon:
                 LatLon = LatLon.first()
                 lat = LatLon[LATFIELD]

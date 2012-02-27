@@ -68,7 +68,6 @@ import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3method import S3Method
-from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
 
 SHAPELY = False
@@ -4368,8 +4367,8 @@ class FeatureLayer(Layer):
                 if record_module not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
-                auth = current.auth
-                if not auth.permission(c=record.module, f=record.resource):
+                if not current.auth.permission(c=record.module,
+                                               f=record.resource):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:
@@ -4385,6 +4384,8 @@ class FeatureLayer(Layer):
                  self.id)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
+            if self.trackable:
+                url = "%s&track=1" % url
 
             # Mandatory attributes
             output = {
@@ -4573,7 +4574,7 @@ class GoogleLayer(Layer):
                 if sublayer.type == "earth":
                     output["Earth"] = str(T("Switch to 3D"))
                     add_script("http://www.google.com/jsapi?key=%s" % apikey)
-                    add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
+                    add_script(SCRIPT("try{google && google.load('earth','1');}catch(e){};", _type="text/javascript"))
                     if debug:
                         # Non-debug has this included within GeoExt.js
                         add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")

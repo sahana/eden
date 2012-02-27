@@ -21,9 +21,11 @@ function addLayers() {
             addOSMLayer(S3.gis.layers_osm[i]);
         }
     }
-    // Google (generated server-side in s3gis.py)
+    // Google
     try {
-        addGoogleLayers();
+        // Only load Google layers if GoogleAPI downloaded ok
+        // - allow rest of map to work offline
+        google & addGoogleLayers();
     } catch(err) {};
     // Bing
     if (S3.gis.Bing) {

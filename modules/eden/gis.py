@@ -1904,6 +1904,12 @@ class S3FeatureLayerModel(S3Model):
                               label = T("Module")),
                         Field("resource",
                               label = T("Resource")),
+                        Field("trackable", "boolean",
+                              label = T("Trackable"),
+                              default = False,
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Trackable"),
+                                                              T("Whether the resource should be tracked using S3Track rather than just using the Base Location")))),
                         # REST Query added to Map JS to call back to server
                         Field("filter",
                               label = T("REST Filter"),
