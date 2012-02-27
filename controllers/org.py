@@ -55,6 +55,11 @@ def site_org_json():
                                otable.name)
     return records.json()
 
+def facility():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
 # =============================================================================
 def organisation():
     """ RESTful CRUD controller """

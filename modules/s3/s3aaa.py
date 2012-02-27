@@ -152,6 +152,7 @@ class AuthS3(Auth):
             shelter = T("Shelter")
         self.org_site_types = Storage(
                                       cr_shelter = shelter,
+                                      org_facility = T("Facility"),
                                       org_office = T("Office"),
                                       hms_hospital = T("Hospital"),
                                       #project_site = T("Project Site"),
