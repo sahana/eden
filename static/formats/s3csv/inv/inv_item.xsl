@@ -29,8 +29,9 @@
          Remark.................
          Outbound...............
          UM.....................supply_item.um
-         Currency...............
+         Currency...............currency
          Price..................
+         UM Value...............pack_value
          Stock..................
          Price..................
          Stock..................inv_inv_item.quantity
@@ -103,6 +104,8 @@
                 </xsl:attribute>
             </reference>
             <data field="quantity"><xsl:value-of select="col[@field='Stock']/text()"/></data>
+            <data field="pack_value"><xsl:value-of select="col[@field='UM Value']/text()"/></data>
+            <data field="currency"><xsl:value-of select="col[@field='Currency']/text()"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Remark']/text()"/></data>
         </resource>
 
