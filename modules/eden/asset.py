@@ -266,7 +266,7 @@ class S3AssetModel(S3Model):
                          "number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
-                         (T("Facility"), "site"),
+                         (T("Facility/Site"), "site"),
                          (hierarchy["L1"], "L1"),
                          (hierarchy["L2"], "L2"),
                         ]
@@ -327,7 +327,7 @@ class S3AssetModel(S3Model):
         # Asset Log
         #
 
-        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Facility Set"),
+        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Facility/Site Set"),
                                  ASSET_LOG_ASSIGN   : T("Assigned"),
                                  ASSET_LOG_RETURN   : T("Returned"),
                                  ASSET_LOG_CHECK    : T("Checked"),
@@ -421,7 +421,7 @@ class S3AssetModel(S3Model):
         table.site_id.writable = True
         table.site_id.widget = None
         table.site_id.comment = (DIV(_class="tooltip",
-                                     _title="%s|%s" % (T("Facility"),
+                                     _title="%s|%s" % (T("Facility/Site"),
                                                        T("Enter some characters to bring up a list of possible matches")),
 
                                      ),
@@ -650,8 +650,8 @@ $(document).ready(function() {
 
         crud_strings = s3.crud_strings.asset_log
         if status == ASSET_LOG_SET_BASE:
-            crud_strings.subtitle_create = T("Set Base Facility")
-            crud_strings.msg_record_created = T("Base Facility Set")
+            crud_strings.subtitle_create = T("Set Base Facility/Site")
+            crud_strings.msg_record_created = T("Base Facility/Site Set")
             table.by_person_id.label = T("Set By")
             table.site_id.writable = True
             table.site_id.requires = IS_ONE_OF(db, "org_site.id",
@@ -691,8 +691,8 @@ $(document).ready(function() {
                 table.check_in_to_person.readable = True
                 table.check_in_to_person.writable = True
             elif type == "site":
-                crud_strings.subtitle_create = T("Assign to Facility")
-                crud_strings.msg_record_created = T("Assigned to Facility")
+                crud_strings.subtitle_create = T("Assign to Facility/Site")
+                crud_strings.msg_record_created = T("Assigned to Facility/Site")
                 table["site_id"].requires = IS_ONE_OF(db, "org_site.site_id",
                                                       table.site_id.represent)
                 #field = table.site_or_location
@@ -794,7 +794,7 @@ def asset_rheader(r):
 
             # @ToDo: Check permissions before displaying buttons
 
-            asset_action_btns = [ A( T("Set Base Facility"),
+            asset_action_btns = [ A( T("Set Base Facility/Site"),
                                      _href = URL(f=func,
                                                  args = [record.id, "log", "create"],
                                                  vars = dict(status = ASSET_LOG_SET_BASE)
@@ -828,7 +828,7 @@ def asset_rheader(r):
                                                         ),
                                               _class = "action-btn"
                                             ),
-                                          A( T("Assign to Facility"),
+                                          A( T("Assign to Facility/Site"),
                                               _href = URL(f=func,
                                                           args = [record.id, "log", "create"],
                                                           vars = dict(status = ASSET_LOG_ASSIGN,
