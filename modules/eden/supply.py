@@ -317,8 +317,11 @@ class S3SupplyModel(S3Model):
                                                      "supply_item_category.id",
                                                      "%(name)s",
                                                      sort=True,
-                                                     filterby = "catalog_id",
-                                                     filter_opts = [1])
+# With the filter no categories are displayed because (I assume) no catalog_id field is in this table
+# Not certain if this is the correct action to take so would prefer another opinion, hence this comment
+#                                                     filterby = "catalog_id",
+#                                                     filter_opts = [1]
+                                                    )
                                                    )
                                                ),
                              brand_id(),
