@@ -141,6 +141,7 @@ class S3InventoryModel(S3Model):
                                   *s3.meta_fields())
 
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        table.virtualfields.append(InvItemVirtualFields())
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
@@ -222,11 +223,19 @@ $(document).ready(function() {
 
         self.configure(tablename,
                        super_entity = "supply_item_entity",
+                       list_fields = ["id",
+                                      "site_id",
+                                      "item_id",
+                                      "quantity",
+                                      "pack_value",
+                                      (T("Total Value"), "total_value"),
+                                      "currency"
+                                      ],
                        search_method = inv_item_search,
                        report_filter = report_filter,
                        report_rows = ["item_id","currency"],
                        report_cols = ["site_id","currency"],
-                       report_fact = ["quantity", "pack_value"],
+                       report_fact = ["quantity", (T("Total Value"), "total_value")],
                        report_method=["sum"],
                        report_groupby = self.inv_inv_item.site_id,
                        report_hide_comments = True
@@ -750,7 +759,7 @@ class S3DistributionModel(S3Model):
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="sender_id")),
                                   self.super_link("site_id", "org_site",
-                                             label = T("From Warehouse"),
+                                             label = T("From Facility"),
                                              default = auth.user.site_id if auth.is_logged_in() else None,
                                              readable = True,
                                              writable = True,
@@ -1240,5 +1249,20 @@ def inv_send_rheader(r):
             s3.rfooter = rfooter
             return rheader
     return None
+# =============================================================================
+class InvItemVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    extra_fields = ["pack_value",
+                    "quantity"
+                    ]
+
+    def total_value(self):
+        """ Year/Month of the start date of the training event """
+        try:
+            return self.inv_inv_item.quantity * self.inv_inv_item.pack_value
+        except:
+            # not available
+            return current.messages.NONE
 
 # END =========================================================================

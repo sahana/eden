@@ -634,6 +634,8 @@ class S3Report:
             value = extract(row, field)
             if value is None and field != pkey:
                 value = "__NONE__"
+            if type(value) is str:
+                value = unicode(value.decode("utf-8"))
             item[field] = value
         item[pkey] = pk
         return item
@@ -997,7 +999,7 @@ class S3ContingencyTable(TABLE):
         for i in xrange(numcols):
             value = values[i].value
             v = represent(cols, value)
-            add_col_title(s3_truncate(str(v)))
+            add_col_title(s3_truncate(unicode(v)))
             colhdr = TH(v, _style=_style)
             add_header(colhdr)
 
@@ -1024,7 +1026,7 @@ class S3ContingencyTable(TABLE):
             # Row header
             row = rvals[i]
             v = represent(rows, row.value)
-            add_row_title(s3_truncate(str(v)))
+            add_row_title(s3_truncate(unicode(v)))
             rowhdr = TD(DIV(v))
             add_cell(rowhdr)
 
@@ -1042,10 +1044,10 @@ class S3ContingencyTable(TABLE):
                         elif value is None:
                             l = "-"
                         else:
-                            l = str(value)
+                            l = unicode(value)
                         add_value(", ".join(l))
                     else:
-                        add_value(str(value))
+                        add_value(unicode(value))
                 vals = " / ".join(vals)
                 add_cell(TD(DIV(vals)))
 
@@ -1181,7 +1183,7 @@ class S3ContingencyTable(TABLE):
         if value is None:
             return default
         else:
-            return str(value)
+            return unicode(value)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -394,12 +394,23 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="ContactPerson">
+
+        <xsl:variable name="Activity" select="col[@field='Name']/text()"/>
+
+        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
+        <xsl:variable name="l1" select="col[@field='State']/text()"/>
+        <xsl:variable name="l2" select="col[@field='District']/text()"/>
+        <xsl:variable name="l3" select="col[@field='City']/text()"/>
+
+        <xsl:variable name="l4id" select="concat('Location L4: ', $Activity)"/>
+
         <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
             <xsl:variable name="PersonData" select="text()"/>
             <xsl:variable name="FirstName" select="substring-before($PersonData, ',')"/>
             <xsl:variable name="LastName" select="substring-before(substring-after($PersonData, ','), ',')"/>
             <xsl:variable name="Email" select="substring-before(substring-after(substring-after($PersonData, ','), ','), ',')"/>
             <xsl:variable name="MobilePhone" select="substring-after(substring-after(substring-after($PersonData, ','), ','), ',')"/>
+
             <xsl:if test="$FirstName!='' and $Email!=''">
                 <resource name="pr_person">
                     <xsl:attribute name="tuid">
@@ -407,6 +418,39 @@
                     </xsl:attribute>
                     <data field="first_name"><xsl:value-of select="$FirstName"/></data>
                     <data field="last_name"><xsl:value-of select="$LastName"/></data>
+
+                    <!-- Address -->
+                    <resource name="pr_address">
+                        <!-- Link to Location (fails inside here)
+                        <xsl:call-template name="LocationReference"/> -->
+                        <reference field="location_id" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l4id"/>
+                            </xsl:attribute>
+                        </reference>
+
+                        <!-- Home address -->
+                        <data field="type">1</data>
+
+                        <!-- Populate the fields directly which are normally populated onvalidation -->
+                        <data field="address">
+                            <xsl:value-of select="$Activity"/>
+                        </data>
+                        <data field="L0">
+                            <xsl:value-of select="$l0"/>
+                        </data>
+                        <data field="L1">
+                            <xsl:value-of select="$l1"/>
+                        </data>
+                        <data field="L2">
+                            <xsl:value-of select="$l2"/>
+                        </data>
+                        <data field="L3">
+                            <xsl:value-of select="$l3"/>
+                        </data>
+                    </resource>
+
+                    <!-- Contacts -->
                     <resource name="pr_contact">
                         <data field="contact_method">EMAIL</data>
                         <data field="value"><xsl:value-of select="$Email"/></data>
@@ -424,6 +468,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="ContactPersonReference">
+
         <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
             <xsl:variable name="PersonData" select="text()"/>
             <xsl:variable name="FirstName" select="substring-before($PersonData, ',')"/>
@@ -431,6 +476,7 @@
             <xsl:variable name="Email" select="substring-before(substring-after(substring-after($PersonData, ','), ','), ',')"/>
             <xsl:variable name="MobilePhone" select="substring-after(substring-after(substring-after($PersonData, ','), ','), ',')"/>
             <xsl:if test="$FirstName!='' and $Email!=''">
+
                 <resource name="project_activity_contact">
                     <reference field="person_id" resource="pr_person">
                         <xsl:attribute name="tuid">
@@ -438,8 +484,10 @@
                         </xsl:attribute>
                     </reference>
                 </resource>
+
             </xsl:if>
         </xsl:for-each>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

@@ -722,13 +722,13 @@ class IS_LOCATION_SELECTOR(Validator):
             L5_allowed = True
         else:
             if L0:
-                ctable = s3db.gis_config
-                query = (ctable.region_location_id == L0)
-                config = db(query).select(ctable.edit_L1,
-                                          ctable.edit_L2,
-                                          ctable.edit_L3,
-                                          ctable.edit_L4,
-                                          ctable.edit_L5,
+                htable = s3db.gis_hierarchy
+                query = (htable.location_id == L0)
+                config = db(query).select(htable.edit_L1,
+                                          htable.edit_L2,
+                                          htable.edit_L3,
+                                          htable.edit_L4,
+                                          htable.edit_L5,
                                           limitby=(0, 1)).first()
             if L0 and config:
                 # Lookup each level individually
@@ -1138,6 +1138,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
         def email_validate(value, person_id):
             error_message = T("This email-address is already registered.")
             if not value:
+                email_required = current.deployment_settings.get_hrm_email_required()
+                if email_required:
+                    error_message = T("Please enter a valid email address.")
+                    return (value, error_message)
                 return (value, None)
             value = value.strip()
             query = (table.deleted != True) & \

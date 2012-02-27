@@ -317,7 +317,7 @@ if deployment_settings.has_module("cr"):
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
                     if r.name == "shelter":
-                        location = gis_location_represent(record.location_id)
+                        location = s3db.gis_location_represent(record.location_id)
 
                         rheader = DIV(TABLE(
                                             TR(

@@ -446,7 +446,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             @param value: the value returned from the widget
         """
 
-        db = resource.db
+        db = current.db
 
         tablename = self.search_field.keys()[0]
         search_field = self.search_field[tablename][0]
@@ -1118,7 +1118,7 @@ class S3Search(S3CRUD):
             value = None
         if hasattr(widget, "validate"):
             errors = widget.validate(resource, value)
-        else:
+        if not errors:
             q = widget.query(resource, value)
             if q is not None:
                 if query is None:
@@ -1252,7 +1252,7 @@ class S3Search(S3CRUD):
         manager = current.manager
         table = self.table
         tablename = self.tablename
- 
+
         vars = request.get_vars
 
         # Get representation
@@ -2530,7 +2530,7 @@ class S3PentitySearch(S3Search):
 
         # AT: group
         if filter and value:
-            gtable = s3db.pr_group 
+            gtable = s3db.pr_group
             field = gtable.name
             query = field.lower().like("%" + value + "%")
             resource.clear_query()

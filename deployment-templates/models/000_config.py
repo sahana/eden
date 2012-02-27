@@ -181,7 +181,7 @@ deployment_settings.L10n.religions = {
 #deployment_settings.L10n.mandatory_lastname = True
 
 # Add thousands separator to numbers, eg. 1,000,000
-deployment_settings.L10n.thousands_separator = True
+#deployment_settings.L10n.thousands_separator = True
 
 # Finance settings
 #deployment_settings.fin.currencies = {
@@ -326,11 +326,6 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.req.show_quantity_transit = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
-# By default the alt supply name will be used.
-# Set this to False to NOT use the supply alt name
-#deployment_settings.supply.use_alt_name = True
-# By default the request number will be used.
-# Set this to False to NOT use the request number
 #deployment_settings.req.use_req_number = False
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
@@ -382,6 +377,7 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.inv.shipment_name = "order"
 
 # Supply
+#deployment_settings.supply.use_alt_name = False
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 

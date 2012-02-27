@@ -15,6 +15,7 @@ resourcename = request.function
 # -----------------------------------------------------------------------------
 # Options Menu (available in all Functions' Views)
 def s3_menu_postp():
+    # @todo: rewrite this for new framework
     menu_selected = []
     group_id = s3mgr.get_session("pr", "group")
     if group_id:
@@ -40,8 +41,6 @@ def s3_menu_postp():
     if menu_selected:
         menu_selected = [T("Open recent"), True, None, menu_selected]
         response.menu_options.append(menu_selected)
-
-s3_menu(module, s3_menu_postp)
 
 # -----------------------------------------------------------------------------
 def index():

@@ -4,7 +4,7 @@
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  */
 
-/* Global vars */
+/* Google Calendar */
 S3.timeline.loadGDataCallback = function(json) {
     var entries = json.feed.entry;
     var events = new Array()
@@ -97,6 +97,7 @@ S3.timeline.onLoadCalendar = function() {
     document.body.appendChild(scriptTag);
 }
 
+/* Data provided as JSON: S3.timeline.data */
 S3.timeline.onLoad = function() {
     var tl_el = document.getElementById("s3timeline");
     S3.timeline.eventSource = new Timeline.DefaultEventSource();
@@ -132,6 +133,7 @@ S3.timeline.onLoad = function() {
     S3.timeline.tl.layout();
 }
 
+/* Common functions */
 S3.timeline.resizeTimerID = null;
 
 S3.timeline.onResize = function() {
@@ -160,4 +162,4 @@ $(document).ready(function() {
             S3.timeline.onResize();
         }
     });
-});
+}); 

@@ -2,8 +2,6 @@
 
 """ Simple Generic Location Tracking System
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
 
@@ -36,35 +34,36 @@ from datetime import datetime, timedelta
 
 __all__ = ["S3Tracker"]
 
+UID = "uuid"                # field name for UIDs
+
+TRACK_ID = "track_id"       # field name for track ID
+LOCATION_ID = "location_id" # field name for base location
+
+LOCATION = "gis_location"   # location tablename
+PRESENCE = "sit_presence"   # presence tablename
+
 # =============================================================================
 class S3Trackable(object):
     """
         Trackable types instance(s)
     """
 
-    UID = "uuid"                # field name for UIDs
-
-    TRACK_ID = "track_id"       # field name for track ID
-    LOCATION_ID = "location_id" # field name for base location
-
-    LOCATION = "gis_location"   # location tablename
-    PRESENCE = "sit_presence"   # presence tablename
-
-    def __init__(self, db, trackable, record_id=None, uid=None, rtable=None):
+    def __init__(self, trackable, record_id=None, uid=None, rtable=None):
         """
             Constructor:
 
-            @param db: the database (DAL)
             @param trackable: the trackable object
             @param record_id: the record ID(s) (if object is a table or tablename)
             @param uid: the record UID(s) (if object is a table or tablename)
             @param rtable: the resource table (for the recursive calls)
         """
 
-        current.db = db
+        db = current.db
+        s3db = current.s3db
+
         self.records = []
 
-        self.table = db.sit_trackable
+        self.table = s3db.sit_trackable
         self.rtable = rtable
 
         if isinstance(trackable, (Table, str)):
@@ -72,11 +71,11 @@ class S3Trackable(object):
                 table = trackable
                 tablename = table._tablename
             else:
-                table = db[trackable]
+                table = s3db[trackable]
                 tablename = trackable
             fields = self.__get_fields(table)
             if not fields:
-                raise SyntaxError("No trackable type: %s" % tablename)
+                raise SyntaxError("Not a trackable type: %s" % tablename)
             query = (table._id > 0)
             if uid is None:
                 if record_id is not None:
@@ -90,7 +89,7 @@ class S3Trackable(object):
                 else:
                     query = (table[UID] == uid)
             fields = [table[f] for f in fields]
-            rows = current.db(query).select(*fields)
+            rows = db(query).select(*fields)
 
         elif isinstance(trackable, Row):
             fields = self.__get_fields(trackable)
@@ -106,22 +105,22 @@ class S3Trackable(object):
             rows = Rows(records=rows, compact=False)
 
         elif isinstance(trackable, (Query, Expression)):
-            tablename = current.db._adapter.get_table(trackable)
-            self.rtable = current.db[tablename]
+            tablename = db._adapter.get_table(trackable)
+            self.rtable = s3db[tablename]
             fields = self.__get_fields(self.rtable)
             if not fields:
-                raise SyntaxError("No trackable type: %s" % tablename)
+                raise SyntaxError("Not a trackable type: %s" % tablename)
             query = trackable
             fields = [self.rtable[f] for f in fields]
-            rows = current.db(query).select(*fields)
+            rows = db(query).select(*fields)
 
         elif isinstance(trackable, Set):
             query = trackable.query
-            tablename = current.db._adapter.get_table(query)
-            table = current.db[tablename]
+            tablename = db._adapter.get_table(query)
+            table = s3db[tablename]
             fields = self.__get_fields(table)
             if not fields:
-                raise SyntaxError("No trackable type: %s" % tablename)
+                raise SyntaxError("Not a trackable type: %s" % tablename)
             fields = [table[f] for f in fields]
             rows = trackable.select(*fields)
 
@@ -131,13 +130,13 @@ class S3Trackable(object):
         records = []
         for r in rows:
             if self.__super_entity(r):
-                table = current.db[r.instance_type]
+                table = s3db[r.instance_type]
                 fields = self.__get_fields(table, super_entity=False)
                 if not fields:
                     raise SyntaxError("No trackable type: %s" % table._tablename)
                 fields = [table[f] for f in fields]
-                query = table[self.UID] == r[self.UID]
-                row = current.db(query).select(limitby=(0, 1), *fields).first()
+                query = table[UID] == r[UID]
+                row = db(query).select(limitby=(0, 1), *fields).first()
                 if row:
                     records.append(row)
             else:
@@ -147,8 +146,8 @@ class S3Trackable(object):
 
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def __super_entity(cls, trackable):
+    @staticmethod
+    def __super_entity(trackable):
         """
             Check whether a trackable is a super-entity
 
@@ -164,8 +163,7 @@ class S3Trackable(object):
 
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def __get_fields(cls, trackable, super_entity=True):
+    def __get_fields(self, trackable, super_entity=True):
         """
             Check a trackable for presence of required fields
 
@@ -181,12 +179,12 @@ class S3Trackable(object):
 
         try:
             if super_entity and \
-               cls.__super_entity(trackable) and cls.UID in keys:
-                return ("instance_type", cls.UID)
-            if cls.LOCATION_ID in keys:
-                fields.append(cls.LOCATION_ID)
-            if cls.TRACK_ID in keys:
-                fields.append(cls.TRACK_ID)
+               self.__super_entity(trackable) and UID in keys:
+                return ("instance_type", UID)
+            if LOCATION_ID in keys:
+                fields.append(LOCATION_ID)
+            if TRACK_ID in keys:
+                fields.append(TRACK_ID)
                 return fields
             elif hasattr(trackable, "update_record") or \
                  isinstance(trackable, Table) or \
@@ -216,8 +214,11 @@ class S3Trackable(object):
             @returns: a location record, or a list of location records (if multiple)
         """
 
-        ptable = current.db[self.PRESENCE]
-        ltable = current.db[self.LOCATION]
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db[PRESENCE]
+        ltable = s3db[LOCATION]
 
         if timestmp is None:
             timestmp = datetime.utcnow()
@@ -225,20 +226,20 @@ class S3Trackable(object):
         locations = []
         for r in self.records:
             location = None
-            if self.TRACK_ID in r:
-                query = ((ptable.deleted == False) &
-                         (ptable[self.TRACK_ID] == r[self.TRACK_ID]) &
+            if TRACK_ID in r:
+                query = ((ptable.deleted == False) & \
+                         (ptable[TRACK_ID] == r[TRACK_ID]) & \
                          (ptable.timestmp <= timestmp))
-                presence = current.db(query).select(orderby=~ptable.timestmp,
-                                                 limitby=(0, 1)).first()
+                presence = db(query).select(orderby=~ptable.timestmp,
+                                            limitby=(0, 1)).first()
                 if presence:
                     if presence.interlock:
-                        exclude = [r[self.TRACK_ID]] + exclude
+                        exclude = [r[TRACK_ID]] + exclude
                         tablename, record = presence.interlock.split(",", 1)
-                        trackable = S3Trackable(current.db, tablename, record)
+                        trackable = S3Trackable(tablename, record)
                         record = trackable.records.first()
-                        if self.TRACK_ID not in record or \
-                           record[self.TRACK_ID] not in exclude:
+                        if TRACK_ID not in record or \
+                           record[TRACK_ID] not in exclude:
                             location = trackable.get_location(timestmp=timestmp,
                                                               exclude=exclude)
                     elif presence.location_id:
@@ -246,15 +247,15 @@ class S3Trackable(object):
                         if _filter is not None:
                             query = query & _filter
                         if _fields is None:
-                            location = current.db(query).select(ltable.ALL,
-                                                             limitby=(0, 1)).first()
+                            location = db(query).select(ltable.ALL,
+                                                        limitby=(0, 1)).first()
                         else:
-                            location = current.db(query).select(limitby=(0, 1),
-                                                             *_fields).first()
+                            location = db(query).select(limitby=(0, 1),
+                                                        *_fields).first()
 
             if not location:
                 if len(self.records) > 1:
-                    trackable = S3Trackable(current.db, r, rtable=self.rtable)
+                    trackable = S3Trackable(r, rtable=self.rtable)
                 else:
                     trackable = self
                 location = trackable.get_base_location(_fields=_fields)
@@ -284,7 +285,7 @@ class S3Trackable(object):
             @returns: nothing
         """
 
-        ptable = current.db[self.PRESENCE]
+        ptable = current.s3db[PRESENCE]
 
         if timestmp is None:
             timestmp = datetime.utcnow()
@@ -305,17 +306,17 @@ class S3Trackable(object):
             data = dict(location_id=location, timestmp=timestmp)
 
         for r in self.records:
-            if self.TRACK_ID not in r:
+            if TRACK_ID not in r:
                 # No track ID => set base location
                 if len(self.records) > 1:
                     trackable = S3Trackable(r)
                 else:
                     trackable = self
                 trackable.set_base_location(location)
-            elif r[self.TRACK_ID]:
-                data.update({self.TRACK_ID:r[self.TRACK_ID]})
+            elif r[TRACK_ID]:
+                data.update({TRACK_ID:r[TRACK_ID]})
                 ptable.insert(**data)
-                self.__update_timestamp(r[self.TRACK_ID], timestmp)
+                self.__update_timestamp(r[TRACK_ID], timestmp)
 
 
     # -------------------------------------------------------------------------
@@ -330,10 +331,13 @@ class S3Trackable(object):
             @returns: nothing
         """
 
-        ptable = current.db[self.PRESENCE]
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db[PRESENCE]
 
         if isinstance(table, str):
-            table = current.db[table]
+            table = s3db[table]
         fields = self.__get_fields(table)
         if not fields:
             raise SyntaxError("No location data in %s" % table._tablename)
@@ -344,12 +348,12 @@ class S3Trackable(object):
         if not isinstance(record, Row):
             record = table[record]
         if self.__super_entity(record):
-            table = current.db[record.instance_type]
+            table = s3db[record.instance_type]
             fields = self.__get_fields(table, super_entity=False)
             if not fields:
                 raise SyntaxError("No trackable type: %s" % table._tablename)
-            query = table[self.UID] == record[self.UID]
-            record = current.db(query).select(limitby=(0, 1)).first()
+            query = table[UID] == record[UID]
+            record = db(query).select(limitby=(0, 1)).first()
         if record and table._id.name in record:
             record = record[table._id.name]
             if record:
@@ -365,18 +369,18 @@ class S3Trackable(object):
                         interlock=interlock)
             q = ((ptable.deleted == False) & (ptable.timestmp <= timestmp))
             for r in self.records:
-                if self.TRACK_ID not in r:
+                if TRACK_ID not in r:
                     # Cannot check-in a non-trackable
                     continue
-                query = q & (ptable[self.TRACK_ID] == r[self.TRACK_ID])
-                presence = current.db(query).select(orderby=~ptable.timestmp,
-                                                 limitby=(0, 1)).first()
+                query = q & (ptable[TRACK_ID] == r[TRACK_ID])
+                presence = db(query).select(orderby=~ptable.timestmp,
+                                            limitby=(0, 1)).first()
                 if presence and presence.interlock == interlock:
                     # already checked-in to the same instance
                     continue
-                data.update({self.TRACK_ID:r[self.TRACK_ID]})
+                data.update({TRACK_ID:r[TRACK_ID]})
                 ptable.insert(**data)
-                self.__update_timestamp(r[self.TRACK_ID], timestmp)
+                self.__update_timestamp(r[TRACK_ID], timestmp)
 
 
     # -------------------------------------------------------------------------
@@ -387,10 +391,12 @@ class S3Trackable(object):
 
             @param timestmp: the date/time of the check-out, defaults
                              to current time
-
         """
 
-        ptable = current.db[self.PRESENCE]
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db[PRESENCE]
 
         if timestmp is None:
             timestmp = datetime.utcnow()
@@ -398,18 +404,18 @@ class S3Trackable(object):
         interlock = None
         if table is not None:
             if isinstance(table, str):
-                table = current.db[table]
+                table = s3db[table]
             if isinstance(record, Rows):
                 record = record.first()
             if self.__super_entity(table):
                 if not isinstance(record, Row):
                     record = table[record]
-                table = current.db[record.instance_type]
+                table = s3db[record.instance_type]
                 fields = self.__get_fields(table, super_entity=False)
                 if not fields:
                     raise SyntaxError("No trackable type: %s" % table._tablename)
-                query = table[self.UID] == record[self.UID]
-                record = current.db(query).select(limitby=(0, 1)).first()
+                query = table[UID] == record[UID]
+                record = db(query).select(limitby=(0, 1)).first()
             if isinstance(record, Row) and table._id.name in record:
                 record = record[table._id.name]
             if record:
@@ -420,12 +426,12 @@ class S3Trackable(object):
         q = ((ptable.deleted == False) & (ptable.timestmp <= timestmp))
 
         for r in self.records:
-            if self.TRACK_ID not in r:
+            if TRACK_ID not in r:
                 # Cannot check-out a non-trackable
                 continue
-            query = q & (ptable[self.TRACK_ID] == r[self.TRACK_ID])
-            presence = current.db(query).select(orderby=~ptable.timestmp,
-                                             limitby=(0, 1)).first()
+            query = q & (ptable[TRACK_ID] == r[TRACK_ID])
+            presence = db(query).select(orderby=~ptable.timestmp,
+                                        limitby=(0, 1)).first()
             if presence and presence.interlock:
                 if interlock and presence.interlock != interlock:
                     continue
@@ -433,16 +439,16 @@ class S3Trackable(object):
                      not presence.interlock.startswith("%s" % table):
                     continue
                 tablename, record = presence.interlock.split(",", 1)
-                trackable = S3Trackable(current.db, tablename, record)
+                trackable = S3Trackable(tablename, record)
                 location = trackable.get_location(timestmp=timestmp)
                 if timestmp - presence.timestmp < timedelta(seconds=1):
                     timestmp = timestmp + timedelta(seconds=1)
                 data = dict(location_id=location,
                             timestmp=timestmp,
                             interlock=None)
-                data.update({self.TRACK_ID:r[self.TRACK_ID]})
+                data.update({TRACK_ID:r[TRACK_ID]})
                 ptable.insert(**data)
-                self.__update_timestamp(r[self.TRACK_ID], timestmp)
+                self.__update_timestamp(r[TRACK_ID], timestmp)
 
 
     # -------------------------------------------------------------------------
@@ -471,26 +477,28 @@ class S3Trackable(object):
         """
 
         db = current.db
-        ltable = db[self.LOCATION]
+        s3db = current.s3db
+
+        ltable = s3db[LOCATION]
         rtable = self.rtable
 
         locations = []
         for r in self.records:
             location = None
             query = None
-            if self.LOCATION_ID in r:
-                query = (ltable.id == r[self.LOCATION_ID])
+            if LOCATION_ID in r:
+                query = (ltable.id == r[LOCATION_ID])
                 if rtable:
-                    query = query & (rtable[self.LOCATION_ID] == ltable.id)
-                    if self.TRACK_ID in r:
-                        query = query & (rtable[self.TRACK_ID] == r[self.TRACK_ID])
-            elif self.TRACK_ID in r:
-                q = (self.table[self.TRACK_ID] == r[self.TRACK_ID])
+                    query = query & (rtable[LOCATION_ID] == ltable.id)
+                    if TRACK_ID in r:
+                        query = query & (rtable[TRACK_ID] == r[TRACK_ID])
+            elif TRACK_ID in r:
+                q = (self.table[TRACK_ID] == r[TRACK_ID])
                 trackable = db(q).select(limitby=(0, 1)).first()
-                table = db[trackable.instance_type]
-                if self.LOCATION_ID in table.fields:
-                    query = ((table[self.TRACK_ID] == r[self.TRACK_ID]) &
-                             (table[self.LOCATION_ID] == ltable.id))
+                table = s3db[trackable.instance_type]
+                if LOCATION_ID in table.fields:
+                    query = ((table[TRACK_ID] == r[TRACK_ID]) &
+                             (table[LOCATION_ID] == ltable.id))
             if query:
                 if _filter is not None:
                     query = query & _filter
@@ -526,6 +534,9 @@ class S3Trackable(object):
             @note: instance tables without a location_id field will be ignored
         """
 
+        db = current.db
+        s3db = current.s3db
+
         if isinstance(location, S3Trackable):
             location = location.get_base_location()
         if isinstance(location, Rows):
@@ -537,13 +548,13 @@ class S3Trackable(object):
             # Location not found
             return
         else:
-            data = {self.LOCATION_ID:location}
+            data = {LOCATION_ID:location}
 
         # Update records without track ID
         for r in self.records:
-            if self.TRACK_ID in r:
+            if TRACK_ID in r:
                 continue
-            elif self.LOCATION_ID in r:
+            elif LOCATION_ID in r:
                 if hasattr(r, "update_record"):
                     r.update_record(**data)
                 else:
@@ -551,15 +562,15 @@ class S3Trackable(object):
 
         # Update records with track ID
         # => this can happen table-wise = less queries
-        track_ids = [r[self.TRACK_ID] for r in self.records
-                                      if self.TRACK_ID in r]
-        rows = current.db(self.table[self.TRACK_ID].belongs(track_ids)).select()
+        track_ids = [r[TRACK_ID] for r in self.records
+                                      if TRACK_ID in r]
+        rows = db(self.table[TRACK_ID].belongs(track_ids)).select()
         tables = []
         for r in rows:
             instance_type = r.instance_type
-            table = current.db[instance_type]
+            table = s3db[instance_type]
             if instance_type not in tables and \
-               self.LOCATION_ID in table.fields:
+               LOCATION_ID in table.fields:
                    tables.append(table)
             else:
                 # No location ID in this type => ignore gracefully
@@ -567,12 +578,12 @@ class S3Trackable(object):
 
         # Location specified => update all base locations
         for table in tables:
-            current.db(table[self.TRACK_ID].belongs(track_ids)).update(**data)
+            db(table[TRACK_ID].belongs(track_ids)).update(**data)
 
         # Refresh records
         for r in self.records:
-            if self.LOCATION_ID in r:
-                r[self.LOCATION_ID] = location
+            if LOCATION_ID in r:
+                r[LOCATION_ID] = location
 
 
     # -------------------------------------------------------------------------
@@ -595,33 +606,31 @@ class S3Trackable(object):
 # =============================================================================
 class S3Tracker(object):
     """
-    S3 Tracking system, to be instantiated once as global "s3_trackable" object
+    S3 Tracking system, to be instantiated once as global "s3tracker" object
 
     """
 
     def __init__(self):
         """
-        Constructor
-
+            Constructor
         """
 
     # -------------------------------------------------------------------------
     def __call__(self, trackable, record_id=None, uid=None):
         """
-        Get a tracking interface for a record or set of records
+            Get a tracking interface for a record or set of records
 
-        @param trackable: a Row, Rows, Query, Expression, Set object or
-                          a Table or a tablename
-        @param record_id: a record ID or a list/tuple of record IDs (together
-                          with Table or tablename)
-        @param uid: a record UID or a list/tuple of record UIDs (together with
-                    Table or tablename)
+            @param trackable: a Row, Rows, Query, Expression, Set object or
+                              a Table or a tablename
+            @param record_id: a record ID or a list/tuple of record IDs
+                              (together with Table or tablename)
+            @param uid: a record UID or a list/tuple of record UIDs
+                        (together with Table or tablename)
 
-        @returns: a S3Trackable instance for the specified record(s)
-
+            @returns: a S3Trackable instance for the specified record(s)
         """
 
-        return S3Trackable(current.db, trackable,
+        return S3Trackable(trackable,
                            record_id=record_id,
                            uid=uid)
 
@@ -632,8 +641,7 @@ class S3Tracker(object):
                 bbox=None,
                 timestmp=None):
         """
-        Get all instances of the given entity at the given location and time
-
+            Get all instances of the given entity at the given location and time
         """
         raise NotImplementedError
 
@@ -643,9 +651,8 @@ class S3Tracker(object):
                        instance_type=None,
                        timestmp=None):
         """
-        Get all trackables of the given type that are checked-in
-        to the given instance at the given time
-
+            Get all trackables of the given type that are checked-in
+            to the given instance at the given time
         """
         raise NotImplementedError
 

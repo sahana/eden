@@ -74,8 +74,8 @@ asset_log_status = {
                 "DESTROY"  : ASSET_LOG_DESTROY,
                }
 
-SITE = 1
-LOCATION = 2
+#SITE = 1
+#LOCATION = 2
 
 # =============================================================================
 class S3AssetModel(S3Model):
@@ -327,7 +327,7 @@ class S3AssetModel(S3Model):
         # Asset Log
         #
 
-        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Site Set"),
+        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Facility Set"),
                                  ASSET_LOG_ASSIGN   : T("Assigned"),
                                  ASSET_LOG_RETURN   : T("Returned"),
                                  ASSET_LOG_CHECK    : T("Checked"),
@@ -337,8 +337,8 @@ class S3AssetModel(S3Model):
                                  ASSET_LOG_STOLEN   : T("Stolen"),
                                  ASSET_LOG_DESTROY  : T("Destroyed"),
                                  }
-        site_or_location_opts = {SITE     :T("Site"),
-                                 LOCATION :T("Location")}
+        #site_or_location_opts = {SITE     :T("Site"),
+        #                         LOCATION :T("Location")}
 
         asset_condition_opts = {
                                 1:T("Good Condition"),
@@ -385,16 +385,16 @@ class S3AssetModel(S3Model):
                                    readable = False,
                                    writable = False),
                              organisation_id(),      # This is the Organisation to whom the loan is made
-                             Field("site_or_location",
-                                   "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(site_or_location_opts)),
-                                   represent = lambda opt: \
-                                       site_or_location_opts.get(opt, UNKNOWN_OPT),
-                                   widget = RadioWidget.widget,
-                                   label = T("Facility or Location")),
+                             #Field("site_or_location",
+                             #      "integer",
+                             #      requires = IS_NULL_OR(IS_IN_SET(site_or_location_opts)),
+                             #      represent = lambda opt: \
+                             #          site_or_location_opts.get(opt, UNKNOWN_OPT),
+                             #      widget = RadioWidget.widget,
+                             #      label = T("Facility or Location")),
                              site_id,
                              room_id(),
-                             location_id(),
+                             #location_id(),
                              Field("cancel", #
                                    "boolean",
                                    default = False,
@@ -468,10 +468,10 @@ $(document).ready(function() {
                                  "datetime",
                                  "datetime_until",
                                  "organisation_id",
-                                 "site_or_location",
+                                 #"site_or_location",
                                  "site_id",
                                  "room_id",
-                                 "location_id",
+                                 #"location_id",
                                  "cancel",
                                  "cond",
                                  "comments"]
@@ -532,11 +532,11 @@ $(document).ready(function() {
 
         status = int(request.post_vars.get("status", 0))
         type = request.get_vars.get("type", None)
-        if  status == asset_log_status["ASSIGN"] and type == "organisation":
+        #if  status == asset_log_status["ASSIGN"] and type == "organisation":
             # Site or Location is required
-            if not form.vars.site_id and not form.vars.location_id:
-                response.error = T("The asset must be assigned to a site OR location.")
-                form.errors.site_or_location = T("Please enter a site OR a location")
+        #    if not form.vars.site_id and not form.vars.location_id:
+        #        response.error = T("The asset must be assigned to a site OR location.")
+        #        form.errors.site_or_location = T("Please enter a site OR a location")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -548,7 +548,7 @@ $(document).ready(function() {
         s3db = current.s3db
         request = current.request
         s3 = current.response.s3
-        tracker = current.s3tracker
+        tracker = S3Tracker()
 
         ltable = s3db.asset_log
 
@@ -592,12 +592,12 @@ $(document).ready(function() {
                     asset_tracker.check_in(s3db.org_site, vars.site_id,
                                            timestmp = vars.datetime)
                 elif type == "organisation":
-                    if vars.site_or_location == SITE:
-                        asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                               timestmp = vars.datetime)
-                    if vars.site_or_location == LOCATION:
-                        asset_tracker.set_location(vars.location_id,
-                                                   timestmp = vars.datetime)
+                    #if vars.site_or_location == SITE:
+                    asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                           timestmp = vars.datetime)
+                    #if vars.site_or_location == LOCATION:
+                    #    asset_tracker.set_location(vars.location_id,
+                    #                               timestmp = vars.datetime)
 
             if status == ASSET_LOG_RETURN:
                 # Set location to base location
@@ -650,8 +650,8 @@ $(document).ready(function() {
 
         crud_strings = s3.crud_strings.asset_log
         if status == ASSET_LOG_SET_BASE:
-            crud_strings.subtitle_create = T("Set Base Site")
-            crud_strings.msg_record_created = T("Base Site Set")
+            crud_strings.subtitle_create = T("Set Base Facility")
+            crud_strings.msg_record_created = T("Base Facility Set")
             table.by_person_id.label = T("Set By")
             table.site_id.writable = True
             table.site_id.requires = IS_ONE_OF(db, "org_site.id",
@@ -660,22 +660,22 @@ $(document).ready(function() {
             table.datetime_until.writable = False
             table.person_id.readable = False
             table.person_id.writable = False
-            table.site_or_location.readable = False
-            table.site_or_location.writable = False
-            table.location_id.readable = False
-            table.location_id.writable = False
+            #table.site_or_location.readable = False
+            #table.site_or_location.writable = False
+            #table.location_id.readable = False
+            #table.location_id.writable = False
 
         elif status == ASSET_LOG_RETURN:
             crud_strings.subtitle_create = T("Return")
             crud_strings.msg_record_created = T("Returned")
             table.person_id.label = T("Returned From")
             table.person_id.default = current_log.person_id
-            table.site_or_location.readable = False
-            table.site_or_location.writable = False
+            #table.site_or_location.readable = False
+            #table.site_or_location.writable = False
             table.site_id.readable = False
             table.site_id.writable = False
-            table.location_id.readable = False
-            table.location_id.writable = False
+            #table.location_id.readable = False
+            #table.location_id.writable = False
 
         elif status == ASSET_LOG_ASSIGN:
             type = request.vars.type
@@ -691,16 +691,16 @@ $(document).ready(function() {
                 table.check_in_to_person.readable = True
                 table.check_in_to_person.writable = True
             elif type == "site":
-                crud_strings.subtitle_create = T("Assign to Site")
-                crud_strings.msg_record_created = T("Assigned to Site")
+                crud_strings.subtitle_create = T("Assign to Facility")
+                crud_strings.msg_record_created = T("Assigned to Facility")
                 table["site_id"].requires = IS_ONE_OF(db, "org_site.site_id",
                                                       table.site_id.represent)
-                field = table.site_or_location
-                field.readable = False
-                field.writable = False
-                field.default = SITE
-                table.location_id.readable = False
-                table.location_id.writable = False
+                #field = table.site_or_location
+                #field.readable = False
+                #field.writable = False
+                #field.default = SITE
+                #table.location_id.readable = False
+                #table.location_id.writable = False
             elif type == "organisation":
                 crud_strings.subtitle_create = T("Assign to Organization")
                 crud_strings.msg_record_created = T("Assigned to Organization")
@@ -708,7 +708,7 @@ $(document).ready(function() {
                                                               table.organisation_id.represent,
                                                               orderby="org_organisation.name",
                                                               sort=True)
-                table.site_or_location.required = True
+                #table.site_or_location.required = True
         elif "status" in request.get_vars:
             crud_strings.subtitle_create = T("Update Status")
             crud_strings.msg_record_created = T("Status Updated")
@@ -743,7 +743,7 @@ def asset_get_current_log(asset_id):
                                  table.cond,
                                  table.person_id,
                                  table.site_id,
-                                 table.location_id,
+                                 #table.location_id,
                                  orderby = ~table.datetime,
                                  limitby=(0, 1)).first()
     if asset_log:
@@ -752,7 +752,7 @@ def asset_get_current_log(asset_id):
                        cond = int(asset_log.cond or 0),
                        status = int(asset_log.status or 0),
                        site_id = asset_log.site_id,
-                       location_id = asset_log.location_id
+                       #location_id = asset_log.location_id
                        )
     else:
         return Storage()
@@ -794,7 +794,7 @@ def asset_rheader(r):
 
             # @ToDo: Check permissions before displaying buttons
 
-            asset_action_btns = [ A( T("Set Base Site"),
+            asset_action_btns = [ A( T("Set Base Facility"),
                                      _href = URL(f=func,
                                                  args = [record.id, "log", "create"],
                                                  vars = dict(status = ASSET_LOG_SET_BASE)
@@ -828,7 +828,7 @@ def asset_rheader(r):
                                                         ),
                                               _class = "action-btn"
                                             ),
-                                          A( T("Assign to Site"),
+                                          A( T("Assign to Facility"),
                                               _href = URL(f=func,
                                                           args = [record.id, "log", "create"],
                                                           vars = dict(status = ASSET_LOG_ASSIGN,
@@ -870,8 +870,8 @@ def asset_rheader(r):
                                     ltable.person_id.represent(current_log.person_id),
                                     TH("%s: " % ltable.site_id.label),
                                     ltable.site_id.represent(current_log.site_id),
-                                   TH("%s: " %  ltable.location_id.label),
-                                    ltable.location_id.represent(current_log.location_id),
+                                   #TH("%s: " %  ltable.location_id.label),
+                                   # ltable.location_id.represent(current_log.location_id),
                                   ),
                                ),
                           DIV(_style = "margin-top:5px;",

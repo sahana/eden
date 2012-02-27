@@ -14,6 +14,7 @@ if not deployment_settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def s3_menu_postp():
+    # @todo: rewrite this for new framework
     if len(request.args) > 0 and request.args[0].isdigit():
         newreq = dict(from_record="hms_hospital.%s" % request.args[0],
                       from_fields="hospital_id$id")
@@ -37,8 +38,6 @@ def s3_menu_postp():
     if menu_selected:
         menu_selected = [T("Open recent"), True, None, menu_selected]
         response.menu_options.append(menu_selected)
-
-s3_menu(module, s3_menu_postp)
 
 # -----------------------------------------------------------------------------
 def index():
@@ -233,7 +232,6 @@ def hospital():
     rheader = s3db.hms_hospital_rheader
 
     output = s3_rest_controller(module, resourcename, rheader=rheader)
-    s3_menu(module, s3_menu_postp)
     return output
 
 # -----------------------------------------------------------------------------

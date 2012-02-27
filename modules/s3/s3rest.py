@@ -8,8 +8,6 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -44,6 +42,7 @@ __all__ = ["S3RequestManager",
 import sys
 import datetime
 import time
+import HTMLParser
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -387,9 +386,19 @@ class S3RequestManager(object):
             if not xml_escape and val is not None:
                 ftype = str(field.type)
                 if ftype in ("string", "text"):
-                    val = text = xml_encode(str(val))
+                    try:
+                        val = unicode(val)
+                    except:
+                        val = unicode(val.decode("utf-8"))
+                    val = text = xml_encode(val)
                 elif ftype == "list:string":
-                    val = text = [xml_encode(str(v)) for v in val]
+                    vals = []
+                    for v in val:
+                        try:
+                            vals.append(xml_encode(unicode(v)))
+                        except:
+                            vals.append(xml_encode(unicode(v.decode("utf-8"))))
+                    val = text = vals
 
         # Get text representation
         if field.represent:
@@ -406,23 +415,17 @@ class S3RequestManager(object):
             if val is None:
                 text = NONE
             elif fname == "comments" and not extended_comments:
-                ur = unicode(text, "utf8")
+                ur = unicode(text)
                 if len(ur) > 48:
                     text = "%s..." % ur[:45].encode("utf8")
             else:
-                text = str(text)
+                text = unicode(text)
 
         # Strip away markup from text
         if strip_markup and "<" in text:
-            try:
-                markup = etree.XML(text)
-                text = markup.xpath(".//text()")
-                if text:
-                    text = " ".join(text)
-                else:
-                    text = ""
-            except etree.XMLSyntaxError:
-                text = text.replace("<", "<!-- <").replace(">", "> -->")
+            stripper = S3MarkupStripper()
+            stripper.feed(text)
+            text = stripper.stripped()
 
         # Link ID field
         if fname == "id" and linkto:
@@ -1057,7 +1060,7 @@ class S3Request(object):
         tablename = self.component and self.component.tablename or self.tablename
 
         transform = False
-        if method is None or method in ("read", "display"):
+        if method is None or method in ("read", "display", "update"):
             if self.transformable():
                 method = "export_tree"
                 transform = True
@@ -1075,7 +1078,7 @@ class S3Request(object):
                 else:
                     method = "read"
             else:
-                if self.id or method in ("read", "display"):
+                if self.id or method in ("read", "display", "update"):
                     # Enforce single record
                     if not self.resource._rows:
                         self.resource.load(start=0, limit=1)
@@ -4659,24 +4662,20 @@ class S3ResourceFilter:
         """
             Generate a Query from a URL boundary box query
 
+            Supports multiple bboxes, but optimised for the usual case of just 1
+
             @param resource: the resource
             @param vars: the URL get vars
         """
-
-        table = resource.table
-        tablename = resource.tablename
-        fields = table.fields
-
-        if tablename == "gis_feature_query" or \
-           tablename == "gis_cache":
-            gtable = table
-        else:
-            gtable = current.s3db.gis_location
 
         bbox_query = None
         if vars:
             for k in vars:
                 if k[:4] == "bbox":
+                    table = resource.table
+                    tablename = resource.tablename
+                    fields = table.fields
+
                     fname = None
                     if k.find(".") != -1:
                         fname = k.split(".")[1]
@@ -4695,6 +4694,12 @@ class S3ResourceFilter:
                         # Badly-formed bbox - ignore
                         continue
                     else:
+                        if tablename == "gis_feature_query" or \
+                           tablename == "gis_cache":
+                            gtable = table
+                        else:
+                            gtable = current.s3db.gis_location
+
                         bbox_filter = (gtable.lon > float(minLon)) & \
                                       (gtable.lon < float(maxLon)) & \
                                       (gtable.lat > float(minLat)) & \
@@ -4734,12 +4739,16 @@ class S3ResourceFilter:
             elif c == "," and not quote:
                 if w == "NONE":
                     w = None
+                else:
+                    w = w.strip('"')
                 vlist.append(w)
                 w = ""
             else:
                 w += c
         if w == "NONE":
             w = None
+        else:
+            w = w.strip('"')
         vlist.append(w)
         if len(vlist) == 1:
             return vlist[0]
@@ -4783,7 +4792,8 @@ class S3ResourceFilter:
                 if i >= first:
                     append(row)
                 i += 1
-        return Rows(rows.db, result, colnames=rows.colnames)
+        return Rows(rows.db, result,
+                    colnames=rows.colnames, compact=False)
 
     # -------------------------------------------------------------------------
     def count(self, left=None, distinct=False):
@@ -5702,5 +5712,20 @@ class S3TypeConverter:
             return value
         else:
             raise TypeError
+
+# =============================================================================
+
+class S3MarkupStripper(HTMLParser.HTMLParser):
+    """ Simple markup stripper """
+
+    def __init__(self):
+        self.reset()
+        self.result = []
+
+    def handle_data(self, d):
+        self.result.append(d)
+
+    def stripped(self):
+        return ''.join(self.result)
 
 # END =========================================================================

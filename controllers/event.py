@@ -12,9 +12,6 @@ resourcename = request.function
 if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
 
@@ -223,7 +220,7 @@ def compose():
     # Create the form
     output = msg.compose(recipient = pe_id,
                          url = url)
-    
+
     output["title"] = title
     response.view = "msg/compose.html"
     return output

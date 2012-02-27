@@ -68,7 +68,6 @@ import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3method import S3Method
-from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
 
 SHAPELY = False
@@ -3198,7 +3197,12 @@ class GIS(object):
         self.cluster_distance = 2    # pixels
         self.cluster_threshold = 2   # minimum # of features to form a cluster
 
+        # Support bookmarks (such as from the control)
+        # - these over-ride the arguments
+        vars = request.vars
+
         # Read configuration
+        config = self.get_config()
         if height:
             map_height = height
         else:
@@ -3218,28 +3222,23 @@ class GIS(object):
         else:
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
+            # Use Lat/Lon to center instead
+            if "lat" in vars and vars.lat:
+                lat = float(vars.lat)
+            if lat is None or lat == "":
+                lat = config.lat
+            if "lon" in vars and vars.lon:
+                lon = float(vars.lon)
+            if lon is None or lon == "":
+                lon = config.lon
 
-        config = self.get_config()
-
-        # Support bookmarks (such as from the control)
-        # - these over-ride the arguments
-        vars = request.vars
-        if "lat" in vars and vars.lat:
-            lat = float(vars.lat)
-        if lat is None or lat == "":
-            lat = config.lat
-        if "lon" in vars and vars.lon:
-            lon = float(vars.lon)
-        if lon is None or lon == "":
-            lon = config.lon
         if "zoom" in request.vars:
             zoom = int(vars.zoom)
         if not zoom:
             zoom = config.zoom
+
         if not projection:
             projection = config.epsg
-
-
         if projection not in (900913, 4326):
             # Test for Valid Projection file in Proj4JS library
             projpath = os.path.join(
@@ -3954,7 +3953,7 @@ S3.i18n.gis_feature_info = '%s';
             toolbar,
             "S3.gis.map_height = %i;\n" % map_height,
             "S3.gis.map_width = %i;\n" % map_width,
-            "S3.gis.zoom = %i;\n" % zoom,
+            "S3.gis.zoom = %i;\n" % (zoom or 1),
             center,
             "S3.gis.projection = '%i';\n" % projection,
             "S3.gis.units = '%s';\n" % units,
@@ -4368,8 +4367,8 @@ class FeatureLayer(Layer):
                 if record_module not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
-                auth = current.auth
-                if not auth.permission(c=record.module, f=record.resource):
+                if not current.auth.permission(c=record.module,
+                                               f=record.resource):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:
@@ -4385,6 +4384,8 @@ class FeatureLayer(Layer):
                  self.id)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
+            if self.trackable:
+                url = "%s&track=1" % url
 
             # Mandatory attributes
             output = {
@@ -4573,7 +4574,7 @@ class GoogleLayer(Layer):
                 if sublayer.type == "earth":
                     output["Earth"] = str(T("Switch to 3D"))
                     add_script("http://www.google.com/jsapi?key=%s" % apikey)
-                    add_script(SCRIPT("google && google.load('earth', '1');", _type="text/javascript"))
+                    add_script(SCRIPT("try{google && google.load('earth','1');}catch(e){};", _type="text/javascript"))
                     if debug:
                         # Non-debug has this included within GeoExt.js
                         add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")

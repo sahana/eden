@@ -125,6 +125,7 @@ class S3LocationModel(S3Model):
                                    readable=False,
                                    writable=False),
                              Field("level", length=2, label = T("Level"),
+                                   requires = IS_NULL_OR(IS_IN_SET(hierarchy_level_keys)),
                                    represent = self.gis_level_represent),
                              # @ToDo: If level is known, filter on higher than that?
                              # If strict, filter on next higher level?
@@ -1903,6 +1904,12 @@ class S3FeatureLayerModel(S3Model):
                               label = T("Module")),
                         Field("resource",
                               label = T("Resource")),
+                        Field("trackable", "boolean",
+                              label = T("Trackable"),
+                              default = False,
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Trackable"),
+                                                              T("Whether the resource should be tracked using S3Track rather than just using the Base Location")))),
                         # REST Query added to Map JS to call back to server
                         Field("filter",
                               label = T("REST Filter"),
@@ -2958,7 +2965,7 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
     def level_with_parent(location, level_name):
         parent_info = parent_represent(location)
         if parent_info:
-            return "%s, %s" % (level_name, parent_info)
+            return "(%s), %s" % (level_name, parent_info)
         else:
             return level_name
 
@@ -2972,66 +2979,50 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
     if showlink and simpletext:
         # We aren't going to use the represent, so skip making it.
         represent_text = T("Show on Map")
+    elif location.level == "L0":
+        represent_text = "%s (%s)" % (location.name, T("Country"))
     else:
-        # The basic location representation is the name, but extra info is useful.
-        if location.level:
+        if location.level in ["L1", "L2", "L3", "L4", "L5"]:
             level_name = None
-            if location.level == "L0":
-                level_name = T("Country")
-            else:
-                # Find the L0 Ancestor
-                L0 = gis.get_parent_country(location)
-                if L0:
-                    table = s3db.gis_hierarchy
-                    query = (table.location_id == L0)
-                    config = db(query).select(table.L1,
-                                              table.L2,
-                                              table.L3,
-                                              table.L4,
-                                              table.L5,
-                                              cache=cache,
-                                              limitby=(0, 1)).first()
-                    if config:
-                        level_name = config[location.level]
+            # Find the L0 Ancestor to lookup the hierarchy
+            L0 = gis.get_parent_country(location)
+            if L0:
+                table = s3db.gis_hierarchy
+                query = (table.location_id == L0)
+                config = db(query).select(table.L1,
+                                          table.L2,
+                                          table.L3,
+                                          table.L4,
+                                          table.L5,
+                                          cache=cache,
+                                          limitby=(0, 1)).first()
+                if config:
+                    level_name = config[location.level]
             if level_name is None:
                 # Fallback to system default
                 level_name = gis.get_all_current_levels(location.level)
-            # Countries don't have Parents & shouldn't be represented with Lat/Lon
-            # Non-hierarchy levels (e.g. groups) only show the level.
-            extra = level_name
-            if location.level in ["L1", "L2", "L3"]:
-                # Show the Parent location for larger regions
-                extra = level_with_parent(location, level_name)
-            elif location.level[0] == "L" and int(location.level[1:]) > 0:
-                # For small regions, add Lat/Lon
-                extra = level_with_parent(location, level_name)
-                lat_lon = lat_lon_represent(location)
-                if lat_lon:
-                    extra = "%s, %s" % (extra, lat_lon)
-
+            extra = level_with_parent(location, level_name)
+            represent_text = "%s %s" % (location.name, extra)
         else:
             # Specific location:
-            # For extra info, try street address, lat/lon, and OSM id...
-            extra = ""
+            # Don't duplicate the Resource Name
+            # Street address or lat/lon as base
+            represent_text = ""
             if location.addr_street:
                 # Get the 1st line of the street address.
-                extra = location.addr_street.splitlines()[0]
-            # Note some of these can end up with nothing in extra, hence the tests.
-            if (not extra) and (location.lat != None) and (location.lon != None):
-                extra = lat_lon_represent(location)
-            if (not extra) and location.parent:
-                extra = parent_represent(location)
-            # If we have no name, but we have an OSM ID then use that
-            if (not extra) and location.osm_id:
-                extra = ("OSM ID %s" % location.osm_id)
-        extra = extra.strip().strip(", ")
-        if extra:
-            represent_text = "%s (%s)" % (location.name, extra)
-        elif location.name:
-            represent_text = location.name
-        else:
-            # fallback if we have nothing else to show
-            represent_text = str(location.id)
+                represent_text = location.addr_street.splitlines()[0]
+            if (not represent_text) and \
+               (location.lat != None) and \
+               (location.lon != None):
+                represent_text = lat_lon_represent(location)
+            if location.parent:
+                if represent_text:
+                    represent_text = "%s, %s" % \
+                        (represent_text, parent_represent(location))
+                else:
+                    represent_text = parent_represent(location)
+            if not represent_text:
+                  represent_text = location.name or location.id
 
     if showlink:
         # ToDo: Convert to popup? (HTML again!)

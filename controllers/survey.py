@@ -45,8 +45,6 @@ from s3survey import S3AnalysisPriority, \
                      S3QuestionTypeOptionWidget, \
                      survey_T
 
-s3_menu(module)
-
 def index():
 
     """ Module's Home Page """

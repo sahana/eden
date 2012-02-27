@@ -176,7 +176,7 @@ $(document).ready(function() {
 	/**
      * Code to switch between location & site widgets
 	 * @ToDo: Find a better way to show/hide location widget
-	 */
+	 
 	$('[name="site_or_location"]').change(function() {
 		if ($('#asset_log_site_or_location').length == 1) {
 			$('[id^="asset_log_site_id__row"]').hide();
@@ -206,7 +206,7 @@ $(document).ready(function() {
 		}
 	});
 	$('[name="site_or_location"]').change();
-	
+	*/
 	/* Populate Organisation based on Site  */
 	/*
 	$('#asset_log_site_id').change( function() {

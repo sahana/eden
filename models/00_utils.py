@@ -8,6 +8,22 @@ super_key = s3mgr.model.super_key
 s3_action_buttons = s3base.S3CRUD.action_buttons
 
 # -----------------------------------------------------------------------------
+# Compose the option menu and breadcrumbs
+#
+def s3_compose_option_menu():
+
+    controller = request.controller
+    if controller not in s3_menu_dict:
+        # Fall back to standard menu for this controller
+        current.menu.options = S3OptionsMenu(controller).menu
+    else:
+        # Use custom menu
+        current.menu.options = s3_menu_dict[controller]
+
+    # Add breadcrumbs
+    current.menu.breadcrumbs = S3OptionsMenu.breadcrumbs
+
+# -----------------------------------------------------------------------------
 def s3_register_validation():
     """ JavaScript client-side validation """
 

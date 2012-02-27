@@ -373,14 +373,14 @@ class S3ProjectModel(S3Model):
                         ),
                     )
                 )
-            
+
 
         # Resource Configuration
         if drr:
             next = "organisation"
         else:
             next = "activity"
-            
+
         if drr:
             table.virtualfields.append(S3ProjectVirtualfields())
             list_fields=["id",
@@ -560,6 +560,7 @@ class S3ProjectModel(S3Model):
 
         # Field configuration
         if pca:
+            table.name.label = T("Name") # for list_fields
             table.name.readable = False
             table.name.writable = False
             table.name.requires = None
@@ -657,7 +658,14 @@ class S3ProjectModel(S3Model):
                   deduplicate=self.project_activity_deduplicate,
                   report_rows=report_fields,
                   report_cols=report_fields,
-                  report_fact=report_fields)
+                  report_fact=report_fields,
+                  list_fields = ["name",
+                                 "project_id",
+                                 #"location_id",
+                                 "multi_activity_type_id",
+                                 "comments"
+                                 ]
+                  )
 
         # Reusable Field
         activity_id = S3ReusableField("activity_id", db.project_activity,
@@ -707,10 +715,13 @@ class S3ProjectModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Activity Contact Person
         #
+        # @ToDo: This is a Community Contact nmot an Activity contact,l so
+        #        should be renamed when we add proper Communities
+        #
         tablename = "project_activity_contact"
         table = define_table(tablename,
                              activity_id(),
-                             person_id(widget=S3AddPersonWidget(),
+                             person_id(widget=S3AddPersonWidget(controller="pr"),
                                        requires=IS_ADD_PERSON_WIDGET(),
                                        comment=None),
                              *meta_fields())
@@ -1268,7 +1279,7 @@ class S3ProjectDRRModel(S3Model):
             msg_record_deleted = T("Beneficiaries Deleted"),
             msg_list_empty = T("No Beneficiaries Found")
         )
-        
+
         table.virtualfields.append(S3ProjectBeneficiaryVirtualfields())
 
         # Search Method?
@@ -1586,7 +1597,7 @@ class S3ProjectTaskModel(S3Model):
             #99: T("unspecified")
         }
 
-        project_task_active_statuses = [2, 3, 11]
+        project_task_active_statuses = [2, 3, 4, 11]
         project_task_priority_opts = {
             1:T("Urgent"),
             2:T("High"),
@@ -1716,18 +1727,20 @@ class S3ProjectTaskModel(S3Model):
         # Search Method
         task_search = S3Search(
                 advanced = (
-                    S3SearchOptionsWidget(
-                        name = "task_search_project",
-                        label = T("Project"),
-                        field = ["project"],
-                        cols = 3
-                    ),
-                    S3SearchOptionsWidget(
-                        name = "task_search_activity",
-                        label = T("Activity"),
-                        field = ["activity"],
-                        cols = 3
-                    ),
+                    # Virtual fields not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                        #name = "task_search_project",
+                        #label = T("Project"),
+                        #field = ["project"],
+                        #cols = 3
+                    #),
+                    # Virtual fields not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                        #name = "task_search_activity",
+                        #label = T("Activity"),
+                        #field = ["activity"],
+                        #cols = 3
+                    #),
                     S3SearchOptionsWidget(
                         name = "task_search_priority",
                         label = T("Priority"),
@@ -2329,7 +2342,7 @@ def project_rheader(r, tabs=[]):
         admin = auth.s3_has_role(ADMIN)
         #staff = auth.s3_has_role("STAFF")
         staff = True
-        if admin or drr:
+        if staff or drr:
             append((T("Communities") if pca else T("Activities"), "activity"))
         if staff and not drr:
             append((T("Milestones"), "milestone"))
@@ -2337,7 +2350,7 @@ def project_rheader(r, tabs=[]):
             append((T("Tasks"), "task"))
         if drr:
             append((T("Documents"), "document"))
-        elif admin:
+        elif staff:
             append((T("Attachments"), "document"))
         if record.calendar:
             append((T("Calendar"), "timeline"))

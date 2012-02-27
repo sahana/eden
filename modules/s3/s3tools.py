@@ -485,10 +485,19 @@ class S3BulkImporter(object):
             except SyntaxError, e:
                 self.errorList.append("WARNING: import error - %s" % e)
                 return
-            # @todo: check result (=JSON message) for import errors
-            # and report them to stderr
 
-            db.commit()
+            if not resource.error:
+                db.commit()
+            else:
+                # Must roll back if there was an error!
+                error = resource.error
+                self.errorList.append("%s - %s: %s" % (
+                                      task[3], resource.tablename, error))
+                errors = current.manager.xml.collect_errors(resource)
+                if errors:
+                    self.errorList.extend(errors)
+                db.rollback()
+
             # Restore the view
             response.view = view
             end = datetime.datetime.now()
@@ -549,8 +558,6 @@ class S3BulkImporter(object):
                 self.execute_import_task(task)
             elif task[0] == 2:
                 self.execute_special_task(task)
-
-
 
 # =============================================================================
 

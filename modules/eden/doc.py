@@ -157,27 +157,6 @@ class S3DocumentLibrary(S3Model):
                   #mark_required=["file"],
                   onvalidation=self.document_onvalidation)
 
-        # Reusable Field
-        document_comment = DIV(A(ADD_DOCUMENT,
-                                 _class="colorbox",
-                                 _href=URL(c="doc", f="document",
-                                           args="create",
-                                           vars=dict(format="popup")),
-                                 _target="top",
-                                 _title=T("If you need to add a new document then you can click here to attach one.")),
-                               DIV(_class="tooltip",
-                                   _title="%s|%s" % (DOCUMENT,
-                                                     T("A Reference Document such as a file, URL or contact person to verify this data."))))
-
-        document_id = S3ReusableField("document_id", table,
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "doc_document.id",
-                                                                      self.document_represent,
-                                                                      orderby="doc_document.name")),
-                                      represent = self.document_represent,
-                                      label = DOCUMENT,
-                                      comment = document_comment,
-                                      ondelete = "RESTRICT")
-
         # ---------------------------------------------------------------------
         # Images
         #
@@ -251,29 +230,10 @@ class S3DocumentLibrary(S3Model):
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
 
-        # Reusable field
-        #image_id = S3ReusableField("image_id", db.doc_image,
-        #                requires = IS_NULL_OR(IS_ONE_OF(db, "doc_image.id", "%(name)s")),
-        #                represent = doc_image_represent,
-        #                label = T("Image"),
-        #                comment = DIV(A(ADD_IMAGE,
-        #                                _class="colorbox",
-        #                                _href=URL(c="doc", f="image", args="create",
-        #                                          vars=dict(format="popup")),
-        #                                _target="top",
-        #                                _title=ADD_IMAGE),
-        #                          DIV( _class="tooltip",
-        #                               _title="%s|%s" % (ADD_IMAGE,
-        #                                                 T("Upload an image, such as a photo")))),
-        #                ondelete = "RESTRICT"
-        #                )
-
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return Storage(
-                    document_id = document_id
-                )
+        return Storage()
 
     # -------------------------------------------------------------------------
     def defaults(self):

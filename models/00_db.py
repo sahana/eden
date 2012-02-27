@@ -117,7 +117,6 @@ s3_has_permission = auth.s3_has_permission
 s3_accessible_query = auth.s3_accessible_query
 
 # Custom classes which extend default Gluon
-MENUS3 = s3base.S3Menu
 crud = s3base.CrudS3()
 current.crud = crud
 S3Comment = s3base.S3Comment
@@ -153,10 +152,6 @@ current.manager = s3mgr
 # MSG
 msg = s3base.S3Msg()
 current.msg = msg
-
-# Tracking System
-s3tracker = s3base.S3Tracker()
-current.s3tracker = s3tracker
 
 # Charting
 s3chart = s3base.S3Chart

@@ -56,7 +56,7 @@ class S3ProcurementModel(S3Model):
     names = ["proc_plan",
              "proc_plan_item"
             ]
-    
+
     def model(self):
 
         T = current.T
@@ -306,7 +306,7 @@ class S3SupplierModel(S3Model):
     names = ["proc_supplier",
              "proc_supplier_id",
             ]
-    
+
     def model(self):
 
         T = current.T

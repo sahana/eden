@@ -16,8 +16,6 @@ if not deployment_settings.has_module(module):
 if not deployment_settings.has_module("asset"):
     raise HTTP(404, body="Module disabled: %s" % "asset")
 
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """ Module Home Page """

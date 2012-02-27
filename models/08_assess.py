@@ -5,10 +5,10 @@
 
     This module currently contains 2 types of Assessments
       * Flexible Impact Assessments (including Mobile access)
-      
+
       * Rapid Assessment Tool (from ECB: http://www.ecbproject.org/page/48)
         @ToDo: Migrate this to a Template in the Survey module
-        
+
         @ToDo Validation similar to sitrep_school_report_onvalidation()
         http://bazaar.launchpad.net/~flavour/sahana-eden/trunk/annotate/head:/models/sitrep.py#L99
 
@@ -46,6 +46,14 @@ if deployment_settings.has_module(module) or deployment_settings.has_module("irs
 
 if deployment_settings.has_module(module):
 
+    location_id = s3db.gis_location_id
+    person_id = s3db.pr_person_id
+    organisation_id = s3db.org_organisation_id
+    organisation_represent = s3db.org_organisation_represent
+    sector_id = s3db.org_sector_id
+    human_resource_id = s3db.hrm_human_resource_id
+    ireport_id = s3db.irs_ireport_id
+
     # Impact as component of assessments
     s3mgr.model.add_component("impact_impact", assess_assess="assess_id")
 
@@ -53,14 +61,6 @@ if deployment_settings.has_module(module):
         """ Load the Assess Tables when needed """
 
         module = "assess"
-
-        person_id = s3db.pr_person_id
-        location_id = s3db.gis_location_id
-        organisation_id = s3db.org_organisation_id
-        organisation_represent = s3db.org_organisation_represent
-        sector_id = s3db.org_sector_id
-        human_resource_id = s3db.hrm_human_resource_id
-        ireport_id = s3db.ireport_id
 
         # =========================================================================
         # Flexible Impact Assessments
@@ -271,9 +271,9 @@ if deployment_settings.has_module(module):
             s3mgr.load("cr_shelter")
             shelter_id = response.s3.shelter_id
         if deployment_settings.has_module("hrm"):
-            human_resource_id = response.s3.human_resource_id
+            human_resource_id = s3db.hrm_human_resource_id
         else:
-            human_resource_id = person_id
+            human_resource_id = s3db.pr_person_id
 
         # Section CRUD strings
         ADD_SECTION = T("Add Section")

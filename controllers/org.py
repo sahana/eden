@@ -10,9 +10,6 @@ resourcename = request.function
 if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# Options Menu (available in all Functions" Views)
-s3_menu(module)
-
 # =============================================================================
 def index():
     """ Module's Home Page """
@@ -57,6 +54,11 @@ def site_org_json():
     records = db(query).select(otable.id,
                                otable.name)
     return records.json()
+
+def facility():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def organisation():

@@ -74,7 +74,7 @@ class S3SupplyModel(S3Model):
              "supply_item_duplicate_fields",
              "supply_item_pack_virtualfields",
             ]
-    
+
     def model(self):
 
         T = current.T
@@ -362,7 +362,7 @@ class S3SupplyModel(S3Model):
         #table.item_category_id_2.readable = table.item_category_id_2.writable = False
 
         # CRUD strings
-        ADD_ITEM = T("Add Item")
+        ADD_ITEM = T("Add New Item")
         LIST_ITEMS = T("List Items")
         crud_strings[tablename] = Storage(
             title_create = ADD_ITEM,
@@ -408,9 +408,12 @@ class S3SupplyModel(S3Model):
                                               vars=dict(format="popup")),
                                     _target="top",
                                     _title=ADD_ITEM),
-                              DIV( _class="tooltip",
-                                   _title="%s|%s" % (T("Item"),
-                                                     ADD_ITEM))),
+                                  DIV( _class="tooltip",
+                                       _title="%s|%s" % (T("Item"),
+                                                         T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog.")
+                                                         )
+                                      )
+                                  ),
                     ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------
@@ -1071,7 +1074,7 @@ S3FilterFieldChange({
         """
 
         tablename = job.tablename
-        
+
         s3db = current.s3db
 
         if tablename == "supply_item":
@@ -1112,7 +1115,7 @@ S3FilterFieldChange({
             Create a catalog_item for this item
             Update the UM (Unit of Measure) in the supply_item_pack table
         """
-        
+
         db = current.db
         s3db = current.s3db
         request = current.request

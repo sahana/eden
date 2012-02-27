@@ -752,15 +752,15 @@ class S3IRSModel(S3Model):
                 # URL
                 link = URL(args=[row.id])
                 events.append({'start': start,
-                                       'end': end,
-                                       'title': row.name,
-                                       'caption': row.message or "",
-                                       'description': row.message or "",
-                                       'image': image or "",
-                                       'link': link or ""
-                                       # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                                       #'color' : 'blue'
-                                    })
+                               'end': end,
+                               'title': row.name,
+                               'caption': row.message or "",
+                               'description': row.message or "",
+                               'image': image or "",
+                               'link': link or ""
+                               # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                               #'color' : 'blue'
+                            })
             data["events"] = events
             data = json.dumps(data)
 
@@ -832,7 +832,7 @@ S3.timeline.now = '""", now.isoformat(), """';
                         TD(INPUT(_type="checkbox", _name="ignore_errors", _id="ignore_errors"))),
                         TR("", INPUT(_type="submit", _value=T("Import")))))
 
-            label_list_btn = s3base.S3CRUD.crud_string(r.tablename, "title_list")
+            label_list_btn = S3CRUD.crud_string(r.tablename, "title_list")
             list_btn = A(label_list_btn,
                          _href=r.url(method="", vars=None),
                          _class="action-btn")

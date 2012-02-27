@@ -10,8 +10,6 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 drr = deployment_settings.get_project_drr()
 
 # =============================================================================
@@ -76,6 +74,7 @@ def project():
         doc_table.person_id.writable = False
         doc_table.location_id.writable = False
 
+    # Pre-process
     def prep(r):
         btable = s3db.project_beneficiary
         btable.activity_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
@@ -181,12 +180,12 @@ def project():
                 if validate:
                     response.s3.jquery_ready.append(script)
 
-            if not deployment_settings.get_project_drr():
-                read_url = URL(args=["[id]", "task"])
-                update_url = URL(args=["[id]", "task"])
-                s3mgr.crud.action_buttons(r,
-                                          read_url=read_url,
-                                          update_url=update_url)
+                if not deployment_settings.get_project_drr():
+                    read_url = URL(args=["[id]", "task"])
+                    update_url = URL(args=["[id]", "task"])
+                    s3mgr.crud.action_buttons(r,
+                                              read_url=read_url,
+                                              update_url=update_url)
         return output
     response.s3.postp = postp
 
@@ -273,6 +272,24 @@ def activity():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
+    # Pre-process
+    def prep(r):
+        if r.representation == "plain":
+            s3.crud_strings[tablename].title_display = T("Project Details")
+        elif r.interactive:
+            if r.component is not None:
+                if r.component_name == "document":
+                    doc_table = s3db.doc_document
+                    doc_table.organisation_id.readable = False
+                    doc_table.person_id.readable = False
+                    doc_table.location_id.readable = False
+                    doc_table.organisation_id.writable = False
+                    doc_table.person_id.writable = False
+                    doc_table.location_id.writable = False
+
+        return True
+    response.s3.prep = prep
+
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact")]
     if drr:
@@ -281,15 +298,6 @@ def activity():
     else:
         tabs.append((T("Tasks"), "task"))
         #tabs.append((T("Attachments"), "document"))
-
-    doc_table = s3db.table("doc_document", None)
-    if doc_table is not None:
-        doc_table.organisation_id.readable = False
-        doc_table.person_id.readable = False
-        doc_table.location_id.readable = False
-        doc_table.organisation_id.writable = False
-        doc_table.person_id.writable = False
-        doc_table.location_id.writable = False
 
     rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
@@ -444,7 +452,7 @@ def time():
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         s3mgr.configure("project_time",
                         listadd=False)
-        person_id = auth.logged_in_person()
+        person_id = auth.s3_logged_in_person()
         if person_id:
             response.s3.filter = (table.person_id == person_id)
         try:
@@ -462,21 +470,6 @@ def time():
         response.s3.filter = (table.date > (now - week))
 
     return s3_rest_controller()
-
-# =============================================================================
-def person():
-    """ Person controller for AddPersonWidget """
-
-    def prep(r):
-        if r.representation != "s3json":
-            # Do not serve other representations here
-            return False
-        else:
-            s3mgr.show_ids = True
-        return True
-    response.s3.prep = prep
-
-    return s3_rest_controller("pr", resourcename)
 
 # =============================================================================
 # Comments

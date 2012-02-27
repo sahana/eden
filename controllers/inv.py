@@ -13,8 +13,6 @@ resourcename = request.function
 if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-s3_menu(module)
-
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -99,6 +97,8 @@ def warehouse():
         ))
     s3mgr.configure(tablename,
                     search_method = warehouse_search)
+
+    # CRUD pre-process
     def prep(r):
         if r.interactive and r.tablename == "org_office":
 
@@ -128,6 +128,7 @@ def warehouse():
                     htable.organisation_id.writable = False
 
                 elif r.component.name == "req":
+                    s3db.req_prep()
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
@@ -140,6 +141,18 @@ def warehouse():
             r.resource.add_filter((s3db.org_office.obsolete != True))
         return True
     response.s3.prep = prep
+
+    # CRUD post-process
+    def postp(r, output):
+        if r.interactive and not r.component and r.method != "import":
+            # Change Action buttons to open Stock Tab by default
+            read_url = URL(f="warehouse", args=["[id]", "inv_item"])
+            update_url = URL(f="warehouse", args=["[id]", "inv_item"])
+            s3mgr.crud.action_buttons(r,
+                                      read_url=read_url,
+                                      update_url=update_url)
+        return output
+    response.s3.postp = postp
 
     rheader = s3db.org_rheader
 
@@ -607,7 +620,7 @@ def send_process():
     send_id = request.args[0]
     stable = s3db.inv_send
     otable = s3db.org_office
- 
+
     if not auth.s3_has_permission("update",
                                   stable,
                                   record_id=send_id):

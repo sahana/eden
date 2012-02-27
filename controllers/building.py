@@ -13,7 +13,7 @@
 
     @ToDo: Port forms to Survey module & deprecate as much as possible of this
            module (which might be all)
-    
+
     @ToDo: Hide fields for triage form server side
     - once print comes from controller then it will also skip these fields
     - less to download to browser (more scalable)
@@ -26,9 +26,6 @@ resourcename = request.function
 
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
-
-# Options Menu (available in all Functions' Views)
-s3_menu(module)
 
 # -----------------------------------------------------------------------------
 # Define the Model
