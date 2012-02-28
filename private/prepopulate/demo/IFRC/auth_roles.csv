@@ -27,6 +27,7 @@
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","inv","send",,"ALL",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","inv","recv",,"ALL",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","req",,,"ALL",,,,,,
+"LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","pr","person",,"READ",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","supply","item",,"ALL",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","supply","catalog_item",,"READ|CREATE",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","supply","item_category",,"READ|CREATE",,,,,,

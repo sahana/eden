@@ -411,11 +411,47 @@ class S3PDF(S3Method):
                     # Document that has a resource header and component list
                     self.addrHeader(self.resource,
                                     list_fields,
-                                    report_hide_comments)
-                    self.addTable(self.resource.components[componentname],
-                                  list_fields=list_fields,
-                                  report_groupby=report_groupby,
-                                  report_hide_comments=report_hide_comments)
+                                    report_hide_comments=report_hide_comments)
+                    # Get the raw data for the component
+                    ptable = self.resource.table
+                    ctable = db[componentname]
+                    raw_data = []
+                    linkfield = None
+                    for link in ptable._referenced_by:
+                        if link[0] == componentname:
+                            linkfield = link[1]
+                            break
+                    if linkfield != None:
+                        query = ctable[linkfield] == self.record
+                        records = db(query).select()
+                        find_fields = []
+                        for component in self.resource.components.values():
+                            find_fields += component.readable_fields()
+                        fields = []
+                        for field in find_fields:
+                            if field.type == "id":
+                                continue
+                            if report_hide_comments and field.name == "comments":
+                                continue
+                            fields.append(field)
+                        if not fields:
+                            fields = [table.id]
+                        label_fields = [f.label for f in fields]
+
+                        for record in records:
+                            data = []
+                            for field in fields:
+                                value = record[field.name]
+                                text = manager.represent(field,
+                                             value=value,
+                                             strip_markup=True,
+                                             non_xml_output=True,
+                                             extended_comments=True
+                                            )
+                                data.append(text)
+                            raw_data.append(data)
+                        self.addTable(raw_data = raw_data,
+                                      list_fields=label_fields)
 
                 # Build the document
                 doc = self.buildDoc()
@@ -3144,7 +3180,8 @@ class S3PDFTable(object):
             self.data = self.data + data
 
         if self.raw_data != None:
-            self.data = self.raw_data
+            self.labels = self.list_fields
+            self.data = [self.labels] + self.raw_data
 
         if len(self.data) == 0:
             return None
@@ -3488,12 +3525,12 @@ class S3PDFRHeader():
         if len(self.data) == 0:
             return None
         else:
-            for index in range(len(self.data[0])):
+            for index in range(len(self.labels)):
                 try:
-                    value = data[index]
+                    value = data[0][index]
                 except:
                     value = "-"
-                self.rheader.append([self.data[0],
+                self.rheader.append([self.labels[index],
                                      value]
                                    )
         content = []
@@ -3506,7 +3543,7 @@ class S3PDFRHeader():
         table = Table(self.rheader,
                       repeatRows=1,
                       style=style,
-                      hAlign="LEFT"
+                      hAlign="LEFT",
                      )
         content.append(table)
         return content
