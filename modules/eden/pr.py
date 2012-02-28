@@ -552,7 +552,7 @@ class S3PersonModel(S3Model):
         add_component("hrm_experience", pr_person="person_id")
         # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
-        
+
         # Assets as component of persons
         add_component("asset_asset", pr_person="assigned_to_id")
 
