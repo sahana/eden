@@ -1062,6 +1062,7 @@ class S3CRUD(S3Method):
         # Table and model
         prefix = self.prefix
         name = self.name
+        resource = self.resource
         tablename = self.tablename
         table = self.table
         model = manager.model
@@ -1121,6 +1122,27 @@ class S3CRUD(S3Method):
                         missing_fields[f] = table[f].default
                 record.update(missing_fields)
                 record.update(id=None)
+
+            # Switch to update method if this request attempts to
+            # create a duplicate entry in a link table:
+            if request.env.request_method == "POST" and \
+            resource.linked is not None:
+                pkey = table._id.name
+                if not request.post_vars[pkey]:
+                    linked = resource.linked
+                    lkey = linked.lkey
+                    rkey = linked.rkey
+                    _lkey = request.post_vars[lkey]
+                    _rkey = request.post_vars[rkey]
+                    query = (table[lkey] == _lkey) & (table[rkey] == _rkey)
+                    row = current.db(query).select(table._id, limitby=(0, 1)).first()
+                    if row is not None:
+                        record_id = row[pkey]
+                        formkey = session.get("_formkey[%s/None]" % tablename)
+                        formname = "%s/%s" % (tablename, record_id)
+                        session["_formkey[%s]" % formname] = formkey
+                        request.post_vars["_formname"] = formname
+                        request.post_vars[pkey] = record_id
 
             # Add asterisk to labels of required fields
             mark_required = self._config("mark_required")
