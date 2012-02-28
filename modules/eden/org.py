@@ -827,7 +827,7 @@ class S3FacilityModel(S3Model):
             msg_list_empty = T("No Facilities currently registered"))
 
         self.configure(tablename,
-                       super_entity=("pr_pentity", "org_site"),
+                       super_entity="org_site"
                        )
 
         # ---------------------------------------------------------------------

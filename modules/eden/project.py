@@ -1011,12 +1011,18 @@ class S3ProjectModel(S3Model):
         if pca:
             location_id = form.vars.location_id
             if location_id:
-                table = current.s3db.gis_location
+                db = current.db
+                s3db = current.s3db
+                table = s3db.gis_location
                 query = (table.id == form.vars.location_id)
-                row = current.db(query).select(table.name,
-                                               limitby=(0, 1)).first()
-                if row:
-                    form.vars.name = row.name
+                row = db(query).select(table.parent,
+                                       limitby=(0, 1)).first()
+                if row and row.parent:
+                    query = (table.id == row.parent)
+                    parent = db(query).select(table.name,
+                                              limitby=(0, 1)).first()
+                    if parent:
+                        form.vars.name = parent.name
         return
 
     # ---------------------------------------------------------------------

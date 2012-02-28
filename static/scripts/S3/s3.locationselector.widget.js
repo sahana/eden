@@ -170,6 +170,8 @@ function s3_gis_autocomplete(level) {
                 }
                 // Hide the search results
                 $('ul.ui-autocomplete').hide();
+                // Update autocompletes
+                s3_gis_autocomplete(parseInt(ui.item.level.replace('L', '')) + 1);
                 return false;
             }
         }).data( 'autocomplete' )._renderItem = function( ul, item ) {
