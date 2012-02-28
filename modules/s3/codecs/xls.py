@@ -295,6 +295,8 @@ class S3XLS(S3Codec):
                 style = styleOdd
             for label in headers:
                 represent = item[colCnt]
+                if type(represent) is not str:
+                    represent = unicode(represent)
                 # Strip away markup from representation
                 try:
                     markup = etree.XML(str(represent))
@@ -320,7 +322,7 @@ class S3XLS(S3Codec):
                                 style = styleOdd
                         continue
                 coltype=types[colCnt]
-                value = unicode(represent)
+                value = represent
                 if coltype == "date":
                     try:
                         format = str(settings.get_L10n_date_format())
@@ -374,7 +376,7 @@ class S3XLS(S3Codec):
                     except:
                         pass
                 currentRow.write(colCnt, value, style)
-                width = len(unicode(represent)) * S3XLS.COL_WIDTH_MULTIPLIER
+                width = len(represent) * S3XLS.COL_WIDTH_MULTIPLIER
                 if width > fieldWidth[colCnt]:
                     fieldWidth[colCnt] = width
                     sheet1.col(colCnt).width = width
