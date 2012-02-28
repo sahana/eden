@@ -856,6 +856,7 @@ S3FilterFieldChange({
                 supply_item_pack_virtualfields = supply_item_pack_virtualfields,
                 supply_item_duplicate_fields = item_duplicate_fields,
                 supply_item_add = self.supply_item_add,
+                supply_item_pack_represent = self.item_pack_represent,
                 )
 
     # -------------------------------------------------------------------------
