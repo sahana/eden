@@ -1,0 +1,57 @@
+[main]
+host = https://www.transifex.net
+
+[ecidadania.spaces]
+source_file = apps/spaces/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/spaces/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/spaces/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.accounts]
+source_file = apps/accounts/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/accounts/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/accounts/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.calendar]
+source_file = apps/cal/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/cal/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/cal/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.debate]
+source_file = apps/debate/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/debate/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/debate/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.news]
+source_file = apps/news/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/news/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/news/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.proposals]
+source_file = apps/proposals/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/proposals/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/proposals/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.staticpages]
+source_file = apps/staticpages/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/staticpages/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/staticpages/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.userprofile]
+source_file = apps/userprofile/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/userprofile/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/userprofile/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.core]
+source_file = locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = locale/gl_ES/LC_MESSAGES/django.po
+

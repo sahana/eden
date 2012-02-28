@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-04 17:33+0100\n"
+"POT-Creation-Date: 2012-02-28 17:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,13 +93,13 @@ msgstr ""
 
 #: templates/proposals/proposal_add.html:124
 #: templates/proposals/proposal_confirm_delete.html:26
-#: templates/proposals/proposal_edit.html:137
+#: templates/proposals/proposal_edit.html:139
 #: templates/proposals/proposal_list.html:47
 msgid "Go back"
 msgstr ""
 
 #: templates/proposals/proposal_add.html:125
-#: templates/proposals/proposal_edit.html:138
+#: templates/proposals/proposal_edit.html:140
 msgid "Publish"
 msgstr ""
 

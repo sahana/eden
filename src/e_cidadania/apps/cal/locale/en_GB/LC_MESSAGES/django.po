@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-04 17:33+0100\n"
+"POT-Creation-Date: 2012-02-28 17:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,42 +18,42 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: templates/cal/calendar.html:4 templates/cal/calendar.html.py:14
+#: templates/cal/calendar.html:4 templates/cal/calendar.html.py:16
 msgid "Calendar"
 msgstr ""
 
-#: templates/cal/calendar.html:20
+#: templates/cal/calendar.html:21
 msgid "Previous month"
 msgstr ""
 
-#: templates/cal/calendar.html:21
+#: templates/cal/calendar.html:22
 msgid "Next month"
 msgstr ""
 
-#: templates/cal/calendar.html:22
+#: templates/cal/calendar.html:23
 msgid "Go back"
 msgstr ""
 
-#: templates/cal/error.html:4
+#: templates/cal/error.html:4 templates/cal/error.html.py:9
 msgid "Calendar error"
 msgstr ""
 
-#: templates/cal/error.html:8
+#: templates/cal/error.html:10
 msgid "You entered and incorrect month or year. Please correct it."
 msgstr ""
 
-#: templates/cal/error.html:10
+#: templates/cal/error.html:11
 msgid "You can go"
 msgstr ""
 
-#: templates/cal/error.html:10
+#: templates/cal/error.html:11
 msgid "back to home"
 msgstr ""
 
-#: templates/cal/error.html:10
+#: templates/cal/error.html:11
 msgid "or"
 msgstr ""
 
-#: templates/cal/error.html:10
+#: templates/cal/error.html:11
 msgid "back to your profile"
 msgstr ""

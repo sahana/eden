@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-04 17:34+0100\n"
+"POT-Creation-Date: 2012-02-28 17:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,27 +139,27 @@ msgid ""
 "to the index."
 msgstr ""
 
-#: templates/base.html:112
+#: templates/base.html:116
 msgid "Pages"
 msgstr ""
 
-#: templates/base.html:122
+#: templates/base.html:126
 msgid "Help"
 msgstr ""
 
-#: templates/base.html:123
+#: templates/base.html:127
 msgid "Mailing lists"
 msgstr ""
 
-#: templates/base.html:124
+#: templates/base.html:128
 msgid "Issues"
 msgstr ""
 
-#: templates/base.html:125
+#: templates/base.html:129
 msgid "E-mail"
 msgstr ""
 
-#: templates/base.html:137
+#: templates/base.html:141
 msgid "created by"
 msgstr ""
 
@@ -167,7 +167,7 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: templates/menu.html:5 templates/site_index.html:58
+#: templates/menu.html:5 templates/site_index.html:54
 msgid "Login"
 msgstr ""
 
@@ -175,28 +175,28 @@ msgstr ""
 msgid "Sign up"
 msgstr ""
 
-#: templates/menu.html:21
-msgid "Administration"
+#: templates/menu.html:12
+msgid "Language"
 msgstr ""
 
-#: templates/menu.html:22
-msgid "Translation"
-msgstr ""
-
-#: templates/menu.html:24
-msgid "Edit profile"
-msgstr ""
-
-#: templates/menu.html:26
-msgid "Logout"
-msgstr ""
-
-#: templates/menu.html:30
+#: templates/menu.html:29
 msgid "Profile"
 msgstr ""
 
-#: templates/menu.html:35
-msgid "Language"
+#: templates/menu.html:41
+msgid "Administration"
+msgstr ""
+
+#: templates/menu.html:42
+msgid "Create new space"
+msgstr ""
+
+#: templates/menu.html:44
+msgid "Edit profile"
+msgstr ""
+
+#: templates/menu.html:46
+msgid "Logout"
 msgstr ""
 
 #: templates/not_allowed.html:4
@@ -217,55 +217,55 @@ msgstr ""
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:18
+#: templates/site_index.html:14
 msgid "Recent processes"
 msgstr ""
 
-#: templates/site_index.html:25
+#: templates/site_index.html:21
 msgid "Public"
 msgstr ""
 
-#: templates/site_index.html:27
+#: templates/site_index.html:23
 msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:39
+#: templates/site_index.html:27
 msgid "There are no spaces."
 msgstr ""
 
-#: templates/site_index.html:42
+#: templates/site_index.html:38
 msgid "View all the spaces"
 msgstr ""
 
-#: templates/site_index.html:58
+#: templates/site_index.html:54
 msgid "Register"
 msgstr ""
 
-#: templates/site_index.html:58
+#: templates/site_index.html:54
 msgid "or"
 msgstr ""
 
-#: templates/site_index.html:67
+#: templates/site_index.html:63
 msgid "Recent news"
 msgstr ""
 
-#: templates/site_index.html:72
+#: templates/site_index.html:68
 msgid "No public news."
 msgstr ""
 
-#: templates/site_index.html:77
+#: templates/site_index.html:73
 msgid "True democracy"
 msgstr ""
 
-#: templates/site_index.html:81
+#: templates/site_index.html:77
 msgid "The most complete tool ever"
 msgstr ""
 
-#: templates/site_index.html:98
+#: templates/site_index.html:94
 msgid "Share"
 msgstr ""
 
-#: templates/site_index.html:135
+#: templates/site_index.html:131
 msgid "Tweet"
 msgstr ""
 
@@ -327,11 +327,11 @@ msgstr ""
 msgid "Leave a comment"
 msgstr ""
 
-#: templates/comments/form.html:27 templates/comments/preview.html:36
+#: templates/comments/form.html:27 templates/comments/preview.html:34
 msgid "Post"
 msgstr ""
 
-#: templates/comments/form.html:28 templates/comments/preview.html:37
+#: templates/comments/form.html:28 templates/comments/preview.html:35
 msgid "Preview"
 msgstr ""
 
