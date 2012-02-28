@@ -39,7 +39,7 @@
 	        <ul class="dropdown-menu">
 	            {% if user.is_staff %}
 	                <li><a href="{% url 'admin:index' %}">{% trans "Administration" %}</a></li>
-	                <li><a href="{% url 'rosetta-home' %}">{% trans "Translation" %}</a></li>
+	                <li><a href="{% url 'create-space' %}">{% trans "Create new space" %}</a></li>
 	            {% endif %}
 	            <li><a href="{% url 'profile_edit_personal' %}">{% trans "Edit profile" %}</a></li>
 	            <li class="divider"></li>

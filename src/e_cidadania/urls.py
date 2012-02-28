@@ -81,8 +81,6 @@ urlpatterns = patterns('',
     # This urls is for the django comments system
     (r'^comments/', include('django.contrib.comments.urls')),
 
-    (r'^rosetta/', include('e_cidadania.apps.rosetta.urls')),
-
     (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
 
     # This url is for the access to static pages. I hope this doesn't collide
