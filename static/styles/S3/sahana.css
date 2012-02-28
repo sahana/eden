@@ -558,13 +558,13 @@ table {
         rgb(188,204,217) 16%,
         rgb(212,225,235) 57%
     );
-    margin:-10px -30px 10px -30px;
-    background-color:#cfdde7;
+    margin: -6px -10px 6px -10px;
+    background-color: #cfdde7;
     text-shadow: 0px 1px 1px #e3edf4;
-    border:1px solid #aecbe0;
-    border-top:1px solid #e1eaf1;
-    border-bottom:1px solid #9cb2c1;
-    padding-left:10px;
+    border: 1px solid #aecbe0;
+    border-top: 1px solid #e1eaf1;
+    border-bottom: 1px solid #9cb2c1;
+    padding-left: 10px;
     -moz-border-radius: 10px 10px 0px 0px;
     -webkit-border-radius: 10px 10px 0px 0px;
 }
@@ -1213,7 +1213,7 @@ div#last_update {
 .action-btn {
     cursor: pointer;
     text-decoration: none;
-    font-weight:bold;
+    /* font-weight:bold; */
     color: #ffffff;
     background-color: #3286e2;
     border:1px solid #4c95e6;

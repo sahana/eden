@@ -23,6 +23,10 @@ def supply_item_controller():
                                               filter_opts = [True])
                                             )
 
+    s3mgr.configure("inv_inv_item",
+                    listadd=False,
+                    deletable=False)
+
     return s3_rest_controller("supply", "item",
                               rheader=eden.supply.supply_item_rheader)
 

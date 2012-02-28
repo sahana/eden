@@ -2969,7 +2969,7 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
         else:
             return level_name
 
-    if request.raw_args == "read.plain" or \
+    if (request.raw_args and ".plain" in request.raw_args) or \
        (location.lat == None and location.lon == None or \
         location.parent == None):
         # Map popups don't support iframes (& meaningless anyway), and if there

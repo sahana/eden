@@ -2190,8 +2190,8 @@ class S3LocationSearch(S3Search):
                 if children:
                     # New LocationSelector
                     children = gis.get_children(children, level=level)
-                    #children = children.find(lambda row: \
-                    #                         value in str.lower(row.name))
+                    children = children.find(lambda row: \
+                                             row.name and value in str.lower(row.name))
                     output = children.json()
                     response.headers["Content-Type"] = "application/json"
                     return output
