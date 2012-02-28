@@ -892,9 +892,11 @@ class S3ProjectModel(S3Model):
                 s3_debug("project_deduplicate", exception.message)
             else:
                 duplicate = current.db(query).select(table.id,
+                                                     table.name,
                                                      limitby=(0, 1)).first()
                 if duplicate:
                     item.id = duplicate.id
+                    item.data.name = duplicate.name
                     item.method = item.METHOD.UPDATE
         return
 
