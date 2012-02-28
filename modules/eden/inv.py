@@ -375,6 +375,10 @@ class S3IncomingModel(S3Model):
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         widget = S3DateWidget(),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Date Received"),
+                                                                        T("Will be filled automatically when the Shipment has been Received"))
+                                                      )
                                         #readable = False # unless the record is locked
                                         ),
                                   Field("type",
@@ -844,6 +848,13 @@ class S3DistributionModel(S3Model):
         self.set_method(tablename,
                         method="form",
                         action=self.inv_send_form )
+        
+        # Redirect to the Items tabs after creation
+        send_item_url = URL(f="send", args=["[id]",
+                                                "send_item"])
+        self.configure(tablename,
+                        create_next = send_item_url,
+                        update_next = send_item_url)
 
         # =====================================================================
         # Send (Outgoing / Dispatch / etc) Items
@@ -1001,7 +1012,7 @@ def inv_tabs(r):
             else:
                 recv_tab = T("Receive")
             inv_tabs = [(T("Warehouse Stock"), "inv_item"),
-                        (T("Incoming"), "incoming/"),
+                        #(T("Incoming"), "incoming/"),
                         (recv_tab, "recv"),
                         (T("Send"), "send", dict(select="sent")),
                         ]
@@ -1227,11 +1238,11 @@ def inv_send_rheader(r):
                                                             ),
                                                 _id = "send_receive",
                                                 _class = "action-btn",
-                                                _title = T("Only use this button to confirm that the shipment has been received by the destination, if the destination will not enter this information into the system directly")
+                                                _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system")
                                                 )
 
                                 receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
-                                                             % T("This shipment will be confirmed as received.") )
+                                                             % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
                                 rfooter.append(receive_btn)
                                 rfooter.append(receive_btn_confirm)
                         if auth.s3_has_permission("delete",

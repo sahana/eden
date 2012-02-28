@@ -49,7 +49,7 @@ def req_controller():
 
     def prep(r):
         
-        s3db.req_prep()
+        s3db.req_prep(r)
 
         # Remove type from list_fields
         list_fields = s3mgr.model.get_config("req_req",

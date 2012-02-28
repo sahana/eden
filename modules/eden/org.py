@@ -1271,7 +1271,8 @@ def org_site_represent(id, link=True):
                 type = record.type
 
         if type == 5:
-             instance_type_nice = T("Warehouse")
+            instance_type = "inv_warehouse"
+            instance_type_nice = T("Warehouse")
 
     if site:
         represent = "%s (%s)" % (site.name, instance_type_nice)
@@ -1358,13 +1359,14 @@ def org_rheader(r, tabs=[]):
                 (T("Staff"), "human_resource"),
                ]
         try:
-            tabs = tabs + s3.req_tabs(r)
-        except:
-            pass
-        try:
             tabs = tabs + current.s3db.inv_tabs(r)
         except:
             pass
+        try:
+            tabs = tabs + s3.req_tabs(r)
+        except:
+            pass
+
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 

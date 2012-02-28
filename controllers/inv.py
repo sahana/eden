@@ -129,7 +129,7 @@ def warehouse():
                     htable.organisation_id.writable = False
 
                 elif r.component.name == "req":
-                    s3db.req_prep()
+                    s3db.req_prep(r)
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
@@ -402,6 +402,8 @@ def recv_process():
 
     recv_id = request.args[0]
     rtable = s3db.inv_recv
+    otable = s3db.org_office
+    
     if not auth.s3_has_permission("update",
                                   rtable,
                                   record_id=recv_id):
@@ -492,11 +494,17 @@ def recv_process():
     # Go to the Inventory of the Site which has received these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
                                                           site_id)
-
-    redirect(URL(c = prefix,
-                 f = resourcename,
-                 args = [id, "inv_item"],
-                 vars = dict(show_inv="True")))
+    query = (otable.id == id)
+    otype = db(query).select(otable.type, limitby = (0, 1)).first()
+    if otype and otype.type == 5:
+        url = URL(c = "inv",
+                 f = "warehouse",
+                 args = [id, "inv_item"])
+    else:
+        url = URL(c = "org",
+                 f = "office",
+                 args = [id, "inv_item"])
+    redirect(url)
 
 # -----------------------------------------------------------------------------
 def recv_cancel():
@@ -712,6 +720,7 @@ def send_process():
                                owned_by_user = None,
                                owned_by_role = ADMIN
                             )
+        copy_send_to_recv(send_id)
         session.confirmation = T("Shipment Items sent from Warehouse")
 
         # Update status_fulfil of the req record(s)
@@ -869,15 +878,12 @@ def send_cancel():
                  args = [send_id]))
 
 #==============================================================================
-def recv_sent():
-    """ function to copy data from a shipment which was sent to the warehouse to a recv shipment """
-
-    send_id = request.args[0]
-    # This is more explicit than getting the site_id from the inv_send.to_site_id
-    # As there may be multiple sites per location.
-    site_id = request.vars.site_id
-
+def copy_send_to_recv(send_id):
+    """ function to copy data from a shipment which was sent to the warehouse to a recv shipment (when the shipment is sent)
+    @ToDo: Make sure that the original shipment gets "received" when this shipment is received. 
+    """
     r_send = s3db.inv_send[send_id]
+    site_id = r_send.to_site_id
 
     if r_send.status != eden.inv.inv_ship_status["SENT"]:
         session.error = T("This shipment has already been received.")
@@ -918,6 +924,18 @@ def recv_sent():
                       item_pack_id = sent_item.inv_send_item.item_pack_id,
                       quantity = sent_item.inv_send_item.quantity,
                       req_item_id = sent_item.inv_send_item.req_item_id)
+    
+def recv_sent():
+    """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
+        @ToDo: Consider making obsolete
+    """
+
+    send_id = request.args[0]
+    # This is more explicit than getting the site_id from the inv_send.to_site_id
+    # As there may be multiple sites per location.
+    #site_id = request.vars.site_id
+
+
 
     # Flag shipment as received as received
     s3db.inv_send[send_id] = dict(status = eden.inv.inv_ship_status["RECEIVED"])

@@ -1078,7 +1078,7 @@ class S3OptionsMenu:
                         M("Who is doing What Where", f="activity", m="report"),
                         M("Beneficiaries", f="beneficiary", m="report",
                           vars=Storage(rows="project_id",
-                                       cols="beneficiary_type_id$name",
+                                       cols="beneficiary_type_id",
                                        fact="number",
                                        aggregate="sum")),
                         M("Funding", f="organisation", args="report"),

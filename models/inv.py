@@ -81,12 +81,6 @@ def inv_send_controller():
 
     def prep(r):
         if r.interactive:
-            # Redirect to the Items tabs after creation
-            send_item_url = URL(f="send", args=["[id]",
-                                                "send_item"])
-            s3mgr.configure(tablename,
-                            create_next = send_item_url,
-                            update_next = send_item_url)
 
             # Default to the Search tab in the location selector
             response.s3.gis.tab = "search"

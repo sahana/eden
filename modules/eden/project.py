@@ -1110,11 +1110,24 @@ class S3ProjectDRRModel(S3Model):
             4: T("Customer"), # T("Beneficiary")?
         }
         project_organisation_lead_role = 1
+        
+        organisation_help = T("Add all organisations which are involved in different roles in this project")
 
         tablename = "project_organisation"
         table = self.define_table(tablename,
                                   project_id(),
-                                  organisation_id(),
+                                  organisation_id(comment = DIV(A(T("Add Organization"),
+                                                                  _class="colorbox",
+                                                                  _href=URL(c="org", f="organisation",
+                                                                            args="create",
+                                                                            vars=dict(format="popup")),
+                                                                  _target="top",
+                                                                  _title=T("Add Organization")),
+                                                                DIV(_class="tooltip",
+                                                                    _title="%s|%s" % (T("Organization"),
+                                                                                      organisation_help))
+                                                                ) 
+                                                  ),
                                   Field("role", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
                                         represent = lambda opt, row=None: \
