@@ -133,7 +133,7 @@ def org_office_controller():
             hrm_table.organisation_id.writable = False
 
         if r.interactive or r.representation == "aadata":
-            if deployment_settings.has_module("inv"):
+            if not r.component and deployment_settings.has_module("inv"):
                 # Filter out Warehouses, since they have a dedicated controller
                 response.s3.filter = (table.type != 5) | \
                                      (table.type == None)

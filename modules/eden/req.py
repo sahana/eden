@@ -85,7 +85,7 @@ class S3RequestModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         #s3_date_format = settings.get_L10n_date_format()
-        #s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
         # Multiple Item/Skill Types per Request?
@@ -148,10 +148,15 @@ class S3RequestModel(S3Model):
                                                         maximum=request.utcnow,
                                                         error_message="%s %%(max)s!" %
                                                             T("Enter a valid past date")))],
-                                        widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
-                                                                  future=0),
+                                        # @ToDo: deployment_setting
+                                        #widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
+                                        #                          future=0),
+                                        #represent = s3_datetime_represent
+                                        widget = S3DateWidget(past=12, # Months, so 1 year
+                                                              future=0),
+                                        represent = s3_date_represent,
                                         default = request.utcnow,
-                                        represent = s3_datetime_represent),
+                                        ),
                                   Field("priority",
                                         "integer",
                                         default = 2,
@@ -174,9 +179,14 @@ class S3RequestModel(S3Model):
                                                       minimum=request.utcnow - datetime.timedelta(days=1),
                                                       error_message="%s %%(min)s!" %
                                                           T("Enter a valid future date")))],
-                                        widget = S3DateTimeWidget(past=0,
-                                                                  future=8760),  # Hours, so 1 year
-                                        represent = s3_datetime_represent),
+                                        # @ToDo: deployment_setting
+                                        #widget = S3DateTimeWidget(past=0,
+                                        #                          future=8760), # Hours, so 1 year
+                                        #represent = s3_datetime_represent
+                                        widget = S3DateWidget(past=0,
+                                                              future=12), # Months, so 1 year
+                                        represent = s3_date_represent,
+                                        ),
                                   Field("date_required_until",
                                         "datetime",
                                         label = T("Date Required Until"),
@@ -443,6 +453,7 @@ $(function() {
         table.transit_status.readable = table.transit_status.writable = False
         table.fulfil_status.readable = table.fulfil_status.writable = False
         table.cancel.readable = table.cancel.writable = False
+        table.recv_by_id.readable = table.recv_by_id.writable = False
 
         return
     # -------------------------------------------------------------------------

@@ -1091,6 +1091,9 @@ class GIS(object):
                       table.L5]
 
         query = (table.uuid == "SITE_DEFAULT")
+        if not location:
+            config = self.get_config()
+            location = config.region_location_id
         if location:
             # Try the Region, but ensure we have the fallback available in a single query
             query = query | (table.location_id == location)

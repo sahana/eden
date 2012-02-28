@@ -826,6 +826,10 @@ class S3FacilityModel(S3Model):
             msg_record_deleted = T("Facility deleted"),
             msg_list_empty = T("No Facilities currently registered"))
 
+        self.configure(tablename,
+                       super_entity="org_site"
+                       )
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #

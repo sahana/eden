@@ -1626,11 +1626,12 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Date")
 
     def display(self, **attr):
-        from s3widgets import S3DateWidget
-        value = self.getAnswer()
-        widget = S3DateWidget()
-        input = widget(self.field, value, **self.attr)
-        return self.layout(self.question.name, input, **attr)
+        return S3QuestionTypeAbstractWidget.display(self, **attr)
+#        from s3widgets import S3DateWidget
+#        value = self.getAnswer()
+#        widget = S3DateWidget()
+#        input = widget(self.field, value, **self.attr)
+#        return self.layout(self.question.name, input, **attr)
 
     def formattedAnswer(self, data):
         """

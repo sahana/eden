@@ -44,14 +44,6 @@ def inv_recv_controller():
 
     def prep(r):
         if r.interactive:
-
-            # Redirect to the Items tabs after creation
-            recv_item_url = URL(f="recv", args=["[id]",
-                                                "recv_item"])
-            s3mgr.configure(tablename,
-                            create_next = recv_item_url,
-                            update_next = recv_item_url)
-
             # If component view
             if r.record:
                 SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
