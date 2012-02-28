@@ -1291,6 +1291,8 @@ class S3LocationSelectorWidget(FormWidget):
                         countries[id] = defaults["L0"].name
                 country_snippet = "S3.gis.country = '%s';\n" % \
                     gis.get_default_country(key_type="code")
+        elif len(countries) == 1:
+            default_L0.id = countries.keys()[0]
 
         # Should we use a Map-based selector?
         map_selector = settings.get_gis_map_selector()
