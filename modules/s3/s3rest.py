@@ -2111,14 +2111,19 @@ class S3Resource(object):
         prefix = self.prefix
         name = self.name
 
+        attr = Storage(attributes)
         rfilter = self.rfilter
+
         if rfilter is None:
             rfilter = self.build_query()
         query = rfilter.get_query()
         vfltr = rfilter.get_filter()
 
+        distinct = attr.pop("distinct", False) and True or False
+        distinct = rfilter.distinct or distinct
+        attr["distinct"] = distinct
+
         if vfltr is not None:
-            attr = Storage(attributes)
             if "limitby" in attr:
                 limitby = attr["limitby"]
                 start = limitby[0]
@@ -2129,13 +2134,12 @@ class S3Resource(object):
                 self._slice = True
             else:
                 start = limit = None
-            attributes = attr
             # @todo: override fields => needed for vfilter
-        elif "limitby" in attributes:
+        elif "limitby" in attr:
             self._slice = True
 
         # Get the rows
-        rows = db(query).select(*fields, **attributes)
+        rows = db(query).select(*fields, **attr)
         if vfltr is not None:
             rows = rfilter(rows, start=start, limit=limit)
 
