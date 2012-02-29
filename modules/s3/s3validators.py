@@ -57,7 +57,7 @@ __all__ = ["single_phone_number_pattern",
 import time
 import re
 from datetime import datetime, timedelta
-from gluon import current, Field,  IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE
+from gluon import current, Field, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
 from gluon.validators import Validator
 from gluon.storage import Storage
 
@@ -1134,119 +1134,134 @@ class IS_ADD_PERSON_WIDGET(Validator):
             person_id = None
 
         ptable = db.pr_person
-        table = db.pr_contact
+        ctable = db.pr_contact
+
         def email_validate(value, person_id):
-            error_message = T("This email-address is already registered.")
+            """ Validate the email address """
+
+            error_message = T("Please enter a valid email address.")
+
+            if value is not None:
+                value = value.strip()
+
+            # No email?
             if not value:
                 email_required = current.deployment_settings.get_hrm_email_required()
                 if email_required:
-                    error_message = T("Please enter a valid email address.")
                     return (value, error_message)
                 return (value, None)
-            value = value.strip()
-            query = (table.deleted != True) & \
-                    (table.contact_method == "EMAIL") & \
-                    (table.value == value)
+
+            # Valid email?
+            value, error = IS_EMAIL()(value)
+            if error:
+                return value, error_message
+
+            # Unique email?
+            query = (ctable.deleted != True) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.value == value)
             if person_id:
                 query = query & \
-                        (table.pe_id == ptable.pe_id) & \
+                        (ctable.pe_id == ptable.pe_id) & \
                         (ptable.id != person_id)
-            email = db(query).select(table.id, limitby=(0, 1)).first()
+            email = db(query).select(ctable.id, limitby=(0, 1)).first()
             if email:
+                error_message = T("This email-address is already registered.")
                 return value, error_message
+
+            # Ok!
             return value, None
 
         if request.env.request_method == "POST":
             _vars = request.post_vars
             mobile = _vars["mobile_phone"]
+
             # Validate the phone number
             if _vars.mobile_phone:
                 regex = re.compile(single_phone_number_pattern)
                 if not regex.match(_vars.mobile_phone):
                     error = T("Invalid phone number")
                     return (person_id, error)
-            if person_id:
-                # update the person record
-                # Values are hard coded, but it looks to work ;)
-                data = Storage()
-                fields = ["first_name",
-                          "middle_name",
-                          "last_name",
-                          "date_of_birth",
-                          "gender",
-                          "occupation"]
-                for f in fields:
-                    if f in _vars and _vars[f]:
-                        data[f] = _vars[f]
-                if data:
-                    db(ptable.id == person_id).update(**data)
 
-                # Now check the contact information
-                record = ptable(person_id)
-                pe_id = record.pe_id
-                if pe_id:
-                    # Check to see if the contact details have been set up
-                    # First Email
-                    record = table(pe_id=pe_id,
-                                   contact_method="EMAIL",
-                                  )
+            if person_id:
+                # Update the person record
+                query = ptable.id == person_id
+
+                # Validate and update the person record
+                data = Storage()
+                for f in ptable._filter_fields(_vars):
+                    value, error = manager.validate(ptable, None, f, _vars[f])
+                    if error:
+                        return (None, None)
+                    else:
+                        data[f] = value
+                if data:
+                    db(query).update(**data)
+
+                # Update the contact information
+                record = db(query).select(ptable.pe_id, limitby=(0, 1)).first()
+                if record:
+                    pe_id = record.pe_id
+
+                    record = ctable(pe_id=pe_id, contact_method="EMAIL")
                     email = _vars["email"]
                     if record and email: # update
                         if email != record.value:
-                            db(table.id == record.id).update(value=email)
+                            db(ctable.id == record.id).update(value=email)
                     else: # insert
-                        table.insert(pe_id=pe_id,
-                                             contact_method="EMAIL",
-                                             value=email
-                                             )
-                    # Now mobile phone
-                    record = table(pe_id=pe_id,
-                                   contact_method="SMS",
-                                  )
+                        ctable.insert(pe_id=pe_id,
+                                      contact_method="EMAIL",
+                                      value=email)
+
+                    record = ctable(pe_id=pe_id, contact_method="SMS")
                     if record: # update
                         if mobile != record.value:
-                            db(table.id == record.id).update(value=mobile)
+                            db(ctable.id == record.id).update(value=mobile)
                     else: # insert
                         if mobile: # Don't insert an empty number
-                            table.insert(pe_id=pe_id,
-                                         contact_method="SMS",
-                                         value=mobile
-                                        )
-                pass
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="SMS",
+                                          value=mobile)
+
             else:
+                # Create a new person record
+
                 # Filter out location_id (location selector form values
                 # being processed only after this widget has been validated)
                 _vars = Storage([(k, _vars[k])
-                                 for k in _vars
-                                    if k != "location_id"])
+                                 for k in _vars if k != "location_id"])
+
                 # Validate the email
                 email, error = email_validate(_vars.email, None)
                 if error:
                     return (person_id, error)
+
                 # Validate and add the person record
-                table = db.pr_person
-                for f in table._filter_fields(_vars):
-                    value, error = manager.validate(table, None, f, _vars[f])
+                for f in ptable._filter_fields(_vars):
+                    value, error = manager.validate(ptable, None, f, _vars[f])
                     if error:
                         return (None, None)
-                person_id = table.insert(**table._filter_fields(_vars))
+                person_id = ptable.insert(**ptable._filter_fields(_vars))
+
                 # Need to update post_vars here,
                 # for some reason this doesn't happen through validation alone
                 request.post_vars.update(person_id=str(person_id))
+
                 if person_id:
-                    # Update the super-entity
-                    manager.model.update_super(table, dict(id=person_id))
-                    person = table[person_id]
+                    # Update the super-entities
+                    manager.model.update_super(ptable, dict(id=person_id))
+                    person = ptable[person_id]
+
                     # Add contact information as provided
-                    table = db.pr_contact
-                    table.insert(pe_id=person.pe_id,
-                                contact_method="EMAIL",
-                                value=_vars.email)
+                    ctable.insert(pe_id=person.pe_id,
+                                  contact_method="EMAIL",
+                                  value=_vars.email)
                     if _vars.mobile_phone:
-                        table.insert(pe_id=person.pe_id,
-                                    contact_method="SMS",
-                                    value=_vars.mobile_phone)
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="SMS",
+                                      value=_vars.mobile_phone)
                 else:
+                    # Something went wrong
                     return (person_id, self.error_message)
 
         return (person_id, None)
