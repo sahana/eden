@@ -1308,8 +1308,6 @@ class IS_UTC_DATETIME(Validator):
         Example:
             - INPUT(_type="text", _name="name", requires=IS_UTC_DATETIME())
 
-        @author: nursix
-
         @param format:          strptime/strftime format template string, for
                                 directives refer to your strptime implementation
         @param error_message:   dict of error messages to be returned

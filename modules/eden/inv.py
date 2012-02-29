@@ -224,6 +224,7 @@ $(document).ready(function() {
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        list_fields = ["id",
+                                      # This is added in req/req_item_inv_item controller
                                       #"site_id",
                                       "item_id",
                                       "quantity",
