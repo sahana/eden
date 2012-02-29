@@ -162,6 +162,11 @@ def req_item_inv_item():
     response.s3.filter = (itable.item_id == req_item.item_id)
     # Tweak CRUD String for this context
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Inventories currently have this item in stock")
+    # Add Site to list_fields
+    list_fields = s3mgr.model.get_config("inv_inv_item", "list_fields")
+    list_fields.insert(1, "site_id")
+    s3mgr.configure("inv_inv_item", list_fields=list_fields)
+
     inv_items = s3_rest_controller("inv", "inv_item")
     output["items"] = inv_items["items"]
 
