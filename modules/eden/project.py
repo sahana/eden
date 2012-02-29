@@ -921,9 +921,11 @@ class S3ProjectModel(S3Model):
                 s3_debug("project_deduplicate", exception.message)
             else:
                 duplicate = current.db(query).select(table.id,
+                                                     table.name,
                                                      limitby=(0, 1)).first()
                 if duplicate:
                     item.id = duplicate.id
+                    item.data.name = duplicate.name
                     item.method = item.METHOD.UPDATE
         return
 
@@ -1811,10 +1813,22 @@ class S3ProjectTaskModel(S3Model):
                                 ]
                     ),
                     S3SearchOptionsWidget(
+                        name = "task_search_created_by",
+                        label = T("Created By"),
+                        field = ["created_by"],
+                        cols = 4
+                    ),
+                    S3SearchOptionsWidget(
                         name = "task_search_assignee",
                         label = T("Assigned To"),
                         field = ["pe_id"],
                         cols = 4
+                    ),
+                    S3SearchMinMaxWidget(
+                        name="task_search_date_created",
+                        method="range",
+                        label=T("Date Created"),
+                        field=["created_on"]
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_due",
