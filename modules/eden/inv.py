@@ -680,11 +680,17 @@ class S3IncomingModel(S3Model):
         table.site_id.label = T("By Warehouse")
         table.site_id.represent = s3db.org_site_represent
 
+        record = table[r.id]
+        site_id = record.site_id
+        site = table.site_id.represent(site_id,False)
+
         exporter = S3PDF()
         return exporter(r,
-                        componentname = "recv_item",
-                        formname = T("Goods Received Note"),
-                        filename = T("GRN"),
+                        method="list",
+                        formname="Goods Received Note",
+                        filename="GRN-%s" % site,
+                        report_hide_comments=True,
+                        componentname = "inv_recv_item",
                         **attr
                        )
 
@@ -702,13 +708,19 @@ class S3IncomingModel(S3Model):
         table.type.readable = False
         table.site_id.readable = True
         table.site_id.label = T("By Warehouse")
-        table.site_id.represent = s3dborg_site_represent
+        table.site_id.represent = s3db.org_site_represent
+
+        record = table[r.id]
+        site_id = record.site_id
+        site = table.site_id.represent(site_id,False)
 
         exporter = S3PDF()
         return exporter(r,
-                        componentname = "recv_item",
-                        formname = T("Donation Certificate"),
-                        filename = T("DC"),
+                        method="list",
+                        formname="Donation Certificate",
+                        filename="DC-%s" % site,
+                        report_hide_comments=True,
+                        componentname = "inv_recv_item",
                         **attr
                        )
 
@@ -947,11 +959,17 @@ class S3DistributionModel(S3Model):
         table = s3db.inv_recv
         table.date.readable = True
 
+        record = table[r.id]
+        site_id = record.site_id
+        site = table.site_id.represent(site_id,False)
+
         exporter = S3PDF()
         return exporter(r,
-                        componentname = "send_item",
-                        formname = T("Consignment Note"),
-                        filename = "CN",
+                        method="list",
+                        componentname="inv_send_item",
+                        formname="Waybill",
+                        filename="Waybill-%s" % site,
+                        report_hide_comments=True,
                         **attr
                        )
 
@@ -1100,14 +1118,14 @@ def inv_recv_rheader(r):
             else:
                 grn_btn = A( T("Goods Received Note"),
                               _href = URL(f = "recv",
-                                          args = [record.id, "list.pdf"]
+                                          args = [record.id, "form"]
                                           ),
                               _class = "action-btn"
                               )
                 rfooter.append(grn_btn)
                 dc_btn = A( T("Donation Certificate"),
                               _href = URL(f = "recv",
-                                          args = [record.id, "list.pdf"]
+                                          args = [record.id, "cert"]
                                           ),
                               _class = "action-btn"
                               )
@@ -1197,7 +1215,7 @@ def inv_send_rheader(r):
             else:
                 cn_btn = A( T("Waybill"),
                               _href = URL(f = "send",
-                                          args = [record.id, "list.pdf"]
+                                          args = [record.id, "form"]
                                           ),
                               _class = "action-btn"
                               )

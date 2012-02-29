@@ -56,8 +56,6 @@ def inv_recv_controller():
 
     output = s3_rest_controller("inv", "recv",
                                 rheader=eden.inv.inv_recv_rheader,
-                                componentname="inv_recv_item",
-                                report_hide_comments=True,
                                 )
     return output
 
@@ -66,6 +64,7 @@ def inv_send_controller():
     """ RESTful CRUD controller """
     tablename = "inv_send"
     table = s3db.inv_send
+
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission for any facility to send a shipment.")
@@ -113,8 +112,6 @@ def inv_send_controller():
 
     output = s3_rest_controller("inv", "send",
                                 rheader=eden.inv.inv_send_rheader,
-                                componentname="inv_send_item",
-                                report_hide_comments=True
                                )
     return output
 
