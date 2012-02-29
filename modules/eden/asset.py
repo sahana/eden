@@ -420,6 +420,7 @@ class S3AssetModel(S3Model):
         table.site_id.readable = True
         table.site_id.writable = True
         table.site_id.widget = None
+        table.site_id.label = T("Facility/Site")
         table.site_id.comment = (DIV(_class="tooltip",
                                      _title="%s|%s" % (T("Facility/Site"),
                                                        T("Enter some characters to bring up a list of possible matches")),

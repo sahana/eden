@@ -35,6 +35,7 @@ __all__ = ["S3RequestModel",
            "S3CommitPersonModel",
            "req_item_onaccept",
            "req_rheader",
+           "req_match",
            ]
 
 import datetime
@@ -326,7 +327,7 @@ class S3RequestModel(S3Model):
                        "site_id"
                        #"type",
                        #"event_id",
-                       
+
                        ]
 
         if settings.get_req_use_req_number():
@@ -553,7 +554,7 @@ $(function() {
             current.auth.s3_has_permission("read", "req_req"):
             return [
                     (T("Requests"), "req"),
-                    (T("Match Requests"), "match/"),
+                    (T("Match Requests"), "req_match/"),
                     (T("Commit"), "commit")
                     ]
         else:
@@ -1897,5 +1898,75 @@ def req_rheader(r, check_page = False):
                 # Removed because causes an error if validation fails twice
                 # return response.s3.req_helptext_script
     return None
+
+# =============================================================================
+def req_match():
+    """
+        Function to be called from controller functions to display all
+        requests as a tab for a site.
+        @ToDo: Filter out requests from this site
+    """
+
+    request = current.request
+    manager = current.manager
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    settings = current.deployment_settings
+
+    output = dict()
+
+    if "viewing" not in request.vars:
+        return output
+    else:
+        viewing = request.vars.viewing
+    if "." in viewing:
+        tablename, id = viewing.split(".", 1)
+    else:
+        return output
+
+    site_id = s3db[tablename][id].site_id
+    s3.actions = [dict(url = URL(c = "req",
+                                 f = "req",
+                                 args = ["[id]","check"],
+                                 vars = {"site_id": site_id}
+                                 ),
+                       _class = "action-btn",
+                       label = str(T("Check")),
+                       ),
+                  dict(url = URL(c = "req",
+                                 f = "commit_req",
+                                 args = ["[id]"],
+                                 vars = {"site_id": site_id}
+                                 ),
+                       _class = "action-btn",
+                       label = str(T("Commit")),
+                       ),
+                  dict(url = URL(c = "req",
+                                 f = "send_req",
+                                 args = ["[id]"],
+                                 vars = {"site_id": site_id}
+                                 ),
+                       _class = "action-btn",
+                       label = str(T("Send")),
+                       )
+                  ]
+
+    if tablename == "org_office":
+        rheader = s3db.org_rheader
+    elif tablename == "cr_shelter":
+        rheader = s3.shelter_rheader
+    elif tablename == "hms_hospital":
+        rheader = s3db.hms_hospital_rheader
+    else:
+        rheader = None
+
+    manager.configure("req_req", insertable=False)
+    output = current.rest_controller("req", "req", rheader = rheader)
+
+    if tablename == "org_office" and isinstance(output, dict):
+        output["title"] = T("Warehouse Details")
+    return output
 
 # END =========================================================================

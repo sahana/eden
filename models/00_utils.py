@@ -528,4 +528,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
     return output
 
+current.rest_controller = s3_rest_controller
+
 # END =========================================================================

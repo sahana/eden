@@ -185,17 +185,10 @@ def incoming():
     return inv_incoming()
 
 # =============================================================================
-def match():
+def req_match():
     """ Match Requests """
 
-    return req_match()
-
-# -----------------------------------------------------------------------------
-#def req_match():
-#    """ Match Requests """
-#
-#    s3mgr.load("req_req")
-#    return response.s3.req_match()
+    return s3db.req_match()
 
 # =============================================================================
 def inv_item():
@@ -403,7 +396,7 @@ def recv_process():
     recv_id = request.args[0]
     rtable = s3db.inv_recv
     otable = s3db.org_office
-    
+
     if not auth.s3_has_permission("update",
                                   rtable,
                                   record_id=recv_id):
@@ -880,7 +873,7 @@ def send_cancel():
 #==============================================================================
 def copy_send_to_recv(send_id):
     """ function to copy data from a shipment which was sent to the warehouse to a recv shipment (when the shipment is sent)
-    @ToDo: Make sure that the original shipment gets "received" when this shipment is received. 
+    @ToDo: Make sure that the original shipment gets "received" when this shipment is received.
     """
     r_send = s3db.inv_send[send_id]
     site_id = r_send.to_site_id
@@ -924,7 +917,7 @@ def copy_send_to_recv(send_id):
                       item_pack_id = sent_item.inv_send_item.item_pack_id,
                       quantity = sent_item.inv_send_item.quantity,
                       req_item_id = sent_item.inv_send_item.req_item_id)
-    
+
 def recv_sent():
     """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
         @ToDo: Consider making obsolete
