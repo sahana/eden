@@ -1256,11 +1256,14 @@ def complete():
                             answerList = optionList[col]
                     else:
                         if type == "Date":
-                            (dtYear, dtMonth, dtDay, dtHour, dtMinute, dtSecond) = \
-                                     xlrd.xldate_as_tuple(cellValue,
-                                                          workbook.datemode)
-                            dtValue = date(dtYear, dtMonth, dtDay)
-                            cellValue = dtValue.isoformat()
+                            try:
+                                (dtYear, dtMonth, dtDay, dtHour, dtMinute, dtSecond) = \
+                                         xlrd.xldate_as_tuple(cellValue,
+                                                              workbook.datemode)
+                                dtValue = date(dtYear, dtMonth, dtDay)
+                                cellValue = dtValue.isoformat()
+                            except:
+                                pass
                         answerList += "%s" % cellValue
             body += ',"%s"' % answerList
         openFile.write(header)
