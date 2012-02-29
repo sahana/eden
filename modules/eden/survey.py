@@ -152,10 +152,10 @@ class S3TemplateModel(S3Model):
         # translated when the spreadsheet is printed
         hierarchy_elements = {
                               "L0":"Country",
-                              "L1":"State",
-                              "L2":"City",
-                              "L3":"Town",
-                              "L4":"Neighborhood",
+                              "L1":"District",
+                              "L2":"SubDistrict",
+                              "L3":"Suco",
+                              "L4":"Village",
                               "Lat":"Latitude",
                               "Lon":"Longitude",
                              }
