@@ -1811,10 +1811,22 @@ class S3ProjectTaskModel(S3Model):
                                 ]
                     ),
                     S3SearchOptionsWidget(
+                        name = "task_search_created_by",
+                        label = T("Created By"),
+                        field = ["created_by"],
+                        cols = 4
+                    ),
+                    S3SearchOptionsWidget(
                         name = "task_search_assignee",
                         label = T("Assigned To"),
                         field = ["pe_id"],
                         cols = 4
+                    ),
+                    S3SearchMinMaxWidget(
+                        name="task_search_date_created",
+                        method="range",
+                        label=T("Date Created"),
+                        field=["created_on"]
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_due",
