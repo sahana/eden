@@ -1112,11 +1112,24 @@ class S3ProjectDRRModel(S3Model):
             4: T("Customer"), # T("Beneficiary")?
         }
         project_organisation_lead_role = 1
+        
+        organisation_help = T("Add all organisations which are involved in different roles in this project")
 
         tablename = "project_organisation"
         table = self.define_table(tablename,
                                   project_id(),
-                                  organisation_id(),
+                                  organisation_id(comment = DIV(A(T("Add Organization"),
+                                                                  _class="colorbox",
+                                                                  _href=URL(c="org", f="organisation",
+                                                                            args="create",
+                                                                            vars=dict(format="popup")),
+                                                                  _target="top",
+                                                                  _title=T("Add Organization")),
+                                                                DIV(_class="tooltip",
+                                                                    _title="%s|%s" % (T("Organization"),
+                                                                                      organisation_help))
+                                                                ) 
+                                                  ),
                                   Field("role", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
                                         represent = lambda opt, row=None: \
@@ -1800,10 +1813,22 @@ class S3ProjectTaskModel(S3Model):
                                 ]
                     ),
                     S3SearchOptionsWidget(
+                        name = "task_search_created_by",
+                        label = T("Created By"),
+                        field = ["created_by"],
+                        cols = 4
+                    ),
+                    S3SearchOptionsWidget(
                         name = "task_search_assignee",
                         label = T("Assigned To"),
                         field = ["pe_id"],
                         cols = 4
+                    ),
+                    S3SearchMinMaxWidget(
+                        name="task_search_date_created",
+                        method="range",
+                        label=T("Date Created"),
+                        field=["created_on"]
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_due",

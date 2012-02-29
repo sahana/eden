@@ -144,8 +144,10 @@ class S3RequestModel(S3Model):
                                         "datetime",
                                         label = T("Date Requested"),
                                         requires = [IS_EMPTY_OR(
-                                                    IS_UTC_DATETIME_IN_RANGE(
-                                                        maximum=request.utcnow,
+                                                    #IS_UTC_DATETIME_IN_RANGE(
+                                                    IS_DATE_IN_RANGE(
+                                                        #maximum=request.utcnow,
+                                                        maximum=request.utcnow.date(),
                                                         error_message="%s %%(max)s!" %
                                                             T("Enter a valid past date")))],
                                         # @ToDo: deployment_setting
@@ -175,8 +177,10 @@ class S3RequestModel(S3Model):
                                         "datetime",
                                         label = T("Date Required"),
                                         requires = [IS_EMPTY_OR(
-                                                    IS_UTC_DATETIME_IN_RANGE(
-                                                      minimum=request.utcnow - datetime.timedelta(days=1),
+                                                    #IS_UTC_DATETIME_IN_RANGE(
+                                                    IS_DATE_IN_RANGE(
+                                                      #minimum=request.utcnow - datetime.timedelta(days=1),
+                                                      minimum=request.utcnow.date() - datetime.timedelta(days=1),
                                                       error_message="%s %%(min)s!" %
                                                           T("Enter a valid future date")))],
                                         # @ToDo: deployment_setting
@@ -319,8 +323,11 @@ class S3RequestModel(S3Model):
                                  label = T("Request"),
                                  ondelete = "CASCADE")
         list_fields = ["id",
-                       "type",
-                       "event_id",]
+                       "site_id"
+                       #"type",
+                       #"event_id",
+                       
+                       ]
 
         if settings.get_req_use_req_number():
             list_fields.append("request_number")
@@ -458,19 +465,19 @@ $(function() {
         return
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_prep():
+    def req_prep(r):
         """
             Function to be called from REST prep functions
              - main module & components (sites)
         """
-
-        s3db = current.s3db
-        table = s3db.req_req
-        default_type = table.type.default
-        if table.type.default:
-            req_submit_button = {1:T("Save and add Items"),
-                                 3:T("Save and add People")}
-            current.manager.s3.crud.submit_button = req_submit_button[default_type]
+        if not r.component:
+            s3db = current.s3db
+            table = s3db.req_req
+            default_type = table.type.default
+            if table.type.default:
+                req_submit_button = {1:T("Save and add Items"),
+                                     3:T("Save and add People")}
+                current.manager.s3.crud.submit_button = req_submit_button[default_type]
 
         return
 
