@@ -147,19 +147,6 @@ class S3TemplateModel(S3Model):
                             4: T("Master")
                           }
 
-        # The location hierarchy strings are added here (rather than using
-        # the system settings) because they will be dynamically
-        # translated when the spreadsheet is printed
-        hierarchy_elements = {
-                              "L0":"Country",
-                              "L1":"State",
-                              "L2":"City",
-                              "L3":"Town",
-                              "L4":"Neighborhood",
-                              "Lat":"Latitude",
-                              "Lon":"Longitude",
-                             }
-
         """
             The survey_template table
 
@@ -315,7 +302,6 @@ class S3TemplateModel(S3Model):
         return Storage(
             survey_template_id = template_id,
             survey_template_status = template_status,
-            survey_hierarchy_elements = hierarchy_elements,
         )
 
     # ---------------------------------------------------------------------
@@ -431,10 +417,12 @@ class S3TemplateModel(S3Model):
                 posn += 1
                 addQuestion(template_id, name, code, None, type, posn)
             for loc in locationList:
-                if loc in s3.survey_hierarchy_elements:
-                    name = s3.survey_hierarchy_elements[loc]
+                if loc == "Lat":
+                    name = "Latitude"
+                elif loc == "Lon":
+                    name = "Longitude"
                 else:
-                    continue
+                    name = loc
                 code = "STD-%s" % loc
                 if loc == "Lat" or loc == "Lon":
                     type = "Numeric"
@@ -821,7 +809,8 @@ class S3QuestionModel(S3Model):
 
     names = ["survey_question",
              "survey_question_metadata",
-             "survey_question_list"
+             "survey_question_list",
+             "survey_qstn_name_represent"
             ]
 
     def model(self):
@@ -848,6 +837,7 @@ class S3QuestionModel(S3Model):
                                        "string",
                                        length=200,
                                        notnull=True,
+                                       represent = self.qstn_name_represent,
                                        ),
                                  Field("code",
                                        "string",
@@ -984,8 +974,18 @@ class S3QuestionModel(S3Model):
                         deduplicate = self.survey_question_list_duplicate,
                         )
         # ---------------------------------------------------------------------
-        return Storage()
+        return Storage(survey_qstn_name_represent = self.qstn_name_represent)
 
+    @staticmethod
+    def qstn_name_represent(value):
+        """
+            return the question name, for locations in the gis hierarchy
+            the localised name will be returned
+        """
+        if value == "L0" or value == "L1" or value == "L2" or value == "L3" or value == "L4":
+            return current.gis.get_location_hierarchy(value)
+        else:
+            return value
 
     @staticmethod
     def question_onvalidate(form):
@@ -1160,6 +1160,7 @@ def survey_getAllQuestionsForTemplate(template_id):
     """
     s3db = current.s3db
     db = current.db
+    s3 = current.response.s3
 
     sectable = s3db.survey_section
     q_ltable = s3db.survey_question_list
@@ -1180,7 +1181,7 @@ def survey_getAllQuestionsForTemplate(template_id):
         question = {}
         question["qstn_id"] = row.survey_question.id
         question["code"] = row.survey_question.code
-        question["name"] = row.survey_question.name
+        question["name"] = s3.survey_qstn_name_represent(row.survey_question.name)
         question["type"] = row.survey_question.type
         question["posn"] = row.survey_question_list.posn
         question["section"] = row.survey_section.name
@@ -1266,6 +1267,15 @@ def survey_getQuestionFromName(name, series_id):
                           qsntable.type,
                           q_ltable.posn,
                           limitby=(0, 1)).first()
+    if record == None:
+        # Unable to get the record from the question name
+        # It could be because the question is a location
+        # So get the location names and then check
+        locList = current.gis.get_all_current_levels()
+        for row in locList.items():
+            if row[1] == name:
+                return survey_getQuestionFromName(row[0],series_id)
+        
     question = {}
     question["qstn_id"] = record.survey_question.id
     question["code"] = record.survey_question.code

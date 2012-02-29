@@ -357,9 +357,13 @@ class S3PDF(S3Method):
             footer = getParam("footer")
             if footer == None:
                 footer = self.pageFooter
+            filename = getParam("filename")
+            if filename == None:
+                filename = title
             self.newDocument(title,
                              header=header,
-                             footer=footer)
+                             footer=footer,
+                             filename = filename)
             try:
                 id = r.component_id
                 if id == None:
@@ -392,13 +396,18 @@ class S3PDF(S3Method):
                 list_fields = getParam("list_fields")
                 report_groupby = getParam("report_groupby")
                 report_hide_comments = getParam("report_hide_comments")
+                filename = getParam("filename")
+                if filename == None:
+                    filename = title
+
 
                 # Create the document shell
                 if title == None:
                     title = self.defaultTitle(self.resource)
                 self.newDocument(title,
                                  header=self.pageHeader,
-                                 footer=self.pageFooter)
+                                 footer=self.pageFooter,
+                                 filename = filename)
 
                 # Add details to the document
                 if componentname == None:
@@ -1911,6 +1920,7 @@ class S3PDF(S3Method):
                     title,
                     header,
                     footer,
+                    filename = None,
                     heading=None,
                    ):
         """
@@ -1926,7 +1936,10 @@ class S3PDF(S3Method):
         # Get the document variables
         now = self.request.now.isoformat()[:19].replace("T", " ")
         docTitle = "%s %s" % (title, now)
-        self.filename = "%s_%s.pdf" % (title, now)
+        if filename == None:
+            self.filename = "%s_%s.pdf" % (title, now)
+        else:
+            self.filename = "%s_%s.pdf" % (filename, now)
         self.output = StringIO()
         self.doc = EdenDocTemplate(self.output, title=docTitle)
         self.doc.setPageTemplates(header,footer)
