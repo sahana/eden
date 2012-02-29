@@ -852,7 +852,7 @@ class S3DistributionModel(S3Model):
         
         # Redirect to the Items tabs after creation
         send_item_url = URL(f="send", args=["[id]",
-                                                "send_item"])
+                                            "send_item"])
         self.configure(tablename,
                         create_next = send_item_url,
                         update_next = send_item_url)
