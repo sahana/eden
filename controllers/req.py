@@ -479,12 +479,10 @@ def send_req():
                      f = "req",
                      args = [req_id]))
 
-    to_location_id = s3db.org_site[r_req.site_id].location_id
-
     # Create a new send record
     send_id = s3db.inv_send.insert(date = request.utcnow,
                                    site_id = site_id,
-                                   to_site_id = to_location_id)
+                                   to_site_id = r_req.site_id)
 
     # Only select items which are in the warehouse
     ritable = s3db.req_req_item
