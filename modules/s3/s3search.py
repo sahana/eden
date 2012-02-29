@@ -2337,14 +2337,8 @@ class S3OrganisationSearch(S3Search):
             fields = [table.id, field, field2]
 
             if filter == "~":
-                # pr_person Autocomplete
-                if " " in value:
-                    value1, value2 = value.split(" ", 1)
-                    query = (field.lower().like("%" + value1 + "%")) & \
-                            (field2.lower().like("%" + value2 + "%"))
-                else:
-                    query = (field.lower().like("%" + value + "%")) | \
-                            (field2.lower().like("%" + value + "%"))
+                query = (field.lower().like("%" + value + "%")) | \
+                        (field2.lower().like("%" + value + "%"))
 
             else:
                 output = xml.json_message(False,
