@@ -1668,7 +1668,9 @@ class S3Importer(S3CRUD):
         """ Defines the upload table """
 
         db = current.db
-
+        uploadfolder = os.path.join(current.request.folder,
+                                    "uploads",
+                                    )
         if cls.UPLOAD_TABLE_NAME not in db:
             upload_table = db.define_table(cls.UPLOAD_TABLE_NAME,
                     Field("controller",

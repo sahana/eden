@@ -1208,8 +1208,15 @@ def complete():
             print >> sys.stderr, "ERROR: xlrd & xlwt modules are needed for importing spreadsheets"
             return None
         workbook = xlrd.open_workbook(file_contents=uploadFile)
-        sheetR = workbook.sheet_by_name("Assessment")
-        sheetM = workbook.sheet_by_name("Metadata")
+        try:
+            sheetR = workbook.sheet_by_name("Assessment")
+            sheetM = workbook.sheet_by_name("Metadata")
+        except:
+            session.error = T("You need to use the spreadsheet which you can download from this page") 
+            redirect(URL(c="survey",
+                     f="newAssessment",
+                     args=[],
+                     vars = {"viewing":"survey_series.%s" % series_id}))
         header = ''
         body = ''
         for row in xrange(1, sheetM.nrows):

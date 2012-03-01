@@ -46,6 +46,7 @@ from ..s3 import *
 try:
     from lxml import etree, html
 except ImportError:
+    import sys
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
