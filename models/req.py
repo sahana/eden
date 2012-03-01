@@ -48,7 +48,7 @@ def req_controller():
         type_field.writable = False
 
     def prep(r):
-        
+
         s3db.req_prep(r)
 
         # Remove type from list_fields
@@ -283,67 +283,6 @@ def req_skill_controller():
     response.s3.postp = postp
 
     output = s3_rest_controller("req", "req_skill")
-
-    return output
-
-# ---------------------------------------------------------------------
-def req_match():
-    """
-        Function to be called from controller functions to display all
-        requests as a tab for a site.
-        @ToDo: Filter out requests from this site
-    """
-
-    output = dict()
-
-    if "viewing" not in request.vars:
-        return output
-    else:
-        viewing = request.vars.viewing
-    if "." in viewing:
-        tablename, id = viewing.split(".", 1)
-    else:
-        return output
-    site_id = s3db[tablename][id].site_id
-    response.s3.actions = [dict(url = URL(c = "req",
-                                          f = "req",
-                                          args = ["[id]","check"],
-                                          vars = {"site_id": site_id}
-                                         ),
-                                _class = "action-btn",
-                                label = str(T("Check")),
-                                ),
-                           dict(url = URL(c = "req",
-                                          f = "commit_req",
-                                          args = ["[id]"],
-                                          vars = {"site_id": site_id}
-                                         ),
-                                _class = "action-btn",
-                                label = str(T("Commit")),
-                                ),
-                           dict(url = URL(c = "req",
-                                          f = "send_req",
-                                          args = ["[id]"],
-                                          vars = {"site_id": site_id}
-                                         ),
-                                _class = "action-btn",
-                                label = str(T("Send")),
-                                )
-                           ]
-
-    rheader_dict = dict(org_office = s3db.org_rheader)
-    if deployment_settings.has_module("cr"):
-        rheader_dict["cr_shelter"] = response.s3.shelter_rheader
-    if deployment_settings.has_module("hms"):
-        rheader_dict["hms_hospital"] = s3db.hms_hospital_rheader
-
-    s3mgr.configure("req_req", insertable=False)
-    output = s3_rest_controller("req", "req",
-                                method = "list",
-                                rheader = rheader_dict[tablename])
-
-    if tablename == "org_office" and isinstance(output, dict):
-        output["title"] = T("Warehouse Details")
 
     return output
 
