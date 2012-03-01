@@ -80,6 +80,7 @@ class SpaceAdmin(admin.ModelAdmin):
         if not change:
             obj.author = request.user
         obj.save()
+        request.user.profile.spaces.add(obj.id)
 
 class DocumentAdmin(admin.ModelAdmin):
 

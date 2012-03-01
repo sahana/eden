@@ -1,94 +1,99 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
+# 
+# Translators:
+# Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-28 17:13+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Project-Id-Version: e-cidadania\n"
+"Report-Msgid-Bugs-To: http://dev.ecidadania.org/\n"
+"POT-Creation-Date: 2012-01-04 17:33+0100\n"
+"PO-Revision-Date: 2012-02-29 08:50+0000\n"
+"Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
+"Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/ecidadania/language/gl_ES/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: gl_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: models.py:33
 msgid "Male"
-msgstr ""
+msgstr "Home"
 
 #: models.py:34
 msgid "Female"
-msgstr ""
+msgstr "Muller"
 
 #: models.py:42
 msgid "Interes"
-msgstr ""
+msgstr "Interese"
 
 #: models.py:54
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #: models.py:55
 msgid "Surname"
-msgstr ""
+msgstr "Apelido"
 
 #: models.py:56
 msgid "Gender"
-msgstr ""
+msgstr "Sexo"
 
 #: models.py:59
 msgid "Birth date"
-msgstr ""
+msgstr "Data de nacemento"
 
 #: models.py:63
 msgid "Province"
-msgstr ""
+msgstr "Provincia"
 
 #: models.py:64
 msgid "Region"
-msgstr ""
+msgstr "Rexión"
 
 #: models.py:65
 msgid "Neighborhood"
-msgstr ""
+msgstr "Zona"
 
 #: models.py:68
 msgid "Address"
-msgstr ""
+msgstr "Enderezo"
 
 #: models.py:69
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: models.py:71
 msgid "Floor"
-msgstr ""
+msgstr "Piso"
 
 #: models.py:72
 msgid "Letter"
-msgstr ""
+msgstr "Letra"
 
 #: models.py:75
 msgid "Phone 1"
-msgstr ""
+msgstr "Teléfono 1"
 
 #: models.py:76 models.py:78
 msgid "9 digits maximum"
-msgstr ""
+msgstr "Máximo de 9 díxitos"
 
 #: models.py:77
 msgid "Phone 2"
-msgstr ""
+msgstr "Teléfono 2"
 
 #: models.py:80
 msgid "Identification document"
-msgstr ""
+msgstr "Documento de identidade"
 
 #: models.py:83
 msgid "Website"
-msgstr ""
+msgstr "Páxina web"
+
+#: models.py:85
+msgid "The URL will be checked"
+msgstr "O URL comprobarase"
