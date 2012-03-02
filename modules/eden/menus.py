@@ -799,8 +799,6 @@ class S3OptionsMenu:
         inv_recv_list = crud_strings.inv_recv.subtitle_list
         inv_recv_search = crud_strings.inv_recv.title_search
 
-        req = current.deployment_settings.has_module("req")
-
         return M()(
                     #M("Home", f="index"),
                     M("Warehouses", c="inv", f="warehouse")(
@@ -844,16 +842,14 @@ class S3OptionsMenu:
                         M("New Item Category", m="create"),
                         M("List All"),
                     ),
-                    M("Requests", c="req", f="req",
-                      restrict=[req])(
+                    M("Requests", c="req", f="req")(
                         M("New", m="create"),
                         M("List All"),
                         M("List All Requested Items", f="req_item"),
                         M("List All Requested Skills", f="req_skill"),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
-                    M("Commitments", c="req", f="commit",
-                      restrict=[req])(
+                    M("Commitments", c="req", f="commit")(
                         M("List All")
                     ),
                 )
