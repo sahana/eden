@@ -289,6 +289,7 @@ s3.roles_permitted = roles_permitted
 # Reusable comments field to include in other table definitions
 s3_comments = S3ReusableField("comments", "text",
                               label = T("Comments"),
+                              widget = comments_widget,
                               comment = DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Comments"),
                                                               T("Please use this field to record any additional information, including a history of the record if it is updated."))))

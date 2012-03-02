@@ -197,6 +197,9 @@ fieldset {
 input, select, textarea {
     font-size: 100%;
 }
+textarea.comments {
+    height: 50px;
+}
 .hide {
     display: none;
 }

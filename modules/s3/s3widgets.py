@@ -53,6 +53,7 @@ __all__ = ["S3HiddenWidget",
            "S3TimeIntervalWidget",
            "S3EmbedComponentWidget",
            "S3SliderWidget",
+           "comments_widget",
            ]
 
 import copy
@@ -2944,6 +2945,14 @@ class S3EmbedComponentWidget(FormWidget):
                        ac_row,
                        table,
                        divider)
+
+# -----------------------------------------------------------------------------
+def comments_widget(field, value):
+    return TEXTAREA(_name=field.name,
+                    _id="%s_%s" % (field._tablename, field.name),
+                    _class="comments %s" % (field.type),
+                    _value=value,
+                    requires=field.requires)
 
 # -----------------------------------------------------------------------------
 class S3SliderWidget(FormWidget):
