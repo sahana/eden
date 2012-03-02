@@ -362,10 +362,11 @@ class S3HRModel(S3Model):
         """ On-delete routine for HR records """
 
         db = current.db
+        s3db = current.s3db
 
-        htable = self.hrm_human_resource
-        ptable = self.pr_person
-        ltable = self.pr_person_user
+        htable = s3db.hrm_human_resource
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
         utable = db.auth_user
 
         user = None

@@ -3905,9 +3905,9 @@ S3.gis.layers_feature_queries[%i] = {
             # Add just the default Base Layer
             # @ToDo
             layer_types = [
-                #OSMLayer,
+                OSMLayer,
                 # v3 doesn't work when initially hidden
-                GoogleLayer,
+                #GoogleLayer,
             ]
 
         layers_config = ""

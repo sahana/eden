@@ -2109,10 +2109,10 @@ $.post('%s',
         if bounds == {}:
             bounds = gis.get_bounds()
         map = gis.show_map(feature_queries = feature_queries,
-                           height = 600,
-                           width = 720,
+                           #height = 600,
+                           #width = 720,
                            bbox = bounds,
-                           collapsed = True,
+                           #collapsed = True,
                            catalogue_layers = True,
                           )
         allQuestions = survey_getAllQuestionsForSeries(series_id)
