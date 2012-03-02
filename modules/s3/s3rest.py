@@ -332,6 +332,20 @@ class S3RequestManager(object):
                 v = record.get(fieldname, None)
                 if v and v == value:
                     return (value, None)
+                self_id = record[table._id.name]
+                requires = field.requires
+                if field.unique and not requires:
+                    field.requires = IS_NOT_IN_DB(current.db, str(field))
+                    field.requires.set_self_id(self_id)
+                else:
+                    if not isinstance(requires, (list, tuple)):
+                        requires = [requires]
+                    for r in requires:
+                        if hasattr(r, "set_self_id"):
+                            r.set_self_id(self_id)
+                        if hasattr(r, "other") and \
+                            hasattr(r.other, "set_self_id"):
+                            r.other.set_self_id(self_id)
             try:
                 value, error = field.validate(value)
             except:
