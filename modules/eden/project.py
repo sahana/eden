@@ -104,6 +104,7 @@ class S3ProjectModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
+        comments = s3.comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -288,6 +289,9 @@ class S3ProjectModel(S3Model):
                                    writable = drr,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
+                             comments(comment=DIV(_class="tooltip",
+                                                  _title="%s|%s" % (T("Comments"),
+                                                                    T("Outcomes, Impact, Challenges")))),
                              format="%(name)s",
                              *meta_fields())
 
@@ -555,7 +559,7 @@ class S3ProjectModel(S3Model):
                                    writable=False,
                                    label = "%s (%s)" % (T("Time Taken"),
                                                         T("hours"))),
-                             s3.comments(),
+                             comments(),
                              format="%(name)s",
                              *meta_fields())
 
@@ -1142,6 +1146,7 @@ class S3ProjectDRRModel(S3Model):
                                         widget = IS_FLOAT_AMOUNT.widget,
                                         label = T("Funds Contributed by this Organization")),
                                   currency_type(),
+                                  s3.comments(),
                                   *s3.meta_fields())
 
         # Field configuration?

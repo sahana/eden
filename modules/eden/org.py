@@ -962,6 +962,8 @@ class S3OfficeModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
 
+        super_link = self.super_link
+
         # =============================================================================
         # Offices
         #
@@ -987,8 +989,9 @@ class S3OfficeModel(S3Model):
 
         tablename = "org_office"
         table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  self.super_link("site_id", "org_site"),
+                                  super_link("pe_id", "pr_pentity"),
+                                  super_link("site_id", "org_site"),
+                                  super_link("doc_id", "doc_entity"),
                                   Field("name", notnull=True,
                                         length=64,           # Mayon Compatibility
                                         label = T("Name")),
@@ -1357,6 +1360,7 @@ def org_rheader(r, tabs=[]):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
+                (T("Attachments"), "document"),
                ]
         try:
             tabs = tabs + current.s3db.inv_tabs(r)
