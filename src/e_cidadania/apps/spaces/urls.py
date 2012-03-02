@@ -72,7 +72,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
     url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/delete/$', DeleteEvent.as_view(), name='delete-event'),
     
-    url(r'^(?P<space_name>\w+)/event(?P<event_id>\d+)/$', ViewEvent.as_view(), name='view-event'),
+    url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/$', ViewEvent.as_view(), name='view-event'),
 
     url(r'^(?P<space_name>\w+)/event/$', ListEvents.as_view(), name='list-events'),
 

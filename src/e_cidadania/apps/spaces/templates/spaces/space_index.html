@@ -113,6 +113,8 @@
                             <ul class="unstyled">
                                 {% for m in event %}
                                     <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a></li>
+                                {% empty %}
+                                    <li>{% trans "There are no events." %}</li>
                                 {% endfor %}
                             </ul>
                         </div>

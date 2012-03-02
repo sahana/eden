@@ -188,7 +188,7 @@ class ViewSpaceIndex(DetailView):
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
         context['messages'] = messages.get_messages(self.request)
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
-        context['event'] = Event.objects.filter(space=place.id)
+        context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
         return context
 
 
