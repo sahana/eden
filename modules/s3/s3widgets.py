@@ -1594,6 +1594,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                 _disabled="disabled")
             street_widget = TEXTAREA(value=addr_street,
                                      _id="gis_location_street",
+                                     _class="text",
                                      _name="gis_location_street",
                                      _disabled="disabled")
             postcode_widget = INPUT(value=postcode,
@@ -1651,6 +1652,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
             name_widget = INPUT(_id="gis_location_name",
                                 _name="gis_location_name")
             street_widget = TEXTAREA(_id="gis_location_street",
+                                     _class="text",
                                      _name="gis_location_street")
             postcode_widget = INPUT(_id="gis_location_postcode",
                                     _name="gis_location_postcode")
