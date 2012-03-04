@@ -1387,8 +1387,6 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                         represent = this_location.name
 
                     if map_selector:
-                        # Load the Models
-                        manager.load("gis_layer_openstreetmap")
                         zoom = config.zoom
                         if lat is None or lon is None:
                             map_lat = config.lat
@@ -1419,7 +1417,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                                  collapsed = True,
                                                  search = True,
                                                  window = True,
-                                                 window_hide = True
+                                                 window_hide = True,
+                                                 location_selector = True
                                                 )
                 else:
                     # Bad location_id
@@ -1459,7 +1458,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                              collapsed = True,
                                              search = True,
                                              window = True,
-                                             window_hide = True
+                                             window_hide = True,
+                                             location_selector = True
                                             )
             else:
                 # No Permission to create a location, so don't render a row
@@ -1630,7 +1630,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                     label = LABEL("%s:" % level)
                 row = TR(TD(label), TD(),
                          _id="gis_location_%s_label__row" % level,
-                         _class="%s box_middle" % hidden)
+                         _class="%s locselect box_middle" % hidden)
                 Lx_rows.append(row)
                 widget = DIV(INPUT(value=id,
                                    _id="gis_location_%s" % level,

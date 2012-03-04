@@ -1010,13 +1010,6 @@ class S3OfficeModel(S3Model):
                                         requires = IS_NULL_OR(IS_IN_SET(org_office_type_opts)),
                                         represent = lambda opt: \
                                           org_office_type_opts.get(opt, UNKNOWN_OPT)),
-                                  # @ToDo: Deprecate
-                                  Field("office_id", "reference org_office", # This form of hierarchy may not work on all Databases
-                                        readable=False,
-                                        writable=False,
-                                        label = T("Parent Office"),
-                                        represent = self.org_office_represent,
-                                        comment = office_comment),
                                   location_id(),
                                   Field("phone1", label = T("Phone 1"),
                                         requires = IS_NULL_OR(s3_phone_requires)),
@@ -1048,12 +1041,6 @@ class S3OfficeModel(S3Model):
                                   s3.comments(),
                                   *(s3.address_fields() + s3.meta_fields()))
 
-        # Field settings
-        table.office_id.requires = IS_NULL_OR(IS_ONE_OF(db, "org_office.id",
-                                                        "%(name)s",
-                                                        filterby = "type",
-                                                        filter_opts = [1, 2, 3, 4] # All bar '5' (Warehouse)
-                                                        ))
         if not settings.get_gis_building_name():
             table.building_name.readable = False
 

@@ -590,17 +590,23 @@ function addToolbar() {
         addGeolocateControl(toolbar)
     }
 
-    toolbar.add(zoomout);
-    toolbar.add(zoomin);
-    toolbar.add(S3.gis.panButton);
-    toolbar.addSeparator();
+    // Don't include the Nav controls in the Location Selector
+    if (undefined === S3.gis.loc_select) {
+        toolbar.add(zoomout);
+        toolbar.add(zoomin);
+        toolbar.add(S3.gis.panButton);
+        toolbar.addSeparator();
+    }
 
     // Navigation
     // @ToDo: Make these optional
-    addNavigationControl(toolbar);
+    // Don't include the Nav controls in the Location Selector
+    if (undefined === S3.gis.loc_select) {
+        addNavigationControl(toolbar);
+    }
 
     // Save Viewport
-    if (S3.gis.region) {
+    if ((undefined === S3.gis.loc_select) && (S3.gis.region)) {
         addSaveButton(toolbar);
     }
     toolbar.addSeparator();

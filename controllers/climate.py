@@ -35,11 +35,6 @@ def index():
     # Include an embedded Overview Map on the index page
     config = gis.get_config()
 
-    if not deployment_settings.get_security_map() or s3_has_role("MapAdmin"):
-        catalogue_toolbar = True
-    else:
-        catalogue_toolbar = False
-
     search = True
     catalogue_layers = False
 
@@ -62,7 +57,6 @@ def index():
         lon = 84.1,
         zoom = 7,
         toolbar = False,
-#        catalogue_toolbar=catalogue_toolbar, # T/F, top tabs toolbar
         wms_browser = wms_browser, # dict
         plugins = [
             map_plugin(

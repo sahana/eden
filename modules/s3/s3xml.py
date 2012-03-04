@@ -1721,10 +1721,13 @@ class S3XML(S3Codec):
         def add_col(row, key, value):
             col = etree.SubElement(row, cls.TAG.col)
             col.set(cls.ATTRIBUTE.field, str(key))
-            text = str(value)
-            if text.lower() not in ("null", "<null>"):
-                text = cls.xml_encode(unicode(text.decode("utf-8")))
-                col.text = text
+            if value:
+                text = str(value)
+                if text.lower() not in ("null", "<null>"):
+                    text = cls.xml_encode(unicode(text.decode("utf-8")))
+                    col.text = text
+            else:
+                col.text = ""
 
         def utf_8_encode(source):
             """

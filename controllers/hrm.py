@@ -806,7 +806,7 @@ def group():
         subtitle_create = T("Add New Member"),
         subtitle_list = T("Current Team Members"),
         label_list_button = T("List Members"),
-        label_create_button = T("Add Group Member"),
+        label_create_button = T("Add Team Member"),
         label_delete_button = T("Delete Membership"),
         msg_record_created = T("Team Member added"),
         msg_record_modified = T("Membership updated"),

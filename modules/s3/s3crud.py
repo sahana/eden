@@ -432,7 +432,8 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["last_update"] = last_update
+                output["modified_on"] = last_update["modified_on"]
+                output["modified_by"] = last_update["modified_by"]
 
         elif representation == "plain":
             # Hide empty fields from popups on map
@@ -618,7 +619,8 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["last_update"] = last_update
+                output["modified_on"] = last_update["modified_on"]
+                output["modified_by"] = last_update["modified_by"]
 
             # Redirection
             update_next = _config("update_next")
@@ -1336,11 +1338,11 @@ class S3CRUD(S3Method):
                     modified_by = T("anonymous user")
                 else:
                     modified_by = represent(record.modified_by)
-                output.update(modified_by= T("by %(person)s") %
-                                           dict(person = modified_by))
+                output["modified_by"] = T("by %(person)s") % \
+                                           dict(person = modified_by)
             if "modified_on" in record:
-                output.update(modified_on=T("on %(date)s") %
-                              dict(date = record.modified_on))
+                output["modified_on"] = T("on %(date)s") % \
+                              dict(date = record.modified_on)
 
         return output
 
