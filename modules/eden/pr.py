@@ -1397,7 +1397,7 @@ class S3SavedSearch(S3Model):
                                   *s3_timestamp())
 
         # Field configuration
-        table.search_vars.represent = lambda id : self.get_criteria(id=id)
+        #table.search_vars.represent = lambda id : self.get_criteria(id=id)
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -1445,8 +1445,10 @@ class S3SavedSearch(S3Model):
                     c_dict = search_vars[var]
                     #s = s + crud_string("pr_save_search", "Search Criteria")
                     for j in c_dict.iterkeys():
-                        if not re.match(pat,j):
-                            st = str(j)
+                        st = str(j)
+                        if st[0] == '_':
+                            continue
+                        else:                         
                             st = st.replace("_search_", " ")
                             st = st.replace("_advanced", "")
                             st = st.replace("_simple", "")
