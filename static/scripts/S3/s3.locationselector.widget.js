@@ -75,15 +75,15 @@ $(function() {
 
         // Buttons
         $('#gis_location_expand').click( function(evt) {
-            if ($('#gis_location_expand').hasClass('minus')) {
+            if ($('#gis_location_expand').hasClass('expand')) {
                 s3_gis_hide_selector();
-                $('#gis_location_expand').addClass('plus');
-                $('#gis_location_expand').removeClass('minus');
+                $('#gis_location_expand').addClass('expanded');
+                $('#gis_location_expand').removeClass('expand');
                 evt.preventDefault();
             } else {
                 s3_gis_show_tab('add');
-                $('#gis_location_expand').addClass('minus');
-                $('#gis_location_expand').removeClass('plus');
+                $('#gis_location_expand').addClass('expand');
+                $('#gis_location_expand').removeClass('expanded');
                 evt.preventDefault();
             }
         });
