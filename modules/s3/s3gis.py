@@ -3098,6 +3098,7 @@ class GIS(object):
                   window = False,
                   window_hide = False,
                   closable = True,
+                  maximizable = True,
                   collapsed = False,
                   location_selector = False,
                   plugins = None,
@@ -3649,6 +3650,11 @@ S3.i18n.gis_search_no_internet = '%s';
             elif not closable:
                 s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
 
+        if maximizable:
+            maximizable = "S3.gis.maximizable = true;\n"
+        else:
+            maximizable = "S3.gis.maximizable = false;\n"
+
         # Collapsed
         if collapsed:
             collapsed = "S3.gis.west_collapsed = true;\n"
@@ -3938,6 +3944,7 @@ S3.i18n.gis_feature_info = '%s';
             s3_gis_window,
             s3_gis_windowHide,
             s3_gis_windowNotClosable,
+            maximizable,
             collapsed,
             toolbar,
             loc_select,
