@@ -799,7 +799,7 @@ class S3NavigationItem:
         parent = self.parent
         if parent is not None and parent !=p:
             while self in parent.components:
-                parent.remove(self)
+                parent.components.remove(self)
         if i is not None:
             p.component.insert(i, self)
         else:
