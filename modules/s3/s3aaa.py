@@ -3069,13 +3069,14 @@ class S3Permission(object):
             return False
 
         permitted = True
-        if self.use_cacls:
-            acl = self(c=c, f=f, table=tablename)
-            if acl & permission != permission:
-                permitted = False
-        else:
-            if permission != self.READ:
-                permitted = self.auth.s3_logged_in()
+        if not self.auth.override:
+            if self.use_cacls:
+                acl = self(c=c, f=f, table=tablename)
+                if acl & permission != permission:
+                    permitted = False
+            else:
+                if permission != self.READ:
+                    permitted = self.auth.s3_logged_in()
 
         if permitted:
             return URL(a=a,
