@@ -276,9 +276,10 @@ function addMapWindow(items) {
         id: 'gis-map-window',
         collapsible: true,
         constrain: true,
+        closable: !S3.gis.windowNotClosable,
         closeAction: 'hide',
         autoScroll: true,
-        maximizable: true,
+        maximizable: S3.gis.maximizable,
         titleCollapse: true,
         height: S3.gis.map_height,
         width: S3.gis.map_width,
@@ -306,9 +307,6 @@ function addMapWindow(items) {
 
     // Set Options
     if (!S3.gis.windowHide) {
-        if (S3.gis.windowNotClosable) {
-            mapWin.closable = false;
-        }
         // If the window is meant to be displayed immediately then display it now that it is ready
         mapWin.show();
         mapWin.maximize();

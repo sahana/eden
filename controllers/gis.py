@@ -30,7 +30,8 @@ def index():
     toolbar = True
 
     map = define_map(window=False,
-                     toolbar=toolbar)
+                     toolbar=toolbar,
+                     maximizable=True)
 
     # Don't bother with breadcrumbs as they use up real-estate needlessly
     breadcrumbs = []
@@ -72,13 +73,14 @@ def map_viewing_client():
     """
 
     map = define_map(window=True,
-                     toolbar=True)
+                     toolbar=True,
+                     closable=False)
 
     response.title = T("Map Viewing Client")
     return dict(map=map)
 
 # -----------------------------------------------------------------------------
-def define_map(window=False, toolbar=False, config=None):
+def define_map(window=False, toolbar=False, closable=True, maximizable=False, config=None):
     """
         Define the main Situation Map
         This can then be called from both the Index page (embedded)
@@ -115,6 +117,8 @@ def define_map(window=False, toolbar=False, config=None):
                        window=window,
                        wms_browser = wms_browser,
                        toolbar=toolbar,
+                       closable=closable,
+                       maximizable=maximizable,
                        legend=legend,
                        search=search,
                        catalogue_layers=catalogue_layers,
