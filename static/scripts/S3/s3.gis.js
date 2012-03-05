@@ -274,13 +274,13 @@ function addMapPanel(items) {
 function addMapWindow(items) {
     S3.gis.mapWin = new Ext.Window({
         id: 'gis-map-window',
-        collapsible: true,
+        collapsible: false,
         constrain: true,
         closable: !S3.gis.windowNotClosable,
         closeAction: 'hide',
         autoScroll: true,
         maximizable: S3.gis.maximizable,
-        titleCollapse: true,
+        titleCollapse: false,
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         layout: 'border',

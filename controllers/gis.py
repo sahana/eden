@@ -74,13 +74,14 @@ def map_viewing_client():
 
     map = define_map(window=True,
                      toolbar=True,
-                     closable=False)
+                     closable=False,
+                     maximizable=False)
 
     response.title = T("Map Viewing Client")
     return dict(map=map)
 
 # -----------------------------------------------------------------------------
-def define_map(window=False, toolbar=False, closable=True, maximizable=False, config=None):
+def define_map(window=False, toolbar=False, closable=True, maximizable=True, config=None):
     """
         Define the main Situation Map
         This can then be called from both the Index page (embedded)

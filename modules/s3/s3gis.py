@@ -3944,6 +3944,7 @@ S3.i18n.gis_feature_info = '%s';
             s3_gis_window,
             s3_gis_windowHide,
             s3_gis_windowNotClosable,
+            maximizable,
             collapsed,
             toolbar,
             loc_select,
