@@ -776,7 +776,9 @@ class S3NavigationItem:
         """
 
         output = self.render()
-        if hasattr(output, "xml"):
+        if output is None:
+            return ""
+        elif hasattr(output, "xml"):
             return output.xml()
         else:
             return str(output)
