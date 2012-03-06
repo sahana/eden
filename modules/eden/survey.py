@@ -404,7 +404,7 @@ class S3TemplateModel(S3Model):
             name = form.vars.time_qstn
             code = "STD-TIME"
             notes = "Time the assessment was completed"
-            type = "String"
+            type = "Time"
             posn += 1
             addQuestion(template_id, name, code, notes, type, posn)
         if form.vars.location_detail != None:
@@ -750,13 +750,15 @@ def survey_build_template_summary(template_id):
     qstnTypeList = {}
     posn = 1
     for (key, type) in survey_question_type.items():
+        if key == "Grid" or key == "GridChild":
+            continue
         hr.append(TH(type().type_represent()))
         qstnTypeList[key] = posn
         posn += 1
     hr.append(TH(T("Total")))
     header = THEAD(hr)
 
-    numOfQstnTypes = len(survey_question_type) + 1
+    numOfQstnTypes = len(survey_question_type) - 1 # exclude the grid questions
     questions = survey_getAllQuestionsForTemplate(template_id)
     sectionTitle = ""
     line = []
@@ -773,6 +775,12 @@ def survey_build_template_summary(template_id):
             section += 1
             sectionTitle = question["section"]
             line = [section, sectionTitle] + [0]*numOfQstnTypes
+        if question["type"] == "Grid":
+            continue
+        if question["type"] == "GridChild":
+            # get the real grid question type
+            widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
+            question["type"] = widgetObj.typeDescription
         line[qstnTypeList[question["type"]]+1] += 1
         line[numOfQstnTypes+1] += 1
         total[qstnTypeList[question["type"]]+1] += 1
@@ -2421,7 +2429,6 @@ def buildSeriesSummary(series_id, posn_offset):
                   _class="dataTable display")
     hr = TR(TH(T("Position")),
             TH(T("Question")),
-            TH(T("Code")),
             TH(T("Type")),
             TH(T("Summary"))
            )
@@ -2431,12 +2438,14 @@ def buildSeriesSummary(series_id, posn_offset):
     line = []
     body = TBODY()
     for question in questions:
+        if question["type"] == "Grid":
+            continue
         question_id = question["qstn_id"]
         widgetObj = survey_getWidgetFromQuestion(question_id)
         br = TR()
         br.append(int(question["posn"])+posn_offset) # add an offset to make all id's +ve
-        br.append(question["name"])
-        br.append(question["code"])
+        br.append(widgetObj.fullName())
+#        br.append(question["name"])
         type = widgetObj.type_represent()
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
                                                    series_id)
