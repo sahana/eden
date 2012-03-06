@@ -35,6 +35,8 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_represent",
            "org_rheader",
            "org_site_represent",
+           "org_organisation_controller",
+           "org_office_controller",
            ]
 
 from gluon import *
@@ -1393,5 +1395,195 @@ def org_rheader(r, tabs=[]):
             #rheader.append(s3.req_helptext_script)
 
     return rheader
+
+# =============================================================================
+def org_organisation_controller():
+    """
+        Organisation Controller, defined in the model for use from
+        multiple controllers for unified menus
+    """
+
+    db = current.db
+    s3db = current.s3db
+    s3_rest_controller = current.rest_controller
+
+    T = current.T
+    db = current.db
+    gis = current.gis
+    s3 = current.response.s3
+    manager = current.manager
+
+    tablename = "org_office"
+    table = s3db[tablename]
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            r.table.country.default = gis.get_default_country("code")
+            if r.component_name == "human_resource" and r.component_id:
+                # Workaround until widget is fixed:
+                htable = s3db.hrm_human_resource
+                htable.person_id.widget = None
+                htable.person_id.writable = False
+
+            elif r.component_name == "office" and \
+                 r.method and r.method != "read":
+                # Don't want to see in Create forms
+                # inc list_create (list_fields over-rides)
+                otable = r.component.table
+                s3.address_hide(otable)
+                # Process Base Location
+                #manager.configure(table._tablename,
+                #                  onaccept=s3.address_onaccept)
+
+            elif r.component_name == "task" and \
+                 r.method != "update" and r.method != "read":
+                # Create or ListCreate
+                ttable = r.component.table
+                ttable.organisation_id.default = r.id
+                ttable.status.writable = False
+                ttable.status.readable = False
+
+            elif r.component_name == "project" and r.link:
+                # Hide/show host role after project selection in embed-widget
+                tn = r.link.tablename
+                manager.configure(tn,
+                                  post_process="hide_host_role($('#%s').val());")
+                script = "s3.hide_host_role.js"
+                s3.scripts.append( "%s/%s" % (s3.script_dir, script))
+        return True
+    s3.prep = prep
+
+    rheader = s3db.org_rheader
+    output = s3_rest_controller("org", "organisation",
+                                native=False, rheader=rheader)
+    return output
+
+# =============================================================================
+def org_office_controller():
+    """
+        Office Controller, defined in the model for use from
+        multiple controllers for unified menus
+    """
+
+    s3_rest_controller = current.rest_controller
+
+    T = current.T
+    gis = current.gis
+    request = current.request
+    session = current.session
+    s3 = current.response.s3
+    manager = current.manager
+    settings = current.deployment_settings
+    s3db = current.s3db
+
+    # Get default organisation_id
+    req_vars = request.vars
+    organisation_id = req_vars["organisation_id"]
+    if type(organisation_id) is list:
+        req_vars["organisation_id"] = organisation_id[0]
+    organisation_id = req_vars["organisation_id"] or \
+                      session.s3.organisation_id or \
+                      ""
+
+    # Configure Search
+    office_search = S3Search(
+        advanced=(S3SearchSimpleWidget(
+                    name="office_search_text",
+                    label=T("Search"),
+                    comment=T("Search for office by text."),
+                    field=["name", "comments", "email"]
+                  ),
+                  S3SearchOptionsWidget(
+                    name="office_search_org",
+                    label=T("Organization"),
+                    comment=T("Search for office by organization."),
+                    field=["organisation_id"],
+                    represent ="%(name)s",
+                    cols = 3
+                  ),
+                  S3SearchLocationHierarchyWidget(
+                    name="office_search_location",
+                    comment=T("Search for office by location."),
+                    represent ="%(name)s",
+                    cols = 3
+                  ),
+                  S3SearchLocationWidget(
+                    name="office_search_map",
+                    label=T("Map"),
+                  ),
+        ))
+    manager.configure("org_office",
+                      search_method = office_search)
+
+    # Pre-processor
+    def prep(r):
+
+        table = r.table
+        if organisation_id:
+            table.organisation_id.default = organisation_id
+
+        if r.representation == "plain":
+            # Map popups want less clutter
+            table.obsolete.readable = False
+            if r.record and r.record.type == 5:
+                s3.crud_strings[tablename].title_display = T("Warehouse Details")
+
+        if r.record and settings.has_module("hrm"):
+            # Cascade the organisation_id from the office to the staff
+            htable = s3db.hrm_human_resource
+            htable.organisation_id.default = r.record.organisation_id
+            htable.organisation_id.writable = False
+
+        if r.interactive or r.representation == "aadata":
+            if not r.component and settings.has_module("inv"):
+                # Filter out Warehouses, since they have a dedicated controller
+                s3.filter = (table.type != 5) | (table.type == None)
+
+        if r.interactive:
+
+            if settings.has_module("inv"):
+                # Don't include Warehouses in the type dropdown
+                s3.org_office_type_opts.pop(5)
+                table.type.requires = IS_NULL_OR(IS_IN_SET(s3.org_office_type_opts))
+
+            if r.record and r.record.type == 5: # 5 = Warehouse
+                s3.crud_strings[tablename] = s3.org_warehouse_crud_strings
+
+            if r.method == "create":
+                table.obsolete.readable = table.obsolete.writable = False
+
+            if r.method and r.method != "read":
+                # Don't want to see in Create forms
+                # inc list_create (list_fields over-rides)
+                table.obsolete.writable = False
+                table.obsolete.readable = False
+                s3.address_hide(table)
+
+            if r.component:
+
+                cname = r.component.name
+                if cname in ("inv_item", "recv", "send"):
+                    # Filter out items which are already in this inventory
+                    s3db.inv_prep(r)
+
+                elif cname == "human_resource":
+                    # Filter out people which are already staff for this office
+                    s3_filter_staff(r)
+                    # Cascade the organisation_id from the hospital to the staff
+                    htable.organisation_id.default = r.record.organisation_id
+                    htable.organisation_id.writable = False
+                    htable.organisation_id.comment = None
+
+                elif cname == "req" and r.method not in ("update", "read"):
+                    # Hide fields which don't make sense in a Create form
+                    # inc list_create (list_fields over-rides)
+                    s3db.req_create_form_mods()
+
+        return True
+    s3.prep = prep
+
+    rheader = s3db.org_rheader
+    return s3_rest_controller("org", "office", rheader=rheader)
 
 # END =========================================================================
