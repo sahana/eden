@@ -274,12 +274,13 @@ function addMapPanel(items) {
 function addMapWindow(items) {
     S3.gis.mapWin = new Ext.Window({
         id: 'gis-map-window',
-        collapsible: true,
+        collapsible: false,
         constrain: true,
+        closable: !S3.gis.windowNotClosable,
         closeAction: 'hide',
         autoScroll: true,
-        maximizable: true,
-        titleCollapse: true,
+        maximizable: S3.gis.maximizable,
+        titleCollapse: false,
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         layout: 'border',
@@ -306,9 +307,6 @@ function addMapWindow(items) {
 
     // Set Options
     if (!S3.gis.windowHide) {
-        if (S3.gis.windowNotClosable) {
-            mapWin.closable = false;
-        }
         // If the window is meant to be displayed immediately then display it now that it is ready
         mapWin.show();
         mapWin.maximize();
@@ -590,17 +588,23 @@ function addToolbar() {
         addGeolocateControl(toolbar)
     }
 
-    toolbar.add(zoomout);
-    toolbar.add(zoomin);
-    toolbar.add(S3.gis.panButton);
-    toolbar.addSeparator();
+    // Don't include the Nav controls in the Location Selector
+    if (undefined === S3.gis.loc_select) {
+        toolbar.add(zoomout);
+        toolbar.add(zoomin);
+        toolbar.add(S3.gis.panButton);
+        toolbar.addSeparator();
+    }
 
     // Navigation
     // @ToDo: Make these optional
-    addNavigationControl(toolbar);
+    // Don't include the Nav controls in the Location Selector
+    if (undefined === S3.gis.loc_select) {
+        addNavigationControl(toolbar);
+    }
 
     // Save Viewport
-    if (S3.gis.region) {
+    if ((undefined === S3.gis.loc_select) && (S3.gis.region)) {
         addSaveButton(toolbar);
     }
     toolbar.addSeparator();

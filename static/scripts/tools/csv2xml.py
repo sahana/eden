@@ -69,10 +69,14 @@ def csv2tree(source, delimiter=",", quotechar='"'):
         for k in r:
             col = etree.SubElement(row, COL)
             col.set(FIELD, str(k))
-            text = str(r[k])
-            if text.lower() not in ("null", "<null>"):
-                text = xml_encode(unicode(text.decode("utf-8")))
-                col.text = text
+            value = r[k]
+            if value:
+                text = str(value)
+                if text.lower() not in ("null", "<null>"):
+                    text = xml_encode(unicode(text.decode("utf-8")))
+                    col.text = text
+            else:
+                col.text = ""
 
     return  etree.ElementTree(root)
 

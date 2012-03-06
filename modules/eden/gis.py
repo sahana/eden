@@ -55,7 +55,9 @@ class S3LocationModel(S3Model):
              "gis_location_name",
              "gis_location_id",
              "gis_country_id",
-             "gis_countries_id"]
+             "gis_countries_id",
+             "gis_location_onvalidation",
+            ]
 
     def model(self):
 
@@ -333,7 +335,8 @@ class S3LocationModel(S3Model):
         return Storage(
                     gis_location_id = location_id,
                     gis_country_id = country_id,
-                    gis_countries_id = countries_id
+                    gis_countries_id = countries_id,
+                    gis_location_onvalidation = self.gis_location_onvalidation,
                 )
 
     # ---------------------------------------------------------------------
@@ -378,11 +381,9 @@ class S3LocationModel(S3Model):
             On Accept for GIS Locations (after DB I/O)
         """
 
-        gis = current.gis
-
         # Update the Path
         vars = form.vars
-        gis.update_location_tree(vars.id, vars.parent)
+        current.gis.update_location_tree(vars.id, vars.parent)
         return
 
     # -------------------------------------------------------------------------

@@ -30,7 +30,8 @@ def index():
     toolbar = True
 
     map = define_map(window=False,
-                     toolbar=toolbar)
+                     toolbar=toolbar,
+                     maximizable=True)
 
     # Don't bother with breadcrumbs as they use up real-estate needlessly
     breadcrumbs = []
@@ -72,13 +73,15 @@ def map_viewing_client():
     """
 
     map = define_map(window=True,
-                     toolbar=True)
+                     toolbar=True,
+                     closable=False,
+                     maximizable=False)
 
     response.title = T("Map Viewing Client")
     return dict(map=map)
 
 # -----------------------------------------------------------------------------
-def define_map(window=False, toolbar=False, config=None):
+def define_map(window=False, toolbar=False, closable=True, maximizable=True, config=None):
     """
         Define the main Situation Map
         This can then be called from both the Index page (embedded)
@@ -87,11 +90,6 @@ def define_map(window=False, toolbar=False, config=None):
 
     if not config:
         config = gis.get_config()
-
-    if not deployment_settings.get_security_map() or s3_has_role(MAP_ADMIN):
-        catalogue_toolbar = True
-    else:
-        catalogue_toolbar = False
 
     # @ToDo: Make these configurable
     search = True
@@ -118,9 +116,10 @@ def define_map(window=False, toolbar=False, config=None):
 
     map = gis.show_map(
                        window=window,
-                       catalogue_toolbar=catalogue_toolbar,
                        wms_browser = wms_browser,
                        toolbar=toolbar,
+                       closable=closable,
+                       maximizable=maximizable,
                        legend=legend,
                        search=search,
                        catalogue_layers=catalogue_layers,

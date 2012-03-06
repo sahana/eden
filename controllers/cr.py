@@ -279,10 +279,10 @@ def incoming():
     return inv_incoming()
 
 # -----------------------------------------------------------------------------
-def match():
+def req_match():
     """ Match Requests """
 
-    return req_match()
+    return s3db.req_match()
 
 # =============================================================================
 # This code provides urls of the form:

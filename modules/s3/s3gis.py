@@ -3087,7 +3087,6 @@ class GIS(object):
                   feature_queries = [],
                   wms_browser = {},
                   catalogue_layers = False,
-                  catalogue_toolbar = False,
                   legend = False,
                   toolbar = False,
                   search = False,
@@ -3099,7 +3098,9 @@ class GIS(object):
                   window = False,
                   window_hide = False,
                   closable = True,
+                  maximizable = True,
                   collapsed = False,
+                  location_selector = False,
                   plugins = None,
                 ):
         """
@@ -3149,7 +3150,6 @@ class GIS(object):
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
-            @param catalogue_toolbar: Show the Catalogue Toolbar
             @param legend: Show the Legend panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param search: Show the Geonames search box
@@ -3171,6 +3171,7 @@ class GIS(object):
             @param window_hide: Have the window hidden by default, ready to appear (e.g. on clicking a button)
             @param closable: In Window mode, whether the window is closable or not
             @param collapsed: Start the Tools panel (West region) collapsed
+            @param location_selector: This Map is being instantiated within the LocationSelectorWidget
             @param plugins: an iterable of objects which support the following methods:
                             .addToMapWindow(items)
                             .setup(map)
@@ -3286,27 +3287,6 @@ class GIS(object):
         ######
         # HTML
         ######
-        # Catalogue Toolbar
-        # if catalogue_toolbar:
-            # @ToDO: Replace this with a Horizontal rednering of the Menu when using narrow themes?
-            # config_button = SPAN( A(T("Configurations"),
-                                  # _href=URL(c="gis", f="config")),
-                                  # _class="tab_other" )
-            # catalogue_toolbar = DIV(
-                # config_button,
-                # SPAN( A(T("Layers"),
-                      # _href=URL(c="gis", f="map_service_catalogue")),
-                      # _class="tab_other" ),
-                # SPAN( A(T("Markers"),
-                      # _href=URL(c="gis", f="marker")),
-                      # _class="tab_other" ),
-                # SPAN( A(T("Projections"),
-                      # _href=URL(c="gis", f="projection")),
-                      # _class="tab_last" ),
-                # _class="tabs")
-            # html.append(catalogue_toolbar)
-        catalogue_toolbar = ""
-
         # Map (Embedded not Window)
         html.append(DIV(_id="map_panel"))
 
@@ -3383,6 +3363,12 @@ class GIS(object):
             toolbar = "S3.gis.toolbar = true;\n"
         else:
             toolbar = ""
+        
+        # @ToDo: Could we get this automatically?
+        if location_selector:
+            loc_select = "S3.gis.loc_select = true;\n"
+        else:
+            loc_select = ""
 
         # MGRS PDF Browser
         if mgrs:
@@ -3664,6 +3650,11 @@ S3.i18n.gis_search_no_internet = '%s';
             elif not closable:
                 s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
 
+        if maximizable:
+            maximizable = "S3.gis.maximizable = true;\n"
+        else:
+            maximizable = "S3.gis.maximizable = false;\n"
+
         # Collapsed
         if collapsed:
             collapsed = "S3.gis.west_collapsed = true;\n"
@@ -3905,9 +3896,9 @@ S3.gis.layers_feature_queries[%i] = {
             # Add just the default Base Layer
             # @ToDo
             layer_types = [
-                #OSMLayer,
+                OSMLayer,
                 # v3 doesn't work when initially hidden
-                GoogleLayer,
+                #GoogleLayer,
             ]
 
         layers_config = ""
@@ -3953,8 +3944,10 @@ S3.i18n.gis_feature_info = '%s';
             s3_gis_window,
             s3_gis_windowHide,
             s3_gis_windowNotClosable,
+            maximizable,
             collapsed,
             toolbar,
+            loc_select,
             "S3.gis.map_height = %i;\n" % map_height,
             "S3.gis.map_width = %i;\n" % map_width,
             "S3.gis.zoom = %i;\n" % (zoom or 1),

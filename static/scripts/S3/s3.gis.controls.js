@@ -402,6 +402,7 @@ function openStreetviewPopup(location) {
 
 // Measure Controls
 function addMeasureControls(toolbar) {
+    // Common components
     var measureSymbolizers = {
         'Point': {
             pointRadius: 5,
@@ -432,6 +433,7 @@ function addMeasureControls(toolbar) {
     ]);
     var styleMapMeasure = new OpenLayers.StyleMap({'default': styleMeasure});
 
+    // Length Button
     var length = new OpenLayers.Control.Measure(
         OpenLayers.Handler.Path, {
             geodesic: true,
@@ -444,21 +446,6 @@ function addMeasureControls(toolbar) {
     length.events.on({
         'measure': function(evt) {
             alert(S3.i18n.gis_length_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units);
-        }
-    });
-
-    var area = new OpenLayers.Control.Measure(
-        OpenLayers.Handler.Polygon, {
-            geodesic: true,
-            persist: true,
-            handlerOptions: {
-                layerOptions: {styleMap: styleMapMeasure}
-            }
-        }
-    );
-    area.events.on({
-        'measure': function(evt) {
-            alert(S3.i18n.gis_area_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units + '2');
         }
     });
 
@@ -475,19 +462,39 @@ function addMeasureControls(toolbar) {
         enableToggle: true
     });
 
-    var areaButton = new GeoExt.Action({
-        control: area,
-        map: map,
-        iconCls: 'measure-area',
-        // button options
-        tooltip: S3.i18n.gis_area_tooltip,
-        toggleGroup: 'controls',
-        allowDepress: true,
-        enableToggle: true
-    });
-   
     toolbar.add(lengthButton);
-    toolbar.add(areaButton);
+
+    // Don't include the Area button in the Location Selector
+    if (undefined === S3.gis.loc_select) {
+        // Area Button
+        var area = new OpenLayers.Control.Measure(
+            OpenLayers.Handler.Polygon, {
+                geodesic: true,
+                persist: true,
+                handlerOptions: {
+                    layerOptions: {styleMap: styleMapMeasure}
+                }
+            }
+        );
+        area.events.on({
+            'measure': function(evt) {
+                alert(S3.i18n.gis_area_message + ' ' + evt.measure.toFixed(2) + ' ' + evt.units + '2');
+            }
+        });
+
+        var areaButton = new GeoExt.Action({
+            control: area,
+            map: map,
+            iconCls: 'measure-area',
+            // button options
+            tooltip: S3.i18n.gis_area_tooltip,
+            toggleGroup: 'controls',
+            allowDepress: true,
+            enableToggle: true
+        });
+   
+        toolbar.add(areaButton);
+    }
 }
 
 // Navigation History
