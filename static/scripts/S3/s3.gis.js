@@ -304,6 +304,12 @@ function addMapWindow(items) {
 
     // Shortcut
     var mapWin = S3.gis.mapWin;
+    
+    mapWin.on("beforehide", function(mw){
+    	if (mw.maximized) {
+    		mw.restore();
+    	}
+    });
 
     // Set Options
     if (!S3.gis.windowHide) {
