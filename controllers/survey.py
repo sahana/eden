@@ -1271,6 +1271,14 @@ def complete():
                                 cellValue = dtValue.isoformat()
                             except:
                                 pass
+                        elif type == "Time":
+                            try:
+                                time = cellValue
+                                hour = int(time*24)
+                                minute = int((time*24-hour)*60)
+                                cellValue = "%s:%s" % (hour, minute)
+                            except:
+                                pass
                         answerList += "%s" % cellValue
             body += ',"%s"' % answerList
         openFile.write(header)
