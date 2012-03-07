@@ -115,7 +115,7 @@ if deployment_settings.has_module("climate"):
     )
 
     def station_represent(id):
-        row_id = db(climate_station_id.id == id).select(
+        row_id = db(climate_station_id.station_id == id).select(
             climate_station_id.station_id,
             limitby=(0,1)
         ).first()
@@ -125,11 +125,11 @@ if deployment_settings.has_module("climate"):
         ).first()
                                                             
         if row_id and row_id.station_id:
-            represent = "(%s) " % row_id.station_id
+            represent = " (%s)" % row_id.station_id
         else:
             represent = ""
         if row_name and row_name.name:
-            represent = "%s%s" % (represent, row_name.name)
+            represent = "%s%s" % (row_name.name, represent)
         
         return represent or NONE
             
@@ -150,28 +150,11 @@ if deployment_settings.has_module("climate"):
         ondelete = "RESTRICT"
     )
 
-    climate_region = place_attribute_table(
-        "region",
-        (
-            Field(
-                "region_id",
-                "integer",
-                notnull=True,
-                required=True,
-            ),
-        )
-    )
-
-    # coefficient of variance is meaningless for C but Ok for Kelvin
+    # coefficient of variance is meaningless for degrees C but Ok for Kelvin
     # internally all scales must be ratio scales if coefficient 
     # of variations is to be allowed, (which it is)
     # rainfall (mm), temp (K) are ok
-    # output units
-
-    sample_type_code_opts = {"O":"Observed Station",
-                             "G":"Observed Gridded",
-                             "P":"Projected"
-                             }
+    # output units 
     
     climate_sample_table_spec = climate_define_table(
         "sample_table_spec",
@@ -209,18 +192,27 @@ if deployment_settings.has_module("climate"):
                 default="",
                 notnull=True,
                 required=True
+            ),
+            Field(
+                "grid_size",
+                "double",
+                default = 0,
+                notnull = True,
+                required = True
             )
         ),
     )
     
     def sample_table_spec_represent(id):
         table = db.climate_sample_table_spec
-        row = db(table.id == id).select(table.name,
-                                        table.sample_type_code,
-                                        limitby=(0, 1) ).first()
+        row = db(table.id == id).select(
+            table.name,
+            table.sample_type_code,
+            limitby=(0, 1)
+        ).first()
         if row:
             return "%s %s" % (
-                sample_type_code_opts.get(row.sample_type_code), 
+                ClimateDataPortal.sample_table_types_by_code[row.sample_type_code].__name__, 
                 row.name
             )
         else:
@@ -230,7 +222,7 @@ if deployment_settings.has_module("climate"):
         "parameter_id", 
         db.climate_sample_table_spec, 
         sortby="name",
-        requires = IS_ONE_OF_EMPTY_SELECT(
+        requires = IS_ONE_OF(
             db,
             "climate_sample_table_spec.id",
             sample_table_spec_represent,
@@ -238,15 +230,16 @@ if deployment_settings.has_module("climate"):
         ),
         represent = sample_table_spec_represent,
         label = "Parameter",
-        script = SCRIPT(
-"""
-S3FilterFieldChange({
-    'FilterField':    'sample_type_code',
-    'Field':        'parameter_id',
-    'FieldResource':'sample_table_spec',
-    'FieldPrefix':    'climate',
-});"""),
-                                           ondelete = "RESTRICT")
+#        script = SCRIPT(
+#"""
+#S3FilterFieldChange({
+#    'FilterField':    'sample_type_code',
+#    'Field':        'parameter_id',
+#    'FieldResource':'sample_table_spec',
+#    'FieldPrefix':    'climate',
+#});"""),
+        ondelete = "RESTRICT"
+    )
 
     climate_first_run_sql.append(
         "ALTER TABLE climate_sample_table_spec"
@@ -265,7 +258,7 @@ S3FilterFieldChange({
             ),
             Field(
                 # this maps to the name of a python class
-                # thats deals with the monthly aggregated data.
+                # that deals with the monthly aggregated data.
                 "aggregation",
                 "string",
                 notnull=True,
@@ -314,7 +307,8 @@ S3FilterFieldChange({
         msg_record_created = T("Station Parameter Added"),
         msg_record_modified = T("Station Parameter updated"),
         msg_record_deleted = T("Station Parameter removed"),
-        msg_list_empty = T("No Station Parameter currently registered"))
+        msg_list_empty = T("No Station Parameters currently registered")
+    )
     
 
     # Virtual Field for pack_quantity
@@ -390,40 +384,61 @@ S3FilterFieldChange({
     # =====================================================================
     # Purchase Data
     #
+    nationality_opts = {1:"Nepali", 2:"Foreigner"}
     
     resourcename = "purchase"
     tablename = "climate_purchase"
     table = db.define_table(
         tablename,
-        Field("paid",
-              "boolean"
-        ),
         #user_id(),
-        Field("sample_type_code",
-              "string",
-              requires = IS_IN_SET(sample_type_code_opts),
-              represent = lambda code: sample_type_code_opts.get(code, NONE)
+        #Field("sample_type_code",
+        #      "string",
+        #      requires = IS_IN_SET(sample_type_code_opts),
+        #      represent = lambda code: ClimateDataPortal.sample_table_types_by_code[code]
+        #),
+        parameter_id(
+            requires = IS_ONE_OF(
+                db,
+                "climate_sample_table_spec.id",
+                sample_table_spec_represent,
+                filterby = "sample_type_code",
+                filter_opts = ["O"],
+                sort=True
+            ),
         ),
-        parameter_id(),
         station_id(),
         Field("date_from",
               "date",
               requires = IS_DATE(format = s3_date_format),
               widget = S3DateWidget(),
               default = request.utcnow,
+              required = True
         ),
         Field("date_to",
               "date",
               requires = IS_DATE(format = s3_date_format),
               widget = S3DateWidget(),
               default = request.utcnow,
+              required = True
         ),
-        Field("price", 
-              "double"
+        Field("nationality",
+              "integer",
+              label = T("Nationality"),
+              requires = IS_IN_SET(nationality_opts),
+              represent = lambda id: nationality_opts.get(id, NONE),
+              required = True
         ),
         Field("purpose",
               "text"
-        )
+        ),
+        Field("price", 
+              "string",
+        ),
+        Field("paid",
+              "boolean",
+              represent = lambda paid: paid and "Yes" or "No",
+        ),
+        *s3_meta_fields()
     )
     
     if not s3_has_role(ADMIN):
@@ -448,8 +463,60 @@ S3FilterFieldChange({
         msg_record_deleted = T("Data Purchase removed"),
         msg_list_empty = T("No Data Purchased"))
     
+    def climate_purchase_onaccept(form):
+        # Calculate Price
+        id = form.vars.id
+        
+        parameter_table = db(
+            db.climate_sample_table_spec.id == form.vars.parameter_id
+        ).select(
+            db.climate_sample_table_spec.id,
+            db.climate_sample_table_spec.date_mapping
+        ).first()
+        parameter_table_id = parameter_table.id
+        date_mapping_name = parameter_table.date_mapping
+        period = date_mapping_name
+        
+        date_from = form.vars.date_from
+        date_to = form.vars.date_to
+        nationality = int(form.vars.nationality)
+        if nationality == 1:
+            period_dict = dict(
+                daily = 60,
+                monthly = 40
+                          # 3:15,
+                          # 4:5
+            )
+            currency = "NRs"
+        else:
+            period_dict = dict(
+                daily = 2,
+                monthly = 1.5
+            #               3:0.5,
+            #               4:0.25}
+            )
+            currency = "US$"
+        
+        date_mapping = getattr(ClimateDataPortal, date_mapping_name)
+        
+        start_date_number = date_mapping.date_to_time_period(date_from)
+        end_date_number = date_mapping.date_to_time_period(date_to)
+        
+        place_id = int(form.vars.station_id)
+        
+        duration = db.executesql(
+            "SELECT COUNT(*) "
+            "FROM climate_sample_table_%(parameter_table_id)i "
+            "WHERE time_period >= %(start_date_number)i "
+            "AND place_id = %(place_id)i "
+            "AND time_period <= %(end_date_number)i;" % locals()
+        )[0][0]
+        price = "%.2f" % (duration * period_dict[period] / (dict(daily=365.25, monthly=12)[period]))
+        db.climate_purchase[id] = {"price": "%s %s" % (price, currency)}
+
     s3mgr.configure(
         tablename,
+        onaccept = climate_purchase_onaccept,
         create_next = aURL( args = ["[id]","read"]),
         #listadd = listadd
     )

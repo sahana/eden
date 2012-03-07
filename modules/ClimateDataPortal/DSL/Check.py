@@ -11,7 +11,19 @@ def month_number_from_arg(month, error):
     except KeyError:
         error(
             "Months should be e.g. Jan/January or numbers "
-            "in range 1 to 12, not %s" % month
+            "in range 1 (January) to 12 (Dec), not %s" % month
+        )
+        return 1
+    else:
+        return month_number
+
+def month_filter_number_from_arg(month, error):
+    try:
+        month_number = Months.options[month]
+    except KeyError:
+        error(
+            "Months should be e.g. PrevDec/PreviousDecember/Jan/January or numbers "
+            "in range 0 (PreviousDecember) to 12 (Dec), not %s" % month
         )
         return 1
     else:
@@ -21,7 +33,7 @@ def month_number_from_arg(month, error):
 def Months_check(month_filter):
     month_filter.errors = []
     error = month_filter.errors.append
-    month_filter.month_numbers = list()
+    month_filter.month_numbers = month_numbers = list()
     for month in month_filter.months:                
         month_number = month_number_from_arg(month, error) - 1
         if month_number in month_filter.month_numbers:
@@ -29,6 +41,14 @@ def Months_check(month_filter):
                 "%s was added more than once" % month_sequence[month_number]
             )
         month_filter.month_numbers.append(month_number)
+    if (
+        Months.options["PreviousDecember"] - 1 in month_numbers and 
+        Months.options["December"] - 1 in month_numbers
+    ):
+        error(
+            "It doesn't make sense to aggregate with both PreviousDecember and "
+            "December. Please choose one or the other."
+        )
     return month_filter.errors
 
 @check.implementation(From)
@@ -54,7 +74,7 @@ def From_check(from_date):
     try:
         from_date.date = datetime.date(year, month_number, day)
     except:
-        error("Invalid date")
+        error("Invalid date: datetime.date(%i, %i, %i)" % (year, month_number, day))
     return from_date.errors
 
 import calendar
@@ -85,7 +105,7 @@ def To_check(to_date):
     try:
         to_date.date = datetime.date(year, month_number, day)
     except ValueError:
-        error("Invalid date")
+        error("Invalid date: datetime.date(%i, %i, %i)" % (year, month_number, day))
     return to_date.errors
 
 @check.implementation(Addition, Subtraction, Multiplication, Division)
@@ -172,6 +192,12 @@ def Date_check_analysis(date_spec, out):
     out("%s," % date_spec)
     if date_spec.errors:
         out("# ^ ", ", ".join(date_spec.errors))
+
+@check_analysis.implementation(Months)
+def Months_check_analysis(months, out):
+    out("%s," % months)
+    if months.errors:
+        out("# ^ ", ", ".join(months.errors))
 
 @check_analysis.implementation(*operations)
 def Binop_check_analysis(binop, out):

@@ -37,17 +37,20 @@ def binop_build(binop):
     Build(binop.left)
 
 def set_months(aggregation, month_numbers):
-    assert aggregation.month_numbers is None, "Months were specified twice."
+    if aggregation.month_numbers is not None:
+        raise DSLSyntaxError("Months() was specified twice.")
     aggregation.month_numbers = month_numbers
 AggregationNode.set_months = set_months
 
 def set_to_date(aggregation, to_date):
-    assert aggregation.to_date is None, "To was specified twice."
+    if aggregation.to_date is not None:
+        raise DSLSyntaxError("To was specified twice.")
     aggregation.to_date = to_date
 AggregationNode.set_to_date = set_to_date
 
 def set_from_date(aggregation, from_date):
-    assert aggregation.from_date is None, "From was specified twice."
+    if (aggregation.from_date is not None):
+        raise DSLSyntaxError("From was specified twice.")
     aggregation.from_date = from_date
 AggregationNode.set_from_date = set_from_date
 

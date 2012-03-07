@@ -154,8 +154,31 @@ operations = (Addition, Subtraction, Multiplication, Division, Pow)
 
 
 class Months(object):
+    """
+    Previous December handling:
+    
+    If previous december is specified, then the aggregation is done on 
+    values taken from the previous year's december. Therefore this is affecting
+    the generated SQL.
+    
+    PreviousDecember and December specified together does not make sense. 
+    This should be caught in the Months check and also avoided in the UI.
+    
+    When previous december is specified, this only affects yearly aggregation.
+    
+    The start date and end date should be from the month before if the 
+    month is January/Dec.
+    
+    The modulus of the months is not/is shifted.
+    
+    The SQL should look like:
+    
+    time_period -1
+    
+    """
     options = {}
     sequence = [
+        "PreviousDecember",
         "January",
         "February",
         "March",
@@ -169,11 +192,13 @@ class Months(object):
         "November",
         "December"
     ]
-    # + 3 letter versions:
-    for month_name, month_number in zip(sequence, range(1,13)):
+    for month_name, month_number in zip(sequence, range(0,13)):
         options[month_name] = \
-        options[month_name[:3]] = \
         options[month_number] = month_number
+    # + short versions:
+    options["PrevDec"] = 0
+    for month_name, month_number in zip(sequence[1:], range(1,13)):
+        options[month_name[:3]] = month_number
 
     def __init__(month_filter, *months):
         month_filter.months = months
@@ -219,6 +244,12 @@ aggregations = (Maximum, Minimum, Average, StandardDeviation, Sum, Count)
 
 from .. import SampleTable, units_in_out
 from Units import Dimensionless
+
+class DSLSyntaxError(SyntaxError):
+    pass
+
+class DSLTypeError(TypeError):
+    pass
 
 # Validating strings and parsing
 def parse(expression_string):
@@ -309,7 +340,10 @@ def parse(expression_string):
         (
             r'"(%(sample_table_names)s)"' % dict(
                 sample_table_names = "|".join(
-                    SampleTable._SampleTable__names.keys()
+                    map(
+                        re.escape,
+                        SampleTable._SampleTable__names.keys()
+                    )
                 )
             ),
             write_table_name
@@ -360,15 +394,26 @@ def parse(expression_string):
                 allowed_names
             )
         except SyntaxError, syntax_error:
-            syntax_error.understood_expression = cleaned_expression_string
-            raise
+            dsl_syntax_error = DSLSyntaxError()
+
+            dsl_syntax_error.args = syntax_error.args
+            dsl_syntax_error.lineno = syntax_error.lineno
+            dsl_syntax_error.msg = syntax_error.msg
+            dsl_syntax_error.filename = syntax_error.filename
+            dsl_syntax_error.message = syntax_error.message
+            dsl_syntax_error.text = syntax_error.text
+            dsl_syntax_error.offset = syntax_error.offset
+            dsl_syntax_error.print_file_and_line = syntax_error.print_file_and_line
+            
+            dsl_syntax_error.understood_expression = cleaned_expression_string
+            raise dsl_syntax_error
         else:
             if check(expression):
                 check_analysis_out = []
                 def analysis_out(*things):
                     check_analysis_out.append("".join(map(str, things)))
                 check_analysis(expression, analysis_out)
-                raise TypeError(
+                raise DSLTypeError(
                     "\n".join(check_analysis_out)
                 )
             else:
@@ -380,9 +425,14 @@ from Units import (
     units,
     analysis, 
     WhateverUnitsAreNeeded,
-    MeaninglessUnitsException
+    MeaninglessUnitsException,
+    DimensionError
 )
 from Check import check, check_analysis
 from Build import Build
-from CodeGeneration import R_Code_for_values, init_R_interpreter
+from CodeGeneration import (
+    R_Code_for_values,
+    init_R_interpreter
+)
+from GridSizing import grid_sizes
 import Stringification
