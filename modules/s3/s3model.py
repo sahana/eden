@@ -1196,6 +1196,8 @@ class S3MultiPath:
 
         if isinstance(path, Path):
             path = path.nodes
+        else:
+            path = Path(path).nodes
         multipath = None
 
         # Normalize any recurrent paths
@@ -1204,13 +1206,13 @@ class S3MultiPath:
         append = self.paths.append
         for p in paths:
             p = Path(p)
-            if p not in self:
+            if not self & p:
                 append(p)
                 multipath = self
         return multipath
 
     # -------------------------------------------------------------------------
-    def extend(self, head, ancestors=None):
+    def extend(self, head, ancestors=None, cut=None):
         """
             Extend this multi-path with a new vertex ancestors<-head
 
@@ -1222,7 +1224,7 @@ class S3MultiPath:
         if isinstance(ancestors, S3MultiPath):
             extend = self.extend
             for p in ancestors.paths:
-                extend(head, p)
+                extend(head, p, cut=cut)
             return self
 
         # Split-extend all paths which contain the head node
@@ -1230,6 +1232,10 @@ class S3MultiPath:
         Path = self.Path
         append = extensions.append
         for p in self.paths:
+            if cut:
+                pos = p.find(cut)
+                if pos > 0:
+                    p.nodes = p.nodes[:pos-1]
             i = p.find(head)
             if i > 0:
                 path = Path(p.nodes[:i]).extend(head, ancestors)
@@ -1286,6 +1292,10 @@ class S3MultiPath:
     def __repr__(self):
         """ Serialize this multi-path as string """
         return ",".join([str(p) for p in self.paths])
+
+    def as_list(self):
+        """ Return this multi-path as list of node lists """
+        return [p.as_list() for p in self.paths if len(p)]
 
     # -------------------------------------------------------------------------
     # Introspection
@@ -1441,6 +1451,8 @@ class S3MultiPath:
             if node is None:
                 return True
             n = str(node)
+            if not n:
+                return True
             if n not in self.nodes:
                 self.nodes.append(n)
                 return True
@@ -1503,6 +1515,10 @@ class S3MultiPath:
         def __parse(self, value):
             """ Parse a string into nodes """
             return value.strip().strip("[").strip("]").strip("|").split("|")
+
+        def as_list(self):
+            """ Return the list of nodes """
+            return list(self.nodes)
 
         # ---------------------------------------------------------------------
         # Item access

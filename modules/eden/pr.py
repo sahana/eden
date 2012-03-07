@@ -39,6 +39,15 @@ __all__ = ["S3PersonEntity",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
+           "pr_get_path",
+           "pr_define_role",
+           "pr_delete_role",
+           "pr_add_to_role",
+           "pr_remove_from_role",
+           "pr_rebuild_path",
+           "pr_role_rebuild_path",
+           "pr_get_ancestors",
+           "pr_get_descendants",
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
@@ -50,6 +59,8 @@ from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 from ..s3 import *
 
+OU = 1 # role type which indicates hierarchy, see role_types
+
 # =============================================================================
 class S3PersonEntity(S3Model):
     """ Person Super-Entity """
@@ -57,6 +68,7 @@ class S3PersonEntity(S3Model):
     names = ["pr_pentity",
              "pr_affiliation",
              "pr_role",
+             "pr_role_types",
              "pr_pe_label",
              "pr_pe_types"]
 
@@ -151,11 +163,11 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Role (Affiliates Group)
         #
-        hierarchy_types = {
-            1:T("Business"),      # business hierarchy (reporting units)
-            2:T("Membership"),    # membership hierarchy (non-reporting)
-            3:T("Association"),   # other non-reporting hierarchy
-            9:T("None")           # no hierarchy
+        role_types = {
+            1:T("Organizational Units"),  # business hierarchy (reporting units)
+            2:T("Membership"),            # membership role
+            3:T("Association"),           # other non-reporting role
+            9:T("Other")                  # other role type
         }
         tablename = "pr_role"
         table = define_table(tablename,
@@ -164,25 +176,20 @@ class S3PersonEntity(S3Model):
                                         label=T("Corporate Entity"),
                                         readable=True,
                                         writable=True),
-                             # Hierarchy type
-                             Field("hierarchy", "integer",
-                                   requires = IS_IN_SET(hierarchy_types, zero=None),
+                             # Role type
+                             Field("role_type", "integer",
+                                   requires = IS_IN_SET(role_types, zero=None),
                                    represent = lambda opt: \
-                                               hierarchy_types.get(opt, UNKNOWN_OPT)),
+                                               role_types.get(opt, UNKNOWN_OPT)),
                              # Role name
                              Field("role", notnull=True),
-                             # Reporting (business-) units of the parent entity?
-                             Field("unit", "boolean",
-                                   label = T("Reporting Role?"),
-                                   default = False,
-                                   represent = lambda opt: opt and YES or NO),
-                             # Path, for faster lookups (not implemented yet)
+                             # Path, for faster lookups
                              Field("path",
                                    readable = False,
                                    writable = False),
                              # Type filter, type of entities which can have this role
                              Field("entity_type", "string",
-                                   requires = IS_IN_SET(pe_types, zero=T("ANY")),
+                                   requires = IS_EMPTY_OR(IS_IN_SET(pe_types, zero=T("ANY"))),
                                    represent = lambda opt: pe_types.get(opt, UNKNOWN_OPT)),
                              # Subtype filter, if the entity type defines its own type
                              Field("sub_type", "integer",
@@ -211,6 +218,10 @@ class S3PersonEntity(S3Model):
             msg_record_modified = T("Role updated"),
             msg_record_deleted = T("Role deleted"),
             msg_list_empty = T("No Roles defined"))
+
+        # Resource configuration
+        configure(tablename,
+                  onvalidation=self.pr_role_onvalidation)
 
         # Reusable fields
         role_id = S3ReusableField("role_id", db.pr_role,
@@ -253,12 +264,18 @@ class S3PersonEntity(S3Model):
             msg_record_deleted = T("Affiliation deleted"),
             msg_list_empty = T("No Affiliations defined"))
 
+        # Resource configuration
+        configure(tablename,
+                  onaccept=self.pr_affiliation_onaccept,
+                  ondelete=self.pr_affiliation_ondelete)
+
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
         return Storage(
             pr_pe_types=pe_types,
             pr_pe_label=pr_pe_label,
+            pr_role_types=role_types,
         )
 
     # -------------------------------------------------------------------------
@@ -282,6 +299,102 @@ class S3PersonEntity(S3Model):
             return "%s: %s" % (entity, role.role)
         else:
             return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_role_onvalidation(form):
+        """
+            Clear descendant paths if role type has changed
+
+            @param form: the CRUD form
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        formvars = form.vars
+        if not formvars:
+            return
+        if "role_type" in formvars:
+            role_id = form.record_id
+            if not role_id:
+                return
+            role_type = formvars.role_type
+            rtable = s3db.pr_role
+            role = db(rtable.id == role_id).select(rtable.role_type,
+                                                   limitby=(0, 1)).first()
+            if role and str(role.role_type) != str(role_type):
+                # If role type has changed, then clear paths
+                if str(role_type) != str(OU):
+                    formvars["path"] = None
+                s3db.pr_role_rebuild_path(role_id, clear=True)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_affiliation_onaccept(form):
+        """
+            Remove duplicate affiliations and clear descendant paths (to
+            trigger lazy rebuild)
+
+            @param form: the CRUD form
+        """
+
+        db = current.db
+        s3db = current.s3db
+        manager = current.manager
+
+        atable = s3db.pr_affiliation
+
+        formvars = form.vars
+        role_id = formvars["role_id"]
+        pe_id = formvars["pe_id"]
+        record_id = formvars["id"]
+
+        if role_id and pe_id and record_id:
+            # Remove duplicates
+            query = (atable.id != record_id) & \
+                    (atable.role_id == role_id) & \
+                    (atable.pe_id == pe_id)
+            import gluon.contrib.simplejson as json
+            deleted_fk = {"role_id": role_id, "pe_id": pe_id}
+            data = {"deleted": True,
+                    "role_id": None,
+                    "pe_id": None,
+                    "deleted_fk": json.dumps(deleted_fk)}
+            db(query).update(**data)
+            # Clear descendant paths
+            s3db.pr_rebuild_path(pe_id, clear=True)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_affiliation_ondelete(row):
+        """
+            Clear descendant paths, also called indirectly via
+            ondelete-CASCADE when a role gets deleted.
+
+            @param row: the deleted row
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        atable = s3db.pr_affiliation
+
+        if row and row.id:
+            query = atable.id == row.id
+            record = db(query).select(atable.deleted_fk,
+                                      limitby=(0, 1)).first()
+        else:
+            return
+        if record:
+            import gluon.contrib.simplejson as json
+            data = json.loads(record.deleted_fk)
+            pe_id = data.get("pe_id", None)
+            if pe_id:
+                s3db.pr_rebuild_path(pe_id, clear=True)
+        return
 
 # =============================================================================
 class S3PersonModel(S3Model):
@@ -778,6 +891,7 @@ class S3GroupModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Group membership
+        # @todo: deprecate (to be replaced by role/affiliation)
         #
         resourcename = "group_membership"
         tablename = "pr_group_membership"
@@ -2437,5 +2551,328 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
                             vars=dict(caller=caller, child=child),
                             title=current.messages.ADD_PERSON,
                             tooltip="%s|%s" % (title, comment))
+
+# =============================================================================
+def pr_define_role(pe_id,
+                   role=None,
+                   role_type=None,
+                   entity_type=None,
+                   sub_type=None):
+    """
+        Back-end method to define a new affiliates-role for a person entity
+
+        @param pe_id: the person entity ID
+        @param role: the role name
+        @param role_type: the role type (from pr_role_types), default 9
+        @param entity_type: limit selection in CRUD forms to this entity type
+        @param sub_type: limit selection in CRUD forms to this entity sub-type
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if not pe_id:
+        return
+    if role_type not in s3db.pr_role_types:
+        role_type = 9 # Other
+
+    data = {"pe_id": pe_id,
+            "role": role,
+            "role_type": role_type,
+            "entity_type": entity_type,
+            "sub_type": sub_type}
+
+    rtable = s3db.pr_role
+    if role:
+        query = (rtable.pe_id == pe_id) & \
+                (rtable.role == role)
+        duplicate = db(query).select(rtable.id,
+                                     rtable.role_type,
+                                     limitby=(0, 1)).first()
+    else:
+        duplicate = None
+    if duplicate:
+        if duplicate.role_type != role_type:
+            # Clear paths if this changes the role type
+            if str(role_type) != str(OU):
+                data["path"] = None
+            s3db.pr_role_rebuild_path(duplicate.id, clear=True)
+        duplicate.update_record(**data)
+        record_id = duplicate.id
+    else:
+        record_id = rtable.insert(**data)
+    return record_id
+
+# =============================================================================
+def pr_delete_role(role_id):
+    """
+        Back-end method to delete a role
+
+        @param role_id: the role ID
+    """
+
+    manager = current.manager
+    resource = manager.define_resource("pr", "role", id=role_id)
+    return resource.delete()
+
+# =============================================================================
+def pr_add_to_role(role_id, pe_id):
+    """
+        Back-end method to add a person entity to a role.
+
+        @param role_id: the role ID
+        @param pe_id: the person entity ID
+
+        @todo: update descendant paths only if the role is a OU role
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+
+    # Check for duplicate
+    query = (atable.role_id == role_id) & (atable.pe_id == pe_id)
+    affiliation = db(query).select(limitby=(0, 1)).first()
+    if affiliation is None:
+        # Insert affiliation record
+        atable.insert(role_id=role_id, pe_id=pe_id)
+        # Clear descendant paths (triggers lazy rebuild)
+        pr_rebuild_path(pe_id, clear=True)
+    return
+
+# =============================================================================
+def pr_remove_from_role(role_id, pe_id):
+    """
+        Back-end method to remove a person entity from a role.
+
+        @param role_id: the role ID
+        @param pe_id: the person entity ID
+
+        @todo: update descendant paths only if the role is a OU role
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+
+    query = (atable.role_id == role_id) & (atable.pe_id == pe_id)
+    affiliation = db(query).select(limitby=(0, 1)).first()
+    if affiliation is not None:
+        # Soft-delete the record, clear foreign keys
+        import gluon.contrib.simplejson as json
+        deleted_fk = {"role_id": role_id, "pe_id": pe_id}
+        data = {"deleted": True,
+                "role_id": None,
+                "pe_id": None,
+                "deleted_fk": json.dumps(deleted_fk)}
+        affiliation.update_record(**data)
+        # Clear descendant paths
+        pr_rebuild_path(pe_id, clear=True)
+    return
+
+# =============================================================================
+def pr_get_path(pe_id):
+    """
+        Get all ancestor paths of a person entity
+
+        @param pe_id: the person entity ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == pe_id) & \
+            (rtable.deleted != True) & \
+            (rtable.role_type == OU)
+    roles = db(query).select(rtable.ALL)
+    multipath = S3MultiPath()
+    append = multipath.append
+    for role in roles:
+        path = S3MultiPath([role.pe_id])
+        if role.path is None:
+            ppath = pr_role_rebuild_path(role)
+        else:
+            ppath = S3MultiPath(role.path)
+        path.extend(role.pe_id, ppath, cut=pe_id)
+        for p in path.paths:
+            append(p)
+    return multipath.clean()
+
+# =============================================================================
+def pr_get_ancestors(pe_id):
+    """
+        Find all ancestor entities of a person entity in the OU hierarchy
+        (performs a path lookup where paths are available, otherwise rebuilds
+        paths).
+
+        @param pe_id: the person entity ID
+
+        @todo: be able to filter by type and subtype
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == pe_id) & \
+            (rtable.deleted != True) & \
+            (rtable.role_type == OU)
+    roles = db(query).select(rtable.ALL)
+    paths = []
+    append = paths.append
+    for role in roles:
+        path = S3MultiPath([role.pe_id])
+        if role.path is None:
+            ppath = pr_role_rebuild_path(role)
+        else:
+            ppath = S3MultiPath(role.path)
+        path.extend(role.pe_id, ppath, cut=pe_id)
+        append(path)
+    ancestors = S3MultiPath.all_nodes(paths)
+    return ancestors
+
+# =============================================================================
+def pr_get_descendants(pe_ids, skip=[]):
+    """
+        Find descendant entities of a person entity in the OU hierarchy
+        (performs a real search, not a path lookup).
+
+        @param pe_ids: person entity ID or list of IDs
+        @param skip: list of person entity IDs to skip during descending
+
+        @todo: be able to filter by type and subtype
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+
+    if type(pe_ids) is not list:
+        pe_ids = [pe_ids]
+    pe_ids = [i for i in pe_ids if i not in skip]
+    if not pe_ids:
+        return []
+    skip = skip + pe_ids
+
+    query = (rtable.deleted != True) & \
+            (rtable.pe_id.belongs(pe_ids)) & \
+            (rtable.role_type == OU) & \
+            (atable.deleted != True) & \
+            (atable.role_id == rtable.id)
+    rows = db(query).select(atable.pe_id)
+    nodes = [r.pe_id for r in rows]
+    result = []
+    append = result.append
+    for n in nodes:
+        if n not in result:
+            append(n)
+    descendants = pr_get_descendants(result, skip=skip)
+    for d in descendants:
+        if d not in result:
+            append(d)
+    return result
+
+# =============================================================================
+def pr_rebuild_path(pe_id, clear=False):
+    """
+        Rebuild the ancestor path of all roles in the OU hierarchy a person
+        entity defines.
+
+        @param pe_id: the person entity ID
+        @param clear: clear paths in descendant roles (triggers lazy rebuild)
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if isinstance(pe_id, Row):
+        pe_id = row.pe_id
+
+    rtable = s3db.pr_role
+    query = (rtable.deleted != True) & \
+            (rtable.pe_id == pe_id) & \
+            (rtable.role_type == OU)
+    db(query).update(path=None)
+    roles = db(query).select()
+    for role in roles:
+        if role.path is None:
+            pr_role_rebuild_path(role, clear=clear)
+    return
+
+# =============================================================================
+def pr_role_rebuild_path(role_id, skip=[], clear=False):
+    """
+        Rebuild the ancestor path in a role within the OU hierarchy
+
+        @param role_id: the role ID
+        @param skip: list of role IDs to skip during recursion
+        @param clear: clear paths in descendant roles (triggers lazy rebuild)
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+
+    if isinstance(role_id, Row):
+        role = role_id
+        role_id = role.id
+    else:
+        query = (rtable.deleted != True) & \
+                (rtable.id == role_id)
+        role = db(query).select(limitby=(0, 1)).first()
+    if not role:
+        return None
+    pe_id = role.pe_id
+
+    if role_id in skip:
+        return role.path
+    skip = skip + [role_id]
+
+    if role.role_type != OU:
+        path = None
+    else:
+        # Get all parent roles
+        query = (atable.deleted != True) & \
+                (atable.pe_id == pe_id) & \
+                (rtable.deleted != True) & \
+                (rtable.id == atable.role_id) & \
+                (rtable.role_type == OU)
+        parent_roles = db(query).select(rtable.ALL)
+
+        # Update ancestor path
+        path = S3MultiPath()
+        for prole in parent_roles:
+            path.append([prole.pe_id])
+            if prole.path is None:
+                ppath = pr_role_rebuild_path(prole, skip=skip)
+            else:
+                ppath = S3MultiPath(prole.path)
+            if ppath is not None:
+                path.extend(prole.pe_id, ppath, cut=pe_id)
+        db(rtable.id == role_id).update(path=str(path))
+
+    # Clear descendant paths, if requested (only necessary for writes)
+    if clear:
+        query = (rtable.deleted != True) & \
+                (rtable.path.like("%%|%s|%%" % pe_id)) & \
+                (~(rtable.id.belongs(skip)))
+        db(query).update(path=None)
+
+    return path
 
 # END =========================================================================
