@@ -1470,10 +1470,10 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         s3_gis_lat_lon = ""
 
         # Components to inject into Form
-        divider = TR(TD(_class="subheading"), TD(),
-                     _class="box_bottom")
-        expand_button = DIV(_id="gis_location_expand", _class="minus")
-        label_row = TR(TD(B("%s:" % field.label), expand_button), TD(),
+        divider = TR(TD(_class="subheading"),
+                     _class="box_bottom locselect")
+        expand_button = DIV(_id="gis_location_expand", _class="expand")
+        label_row = TR(TD(expand_button, B("%s:" % field.label)),
                        _id="gis_location_label_row",
                        _class="box_top")
 

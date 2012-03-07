@@ -684,6 +684,12 @@ class S3GroupModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        comments = s3.comments
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
+
         # ---------------------------------------------------------------------
         # Group
         #
@@ -695,25 +701,25 @@ class S3GroupModel(S3Model):
         }
 
         tablename = "pr_group"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("group_type", "integer",
-                                        requires = IS_IN_SET(pr_group_types, zero=None),
-                                        default = 4,
-                                        label = T("Group Type"),
-                                        represent = lambda opt: \
-                                                    pr_group_types.get(opt, UNKNOWN_OPT)),
-                                  Field("system", "boolean",
-                                        default=False,
-                                        readable=False,
-                                        writable=False),
-                                  Field("name",
-                                        label=T("Group Name"),
-                                        requires = IS_NOT_EMPTY()),
-                                  Field("description",
-                                        label=T("Group Description")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             self.super_link("pe_id", "pr_pentity"),
+                             Field("group_type", "integer",
+                                   requires = IS_IN_SET(pr_group_types, zero=None),
+                                   default = 4,
+                                   label = T("Group Type"),
+                                   represent = lambda opt: \
+                                               pr_group_types.get(opt, UNKNOWN_OPT)),
+                             Field("system", "boolean",
+                                   default=False,
+                                   readable=False,
+                                   writable=False),
+                             Field("name",
+                                   label=T("Group Name"),
+                                   requires = IS_NOT_EMPTY()),
+                             Field("description",
+                                   label=T("Group Description")),
+                             comments(),
+                             *meta_fields())
 
         # Field configuration
         table.description.comment = DIV(DIV(_class="tooltip",
@@ -723,7 +729,7 @@ class S3GroupModel(S3Model):
         # CRUD Strings
         ADD_GROUP = T("Add Group")
         LIST_GROUPS = T("List Groups")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_GROUP,
             title_display = T("Group Details"),
             title_list = LIST_GROUPS,
@@ -740,10 +746,11 @@ class S3GroupModel(S3Model):
             msg_list_empty = T("No Groups currently registered"))
 
         # Resource configuration
-        self.configure(tablename,
-                       super_entity="pr_pentity",
-                       main="name",
-                       extra="description")
+        configure(tablename,
+                  super_entity="pr_pentity",
+                  deduplicate=self.group_deduplicate,
+                  main="name",
+                  extra="description")
 
         # Reusable fields
         group_represent = lambda id: (id and [db.pr_group[id].name] or [NONE])[0]
@@ -774,16 +781,16 @@ class S3GroupModel(S3Model):
         #
         resourcename = "group_membership"
         tablename = "pr_group_membership"
-        table = self.define_table(tablename,
-                                  group_id(label = T("Group")),
-                                  person_id(label = T("Person")),
-                                  Field("group_head", "boolean",
-                                        label = T("Group Head"),
-                                        default=False),
-                                  Field("description",
-                                        label = T("Description")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             group_id(label = T("Group")),
+                             person_id(label = T("Person")),
+                             Field("group_head", "boolean",
+                                   label = T("Group Head"),
+                                   default=False),
+                             Field("description",
+                                   label = T("Description")),
+                             comments(),
+                             *meta_fields())
 
         # Field configuration
         table.group_head.represent = lambda group_head: \
@@ -792,7 +799,7 @@ class S3GroupModel(S3Model):
         # CRUD strings
         request = current.request
         if request.function in ("person", "group_membership"):
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = T("Add Membership"),
                 title_display = T("Membership Details"),
                 title_list = T("Memberships"),
@@ -809,7 +816,7 @@ class S3GroupModel(S3Model):
                 msg_list_empty = T("No Memberships currently registered"))
 
         elif request.function == "group":
-            s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 title_create = T("Add Member"),
                 title_display = T("Membership Details"),
                 title_list = T("Group Members"),
@@ -826,13 +833,13 @@ class S3GroupModel(S3Model):
                 msg_list_empty = T("No Members currently registered"))
 
         # Resource configuration
-        self.configure(tablename,
-                       list_fields=["id",
-                                    "group_id",
-                                    "person_id",
-                                    "group_head",
-                                    "description"
-                                   ])
+        configure(tablename,
+                  list_fields=["id",
+                               "group_id",
+                               "person_id",
+                               "group_head",
+                               "description"
+                              ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -841,6 +848,26 @@ class S3GroupModel(S3Model):
             pr_group_id = group_id,
             pr_group_represent = group_represent
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_deduplicate(item):
+        """ Group de-duplication """
+
+        if item.id:
+            return
+        if item.tablename == "pr_group":
+            table = item.table
+            name = item.data.get("name", None)
+
+            query = (table.name == name) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3ContactModel(S3Model):
@@ -970,8 +997,6 @@ class S3ContactModel(S3Model):
     def contact_deduplicate(item):
         """ Contact information de-duplication """
 
-        db = current.db
-
         if item.id:
             return
         if item.tablename == "pr_contact":
@@ -987,8 +1012,8 @@ class S3ContactModel(S3Model):
                     (table.contact_method == contact_method) & \
                     (table.value == value) & \
                     (table.deleted != True)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1067,6 +1092,7 @@ class S3PersonAddressModel(S3Model):
         self.configure(tablename,
                        onaccept=self.address_onaccept,
                        onvalidation=s3.address_onvalidation,
+                       deduplicate=self.address_deduplicate,
                        list_fields = ["id",
                                       "type",
                                       "address",
@@ -1138,6 +1164,30 @@ class S3PersonAddressModel(S3Model):
                     lx_update(htable, hr.id)
         return
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def address_deduplicate(item):
+        """ Address de-duplication """
+
+        if item.id:
+            return
+        if item.tablename == "pr_address":
+            table = item.table
+            pe_id = item.data.get("pe_id", None)
+            address = item.data.get("address", None)
+
+            if pe_id is None:
+                return
+
+            query = (table.pe_id == pe_id) & \
+                    (table.address == address) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3PersonImageModel(S3Model):

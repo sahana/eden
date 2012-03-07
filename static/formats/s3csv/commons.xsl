@@ -100,5 +100,53 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <!-- splitList: split a string with a list into items and call a
+         template with the name "resource" with each item as parameter
+         "item". The "resource" template is to be defined in the calling
+         stylesheet.
+
+         @param list: the string containing the list
+         @param sep: the list separator
+         @param arg: argument to be passed on to the "resource" template
+    -->
+    <xsl:template name="splitList">
+
+        <xsl:param name="list"/>
+        <xsl:param name="listsep" select="','"/>
+        <xsl:param name="arg"/>
+
+        <xsl:if test="$listsep">
+            <xsl:choose>
+                <xsl:when test="contains($list, $listsep)">
+                    <xsl:variable name="head">
+                        <xsl:value-of select="substring-before($list, $listsep)"/>
+                    </xsl:variable>
+                    <xsl:variable name="tail">
+                        <xsl:value-of select="substring-after($list, $listsep)"/>
+                    </xsl:variable>
+                    <xsl:call-template name="resource">
+                        <xsl:with-param name="item" select="normalize-space($head)"/>
+                        <xsl:with-param name="arg" select="$arg"/>
+                    </xsl:call-template>
+                    <xsl:call-template name="splitList">
+                        <xsl:with-param name="list" select="$tail"/>
+                        <xsl:with-param name="listsep" select="$listsep"/>
+                        <xsl:with-param name="arg" select="$arg"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:if test="normalize-space($list)!=''">
+                        <xsl:call-template name="resource">
+                            <xsl:with-param name="item" select="normalize-space($list)"/>
+                            <xsl:with-param name="arg" select="$arg"/>
+                        </xsl:call-template>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

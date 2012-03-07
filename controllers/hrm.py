@@ -548,10 +548,10 @@ def person():
         tabs = [(T("Person Details"), None),
                 (address_tab_name, "address"),
                 (T("Contact Details"), "contact"),
+                (T("Trainings"), "training"),
+                (T("Certificates"), "certification"),
                 (T("Skills"), "competency"),
                 #(T("Credentials"), "credential"),
-                (T("Certificates"), "certification"),
-                (T("Trainings"), "training"),
                 (T("Mission Record"), "experience"),
                 (T("Positions"), "human_resource"),
                 (T("Teams"), "group_membership")]
@@ -575,9 +575,10 @@ def person():
                 (hr_record, "human_resource"),
                 (address_tab_name, "address"),
                 (T("Contact Data"), "contact"),
+                (T("Trainings"), "training"),
+                (T("Certificates"), "certification"),
                 (T("Skills"), "competency"),
                 (T("Credentials"), "credential"),
-                (T("Trainings"), "training"),
                 (T("Mission Record"), "experience"),
                 (T("Teams"), "group_membership")]
 

@@ -165,13 +165,13 @@ class S3OptionsMenuLayout(S3NavigationItem):
 
         # Manage flags: hide any disabled/unauthorized items
         if not item.authorized:
-            item.enabled = False
-            item.visible = False
+            enabled = False
+            visible = False
         elif item.enabled is None or item.enabled:
-            item.enabled = True
-            item.visible = True
+            enabled = True
+            visible = True
 
-        if item.enabled and item.visible:
+        if enabled and visible:
 
             items = item.render_components()
             if item.parent is not None:

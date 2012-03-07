@@ -34,6 +34,8 @@
          Home L3........................optional.....person home address L3
          Job Title......................optional.....job title
          Type...........................optional.....HR type (staff|volunteer)
+         Callsign.......................optional.....Radio Callsign
+         Teams..........................optional.....comma-separated list of Groups
 
          Column headers looked up in labels.xml:
 
@@ -52,6 +54,8 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <xsl:param name="mode"/>
+
+    <xsl:variable name="TeamPrefix" select="'Team:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
@@ -183,6 +187,7 @@
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
+        <xsl:variable name="Teams" select="col[@field='Teams']"/>
 
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
@@ -231,6 +236,11 @@
 
             <!-- Trainings
             <xsl:call-template name="Trainings"/> -->
+            
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="$Teams"/></xsl:with-param>
+                <xsl:with-param name="arg">team</xsl:with-param>
+            </xsl:call-template>
         </resource>
 
         <!-- Locations -->
@@ -311,6 +321,13 @@
             <resource name="pr_contact">
                 <data field="contact_method" value="SKYPE"/>
                 <data field="value"><xsl:value-of select="col[@field='Skype']/text()"/></data>
+            </resource>
+        </xsl:if>
+
+        <xsl:if test="col[@field='Callsign']!=''">
+            <resource name="pr_contact">
+                <data field="contact_method" value="RADIO"/>
+                <data field="value"><xsl:value-of select="col[@field='Callsign']/text()"/></data>
             </resource>
         </xsl:if>
 
@@ -577,6 +594,28 @@
             </resource>
         </xsl:if>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="resource">
+        <xsl:param name="item"/>
+        <xsl:param name="arg"/>
+
+        <xsl:choose>
+            <!-- Team list -->
+            <xsl:when test="$arg='team'">
+                <resource name="pr_group_membership">
+                    <reference field="group_id" resource="pr_group">
+                        <resource name="pr_group">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($TeamPrefix, $item)"/>
+                            </xsl:attribute>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
