@@ -866,6 +866,8 @@ def survey_numericType(question_id = None):
     return S3QuestionTypeNumericWidget(question_id)
 def survey_dateType(question_id = None):
     return S3QuestionTypeDateWidget(question_id)
+def survey_timeType(question_id = None):
+    return S3QuestionTypeTimeWidget(question_id)
 def survey_optionType(question_id = None):
     return S3QuestionTypeOptionWidget(question_id)
 def survey_ynType(question_id = None):
@@ -901,6 +903,7 @@ survey_question_type = {
     "Text": survey_textType,
     "Numeric": survey_numericType,
     "Date": survey_dateType,
+    "Time": survey_timeType,
     "Option": survey_optionType,
     "YesNo": survey_ynType,
     "YesNoDontKnow": survey_yndType,
@@ -1142,9 +1145,8 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             if record != None:
                 parentWidget = survey_question_type["Grid"](record.id)
                 subHeading = parentWidget.getHeading(self.question.parentNumber)
-                return "%s - %s (%s)" % (record.name,
-                                         self.question.name,
-                                         subHeading)
+                return "%s (%s)" % (self.question.name,
+                                    subHeading)
         return self.question.name
 
     def layout(self, label, widget, **attr):
@@ -1737,6 +1739,28 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
 
         return self.ANSWER_VALID
 
+class S3QuestionTypeTimeWidget(S3QuestionTypeAbstractWidget):
+##########################################################################
+# Class S3QuestionTypeAbstractWidget
+##########################################################################
+    """
+        Time Question Type widget
+
+        provides a widget for the survey module that will manage simple
+        time questions.
+
+        Available metadata for this class:
+        Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
+    """
+    def __init__(self,
+                 question_id = None
+                ):
+        T = current.T
+        S3QuestionTypeAbstractWidget.__init__(self, question_id)
+        self.typeDescription = T("Time")
+
 ##########################################################################
 # Class S3QuestionTypeOptionWidget
 ##########################################################################
@@ -2326,9 +2350,15 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         table = TABLE()
         if self.data != None:
             tr = TR(_class="survey_question")
-            tr.append(TH(self.subtitle))
+            if self.subtitle == None:
+                tr.append("")
+            else:
+                tr.append(TH(self.subtitle))
             for col in self.columns:
-                tr.append(TH(col))
+                if col == None:
+                    tr.append("")
+                else:
+                    tr.append(TH(col))
             table.append(tr)
             posn = 0
             codeNum = self.qstnNo
@@ -2593,7 +2623,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
             self.question.parentCode = parentCode
             self.question.parentNumber = int(parentNumber)
         self.metalist.append("Type")
-        self.typeDescription = T("Grid Child")
+        self.typeDescription = self.qstn_metadata["Type"]
         self.xlsWidgetSize = (0,0)
 
     def display(self, **attr):
@@ -2659,6 +2689,8 @@ def analysis_numericType(question_id, answerList):
     return S3NumericAnalysis("Numeric", question_id, answerList)
 def analysis_dateType(question_id, answerList):
     return S3DateAnalysis("Date", question_id, answerList)
+def analysis_timeType(question_id, answerList):
+    return S3TimeAnalysis("Date", question_id, answerList)
 def analysis_optionType(question_id, answerList):
     return S3OptionAnalysis("Option", question_id, answerList)
 def analysis_ynType(question_id, answerList):
@@ -2686,6 +2718,7 @@ survey_analysis_type = {
     "Text": analysis_textType,
     "Numeric": analysis_numericType,
     "Date": analysis_dateType,
+    "Time": analysis_timeType,
     "Option": analysis_optionType,
     "YesNo": analysis_ynType,
     "YesNoDontKnow": analysis_yndType,
@@ -2992,8 +3025,13 @@ class S3DateAnalysis(S3AbstractAnalysis):
     def chartButton(self, series_id):
         return None
 
-
 # -----------------------------------------------------------------------------
+class S3TimeAnalysis(S3AbstractAnalysis):
+
+    def chartButton(self, series_id):
+        return None
+# -----------------------------------------------------------------------------
+
 class S3NumericAnalysis(S3AbstractAnalysis):
 
     def __init__(self,
@@ -3498,8 +3536,13 @@ class S3GridChildAnalysis(S3AbstractAnalysis):
                     pass
         self.widget = survey_analysis_type[trueType](question_id, self.answerList)
 
-    def drawChart(self, output="xml",
-                  data=None, label=None, xLabel=None, yLabel=None):
-        return self.widget.drawChart(output, data, label, xLabel, yLabel)
+    def drawChart(self,
+                  series_id,
+                  output="xml",
+                  data=None,
+                  label=None,
+                  xLabel=None,
+                  yLabel=None):
+        return self.widget.drawChart(series_id, output, data, label, xLabel, yLabel)
 
 # END =========================================================================
