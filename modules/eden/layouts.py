@@ -67,14 +67,15 @@ class S3MainMenuLayout(S3NavigationItem):
                 else:
                     _class = "fleft"
                 if item.components:
-                    # Submenu
-                    _href = item.url()
-                    return LI(DIV(A(item.label,
-                                    _href=_href),
-                                    _class="hoverable"),
-                                UL(items,
-                                    _class="submenu"),
-                                _class=_class)
+                    # Submenu, render only if there's at list one active item
+                    if item.get_first(enabled=True):
+                        _href = item.url()
+                        return LI(DIV(A(item.label,
+                                        _href=_href),
+                                        _class="hoverable"),
+                                  UL(items,
+                                     _class="submenu"),
+                                  _class=_class)
                 else:
                     # Menu item
                     if item.parent.parent is None:

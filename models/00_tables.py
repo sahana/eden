@@ -39,6 +39,7 @@ import eden.survey
 import eden.hms
 import eden.sync
 import eden.patient
+import eden.ocr
 
 # =============================================================================
 # Import S3 meta fields into global namespace
