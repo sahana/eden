@@ -387,7 +387,7 @@ class S3HRModel(S3Model):
 
             query = (ptable.id == person_id) & \
                     (ltable.pe_id == ptable.pe_id) & \
-                    (utable.id == ptable.user_id)
+                    (utable.id == ltable.user_id)
             user = db(query).select(utable.id,
                                     limitby=(0, 1)).first()
         if not user:

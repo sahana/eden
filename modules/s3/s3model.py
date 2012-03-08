@@ -930,6 +930,7 @@ class S3ModelExtensions(object):
                    widget=None,
                    empty=True,
                    default=DEFAULT,
+                   ondelete="CASCADE",
                    readable=False,
                    writable=False):
         """
@@ -976,7 +977,7 @@ class S3ModelExtensions(object):
                      comment = comment,
                      represent = represent,
                      widget = widget,
-                     ondelete = "RESTRICT")
+                     ondelete = ondelete)
 
     # -------------------------------------------------------------------------
     def update_super(self, table, record):
@@ -1066,6 +1067,8 @@ class S3ModelExtensions(object):
             @param record: the instance record
         """
 
+        manager = current.manager
+
         supertable = self.get_config(table._tablename, "super_entity")
         if not supertable:
             return True
@@ -1079,9 +1082,11 @@ class S3ModelExtensions(object):
                     s = S3Model.table(s)
                 if s is None:
                     continue
-                if "deleted" in s.fields:
-                    current.db(s.uuid == uid).update(deleted=True)
-
+                tn = s._tablename
+                prefix, name = tn.split("_", 1)
+                resource = manager.define_resource(prefix, name, uid=uid)
+                ondelete = self.get_config(tn, "ondelete")
+                resource.delete(ondelete=ondelete, cascade=True)
         return True
 
     # -------------------------------------------------------------------------

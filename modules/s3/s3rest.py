@@ -4437,6 +4437,7 @@ class S3ResourceFilter:
         andf = self._andf
 
         manager = current.manager
+        xml = manager.xml
         model = manager.model
         DELETED = manager.DELETED
 
