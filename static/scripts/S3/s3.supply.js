@@ -57,7 +57,7 @@ $(document).ready(function() {
             $('[name = "quantity"]').after(TotalQuantity);
         });
     };
-    $('#inv_send_item_item_pack_id').change(InvItemPackIDChange);
+    $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
 /**
     // Item ID Field
     // Assets don't use Packs, so skip

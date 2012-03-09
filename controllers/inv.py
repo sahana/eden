@@ -273,30 +273,458 @@ def inv_item_packs():
     return records.json()
 
 # =============================================================================
-def recv():
-    """ RESTful CRUD controller """
-
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return inv_recv_controller()
-
-# -----------------------------------------------------------------------------
-def recv_item():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# =============================================================================
 def send():
     """ RESTful CRUD controller """
+    s3mgr.load("inv_send")
+    s3db = current.s3db
+    db = current.db
+    auth = current.auth
+    request = current.request
+    response = current.response
+    s3 = response.s3
 
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return inv_send_controller()
+    tablename = "inv_send"
+    table = s3db.inv_send
+
+
+    # Limit site_id to sites the user has permissions for
+    error_msg = T("You do not have permission for any facility to send a shipment.")
+    auth.permission.permitted_facilities(table=table,
+                                         error_msg=error_msg)
+
+    # Set Validator for checking against the number of items in the warehouse
+    vars = request.vars
+    if (vars.inv_item_id):
+        s3db.inv_track_item.quantity.requires = QUANTITY_INV_ITEM(db,
+                                                                 vars.inv_item_id,
+                                                                 vars.item_pack_id)
+
+    def prep(r):
+        if r.interactive:
+
+            # Default to the Search tab in the location selector
+            response.s3.gis.tab = "search"
+
+            if r.component:
+                if r.method == "delete":
+                    return s3.inv_track_item_deleting(r.component_id)
+                if r.record.get("site_id"):
+                    # Restrict to items from this warehouse only
+                    tracktable = s3db.inv_track_item
+                    tracktable.inv_item_id.requires = IS_ONE_OF(db,
+                                                             "inv_inv_item.id",
+                                                             s3db.inv_item_represent,
+                                                             orderby="inv_inv_item.id",
+                                                             sort=True,
+                                                             filterby = "site_id",
+                                                             filter_opts = [r.record.site_id]
+                                                            )
+                    # Hide the values that will be copied from the inv_inv_item record
+                    tracktable.item_id.readable = False
+                    tracktable.item_id.writable = False
+                    tracktable.expiry_date.readable = False
+                    tracktable.expiry_date.writable = False
+                    tracktable.bin.readable = False
+                    tracktable.bin.writable = False
+                    tracktable.donating_org_id.readable = False
+                    tracktable.donating_org_id.writable = False
+                    # Hide the link to the receive and adjustment records
+                    tracktable.recv_id.readable = False
+                    tracktable.recv_id.writable = False
+                    #tracktable.adj_id.readable = False
+                    #tracktable.adj_id.writable = False
+                SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
+                SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
+                if r.record.status == SHIP_STATUS_IN_PROCESS:
+                    s3.crud_strings.inv_send.title_update = \
+                    s3.crud_strings.inv_send.title_display = T("Process Shipment to Send")
+                elif "site_id" in request.vars and r.record.status == SHIP_STATUS_SENT:
+                    s3.crud_strings.inv_send.title_update = \
+                    s3.crud_strings.inv_send.title_display = T("Review Incoming Shipment to Receive")
+
+        return True
+
+    response.s3.prep = prep
+    output = s3_rest_controller("inv",
+                                "send",
+                                rheader=s3.inv_send_rheader,
+                               )
+    return output
+
 # -----------------------------------------------------------------------------
 def send_item():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
 
+def send_process():
+    """ Send a Shipment """
+    # @todo need to update the status of request items
+
+    send_id = request.args[0]
+    stable = s3db.inv_send
+    tracktable = s3db.inv_track_item
+    otable = s3db.org_office
+
+    if not auth.s3_has_permission("update",
+                                  stable,
+                                  record_id=send_id):
+        session.error = T("You do not have permission to send this shipment.")
+
+    send_record = stable[send_id]
+
+    if send_record.status != eden.inv.inv_ship_status["IN_PROCESS"]:
+        session.error = T("This shipment has already been sent.")
+
+    # Get the track items that are part of this shipment
+    query = ( tracktable.send_id == send_id )
+    track_items = db(query).select()
+    if not track_items:
+        session.error = T("No items have been selected for shipping.")
+
+    if session.error:
+        redirect(URL(c = "inv",
+                     f = "send",
+                     args = [send_id]))
+
+    # Update Send record & lock for editing
+    stable[send_id] = dict(date = request.utcnow,
+                           status = eden.inv.inv_ship_status["SENT"],
+                           owned_by_user = None,
+                           owned_by_role = ADMIN
+                        )
+    # Create a Receive record
+    r_send = stable[send_id]
+    recv_id = s3db.inv_recv.insert(sender_id = r_send.sender_id,
+                                   from_site_id = r_send.site_id,
+                                   eta = r_send.delivery_date,
+                                   recipient_id = r_send.recipient_id,
+                                   site_id = r_send.to_site_id,
+                                   type = 1, # 1:"Another Inventory"
+                                  )
+    # Change the status for all track items in this shipment to In transit
+    # and link to the receive record
+    db(tracktable.send_id == send_id).update(status = 2,
+                                             recv_id = recv_id)
+
+    session.confirmation = T("Shipment Items sent from Warehouse")
+    # Go to the Site which has sent these items
+    site_id = send_record.site_id
+    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
+                                                          site_id)
+    query = (otable.id == id)
+    otype = db(query).select(otable.type, limitby = (0, 1)).first()
+    if otype and otype.type == 5:
+        url = URL(c = "inv",
+                 f = "warehouse",
+                 args = [id, "inv_item"])
+    else:
+        url = URL(c = "org",
+                 f = "office",
+                 args = [id, "inv_item"])
+    redirect(url)
+
+    
+#    # Get Send & Inv Items
+#    sitable = s3db.inv_send_item
+#    itable = s3db.inv_inv_item
+#    query = ( sitable.send_id == send_id ) & \
+#            ( sitable.deleted == False )
+#    send_items = db(query).select(sitable.id,
+#                                  sitable.quantity,
+#                                  sitable.item_pack_id,
+#                                  itable.id,
+#                                  itable.item_id,
+#                                  itable.quantity,
+#                                  itable.item_pack_id, # required by pack_quantity virtualfield
+#                                  itable.deleted,
+#                                  left=itable.on(sitable.inv_item_id == itable.id),
+#                                  # To ensure that all send items are selected, even if the inv item has been deleted.
+#                                )
+#
+#    # Filter for inv site records (separate due to left-join)
+#    send_items.exclude(lambda row: row.inv_inv_item.id and \
+#                                   row.inv_inv_item.deleted == True)
+#
+#    to_site_id = send_record.to_site_id
+#
+#    req_items = req_items_for_inv(to_site_id, "transit")
+#
+#    update_req_id = []
+#
+#    supply_item_add = s3db.supply_item_add
+#    for send_item in send_items:
+#        item_id = send_item.inv_inv_item.item_id
+#        send_item_id = send_item.inv_send_item.id
+#        inv_item_id = send_item.inv_inv_item.id
+#
+#        new_inv_quantity = supply_item_add(send_item.inv_inv_item.quantity,
+#                                           send_item.inv_inv_item.pack_quantity,
+#                                           -send_item.inv_send_item.quantity,
+#                                           send_item.inv_send_item.pack_quantity)
+#
+#        if new_inv_quantity < 0:
+#            # This shipment is invalid
+#            # flag this item
+#            invalid_send_item_ids.append(send_item_id)
+#
+#            # Cancel this processing
+#            cancel_send = True
+#        else:
+#            # Update the Inv Item Quantity
+#            itable[inv_item_id] = dict(quantity = new_inv_quantity)
+#
+#        # Check for req_items (-> transit)
+#        update_req_id.append(req_item_in_shipment(shipment_item = send_item,
+#                                                  shipment_type = "send",
+#                                                  req_items = req_items))
+
+#    if cancel_send:
+#        db.rollback()
+#        for invalid_send_item_id in invalid_send_item_ids:
+#            sitable[invalid_send_item_id] = dict(status = 1)
+#
+#        session.error = T("There is insufficient stock in the Warehouse to send this shipment") #@todo: list the items and the quantities in the error message
+#        redirect(URL(c = "inv",
+#                     f = "send",
+#                     args = [send_id, "send_item"]))
+#    else:
+#        # Update Send record & lock for editing
+#        stable[send_id] = dict(date = request.utcnow,
+#                               status = eden.inv.inv_ship_status["SENT"],
+#                               owned_by_user = None,
+#                               owned_by_role = ADMIN
+#                            )
+#        copy_send_to_recv(send_id)
+#        session.confirmation = T("Shipment Items sent from Warehouse")
+#
+#        # Update status_fulfil of the req record(s)
+#        for req_id, req_item_id in update_req_id:
+#            if req_id:
+#                s3mgr.store_session("req", "req", req_id)
+#                s3mgr.store_session("req", "req_item", req_item_id)
+#                s3db.req_item_onaccept(None)
+#
+#        # Go to the Site which has sent these items
+#        (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
+#                                                              site_id)
+#        query = (otable.id == id)
+#        otype = db(query).select(otable.type, limitby = (0, 1)).first()
+#        if otype and otype.type == 5:
+#            url = URL(c = "inv",
+#                     f = "warehouse",
+#                     args = [id, "inv_item"])
+#        else:
+#            url = URL(c = "org",
+#                     f = "office",
+#                     args = [id, "inv_item"])
+#        redirect(url)
+
+
+# -----------------------------------------------------------------------------
+def send_cancel():
+    """
+        This will cancel a shipment that has been sent
+
+        @todo need to roll back commitments
+    """
+
+    send_id = request.args[0]
+    stable = s3db.inv_send
+    rtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
+    if not auth.s3_has_permission("delete",
+                                  stable,
+                                  record_id=send_id):
+        session.error = T("You do not have permission to cancel this sent shipment.")
+
+    send_record = stable[send_id]
+    if send_record.status != eden.inv.inv_ship_status["SENT"]:
+        session.error = T("This shipment has not been sent - it has NOT been canceled because can still be edited.")
+
+    if session.error:
+        redirect(URL(c = "inv",
+                     f = "send",
+                     args = [send_id],
+                     )
+                 )
+
+    # Okay no error so far, let's delete that baby
+    # Change the send and recv status to cancelled
+    stable[send_id] = dict(date = request.utcnow,
+                           status = eden.inv.inv_ship_status["CANCEL"],
+                           owned_by_user = None,
+                           owned_by_role = ADMIN
+                        )
+    recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
+                                                        limitby = (0, 1)).first()
+    if recv_row:
+        recv_id = recv_row.recv_id
+        rtable[recv_id] = dict(date = request.utcnow,
+                               status = eden.inv.inv_ship_status["CANCEL"],
+                               owned_by_user = None,
+                               owned_by_role = ADMIN
+                            )
+
+
+    # Change the track items status to canceled and then delete them
+    db(tracktable.send_id == send_id).update(status = 4)
+    track_rows = db(tracktable.send_id == send_id).select(tracktable.id)
+    for track_item in track_rows:
+        s3.inv_track_item_deleting(track_item.id)
+    
+#    site_id = send_record.site_id
+#
+#    # Get Send & Inv Items
+#    sitable = s3db.inv_send_item
+#    itable = s3db.inv_inv_item
+#    query = ( sitable.send_id == send_id ) & \
+#            ( sitable.inv_item_id == itable.id ) & \
+#            ( sitable.deleted == False ) & \
+#            ( itable.deleted == False )
+#    send_items = db(query).select(sitable.id,
+#                                  itable.item_id,
+#                                  sitable.quantity,
+#                                  sitable.item_pack_id, # required by pack_quantity virtualfield
+#                                  sitable.req_item_id)
+#
+#    query = ( itable.site_id == site_id ) & \
+#            ( itable.deleted == False )
+#    inv_items = db(query).select(itable.id,
+#                                 itable.item_id,
+#                                 itable.quantity,
+#                                 itable.item_pack_id, # required by pack_quantity virtualfield
+#                                )
+#
+#    inv_items_dict = inv_items.as_dict(key = "item_id")
+#
+#    req_items = req_items_for_inv(site_id, "transit")
+#
+#    update_req_id = []
+#
+#    supply_item_add = s3db.supply_item_add
+#    ritable = s3db.inv_recv_item
+#    rtable = s3db.req_req_item
+#    for send_item in send_items:
+#        item_id = send_item.inv_inv_item.item_id
+#        inv_send_item = send_item.inv_send_item
+#        # All Items received *should* exist in the inv.
+#        if item_id in inv_items_dict:
+#            # Decrease the inv_item.quantity
+#            inv_item = Storage(inv_items_dict[item_id])
+#
+#            inv_item_id = inv_item.id
+#
+#            quantity = supply_item_add(inv_item.quantity,
+#                                       inv_item.pack_quantity,
+#                                       inv_send_item.quantity,
+#                                       inv_send_item.pack_quantity)
+#
+#            item = dict(quantity = quantity)
+#        else:
+#            # This Value should be added with a negative value
+#            inv_item_id = 0
+#            item = dict( site_id = site_id,
+#                         item_id = item_id,
+#                         quantity = inv_send_item.quantity,
+#                         item_pack_id = inv_send_item.item_pack_id
+#                         )
+#
+#        # Update Inv Item
+#        itable[inv_item_id] = item
+#
+#        # Remove the link from the recv_item to the req_item
+#        ritable[inv_send_item.id] = dict(req_item_id = None)
+#
+#        if deployment_settings.has_module("req"):
+#            # Reduce any req_item
+#            req_item_id = inv_send_item.req_item_id
+#            query = (rtable.id == req_item_id) & \
+#                    (rtable.deleted == False)
+#            r_req_item = db(query).select(rtable.quantity_fulfil,
+#                                          rtable.item_pack_id, # required by pack_quantity virtualfield
+#                                          limitby = (0, 1)).first()
+#            if r_req_item:
+#                quantity_fulfil = supply_item_add(r_req_item.quantity_fulfil,
+#                                                  r_req_item.pack_quantity,
+#                                                  -inv_send_item.quantity,
+#                                                  inv_send_item.pack_quantity)
+#                rtable[req_item_id] = dict(quantity_fulfil=quantity_fulfil)
+#
+#                # Check for req_items (-> fulfil)
+#                update_req_id.append( [r_req_item.req_id, req_item_id] )
+#
+#    # Update send record & lock for editing
+#    stable[send_id] = dict(date = request.utcnow,
+#                           status = eden.inv.inv_ship_status["CANCEL"],
+#                           owned_by_user = None,
+#                           owned_by_role = ADMIN
+#                        )
+#
+#    if deployment_settings.has_module("req"):
+#        # Update status_fulfil of the req record(s)
+#        for req_id, req_item_id in update_req_id:
+#            if req_id:
+#                s3mgr.store_session("req", "req", req_id)
+#                s3mgr.store_session("req", "req_item", req_item_id)
+#                s3db.req_item_onaccept(None)
+
+    session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
+
+    redirect(URL(c = "inv",
+                 f = "send",
+                 args = [send_id]))
+
+# =============================================================================
+def recv():
+    """ RESTful CRUD controller """
+    s3mgr.load("inv_recv")
+    tablename = "inv_recv"
+    table = s3db.inv_recv
+
+    # Limit site_id to sites the user has permissions for
+    if deployment_settings.get_inv_shipment_name() == "order":
+        error_msg = T("You do not have permission for any facility to add an order.")
+    else:
+        error_msg = T("You do not have permission for any facility to receive a shipment.")
+    auth.permission.permitted_facilities(table=table,
+                                         error_msg=error_msg)
+
+    def prep(r):
+        if r.interactive:
+            # If component view
+            if r.record:
+                tracktable = s3db.inv_track_item
+                # Hide the values that will be copied from the inv_inv_item record
+                tracktable.item_id.readable = False
+                tracktable.item_id.writable = False
+                tracktable.bin.readable = False
+                tracktable.bin.writable = False
+                tracktable.donating_org_id.readable = False
+                tracktable.donating_org_id.writable = False
+                # Hide the link to the send and adjustment records
+                tracktable.send_id.readable = False
+                tracktable.send_id.writable = False
+
+                SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
+                if r.record.status == SHIP_STATUS_IN_PROCESS:
+                    s3.crud_strings.inv_recv.title_update = \
+                    s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+        return True
+
+    response.s3.prep = prep
+
+    output = s3_rest_controller("inv", "recv",
+                                rheader=eden.inv.inv_recv_rheader,
+                                )
+    return output
+
+
+# -----------------------------------------------------------------------------
+def recv_item():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):
@@ -395,6 +823,8 @@ def recv_process():
 
     recv_id = request.args[0]
     rtable = s3db.inv_recv
+    stable = s3db.inv_send
+    tracktable = s3db.inv_track_item
     otable = s3db.org_office
 
     if not auth.s3_has_permission("update",
@@ -414,75 +844,27 @@ def recv_process():
                      args = [recv_id]))
 
     site_id = recv_record.site_id
-
-    # Get Recv & Inv Items
-    ritable = s3db.inv_recv_item
-    query = (ritable.recv_id == recv_id) & \
-            (ritable.deleted == False)
-    recv_items = db(query).select(ritable.id,
-                                  ritable.item_id,
-                                  ritable.quantity,
-                                  ritable.item_pack_id, # required by pack_quantity virtualfield
-                                  )
-
-    itable = s3db.inv_inv_item
-    query = ( itable.site_id == site_id ) & \
-            ( itable.deleted == False )
-    inv_items = db(query).select(itable.id,
-                                 itable.item_id,
-                                 itable.quantity,
-                                 itable.item_pack_id) # required by pack_quantity virtualfield
-
-    inv_items_dict = inv_items.as_dict(key = "item_id")
-
-    req_items = req_items_for_inv(site_id, "fulfil")
-
-    update_req_id = []
-
-    supply_item_add = s3db.supply_item_add
-    for recv_item in recv_items:
-        item_id = recv_item.item_id
-        if item_id in inv_items_dict:
-            # This item already exists in the inv, and the quantity must be incremented
-            inv_item = Storage(inv_items_dict[item_id])
-
-            inv_item_id = inv_item.id
-
-            quantity = supply_item_add(inv_item.quantity,
-                                       inv_item.pack_quantity,
-                                       recv_item.quantity,
-                                       recv_item.pack_quantity)
-            item = dict(quantity = quantity)
-        else:
-            # This item must be added to the inv
-            inv_item_id = 0
-            item = dict(site_id = site_id,
-                        item_id = item_id,
-                        quantity = recv_item.quantity,
-                        item_pack_id = recv_item.item_pack_id)
-
-        # Update Inv Item
-        itable[inv_item_id] = item
-
-        # Check for req_items (-> fulfil)
-        update_req_id.append(req_item_in_shipment(shipment_item = Storage(inv_recv_item = recv_item),
-                                                  shipment_type = "recv",
-                                                  req_items = req_items))
-
-    # Update recv record & lock for editing
+    # Update Receive record & lock for editing
     rtable[recv_id] = dict(date = request.utcnow,
                            status = eden.inv.inv_ship_status["RECEIVED"],
                            owned_by_user = None,
-                           owned_by_role = ADMIN )
-
-    # Update status_fulfil of the req record(s)
-    for req_id, req_item_id in update_req_id:
-        if req_id:
-            s3mgr.store_session("req", "req", req_id)
-            s3mgr.store_session("req", "req_item", req_item_id)
-            s3db.req_item_onaccept(None)
-
-    session.confirmation = T("Shipment Items received by Warehouse")
+                           owned_by_role = ADMIN
+                          )
+    send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
+                                                        limitby = (0, 1)).first()
+    if send_row:
+        send_id = send_row.send_id
+        stable[send_id] = dict(date = request.utcnow,
+                               status = eden.inv.inv_ship_status["RECEIVED"],
+                               owned_by_user = None,
+                               owned_by_role = ADMIN
+                            )
+    # Change the status for all track items in this shipment to Arrived
+    db(tracktable.recv_id == recv_id).update(status = 3)
+    # Move each item to the site
+    track_rows = db(tracktable.recv_id == recv_id).select(tracktable.id)
+    for track_item in track_rows:
+        s3.inv_track_item_unload(track_item.id, site_id)
 
     # Go to the Inventory of the Site which has received these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
@@ -498,6 +880,90 @@ def recv_process():
                  f = "office",
                  args = [id, "inv_item"])
     redirect(url)
+
+#    # Get Recv & Inv Items
+#    ritable = s3db.inv_recv_item
+#    query = (ritable.recv_id == recv_id) & \
+#            (ritable.deleted == False)
+#    recv_items = db(query).select(ritable.id,
+#                                  ritable.item_id,
+#                                  ritable.quantity,
+#                                  ritable.item_pack_id, # required by pack_quantity virtualfield
+#                                  )
+#
+#    itable = s3db.inv_inv_item
+#    query = ( itable.site_id == site_id ) & \
+#            ( itable.deleted == False )
+#    inv_items = db(query).select(itable.id,
+#                                 itable.item_id,
+#                                 itable.quantity,
+#                                 itable.item_pack_id) # required by pack_quantity virtualfield
+#
+#    inv_items_dict = inv_items.as_dict(key = "item_id")
+#
+#    req_items = req_items_for_inv(site_id, "fulfil")
+#
+#    update_req_id = []
+#
+#    supply_item_add = s3db.supply_item_add
+#    for recv_item in recv_items:
+#        item_id = recv_item.item_id
+#        if item_id in inv_items_dict:
+#            # This item already exists in the inv, and the quantity must be incremented
+#            inv_item = Storage(inv_items_dict[item_id])
+#
+#            inv_item_id = inv_item.id
+#
+#            quantity = supply_item_add(inv_item.quantity,
+#                                       inv_item.pack_quantity,
+#                                       recv_item.quantity,
+#                                       recv_item.pack_quantity)
+#            item = dict(quantity = quantity)
+#        else:
+#            # This item must be added to the inv
+#            inv_item_id = 0
+#            item = dict(site_id = site_id,
+#                        item_id = item_id,
+#                        quantity = recv_item.quantity,
+#                        item_pack_id = recv_item.item_pack_id)
+#
+#        # Update Inv Item
+#        itable[inv_item_id] = item
+#
+#        # Check for req_items (-> fulfil)
+#        update_req_id.append(req_item_in_shipment(shipment_item = Storage(inv_recv_item = recv_item),
+#                                                  shipment_type = "recv",
+#                                                  req_items = req_items))
+#
+#    # Update recv record & lock for editing
+#    rtable[recv_id] = dict(date = request.utcnow,
+#                           status = eden.inv.inv_ship_status["RECEIVED"],
+#                           owned_by_user = None,
+#                           owned_by_role = ADMIN )
+#
+#    # Update status_fulfil of the req record(s)
+#    for req_id, req_item_id in update_req_id:
+#        if req_id:
+#            s3mgr.store_session("req", "req", req_id)
+#            s3mgr.store_session("req", "req_item", req_item_id)
+#            s3db.req_item_onaccept(None)
+#
+#    session.confirmation = T("Shipment Items received by Warehouse")
+#
+#    # Go to the Inventory of the Site which has received these items
+#    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
+#                                                          site_id)
+#    query = (otable.id == id)
+#    otype = db(query).select(otable.type, limitby = (0, 1)).first()
+#    if otype and otype.type == 5:
+#        url = URL(c = "inv",
+#                 f = "warehouse",
+#                 args = [id, "inv_item"])
+#    else:
+#        url = URL(c = "org",
+#                 f = "office",
+#                 args = [id, "inv_item"])
+#    redirect(url)
 
 # -----------------------------------------------------------------------------
 def recv_cancel():
@@ -616,307 +1082,8 @@ def recv_cancel():
                  args = [recv_id]))
 
 # -----------------------------------------------------------------------------
-def send_process():
-    """ Send a Shipment """
-
-    send_id = request.args[0]
-    stable = s3db.inv_send
-    otable = s3db.org_office
-
-    if not auth.s3_has_permission("update",
-                                  stable,
-                                  record_id=send_id):
-        session.error = T("You do not have permission to send this shipment.")
-
-    send_record = stable[send_id]
-
-    if send_record.status != eden.inv.inv_ship_status["IN_PROCESS"]:
-        session.error = T("This shipment has already been sent.")
-
-    if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id]))
-
-    site_id = send_record.site_id
-
-    cancel_send = False
-    invalid_send_item_ids = []
-
-    # Get Send & Inv Items
-    sitable = s3db.inv_send_item
-    itable = s3db.inv_inv_item
-    query = ( sitable.send_id == send_id ) & \
-            ( sitable.deleted == False )
-    send_items = db(query).select(sitable.id,
-                                  sitable.quantity,
-                                  sitable.item_pack_id,
-                                  itable.id,
-                                  itable.item_id,
-                                  itable.quantity,
-                                  itable.item_pack_id, # required by pack_quantity virtualfield
-                                  itable.deleted,
-                                  left=itable.on(sitable.inv_item_id == itable.id),
-                                  # To ensure that all send items are selected, even if the inv item has been deleted.
-                                )
-
-    # Filter for inv site records (separate due to left-join)
-    send_items.exclude(lambda row: row.inv_inv_item.id and \
-                                   row.inv_inv_item.deleted == True)
-
-    to_site_id = send_record.to_site_id
-
-    req_items = req_items_for_inv(to_site_id, "transit")
-
-    update_req_id = []
-
-    supply_item_add = s3db.supply_item_add
-    for send_item in send_items:
-        item_id = send_item.inv_inv_item.item_id
-        send_item_id = send_item.inv_send_item.id
-        inv_item_id = send_item.inv_inv_item.id
-
-        new_inv_quantity = supply_item_add(send_item.inv_inv_item.quantity,
-                                           send_item.inv_inv_item.pack_quantity,
-                                           -send_item.inv_send_item.quantity,
-                                           send_item.inv_send_item.pack_quantity)
-
-        if new_inv_quantity < 0:
-            # This shipment is invalid
-            # flag this item
-            invalid_send_item_ids.append(send_item_id)
-
-            # Cancel this processing
-            cancel_send = True
-        else:
-            # Update the Inv Item Quantity
-            itable[inv_item_id] = dict(quantity = new_inv_quantity)
-
-        # Check for req_items (-> transit)
-        update_req_id.append(req_item_in_shipment(shipment_item = send_item,
-                                                  shipment_type = "send",
-                                                  req_items = req_items))
-
-    if cancel_send:
-        db.rollback()
-        for invalid_send_item_id in invalid_send_item_ids:
-            sitable[invalid_send_item_id] = dict(status = 1)
-
-        session.error = T("There is insufficient stock in the Warehouse to send this shipment") #@todo: list the items and the quantities in the error message
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id, "send_item"]))
-    else:
-        # Update Send record & lock for editing
-        stable[send_id] = dict(date = request.utcnow,
-                               status = eden.inv.inv_ship_status["SENT"],
-                               owned_by_user = None,
-                               owned_by_role = ADMIN
-                            )
-        copy_send_to_recv(send_id)
-        session.confirmation = T("Shipment Items sent from Warehouse")
-
-        # Update status_fulfil of the req record(s)
-        for req_id, req_item_id in update_req_id:
-            if req_id:
-                s3mgr.store_session("req", "req", req_id)
-                s3mgr.store_session("req", "req_item", req_item_id)
-                s3db.req_item_onaccept(None)
-
-        # Go to the Site which has sent these items
-        (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
-                                                              site_id)
-        query = (otable.id == id)
-        otype = db(query).select(otable.type, limitby = (0, 1)).first()
-        if otype and otype.type == 5:
-            url = URL(c = "inv",
-                     f = "warehouse",
-                     args = [id, "inv_item"])
-        else:
-            url = URL(c = "org",
-                     f = "office",
-                     args = [id, "inv_item"])
-        redirect(url)
-
-# -----------------------------------------------------------------------------
-def send_cancel():
-    """
-        Could we reuse recv_cancel? Challenges:
-         * errors
-         * sent_items query
-          * Different query
-          * two tables in rows result
-    """
-
-    send_id = request.args[0]
-    stable = s3db.inv_send
-    if not auth.s3_has_permission("delete",
-                                  stable,
-                                  record_id=send_id):
-        session.error = T("You do not have permission to cancel this sent shipment.")
 
 
-    send_record = stable[send_id]
-
-    if send_record.status != eden.inv.inv_ship_status["SENT"]:
-        session.error = T("This shipment has not been sent - it has NOT been canceled because can still be edited.")
-
-    if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id],
-                     )
-                 )
-
-    site_id = send_record.site_id
-
-    # Get Send & Inv Items
-    sitable = s3db.inv_send_item
-    itable = s3db.inv_inv_item
-    query = ( sitable.send_id == send_id ) & \
-            ( sitable.inv_item_id == itable.id ) & \
-            ( sitable.deleted == False ) & \
-            ( itable.deleted == False )
-    send_items = db(query).select(sitable.id,
-                                  itable.item_id,
-                                  sitable.quantity,
-                                  sitable.item_pack_id, # required by pack_quantity virtualfield
-                                  sitable.req_item_id)
-
-    query = ( itable.site_id == site_id ) & \
-            ( itable.deleted == False )
-    inv_items = db(query).select(itable.id,
-                                 itable.item_id,
-                                 itable.quantity,
-                                 itable.item_pack_id, # required by pack_quantity virtualfield
-                                )
-
-    inv_items_dict = inv_items.as_dict(key = "item_id")
-
-    req_items = req_items_for_inv(site_id, "transit")
-
-    update_req_id = []
-
-    supply_item_add = s3db.supply_item_add
-    ritable = s3db.inv_recv_item
-    rtable = s3db.req_req_item
-    for send_item in send_items:
-        item_id = send_item.inv_inv_item.item_id
-        inv_send_item = send_item.inv_send_item
-        # All Items received *should* exist in the inv.
-        if item_id in inv_items_dict:
-            # Decrease the inv_item.quantity
-            inv_item = Storage(inv_items_dict[item_id])
-
-            inv_item_id = inv_item.id
-
-            quantity = supply_item_add(inv_item.quantity,
-                                       inv_item.pack_quantity,
-                                       inv_send_item.quantity,
-                                       inv_send_item.pack_quantity)
-
-            item = dict(quantity = quantity)
-        else:
-            # This Value should be added with a negative value
-            inv_item_id = 0
-            item = dict( site_id = site_id,
-                         item_id = item_id,
-                         quantity = inv_send_item.quantity,
-                         item_pack_id = inv_send_item.item_pack_id
-                         )
-
-        # Update Inv Item
-        itable[inv_item_id] = item
-
-        # Remove the link from the recv_item to the req_item
-        ritable[inv_send_item.id] = dict(req_item_id = None)
-
-        if deployment_settings.has_module("req"):
-            # Reduce any req_item
-            req_item_id = inv_send_item.req_item_id
-            query = (rtable.id == req_item_id) & \
-                    (rtable.deleted == False)
-            r_req_item = db(query).select(rtable.quantity_fulfil,
-                                          rtable.item_pack_id, # required by pack_quantity virtualfield
-                                          limitby = (0, 1)).first()
-            if r_req_item:
-                quantity_fulfil = supply_item_add(r_req_item.quantity_fulfil,
-                                                  r_req_item.pack_quantity,
-                                                  -inv_send_item.quantity,
-                                                  inv_send_item.pack_quantity)
-                rtable[req_item_id] = dict(quantity_fulfil=quantity_fulfil)
-
-                # Check for req_items (-> fulfil)
-                update_req_id.append( [r_req_item.req_id, req_item_id] )
-
-    # Update send record & lock for editing
-    stable[send_id] = dict(date = request.utcnow,
-                           status = eden.inv.inv_ship_status["CANCEL"],
-                           owned_by_user = None,
-                           owned_by_role = ADMIN
-                        )
-
-    if deployment_settings.has_module("req"):
-        # Update status_fulfil of the req record(s)
-        for req_id, req_item_id in update_req_id:
-            if req_id:
-                s3mgr.store_session("req", "req", req_id)
-                s3mgr.store_session("req", "req_item", req_item_id)
-                s3db.req_item_onaccept(None)
-
-    session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
-
-    redirect(URL(c = "inv",
-                 f = "send",
-                 args = [send_id]))
-
-#==============================================================================
-def copy_send_to_recv(send_id):
-    """ function to copy data from a shipment which was sent to the warehouse to a recv shipment (when the shipment is sent)
-    @ToDo: Make sure that the original shipment gets "received" when this shipment is received.
-    """
-    r_send = s3db.inv_send[send_id]
-    site_id = r_send.to_site_id
-
-    if r_send.status != eden.inv.inv_ship_status["SENT"]:
-        session.error = T("This shipment has already been received.")
-
-    if not auth.s3_has_permission("update",
-                                  "org_site",
-                                  record_id=site_id):
-        session.error = T("You do not have permission to receive this shipment.")
-
-    if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id]))
-
-    # Create a new recv record
-    recv_id = s3db.inv_recv.insert( type = 1, # 1:"Another Inventory",
-                                    site_id = site_id,
-                                    recipient_id = s3_logged_in_person(),
-                                    from_site_id = r_send.site_id,
-                                    #organisation_id = r_send.organisation_id,
-                                    sender_id = r_send.sender_id)
-
-    stable = s3db.inv_send_item
-    itable = s3db.inv_inv_item
-    query = (stable.send_id == send_id) & \
-            (stable.inv_item_id == itable.id) & \
-            (stable.deleted == False)
-    sent_items = db(query).select(itable.item_id,
-                                  stable.item_pack_id,
-                                  stable.quantity,
-                                  stable.req_item_id)
-
-    # Copy items from send to recv
-    rtable = s3db.inv_recv_item
-    for sent_item in sent_items:
-        rtable.insert(recv_id = recv_id,
-                      item_id = sent_item.inv_inv_item.item_id,
-                      item_pack_id = sent_item.inv_send_item.item_pack_id,
-                      quantity = sent_item.inv_send_item.quantity,
-                      req_item_id = sent_item.inv_send_item.req_item_id)
 
 def recv_sent():
     """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
