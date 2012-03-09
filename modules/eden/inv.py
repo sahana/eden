@@ -924,7 +924,7 @@ class S3TrackingModel(S3Model):
                     (itable.site_id == stable.id)
             record = db(query).select(stable.organisation_id,
                                       limitby=(0, 1)).first()
-    
+
             form.vars.track_org_id = record.organisation_id
         # If their is a tracking number check that it is unique within the org
         if form.vars.tracking_no:
