@@ -1,3 +1,5 @@
 UUID,Country,L1,L2,L3,L4
 SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb"
+,AU,"State / Territory","Local Government Area","",""
+,PH,"Region","Province","City / Municipality","Barangay"
 ,TL,"District","SubDistrict","Suco","Village"

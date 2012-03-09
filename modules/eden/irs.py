@@ -1051,8 +1051,9 @@ def irs_rheader(r, tabs=[]):
                 (T("Vehicles"), "vehicle"),
                 (T("Staff"), "human_resource"),
                 (T("Tasks"), "task"),
-                (T("Dispatch"), "dispatch"),
                ]
+        if settings.has_module("msg"):
+            tabs.append((T("Dispatch"), "dispatch"))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 

@@ -1260,7 +1260,7 @@ def layer_feature():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1351,7 +1351,7 @@ def layer_openstreetmap():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1404,7 +1404,7 @@ def layer_bing():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1457,7 +1457,7 @@ def layer_google():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1519,7 +1519,7 @@ def layer_mgrs():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1581,7 +1581,7 @@ def layer_geojson():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1666,7 +1666,7 @@ def layer_georss():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1768,7 +1768,7 @@ def layer_gpx():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1816,6 +1816,11 @@ def layer_kml():
         msg_record_deleted=LAYER_DELETED,
         msg_list_empty=NO_LAYERS)
 
+    # Custom Method
+    #s3mgr.model.set_method(module, resourcename,
+    #                       method="enable",
+    #                       action=enable_layer)
+
     # Pre-processor
     def prep(r):
         if r.interactive:
@@ -1830,7 +1835,7 @@ def layer_kml():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -1866,6 +1871,101 @@ def layer_kml():
     response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
+
+    return output
+
+# -----------------------------------------------------------------------------
+def layer_theme():
+    """ RESTful CRUD controller """
+
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load(tablename)
+
+    # CRUD Strings
+    type = "Theme"
+    LAYERS = T(TYPE_LAYERS_FMT % type)
+    ADD_NEW_LAYER = T(ADD_NEW_TYPE_LAYER_FMT % type)
+    EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
+    LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
+    NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
+    s3.crud_strings[tablename] = Storage(
+        title_create=ADD_LAYER,
+        title_display=LAYER_DETAILS,
+        title_list=LAYERS,
+        title_update=EDIT_LAYER,
+        title_search=SEARCH_LAYERS,
+        subtitle_create=ADD_NEW_LAYER,
+        subtitle_list=LIST_LAYERS,
+        label_list_button=LIST_LAYERS,
+        label_create_button=ADD_LAYER,
+        label_delete_button = DELETE_LAYER,
+        msg_record_created=LAYER_ADDED,
+        msg_record_modified=LAYER_UPDATED,
+        msg_record_deleted=LAYER_DELETED,
+        msg_list_empty=NO_LAYERS)
+
+    # Custom Method
+    #s3mgr.model.set_method(module, resourcename,
+    #                       method="enable",
+    #                       action=enable_layer)
+
+    # Pre-processor
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "config":
+                ltable = s3db.gis_layer_config
+                field = ltable.base
+                field.readable = False
+                field.writable = False
+                if r.method != "update":
+                    # Only show Configs with no definition yet for this layer
+                    table = r.table
+                    # Find the records which are used
+                    query = (ltable.layer_id == table.layer_id) & \
+                            (table.id == r.id)
+                    rows = db(query).select(ltable.config_id)
+                    # Filter them out
+                    ltable.config_id.requires = IS_ONE_OF(db,
+                                                         "gis_config.id",
+                                                         "%(name)s",
+                                                         not_filterby="config_id",
+                                                         not_filter_opts=[row.config_id for row in rows]
+                                                         )
+        return True
+    response.s3.prep = prep
+
+    # Post-processor
+    def postp(r, output):
+        if r.interactive and r.method != "import":
+            s3_action_buttons(r, copyable=True)
+            # Only show the enable button if the layer is not currently enabled
+            #query = (r.table.enabled != True)
+            #rows = db(query).select(r.table.id)
+            #restrict = [str(row.id) for row in rows]
+            #response.s3.actions.append(dict(label=str(T("Enable")),
+            #                                _class="action-btn",
+            #                                url=URL(args=["[id]", "enable"]),
+            #                                restrict = restrict
+            #                                )
+            #                            )
+        return output
+    response.s3.postp = postp
+
+    output = s3_rest_controller(rheader=s3db.gis_rheader)
+
+    return output
+
+# -----------------------------------------------------------------------------
+def theme_data():
+    """ RESTful CRUD controller """
+
+    output = s3_rest_controller(csv_extra_fields = [
+                                    dict(label="Layer",
+                                         field=s3db.gis_layer_theme_id())
+                                ])
 
     return output
 
@@ -1921,7 +2021,7 @@ def layer_tms():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -2000,7 +2100,7 @@ def layer_wfs():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -2071,7 +2171,7 @@ def layer_wms():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",
@@ -2145,7 +2245,7 @@ def layer_js():
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
                             (table.id == r.id)
-                    rows = db(query).select(table.config_id)
+                    rows = db(query).select(ltable.config_id)
                     # Filter them out
                     ltable.config_id.requires = IS_ONE_OF(db,
                                                          "gis_config.id",

@@ -79,14 +79,15 @@ try:
 except ImportError:
     s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
-# Map WKT types to db types (multi-geometry types are mapped to single types)
+# Map WKT types to db types
 GEOM_TYPES = {
     "point": 1,
-    "multipoint": 1,
     "linestring": 2,
-    "multilinestring": 2,
     "polygon": 3,
-    "multipolygon": 3,
+    "multipoint": 4,
+    "multilinestring": 5,
+    "multipolygon": 6,
+    "geometrycollection": 7,
 }
 
 # km
@@ -233,9 +234,8 @@ class GIS(object):
         #messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
         messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"
         messages.unknown_type = "Unknown Type!"
-        messages.invalid_wkt_point = "Invalid WKT: Must be like POINT(3 4)!"
-        messages.invalid_wkt_linestring = "Invalid WKT: Must be like LINESTRING(3 4,10 50,20 25)!"
-        messages.invalid_wkt_polygon = "Invalid WKT: Must be like POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))!"
+        messages.invalid_wkt_point = "Invalid WKT: must be like POINT(3 4)"
+        messages.invalid_wkt = "Invalid WKT: see http://en.wikipedia.org/wiki/Well-known_text"
         messages.lon_empty = "Invalid: Longitude can't be empty if Latitude specified!"
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
@@ -2161,10 +2161,22 @@ class GIS(object):
                 else:
                     query = (table.code == code)
                     wkt = geom.ExportToWkt()
+                    if wkt.startswith("LINESTRING"):
+                        gis_feature_type = 2
+                    elif wkt.startswith("POLYGON"):
+                        gis_feature_type = 3
+                    elif wkt.startswith("MULTIPOINT"):
+                        gis_feature_type = 4
+                    elif wkt.startswith("MULTILINESTRING"):
+                        gis_feature_type = 5
+                    elif wkt.startswith("MULTIPOLYGON"):
+                        gis_feature_type = 6
+                    elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        gis_feature_type = 7
                     code2 = feat.GetField(code2Field)
                     area = feat.GetField("Shape_Area")
                     try:
-                        db(query).update(gis_feature_type=3,
+                        db(query).update(gis_feature_type=gis_feature_type,
                                          wkt=wkt,
                                          code2=code2,
                                          area=area)
@@ -2505,9 +2517,21 @@ class GIS(object):
                                  area=area)
                 else:
                     wkt = geom.ExportToWkt()
+                    if wkt.startswith("LINESTRING"):
+                        gis_feature_type = 2
+                    elif wkt.startswith("POLYGON"):
+                        gis_feature_type = 3
+                    elif wkt.startswith("MULTIPOINT"):
+                        gis_feature_type = 4
+                    elif wkt.startswith("MULTILINESTRING"):
+                        gis_feature_type = 5
+                    elif wkt.startswith("MULTIPOLYGON"):
+                        gis_feature_type = 6
+                    elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        gis_feature_type = 7
                     table.insert(name=name,
                                  level=level,
-                                 gis_feature_type=3,
+                                 gis_feature_type=gis_feature_type,
                                  wkt=wkt,
                                  parent=parent.id,
                                  code=code,
@@ -2875,66 +2899,46 @@ class GIS(object):
     def wkt_centroid(form):
         """
             OnValidation callback:
-            If a Point has LonLat defined: calculate the WKT.
-            If a Line/Polygon has WKT defined: validate the format,
+            If a WKT is defined: validate the format,
                 calculate the LonLat of the Centroid, and set bounds
-            Centroid and bounds calculation is done using Shapely, which wraps Geos.
-            A nice description of the algorithm is provided here:
-                http://www.jennessent.com/arcgis/shapes_poster.htm
+            Else if a LonLat is defined: calculate the WKT for the Point.
 
-            Relies on Shapely.
+            Uses Shapely.
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
         messages = current.messages
         vars = form.vars
 
-        if not "gis_feature_type" in vars:
-            # Default to point
-            vars.gis_feature_type = "1"
-        elif not vars.gis_feature_type:
-            # Default to point
-            vars.gis_feature_type = "1"
-
-        if vars.gis_feature_type == "1" or \
-           vars.gis_feature_type == 1:
-            # Point
-            if (vars.lon is None and vars.lat is None) or \
-               (vars.lon == "" and vars.lat == ""):
-                # No geo to create WKT from, so skip
-                return
-            elif vars.lat is None or vars.lat == "":
-                form.errors["lat"] = messages.lat_empty
-                return
-            elif vars.lon is None or vars.lon == "":
-                form.errors["lon"] = messages.lon_empty
-                return
-            else:
-                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                vars.lon_min = vars.lon_max = vars.lon
-                vars.lat_min = vars.lat_max = vars.lat
-                return
-
-        elif vars.gis_feature_type in ("2", "3", 2, 3):
-            # Parse WKT for LineString, Polygon
+        if vars.wkt:
+            # Parse WKT for LineString, Polygon, etc
             try:
+                shape = wkt_loads(vars.wkt)
+            except:
                 try:
-                    shape = wkt_loads(vars.wkt)
+                    # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
+                    linestring = "LINESTRING%s" % vars.wkt[8:-1]
+                    shape = wkt_loads(linestring)
+                    vars.wkt = linestring
                 except:
-                    if vars.gis_feature_type  == "3":
-                        # POLYGON
-                        try:
-                            # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                            linestring = "LINESTRING%s" % vars.wkt[8:-1]
-                            shape = wkt_loads(linestring)
-                            vars.gis_feature_type = 2
-                            vars.wkt = linestring
-                        except:
-                            form.errors["wkt"] = messages.invalid_wkt_polygon
-                    else:
-                        # "2"
-                        form.errors["wkt"] = messages.invalid_wkt_linestring
-                    return
+                    form.errors["wkt"] = messages.invalid_wkt
+                return
+            gis_feature_type = shape.type
+            if gis_feature_type == "Point":
+                vars.gis_feature_type = 1
+            elif gis_feature_type == "LineString":
+                vars.gis_feature_type = 2
+            elif gis_feature_type == "Polygon":
+                vars.gis_feature_type = 3
+            elif gis_feature_type == "MultiPoint":
+                vars.gis_feature_type = 4
+            elif gis_feature_type == "MultiLineString":
+                vars.gis_feature_type = 5
+            elif gis_feature_type == "MultiPolygon":
+                vars.gis_feature_type = 6
+            elif gis_feature_type == "GeometryCollection":
+                vars.gis_feature_type = 7
+            try:
                 centroid_point = shape.centroid
                 vars.lon = centroid_point.x
                 vars.lat = centroid_point.y
@@ -2945,8 +2949,28 @@ class GIS(object):
                 vars.lat_max = bounds[3]
             except:
                 form.errors.gis_feature_type = messages.centroid_error
+
+        elif (vars.lon is None and vars.lat is None) or \
+             (vars.lon == "" and vars.lat == ""):
+            # No Geometry available
+            # Don't clobber existing records (e.g. in Prepop)
+            #vars.gis_feature_type = "0"
+            # Cannot create WKT, so Skip
+            return
         else:
-            form.errors.gis_feature_type = messages.unknown_type
+            # Point
+            vars.gis_feature_type = "1"
+            if vars.lat is None or vars.lat == "":
+                form.errors["lat"] = messages.lat_empty
+                return
+            elif vars.lon is None or vars.lon == "":
+                form.errors["lon"] = messages.lon_empty
+                return
+            else:
+                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
+                vars.lon_min = vars.lon_max = vars.lon
+                vars.lat_min = vars.lat_max = vars.lat
+                return
 
         return
 
@@ -3888,6 +3912,7 @@ S3.gis.layers_feature_queries[%i] = {
                 GeoRSSLayer,
                 GPXLayer,
                 KMLLayer,
+                ThemeLayer,
                 WFSLayer,
                 JSLayer,
                 CoordinateLayer,
@@ -4834,6 +4859,31 @@ class OSMLayer(Layer):
                 attribution = (self.attribution, (None,)),
             )
             self.setup_folder_and_visibility(output)
+            return output
+
+# -----------------------------------------------------------------------------
+class ThemeLayer(Layer):
+    """
+        Theme Layers from Catalogue
+    """
+
+    tablename = "gis_layer_theme"
+    js_array = "S3.gis.layers_theme"
+
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1" % \
+                (URL(c="gis", f="theme_data"),
+                 self.id)
+
+            # Mandatory attributes
+            output = {
+                "name": self.safe_name,
+                "url": url,
+            }
+            #
+            self.setup_folder_and_visibility(output)
+
             return output
 
 # -----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # Script to import all
 #
-# run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_supply_item_ifrc_standard.py complete
+# run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_supply_item_ifrc_standard.py -A complete
 #
 # Equivalent to PrePop:
 # supply,item_category,supply_item_category_ifrc_standard.csv,item_category_ifrc_standard.xsl  

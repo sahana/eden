@@ -33,6 +33,7 @@ __all__ = ["S3LocationModel",
            "S3LayerEntityModel",
            "S3FeatureLayerModel",
            "S3MapModel",
+           "S3GISThemeModel",
            "gis_location_represent",
            "gis_layer_represent",
            "gis_rheader",
@@ -83,10 +84,14 @@ class S3LocationModel(S3Model):
         #  A set of Coordinates &/or Address
         #
         gis_feature_type_opts = {
-            1:T("Point"),
-            2:T("LineString"),
-            3:T("Polygon"),
-            #4:T("MultiPolygon") This just counts as Polygon as far as we're concerned
+            0:T("None"),
+            1:"Point",
+            2:"LineString",
+            3:"Polygon",
+            4:"MultiPoint",
+            5:"MultiLineString",
+            6:"MultiPolygon",
+            7:"GeometryCollection",
             }
         gis_source_opts = {
             "gps":T("GPS"),
@@ -158,7 +163,7 @@ class S3LocationModel(S3Model):
                              Field("wkt", "text",                                # WKT is auto-calculated from lat/lon for Points
                                    requires = IS_LENGTH(2 ** 24),                # Full WKT validation is done in the onvalidation callback - all we do here is allow longer fields than the default (2 ** 16)
                                    represent = gis.abbreviate_wkt,
-                                   label = "WKT (%s)" % T("Well-Known Text")),
+                                   label = "WKT (Well-Known Text)"),
                              Field("url", label = "URL",
                                    requires = IS_NULL_OR(IS_URL())),
                              Field("geonames_id", "integer", unique=True,    # Geonames ID (for cross-correlation. OSM cannot take data from Geonames as 'polluted' with unclear sources, so can't use them as UUIDs)
@@ -268,6 +273,7 @@ class S3LocationModel(S3Model):
                                       widget = S3LocationSelectorWidget(),
                                       requires = IS_NULL_OR(IS_LOCATION_SELECTOR()),
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
+                                      #requires = IS_NULL_OR(IS_LOCATION()),
                                       #widget = S3LocationAutocompleteWidget(),
                                       ondelete = "RESTRICT")
 
@@ -662,13 +668,26 @@ class S3LocationModel(S3Model):
             # @ToDo: check the the lat and lon if they exist?
             #lat = "lat" in job.data and job.data.lat
             #lon = "lon" in job.data and job.data.lon
-
-            if code:
-                query = (table.code.lower().like('%%%s%%' % code.lower()))
-            elif code2:
-                query = (table.code2.lower().like('%%%s%%' % code2.lower()))
-            else:
-                # Name is primary
+            _duplicate = None
+            # In our current data these are not guaranteed unique, especially across countries
+            # if code:
+                # query = (table.code.lower().like('%%%s%%' % code.lower()))
+                # if parent:
+                    # query = query & (table.parent == parent)
+                # if level:
+                    # query = query & (table.level == level)
+                # _duplicate = db(query).select(table.id,
+                                              # limitby=(0, 1)).first()
+            # elif code2:
+                # query = (table.code2.lower().like('%%%s%%' % code2.lower()))
+                # if parent:
+                    # query = query & (table.parent == parent)
+                # if level:
+                    # query = query & (table.level == level)
+                # _duplicate = db(query).select(table.id,
+                                              # limitby=(0, 1)).first()
+            if not _duplicate:
+                # Try the Name
                 query = (table.name.lower().like('%%%s%%' % name.lower()))
                 if parent:
                     query = query & (table.parent == parent)
@@ -1735,6 +1754,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_js = T("JS Layer"),
                               gis_layer_kml = T("KML Layer"),
                               gis_layer_mgrs = T("MGRS Layer"),
+                              gis_layer_theme = T("Theme Layer"),
                               gis_layer_tms = T("TMS Layer"),
                               gis_layer_wfs = T("WFS Layer"),
                               gis_layer_wms = T("WMS Layer"),
@@ -2859,6 +2879,154 @@ class S3MapModel(S3Model):
         return
 
 # =============================================================================
+class S3GISThemeModel(S3Model):
+    """
+        Thematic Mapping model
+    """
+
+    names = ["gis_layer_theme",
+             "gis_theme_data",
+             "gis_layer_theme_id",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        s3 = current.response.s3
+
+        location_id = self.gis_location_id
+
+        layer_id = self.super_link("layer_id", "gis_layer_entity")
+
+        #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        role_required = s3.role_required
+        #roles_permitted = s3.roles_permitted
+
+        # Shortcuts
+        add_component = self.add_component
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
+        
+        # =====================================================================
+        # Theme Layer
+        #
+
+        gis_theme_type_opts = {
+            # This should be stored 
+            #"population":T("Population"),
+            }
+
+        tablename = "gis_layer_theme"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(unique = True),
+                             Field("description", label=T("Description")),
+                             #Field("type", label = T("Type"),
+                             #      requires=IS_NULL_OR(IS_IN_SET(gis_theme_type_opts))
+                             #      represent = lambda opt: gis_theme_type_opts.get(opt,
+                             #                                                      UNKNOWN_OPT),
+                             #      ),
+                             Field("date", "datetime", label = T("Date")),
+                             # @ToDo: Colour Ramps
+                             #Field("colourmap", label = T("Color Map")),
+                             gis_layer_folder()(),
+                             role_required(),       # Single Role
+                             #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                             *meta_fields())
+
+        configure(tablename,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_theme=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # Theme Data
+        add_component("gis_theme_data", gis_layer_theme="layer_theme_id")
+
+        layer_theme_id = S3ReusableField("layer_theme_id", db.gis_layer_theme,
+                                         label = "Theme Layer",
+                                         requires = IS_ONE_OF(db,
+                                                              "gis_layer_theme.id",
+                                                              "%(name)s"),
+                                         represent = self.theme_represent,
+                                         ondelete = "RESTRICT")
+
+        # =====================================================================
+        # GIS Theme Data
+        #
+
+        tablename = "gis_theme_data"
+        table = define_table(tablename,
+                             layer_theme_id(),
+                             location_id(
+                                widget=S3LocationAutocompleteWidget(),
+                                requires = IS_LOCATION(level=["L1", "L2", "L3", "L4"]),
+                                ),
+                             Field("value", label = T("Value")),
+                             # Should we have the Colour defined onaccept of the Theme Layer or calculated real-time?
+                             Field("colour", label = T("Color"),
+                                   requires=IS_HTML_COLOUR()),
+                             *meta_fields())
+
+        ADD_THEME = T("Add Data to Theme Layer")
+        LIST_THEMES = T("List Data in Theme Layer")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_THEME,
+            title_display = T("Theme Data"),
+            title_list = T("Theme Data"),
+            title_update = T("Edit Theme Data"),
+            title_search = T("Search Theme Data"),
+            title_upload = T("Import Data for Theme Layer"),
+            subtitle_create = T("Add New Data to Theme Layer"),
+            subtitle_list = LIST_THEMES,
+            label_list_button = LIST_THEMES,
+            label_create_button = ADD_THEME,
+            label_delete_button = T("Delete Data from Theme layer"),
+            msg_record_created = T("Data added to Theme Layer"),
+            msg_record_modified = T("Theme Data updated"),
+            msg_record_deleted = T("Theme Data deleted"),
+            msg_list_empty = T("No Data currently defined for this Theme Layer")
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (response.s3.*)
+        #
+        return Storage(
+                    gis_layer_theme_id = layer_theme_id,
+                )
+
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def theme_represent(id):
+        """
+        """
+
+        if not id:
+            return current.messages.NONE
+        table = current.s3db.gis_layer_theme
+        query = (table.id == id)
+        theme = current.db(query).select(table.name,
+                                         limitby=(0, 1)).first()
+        if theme:
+            return theme.name
+        else:
+            return current.messages.UNKNOWN_OPT
+
+# =============================================================================
 def name_field():
     T = current.T
     return S3ReusableField("name", length=64,
@@ -3270,6 +3438,30 @@ def gis_rheader(r, tabs=[]):
         if not tabs:
             tabs = [(T("Layer Details"), None),
                     (T("Profiles"), "config"),
+                   ]
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        if record.description:
+            description = TR(TH("%s: " % table.description.label),
+                             record.description)
+        else:
+            description = ""
+
+        rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.name.label),
+                               record.name,
+                            ),
+                            description,
+                            ),
+                      rheader_tabs)
+
+    elif resourcename == "layer_theme":
+        # Tabs
+        if not tabs:
+            tabs = [(T("Layer Details"), None),
+                    (T("Profiles"), "config"),
+                    (T("Data"), "theme_data"),
                    ]
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
