@@ -39,19 +39,23 @@ __all__ = ["S3PersonEntity",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
-           "pr_get_path",
+           "pr_pentity_represent",
+           "pr_person_represent",
+           "pr_person_comment",
+           "pr_rheader",
+           "pr_update_affiliations",
+           "pr_add_affiliation",
+           "pr_remove_affiliation",
+           "pr_get_pe_id",
            "pr_define_role",
            "pr_delete_role",
            "pr_add_to_role",
            "pr_remove_from_role",
-           "pr_rebuild_path",
-           "pr_role_rebuild_path",
+           "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
-           "pr_pentity_represent",
-           "pr_person_represent",
-           "pr_person_comment",
-           "pr_rheader"]
+           "pr_rebuild_path",
+           "pr_role_rebuild_path"]
 
 from gluon import *
 from gluon.dal import Row
@@ -2373,6 +2377,9 @@ class S3PersonDescription(S3Model):
         return
 
 # =============================================================================
+# =============================================================================
+# Representation Methods
+#
 def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
@@ -2464,6 +2471,21 @@ def pr_person_represent(id):
     return name
 
 # =============================================================================
+def pr_person_comment(title=None, comment=None, caller=None, child=None):
+
+    T = current.T
+    if title is None:
+        title = T("Person")
+    if comment is None:
+        comment = T("Type the first few characters of one of the Person's names.")
+    if child is None:
+        child = "person_id"
+    return s3_popup_comment(c="pr", f="person",
+                            vars=dict(caller=caller, child=child),
+                            title=current.messages.ADD_PERSON,
+                            tooltip="%s|%s" % (title, comment))
+
+# =============================================================================
 def pr_rheader(r, tabs=[]):
     """
         Person Registry resource headers
@@ -2538,21 +2560,307 @@ def pr_rheader(r, tabs=[]):
     return None
 
 # =============================================================================
-def pr_person_comment(title=None, comment=None, caller=None, child=None):
+# =============================================================================
+# Affiliation Callbacks
+#
+def pr_update_affiliations(table, record):
+    """ Update all affiliations related to this record """
 
-    T = current.T
-    if title is None:
-        title = T("Person")
-    if comment is None:
-        comment = T("Type the first few characters of one of the Person's names.")
-    if child is None:
-        child = "person_id"
-    return s3_popup_comment(c="pr", f="person",
-                            vars=dict(caller=caller, child=child),
-                            title=current.messages.ADD_PERSON,
-                            tooltip="%s|%s" % (title, comment))
+    if hasattr(table, "_tablename"):
+        rtype = table._tablename
+    else:
+        rtype = table
+
+    db = current.db
+    s3db = current.s3db
+
+    if rtype == "hrm_human_resource":
+
+        # Get the HR record
+        htable = s3db.hrm_human_resource
+        if not isinstance(record, Row):
+            record = db(htable.id == record).select(htable.ALL,
+                                                    limitby=(0, 1)).first()
+        if not record:
+            return
+
+        # Find the person_ids to update
+        update = pr_human_resource_update_affiliations
+        person_id = None
+        if record.deleted_fk:
+            try:
+                person_id = json.loads(record.deleted_fk)["person_id"]
+            except:
+                pass
+        if person_id:
+            update(person_id)
+        if person_id != record.person_id:
+            person_id = record.person_id
+            if person_id:
+                update(person_id)
+
+    elif rtype == "group_membership":
+        # Not implemented yet
+        pass
+
+    elif rtype == "org_site":
+        # Not implemented yet
+        pass
+
+    return
 
 # =============================================================================
+def pr_human_resource_update_affiliations(person_id):
+    """
+        Update all affiliations related to the HR records of a person
+
+        @param person_id: the person record ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    STAFF = "Staff"
+    VOLUNTEER = "Volunteer"
+
+    update = pr_human_resource_update_affiliations
+
+    etable = s3db.pr_pentity
+    ptable = s3db.pr_person
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+    htable = s3db.hrm_human_resource
+    otable = s3db.org_organisation
+    stable = s3db.org_site
+
+    h = str(htable)
+    s = str(stable)
+    o = str(otable)
+    r = str(rtable)
+    e = str(etable)
+
+    # Get the PE-ID for this person
+    pe_id = s3db.pr_get_pe_id("pr_person", person_id)
+
+    # Get all current HR records
+    query = (htable.person_id == person_id) & \
+            (htable.status == 1) & \
+            (htable.type.belongs((1,2))) & \
+            (htable.deleted != True)
+    left = [otable.on(htable.organisation_id == otable.id),
+            stable.on(htable.site_id == stable.site_id)]
+    rows = db(query).select(htable.site_id,
+                            htable.type,
+                            otable.pe_id,
+                            stable.uuid,
+                            stable.instance_type,
+                            left=left)
+
+    # Extract all master PE's
+    masters = {STAFF:[], VOLUNTEER:[]}
+    sites = Storage()
+    for row in rows:
+        if row[h].type == 1:
+            role = STAFF
+            site_id = row[h].site_id
+            site_pe_id = None
+            if site_id and site_id not in sites:
+                itable = s3db.table(row[s].instance_type, None)
+                if itable and "pe_id" in itable.fields:
+                    q = itable.site_id == site_id
+                    site = db(q).select(itable.pe_id,
+                                        limitby=(0, 1)).first()
+                    if site:
+                        site_pe_id = sites[site_id] == site.pe_id
+            else:
+                site_pe_id = sites[site_id]
+            if site_pe_id and site_pe_id not in masters[role]:
+                masters[role].append(site_pe_id)
+        elif row[h].type == 2:
+            role = VOLUNTEER
+        else:
+            continue
+        org_pe_id = row[o].pe_id
+        if org_pe_id and org_pe_id not in masters[role]:
+            masters[role].append(org_pe_id)
+
+    # Get all current affiliations
+    query = (ptable.id == person_id) & \
+            (atable.deleted != True) & \
+            (atable.pe_id == ptable.pe_id) & \
+            (rtable.deleted != True) & \
+            (rtable.id == atable.role_id) & \
+            (rtable.role.belongs((STAFF, VOLUNTEER))) & \
+            (etable.pe_id == rtable.pe_id) & \
+            (etable.instance_type.belongs((o, s)))
+    affiliations = db(query).select(rtable.id,
+                                    rtable.pe_id,
+                                    rtable.role,
+                                    etable.instance_type)
+
+    # Remove all affiliations which are not in masters
+    for a in affiliations:
+        pe = a[r].pe_id
+        role = a[r].role
+        if role in masters:
+            if pe not in masters[role]:
+                pr_remove_affiliation(pe, pe_id, role=role)
+            else:
+                masters[role].remove[pe]
+
+    # Add affiliations to all masters which are not in current affiliations
+    for role in masters:
+        if role == VOLUNTEER:
+            role_type = 9
+        else:
+            role_type = 1
+        for m in masters[role]:
+            pr_add_affiliation(m, pe_id, role=role, role_type=role_type)
+
+    return
+
+# =============================================================================
+# =============================================================================
+# Affiliation Helpers
+#
+def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
+    """
+        Add a new affiliation record
+
+        @param master: the master entity, either as PE-ID or as tuple
+                       (instance_type, instance_id)
+        @param affiliate: the affiliated entity, either as PE-ID or as tuple
+                          (instance_type, instance_id)
+        @param role: the role to add the affiliate to (will be created if it
+                     doesn't yet exist)
+        @param role_type: the type of the role, defaults to OU
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if not role:
+        return
+
+    master_pe = pr_get_pe_id(master)
+    affiliate_pe = pr_get_pe_id(affiliate)
+
+    if master_pe and affiliate_pe:
+        rtable = s3db.pr_role
+        query = (rtable.pe_id == master_pe) & \
+                (rtable.role == role) & \
+                (rtable.deleted != True)
+        row = db(query).select(limitby=(0, 1)).first()
+        if not row:
+            data = {"pe_id": master_pe,
+                    "role": role,
+                    "role_type": role_type}
+            role_id = rtable.insert(**data)
+        else:
+            role_id = row.id
+        if role_id:
+            pr_add_to_role(role_id, affiliate_pe)
+    return
+
+# =============================================================================
+def pr_remove_affiliation(master, affiliate, role=None):
+    """
+        Remove affiliation records
+
+        @param master: the master entity, either as PE-ID or as tuple
+                       (instance_type, instance_id), if this is None, then
+                       all affiliations with all entities will be removed
+        @param affiliate: the affiliated entity, either as PE-ID or as tuple
+                          (instance_type, instance_id)
+        @param affiliate: the affiliated PE, either as pe_id or as tuple
+                          (instance_type, instance_id)
+        @param role: name of the role to remove the affiliate from, if None,
+                     the affiliate will be removed from all roles
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    master_pe = pr_get_pe_id(master)
+    affiliate_pe = pr_get_pe_id(affiliate)
+
+    if affiliate_pe:
+        atable = s3db.pr_affiliation
+        rtable = s3db.pr_role
+        query = (atable.pe_id == affiliate_pe) & \
+                (atable.role_id == rtable.id)
+        if master_pe:
+            query &= (rtable.pe_id == master_pe)
+        if role:
+            query &= (rtable.role == role)
+        rows = db(query).select(rtable.id)
+        for row in rows:
+            pr_remove_from_role(row.id, affiliate_pe)
+    return
+
+# =============================================================================
+# =============================================================================
+# PE Helpers
+#
+def pr_get_pe_id(entity, record_id=None):
+    """
+        Get the PE-ID of an instance record
+
+        @param entity: the entity, either a tablename, a tuple (tablename,
+                       record_id), a Row of the instance type, or a PE-ID
+        @param record_id: the record ID, if entity is a tablename
+
+        @returns: the PE-ID
+    """
+
+    db = current.db
+    s3db = current.s3db
+    if record_id is not None:
+        table, _id = entity, record_id
+    elif isinstance(entity, (tuple, list)):
+        table, _id = entity
+    elif isinstance(entity, Row):
+        if "pe_id" in entity:
+            return entity["pe_id"]
+        else:
+            for f in entity.values():
+                if isinstance(f, Row) and "pe_id" in f:
+                    return f["pe_id"]
+            return None
+    else:
+        return entity
+    if not hasattr(table, "_tablename"):
+        table = s3db.table(table, None)
+    record = None
+    if table:
+        if "pe_id" in table.fields and _id:
+            record = db(table._id==_id).select(table.pe_id,
+                                               limitby=(0, 1)).first()
+        elif _id:
+            key = table._id.name
+            if key == "pe_id":
+                return _id
+            if key != "id" and "instance_type" in table.fields:
+                s = db(table._id==_id).select(table.instance_type,
+                                              limitby=(0, 1)).first()
+            else:
+                return None
+            if not s:
+                return None
+            table = s3db.table(s.instance_type, None)
+            if table and "pe_id" in table.fields:
+                record = db(table[key] == _id).select(table.pe_id,
+                                                      limitby=(0, 1)).first()
+            else:
+                return None
+    if record:
+        return record.pe_id
+    return None
+
+# =============================================================================
+# =============================================================================
+# Back-end Role tools
+#
 def pr_define_role(pe_id,
                    role=None,
                    role_type=None,
@@ -2673,6 +2981,9 @@ def pr_remove_from_role(role_id, pe_id):
     return
 
 # =============================================================================
+# =============================================================================
+# Back-end Path Tools
+#
 def pr_get_path(pe_id):
     """
         Get all ancestor paths of a person entity
@@ -2786,6 +3097,9 @@ def pr_get_descendants(pe_ids, skip=[]):
     return result
 
 # =============================================================================
+# =============================================================================
+# Internal Path Tools
+#
 def pr_rebuild_path(pe_id, clear=False):
     """
         Rebuild the ancestor path of all roles in the OU hierarchy a person
