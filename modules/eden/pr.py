@@ -2706,7 +2706,7 @@ def pr_human_resource_update_affiliations(person_id):
             if pe not in masters[role]:
                 pr_remove_affiliation(pe, pe_id, role=role)
             else:
-                masters[role].remove[pe]
+                masters[role].remove(pe)
 
     # Add affiliations to all masters which are not in current affiliations
     for role in masters:
