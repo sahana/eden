@@ -21,7 +21,9 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
+
 from e_cidadania.apps.spaces.file_validation import ContentTypeRestrictedFileField
+from fields import StdImageField
 
 ALLOWED_CONTENT_TYPES = [
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -55,12 +57,14 @@ class Space(models.Model):
     author = models.ForeignKey(User, blank=True, null=True,
                                 verbose_name=_('Space creator'))
 
-    logo = models.ImageField(upload_to='spaces/logos',
-                             verbose_name=_('Logotype'),
-                             help_text=_('100x75 pixels'))
-    banner = models.ImageField(upload_to='spaces/banners',
-                               verbose_name=_('Banner'),
-                               help_text=_('75px height'))
+    logo = StdImageField(upload_to='spaces/logos', size=(100, 75, False))
+    banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False))
+#    logo = models.ImageField(upload_to='spaces/logos',
+#                             verbose_name=_('Logotype'),
+#                             help_text=_('100x75 pixels'))
+#    banner = models.ImageField(upload_to='spaces/banners',
+#                               verbose_name=_('Banner'),
+#                               help_text=_('75px height'))
     public = models.BooleanField(_('Public space'))
     #theme = models.CharField(_('Theme'), m)
     

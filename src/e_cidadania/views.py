@@ -158,7 +158,7 @@ def view_post(request, post_id):
     return object_detail(request,
                          queryset = Post.objects.all(),
                          object_id = post_id,
-                         template_name = 'news/post_detail.html',
+                         template_name = 'news/post_detail_index.html',
                          template_object_name = 'news')
 
 class ListNews(ListView):

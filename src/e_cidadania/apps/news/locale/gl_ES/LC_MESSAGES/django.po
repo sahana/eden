@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://dev.ecidadania.org/\n"
-"POT-Creation-Date: 2012-01-04 17:33+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-03-08 12:08+0100\n"
 "PO-Revision-Date: 2012-02-29 09:04+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
-"Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/ecidadania/language/gl_ES/)\n"
+"Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
+"ecidadania/language/gl_ES/)\n"
+"Language: gl_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: gl_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: admin.py:38
@@ -128,7 +129,9 @@ msgstr "Publicar no índice:"
 msgid ""
 "If you mark this, the post will appear in the spaces index page AND in the "
 "main index."
-msgstr "Se marcas isto, a entrada aparecerá no índice do espacio E no íncide principal."
+msgstr ""
+"Se marcas isto, a entrada aparecerá no índice do espacio E no íncide "
+"principal."
 
 #: templates/news/post_confirm_delete.html:4
 msgid "Delete news"
@@ -141,7 +144,9 @@ msgstr "Eliminar entrada"
 #: templates/news/post_confirm_delete.html:34
 msgid ""
 "Are you sure you want to delete this post? This action cannot be undone."
-msgstr "Está seguro de querer eliminar esta entrada? Esta acción non se pode desfacer."
+msgstr ""
+"Está seguro de querer eliminar esta entrada? Esta acción non se pode "
+"desfacer."
 
 #: templates/news/post_confirm_delete.html:38
 #: templates/news/post_detail.html:40

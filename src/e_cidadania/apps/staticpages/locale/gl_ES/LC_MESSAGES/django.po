@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://dev.ecidadania.org/\n"
-"POT-Creation-Date: 2012-01-04 17:33+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-03-08 12:08+0100\n"
 "PO-Revision-Date: 2012-02-29 11:37+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
-"Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/ecidadania/language/gl_ES/)\n"
+"Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
+"ecidadania/language/gl_ES/)\n"
+"Language: gl_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: gl_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: admin.py:39
@@ -58,10 +59,10 @@ msgstr "Orde"
 msgid "Static Pages"
 msgstr "Páxinas estáticas"
 
-#: templates/staticpages/staticpages_index.html:11
+#: templates/staticpages/staticpages_index.html:13
 msgid "Go back"
 msgstr "Volver"
 
-#: templates/staticpages/staticpages_index.html:14
+#: templates/staticpages/staticpages_index.html:16
 msgid "last updated"
 msgstr "última actualización"

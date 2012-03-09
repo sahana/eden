@@ -67,8 +67,8 @@ class SpaceAdmin(admin.ModelAdmin):
             [('logo', 'banner')]}),
 
         (_('Modules'), {'fields':
-            [('mod_cal', 'mod_docs', 'mod_news', 'mod_proposals',
-            'mod_debate')]}),
+            ('mod_cal', 'mod_docs', 'mod_news', 'mod_proposals',
+            'mod_debate')}),
 
     ]
     
