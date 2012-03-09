@@ -930,6 +930,7 @@ class S3ModelExtensions(object):
                    widget=None,
                    empty=True,
                    default=DEFAULT,
+                   ondelete="CASCADE",
                    readable=False,
                    writable=False):
         """
@@ -976,7 +977,7 @@ class S3ModelExtensions(object):
                      comment = comment,
                      represent = represent,
                      widget = widget,
-                     ondelete = "RESTRICT")
+                     ondelete = ondelete)
 
     # -------------------------------------------------------------------------
     def update_super(self, table, record):
@@ -1066,6 +1067,8 @@ class S3ModelExtensions(object):
             @param record: the instance record
         """
 
+        manager = current.manager
+
         supertable = self.get_config(table._tablename, "super_entity")
         if not supertable:
             return True
@@ -1079,9 +1082,11 @@ class S3ModelExtensions(object):
                     s = S3Model.table(s)
                 if s is None:
                     continue
-                if "deleted" in s.fields:
-                    current.db(s.uuid == uid).update(deleted=True)
-
+                tn = s._tablename
+                prefix, name = tn.split("_", 1)
+                resource = manager.define_resource(prefix, name, uid=uid)
+                ondelete = self.get_config(tn, "ondelete")
+                resource.delete(ondelete=ondelete, cascade=True)
         return True
 
     # -------------------------------------------------------------------------
@@ -1196,6 +1201,8 @@ class S3MultiPath:
 
         if isinstance(path, Path):
             path = path.nodes
+        else:
+            path = Path(path).nodes
         multipath = None
 
         # Normalize any recurrent paths
@@ -1204,13 +1211,13 @@ class S3MultiPath:
         append = self.paths.append
         for p in paths:
             p = Path(p)
-            if p not in self:
+            if not self & p:
                 append(p)
                 multipath = self
         return multipath
 
     # -------------------------------------------------------------------------
-    def extend(self, head, ancestors=None):
+    def extend(self, head, ancestors=None, cut=None):
         """
             Extend this multi-path with a new vertex ancestors<-head
 
@@ -1222,7 +1229,7 @@ class S3MultiPath:
         if isinstance(ancestors, S3MultiPath):
             extend = self.extend
             for p in ancestors.paths:
-                extend(head, p)
+                extend(head, p, cut=cut)
             return self
 
         # Split-extend all paths which contain the head node
@@ -1230,6 +1237,10 @@ class S3MultiPath:
         Path = self.Path
         append = extensions.append
         for p in self.paths:
+            if cut:
+                pos = p.find(cut)
+                if pos > 0:
+                    p.nodes = p.nodes[:pos-1]
             i = p.find(head)
             if i > 0:
                 path = Path(p.nodes[:i]).extend(head, ancestors)
@@ -1286,6 +1297,10 @@ class S3MultiPath:
     def __repr__(self):
         """ Serialize this multi-path as string """
         return ",".join([str(p) for p in self.paths])
+
+    def as_list(self):
+        """ Return this multi-path as list of node lists """
+        return [p.as_list() for p in self.paths if len(p)]
 
     # -------------------------------------------------------------------------
     # Introspection
@@ -1441,6 +1456,8 @@ class S3MultiPath:
             if node is None:
                 return True
             n = str(node)
+            if not n:
+                return True
             if n not in self.nodes:
                 self.nodes.append(n)
                 return True
@@ -1503,6 +1520,10 @@ class S3MultiPath:
         def __parse(self, value):
             """ Parse a string into nodes """
             return value.strip().strip("[").strip("]").strip("|").split("|")
+
+        def as_list(self):
+            """ Return the list of nodes """
+            return list(self.nodes)
 
         # ---------------------------------------------------------------------
         # Item access

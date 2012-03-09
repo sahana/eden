@@ -37,6 +37,7 @@ __all__ = ["S3HRModel",
 
 from gluon import *
 from gluon.storage import Storage
+from gluon.dal import Row
 import gluon.contrib.simplejson as json
 from ..s3 import *
 
@@ -385,9 +386,11 @@ class S3HRModel(S3Model):
             if not person_id:
                 return
 
+            s3db.pr_update_affiliations(htable, record)
+
             query = (ptable.id == person_id) & \
                     (ltable.pe_id == ptable.pe_id) & \
-                    (utable.id == ptable.user_id)
+                    (utable.id == ltable.user_id)
             user = db(query).select(utable.id,
                                     limitby=(0, 1)).first()
         if not user:
@@ -431,6 +434,9 @@ class S3HRModel(S3Model):
             return
 
         data = Storage()
+
+        # Affiliation
+        s3db.pr_update_affiliations(htable, record)
 
         if record.type == 1 and record.site_id:
             # Staff: update the location ID from the selected site

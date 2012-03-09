@@ -2278,6 +2278,7 @@ class S3Resource(object):
 
             @param ondelete: on-delete callback
             @param format: the representation format of the request (optional)
+            @param cascade: this is a cascade delete (prevents rollbacks/commits)
 
             @returns: number of records deleted
 
@@ -4436,6 +4437,7 @@ class S3ResourceFilter:
         andf = self._andf
 
         manager = current.manager
+        xml = manager.xml
         model = manager.model
         DELETED = manager.DELETED
 

@@ -454,7 +454,10 @@ class S3LocationModel(S3Model):
                 location_is_group = s3.location_is_group
             else:
                 old_location = get_location_info()
-                location_is_group = old_location.level == "GR"
+                if old_location:
+                    location_is_group = old_location.level == "GR"
+                else:
+                    location_is_group = False
             if location_is_group:
                 if not edit_GR:
                     response.error = record_error
