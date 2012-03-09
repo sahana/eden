@@ -692,16 +692,14 @@ def recv():
 
     def prep(r):
         if r.interactive:
-            # If component view
-            if r.record:
+            if r.component:
                 tracktable = s3db.inv_track_item
                 # Hide the values that will be copied from the inv_inv_item record
-                tracktable.item_id.readable = False
-                tracktable.item_id.writable = False
-                tracktable.bin.readable = False
-                tracktable.bin.writable = False
-                tracktable.donating_org_id.readable = False
-                tracktable.donating_org_id.writable = False
+                tracktable.inv_item_id.readable = False
+                tracktable.inv_item_id.writable = False
+                tracktable.tracking_no.required = False
+                tracktable.tracking_no.readable = False
+                tracktable.tracking_no.writable = False
                 # Hide the link to the send and adjustment records
                 tracktable.send_id.readable = False
                 tracktable.send_id.writable = False
@@ -710,6 +708,11 @@ def recv():
                 if r.record.status == SHIP_STATUS_IN_PROCESS:
                     s3.crud_strings.inv_recv.title_update = \
                     s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+            else:
+                table.sender_id.readable = False
+                table.sender_id.writable = False
+                table.from_site_id.readable = False
+                table.from_site_id.writable = False
         return True
 
     response.s3.prep = prep

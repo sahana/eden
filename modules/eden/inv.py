@@ -649,7 +649,7 @@ class S3TrackingModel(S3Model):
     
         # Redirect to the Items tabs after creation
         recv_item_url = URL(f="recv", args=["[id]",
-                                            "recv_item"])
+                                            "track_item"])
     
         self.configure(tablename,
                        search_method = recv_search,
@@ -712,7 +712,7 @@ class S3TrackingModel(S3Model):
                                         label = T("Value per Pack")),
                                   Field("expiry_date", "date",
                                         label = T("Expiry Date"),
-                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                        #requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         widget = S3DateWidget()
                                         ),
@@ -919,28 +919,31 @@ class S3TrackingModel(S3Model):
         stable = s3db.org_site
 
         # save the organisation from where this tracking originates
-        query = (itable.id == form.vars.inv_item_id) & \
-                (itable.site_id == stable.id)
-        record = db(query).select(stable.organisation_id,
-                                  limitby=(0, 1)).first()
-
-        form.vars.track_org_id = record.organisation_id
-        org_repr = current.response.s3.org_organisation_represent
-        query = (ttable.track_org_id == form.vars.track_org_id) & \
-                (ttable.tracking_no == form.vars.tracking_no)
-        record = db(query).select(limitby=(0, 1)).first()
-        if record:
-            form.errors.tracking_no = T("The Tracking Number %s is already used by %s.") % (form.vars.tracking_no,
-                                                                                            org_repr(record.track_org_id))
-
-        query = (itable.id == form.vars.inv_item_id)
-        record = db(query).select(limitby=(0, 1)).first()
+        if form.vars.inv_item_id:
+            query = (itable.id == form.vars.inv_item_id) & \
+                    (itable.site_id == stable.id)
+            record = db(query).select(stable.organisation_id,
+                                      limitby=(0, 1)).first()
+    
+            form.vars.track_org_id = record.organisation_id
+        # If their is a tracking number check that it is unique within the org
+        if form.vars.tracking_no:
+            org_repr = current.response.s3.org_organisation_represent
+            query = (ttable.track_org_id == form.vars.track_org_id) & \
+                    (ttable.tracking_no == form.vars.tracking_no)
+            record = db(query).select(limitby=(0, 1)).first()
+            if record:
+                form.errors.tracking_no = T("The Tracking Number %s is already used by %s.") % (form.vars.tracking_no,
+                                                                                                org_repr(record.track_org_id))
 
         # copy the data from the donated stock
-        form.vars.item_id = record.item_id
-        form.vars.expiry_date = record.expiry_date
-        form.vars.bin = record.bin
-        form.vars.donating_org_id = record.organisation_id
+        if form.vars.inv_item_id:
+            query = (itable.id == form.vars.inv_item_id)
+            record = db(query).select(limitby=(0, 1)).first()
+            form.vars.item_id = record.item_id
+            form.vars.expiry_date = record.expiry_date
+            form.vars.bin = record.bin
+            form.vars.donating_org_id = record.organisation_id
         return
 
     @staticmethod
