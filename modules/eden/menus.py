@@ -299,6 +299,21 @@ class S3MainMenu:
                 )
         return gis_menu
 
+    @staticmethod
+    def menu_climate(**attr):
+        settings = current.deployment_settings
+        module = settings.modules["climate"]
+        menu_climate = MM(
+            module.name_nice,
+            c="climate",
+            **attr
+        )(
+            MM("Station Parameters", f="station_parameter"),
+            #MM("Saved Queries", f="save_query"),
+            MM("Purchase Data", f="purchase"),
+        )
+        return menu_climate
+
 # =============================================================================
 class S3OptionsMenu:
     """

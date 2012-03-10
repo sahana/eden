@@ -20,7 +20,7 @@ def _map_plugin(**client_config):
     return ClimateDataPortal.MapPlugin(
         env = Storage(globals()),
         year_max = 2100,
-        year_min = 1950,
+        year_min = 1940,
         place_table = climate_place,
         client_config = client_config
     )
@@ -168,7 +168,7 @@ def _climate_chart(content_type):
             return map(converter, choices)
         return convert_list
     checked_specs = []
-    for spec in specs:
+    for label, spec in specs.iteritems():
         arguments = {}
         errors = []
         for name, converter in dict(
@@ -188,7 +188,7 @@ def _climate_chart(content_type):
                     errors.append("%s: %s" % (name, assertion_error))
         if spec:
             errors.append("Unexpected arguments: %s" % spec.keys())
-        checked_specs.append(arguments)
+        checked_specs.append((label, arguments))
 
     if errors:
         raise HTTP(400, "<br />".join(errors))
@@ -408,3 +408,12 @@ def download_purchased_data():
     else:
         return
     
+def get_years():
+    from datetime import datetime, timedelta
+    response.headers["Expires"] = (
+        datetime.now() + timedelta(days = 7)
+    ).strftime("%a, %d %b %Y %H:%M:%S GMT") # not GMT, but can't find a way
+    return response.stream(
+        open(_map_plugin().get_available_years(request.vars["dataset_name"]),"rb"),
+        chunk_size=4096
+    )

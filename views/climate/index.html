@@ -93,18 +93,10 @@
 
 <body>
     <div id='menu_modules'>
-        {{=MENUS3(response.menu, _id="modulenav")}}
+        {{=current.menu.main}}
     </div>
 
     <div class='colmask fullpage'>
-				{{if response.menu_options:}}
-					<div class='aside'>
-						<div id='menu_options'>
-							{{=MENUS3(response.menu_options, _id="subnav")}}
-						</div>					
-					</div>
-				{{pass}}
-				<div {{if response.menu_options:}}class='rightside'{{pass}}>
 	        <div class='col1'>
 	                {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
 	                {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
@@ -128,21 +120,7 @@
 <script> DD_belatedPNG.fix('img, .png_bg'); //fix any <img> or .png_bg background-images </script>
 <![endif]-->
 
-<!-- Asynchronous Google analytics: mathiasbynens.be/notes/async-analytics-snippet
- change the UA-XXXXX-X to be your site's ID -->
-<!--
-   <script>
-     var _gaq = [['_setAccount', 'UA-XXXXX-X'], ['_trackPageview']];
-     (function(d, t) {
-     var g = d.createElement(t),
-     s = d.getElementsByTagName(t)[0];
-     g.async = true;
-     g.src = '//www.google-analytics.com/ga.js';
-     s.parentNode.insertBefore(g, s);
-     })(document, 'script');
-   </script>
--->
-
+{{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script')) </script>{{pass}}
 <!-- Include dynamically added Scripts -->
 {{for script in response.s3.scripts:}}
     {{=SCRIPT(_src = script)}}

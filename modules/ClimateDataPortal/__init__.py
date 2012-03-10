@@ -475,6 +475,24 @@ class SampleTable(object):
             )
         data.append("")
         return "\n".join(data)
+        
+    def get_available_years(
+        sample_table
+    ):
+        years = []
+        for (year,) in db.executesql(
+            "SELECT sub.year FROM ("
+                "SELECT (((time_period + %(start_month_0_indexed)i) / 12) + %(start_year)i)"
+                " AS year "
+                "FROM climate_sample_table_%(sample_table_id)i "
+            ") as sub GROUP BY sub.year;" % dict(
+                start_year = start_year,
+                start_month_0_indexed = start_month_0_indexed,
+                sample_table_id = sample_table.id
+            )
+        ):
+            years.append(year)
+        return years
 
 def init_SampleTable():
     for SampleTableType in sample_table_types:

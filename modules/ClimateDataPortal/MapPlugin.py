@@ -101,6 +101,7 @@ class MapPlugin(object):
             buy_data_popup_URL = climate_URL("buy_data.html"),
             request_image_URL = climate_URL("request_image"),
             data_URL = climate_URL("data"),
+            years_URL = climate_URL("get_years"),
             station_parameters_URL = climate_URL("station_parameter"),
             data_type_label = str(T("Data Type")),
             projected_option_type_label = str(
@@ -127,16 +128,6 @@ class MapPlugin(object):
             )
         )
 
-    def get_places(map_plugin, place_ids):
-        db = env.db
-        place_table = map_plugin.place_table
-
-        place_data = db(place_table).select(
-            place_table.id,
-            place_table.longitude,
-            place_table.latitude,
-        )
-            
     def get_overlay_data(
         map_plugin,
         query_expression,
@@ -338,11 +329,11 @@ class MapPlugin(object):
             starts = []
             ends = []
             yearly = []
-            for spec in specs:
+            for label, spec in specs:
                 query_expression = spec["query_expression"]
                 expression = DSL.parse(query_expression)
                 understood_expression_string = str(expression)
-                spec_names.append(understood_expression_string)
+                spec_names.append(label)
                 units = DSL.units(expression)
                 unit_string = str(units)
                 if units is None:
@@ -588,15 +579,15 @@ function (
                     )
                 
                     spec_names[i] += (
-                        "   {"
-                            "y=%(slope_str)s\xc3\x97year %(add)s%(intercept_str)s, "
+                        u"   {"
+                            "y=%(slope_str)s x year %(add)s%(intercept_str)s, "
                             "r= %(r_str)s, "
                             "p= %(p_str)s, "
                             "S.E.= %(stderr_str)s"
                         "}"
                     ) % dict(
                         locals(),
-                        add = ["+ ",""][intercept_str.startswith("-")]
+                        add = [u"+ ",u""][intercept_str.startswith("-")]
                     )
                     
             plot_chart(
@@ -634,6 +625,73 @@ function (
                         col = colour_number+1
                     )
             R("dev.off()")
+            
+            import Image, ImageEnhance
+
+            RGBA = "RGBA"
+            def reduce_opacity(image, opacity):
+                """Returns an image with reduced opacity."""
+                assert opacity >= 0 and opacity <= 1
+                if image.mode != RGBA:
+                    image = image.convert(RGBA)
+                else:
+                    image = image.copy()
+                alpha = image.split()[3]
+                alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+                image.putalpha(alpha)
+                return image
+                
+            def scale_preserving_aspect_ratio(image, ratio):
+                return image.resize(
+                    map(int, map(ratio.__mul__, image.size))
+                )
+
+            def watermark(image, mark, position, opacity=1):
+                """Adds a watermark to an image."""
+                if opacity < 1:
+                    mark = reduce_opacity(mark, opacity)
+                if image.mode != RGBA:
+                    image = image.convert(RGBA)
+                # create a transparent layer the size of the 
+                # image and draw the watermark in that layer.
+                layer = Image.new(RGBA, image.size, (0,0,0,0))
+                if position == 'tile':
+                    for y in range(0, image.size[1], mark.size[1]):
+                        for x in range(0, image.size[0], mark.size[0]):
+                            layer.paste(mark, (x, y))
+                elif position == 'scale':
+                    # scale, but preserve the aspect ratio
+                    ratio = min(
+                        float(image.size[0]) / mark.size[0],
+                        float(image.size[1]) / mark.size[1]
+                    )
+                    w = int(mark.size[0] * ratio)
+                    h = int(mark.size[1] * ratio)
+                    mark = mark.resize((w, h))
+                    layer.paste(
+                        mark,
+                        (
+                            (image.size[0] - w) / 2,
+                            (image.size[1] - h) / 2
+                        )
+                    )
+                else:
+                    layer.paste(mark, position)
+                # composite the watermark with the layer
+                return Image.composite(layer, image, layer)
+
+            image = Image.open(file_path)
+            watermark_image_path = os.path.join(
+                os.path.realpath("."),
+                "applications",
+                map_plugin.env.request.application, 
+                "static", "img", 
+                "Nepal-Government-Logo.png"
+            )
+            watermark_image = Image.open(watermark_image_path)
+            #watermark_image = scale_preserving_aspect_ratio(watermark_image, 0.5)
+            watermark(image, watermark_image, 'scale', 0.05).save(file_path)
+
 
         import md5
         import gluon.contrib.simplejson as JSON
@@ -856,7 +914,13 @@ function (
                 file_path
             )
 
-            os.system(command+" "+(" ".join(map("'%s'".__mod__, subprocess_args))))
+            os.system(
+                command+" "+(
+                    " ".join(
+                        map("'%s'".__mod__, subprocess_args)
+                    )
+                )
+            )
 
         import md5
         import gluon.contrib.simplejson as JSON
@@ -868,4 +932,19 @@ function (
                 )
             ).hexdigest()+".png",
             generate_printable_map_image
+        )
+
+    def get_available_years(map_plugin, sample_table_name):
+        def generate_years_json(file_path):
+            file = open(file_path, "w")
+            years = SampleTable.with_name(sample_table_name).get_available_years()
+            years.sort()
+            file.write(str(years))
+            file.close()
+        
+        import md5
+        import gluon.contrib.simplejson as JSON
+        return get_cached_or_generated_file(
+            md5.md5(sample_table_name+" years").hexdigest()+".json",
+            generate_years_json
         )
