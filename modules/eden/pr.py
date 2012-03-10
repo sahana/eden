@@ -64,6 +64,7 @@ from gluon.sqlhtml import RadioWidget
 from ..s3 import *
 
 OU = 1 # role type which indicates hierarchy, see role_types
+OTHER_ROLE = 9
 
 # =============================================================================
 class S3PersonEntity(S3Model):
@@ -120,6 +121,7 @@ class S3PersonEntity(S3Model):
                   editable=False,
                   deletable=False,
                   listadd=False,
+                  onaccept=self.pr_pentity_onaccept,
                   search_method=pentity_search)
 
         # Reusable fields
@@ -332,6 +334,34 @@ class S3PersonEntity(S3Model):
                 if str(role_type) != str(OU):
                     formvars["path"] = None
                 s3db.pr_role_rebuild_path(role_id, clear=True)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_pentity_onaccept(form):
+        """
+            Update organisation affiliations for org_site instances.
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.pr_pentity
+
+        pe_id = form.vars.pe_id
+        pe = db(ptable.pe_id == pe_id).select(ptable.instance_type,
+                                              limitby=(0, 1)).first()
+        if pe:
+            itable = s3db.table(pe.instance_type, None)
+            if itable and \
+               "site_id" in itable.fields and \
+               "organisation_id" in itable.fields:
+                q = itable.pe_id == pe_id
+                instance = db(q).select(itable.pe_id,
+                                        itable.organisation_id,
+                                        limitby=(0, 1)).first()
+                if instance:
+                    s3db.pr_update_affiliations("org_site", instance)
         return
 
     # -------------------------------------------------------------------------
@@ -2604,9 +2634,55 @@ def pr_update_affiliations(table, record):
         pass
 
     elif rtype == "org_site":
-        # Not implemented yet
-        pass
+        pr_site_update_affiliations(record)
 
+    return
+
+# =============================================================================
+def pr_site_update_affiliations(record):
+    """
+        Update the affiliations of an org_site instance
+
+        @param record: the instance record
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    SITES = "Sites"
+
+    otable = s3db.org_organisation
+    stable = s3db.org_site
+    rtable = s3db.pr_role
+    ptable = s3db.pr_pentity
+    atable = s3db.pr_affiliation
+
+    o_pe_id = None
+    s_pe_id = record.pe_id
+
+    organisation_id = record.organisation_id
+    if organisation_id:
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby=(0, 1)).first()
+        if org:
+            o_pe_id = org.pe_id
+    if s_pe_id:
+        query = (atable.deleted != True) & \
+                (atable.pe_id == s_pe_id) & \
+                (rtable.deleted != True) & \
+                (rtable.id == atable.role_id) & \
+                (rtable.role == SITES) & \
+                (ptable.pe_id == rtable.pe_id) & \
+                (ptable.instance_type == str(otable))
+        rows = db(query).select(rtable.pe_id)
+        seen = False
+        for row in rows:
+            if o_pe_id == None or o_pe_id != row.pe_id:
+                pr_remove_affiliation(row.pe_id, s_pe_id, role=SITES)
+            elif o_pe_id == row.pe_id:
+                seen = True
+        if o_pe_id and not seen:
+            pr_add_affiliation(o_pe_id, s_pe_id, role=SITES, role_type=OU)
     return
 
 # =============================================================================
@@ -2671,7 +2747,7 @@ def pr_human_resource_update_affiliations(person_id):
                     site = db(q).select(itable.pe_id,
                                         limitby=(0, 1)).first()
                     if site:
-                        site_pe_id = sites[site_id] == site.pe_id
+                        site_pe_id = sites[site_id] = site.pe_id
             else:
                 site_pe_id = sites[site_id]
             if site_pe_id and site_pe_id not in masters[role]:
@@ -2711,9 +2787,9 @@ def pr_human_resource_update_affiliations(person_id):
     # Add affiliations to all masters which are not in current affiliations
     for role in masters:
         if role == VOLUNTEER:
-            role_type = 9
+            role_type = OTHER_ROLE
         else:
-            role_type = 1
+            role_type = OU
         for m in masters[role]:
             pr_add_affiliation(m, pe_id, role=role, role_type=role_type)
 

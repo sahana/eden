@@ -1015,12 +1015,12 @@ class S3ModelExtensions(object):
             # Get the shared field map
             shared = self.get_config(tablename, "%s_fields" % s._tablename)
             if shared:
-                data = dict([(f, _record[shared[f]])
-                             for f in shared
-                             if shared[f] in _record and f in s.fields and f != key])
+                data = Storage([(f, _record[shared[f]])
+                                for f in shared
+                                if shared[f] in _record and f in s.fields and f != key])
             else:
-                data = dict([(f, _record[f])
-                             for f in s.fields if f in _record and f != key])
+                data = Storage([(f, _record[f])
+                               for f in s.fields if f in _record and f != key])
             # Add instance type and deletion status
             data.update(instance_type=tablename,
                         deleted=_record.get("deleted", False))
@@ -1032,8 +1032,9 @@ class S3ModelExtensions(object):
                 query = s[key] == skey
                 row = current.db(query).select(s[key], limitby=(0, 1)).first()
             else:
-                row = None
+                row = Storage()
             _tablename = s._tablename
+            form = Storage(vars=row)
             if row:
                 onaccept = self.get_config(_tablename, "update_onaccept",
                            self.get_config(_tablename, "onaccept", None))
@@ -1044,7 +1045,8 @@ class S3ModelExtensions(object):
                     current.db(table.id == id).update(**k)
                 data.update(k)
                 if onaccept:
-                    onaccept(dict(vars=_record).update(data))
+                    form.vars.update(data)
+                    onaccept(form)
             else:
                 onaccept = self.get_config(_tablename, "create_onaccept",
                            self.get_config(_tablename, "onaccept", None))
@@ -1054,7 +1056,8 @@ class S3ModelExtensions(object):
                     super_keys.update({key:k})
                 data.update({key:k})
                 if onaccept:
-                    onaccept(dict(vars=_record).update(data))
+                    form.vars.update(data)
+                    onaccept(form)
         record.update(super_keys)
         return True
 

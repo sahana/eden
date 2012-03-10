@@ -37,7 +37,6 @@ __all__ = ["S3HRModel",
 
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Row
 import gluon.contrib.simplejson as json
 from ..s3 import *
 
