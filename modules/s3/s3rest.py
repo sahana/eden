@@ -4160,6 +4160,10 @@ class S3Resource(object):
             @param record: the new component record to be linked
         """
 
+        db = current.db
+        manager = current.manager
+        model = manager.model
+
         if self.parent is None or self.linked is None:
             return None
 
@@ -4178,14 +4182,21 @@ class S3Resource(object):
         if not _lkey or not _rkey:
             return None
 
-        # Create the link if it does not already exist
-        db = current.db
         ltable = self.table
+        ltn = ltable._tablename
+        onaccept = model.get_config(ltn, "create_onaccept",
+                   model.get_config(ltn, "onaccept", None))
+
+        # Create the link if it does not already exist
         query = ((ltable[lkey] == _lkey) &
                  (ltable[rkey] == _rkey))
         row = db(query).select(ltable._id, limitby=(0, 1)).first()
         if not row:
-            link_id = ltable.insert(**{lkey:_lkey, rkey:_rkey})
+            form = Storage(vars=Storage({lkey:_lkey, rkey:_rkey}))
+            link_id = ltable.insert(**form.vars)
+            if link_id and onaccept:
+                form.vars[ltable._id.name] = link_id
+                callback(onaccept, form)
         else:
             link_id = row[ltable._id.name]
         return link_id

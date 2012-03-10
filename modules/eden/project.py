@@ -1117,7 +1117,7 @@ class S3ProjectDRRModel(S3Model):
             4: T("Customer"), # T("Beneficiary")?
         }
         project_organisation_lead_role = 1
-        
+
         organisation_help = T("Add all organisations which are involved in different roles in this project")
 
         tablename = "project_organisation"
@@ -1133,7 +1133,7 @@ class S3ProjectDRRModel(S3Model):
                                                                 DIV(_class="tooltip",
                                                                     _title="%s|%s" % (T("Organization"),
                                                                                       organisation_help))
-                                                                ) 
+                                                                )
                                                   ),
                                   Field("role", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
@@ -2407,7 +2407,7 @@ class S3ProjectTaskIReportModel(S3Model):
             When a Task is linked to an IReport, then populate the location_id
         """
 
-        vars - form.vars
+        vars = form.vars
         ireport_id = vars.ireport_id
         task_id = vars.task_id
 
