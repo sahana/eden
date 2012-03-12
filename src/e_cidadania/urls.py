@@ -31,7 +31,7 @@ admin.autodiscover()
 # We put here the dictionary with all the packages for translatin JavaScript code
 # Please refer to https://docs.djangoproject.com/en/dev/topics/i18n/internationalization/#specifying-translation-strings-in-javascript-code
 js_info_dict = {
-    'packages': ('e_cidadania.apps.debates',),
+    'packages': ('e_cidadania.apps.debate',),
 }
 
 urlpatterns = patterns('',

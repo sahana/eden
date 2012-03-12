@@ -120,9 +120,8 @@
                 </div>
                 
                 <div class="clearfix {% if form.public.errors %}error{% endif%}"> 
-                    <label for="prependedInput">{{ form.public.label }}</label> 
+                    <label class="checkbox">{{ form.public }} {{ form.public.label }}</label> 
                     <div class="input"> 
-                        {{ form.public }}
                         <span class="help-inline">
                             {% if form.public.errors %}
                                 {% for error in form.public.errors %}
@@ -138,30 +137,13 @@
                 <hr />
     
                 <div class="clearfix">
-                    <label id="optionsChekboxes">{% trans "Modules" %}</label>
-                    <div class="input">
-                        <ul class="inputs-list">
-                            <li><label>
-                                {{ form.mod_debate }}
-                                <span>{{ form.mod_debate.label }}</span>
-                            </label></li>
-                            <li><label>
-                                {{ form.mod_proposals }}
-                                <span>{{ form.mod_proposals.label }}</span>
-                            </label></li>
-                            <li><label>
-                                {{ form.mod_news }}
-                                <span>{{ form.mod_news.label }}</span>
-                            </label></li>
-                            <li><label>
-                                {{ form.mod_cal }}
-                                <span>{{ form.mod_cal.label }}</span>
-                            </label></li>
-                            <li><label>
-                                {{ form.mod_docs }}
-                                <span>{{ form.mod_docs.label }}</span>
-                            </label></li>
-                        </ul>
+                    <h3>{% trans "Modules" %}</h3>
+                    <div class="controls">
+                        <label class="checkbox">{{ form.mod_debate }}{{ form.mod_debate.label }}</label>
+                        <label class="checkbox">{{ form.mod_proposals }}{{ form.mod_proposals.label }}</label>
+                        <label class="checkbox">{{ form.mod_news }}{{ form.mod_news.label }}</label>
+                        <label class="checkbox">{{ form.mod_cal }}{{ form.mod_cal.label }}</label>
+                        <label class="checkbox">{{ form.mod_docs }}{{ form.mod_docs.label }}</label>
                     </div>
                 </div>
     

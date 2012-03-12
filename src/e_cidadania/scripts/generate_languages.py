@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This script automates the creation of all the language catalogs for
-e-cidadania project.
+
+"""
+This script automates the creation of all the language catalogs for a django
+project, creating both standard and JS catalogs.
 """
 
 import sys
@@ -9,14 +11,9 @@ import os
 import subprocess
 import argparse
 
-__author__ = "Oscar Carballal"
-__copyright__ = "Copyright 2011, Cidadania Sociedade Cooperativa Galega"
-__credits__ = ["Oscar Carballal"]
+__author__ = "Oscar Carballal Prego <oscar.carballal@cidadania.coop>"
 __license__ = "GPLv3"
-__version__ = "0.4"
-__maintainer__ = "Oscar Carballal"
-__email__ = "oscar.carballal@cidadania.coop"
-__status__ = "Prototype"
+__version__ = "0.5"
 
 class Language():
 
@@ -30,7 +27,7 @@ class Language():
         """
         # Get current work directory and add it to sys.path so we can import
         # the project settings.
-        self.cwd = os.getcwd().strip('scripts')
+        self.cwd = os.getcwd().strip('scripts') # Remove scripts directory just in case
         sys.path.append(self.cwd)
 
         # Get the languages configured in settings.py and the installed
@@ -41,34 +38,58 @@ class Language():
             sys.exit("\nCould not import the settings module. Aborting execution.\n\
             Probable cause: the script is not being executed from poject root.\n")
 
-        self.applications = settings.ECIDADANIA_MODULES
+        # You must put here the name off you applications variable in the form
+        # "settings.YOURVARNAME"
+        APPLICATIONS = settings.ECIDADANIA_MODULES
+        
+        self.applications = APPLICATIONS
         self.languages = settings.LANGUAGES
-        self.apps = []
+        self.appnames = []
+        self.appdirs = []
+        
+        # We are going to add all the applications of the project, and create
+        # a dictionary with appname:appdir values
+        print "\n >> Populating variables with applications...\n"
+        for app in self.applications:
+            appdata = app.split('.') # Separate all components
+            appdata.pop(0) # Remove project name, it's useless
+            app_path_list = appdata # This will leave us with an useful route to the application
+            app_path = '/'.join(app_path_list)
+            appname = app_path_list[-1] # Get the application name (last value)
+            self.appnames.append(appname)
+            self.appdirs.append(app_path)
+            
+        # When we exit the for loop, create a dictionary with appname:app_path
+        self.appDict = dict(zip(self.appnames, self.appdirs))
+        print self.appDict
 
-    def _iterator(self, command, type):
+    def _iterator(self, command, action):
 
         """
-        This method iterates over the applications and languages making
-        what the command says.
+        This method iterates over the applications and languages executing the
+        command specified in the call.
         """
-        for module in self.apps:
-            os.chdir(self.cwd + '/apps/' + module)
-            print '\n>> %s language catalog: %s' % (type, module)
+        for app, appdir in self.appDict.items():
+            os.chdir(self.cwd + '/' + appdir)
+            print '\n>> %s language catalog: %s' % (action, app)
             for lang in self.languages:
-                a = subprocess.Popen(command + '%s' % (lang[0]), shell=True)
+                a = subprocess.Popen(command + '-l %s' % (lang[0]), shell=True)
                 subprocess.Popen.wait(a)
 
-        print '\n>> %s site root language catalog.' % (type)
+        print '\n>> %s site root language catalog.' % (action)
         os.chdir(self.cwd)
         for lang in self.languages:
-            a = subprocess.Popen("django-admin.py makemessages -i 'apps/*' -l %s" % (lang[0]), shell=True)
+            if action is not "Compiling":
+                a = subprocess.Popen(command + "-i 'apps/*' -l %s" % (lang[0]), shell=True)
+            else:
+                a = subprocess.Popen(command + "-l %s" % (lang[0]), shell=True)
             subprocess.Popen.wait(a)
 
             
     def make(self):
         
         """
-        Generate the language catalogs for the application and site root
+        Generate the language catalogs for the application and site root.
         """
         # Spit out the information
         print "\n>> Languages to generate:"
@@ -76,17 +97,17 @@ class Language():
             print ' - ' + lang[1]
 
         print "\n>> Installed applications:"
-        for app in self.applications:
-            self.got_it = app.split('.')[2]
-            print ' - ' + self.got_it
-            self.apps.append(self.got_it)
-        self._iterator('django-admin.py makemessages -l ', 'Generating')
-        self._iterator('django-admin.py makemessages -d djangojs -l ', 'Generating JavaScript')
+        for app in self.appDict.keys():
+            print ' - ' + app
+        
+        self._iterator('django-admin.py makemessages ', 'Generating')
+        self._iterator('django-admin.py makemessages -d djangojs ', 'Generating JavaScript')
 
 
     def compile(self):
 
         """
+        Compile all the language catalogs.
         """
         # Spit out the information
         print "\n>> Languages to generate:"
@@ -94,22 +115,11 @@ class Language():
             print ' - ' + lang[1]
 
         print "\n>> Installed applications:"
-        for app in self.applications:
-            self.got_it = app.split('.')[2]
-            print ' - ' + self.got_it
-            self.apps.append(self.got_it)
+        for app in self.appDict.keys():
+            print ' - ' + app
 
-        for module in self.apps:
-            os.chdir(self.cwd + '/apps/' + module)
-            print '\n>> Compiling all messages for %s' % (module)
-            a = subprocess.Popen('django-admin.py compilemessages ',
-                                 shell=True)
-            subprocess.Popen.wait(a)
-
-        print '\n>> Compiling site root language catalogs'
-        os.chdir(self.cwd)
-        a = subprocess.Popen('django-admin.py compilemessages ', shell=True)
-        subprocess.Popen.wait(a)
+        self._iterator('django-admin.py compilemessages ', 'Compiling')        
+        
 
 
     def clean(self):
@@ -121,9 +131,9 @@ class Language():
         print '\n>> WARNING: This command will remove ALL the language \
 catalogs, having to rebuild and translate them all.'
         raw_input('\n Continue? (Ctrl-C to quit)')
-        for module in self.apps:
-            os.chdir(self.cwd + '/apps/' + module)
-            print '\n>> Cleaning language catalogs for %s' % (module)
+        for app, appdir in self.appDict.items():
+            os.chdir(self.cwd + '/' + appdir)
+            print '\n>> Cleaning language catalogs for %s' % (app)
             for lang in self.languages:
                 a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
                 subprocess.Popen.wait(a)
@@ -133,10 +143,6 @@ catalogs, having to rebuild and translate them all.'
         for lang in self.languages:
             a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
             subprocess.Popen.wait(a)
-
-#print "\nPlease note that this script must be run from the project root or from \
-#the scripts directory. If you run it from somewhere else it won't work."
-#raw_input('\nPress any key to continue or Ctrl-C to exit...')
 
 lang = Language()
 parser = argparse.ArgumentParser(description='e-cidadania language catalog' \

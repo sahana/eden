@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-08 12:09+0100\n"
+"POT-Creation-Date: 2012-03-12 12:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,29 +31,33 @@ msgid "Edit"
 msgstr ""
 
 #: static/js/debate_board.js:14
-msgid "There has been an error."
+msgid "View"
 msgstr ""
 
 #: static/js/debate_board.js:15
-msgid "Couldn't create note."
+msgid "There has been an error."
 msgstr ""
 
 #: static/js/debate_board.js:16
-msgid "Couldn't get note data."
+msgid "Couldn't create note."
 msgstr ""
 
 #: static/js/debate_board.js:17
-msgid "Couldn't save note."
+msgid "Couldn't get note data."
 msgstr ""
 
 #: static/js/debate_board.js:18
-msgid "Couldn't save note position."
+msgid "Couldn't save note."
 msgstr ""
 
 #: static/js/debate_board.js:19
-msgid "Couldn't delete note."
+msgid "Couldn't save note position."
 msgstr ""
 
 #: static/js/debate_board.js:20
+msgid "Couldn't delete note."
+msgstr ""
+
+#: static/js/debate_board.js:21
 msgid "Are you sure?"
 msgstr ""

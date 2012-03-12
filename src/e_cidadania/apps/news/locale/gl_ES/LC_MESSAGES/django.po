@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-08 12:08+0100\n"
+"POT-Creation-Date: 2012-03-12 12:34+0100\n"
 "PO-Revision-Date: 2012-02-29 09:04+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -149,35 +149,35 @@ msgstr ""
 "desfacer."
 
 #: templates/news/post_confirm_delete.html:38
-#: templates/news/post_detail.html:40
+#: templates/news/post_detail.html:40 templates/news/post_detail_index.html:40
 msgid "Delete"
 msgstr "Eliminar"
 
-#: templates/news/post_detail.html:35
+#: templates/news/post_detail.html:35 templates/news/post_detail_index.html:35
 msgid "Edit"
 msgstr "Editar"
 
-#: templates/news/post_detail.html:45
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
 msgid "Written by"
 msgstr "Escrito por"
 
-#: templates/news/post_detail.html:45
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
 msgid "on"
 msgstr "o"
 
-#: templates/news/post_detail.html:45
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
 msgid "comments"
 msgstr "comentarios"
 
-#: templates/news/post_detail.html:53
+#: templates/news/post_detail.html:53 templates/news/post_detail_index.html:53
 msgid "Recent posts"
 msgstr "Entradas recentes"
 
-#: templates/news/post_detail.html:54
+#: templates/news/post_detail.html:54 templates/news/post_detail_index.html:54
 msgid "Related posts"
 msgstr "Entradas relacionadas"
 
-#: templates/news/post_detail.html:55
+#: templates/news/post_detail.html:55 templates/news/post_detail_index.html:55
 msgid "Share this post"
 msgstr "Compartir esta entrada"
 

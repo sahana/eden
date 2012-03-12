@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-08 12:08+0100\n"
+"POT-Creation-Date: 2012-03-12 12:34+0100\n"
 "PO-Revision-Date: 2012-02-29 08:44+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
@@ -143,11 +143,11 @@ msgstr ""
 
 #: templates/debate/debate_outdated.html:20
 msgid "Started on:"
-msgstr ""
+msgstr "Comenzado el:"
 
 #: templates/debate/debate_outdated.html:23
 msgid "Finished on:"
-msgstr ""
+msgstr "Finalizado el:"
 
 #: templates/debate/debate_view.html:5
 msgid "View debate"
@@ -183,7 +183,7 @@ msgstr "Editar nota"
 
 #: templates/debate/debate_view.html:72
 msgid "View"
-msgstr ""
+msgstr "Ver"
 
 #: templates/debate/debate_view.html:74
 msgid "Edit"

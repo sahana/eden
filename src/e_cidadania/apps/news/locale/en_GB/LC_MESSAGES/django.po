@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-08 12:08+0100\n"
+"POT-Creation-Date: 2012-03-12 12:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -144,35 +144,35 @@ msgid ""
 msgstr ""
 
 #: templates/news/post_confirm_delete.html:38
-#: templates/news/post_detail.html:40
+#: templates/news/post_detail.html:40 templates/news/post_detail_index.html:40
 msgid "Delete"
 msgstr ""
 
-#: templates/news/post_detail.html:35
+#: templates/news/post_detail.html:35 templates/news/post_detail_index.html:35
 msgid "Edit"
 msgstr ""
 
-#: templates/news/post_detail.html:45
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
 msgid "Written by"
 msgstr ""
 
-#: templates/news/post_detail.html:45
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
 msgid "on"
 msgstr ""
 
-#: templates/news/post_detail.html:45
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
 msgid "comments"
 msgstr ""
 
-#: templates/news/post_detail.html:53
+#: templates/news/post_detail.html:53 templates/news/post_detail_index.html:53
 msgid "Recent posts"
 msgstr ""
 
-#: templates/news/post_detail.html:54
+#: templates/news/post_detail.html:54 templates/news/post_detail_index.html:54
 msgid "Related posts"
 msgstr ""
 
-#: templates/news/post_detail.html:55
+#: templates/news/post_detail.html:55 templates/news/post_detail_index.html:55
 msgid "Share this post"
 msgstr ""
 

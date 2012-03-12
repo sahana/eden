@@ -1,5 +1,5 @@
 /*
-    debate_blackboard.js - Javascript containing the engine for the debate
+    debate_board.js - Javascript containing the engine for the debate
                            system.
                            
     License: GPLv3
@@ -12,6 +12,7 @@
 var newTitle = gettext('Write here your title');
 var newMessage = gettext('Write here your message');
 var editString = gettext('Edit');
+var viewString = gettext('View');
 var errorMsg = gettext('There has been an error.');
 var errorCreate = gettext("Couldn't create note.");
 var errorGetNote = gettext("Couldn't get note data.");
@@ -67,10 +68,8 @@ function createNote() {
         var newNote = $("#sortable-dispatcher").append("<div id='" + note.id + "' style='display:hidden;' class='note mine'>" +
             "<div class='handler'><div class='deletenote hidden'>" + "<a href='#' onclick='deleteNote(this)'" +
             " id='deletenote'>x</a></div></div><p class='note-text'>" + note.title + "</p>" +
-            "<span id='edit-note' class='label hidden'><a href='#' onclick='editNote(this)'" +
-            " data-controls-modal='edit-current-note' data-backdrop='true'" +
-            " data-keyboard='true'>" + editString + "</a></span>" +
-            "</div>");
+            "<span id='view-note' class='label hidden'><a href='#' onclick='viewNote(this)' data-toggle='modal' data-target='#view-current-note'>" + viewString + "</a></span>" +
+            "<span id='edit-note' class='label hidden'><a href='#' onclick='editNote(this)' data-toggle='modal' data-target='#edit-current-note'>" + editString + "</a></span></div>");
         newNote.show("slow");
         showControls();
     });
