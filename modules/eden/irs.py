@@ -1051,8 +1051,9 @@ def irs_rheader(r, tabs=[]):
                 (T("Vehicles"), "vehicle"),
                 (T("Staff"), "human_resource"),
                 (T("Tasks"), "task"),
-                (T("Dispatch"), "dispatch"),
                ]
+        if settings.has_module("msg"):
+            tabs.append((T("Dispatch"), "dispatch"))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -1073,6 +1074,8 @@ def irs_rheader(r, tabs=[]):
                     contact = report.person
             elif report.contact:
                 contact = report.contact
+            if contact:
+                contact = DIV(TH("%s: " % T("Contact")), TD(contact))
 
             #create_request = A(T("Create Request"),
             #                   _class="action-btn colorbox",
@@ -1092,13 +1095,14 @@ def irs_rheader(r, tabs=[]):
                             TR(
                                 TH("%s: " % table.name.label), report.name,
                                 TH("%s: " % table.datetime.label), datetime,
+                                ),
                             TR(
                                 TH("%s: " % table.category.label), category,
                                 TH("%s: " % table.expiry.label), expiry,
                                 ),
                             TR(
                                 TH("%s: " % table.location_id.label), location,
-                                TH("%s: " % T("Contact")), contact),
+                                contact,
                                 ),
                             TR(
                                 TH("%s: " % table.message.label), TD(report.message or "",

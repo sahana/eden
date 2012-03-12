@@ -13,9 +13,17 @@ function ChartManager(view_URL) {
     
     chart_manager.update_chart = function () {
         var url_parts = []
-        $('#chart_spec_list li input:checked').each(
+        var labels = []
+        $('#chart_spec_table input:checked').each(
             function (index, element) {
                 url_parts.push(
+                    '"'+
+                        $(element).data('chart_label').attr('value').replace(
+                            new RegExp('"', 'g'),
+                            '\\"'
+                        )+
+                    '"'+
+                    ':'+
                     $(element).attr('value')
                 )
             }
@@ -23,7 +31,7 @@ function ChartManager(view_URL) {
         if (url_parts.length) {
             chart_manager.compute_size()
             var spec = (
-                '?spec='+('['+url_parts.join(',')+']')+
+                '?spec='+('{'+url_parts.join(',')+'}')+
                 '&width='+chart_manager.chart_width+
                 '&height='+chart_manager.chart_height
             )
@@ -89,28 +97,37 @@ function ChartManager(view_URL) {
     fixed_size.change(set_sizing_mode)
     
     chart_manager.addChartSpec = function (chart_url, chart_name) {
-        var list_item = $(document.createElement('li'))
-        var id = $('#chart_spec_list li input').length
-        var list_item_id = 'list_item'+id
-        var list_checkbox = $(document.createElement('input')).attr({
-            id: list_item_id,
+        var chart_spec_row = $(document.createElement('tr'))
+        var id = $('#chart_spec_table textarea').length
+        var chart_spec_row_id = 'chart_spec_row'+id
+        
+        var chart_spec_checkbox = $(document.createElement('input')).attr({
+            id: chart_spec_row_id,
             value: chart_url,
             type: 'checkbox',
-            checked: true
+            checked: true,
+            style: 'vertical-align: top;'
         }).click(function () {
             chart_manager.update_chart()
         })
-        list_item.append(list_checkbox)
         
-        var editable_list_label = $(document.createElement('input')).attr({
-            id: 'chart_name_input'+id,
+        chart_spec_row.append($(document.createElement('td')).append(chart_spec_checkbox))
+        
+        var editable_chart_label = $(document.createElement('textarea')).attr({
+            id: 'chart_name_textarea'+id,
             value: chart_name,
             type: 'text',
-            size: 100
+            size: 100,
+            style: 'width:100%; height:auto;'
         })
-        list_item.append(editable_list_label)
         
-        $('#chart_spec_list').append(list_item)
+        chart_spec_row.append(
+            $(document.createElement('td')).append(editable_chart_label).css('width', '100%')
+        )
+        
+        chart_spec_checkbox.data('chart_label', editable_chart_label)
+        
+        $('#chart_spec_table').append(chart_spec_row)
         chart_manager.update_chart()
     }
     
@@ -132,11 +149,6 @@ function ChartManager(view_URL) {
 
 -->
         </script>
-        <style type='text/css'>
-            #chart_spec_list li {
-                list-style: none;
-            }
-        </style>
     </head>
     <body>
         <div id="container" 
@@ -148,7 +160,7 @@ function ChartManager(view_URL) {
         <div id="controls"
             style="text-align:center; position:absolute; height:130px; bottom:0px; left:0px; right:0px;"
         >
-            <ul id="chart_spec_list"></ul>
+            <table id="chart_spec_table"></table>
             <a id="download_link"></a>
             
             <div>

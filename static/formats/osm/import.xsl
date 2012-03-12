@@ -305,8 +305,8 @@
                     </data>
                 </xsl:when>
                 <xsl:when test="local-name()='way'">
-                    <!-- Note that we assume a closed way here. The onvalidation routine will try an open way (LINESTRING) if the POLYGON import fails -->
-                    <data field="gis_feature_type" value="3">Polygon</data>
+                    <!-- Note that we assume a closed way here. The onvalidation routine will try an open way (LINESTRING) if the POLYGON import fails
+                    <data field="gis_feature_type" value="3">Polygon</data> -->
                     <data field="wkt">
                         <xsl:text>POLYGON((</xsl:text>
                         <xsl:for-each select="./nd">

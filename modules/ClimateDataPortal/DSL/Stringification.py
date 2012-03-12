@@ -4,10 +4,8 @@ from . import *
 def Months__str__(month_filter):
     return "Months(%s)" % (
         ", ".join(
-            map(
-                Months.sequence.__getitem__,
-                month_filter.month_numbers
-            )
+            Months.sequence[month_number + 1] 
+            for month_number in month_filter.month_numbers
         )
     )
 Months.__str__ = Months__str__

@@ -419,7 +419,7 @@ class S3EventModel(S3Model):
         if not id:
             return current.messages.NONE
         s3db = current.s3db
-        table = current.s3db.event_event
+        table = s3db.event_event
         query = (table.id == id)
         event = current.db(query).select(table.name,
                                          limitby=(0, 1),

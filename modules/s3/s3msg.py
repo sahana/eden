@@ -823,6 +823,10 @@ class S3Msg(object):
             Returns the formatted OpenGeoSMS or None if it can't find
                 an appropriate location
         """
+
+        if not location_id:
+            return text
+
         db = current.db
         s3db = current.s3db
         table = s3db.gis_location

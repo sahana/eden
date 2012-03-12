@@ -109,6 +109,7 @@ class S3NavigationItem:
                  check=None,
                  restrict=None,
                  link=True,
+                 mandatory=False,
                  **attributes):
         """
             Constructor
@@ -219,10 +220,11 @@ class S3NavigationItem:
         self.components = []
 
         # Flags
-        self.enabled = True     # Item is enabled/disabled
-        self.selected = None    # Item is in the current selected-path
-        self.visible = None     # Item is visible
-        self.link = link        # Item shall be linked
+        self.enabled = True             # Item is enabled/disabled
+        self.selected = None            # Item is in the current selected-path
+        self.visible = None             # Item is visible
+        self.link = link                # Item shall be linked
+        self.mandatory = mandatory      # Item is always active
 
         # Role restriction
         self.restrict = restrict
@@ -263,6 +265,10 @@ class S3NavigationItem:
         c = self.get("controller")
         if c and c not in settings.modules:
             return False
+
+        # mandatory flag overrides all further checks
+        if self.mandatory:
+            return True
 
         # Fall back to current.request
         if request is None:
@@ -320,6 +326,11 @@ class S3NavigationItem:
                     break
         else:
             authorized = True
+
+        # mandatory flag overrides all further checks
+        if self.mandatory:
+            return authorized
+
         if self.accessible_url() == False:
             authorized = False
         return authorized
@@ -776,7 +787,9 @@ class S3NavigationItem:
         """
 
         output = self.render()
-        if hasattr(output, "xml"):
+        if output is None:
+            return ""
+        elif hasattr(output, "xml"):
             return output.xml()
         else:
             return str(output)
@@ -799,7 +812,7 @@ class S3NavigationItem:
         parent = self.parent
         if parent is not None and parent !=p:
             while self in parent.components:
-                parent.remove(self)
+                parent.components.remove(self)
         if i is not None:
             p.component.insert(i, self)
         else:

@@ -299,6 +299,21 @@ class S3MainMenu:
                 )
         return gis_menu
 
+    @staticmethod
+    def menu_climate(**attr):
+        settings = current.deployment_settings
+        module = settings.modules["climate"]
+        menu_climate = MM(
+            module.name_nice,
+            c="climate",
+            **attr
+        )(
+            MM("Station Parameters", f="station_parameter"),
+            #MM("Saved Queries", f="save_query"),
+            MM("Purchase Data", f="purchase"),
+        )
+        return menu_climate
+
 # =============================================================================
 class S3OptionsMenu:
     """
@@ -643,7 +658,11 @@ class S3OptionsMenu:
 
         return M(c="gis")(
                     M("Fullscreen Map", f="map_viewing_client"),
-                    M("Locations", f="location")(
+                    M("Configuration", f="config"),
+                    # Currently not got geocoding support
+                    #M("Bulk Uploader", c="doc", f="bulk_upload"),
+                    M("Locations", f="location",
+                      restrict=[MAP_ADMIN])(
                         M("New Location", m="create"),
                         M("New Location Group", m="create", vars={"group": 1}),
                         M("List All"),
@@ -651,9 +670,6 @@ class S3OptionsMenu:
                         M("Import", m="import"),
                         #M("Geocode", f="geocode_manual"),
                     ),
-                    M("Configuration", f="config"),
-                    # Currently not got geocoding support
-                    #M("Bulk Uploader", c="doc", f="bulk_upload")
                     M("Admin", restrict=[MAP_ADMIN])(
                         M("Hierarchy", f="hierarchy"),
                         M("Markers", f="marker"),
@@ -840,7 +856,17 @@ class S3OptionsMenu:
                       restrict=[ADMIN])(
                         M("New Item Category", m="create"),
                         M("List All"),
-                    )
+                    ),
+                    M("Requests", c="req", f="req")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("List All Requested Items", f="req_item"),
+                        M("List All Requested Skills", f="req_skill"),
+                        #M("Search Requested Items", f="req_item", m="search"),
+                    ),
+                    M("Commitments", c="req", f="commit")(
+                        M("List All")
+                    ),
                 )
 
     # -------------------------------------------------------------------------

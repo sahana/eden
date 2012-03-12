@@ -6,6 +6,9 @@ counted_dimension_pattern = re.compile(r"(?:\w[^\^\/ ]*)(?:\^[0-9])?")
 class MeaninglessUnitsException(Exception):
     pass
 
+class DimensionError(Exception):
+    pass
+
 class Units(object):
     """Used for dimensional and other analysis."""
     __slots__ = ("_dimensions", "_positive")
@@ -46,7 +49,10 @@ class Units(object):
 
         """
         for dimension, count in dimensions.iteritems():
-            assert isinstance(count, int), "%s dimension count must be integer" % dimension
+            if not isinstance(count, int):
+                raise DimensionError(
+                    "%s dimension count must be a whole number" % dimension
+                )
         units._dimensions = dimensions.copy()
         units._positive = bool(positive)
     
@@ -168,7 +174,7 @@ class Units(object):
         for dimension, count in units._dimensions.iteritems():
             new_count = int(count * factor)
             if new_count != float(count) * float(factor):
-                raise TypeError(
+                raise DimensionError(
                     "Non-integral %s dimension encountered." % dimension
                 )
             result[dimension] = new_count

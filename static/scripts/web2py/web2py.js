@@ -28,7 +28,7 @@ function web2py_ajax_init() {
     jQuery('input.string').attr('size', 62);
     jQuery('input.upload').attr('size', 50);
     jQuery('#login_box input.upload').attr('size', 36);
-    jQuery('textarea.text').attr('cols', 50).attr('rows', 10);
+    jQuery('textarea.text').attr('cols', 50).attr('rows', 5);
     if (S3.i18n.language == 'ja') {
         // For Japanese IME
         jQuery('input.integer').blur(function() {

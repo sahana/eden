@@ -53,6 +53,7 @@ __all__ = ["S3HiddenWidget",
            "S3TimeIntervalWidget",
            "S3EmbedComponentWidget",
            "S3SliderWidget",
+           "comments_widget",
            ]
 
 import copy
@@ -689,7 +690,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        url = URL(c="pr", f="person",
+        url = URL(c="pr", f="person_search",
                   args="search.json",
                   vars={"filter":"~"})
 
@@ -1386,8 +1387,6 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                         represent = this_location.name
 
                     if map_selector:
-                        # Load the Models
-                        manager.load("gis_layer_openstreetmap")
                         zoom = config.zoom
                         if lat is None or lon is None:
                             map_lat = config.lat
@@ -1418,7 +1417,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                                  collapsed = True,
                                                  search = True,
                                                  window = True,
-                                                 window_hide = True
+                                                 window_hide = True,
+                                                 location_selector = True
                                                 )
                 else:
                     # Bad location_id
@@ -1458,7 +1458,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                              collapsed = True,
                                              search = True,
                                              window = True,
-                                             window_hide = True
+                                             window_hide = True,
+                                             location_selector = True
                                             )
             else:
                 # No Permission to create a location, so don't render a row
@@ -1469,10 +1470,10 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
         s3_gis_lat_lon = ""
 
         # Components to inject into Form
-        divider = TR(TD(_class="subheading"), TD(),
-                     _class="box_bottom")
-        expand_button = DIV(_id="gis_location_expand", _class="minus")
-        label_row = TR(TD(B("%s:" % field.label), expand_button), TD(),
+        divider = TR(TD(_class="subheading"),
+                     _class="box_bottom locselect")
+        expand_button = DIV(_id="gis_location_expand", _class="expand")
+        label_row = TR(TD(expand_button, B("%s:" % field.label)),
                        _id="gis_location_label_row",
                        _class="box_top")
 
@@ -1593,6 +1594,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                 _disabled="disabled")
             street_widget = TEXTAREA(value=addr_street,
                                      _id="gis_location_street",
+                                     _class="text",
                                      _name="gis_location_street",
                                      _disabled="disabled")
             postcode_widget = INPUT(value=postcode,
@@ -1628,7 +1630,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                     label = LABEL("%s:" % level)
                 row = TR(TD(label), TD(),
                          _id="gis_location_%s_label__row" % level,
-                         _class="%s box_middle" % hidden)
+                         _class="%s locselect box_middle" % hidden)
                 Lx_rows.append(row)
                 widget = DIV(INPUT(value=id,
                                    _id="gis_location_%s" % level,
@@ -1650,6 +1652,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
             name_widget = INPUT(_id="gis_location_name",
                                 _name="gis_location_name")
             street_widget = TEXTAREA(_id="gis_location_street",
+                                     _class="text",
                                      _name="gis_location_street")
             postcode_widget = INPUT(_id="gis_location_postcode",
                                     _name="gis_location_postcode")
@@ -2944,6 +2947,14 @@ class S3EmbedComponentWidget(FormWidget):
                        ac_row,
                        table,
                        divider)
+
+# -----------------------------------------------------------------------------
+def comments_widget(field, value):
+    return TEXTAREA(_name=field.name,
+                    _id="%s_%s" % (field._tablename, field.name),
+                    _class="comments %s" % (field.type),
+                    _value=value,
+                    requires=field.requires)
 
 # -----------------------------------------------------------------------------
 class S3SliderWidget(FormWidget):

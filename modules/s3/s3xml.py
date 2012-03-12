@@ -80,6 +80,7 @@ class S3XML(S3Codec):
     # GIS field names
     Lat = "lat"
     Lon = "lon"
+    WKT = "wkt"
 
     IGNORE_FIELDS = [
             "id",
@@ -162,6 +163,7 @@ class S3XML(S3Codec):
         type="type",
         readable="readable",
         writable="writable",
+        wkt="wkt",
         has_options="has_options",
         tuid="tuid",
         label="label",
@@ -638,6 +640,7 @@ class S3XML(S3Codec):
 
         LATFIELD = self.Lat
         LONFIELD = self.Lon
+        WKTFIELD = self.WKT
 
         ATTRIBUTE = self.ATTRIBUTE
 
@@ -690,6 +693,7 @@ class S3XML(S3Codec):
                 continue # Multi-reference
 
             LatLon = None
+            WKT = None
             if "track" in current.request.get_vars:
                 # Use S3Track
                 try:
@@ -702,16 +706,25 @@ class S3XML(S3Codec):
                                                   _fields=[gtable.lat,
                                                            gtable.lon])
 
-            if not LatLon:
+            elif "polygons" in current.request.get_vars:
+                # Display Polygons not Points
+                if WKTFIELD in fields:
+                    WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
+                                                       limitby=(0, 1))
+                
+            
+            if not LatLon and not WKT:
                 # Normal Location lookup
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
                                                       limitby=(0, 1))
-            if LatLon:
-                LatLon = LatLon.first()
-                lat = LatLon[LATFIELD]
-                lon = LatLon[LONFIELD]
-                if lat is not None and lon is not None:
+            if LatLon or WKT:
+                if LatLon:
+                    LatLon = LatLon.first()
+                    lat = LatLon[LATFIELD]
+                    lon = LatLon[LONFIELD]
+                    if lat is None or lon is None:
+                        continue
                     attr[ATTRIBUTE.lat] = "%.6f" % lat
                     attr[ATTRIBUTE.lon] = "%.6f" % lon
                     if not marker_url:
@@ -719,37 +732,43 @@ class S3XML(S3Codec):
                         marker_url = "%s/%s" % (download_url, marker.image)
                     attr[ATTRIBUTE.marker] = marker_url
                     attr[ATTRIBUTE.sym] = symbol
-                    if popup_fields:
-                        # Feature Layer
-                        # Build the HTML for the onHover Tooltip
-                        tooltip = gis.get_popup_tooltip(table,
-                                                        record,
-                                                        popup_label,
-                                                        popup_fields)
-                        try:
-                            # encode suitable for use as XML attribute
-                            tooltip = self.xml_encode(tooltip).decode("utf-8")
-                        except:
-                            pass
-                        else:
-                            attr[ATTRIBUTE.popup] = tooltip
+                if WKT:
+                    WKT = WKT.first()
+                    wkt = WKT[WKTFIELD]
+                    if wkt is None:
+                        continue
+                    attr[ATTRIBUTE.wkt] = wkt
+                if popup_fields:
+                    # Feature Layer
+                    # Build the HTML for the onHover Tooltip
+                    tooltip = gis.get_popup_tooltip(table,
+                                                    record,
+                                                    popup_label,
+                                                    popup_fields)
+                    try:
+                        # encode suitable for use as XML attribute
+                        tooltip = self.xml_encode(tooltip).decode("utf-8")
+                    except:
+                        pass
+                    else:
+                        attr[ATTRIBUTE.popup] = tooltip
 
-                        # Build the URL for the onClick Popup contents
-                        url = URL(resource.prefix,
-                                  resource.name).split(".", 1)[0]
-                        popup_url = "%s/%i.plain" % (url,
-                                                     record.id)
-                    elif popup_label:
-                        # Feature Queries
-                        # This is the pre-generated HTML for the onHover Tooltip
-                        attr[ATTRIBUTE.popup] = popup_label
+                    # Build the URL for the onClick Popup contents
+                    url = URL(resource.prefix,
+                              resource.name).split(".", 1)[0]
+                    popup_url = "%s/%i.plain" % (url,
+                                                 record.id)
+                elif popup_label:
+                    # Feature Queries
+                    # This is the pre-generated HTML for the onHover Tooltip
+                    attr[ATTRIBUTE.popup] = popup_label
 
-                    if popup_url:
-                        # @ToDo: add the Public URL so that layers can
-                        # be loaded off remote Sahana instances
-                        # (make this optional to keep filesize small
-                        # when not needed?)
-                        attr[ATTRIBUTE.url] = popup_url
+                if popup_url:
+                    # @ToDo: add the Public URL so that layers can
+                    # be loaded off remote Sahana instances
+                    # (make this optional to keep filesize small
+                    # when not needed?)
+                    attr[ATTRIBUTE.url] = popup_url
 
     # -------------------------------------------------------------------------
     def resource(self, parent, table, record,
@@ -1052,7 +1071,7 @@ class S3XML(S3Codec):
                                     "%s: %s" % (f, error))
                         valid = False
                         continue
-                    record[f]=value
+                    record[f] = value
 
         if deleted:
             return record
@@ -1132,7 +1151,10 @@ class S3XML(S3Codec):
                     v = value
                 elif isinstance(value, basestring) and len(value):
                     try:
-                        value = json.loads(value)
+                        _value = json.loads(value)
+                        if _value != float("inf"):
+                            # e.g. an HTML_COLOUR of 98E600
+                            value = _value
                     except:
                         pass
 
@@ -1721,10 +1743,13 @@ class S3XML(S3Codec):
         def add_col(row, key, value):
             col = etree.SubElement(row, cls.TAG.col)
             col.set(cls.ATTRIBUTE.field, str(key))
-            text = str(value)
-            if text.lower() not in ("null", "<null>"):
-                text = cls.xml_encode(unicode(text.decode("utf-8")))
-                col.text = text
+            if value:
+                text = str(value)
+                if text.lower() not in ("null", "<null>"):
+                    text = cls.xml_encode(unicode(text.decode("utf-8")))
+                    col.text = text
+            else:
+                col.text = ""
 
         def utf_8_encode(source):
             """

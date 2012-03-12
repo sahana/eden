@@ -10,10 +10,7 @@
 "First 24 Hours","Background Information",1,"# Minor damage","Numeric","Building can be safely occupied but needs minor repairs",9,"24H-9",
 "First 24 Hours","Background Information",1,"# Moderate damage","Numeric","Building cannot be safely occupied and needs major repairs",10,"24H-10",
 "First 24 Hours","Background Information",1,"# Destroyed","Numeric","Obviously destroyed and requires rebuilding",11,"24H-11",
-"First 24 Hours","Background Information",1,"Displaced","Numeric",,12,"24H-12",
-"First 24 Hours","Background Information",1,"Evacuated","Numeric",,13,"24H-13",
-"First 24 Hours","Background Information",1,"Displaced","Numeric",,14,"24H-14",
-"First 24 Hours","Background Information",1,"Evacuated","Numeric",,15,"24H-15",
+"First 24 Hours","Background Information",1,"Displaced","Grid",,12,"24H-12-","{'col-cnt': '2', 'row-cnt': '2', 'rows': ['Displaced', 'Evacuated'], 'data': [['Numeric', 'Numeric'], ['Numeric', 'Numeric']], 'columns': ['Currently known', 'Projected']}"
 "First 24 Hours","Background Information",1,"How are people being sheltered?","OptionOther",,16,"24H-16","{'1': 'Shelter', '3': 'Camps', '2': 'Host families', 'Length': '3'}"
 "First 24 Hours","Background Information",1,"Describe shelter situation","Text",,17,"24H-17",
 "First 24 Hours","Infrastructure",2,"Status of roads/best way to access affected area","Text",,18,"24H-18",

@@ -357,9 +357,13 @@ class S3PDF(S3Method):
             footer = getParam("footer")
             if footer == None:
                 footer = self.pageFooter
+            filename = getParam("filename")
+            if filename == None:
+                filename = title
             self.newDocument(title,
                              header=header,
-                             footer=footer)
+                             footer=footer,
+                             filename = filename)
             try:
                 id = r.component_id
                 if id == None:
@@ -392,13 +396,18 @@ class S3PDF(S3Method):
                 list_fields = getParam("list_fields")
                 report_groupby = getParam("report_groupby")
                 report_hide_comments = getParam("report_hide_comments")
+                filename = getParam("filename")
+                if filename == None:
+                    filename = title
+
 
                 # Create the document shell
                 if title == None:
                     title = self.defaultTitle(self.resource)
                 self.newDocument(title,
                                  header=self.pageHeader,
-                                 footer=self.pageFooter)
+                                 footer=self.pageFooter,
+                                 filename = filename)
 
                 # Add details to the document
                 if componentname == None:
@@ -468,7 +477,7 @@ class S3PDF(S3Method):
 
             elif method == "create":
                 # Create an OCR PDF form
-                if not session.s3.ocr_enabled:
+                if not current.deployment_settings.has_module("ocr"):
                     r.error(501, self.ERROR.OCR_DISABLED)
 
                 manager.load("ocr_meta")
@@ -496,7 +505,7 @@ class S3PDF(S3Method):
 
             elif method == "import":
                 # Render a review UI
-                if not session.s3.ocr_enabled:
+                if not current.deployment_settings.has_module("ocr"):
                     r.error(501, self.ERROR.OCR_DISABLED)
 
                 authorised = self._permitted(method="create")
@@ -851,7 +860,10 @@ class S3PDF(S3Method):
                     # Render upload UI
 
                     # Check if user has UTC offset in his profile
-                    if not session.s3.ocr_user_utc_offset:
+                    auth = current.auth
+                    if auth.user:
+                        utc_offset = auth.user.utc_offset
+                    else:
                         r.error(501, self.ERROR.NO_UTC_OFFSET)
 
                     # Load OCR tables
@@ -899,7 +911,7 @@ class S3PDF(S3Method):
         elif r.http == "POST":
             if method == "create":
                 # Upload scanned OCR images
-                if not session.s3.ocr_enabled:
+                if not current.deployment_settings.has_module("ocr"):
                     r.error(501, self.ERROR.OCR_DISABLED)
 
                 # Form meta vars
@@ -1057,7 +1069,7 @@ class S3PDF(S3Method):
                              vars={"setuuid":setuuid}))
 
             elif method == "import":
-                if not session.s3.ocr_enabled:
+                if not current.deployment_settings.has_module("ocr"):
                     r.error(501, self.ERROR.OCR_DISABLED)
 
                 authorised = self._permitted(method="create")
@@ -1911,6 +1923,7 @@ class S3PDF(S3Method):
                     title,
                     header,
                     footer,
+                    filename = None,
                     heading=None,
                    ):
         """
@@ -1926,7 +1939,10 @@ class S3PDF(S3Method):
         # Get the document variables
         now = self.request.now.isoformat()[:19].replace("T", " ")
         docTitle = "%s %s" % (title, now)
-        self.filename = "%s_%s.pdf" % (title, now)
+        if filename == None:
+            self.filename = "%s_%s.pdf" % (title, now)
+        else:
+            self.filename = "%s_%s.pdf" % (filename, now)
         self.output = StringIO()
         self.doc = EdenDocTemplate(self.output, title=docTitle)
         self.doc.setPageTemplates(header,footer)
@@ -4408,7 +4424,11 @@ class S3OCRImageParser(object):
                                                              hh,
                                                              mm),
                                       "%Y-%m-%d %H:%M:%S")
-        utc_offset = current.session.s3.ocr_user_utc_offset
+        auth = current.auth
+        if auth.user:
+            utc_offset = auth.user.utc_offset
+        else:
+            utc_offset = None
         try:
             t = utc_offset.split()[1]
             if len(t) == 5:

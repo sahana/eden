@@ -13,6 +13,8 @@ def save_webpage_screenshot(url, width, height, file_name = None):
     width and height, if given, are in pixels
     if not given, the browser's default dimensions will be used.
     
+    Needs a call to window.print() from within the webpage.
+    
     Example:
     
     save_webpage_screenshot(
@@ -56,12 +58,12 @@ def save_webpage_screenshot(url, width, height, file_name = None):
         painter.end()
         
         if file_name is not None:
-            image.save(file_name+".png")
+            image.save(file_name)
         else:
             byte_array = QByteArray()
             buffer = QBuffer(byte_array)
             buffer.open(QIODevice.WriteOnly)
-            image.save(buffer, format= "PNG")
+            image.save(buffer, "PNG")
             result.append(str(byte_array))
             
         if __name__ == "__main__":

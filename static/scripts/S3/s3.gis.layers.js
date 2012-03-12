@@ -94,6 +94,12 @@ function addLayers() {
             addKMLLayer(S3.gis.layers_kml[i]);
         }
     }
+    // Theme
+    if (S3.gis.layers_theme) {
+        for (i = 0; i < S3.gis.layers_theme.length; i++) {
+            addGeoJSONLayer(S3.gis.layers_theme[i]);
+        }
+    }
     // WFS
     if (S3.gis.layers_wfs) {
         for (i = 0; i < S3.gis.layers_wfs.length; i++) {

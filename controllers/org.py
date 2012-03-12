@@ -65,7 +65,7 @@ def organisation():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return org_organisation_controller()
+    return s3db.org_organisation_controller()
 
 # -----------------------------------------------------------------------------
 def organisation_list_represent(l):
@@ -93,7 +93,7 @@ def office():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return org_office_controller()
+    return s3db.org_office_controller()
 
 # =============================================================================
 def person():
@@ -123,10 +123,10 @@ def incoming():
     return inv_incoming()
 
 # =============================================================================
-def match():
+def req_match():
     """ Match Requests """
 
-    return req_match()
+    return s3db.req_match()
 
 # =============================================================================
 def donor():

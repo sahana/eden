@@ -5,11 +5,12 @@ def drop_table(sample_type_name, parameter_name):
     def write_message(sample_table_name):
         print "Dropped", sample_table_name, sample_type_name, parameter_name
         
-    sample_table_name = ClimateDataPortal.SampleTable(
+    sample_table_name = ClimateDataPortal.SampleTable.matching(
         parameter_name,
-        sample_type_name,
-        db
-    ).drop()
+        sample_type_code = getattr(ClimateDataPortal, sample_type_name).code
+    ).drop(
+        write_message
+    )
 
 def show_usage():
     sys.stderr.write("""Usage:

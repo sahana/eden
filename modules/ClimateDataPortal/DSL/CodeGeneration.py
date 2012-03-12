@@ -241,7 +241,7 @@ def init_R_interpreter(R, database_settings):
 
     from rpy2.rinterface import RRuntimeError
     try:
-        R("library(RPostgreSQL)")
+        R("library(RPostgreSQL, quietly=TRUE)")
     except RRuntimeError, R_runtime_error:
         message = """%s
 R package RPostgreSQL might not be installed.
@@ -259,7 +259,7 @@ You may need to select a mirror.
         raise ImportError(message)
 
     try:
-        R("library(multicore)")
+        R("library(multicore, quietly=TRUE)")
     except RRuntimeError, R_runtime_error:
         if "no package called" in R_runtime_error.args[0]:
             raise ImportError(
@@ -341,21 +341,41 @@ def DSLAggregationNode_SQL(aggregation, key, out, extra_filter):
     if extra_filter:
         filter_strings.append(extra_filter)
     add_filter = filter_strings.append
+    month_numbers = aggregation.month_numbers
+    if month_numbers is not None and -1 in month_numbers:
+        # PreviousDecember handling:
+        # shift the month numbers forward by one month and compare against 
+        # month filter numbers also shifted forward one month.
+        time_period = "(time_period + 1)"
+        month_numbers = map((1).__add__, month_numbers)
+    else:
+        time_period = "time_period"
     if from_time_period is not None:
-        add_filter("time_period >= %i" % from_time_period)
+        add_filter(
+            "%(time_period)s >= %(from_date_number)i" % dict(
+                time_period = time_period,
+                from_date_number = sample_table.date_mapper.date_to_time_period(from_date)
+            )
+        )
     to_date = aggregation.to_date
     if to_date is not None:
         add_filter(
-            "time_period <= %i" % sample_table.date_mapper.date_to_time_period(to_date)
-        )
-    month_numbers = aggregation.month_numbers
-    if month_numbers and len(month_numbers) < 12:
-        add_filter(
-            "((time_period + 65532 + %(month_offset)i) %% 12) IN (%(month_list)s)" % dict(
-                month_offset = start_month_0_indexed,
-                month_list = ",".join(map(str, month_numbers))
+            "%(time_period)s <= %(to_date_number)i" % dict(
+                time_period = time_period,
+                to_date_number = sample_table.date_mapper.date_to_time_period(to_date)
             )
         )
+    if month_numbers is not None and month_numbers != list(range(0,12)):
+        if month_numbers == []:
+            add_filter("FALSE")
+        else:
+            add_filter(
+                "((%(time_period)s + 65532 + %(month_offset)i) %% 12) IN (%(month_list)s)" % dict(
+                    time_period = time_period,
+                    month_offset = start_month_0_indexed,
+                    month_list = ",".join(map(str, month_numbers))
+                )
+            )
     if filter_strings:
         out(
             " WHERE ", 
