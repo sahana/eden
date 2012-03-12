@@ -57,6 +57,8 @@ __all__ = ["S3PersonEntity",
            "pr_rebuild_path",
            "pr_role_rebuild_path"]
 
+import gluon.contrib.simplejson as json
+
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
@@ -390,7 +392,6 @@ class S3PersonEntity(S3Model):
             query = (atable.id != record_id) & \
                     (atable.role_id == role_id) & \
                     (atable.pe_id == pe_id)
-            import gluon.contrib.simplejson as json
             deleted_fk = {"role_id": role_id, "pe_id": pe_id}
             data = {"deleted": True,
                     "role_id": None,
@@ -423,7 +424,6 @@ class S3PersonEntity(S3Model):
         else:
             return
         if record:
-            import gluon.contrib.simplejson as json
             data = json.loads(record.deleted_fk)
             pe_id = data.get("pe_id", None)
             if pe_id:
@@ -925,7 +925,6 @@ class S3GroupModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Group membership
-        # @todo: deprecate (to be replaced by role/affiliation)
         #
         resourcename = "group_membership"
         tablename = "pr_group_membership"
@@ -982,6 +981,8 @@ class S3GroupModel(S3Model):
 
         # Resource configuration
         configure(tablename,
+                  onaccept = self.group_membership_onaccept,
+                  ondelete = self.group_membership_onaccept,
                   list_fields=["id",
                                "group_id",
                                "person_id",
@@ -1015,6 +1016,45 @@ class S3GroupModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_membership_onaccept(form):
+        """
+            Remove any duplicate memberships and update affiliations
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        mtable = s3db.pr_group_membership
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+        if _id:
+            record = db(mtable.id == _id).select(limitby=(0, 1)).first()
+        else:
+            return
+        if record:
+            person_id = record.person_id
+            group_id = record.group_id
+            if person_id and group_id and not record.deleted:
+                query = (mtable.person_id == person_id) & \
+                        (mtable.group_id == group_id) & \
+                        (mtable.id != record.id) & \
+                        (mtable.deleted != True)
+                deleted_fk = {"person_id": person_id,
+                              "group_id": group_id}
+                db(query).update(deleted = True,
+                                 person_id = None,
+                                 group_id = None,
+                                 deleted_fk = json.dumps(deleted_fk))
+            pr_update_affiliations(mtable, record)
         return
 
 # =============================================================================
@@ -2629,13 +2669,85 @@ def pr_update_affiliations(table, record):
             if person_id:
                 update(person_id)
 
-    elif rtype == "group_membership":
-        # Not implemented yet
-        pass
+    elif rtype == "pr_group_membership":
+        mtable = s3db.pr_group_membership
+        if not isinstance(record, Row):
+            record = db(mtable.id == record).select(mtable.ALL,
+                                                    limitby=(0, 1)).first()
+        if not record:
+            return
+        pr_group_update_affiliations(record)
 
     elif rtype == "org_site":
         pr_site_update_affiliations(record)
 
+    return
+
+# =============================================================================
+def pr_group_update_affiliations(record):
+    """
+        Update affiliations for group memberships, currently this makes
+        all members of a group organisational units of the group.
+
+        @param record: the membership record
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    MEMBERS = "Members"
+
+    if record.deleted and record.deleted_fk:
+        try:
+            fk = json.loads(record.deleted_fk)
+            person_id = fk["person_id"]
+        except:
+            return
+    else:
+        person_id = record.person_id
+
+    ptable = s3db.pr_person
+    gtable = s3db.pr_group
+    mtable = s3db.pr_group_membership
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+    etable = s3db.pr_pentity
+
+    g = str(gtable)
+    r = str(rtable)
+    p = str(ptable)
+
+    # Get current memberships
+    query = (mtable.person_id == person_id) & \
+            (mtable.deleted != True)
+    left = [ptable.on(mtable.person_id == ptable.id),
+            gtable.on(mtable.group_id == gtable.id)]
+    rows = db(query).select(ptable.pe_id, gtable.pe_id, left=left)
+    current_memberships = [(row[g].pe_id, row[p].pe_id) for row in rows]
+
+    # Get current affiliations
+    query = (rtable.deleted != True) & \
+            (rtable.role == MEMBERS) & \
+            (rtable.pe_id == etable.pe_id) & \
+            (etable.instance_type == g) & \
+            (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == ptable.pe_id) & \
+            (ptable.id == person_id)
+    rows = db(query).select(ptable.pe_id, rtable.pe_id)
+    current_affiliations = [(row[r].pe_id, row[p].pe_id) for row in rows]
+
+    # Remove all affiliations which are not current memberships
+    for a in current_affiliations:
+        group, person = a
+        if a not in current_memberships:
+            pr_remove_affiliation(group, person, role=MEMBERS)
+        else:
+            current_memberships.remove(a)
+    # Add affiliations for all new memberships
+    for m in current_memberships:
+        group, person = m
+        pr_add_affiliation(group, person, role=MEMBERS, role_type=OU)
     return
 
 # =============================================================================
@@ -3045,7 +3157,6 @@ def pr_remove_from_role(role_id, pe_id):
     affiliation = db(query).select(limitby=(0, 1)).first()
     if affiliation is not None:
         # Soft-delete the record, clear foreign keys
-        import gluon.contrib.simplejson as json
         deleted_fk = {"role_id": role_id, "pe_id": pe_id}
         data = {"deleted": True,
                 "role_id": None,
