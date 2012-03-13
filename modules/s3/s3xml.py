@@ -1615,7 +1615,7 @@ class S3XML(S3Codec):
                 if child_obj:
                     single = len(findall(tag)) == 1
                     if tag not in obj:
-                        if single or collapse:
+                        if single and collapse:
                             obj[tag] = child_obj
                         else:
                             obj[tag] = [child_obj]
