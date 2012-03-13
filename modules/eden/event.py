@@ -70,6 +70,7 @@ class S3EventModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
+        countries_id = self.gis_countries_id
         scenario_id = self.scenario_scenario_id
 
         s3_datetime_format = settings.get_L10n_datetime_format()
@@ -93,12 +94,16 @@ class S3EventModel(S3Model):
                                   #Field("code",       # e.g. to link to WebEOC
                                   #      length=64,    # Mayon compatiblity
                                   #      label=T("Code")),
+                                  countries_id(
+                                          #readable=False,
+                                          #writable=False
+                                         ),
                                   Field("exercise", "boolean",
                                         represent = lambda opt: "√" if opt else current.messages.NONE,
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Exercise"),
+                                        #comment = DIV(_class="tooltip",
+                                        #              _title="%s|%s" % (T("Exercise"),
                                                                         # Should!
-                                                                        T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
+                                        #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
                                         label=T("Exercise?")),
                                   Field("zero_hour", "datetime",
                                         default = current.request.utcnow,
@@ -313,12 +318,13 @@ class S3EventModel(S3Model):
 
         db = current.db
         s3db = current.s3db
+        gis = current.gis
 
         vars = form.vars
 
         event = vars.id
         # Set the Event in the session
-        session.s3.event = event
+        current.session.s3.event = event
         ctable = s3db.gis_config
         mapconfig = None
         if vars.scenario_id:
@@ -398,14 +404,16 @@ class S3EventModel(S3Model):
             When an Event is updated, check for closure
         """
 
+        s3 = current.session.s3
         vars = form.vars
         event = vars.id
         if vars.closed:
             # Ensure this event isn't active in the session
-            if session.s3.event == event:
-                session.s3.event = None
+            if s3.event == event:
+                s3.event = None
             # @ToDo: Hide the Event from the Map menu
-            config = current.gis.get_config()
+            gis = current.gis
+            config = gis.get_config()
             if config == config.config_id: # @ToDo: Doesn't look right!?
                 # Reset to the Default Map
                 gis.set_config(0)

@@ -212,18 +212,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-        # Fix the breadcrumb
-        #breadcrumbs[2] = (T("Volunteers"), False,
-        #                  URL(c=request.controller,
-        #                      f=request.function,
-        #                      args=request.args,
-        #                      vars=request.vars))
-        #if "create" in request.args:
-        #    breadcrumbs[3] = (T("New Volunteer"), True,
-        #                      URL(c=request.controller,
-        #                          f=request.function,
-        #                          args=request.args,
-        #                          vars=request.vars))
 
     elif group == "staff":
         #s3mgr.configure(table._tablename, insertable=False)
@@ -256,12 +244,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-        # Fix the breadcrumb
-        #breadcrumbs[2] = (T("Staff"), False,
-        #                  URL(c=request.controller,
-        #                      f=request.function,
-        #                      args=request.args,
-        #                      vars=request.vars))
 
     s3mgr.configure(tablename,
                     list_fields = list_fields)
@@ -407,6 +389,17 @@ def person():
 
         @ToDo: Volunteers should be redirected to vol/person?
     """
+
+    if deployment_settings.has_module("asset"):
+        # Assets as component of people
+        s3mgr.model.add_component("asset_asset",
+                                  pr_person="assigned_to_id")
+        # Edits should always happen via the Asset Log
+        # @ToDo: Allow this method too, if we can do so safely
+        s3mgr.configure("asset_asset",
+                        insertable = False,
+                        editable = False,
+                        deletable = False)
 
     group = request.get_vars.get("group", "staff")
     hr_id = request.get_vars.get("human_resource.id", None)
