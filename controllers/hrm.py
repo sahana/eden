@@ -744,6 +744,34 @@ def hrm_rheader(r, tabs=[]):
                                     ),
                               rheader_tabs)
 
+        elif r.name == "certificate":
+            # Tabs
+            tabs = [(T("Certificate Details"), None),
+                    (T("Skill Equivalence"), "certificate_skill")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            table = r.table
+            certificate = r.record
+            if certificate:
+                rheader = DIV(TABLE(
+                                    TR(TH("%s: " % table.name.label),
+                                       certificate.name),
+                                    ),
+                              rheader_tabs)
+
+        elif r.name == "course":
+            # Tabs
+            tabs = [(T("Course Details"), None),
+                    (T("Course Certificates"), "course_certificate")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            table = r.table
+            course = r.record
+            if course:
+                rheader = DIV(TABLE(
+                                    TR(TH("%s: " % table.name.label),
+                                       course.name),
+                                    ),
+                              rheader_tabs)
+
         elif r.name == "human_resource":
             hr = r.record
             if hr:
@@ -950,7 +978,7 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader=hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -976,7 +1004,7 @@ def certificate():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader=hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------

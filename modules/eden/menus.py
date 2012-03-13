@@ -785,13 +785,13 @@ class S3OptionsMenu:
                       check=manager_mode)(
                         M("New Training Course", m="create"),
                         M("List All"),
-                        M("Course Certificates", f="course_certificate"),
+                        #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
                         M("New Certificate", m="create"),
                         M("List All"),
-                        M("Skill Equivalence", f="certificate_skill"),
+                        #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
