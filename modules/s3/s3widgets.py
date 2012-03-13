@@ -54,6 +54,7 @@ __all__ = ["S3HiddenWidget",
            "S3EmbedComponentWidget",
            "S3SliderWidget",
            "comments_widget",
+           "S3InvBinWidget",
            ]
 
 import copy
@@ -1388,6 +1389,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
 
                     if map_selector:
                         zoom = config.zoom
+                        if zoom == None:
+                            zoom = 1
                         if lat is None or lon is None:
                             map_lat = config.lat
                             map_lon = config.lon
@@ -2756,6 +2759,71 @@ class S3TimeIntervalWidget(FormWidget):
         return "%s %s" % (val, T(multiplier[0]))
 
 # -----------------------------------------------------------------------------
+class S3InvBinWidget(FormWidget):
+    """
+        Widget used by S3CRUD to offer the user matching bins where
+        stock itesm can be placed
+    """
+
+    def __init__(self,
+                 tablename,):
+        self.tablename = tablename
+
+    def __call__(self, field, value, **attributes):
+
+        request = current.request
+        response = current.response
+        db = current.db
+        s3db = current.s3db
+        tracktable = s3db.inv_track_item
+        stocktable = s3db.inv_inv_item
+        T = current.T
+
+        new_div = INPUT(value = value or "",
+                        requires = field.requires,
+                        _id = "i_%s_%s" % (self.tablename, field.name),
+                        _name = field.name,
+                       )
+        id = None
+        function = self.tablename[4:]
+        if len(request.args) > 2:
+            if request.args[1] == function:
+                id = request.args[2]
+
+        if id == None or tracktable[id] == None:
+            return TAG[""](
+                           new_div
+                          )
+
+        record = tracktable[id]
+        query = (stocktable.item_id == record.item_id) & \
+                (stocktable.item_pack_id == record.item_pack_id) & \
+                (stocktable.currency == record.currency) & \
+                (stocktable.pack_value == record.pack_value) & \
+                (stocktable.expiry_date == record.expiry_date) & \
+                (stocktable.supply_org_id == record.supply_org_id)
+        rows = db(query).select(stocktable.bin,stocktable.id)
+        if len(rows) == 0:
+            return TAG[""](
+                           new_div
+                          )
+        bins = []
+        for row in rows:
+            bins.append(OPTION(row.bin))
+
+        match_lbl = LABEL(T("Select an existing bin"))
+        match_div = SELECT(bins,
+                          _id = "%s_%s" % (self.tablename, field.name),
+                          _name = field.name,
+                         )
+        new_lbl = LABEL(T("...or add a new bin"))
+        return TAG[""](
+                    match_lbl,
+                    match_div,
+                    new_lbl,
+                    new_div
+                    )
+
 class S3EmbedComponentWidget(FormWidget):
     """
         Widget used by S3CRUD for link-table components with actuate="embed".
@@ -2953,7 +3021,7 @@ def comments_widget(field, value):
     return TEXTAREA(_name=field.name,
                     _id="%s_%s" % (field._tablename, field.name),
                     _class="comments %s" % (field.type),
-                    _value=value,
+                    value=value,
                     requires=field.requires)
 
 # -----------------------------------------------------------------------------

@@ -75,6 +75,7 @@ def org_office_controller():
     # Load Models to add tabs
     if settings.has_module("inv"):
         manager.load("inv_inv_item")
+        manager.load("inv_adj_item")
     elif settings.has_module("req"):
         # (gets loaded by Inv if available)
         manager.load("req_req")
@@ -183,6 +184,15 @@ def org_office_controller():
 
     rheader = s3db.org_rheader
 
-    return s3_rest_controller("org", "office", rheader=rheader)
+    s3mgr.configure("inv_inv_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
+    output = s3_rest_controller("org", "office", rheader=rheader)
+    if output['r'].component and output['r'].component.name == "inv_item" and "add_btn" in output:
+            del output["add_btn"]
+    return output
 
 # END =========================================================================

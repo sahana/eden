@@ -12,21 +12,21 @@ if session.s3.show_inv == None:
 # -----------------------------------------------------------------------------
 # Defined in the Model for use from Multiple Controllers for unified menus
 #
-def inv_item_controller():
-    """ RESTful CRUD controller """
-
-    table = s3db.inv_inv_item
-
-    # Limit site_id to sites the user has permissions for
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=T("You do not have permission for any site to add an inventory item."))
-
-    return s3_rest_controller("inv", "inv_item",
-                              csv_extra_fields = [
-                                dict(label="Organisation",
-                                     field=s3db.org_organisation_id(comment=None))],
-                              interactive_report = True
-                              )
+#def inv_item_controller():
+#    """ RESTful CRUD controller """
+#
+#    table = s3db.inv_inv_item
+#
+#    # Limit site_id to sites the user has permissions for
+#    auth.permission.permitted_facilities(table=table,
+#                                         error_msg=T("You do not have permission for any site to add an inventory item."))
+#
+#    return s3_rest_controller("inv", "inv_item",
+#                              csv_extra_fields = [
+#                                dict(label="Organisation",
+#                                     field=s3db.org_organisation_id(comment=None))],
+#                              interactive_report = True
+#                              )
 
 # -----------------------------------------------------------------------------
 #def inv_recv_controller():
