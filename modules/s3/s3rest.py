@@ -175,7 +175,6 @@ class S3RequestManager(object):
         self.messages = None
         self.import_prep = None
         self.log = None
-        self.onexport = None
 
         # JSON/CSV formats and content-type headers
         self.json_formats = []
@@ -3122,7 +3121,7 @@ class S3Resource(object):
         tablename = self.tablename
         table = self.table
 
-        postprocess = model.get_config(tablename, "onexport", manager.onexport)
+        postprocess = model.get_config(tablename, "onexport", None)
 
         default = (None, None)
 
@@ -3158,7 +3157,7 @@ class S3Resource(object):
 
         # GIS-encode the element
         download_url = manager.s3.download_url
-        xml.gis_encode(self, record, rmap,
+        xml.gis_encode(self, record, element, rmap,
                        download_url=download_url,
                        marker=marker)
 

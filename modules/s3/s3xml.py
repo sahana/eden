@@ -612,6 +612,7 @@ class S3XML(S3Codec):
     def gis_encode(self,
                    resource,
                    record,
+                   element,
                    rmap,
                    download_url="",
                    marker=None,
@@ -621,6 +622,7 @@ class S3XML(S3Codec):
 
             @param resource: the referencing resource
             @param record: the particular record
+            @param element: the XML element
             @param rmap: list of references to encode
             @param download_url: download URL of this instance
             @param marker: marker dict or filename
@@ -685,8 +687,8 @@ class S3XML(S3Codec):
             if LATFIELD not in fields or \
                LONFIELD not in fields:
                 continue
-            element = r.element
-            attr = element.attrib
+            relement = r.element
+            attr = relement.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
@@ -738,6 +740,19 @@ class S3XML(S3Codec):
                     if wkt is None:
                         continue
                     attr[ATTRIBUTE.wkt] = wkt
+                    # Instead of adding the wkt as attribute to the reference,
+                    # one could create a new element inside the parent which
+                    # carries the target format WKT data, e.g. GeoJSON (pseudocode):
+                    #
+                    #if current.auth.permission.format == "geojson":
+                    #   wkt_json = gis.convert_wkt_to_json(wkt)
+                    #   coordinates = etree.SubElement(element, "coordinates")
+                    #   coordinates.set("value", wkt_json)
+                    #
+                    # This additional <coordinates> element can then be picked up
+                    # by the respective stylesheet and put into the right place.
+                    # Since the value-attribute is already JSON, no further
+                    # conversion in the XSLT is necessary.
                 if popup_fields:
                     # Feature Layer
                     # Build the HTML for the onHover Tooltip
