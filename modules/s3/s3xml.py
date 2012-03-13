@@ -711,8 +711,8 @@ class S3XML(S3Codec):
                 if WKTFIELD in fields:
                     WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
                                                        limitby=(0, 1))
-                
-            
+
+
             if not LatLon and not WKT:
                 # Normal Location lookup
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
@@ -1577,6 +1577,7 @@ class S3XML(S3Codec):
 
         if element.tag == TAG.list:
             obj = []
+            append = obj.append
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1585,10 +1586,11 @@ class S3XML(S3Codec):
                     tag = tag.rsplit("}", 1)[1]
                 child_obj = element2json(child, native=native)
                 if child_obj:
-                    obj.append(child_obj)
+                    append(child_obj)
             return obj
         else:
             obj = {}
+            findall = element.findall
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1609,33 +1611,43 @@ class S3XML(S3Codec):
                                          child.get(ATTRIBUTE.field))
                     elif tag == TAG.data:
                         tag = child.get(ATTRIBUTE.field)
-                child_obj = cls.__element2json(child, native=native)
+                child_obj = element2json(child, native=native)
                 if child_obj:
-                    if not tag in obj:
-                        if isinstance(child_obj, list) or not collapse:
-                            obj[tag] = [child_obj]
-                        else:
+                    single = len(findall(tag)) == 1
+                    if tag not in obj:
+                        if single or collapse:
                             obj[tag] = child_obj
+                        else:
+                            obj[tag] = [child_obj]
                     else:
                         if not isinstance(obj[tag], list):
                             obj[tag] = [obj[tag]]
                         obj[tag].append(child_obj)
 
             attributes = element.attrib
+            skip_text = False
+            tag = element.tag
             for a in attributes:
+                v = element.get(a)
                 if native:
-                    if a == ATTRIBUTE.name and \
-                       element.tag == TAG.resource:
+                    if a == ATTRIBUTE.name and tag == TAG.resource:
                         continue
-                    if a == ATTRIBUTE.resource and \
-                       element.tag == TAG.options:
+                    if a == ATTRIBUTE.resource and tag == TAG.options:
                         continue
-                    if a == ATTRIBUTE.field and \
-                       element.tag in (TAG.data, TAG.reference):
+                    if a == ATTRIBUTE.field and tag in (TAG.data, TAG.reference):
                         continue
-                obj[PREFIX.attribute + a] = element.get(a)
+                else:
+                    if a == ATTRIBUTE.value:
+                        try:
+                            obj[TAG.item] = json.loads(v)
+                        except:
+                            pass
+                        else:
+                            skip_text = True
+                        continue
+                obj[PREFIX.attribute + a] = v
 
-            if element.text:
+            if element.text and not skip_text:
                 obj[PREFIX.text] = cls.xml_decode(element.text)
 
             if len(obj) == 1 and obj.keys()[0] in \
