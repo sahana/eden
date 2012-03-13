@@ -1352,7 +1352,7 @@ class InvItemVirtualFields:
     def total_value(self):
         """ Year/Month of the start date of the training event """
         try:
-            return IS_FLOAT_AMOUNT.represent((self.inv_inv_item.quantity * self.inv_inv_item.pack_value), precision=2)
+            return self.inv_inv_item.quantity * self.inv_inv_item.pack_value
         except:
             # not available
             return current.messages.NONE
