@@ -2962,15 +2962,16 @@ class GIS(object):
             vars.gis_feature_type = "1"
             if vars.lat is None or vars.lat == "":
                 form.errors["lat"] = messages.lat_empty
-                return
             elif vars.lon is None or vars.lon == "":
                 form.errors["lon"] = messages.lon_empty
-                return
             else:
                 vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
-                return
+
+        if current.deployment_settings.get_gis_spatialdb():
+            # Also populate the spatial field
+            vars.the_geom = vars.wkt
 
         return
 
@@ -3093,6 +3094,21 @@ class GIS(object):
                              lat_min=table.lat,
                              lon_max=table.lon,
                              lat_max=table.lat)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def simplify(wkt, tolerance=0.5, preserve_topology=False):
+        """
+            Simplify a complex Polygon
+
+            @ToDo: Use ST_SIMPLIFY when Spatial DB is available
+        """
+
+        shape = wkt_loads(wkt)
+        simplified = shape.simplify(tolerance, preserve_topology)
+        wkt_out = simplified.to_wkt()
+
+        return wkt_out
 
     # -------------------------------------------------------------------------
     def show_map( self,

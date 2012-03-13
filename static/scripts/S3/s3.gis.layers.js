@@ -391,6 +391,10 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
+                    if ( color.indexOf('#') == -1) {
+                        // gis_layer_theme
+                        color = '#' + color;
+                    }
                 } else {
                     // default fillColor for Unclustered Point
                     var color = '#f5902e';

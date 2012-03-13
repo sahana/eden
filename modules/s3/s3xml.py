@@ -711,8 +711,6 @@ class S3XML(S3Codec):
                 if WKTFIELD in fields:
                     WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
                                                        limitby=(0, 1))
-                
-            
             if not LatLon and not WKT:
                 # Normal Location lookup
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
@@ -737,6 +735,12 @@ class S3XML(S3Codec):
                     wkt = WKT[WKTFIELD]
                     if wkt is None:
                         continue
+                    if len(wkt) > 15000:
+                        # Simplify the polygon to reduce download size
+                        # & also to work around the recursion limit in libxslt
+                        # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                        wkt = gis.simplify(wkt)
+
                     attr[ATTRIBUTE.wkt] = wkt
                 if popup_fields:
                     # Feature Layer

@@ -220,11 +220,13 @@
                                     <xsl:text>Point</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="Point">
-                                        <xsl:with-param name="point">
-                                            <xsl:value-of select="substring-before(substring-after(normalize-space(substring-after($wkt,'POINT')),'('),')')"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="Point">
+                                            <xsl:with-param name="point">
+                                                <xsl:value-of select="substring-before(substring-after(normalize-space(substring-after($wkt,'POINT')),'('),')')"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                             <xsl:when test="starts-with($wkt,'LINESTRING')">
@@ -232,11 +234,13 @@
                                     <xsl:text>LineString</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="LineString">
-                                        <xsl:with-param name="linestring">
-                                            <xsl:value-of select="normalize-space(substring-after($wkt,'LINESTRING'))"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="LineString">
+                                            <xsl:with-param name="linestring">
+                                                <xsl:value-of select="normalize-space(substring-after($wkt,'LINESTRING'))"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                             <xsl:when test="starts-with($wkt,'POLYGON')">
@@ -244,11 +248,13 @@
                                     <xsl:text>Polygon</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="Polygon">
-                                        <xsl:with-param name="polygon">
-                                            <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="Polygon">
+                                            <xsl:with-param name="polygon">
+                                                <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                             <xsl:when test="starts-with($wkt,'MULTIPOLYGON')">
@@ -256,11 +262,13 @@
                                     <xsl:text>MultiPolygon</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="MultiPolygon">
-                                        <xsl:with-param name="multipolygon">
-                                            <xsl:value-of select="normalize-space(substring-after($wkt,'MULTIPOLYGON'))"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="MultiPolygon">
+                                            <xsl:with-param name="multipolygon">
+                                                <xsl:value-of select="normalize-space(substring-after($wkt,'MULTIPOLYGON'))"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                         </xsl:choose>
