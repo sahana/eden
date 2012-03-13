@@ -3097,18 +3097,27 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def simplify(wkt, tolerance=0.5, preserve_topology=False):
+    def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
         """
             Simplify a complex Polygon
-
-            @ToDo: Use ST_SIMPLIFY when Spatial DB is available
         """
+
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
         shape = wkt_loads(wkt)
         simplified = shape.simplify(tolerance, preserve_topology)
-        wkt_out = simplified.to_wkt()
+        if output == "wkt":
+            output = simplified.to_wkt()
+        elif output == "geojson":
+            from ..geojson import dumps
+            output = dumps(simplified)
 
-        return wkt_out
+        return output
 
     # -------------------------------------------------------------------------
     def show_map( self,
@@ -3923,15 +3932,15 @@ S3.gis.layers_feature_queries[%i] = {
                 GoogleLayer,
                 TMSLayer,
                 WMSLayer,
-                FeatureLayer,
-                GeoJSONLayer,
-                GeoRSSLayer,
-                GPXLayer,
-                KMLLayer,
-                ThemeLayer,
-                WFSLayer,
                 JSLayer,
+                ThemeLayer,
+                GeoJSONLayer,
+                GPXLayer,
                 CoordinateLayer,
+                GeoRSSLayer,
+                KMLLayer,
+                WFSLayer,
+                FeatureLayer,
             ]
         else:
             # Add just the default Base Layer

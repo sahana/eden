@@ -711,52 +711,50 @@ class S3XML(S3Codec):
             elif "polygons" in current.request.get_vars:
                 # Display Polygons not Points
                 if WKTFIELD in fields:
+                    #if current.deployment_settings.get_gis_spatialdb():
+                    #   Do the Simplify & GeoJSON direct from the DB
+                    #else:
                     WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
                                                        limitby=(0, 1))
+                    if WKT:
+                        WKT = WKT.first()
+                        wkt = WKT[WKTFIELD]
+                        if wkt is None:
+                            continue
+                        if current.auth.permission.format == "geojson":
+                            # Simplify the polygon to reduce download size
+                            geojson = gis.simplify(wkt, output="geojson")
+                            # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                            geometry = etree.SubElement(element, "geometry")
+                            geometry.set("value", geojson)
+                        else:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(wkt)
+                            # Convert the WKT in XSLT
+                            attr[ATTRIBUTE.wkt] = wkt
 
             if not LatLon and not WKT:
                 # Normal Location lookup
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
                                                       limitby=(0, 1))
+            if LatLon:
+                LatLon = LatLon.first()
+                lat = LatLon[LATFIELD]
+                lon = LatLon[LONFIELD]
+                if lat is None or lon is None:
+                    continue
+                attr[ATTRIBUTE.lat] = "%.6f" % lat
+                attr[ATTRIBUTE.lon] = "%.6f" % lon
+                if not marker_url:
+                    marker = gis.get_marker()
+                    marker_url = "%s/%s" % (download_url, marker.image)
+                attr[ATTRIBUTE.marker] = marker_url
+                attr[ATTRIBUTE.sym] = symbol
+
             if LatLon or WKT:
-                if LatLon:
-                    LatLon = LatLon.first()
-                    lat = LatLon[LATFIELD]
-                    lon = LatLon[LONFIELD]
-                    if lat is None or lon is None:
-                        continue
-                    attr[ATTRIBUTE.lat] = "%.6f" % lat
-                    attr[ATTRIBUTE.lon] = "%.6f" % lon
-                    if not marker_url:
-                        marker = gis.get_marker()
-                        marker_url = "%s/%s" % (download_url, marker.image)
-                    attr[ATTRIBUTE.marker] = marker_url
-                    attr[ATTRIBUTE.sym] = symbol
-                if WKT:
-                    WKT = WKT.first()
-                    wkt = WKT[WKTFIELD]
-                    if wkt is None:
-                        continue
-                    if len(wkt) > 15000:
-                        # Simplify the polygon to reduce download size
-                        # & also to work around the recursion limit in libxslt
-                        # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                        wkt = gis.simplify(wkt)
-                    attr[ATTRIBUTE.wkt] = wkt
-                    # Instead of adding the wkt as attribute to the reference,
-                    # one could create a new element inside the parent which
-                    # carries the target format WKT data, e.g. GeoJSON (pseudocode):
-                    #
-                    #if current.auth.permission.format == "geojson":
-                    #   wkt_json = gis.convert_wkt_to_json(wkt)
-                    #   coordinates = etree.SubElement(element, "coordinates")
-                    #   coordinates.set("value", wkt_json)
-                    #
-                    # This additional <coordinates> element can then be picked up
-                    # by the respective stylesheet and put into the right place.
-                    # Since the value-attribute is already JSON, no further
-                    # conversion in the XSLT is necessary.
                 if popup_fields:
                     # Feature Layer
                     # Build the HTML for the onHover Tooltip

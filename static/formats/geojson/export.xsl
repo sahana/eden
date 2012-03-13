@@ -208,10 +208,60 @@
     <xsl:template match="resource">
         <xsl:if test="./reference[@field='location_id']">
         
+            <xsl:variable name="geometry" select="./geometry/@value"/>
             <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
 
             <xsl:choose>
+                <xsl:when test="$geometry!='null'">
+                    <!-- Use pre-prepared GeoJSON -->
+                    <type>Feature</type>
+                    <geometry>  
+                        <xsl:attribute name="value">
+                            <xsl:value-of select="$geometry"/>
+                        </xsl:attribute>
+                    </geometry>
+                    <properties>
+                        <id>
+                            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
+                        </id>
+                        <xsl:choose>
+                            <xsl:when test="data[@field='name']!=''">
+                                <name>
+                                    <xsl:value-of select="data[@field='name']"/>
+                                </name>
+                            </xsl:when>
+                            <xsl:when test="reference[@field='location_id']/text()!=''">
+                                <name>
+                                    <xsl:value-of select="reference[@field='location_id']/text()"/>
+                                </name>
+                            </xsl:when>
+                        </xsl:choose>
+                        <xsl:if test="data[@field='colour']!=''">
+                            <colour>
+                                <xsl:value-of select="data[@field='colour']"/>
+                            </colour>
+                        </xsl:if>
+                        <xsl:if test="reference[@field='location_id']/@marker!=''">
+                            <marker>
+                                <xsl:value-of select="reference[@field='location_id']/@marker"/>
+                            </marker>
+                        </xsl:if>
+                        <xsl:if test="reference[@field='location_id']/@popup!=''">
+                            <popup>
+                                <xsl:value-of select="reference[@field='location_id']/@popup"/>
+                            </popup>
+                        </xsl:if>
+                        <xsl:if test="reference[@field='location_id']/@url!=''">
+                            <url>
+                                <xsl:value-of select="reference[@field='location_id']/@url"/>
+                            </url>
+                        </xsl:if>
+                    </properties>
+                </xsl:when>
                 <xsl:when test="$wkt!='null'">
+                    <!-- Convert WKT to GeoJSON in XSLT. Note that this can hit the libxslt default recursion limit
+                         http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                         This shouldn't be called any more but is left in as an example -->
                     <type>Feature</type>
                     <geometry>
                         <xsl:choose>
