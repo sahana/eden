@@ -268,7 +268,12 @@ class S3Config(Storage):
     def get_gis_geoserver_password(self):
         return self.gis.get("geoserver_password", "")
     def get_gis_spatialdb(self):
-        return self.gis.get("spatialdb", False)
+        db_type = self.get_database_type()
+        if db_type != "postgres":
+            # Only Postgres supported currently
+            return False
+        else:
+            return self.gis.get("spatialdb", False)
 
     # -------------------------------------------------------------------------
     # L10N Settings

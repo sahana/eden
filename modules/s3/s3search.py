@@ -1713,7 +1713,7 @@ class S3Search(S3CRUD):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower()
+        value = value.lower().strip()
 
         if _vars.field and _vars.filter and value:
             fieldname = str.lower(_vars.field)
@@ -2120,7 +2120,7 @@ class S3LocationSearch(S3Search):
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         if value:
-            value = value.lower()
+            value = value.lower().strip()
 
         query = None
         fields = []
@@ -2323,7 +2323,7 @@ class S3OrganisationSearch(S3Search):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower()
+        value = value.lower().strip()
 
         filter = _vars.filter
         limit = int(_vars.limit or 0)
@@ -2417,10 +2417,12 @@ class S3PersonSearch(S3Search):
                 # pr_person Autocomplete
                 if " " in value:
                     value1, value2 = value.split(" ", 1)
+                    value2 = value2.strip()
                     query = (field.lower().like(value1 + "%")) & \
                             (field2.lower().like(value2 + "%")) | \
                             (field3.lower().like(value2 + "%"))
                 else:
+                    value = value.strip()
                     query = ((field.lower().like(value + "%")) | \
                             (field2.lower().like(value + "%")) | \
                             (field3.lower().like(value + "%")))
@@ -2502,10 +2504,12 @@ class S3PentitySearch(S3Search):
                 # pr_person Autocomplete
                 if " " in value:
                     value1, value2 = value.split(" ", 1)
+                    value2 = value2.strip()
                     query = (field.lower().like(value1 + "%")) & \
                             (field2.lower().like(value2 + "%")) | \
                             (field3.lower().like(value2 + "%"))
                 else:
+                    value = value.strip()
                     query = ((field.lower().like(value + "%")) | \
                             (field2.lower().like(value + "%")) | \
                             (field3.lower().like(value + "%")))

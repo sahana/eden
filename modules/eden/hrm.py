@@ -154,7 +154,7 @@ class S3HRModel(S3Model):
                                             #                                                                     none_value = None),
                                             #                                    ),
                                             label = T("Human Resource"),
-                                            ondelete = "SET NULL")
+                                            ondelete = "RESTRICT")
 
         human_resource_search = S3Search(
             simple=(self.human_resource_search_simple_widget("simple")),
@@ -599,7 +599,7 @@ class S3HRJobModel(S3Model):
                                                     DIV(DIV(_class="tooltip",
                                                             _title="%s|%s" % (label_create,
                                                                               T("Add a new job role to the catalog."))))),
-                                      ondelete = "RESTRICT")
+                                      ondelete = "SET NULL")
 
         # =========================================================================
         # Positions
@@ -653,7 +653,7 @@ class S3HRJobModel(S3Model):
         #                                            DIV(DIV(_class="tooltip",
         #                                                    _title="%s|%s" % (label_create,
         #                                                                      T("Add a new job role to the catalog."))))),
-        #                              ondelete = "RESTRICT")
+        #                              ondelete = "SET NULL")
 
         # =========================================================================
         # Availability
@@ -924,7 +924,7 @@ class S3HRSkillModel(S3Model):
                         represent = lambda id: \
                             (id and [db.hrm_skill[id].name] or [T("None")])[0],
                         comment = skill_help,
-                        ondelete = "RESTRICT",
+                        ondelete = "SET NULL",
                         # Uncomment this to use an Autocomplete & not a Dropdown
                         # (NB FilterField widget needs fixing for that too)
                         #widget = S3AutocompleteWidget("hrm",
@@ -941,7 +941,7 @@ class S3HRSkillModel(S3Model):
                                                         multiple=True)),
                         represent = hrm_multi_skill_represent,
                         #comment = skill_help,
-                        ondelete = "RESTRICT",
+                        ondelete = "SET NULL",
                         widget = S3MultiSelectWidget()
                         )
 
@@ -1112,7 +1112,7 @@ class S3HRSkillModel(S3Model):
         #                                         DIV(DIV(_class="tooltip",
         #                                                 _title="%s|%s" % (label_create,
         #                                                                   T("Add a new skill provision to the catalog."))))),
-        #                           ondelete = "RESTRICT")
+        #                           ondelete = "SET NULL")
 
 
         # =====================================================================

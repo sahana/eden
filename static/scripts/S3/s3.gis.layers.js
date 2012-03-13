@@ -53,16 +53,10 @@ function addLayers() {
     } catch(err) {};
 
     /* Overlays */
-    // Feature Queries from Mapping API
-    if (S3.gis.layers_feature_queries) {
-        for (i = 0; i < S3.gis.layers_feature_queries.length; i++) {
-            addGeoJSONLayer(S3.gis.layers_feature_queries[i]);
-        }
-    }
-    // Feature Layers from Catalogue
-    if (S3.gis.layers_features) {
-        for (i = 0; i < S3.gis.layers_features.length; i++) {
-            addGeoJSONLayer(S3.gis.layers_features[i]);
+    // Theme
+    if (S3.gis.layers_theme) {
+        for (i = 0; i < S3.gis.layers_theme.length; i++) {
+            addGeoJSONLayer(S3.gis.layers_theme[i]);
         }
     }
     // GeoJSON
@@ -71,16 +65,20 @@ function addLayers() {
             addGeoJSONLayer(S3.gis.layers_geojson[i]);
         }
     }
-    // GeoRSS
-    if (S3.gis.layers_georss) {
-        for (i = 0; i < S3.gis.layers_georss.length; i++) {
-            addGeoJSONLayer(S3.gis.layers_georss[i]);
-        }
-    }
     // GPX
     if (S3.gis.layers_gpx) {
         for (i = 0; i < S3.gis.layers_gpx.length; i++) {
             addGPXLayer(S3.gis.layers_gpx[i]);
+        }
+    }
+    // CoordinateGrid
+    if (S3.gis.CoordinateGrid) {
+        addCoordinateGrid();
+    }
+    // GeoRSS
+    if (S3.gis.layers_georss) {
+        for (i = 0; i < S3.gis.layers_georss.length; i++) {
+            addGeoJSONLayer(S3.gis.layers_georss[i]);
         }
     }
     // KML
@@ -94,21 +92,23 @@ function addLayers() {
             addKMLLayer(S3.gis.layers_kml[i]);
         }
     }
-    // Theme
-    if (S3.gis.layers_theme) {
-        for (i = 0; i < S3.gis.layers_theme.length; i++) {
-            addGeoJSONLayer(S3.gis.layers_theme[i]);
-        }
-    }
     // WFS
     if (S3.gis.layers_wfs) {
         for (i = 0; i < S3.gis.layers_wfs.length; i++) {
             addWFSLayer(S3.gis.layers_wfs[i]);
         }
     }
-    // CoordinateGrid
-    if (S3.gis.CoordinateGrid) {
-        addCoordinateGrid();
+    // Feature Queries from Mapping API
+    if (S3.gis.layers_feature_queries) {
+        for (i = 0; i < S3.gis.layers_feature_queries.length; i++) {
+            addGeoJSONLayer(S3.gis.layers_feature_queries[i]);
+        }
+    }
+    // Feature Layers from Catalogue
+    if (S3.gis.layers_features) {
+        for (i = 0; i < S3.gis.layers_features.length; i++) {
+            addGeoJSONLayer(S3.gis.layers_features[i]);
+        }
     }
     // Draft Layers
     if (S3.gis.features || S3.gis.draw_feature || S3.gis.draw_polygon || navigator.geolocation) {
@@ -391,6 +391,10 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
+                    if ( color.indexOf('#') == -1) {
+                        // gis_layer_theme
+                        color = '#' + color;
+                    }
                 } else {
                     // default fillColor for Unclustered Point
                     var color = '#f5902e';
@@ -404,6 +408,10 @@ function addGeoJSONLayer(layer) {
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
+                    if ( color.indexOf('#') == -1) {
+                        // gis_layer_theme
+                        color = '#FFFFFF';
+                    }
                 } else {
                     // default strokeColor for Unclustered Point
                     var color = '#f5902e';
@@ -482,6 +490,8 @@ function addGeoJSONLayer(layer) {
     map.addLayer(geojsonLayer);
     // Ensure Highlight & Popup Controls act on this layer
     S3.gis.layers_all.push(geojsonLayer);
+    // Ensure marker layers are rendered over other layers
+    //map.setLayerIndex(geojsonLayer, 99);
 }
 
 // Google

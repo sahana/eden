@@ -455,7 +455,7 @@ class S3IRSModel(S3Model):
                                      represent = lambda id: \
                                         (id and [db.irs_ireport[id].name] or [NONE])[0],
                                      label = T("Incident"),
-                                     ondelete = "RESTRICT")
+                                     ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
         # Custom Methods

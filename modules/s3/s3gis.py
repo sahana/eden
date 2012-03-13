@@ -2962,15 +2962,16 @@ class GIS(object):
             vars.gis_feature_type = "1"
             if vars.lat is None or vars.lat == "":
                 form.errors["lat"] = messages.lat_empty
-                return
             elif vars.lon is None or vars.lon == "":
                 form.errors["lon"] = messages.lon_empty
-                return
             else:
                 vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
-                return
+
+        if current.deployment_settings.get_gis_spatialdb():
+            # Also populate the spatial field
+            vars.the_geom = vars.wkt
 
         return
 
@@ -3093,6 +3094,30 @@ class GIS(object):
                              lat_min=table.lat,
                              lon_max=table.lon,
                              lat_max=table.lat)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
+        """
+            Simplify a complex Polygon
+        """
+
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+
+        shape = wkt_loads(wkt)
+        simplified = shape.simplify(tolerance, preserve_topology)
+        if output == "wkt":
+            output = simplified.to_wkt()
+        elif output == "geojson":
+            from ..geojson import dumps
+            output = dumps(simplified)
+
+        return output
 
     # -------------------------------------------------------------------------
     def show_map( self,
@@ -3907,15 +3932,15 @@ S3.gis.layers_feature_queries[%i] = {
                 GoogleLayer,
                 TMSLayer,
                 WMSLayer,
-                FeatureLayer,
-                GeoJSONLayer,
-                GeoRSSLayer,
-                GPXLayer,
-                KMLLayer,
-                ThemeLayer,
-                WFSLayer,
                 JSLayer,
+                ThemeLayer,
+                GeoJSONLayer,
+                GPXLayer,
                 CoordinateLayer,
+                GeoRSSLayer,
+                KMLLayer,
+                WFSLayer,
+                FeatureLayer,
             ]
         else:
             # Add just the default Base Layer

@@ -1860,6 +1860,7 @@ class S3ProjectTaskModel(S3Model):
                   orderby="project_task.priority",
                   onvalidation=self.task_onvalidation,
                   create_onaccept=self.task_create_onaccept,
+                  create_next=URL(f="task", args=["[id]"]),
                   onaccept=self.task_onaccept,
                   search_method=task_search,
                   list_fields=["id",

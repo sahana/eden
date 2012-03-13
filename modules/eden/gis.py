@@ -104,6 +104,13 @@ class S3LocationModel(S3Model):
 
         hierarchy_level_keys = gis.hierarchy_level_keys
 
+        if current.deployment_settings.get_gis_spatialdb():
+            # Add a spatial field
+            # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
+            meta_spatial_fields = (meta_fields() + (Field("the_geom", "geometry:geometry()"),))
+        else:
+            meta_spatial_fields = meta_fields()
+
         tablename = "gis_location"
         table = define_table(tablename,
                              Field("name", length=128,
@@ -192,7 +199,7 @@ class S3LocationModel(S3Model):
                                     requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                              s3.comments(),
                              format=gis_location_represent,
-                             *meta_fields())
+                             *meta_spatial_fields)
 
         # Default the owning role to Authenticated. This can be used to allow the site
         # to control whether authenticated users get to create / update locations, or
@@ -997,7 +1004,7 @@ class S3GISConfigModel(S3Model):
                                                                           T("Defines the icon used for display of features on interactive map & KML exports."),
                                                                           T("A Marker assigned to an individual Location is set if there is a need to override the Marker assigned to the Feature Class."),
                                                                           T("If neither are defined, then the Default Marker is used.")))),
-                                    ondelete = "RESTRICT")
+                                    ondelete = "SET NULL")
 
         # Components
         # Layers
@@ -1125,7 +1132,7 @@ class S3GISConfigModel(S3Model):
                                         (id and [db(db.gis_symbology.id == id).select(db.gis_symbology.name,
                                                                                       limitby=(0, 1)).first().name] or [NONE])[0],
                                        label = T("Symbology"),
-                                       ondelete = "RESTRICT")
+                                       ondelete = "SET NULL")
 
         # Components
         # Layers
@@ -2965,7 +2972,7 @@ class S3GISThemeModel(S3Model):
                                                               "gis_layer_theme.id",
                                                               "%(name)s"),
                                          represent = self.theme_represent,
-                                         ondelete = "RESTRICT")
+                                         ondelete = "CASCADE")
 
         # =====================================================================
         # GIS Theme Data

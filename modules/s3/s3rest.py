@@ -4758,16 +4758,35 @@ class S3ResourceFilter:
                         # Badly-formed bbox - ignore
                         continue
                     else:
+                        bbox_filter = None
                         if tablename == "gis_feature_query" or \
                            tablename == "gis_cache":
                             gtable = table
                         else:
                             gtable = current.s3db.gis_location
-
-                        bbox_filter = (gtable.lon > float(minLon)) & \
-                                      (gtable.lon < float(maxLon)) & \
-                                      (gtable.lat > float(minLat)) & \
-                                      (gtable.lat < float(maxLat))
+                            if current.deployment_settings.get_gis_spatialdb():
+                                # Use the Spatial Database
+                                minLon = float(minLon)
+                                maxLon = float(maxLon)
+                                minLat = float(minLat)
+                                maxLat = float(maxLat)
+                                bbox = "POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))" % \
+                                            (minLon, minLat,
+                                             minLon, maxLat,
+                                             maxLon, maxLat,
+                                             maxLon, minLat,
+                                             minLon, minLat)
+                                try:
+                                    # Spatial DAL & Database
+                                    bbox_filter = gtable.the_geom.st_intersects(bbox)
+                                except:
+                                    # Old DAL or non-spatial database
+                                    pass
+                        if not bbox_filter:
+                            bbox_filter = (gtable.lon > float(minLon)) & \
+                                          (gtable.lon < float(maxLon)) & \
+                                          (gtable.lat > float(minLat)) & \
+                                          (gtable.lat < float(maxLat))
                         if fname is not None:
                             # Need a join
                             join = (gtable.id == table[fname])
@@ -4777,6 +4796,7 @@ class S3ResourceFilter:
                     if bbox_query is None:
                         bbox_query = bbox
                     else:
+                        # Merge with the previous BBOX
                         bbox_query = bbox_query & bbox
         return bbox_query
 
