@@ -918,12 +918,14 @@ class S3XML(S3Codec):
 
         postp = None
         if postprocess is not None:
-            try:
+            if isinstance(postprocess, dict):
                 postp = postprocess.get(str(table), None)
-            except:
+            else:
                 postp = postprocess
         if postp and callable(postp):
-            elem = postp(table, elem)
+            result = postp(table, record, elem)
+            if isinstance(result, etree._Element):
+                elem = result
 
         return elem
 

@@ -175,6 +175,7 @@ class S3RequestManager(object):
         self.messages = None
         self.import_prep = None
         self.log = None
+        self.onexport = None
 
         # JSON/CSV formats and content-type headers
         self.json_formats = []
@@ -3115,10 +3116,13 @@ class S3Resource(object):
         """
 
         manager = current.manager
+        model = manager.model
         xml = manager.xml
 
         tablename = self.tablename
         table = self.table
+
+        postprocess = model.get_config(tablename, "onexport", manager.onexport)
 
         default = (None, None)
 
@@ -3146,6 +3150,7 @@ class S3Resource(object):
         # Generate the element
         element = xml.resource(parent, table, record,
                                fields=dfields,
+                               postprocess=postprocess,
                                url=url)
         # Add the references
         xml.add_references(element, rmap,
