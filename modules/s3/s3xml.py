@@ -612,6 +612,7 @@ class S3XML(S3Codec):
     def gis_encode(self,
                    resource,
                    record,
+                   element,
                    rmap,
                    download_url="",
                    marker=None,
@@ -621,6 +622,7 @@ class S3XML(S3Codec):
 
             @param resource: the referencing resource
             @param record: the particular record
+            @param element: the XML element
             @param rmap: list of references to encode
             @param download_url: download URL of this instance
             @param marker: marker dict or filename
@@ -685,8 +687,8 @@ class S3XML(S3Codec):
             if LATFIELD not in fields or \
                LONFIELD not in fields:
                 continue
-            element = r.element
-            attr = element.attrib
+            relement = r.element
+            attr = relement.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
@@ -711,6 +713,7 @@ class S3XML(S3Codec):
                 if WKTFIELD in fields:
                     WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
                                                        limitby=(0, 1))
+
             if not LatLon and not WKT:
                 # Normal Location lookup
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
@@ -740,8 +743,20 @@ class S3XML(S3Codec):
                         # & also to work around the recursion limit in libxslt
                         # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
                         wkt = gis.simplify(wkt)
-
                     attr[ATTRIBUTE.wkt] = wkt
+                    # Instead of adding the wkt as attribute to the reference,
+                    # one could create a new element inside the parent which
+                    # carries the target format WKT data, e.g. GeoJSON (pseudocode):
+                    #
+                    #if current.auth.permission.format == "geojson":
+                    #   wkt_json = gis.convert_wkt_to_json(wkt)
+                    #   coordinates = etree.SubElement(element, "coordinates")
+                    #   coordinates.set("value", wkt_json)
+                    #
+                    # This additional <coordinates> element can then be picked up
+                    # by the respective stylesheet and put into the right place.
+                    # Since the value-attribute is already JSON, no further
+                    # conversion in the XSLT is necessary.
                 if popup_fields:
                     # Feature Layer
                     # Build the HTML for the onHover Tooltip
@@ -922,12 +937,14 @@ class S3XML(S3Codec):
 
         postp = None
         if postprocess is not None:
-            try:
+            if isinstance(postprocess, dict):
                 postp = postprocess.get(str(table), None)
-            except:
+            else:
                 postp = postprocess
         if postp and callable(postp):
-            elem = postp(table, elem)
+            result = postp(table, record, elem)
+            if isinstance(result, etree._Element):
+                elem = result
 
         return elem
 
@@ -1581,6 +1598,7 @@ class S3XML(S3Codec):
 
         if element.tag == TAG.list:
             obj = []
+            append = obj.append
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1589,10 +1607,11 @@ class S3XML(S3Codec):
                     tag = tag.rsplit("}", 1)[1]
                 child_obj = element2json(child, native=native)
                 if child_obj:
-                    obj.append(child_obj)
+                    append(child_obj)
             return obj
         else:
             obj = {}
+            findall = element.findall
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1613,33 +1632,43 @@ class S3XML(S3Codec):
                                          child.get(ATTRIBUTE.field))
                     elif tag == TAG.data:
                         tag = child.get(ATTRIBUTE.field)
-                child_obj = cls.__element2json(child, native=native)
+                child_obj = element2json(child, native=native)
                 if child_obj:
-                    if not tag in obj:
-                        if isinstance(child_obj, list) or not collapse:
-                            obj[tag] = [child_obj]
-                        else:
+                    single = len(findall(tag)) == 1
+                    if tag not in obj:
+                        if single and collapse:
                             obj[tag] = child_obj
+                        else:
+                            obj[tag] = [child_obj]
                     else:
                         if not isinstance(obj[tag], list):
                             obj[tag] = [obj[tag]]
                         obj[tag].append(child_obj)
 
             attributes = element.attrib
+            skip_text = False
+            tag = element.tag
             for a in attributes:
+                v = element.get(a)
                 if native:
-                    if a == ATTRIBUTE.name and \
-                       element.tag == TAG.resource:
+                    if a == ATTRIBUTE.name and tag == TAG.resource:
                         continue
-                    if a == ATTRIBUTE.resource and \
-                       element.tag == TAG.options:
+                    if a == ATTRIBUTE.resource and tag == TAG.options:
                         continue
-                    if a == ATTRIBUTE.field and \
-                       element.tag in (TAG.data, TAG.reference):
+                    if a == ATTRIBUTE.field and tag in (TAG.data, TAG.reference):
                         continue
-                obj[PREFIX.attribute + a] = element.get(a)
+                else:
+                    if a == ATTRIBUTE.value:
+                        try:
+                            obj[TAG.item] = json.loads(v)
+                        except:
+                            pass
+                        else:
+                            skip_text = True
+                        continue
+                obj[PREFIX.attribute + a] = v
 
-            if element.text:
+            if element.text and not skip_text:
                 obj[PREFIX.text] = cls.xml_decode(element.text)
 
             if len(obj) == 1 and obj.keys()[0] in \

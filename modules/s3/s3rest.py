@@ -3115,10 +3115,13 @@ class S3Resource(object):
         """
 
         manager = current.manager
+        model = manager.model
         xml = manager.xml
 
         tablename = self.tablename
         table = self.table
+
+        postprocess = model.get_config(tablename, "onexport", None)
 
         default = (None, None)
 
@@ -3146,6 +3149,7 @@ class S3Resource(object):
         # Generate the element
         element = xml.resource(parent, table, record,
                                fields=dfields,
+                               postprocess=postprocess,
                                url=url)
         # Add the references
         xml.add_references(element, rmap,
@@ -3153,7 +3157,7 @@ class S3Resource(object):
 
         # GIS-encode the element
         download_url = manager.s3.download_url
-        xml.gis_encode(self, record, rmap,
+        xml.gis_encode(self, record, element, rmap,
                        download_url=download_url,
                        marker=marker)
 
