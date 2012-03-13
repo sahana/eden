@@ -24,6 +24,7 @@ will make their respective data models available for management.
 """
 
 from django.contrib import admin
+from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.spaces.models import Space, Entity, Document, Event
@@ -81,6 +82,9 @@ class SpaceAdmin(admin.ModelAdmin):
             obj.author = request.user
         obj.save()
         request.user.profile.spaces.add(obj.id)
+        
+    def send_email(self, request, queryset):
+        user_emails = queryset.objects.values('email')
 
 class DocumentAdmin(admin.ModelAdmin):
 

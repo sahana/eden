@@ -168,6 +168,7 @@ ECIDADANIA_MODULES = (
     'e_cidadania.apps.spaces',
     'e_cidadania.apps.staticpages',
     'e_cidadania.apps.cal',
+    'e_cidadania.apps.massmail',
     #'debug_toolbar',
 )
 
