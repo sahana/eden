@@ -303,6 +303,8 @@ class S3MainMenu:
     def menu_climate(**attr):
         settings = current.deployment_settings
         module = settings.modules["climate"]
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
         menu_climate = MM(
             module.name_nice,
             c="climate",
@@ -311,6 +313,7 @@ class S3MainMenu:
             MM("Station Parameters", f="station_parameter"),
             #MM("Saved Queries", f="save_query"),
             MM("Purchase Data", f="purchase"),
+            MM("DataSet Prices", f="prices", restrict=[ADMIN]),
         )
         return menu_climate
 

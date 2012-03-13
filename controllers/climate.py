@@ -48,11 +48,23 @@ def index():
     else:
         print_tool = {}
 
-    map = gis.show_map(
-        lat = 28.5,
-        lon = 84.1,
-        zoom = 7,
-        toolbar = False,
+    if request.vars.get("zoom", None) is not None:
+        zoom = int(request.vars["zoom"])
+    else:
+        zoom = 7
+        
+    if request.vars.get("coords", None) is not None:
+        lon, lat = map(float, request.vars["coords"].split(","))
+    else:
+        lon = 84.1
+        lat = 28.5
+
+    gis_map = gis.show_map(
+        lon = lon,
+        lat = lat,
+        zoom = zoom,
+        toolbar = request.vars.get("display_mode", None) != "print",
+        googleEarth = True,
         wms_browser = wms_browser, # dict
         plugins = [
             _map_plugin(
@@ -64,7 +76,7 @@ def index():
     response.title = module_name
     return dict(
         module_name=module_name,
-        map=map
+        map=gis_map
     )
 
 def climate_overlay_data():
@@ -260,13 +272,11 @@ def places():
 
 # =============================================================================
 def sample_table_spec():
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def station_parameter():
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def purchase():
@@ -328,6 +338,27 @@ def purchase():
     output["addheader"] = T("Please enter the details of the data you wish to purchase")
     return output
 
+def prices():
+    prices_table = db.climate_prices
+    if not auth.is_logged_in():
+        redirect(
+            URL(
+                c = "default",
+                f = "user",
+                args = ["login"],
+                vars = {
+                    "_next": URL(
+                        c = "climate",
+                        f = "prices"
+                    )
+                }
+            )
+        )
+    else:
+        if s3_has_role(1):
+            return s3_rest_controller()
+    
+
 # =============================================================================
 def save_query():
     output = s3_rest_controller()
@@ -357,8 +388,7 @@ def request_image():
                     #application_name = request.application,
                     http_host = request.env.http_host, # includes port
                 ),
-                expression = vars["expression"],
-                filter = vars["filter"],
+                query_string = request.env.query_string,
                 width = int(vars["width"]),
                 height = int(vars["height"])
             ),
