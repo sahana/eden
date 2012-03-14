@@ -784,7 +784,7 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
 
         self.field = [field]
 
-        label = gis.get_location_hierarchy(level=level)
+        label = gis.get_location_hierarchy()[level]
 
         self.attr = Storage(attr)
         self.attr["label"] = label

@@ -242,6 +242,7 @@ class GIS(object):
         self.gps_symbols = GPS_SYMBOLS
         self.DEFAULT_SYMBOL = "White Dot"
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
+        self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
         self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
         # Info for countries. These will be filled in once the gis_location
@@ -1062,11 +1063,22 @@ class GIS(object):
             Returns the location hierarchy and it's labels
 
             @param: level - a specific level for which to lookup the label
+                            (this use is to be discouraged, especially for the early runs as the result won't be cached)
             @param: location - the location_id to lookup the location for
                                currently only the actual location is supported
                                @ToDo: Do a search of parents to allow this
                                       lookup for any location
         """
+
+        _levels = self.hierarchy_levels
+        _location = location
+
+        if not location and _levels:
+            # Use cached value
+            if level:
+                return _levels[level]
+            else:
+                return _levels
 
         T = current.T
         COUNTRY = str(T("Country"))
@@ -1111,7 +1123,6 @@ class GIS(object):
                 if key == "L0":
                     levels[key] = COUNTRY
                 else:
-                    # Only include rows with values
                     levels[key] = key
             return levels
 
@@ -1130,6 +1141,9 @@ class GIS(object):
                 elif key in row and row[key]:
                     # Only include rows with values
                     levels[key] = str(T(row[key]))
+            if not _location:
+                # Cache the value
+                self.hierarchy_levels = levels
             return levels
 
     # -------------------------------------------------------------------------
@@ -3927,9 +3941,10 @@ S3.gis.layers_feature_queries[%i] = {
         if catalogue_layers:
             # Add all Layers from the Catalogue
             layer_types = [
-                OSMLayer,
                 BingLayer,
+                EmptyLayer,
                 GoogleLayer,
+                OSMLayer,
                 TMSLayer,
                 WMSLayer,
                 JSLayer,
@@ -4393,6 +4408,32 @@ class CoordinateLayer(Layer):
                 visibility = "false"
             output = "S3.gis.CoordinateGrid={name:'%s',visibility:%s};" % \
                 (name_safe, visibility)
+            return output
+        else:
+            return None
+
+# -----------------------------------------------------------------------------
+class EmptyLayer(Layer):
+    """
+        Empty Layer from Catalogue
+        - there should only be one of these
+    """
+
+    tablename = "gis_layer_empty"
+
+    # -------------------------------------------------------------------------
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        sublayers = self.sublayers
+        if sublayers:
+            sublayer = sublayers[0]
+            name = str(current.T(sublayer.name))
+            name_safe = re.sub("'", "", name)
+            output = "S3.gis.EmptyLayer='%s';" % name_safe
             return output
         else:
             return None

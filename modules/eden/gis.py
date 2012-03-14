@@ -1756,6 +1756,7 @@ class S3LayerEntityModel(S3Model):
         layer_types = Storage(gis_layer_feature = T("Feature Layer"),
                               gis_layer_bing = T("Bing Layer"),
                               gis_layer_coordinate = T("Coordinate Layer"),
+                              gis_layer_empty = T("No Base Layer"),
                               gis_layer_openstreetmap = T("OpenStreetMap Layer"),
                               gis_layer_geojson = T("GeoJSON Layer"),
                               gis_layer_georss = T("GeoRSS Layer"),
@@ -2089,6 +2090,7 @@ class S3MapModel(S3Model):
              "gis_feature_query",
              "gis_layer_bing",
              "gis_layer_coordinate",
+             "gis_layer_empty",
              "gis_layer_geojson",
              "gis_layer_georss",
              "gis_layer_google",
@@ -2207,6 +2209,35 @@ class S3MapModel(S3Model):
         #
 
         tablename = "gis_layer_coordinate"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(),
+                             Field("description", label=T("Description")),
+                             gis_layer_folder()(),
+                             role_required(),       # Single Role
+                             #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                             *meta_fields())
+
+        configure(tablename,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_coordinate=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # ---------------------------------------------------------------------
+        # Empty
+        #
+
+        tablename = "gis_layer_empty"
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
@@ -3437,6 +3468,7 @@ def gis_rheader(r, tabs=[]):
 
     elif resourcename == "layer_openstreetmap" or \
          resourcename == "layer_bing" or \
+         resourcename == "layer_empty" or \
          resourcename == "layer_google" or \
          resourcename == "layer_tms" or \
          resourcename == "layer_wms" or \

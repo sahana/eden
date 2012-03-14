@@ -43,10 +43,14 @@ function addLayers() {
             addWMSLayer(S3.gis.layers_wms[i]);
         }
     }
-    // XYZ (generated server-side in s3gis.py)
-    //try {
-    //    addXYZLayers();
-    //} catch(err) {};
+    // Empty
+    if (S3.gis.EmptyLayer) {
+        var layer = new OpenLayers.Layer(S3.gis.EmptyLayer, {
+            isBaseLayer: true,
+            'displayInLayerSwitcher': true}
+        );
+        map.addLayer(layer);
+    }
     // JS (generated server-side in s3gis.py)
     try {
         addJSLayers();
