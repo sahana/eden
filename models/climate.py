@@ -115,7 +115,7 @@ if deployment_settings.has_module("climate"):
     )
 
     def station_represent(id):
-        row_id = db(climate_station_id.station_id == id).select(
+        row_id = db(climate_station_id.id == id).select(
             climate_station_id.station_id,
             limitby=(0,1)
         ).first()
@@ -204,10 +204,25 @@ if deployment_settings.has_module("climate"):
     )
     
     def sample_table_spec_represent(id):
-        table = db.climate_sample_table_spec
-        row = db(table.id == id).select(
-            table.name,
-            table.sample_type_code,
+        climate_sample_table_spec = db.climate_sample_table_spec
+        row = db(climate_sample_table_spec.id == id).select(
+            climate_sample_table_spec.name,
+            climate_sample_table_spec.sample_type_code,
+            limitby=(0, 1)
+        ).first()
+        if row:
+            return "%s %s" % (
+                ClimateDataPortal.sample_table_types_by_code[row.sample_type_code].__name__, 
+                row.name
+            )
+        else:
+            return NONE
+    
+    def parameter_id_represent(id):
+        climate_sample_table_spec = db.climate_sample_table_spec
+        row = db(climate_sample_table_spec.id == id.parameter_id).select(
+            climate_sample_table_spec.name,
+            climate_sample_table_spec.sample_type_code,
             limitby=(0, 1)
         ).first()
         if row:
@@ -230,14 +245,6 @@ if deployment_settings.has_module("climate"):
         ),
         represent = sample_table_spec_represent,
         label = "Parameter",
-#        script = SCRIPT(
-#"""
-#S3FilterFieldChange({
-#    'FilterField':    'sample_type_code',
-#    'Field':        'parameter_id',
-#    'FieldResource':'sample_table_spec',
-#    'FieldPrefix':    'climate',
-#});"""),
         ondelete = "RESTRICT"
     )
 
@@ -270,10 +277,9 @@ if deployment_settings.has_module("climate"):
     # =====================================================================
     # Station Parameters
     #
-    resourcename = "station_parameter"
-    tablename = "climate_station_parameter"
-    table = db.define_table(
-        tablename,
+    climate_station_parameter_table_name = "climate_station_parameter"
+    climate_station_parameter_table = db.define_table(
+        climate_station_parameter_table_name,
         station_id(),
         parameter_id(
             requires = IS_ONE_OF(
@@ -288,28 +294,42 @@ if deployment_settings.has_module("climate"):
     
     # Add virtual fields for range: from - to
                             
-                            
-
-    # CRUD strings
-    ADD_STATION_PARAMETER = T("Add Station Parameter")
-    LIST_STATION_PARAMETER = T("List Station Parameters")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_STATION_PARAMETER,
-        title_display = T("Station Parameter Details"),
-        title_list = LIST_STATION_PARAMETER,
-        title_update = T("Edit Station Parameter"),
-        title_search = T("Search Station Parameters"),
-        subtitle_create = ADD_STATION_PARAMETER,
-        subtitle_list = T("Station Parameters"),
-        label_list_button = LIST_STATION_PARAMETER,
-        label_create_button = ADD_STATION_PARAMETER,
-        label_delete_button = T("Remove Station Parameter"),
-        msg_record_created = T("Station Parameter Added"),
-        msg_record_modified = T("Station Parameter updated"),
-        msg_record_deleted = T("Station Parameter removed"),
-        msg_list_empty = T("No Station Parameters currently registered")
-    )
-    
+    def CRUD_strings(
+        table_name,
+        entity,
+        entities = None,
+        CREATE = None,
+        created = None,
+        LIST = None
+    ):
+        if entities is None:
+            entities = entity+"s"
+        if CREATE is None:
+            CREATE = T("Add new "+entity)
+        if created is None:
+            created = entity+" added"
+        if LIST is None:
+            LIST = T("List "+entities)
+        s3.crud_strings[table_name] = Storage(
+            title_create = CREATE,
+            title_display = T(entity+" Details"),
+            title_list = LIST,
+            title_update = T("Edit "+entity),
+            title_search = T("Search "+entities),
+            subtitle_create = CREATE,
+            subtitle_list = T(entities),
+            label_list_button = LIST,
+            label_create_button = CREATE,
+            label_delete_button = T("Remove "+entity),
+            msg_record_created = T(created),
+            msg_record_modified = T(entity+" updated"),
+            msg_record_deleted = T(entity+" removed"),
+            msg_list_empty = T("No "+entities))
+                           
+    CRUD_strings(
+        climate_station_parameter_table_name,
+        entity = "Station Parameter"
+    )    
 
     # Virtual Field for pack_quantity
     class station_parameters_virtualfields(dict, object):
@@ -350,10 +370,12 @@ if deployment_settings.has_module("climate"):
             else:
                 return NONE
     
-    table.virtualfields.append(station_parameters_virtualfields())
+    climate_station_parameter_table.virtualfields.append(
+        station_parameters_virtualfields()
+    )
     
     s3mgr.configure(
-        tablename,
+        climate_station_parameter_table_name,
         insertable = False,
         list_fields = [
             "station_id",
@@ -364,7 +386,7 @@ if deployment_settings.has_module("climate"):
     )
     
     # Load all stations and parameters
-    if not db(table.id > 0).count():
+    if not db(climate_station_parameter_table.id > 0).count():
         station_rows = db(
             climate_station_name.id > 0
         ).select(
@@ -375,7 +397,7 @@ if deployment_settings.has_module("climate"):
                 climate_sample_table_spec.sample_type_code == "O"
             ).select(climate_sample_table_spec.id)
             for parameter_row in parameter_rows:
-                table.insert(
+                climate_station_parameter_table.insert(
                     station_id = station_row.id,
                     parameter_id = parameter_row.id
                 )
@@ -384,18 +406,23 @@ if deployment_settings.has_module("climate"):
     # =====================================================================
     # Purchase Data
     #
-    nationality_opts = {1:"Nepali", 2:"Foreigner"}
+    nationality_opts = {
+        1:"Nepali Student",
+        2:"Others"
+    }
     
-    resourcename = "purchase"
-    tablename = "climate_purchase"
-    table = db.define_table(
-        tablename,
-        #user_id(),
-        #Field("sample_type_code",
-        #      "string",
-        #      requires = IS_IN_SET(sample_type_code_opts),
-        #      represent = lambda code: ClimateDataPortal.sample_table_types_by_code[code]
-        #),
+    climate_prices_table_name = "climate_prices"
+    climate_prices_table = db.define_table(
+        climate_prices_table_name,
+        Field(
+            "category",
+            "integer",
+            label = T("Category"),
+            requires = IS_IN_SET(nationality_opts),
+            represent = lambda id: nationality_opts.get(id, NONE),
+            notnull = True,
+            required = True
+        ),
         parameter_id(
             requires = IS_ONE_OF(
                 db,
@@ -405,6 +432,76 @@ if deployment_settings.has_module("climate"):
                 filter_opts = ["O"],
                 sort=True
             ),
+            notnull = True,
+            required = True,
+            represent = sample_table_spec_represent
+        ),
+        Field(
+            "nrs_per_datum",
+            "double",
+            label = T("NRs per datum"),
+            notnull = True,
+            required = True
+        )
+    )
+    
+    climate_first_run_sql.append(
+    #db.executesql(
+        "ALTER TABLE climate_prices"
+        "    ADD CONSTRAINT climate_price_unique"
+        "    UNIQUE (category, parameter_id);"
+    )
+
+    def climate_price_create_onvalidation(form):
+        if db(
+            (db.climate_prices.category == form.request_vars["category"]) &
+            (db.climate_prices.parameter_id == form.request_vars["parameter_id"])
+        ).select(
+            db.climate_prices.id
+        ).first() is not None:
+            form.errors["nrs_per_datum"] = [
+                "There is a conflicting price for the above category and parameter."
+            ]
+            return False
+        else:
+            return True
+ 
+    s3mgr.configure(
+        climate_prices_table_name,
+        create_onvalidation = climate_price_create_onvalidation,
+        list_fields=[
+            "category",
+            "parameter_id",
+            "nrs_per_datum"
+        ]
+    )
+   
+    CRUD_strings(
+        climate_prices_table_name,
+        entity = "Dataset Price"
+    )    
+        
+
+    climate_purchase_table_name = "climate_purchase"
+    climate_purchase_table = db.define_table(
+        climate_purchase_table_name,
+        #user_id(),
+        #Field("sample_type_code",
+        #      "string",
+        #      requires = IS_IN_SET(sample_type_code_opts),
+        #      represent = lambda code: ClimateDataPortal.sample_table_types_by_code[code]
+        #),        
+        Field(
+            "parameter_id", 
+            "integer", 
+            requires = IS_ONE_OF(
+                db,
+                "climate_prices.parameter_id",
+                parameter_id_represent,
+            ),
+            represent = sample_table_spec_represent,
+            label = "Parameter",
+            ondelete = "RESTRICT"
         ),
         station_id(),
         Field("date_from",
@@ -423,137 +520,158 @@ if deployment_settings.has_module("climate"):
         ),
         Field("nationality",
               "integer",
-              label = T("Nationality"),
+              label = T("Category"),
               requires = IS_IN_SET(nationality_opts),
               represent = lambda id: nationality_opts.get(id, NONE),
               required = True
         ),
-        Field("purpose",
-              "text"
+        Field(
+            "notes",
+            "text",
+            label = T("Receipt number / Student ID / other notes")
         ),
-        Field("price", 
-              "string",
+        Field(
+            "price", 
+            "string",
         ),
-        Field("paid",
-              "boolean",
-              represent = lambda paid: paid and "Yes" or "No",
+        Field(
+            "paid",
+            "boolean",
+            represent = lambda paid: paid and "Yes" or "No",
+        ),
+        Field(
+            "i_agree_to_the_terms_and_conditions",
+            "boolean",
+            required = True,
+            represent = lambda agrees: agrees and "Yes" or "No",
+            comment = DIV(
+                _class="stickytip",
+                _title="%s|%s" % (
+                    T("Important"),
+                    T(
+                        "Check this box when you have read, "
+                        "understand and agree to the "
+                        "<a href='terms' target='_blank'>"
+                            "terms and conditions"
+                        "</a>."
+                    )
+                )
+            )
         ),
         *s3_meta_fields()
     )
+    climate_purchase_table.owned_by_user.label = T("User")
     
     if not s3_has_role(ADMIN):
         db.climate_purchase.paid.writeable = False
     
-    # CRUD strings
-    ADD_CLIMATE_PURCHASE = T("Purchase New Data")
-    LIST_CLIMATE_PURCHASE = T("All Purchased Data")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_CLIMATE_PURCHASE,
-        title_display = T("Purchased Data Details"),
-        title_list = LIST_CLIMATE_PURCHASE,
-        title_update = T("Edit Purchased Data Details"),
-        title_search = T("Search Purchased Data"),
-        subtitle_create = ADD_CLIMATE_PURCHASE,
-        subtitle_list = T("Purchased Data"),
-        label_list_button = LIST_CLIMATE_PURCHASE,
-        label_create_button = ADD_CLIMATE_PURCHASE,
-        label_delete_button = T("Remove Purchased Data"),
-        msg_record_created = T("Data Purchase In Process"),
-        msg_record_modified = T("Data Purchase Processed"),
-        msg_record_deleted = T("Data Purchase removed"),
-        msg_list_empty = T("No Data Purchased"))
-    
+    CRUD_strings(
+        climate_purchase_table_name,
+        entity = "Purchased Data Detail",
+        CREATE = T("Purchase New Data"),
+        created = T("Data Purchase In Process"),
+        LIST = T("All Purchased Data")
+    )    
+
     def climate_purchase_onaccept(form):
         # Calculate Price
         id = form.vars.id
         
-        parameter_table = db(
-            db.climate_sample_table_spec.id == form.vars.parameter_id
+        purchase = db(
+            db.climate_purchase.id == id
         ).select(
-            db.climate_sample_table_spec.id,
-            db.climate_sample_table_spec.date_mapping
+            db.climate_purchase.paid
         ).first()
-        parameter_table_id = parameter_table.id
-        date_mapping_name = parameter_table.date_mapping
-        period = date_mapping_name
         
-        date_from = form.vars.date_from
-        date_to = form.vars.date_to
-        nationality = int(form.vars.nationality)
-        if nationality == 1:
-            period_dict = dict(
-                daily = 60,
-                monthly = 40
-                          # 3:15,
-                          # 4:5
-            )
-            currency = "NRs"
+        if (purchase and purchase.paid == True):
+            pass
         else:
-            period_dict = dict(
-                daily = 2,
-                monthly = 1.5
-            #               3:0.5,
-            #               4:0.25}
-            )
-            currency = "US$"
-        
-        date_mapping = getattr(ClimateDataPortal, date_mapping_name)
-        
-        start_date_number = date_mapping.date_to_time_period(date_from)
-        end_date_number = date_mapping.date_to_time_period(date_to)
-        
-        place_id = int(form.vars.station_id)
-        
-        duration = db.executesql(
-            "SELECT COUNT(*) "
-            "FROM climate_sample_table_%(parameter_table_id)i "
-            "WHERE time_period >= %(start_date_number)i "
-            "AND place_id = %(place_id)i "
-            "AND time_period <= %(end_date_number)i;" % locals()
-        )[0][0]
-        price = "%.2f" % (duration * period_dict[period] / (dict(daily=365.25, monthly=12)[period]))
-        db.climate_purchase[id] = {"price": "%s %s" % (price, currency)}
+            parameter_id = form.vars.parameter_id
+            parameter_table = db(
+                db.climate_sample_table_spec.id == parameter_id
+            ).select(
+                db.climate_sample_table_spec.id,
+                db.climate_sample_table_spec.date_mapping
+            ).first()
+            parameter_table_id = parameter_table.id
+            date_mapping_name = parameter_table.date_mapping
+            period = date_mapping_name
+            
+            date_from = form.vars.date_from
+            date_to = form.vars.date_to
+            nationality = int(form.vars.nationality)
+            price_row = db(
+                (db.climate_prices.category == nationality) &
+                (db.climate_prices.parameter_id == parameter_id)
+            ).select(
+                db.climate_prices.nrs_per_datum
+            ).first()
+
+            if price_row is None:
+                form.errors["price"] = ["There is no price set for this data"]
+            else:
+                price = price_row.nrs_per_datum
+                
+                currency = {
+                    1: "%.2f NRs",
+                    2: "US$ %.2f"
+                }[nationality]
+                
+                date_mapping = getattr(ClimateDataPortal, date_mapping_name)
+                
+                start_date_number = date_mapping.date_to_time_period(date_from)
+                end_date_number = date_mapping.date_to_time_period(date_to)
+                
+                place_id = int(form.vars.station_id)
+                
+                datum_count = db.executesql(
+                    "SELECT COUNT(*) "
+                    "FROM climate_sample_table_%(parameter_table_id)i "
+                    "WHERE place_id = %(place_id)i "
+                    "AND time_period >= %(start_date_number)i "
+                    "AND time_period <= %(end_date_number)i;" % locals()
+                )[0][0]
+                db.climate_purchase[id] = {"price": currency % (datum_count * price)}
 
     s3mgr.configure(
-        tablename,
+        climate_purchase_table_name,
         onaccept = climate_purchase_onaccept,
         create_next = aURL( args = ["[id]","read"]),
-        #listadd = listadd
+        list_fields=[
+            "owned_by_user",
+            "parameter_id",
+            "station_id",
+            "date_from",
+            "date_to",
+            "nationality",
+            #"purpose",
+            "price", 
+            "paid",
+            "i_agree_to_terms_and_conditions"
+        ]
     )
     
     # =====================================================================
     # Saved Queries
     #
-    resourcename = "save_query"
-    tablename = "climate_save_query"
-    table = db.define_table(
-        tablename,
+    climate_save_query_table_name = "climate_save_query"
+    climate_save_query_table = db.define_table(
+        climate_save_query_table_name,
         #user_id(),
         Field("description", "string"),
         Field("query_definition", "text"),
     )
 
-    # CRUD strings
-    ADD_SAVE_QUERY = T("Save Query")
-    LIST_SAVE_QUERY = T("Saved Queries")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_SAVE_QUERY,
-        title_display = T("Saved Query Details"),
-        title_list = LIST_SAVE_QUERY,
-        title_update = T("Edit Saved Query"),
-        title_search = T("Search Saved Queries"),
-        subtitle_create = ADD_SAVE_QUERY,
-        subtitle_list = T("Saved Queries"),
-        label_list_button = LIST_SAVE_QUERY,
-        label_create_button = ADD_SAVE_QUERY,
-        label_delete_button = T("Remove Saved Query"),
-        msg_record_created = T("Query Saved"),
-        msg_record_modified = T("Saved Query updated"),
-        msg_record_deleted = T("Saved Query removed"),
-        msg_list_empty = T("No Queries Saved"))
+    CRUD_strings(
+        climate_save_query_table_name,
+        entity = "Saved Query",
+        CREATE = T("Save Query"),
+        created = "Query Saved",
+        LIST = T("Saved Queries")
+    )
     
     s3mgr.configure(
-        tablename,
+        climate_save_query_table_name,
         listadd = False
     )
     

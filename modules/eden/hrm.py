@@ -867,7 +867,7 @@ class S3HRSkillModel(S3Model):
                                                                                 T("Add a new skill type to the catalog."))))),
                                         ondelete = "RESTRICT")
 
-        configure("hrm_skill_type",
+        configure(tablename,
                   deduplicate=self.hrm_skill_type_duplicate)
 
         # ---------------------------------------------------------------------
@@ -1258,6 +1258,7 @@ class S3HRSkillModel(S3Model):
                                 )
 
         configure("hrm_course",
+                  create_next=URL(f="course", args=["[id]", "course_certificate"]),
                   deduplicate=self.hrm_course_duplicate)
 
         # Components
@@ -1599,7 +1600,11 @@ class S3HRSkillModel(S3Model):
                                          ondelete = "RESTRICT")
 
         configure("hrm_certificate",
+                  create_next=URL(f="certificate", args=["[id]", "certificate_skill"]),
                   deduplicate=self.hrm_certificate_duplicate)
+
+        # Components
+        add_component("hrm_certificate_skill", hrm_certificate="certificate_id")
 
         # =====================================================================
         # Certifications
