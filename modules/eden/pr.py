@@ -2678,9 +2678,79 @@ def pr_update_affiliations(table, record):
             return
         pr_group_update_affiliations(record)
 
+    elif rtype == "org_organisation_branch":
+        ltable = s3db.org_organisation_branch
+        if not isinstance(record, Row):
+            record = db(ltable.id == record).select(ltable.ALL,
+                                                    limitby=(0, 1)).first()
+        if not record:
+            return
+        pr_organisation_update_affiliations(record)
+
     elif rtype == "org_site":
         pr_site_update_affiliations(record)
 
+    return
+
+# =============================================================================
+def pr_organisation_update_affiliations(record):
+
+    db = current.db
+    s3db = current.s3db
+
+    if record.deleted and record.deleted_fk:
+        try:
+            fk = json.loads(record.deleted_fk)
+            branch_id = fk["branch_id"]
+        except:
+            return
+    else:
+        branch_id = record.branch_id
+
+    BRANCHES = "Branches"
+
+    otable = s3db.org_organisation
+    btable = otable.with_alias("branch")
+    ltable = s3db.org_organisation_branch
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+    etable = s3db.pr_pentity
+
+    o = otable._tablename
+    b = btable._tablename
+    r = rtable._tablename
+
+    # Get current memberships
+    query = (ltable.branch_id == branch_id) & \
+            (ltable.deleted != True)
+    left = [otable.on(ltable.organisation_id == otable.id),
+            btable.on(ltable.branch_id == btable.id)]
+    rows = db(query).select(otable.pe_id, btable.pe_id, left=left)
+    current_memberships = [(row[o].pe_id, row[b].pe_id) for row in rows]
+
+    # Get current affiliations
+    query = (rtable.deleted != True) & \
+            (rtable.role == BRANCHES) & \
+            (rtable.pe_id == etable.pe_id) & \
+            (etable.instance_type == o) & \
+            (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == btable.pe_id) & \
+            (btable.id == branch_id)
+    rows = db(query).select(rtable.pe_id, btable.pe_id)
+    current_affiliations = [(row[r].pe_id, row[b].pe_id) for row in rows]
+
+    # Remove all affiliations which are not current memberships
+    for a in current_affiliations:
+        org, branch = a
+        if a not in current_memberships:
+            pr_remove_affiliation(org, branch, role=BRANCHES)
+        else:
+            current_memberships.remove(a)
+    # Add affiliations for all new memberships
+    for m in current_memberships:
+        org, branch = m
+        pr_add_affiliation(org, branch, role=BRANCHES, role_type=OU)
     return
 
 # =============================================================================
@@ -2713,9 +2783,9 @@ def pr_group_update_affiliations(record):
     atable = s3db.pr_affiliation
     etable = s3db.pr_pentity
 
-    g = str(gtable)
-    r = str(rtable)
-    p = str(ptable)
+    g = gtable._tablename
+    r = rtable._tablename
+    p = ptable._tablename
 
     # Get current memberships
     query = (mtable.person_id == person_id) & \
@@ -2821,11 +2891,11 @@ def pr_human_resource_update_affiliations(person_id):
     otable = s3db.org_organisation
     stable = s3db.org_site
 
-    h = str(htable)
-    s = str(stable)
-    o = str(otable)
-    r = str(rtable)
-    e = str(etable)
+    h = htable._tablename
+    s = stable._tablename
+    o = otable._tablename
+    r = rtable._tablename
+    e = etable._tablename
 
     # Get the PE-ID for this person
     pe_id = s3db.pr_get_pe_id("pr_person", person_id)
