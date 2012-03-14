@@ -258,7 +258,8 @@ class S3ProjectModel(S3Model):
                                    # DRR handles on the Organisations Tab
                                    readable=False if drr else True,
                                    writable=False if drr else True,
-                                   label = T("Budget")),
+                                   label = T("Budget"),
+                                   represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              sector_id(
                                        #readable=False,
                                        #writable=False,
@@ -1305,7 +1306,8 @@ class S3ProjectDRRModel(S3Model):
                                   beneficiary_type_id(empty=False),
                                   Field("number", "integer",
                                         label = T("Quantity"),
-                                        requires = IS_INT_IN_RANGE(0, 99999999)),
+                                        requires = IS_INT_IN_RANGE(0, 99999999),
+                                        represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                                   s3.comments(),
                                   *s3.meta_fields())
 
@@ -2032,7 +2034,8 @@ class S3ProjectTaskModel(S3Model):
                                    default = request.utcnow),
                              Field("hours", "double",
                                    label = "%s (%s)" % (T("Time"),
-                                                        T("hours"))),
+                                                        T("hours")),
+                                   represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3.comments(),
                              format="%(comments)s",
                              *s3.meta_fields())

@@ -64,53 +64,6 @@ SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
 
 
-
-def humanise_number(number):
-    """ Change the format of the number depending on the language
-
-        Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
-    """
-    
-    # We need to check that we actually get the separators
-    # otherwise we use the English defaults
-    DECIMAL_SEPARATOR = T("DECIMAL_SEPARATOR")
-    if DECIMAL_SEPARATOR == "DECIMAL_SEPARATOR":
-        DECIMAL_SEPARATOR = u"..."
-    
-    THOUSAND_SEPARATOR = T("THOUSAND_SEPARATOR")
-    if THOUSAND_SEPARATOR == "THOUSAND_SEPARATOR":
-        THOUSAND_SEPARATOR = u",,,"
-    
-    # the negative/positive sign for the number
-    if float(number) < 0:
-        sign = "-"
-    else:
-        sign = ""
-        
-    str_number = unicode(number)
-    
-    if str_number[0] == "-":
-        str_number = str_number[1:]
-    
-    if "." in str_number:
-        int_part, dec_part = str_number.split(".")
-    else:
-        int_part, dec_part = str_number, ""
-    
-    if dec_part:
-        dec_part = DECIMAL_SEPARATOR + dec_part
-    
-    # walk backwards over the integer part, inserting the separator as we go
-    int_part_gd = ""
-    for cnt, digit in enumerate(int_part[::-1]):
-        if cnt and not cnt % 3: # this "3" should be a variable but it's not needed yet
-            int_part_gd += THOUSAND_SEPARATOR
-        int_part_gd += digit
-    int_part = int_part_gd[::-1]
-    
-    return sign + int_part + dec_part
-
-
 # =============================================================================
 class S3InventoryModel(S3Model):
     """
@@ -169,11 +122,11 @@ class S3InventoryModel(S3Model):
                                         "double",
                                         label = T("Quantity"),
                                         notnull = True,
-                                        represent=humanise_number),
+                                        represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   Field("pack_value",
                                         "double",
                                         label = T("Value per Pack"),
-                                        represent=humanise_number),
+                                        represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
                                   currency_type("currency"),
                                   #Field("pack_quantity",
@@ -631,7 +584,8 @@ class S3IncomingModel(S3Model):
                                   item_pack_id(),
                                   Field("quantity", "double",
                                         label = T("Quantity"),
-                                        notnull = True),
+                                        notnull = True,
+                                        represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   s3.comments(),
                                   req_item_id(readable = False,
                                               writable = False),
@@ -932,7 +886,8 @@ class S3DistributionModel(S3Model):
                                   item_pack_id(),
                                   Field("quantity", "double",
                                         label = T("Quantity"),
-                                        notnull = True),
+                                        notnull = True,
+                                        represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   s3.comments(),
                                   Field("status",
                                         "integer",
@@ -1345,7 +1300,7 @@ class InvItemVirtualFields:
     def total_value(self):
         """ Year/Month of the start date of the training event """
         try:
-            return humanise_number(self.inv_inv_item.quantity * self.inv_inv_item.pack_value)
+            return IS_FLOAT_AMOUNT.represent((self.inv_inv_item.quantity * self.inv_inv_item.pack_value), precision=2)
         except:
             # not available
             return current.messages.NONE
