@@ -1863,6 +1863,7 @@ class S3Resource(object):
                  parent=None,
                  linked=None,
                  linktable=None,
+                 alias=None,
                  components=None,
                  include_deleted=False):
         """
@@ -1902,7 +1903,7 @@ class S3Resource(object):
         # Basic properties
         self.prefix = prefix
         self.name = name
-        self.alias = name
+        self.alias = alias or name
 
         # Tablename and table
         tablename = "%s_%s" % (prefix, name)
@@ -1913,6 +1914,16 @@ class S3Resource(object):
             raise KeyError(manager.error)
         self.tablename = tablename
         self.table = table
+
+        # Table alias (needed for self-joins)
+        self._alias = tablename
+        if parent is not None:
+            if parent.tablename == self.tablename:
+                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
+                pkey = table._id.name
+                self.table = table.with_alias(alias)
+                self.table._id = self.table[pkey]
+                self._alias = alias
 
         # Resource Filter
         self.rfilter = None
@@ -1961,6 +1972,7 @@ class S3Resource(object):
                 c = hooks[alias]
                 component = S3Resource(manager, c.prefix, c.name,
                                        parent=self,
+                                       alias=alias,
                                        linktable=c.linktable,
                                        include_deleted=self.include_deleted)
 
@@ -1982,7 +1994,6 @@ class S3Resource(object):
                     link = component.link
                     link.pkey = component.pkey
                     link.fkey = component.lkey
-                    link.alias = component.alias
                     link.actuate = component.actuate
                     link.autodelete = component.autodelete
                     link.multiple = component.multiple
@@ -3712,7 +3723,6 @@ class S3Resource(object):
 
         db = current.db
         table = self.table
-        tablename = self.tablename
 
         # Collect the extra fields
         flist = list(fields)
@@ -3791,7 +3801,7 @@ class S3Resource(object):
         s3db = current.s3db
         manager = current.manager
         xml = manager.xml
-        tablename = self.tablename
+        tablename = self._alias
 
         distinct = False
         original = selector
@@ -3809,15 +3819,15 @@ class S3Resource(object):
             tn = None
             fn = selector
 
-        if tn and tn != self.name:
+        if tn and tn != self.alias:
             # Build component join
             if tn in self.components:
                 c = self.components[tn]
-                ctn = c.tablename
                 distinct = c.link is not None
                 j = c.get_join()
-                left[ctn] = [c.table.on(j)]
-                tn = ctn
+                tn = c._alias
+                left[tn] = [c.table.on(j)] # @todo: this is wrong - not a valid left join
+                table = c.table
             else:
                 raise KeyError("%s is not a component of %s" % (tn, tablename))
         else:
@@ -3826,9 +3836,10 @@ class S3Resource(object):
                 original = "%s$%s" % (fn, tail)
             else:
                 original = fn
+            table = self.table
 
         # Load the table
-        table = s3db[tn]
+        #table = s3db[tn]
         if table is None:
             raise KeyError("undefined table %s" % tn)
         else:
@@ -4301,10 +4312,9 @@ class S3Resource(object):
             attributes.update(left=left_joins)
 
         # Joins
-        qstr = str(query)
         for join in joins.values():
             for j in join:
-                if str(j) not in qstr:
+                if str(j) not in str(query):
                     query &= j
 
         # Column names and headers
