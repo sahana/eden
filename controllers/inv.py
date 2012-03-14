@@ -732,6 +732,17 @@ def recv():
     auth.permission.permitted_facilities(table=table,
                                          error_msg=error_msg)
 
+    # The inv_recv record might be created when the shipment is send and so it
+    # might not have the recipient identified. If it is null then set it to
+    # the person who is logged in (the default)
+    if len(request.args) > 0:
+        try:
+            id = request.args[0]
+            if table[id].recipient_id == None:
+                db(table.id == id).update(recipient_id = auth.s3_logged_in_person())
+        except:
+            pass
+
     def prep(r):
         if r.interactive:
             if r.component:
@@ -751,7 +762,6 @@ def recv():
 
                 if r.method == "update" and record.status==2:
                     # Hide the values that will be copied from the inv_inv_item record
-#                    tracktable.send_stock_id.readable = False
                     tracktable.tracking_no.readable = True
                     tracktable.tracking_no.writable = False
                     tracktable.item_id.writable = False
@@ -788,9 +798,19 @@ def recv():
                 table.sender_id.writable = False
                 table.from_site_id.readable = False
                 table.from_site_id.writable = False
-        return True
+                if r.id:
+                    record = table[r.id]
+                    # If this is part of a shipment then lock down the type and site_id
+                    if record.sender_id != None:
+                        table.type.writable = False
+                        table.site_id.writable = False
+                    if record.status == 1:
+                        table.recipient_id.writable = False
+                        table.date.writable = False
 
+        return True
     response.s3.prep = prep
+
     if len(request.args) > 1 and request.args[1] == "track_item" and table[request.args[0]].status:
         # remove CRUD generated buttons in the tabs
         s3mgr.configure("inv_track_item",
@@ -809,12 +829,6 @@ def recv():
                                 )
     return output
 
-
-# -----------------------------------------------------------------------------
-def recv_item():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):
@@ -1311,6 +1325,133 @@ def send_commit():
     redirect(URL(c = "inv",
                  f = "send",
                  args = [send_id, "send_item"]))
+
+def adj():
+    """ RESTful CRUD controller """
+    s3mgr.load("inv_adj")
+    s3db = current.s3db
+    db = current.db
+    auth = current.auth
+    request = current.request
+    response = current.response
+    s3 = response.s3
+
+    tablename = "inv_adj"
+    table = s3db.inv_adj
+
+    # Limit site_id to sites the user has permissions for
+    error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
+    auth.permission.permitted_facilities(table=table,
+                                         error_msg=error_msg)
+
+    def prep(r):
+        if r.interactive:
+            if r.component:
+                if r.component_id:
+                    aitable = s3db.inv_adj_item
+                    if r.record.status == 0:
+                        aitable.reason.writable = True
+                    record = aitable[r.component_id]
+                    if record.inv_item_id:
+                        aitable.item_id.writable = False
+                        aitable.item_pack_id.writable = False
+                        aitable.item_id.writable = False
+            else:
+                # if an adjustment has been selected and it has been completed
+                # then make the fields read only
+                if r.record and r.record.status:
+                    table.adjuster_id.writable = False
+                    table.site_id.writable = False
+                    table.comments.writable = False
+        return True
+
+    response.s3.prep = prep
+
+    if len(request.args) > 1 and request.args[1] == "adj_item" and table[request.args[0]].status:
+        # remove CRUD generated buttons in the tabs
+        s3mgr.configure("inv_adj_item",
+                        create=False,
+                        listadd=False,
+                        editable=False,
+                        deletable=False,
+                       )
+
+    output = s3_rest_controller("inv",
+                                "adj",
+                                rheader=s3.inv_adj_rheader,
+                               )
+    return output
+
+def adj_close():
+    """ RESTful CRUD controller """
+    s3mgr.load("inv_adj")
+    s3db = current.s3db
+    db = current.db
+    auth = current.auth
+    request = current.request
+    response = current.response
+    s3 = response.s3
+    atable = s3db.inv_adj
+    aitable = s3db.inv_adj_item
+    stocktable = s3db.inv_inv_item
+    otable = s3db.org_office
+
+    # Limit site_id to sites the user has permissions for
+    error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
+    auth.permission.permitted_facilities(table=table,
+                                         error_msg=error_msg)
+
+    adj_id = request.args[0]
+    adj_rec = atable[adj_id]
+    if adj_rec.status != 0:
+        session.error = T("This adjustment has already been closed.")
+
+    if session.error:
+        redirect(URL(c = "inv",
+                     f = "adj",
+                     args = [adj_id]))
+
+    # Go through all the adj_items
+    query = ( aitable.adj_id == adj_id )
+    adj_items = db(query).select()
+    for adj_item in adj_items:
+        # if we don't have a stock item then create it
+        if adj_item.inv_item_id == None:
+            stock_id = stocktable.insert(site_id = adj_rec.site_id,
+                                         item_id = adj_item.item_id,
+                                         item_pack_id = adj_item.item_pack_id,
+                                         currency = adj_item.currency,
+                                         bin = adj_item.bin,
+                                         pack_value = adj_item.pack_value,
+                                         expiry_date = adj_item.expiry_date,
+                                         quantity = adj_item.new_quantity,
+                                        )
+            # and add the inventory item id to the adjustment record
+            db(aitable.id == adj_item.id).update(inv_item_id = stock_id)
+        # otherwise copy the details to the stock item
+        else:
+            db(stocktable.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
+                                                             bin = adj_item.bin,
+                                                             pack_value = adj_item.pack_value,
+                                                             expiry_date = adj_item.expiry_date,
+                                                             quantity = adj_item.new_quantity,
+                                                            )
+    # Change the status of the adj record to Complete
+    db(atable.id == adj_id).update(status=1)
+    # Go to the Inventory of the Site which has adjusted these items
+    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
+                                                          adj_rec.site_id)
+    query = (otable.id == id)
+    otype = db(query).select(otable.type, limitby = (0, 1)).first()
+    if otype and otype.type == 5:
+        url = URL(c = "inv",
+                 f = "warehouse",
+                 args = [id, "inv_item"])
+    else:
+        url = URL(c = "org",
+                 f = "office",
+                 args = [id, "inv_item"])
+    redirect(url)
 
 # =============================================================================
 def recv_item_json():

@@ -35,6 +35,7 @@ __all__ = ["S3InventoryModel",
            "inv_send_rheader",
            "inv_recv_rheader",
            "inv_ship_status",
+           "inv_adj_rheader",
           ]
 
 from gluon import *
@@ -510,6 +511,7 @@ class S3TrackingModel(S3Model):
                                         ),
                                   Field("eta", "date",
                                         label = T("Date Expected"),
+                                        writable = False,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         widget = S3DateWidget()
@@ -526,7 +528,6 @@ class S3TrackingModel(S3Model):
                                                   represent=org_site_represent),
                                   Field("date", "date",
                                         label = T("Date Received"),
-                                        writable = False,
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         represent = s3_date_represent,
                                         widget = S3DateWidget(),
@@ -1029,7 +1030,7 @@ $(document).ready(function() {
         db = current.db
         table = s3db.inv_inv_item
         oldTotal = 0
-        # only modify the original stock total is we have a quantity on the form
+        # only modify the original stock total if we have a quantity on the form
         # Their'll not be one if it is being received since by then it is read only
         if form.vars.quantity:
             if form.record:
@@ -1113,11 +1114,13 @@ $(document).ready(function() {
                                          site_id = recv_rec.site_id,
                                          adjustment_date = current.request.now.date(),
                                          category = 0,
+                                         status = 1,
                                          comments = recv_rec.comments,
                                         )
             # Now create the adi item record
             adjitemtable = s3db.inv_adj_item
             adj_item_id = adjitemtable.insert(reason = 0,
+                                              adj_id = adj_id,
                                               inv_item_id = record.send_stock_id, # original source inv_item
                                               item_id = record.item_id, # the supply item
                                               item_pack_id = record.item_pack_id,
@@ -1126,7 +1129,7 @@ $(document).ready(function() {
                                               currency = record.currency,
                                               pack_value = record.pack_value,
                                               expiry_date = record.expiry_date,
-                                              bin = record.bin,
+                                              bin = record.recv_bin,
                                               comments = record.comments,
                                               )
             # copy the adj_item_id to the tracking record
@@ -1878,16 +1881,7 @@ def inv_warehouse_rheader(r):
     if tablename == "org_organisation" or tablename == "org_office":
         rheader = s3.org_rheader(r)
     rfooter = TAG[""]()
-    if "id" in record:
-        as_btn = A( T("Adjust Stock"),
-                      _href = URL(c = "inv",
-                                  f = "adj",
-                                  args = [record.id, "create"]
-                                  ),
-                      _class = "action-btn"
-                      )
-        rfooter.append(as_btn)
-    else:
+    if "id" not in record:
         ns_btn = A( T("Receive New Stock"),
                       _href = URL(c = "inv",
                                   f = "recv",
@@ -2084,19 +2078,27 @@ def inv_recv_rheader(r):
                 if auth.s3_has_permission("update",
                                           "inv_recv",
                                           record_id=record.id):
-                    recv_btn = A( T("Receive Shipment"),
-                                  _href = URL(c = "inv",
-                                              f = "recv_process",
-                                              args = [record.id]
-                                              ),
-                                  _id = "recv_process",
-                                  _class = "action-btn"
-                                  )
-
-                    recv_btn_confirm = SCRIPT("S3ConfirmClick('#recv_process', '%s')"
-                                              % T("Do you want to receive this shipment?") )
-                    rfooter.append(recv_btn)
-                    rfooter.append(recv_btn_confirm)
+                    tracktable = current.s3db.inv_track_item
+                    query = (tracktable.recv_id == record.id) & \
+                            (tracktable.recv_quantity == None)
+                    row = current.db(query).select(tracktable.id,
+                                        limitby=(0, 1)).first()
+                    if row == None:
+                        recv_btn = A( T("Receive Shipment"),
+                                      _href = URL(c = "inv",
+                                                  f = "recv_process",
+                                                  args = [record.id]
+                                                  ),
+                                      _id = "recv_process",
+                                      _class = "action-btn"
+                                      )
+                        recv_btn_confirm = SCRIPT("S3ConfirmClick('#recv_process', '%s')"
+                                                  % T("Do you want to receive this shipment?") )
+                        rfooter.append(recv_btn)
+                        rfooter.append(recv_btn_confirm)
+                    else:
+                        msg = T("You need to check all item quantities and allocate to bins before you can receive the shipment")
+                        rfooter.append(SPAN(msg))
             else:
                 grn_btn = A( T("Goods Received Note"),
                               _href = URL(f = "recv",
@@ -2168,6 +2170,10 @@ class S3AdjustModel(S3Model):
 
         org_site_represent = self.org_site_represent
 
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
@@ -2177,6 +2183,9 @@ class S3AdjustModel(S3Model):
         adjust_type = {0 : T("Shipment"),
                        1 : T("Inventory"),
                       }
+        adjust_status = {0 : T("In Process"),
+                         1 : T("Complete"),
+                        }
         tablename = "inv_adj"
         table = self.define_table("inv_adj",
                                   person_id(name = "adjuster_id",
@@ -2195,9 +2204,18 @@ class S3AdjustModel(S3Model):
                                   Field("adjustment_date",
                                         "date",
                                         label = T("Date of adjustment"),
+                                        default = current.request.utcnow,
                                         writable = False,
                                         represent = s3_date_represent,
                                         widget = S3DateWidget()
+                                        ),
+                                  Field("status",
+                                        "integer",
+                                        requires = IS_NULL_OR(IS_IN_SET(adjust_status)),
+                                        represent = lambda opt: adjust_status.get(opt, UNKNOWN_OPT),
+                                        default = 0,
+                                        label = T("Status of adjustment"),
+                                        writable = False,
                                         ),
                                   Field("category",
                                         "integer",
@@ -2209,6 +2227,10 @@ class S3AdjustModel(S3Model):
                                         ),
                                   s3.comments(),
                                   *s3.meta_fields())
+        self.configure("inv_adj",
+                       onaccept = self.inv_adj_onaccept,
+                      )
+
         # Reusable Field
         adj_id = S3ReusableField( "adj_id",
                                   db.inv_adj,
@@ -2223,15 +2245,17 @@ class S3AdjustModel(S3Model):
                                   ondelete = "RESTRICT")
 
         adjust_reason = {0 : T("Unknown"),
-                         1 : T("Lost"),
-                         2 : T("Damaged"),
-                         3 : T("Expired"),
+                         1 : T("None"),
+                         2 : T("Lost"),
+                         3 : T("Damaged"),
+                         4 : T("Expired"),
+                         5 : T("Found"),
                         }
 
         # @todo add the optional adj_id
         tablename = "inv_adj_item"
         table = self.define_table("inv_adj_item",
-                                  adj_id(),
+                                  item_id(ondelete = "NO ACTION"),      # supply item
                                   Field("reason",
                                         "integer",
                                         required = True,
@@ -2239,17 +2263,20 @@ class S3AdjustModel(S3Model):
                                         default = 1,
                                         represent = lambda opt: adjust_reason[opt],
                                         writable = False),
-                                  inv_item_id(ondelete = "NO ACTION"),  # original inventory
-                                  item_id(ondelete = "NO ACTION"),      # supply item
+                                  inv_item_id(ondelete = "NO ACTION",
+                                        writable = False),  # original inventory
                                   item_pack_id(ondelete = "NO ACTION"), # pack table
                                   Field("old_quantity",
                                         "double",
                                         label = T("Original Quantity"),
-                                        notnull = True),
+                                        default = 0,
+                                        notnull = True,
+                                        writable = False),
                                   Field("new_quantity",
                                         "double",
                                         label = T("Revised Quantity"),
-                                        notnull = True),
+                                        represent = self.qnty_adj_repr,
+                                        ),
                                   currency_type("currency"),
                                   Field("pack_value",
                                         "double",
@@ -2264,6 +2291,7 @@ class S3AdjustModel(S3Model):
                                         "string",
                                         length = 16,
                                         ),
+                                  adj_id(),
                                   s3.comments(),
                                   *s3.meta_fields()
                                   )
@@ -2280,10 +2308,59 @@ class S3AdjustModel(S3Model):
                                        label = T("Inventory Adjustment Item"),
                                        ondelete = "RESTRICT")
 
+        # Component
+        self.add_component("inv_adj_item",
+                           inv_adj="adj_id")
+
         return Storage(
                     adj_item_id = adj_item_id,
                     adj_id = adj_id,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def qnty_adj_repr(value):
+        if value:
+            return value
+        else:
+            return B(value)
+
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_adj_onaccept(form):
+        """
+           When an adjustment record is created and it is of type inventory
+           then an adj_item record for each inv_inv_item in the site will be 
+           created. If needed, extra adj_item records can be created later.
+        """
+        s3db = current.s3db
+        db = current.db
+        stocktable = s3db.inv_inv_item
+        adjitemtable = s3db.inv_adj_item
+        adjtable = s3db.inv_adj
+        adj_rec = adjtable[form.vars.id]
+        if adj_rec.category == 1:
+            site_id = form.vars.site_id
+            # Only get stock items with a positive quantity
+            query = (stocktable.site_id == site_id) & \
+                    (stocktable.quantity > 0)
+            inv_item_row = db(query).select()
+            for inv_item in inv_item_row:
+                # add an adjustment item record
+                adjitemtable.insert(reason = 0,
+                                    adj_id = form.vars.id,
+                                    inv_item_id = inv_item.id, # original source inv_item
+                                    item_id = inv_item.item_id, # the supply item
+                                    item_pack_id = inv_item.item_pack_id,
+                                    old_quantity = inv_item.quantity,
+                                    currency = inv_item.currency,
+                                    pack_value = inv_item.pack_value,
+                                    expiry_date = inv_item.expiry_date,
+                                    bin = inv_item.bin,
+                                   )
+
+
     # ---------------------------------------------------------------------
     @staticmethod
     def inv_adj_represent(id):
@@ -2296,12 +2373,12 @@ class S3AdjustModel(S3Model):
             s3db = current.s3db
 
             table = s3db.inv_adj
-            send_row = db(table.id == id).select(table.date,
+            send_row = db(table.id == id).select(table.adjustment_date,
                                                  table.adjuster_id,
                                                  limitby=(0, 1)).first()
             return SPAN(table.adjuster_id.represent(send_row.adjuster_id),
                         " - ",
-                        table.date.represent(send_row.date)
+                        table.adjustment_date.represent(send_row.adjustment_date)
                         )
         else:
             return current.messages.NONE
@@ -2332,6 +2409,71 @@ class S3AdjustModel(S3Model):
                         )
         else:
             return current.messages.NONE
+
+def inv_adj_rheader(r):
+    """ Resource Header for Inventory Adjustments """
+
+    if r.representation == "html" and r.name == "adj":
+        record = r.record
+        if record:
+
+            s3db = current.s3db
+            auth = current.auth
+            s3 = current.response.s3
+
+            tabs = [(T("Edit Details"), None),
+                    (T("Items"), "adj_item"),
+                ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+            rheader = DIV( TABLE(
+                               TR( TH("%s: " % table.adjuster_id.label),
+                                   table.adjuster_id.represent(record.adjuster_id),
+                                   TH("%s: " % table.adjustment_date.label),
+                                   table.adjustment_date.represent(record.adjustment_date),
+                                  ),
+                               TR( TH("%s: " % table.site_id.label),
+                                   table.site_id.represent(record.site_id),
+                                   TH("%s: " % table.category.label),
+                                   table.category.represent(record.category),
+                                  ),
+                                 ),
+                            rheader_tabs
+                            )
+
+            rfooter = TAG[""]()
+            if record.status == 0: # In process
+                if auth.s3_has_permission("update",
+                                          "inv_adj",
+                                          record_id=record.id):
+                    aitable = current.s3db.inv_adj_item
+                    query = (aitable.adj_id == record.id) & \
+                            (aitable.new_quantity == None)
+                    row = current.db(query).select(aitable.id,
+                                        limitby=(0, 1)).first()
+                    if row == None:
+                        close_btn = A( T("Close Adjustment"),
+                                      _href = URL(c = "inv",
+                                                  f = "adj_close",
+                                                  args = [record.id]
+                                                  ),
+                                      _id = "adj_close",
+                                      _class = "action-btn"
+                                      )
+                        close_btn_confirm = SCRIPT("S3ConfirmClick('#adj_close', '%s')"
+                                                  % T("Do you want to close this adjustment?") )
+                        rfooter.append(close_btn)
+                        rfooter.append(close_btn_confirm)
+                    else:
+                        msg = T("You need to check all the revised quantities before you can close this adjustment")
+                        rfooter.append(SPAN(msg))
+            s3.rfooter = rfooter
+            return rheader
+    return None
+
+
 # =============================================================================
 class InvItemVirtualFields:
     """ Virtual fields as dimension classes for reports """
