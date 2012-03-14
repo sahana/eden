@@ -1329,11 +1329,11 @@ class S3HRSkillModel(S3Model):
         training_event_id = S3ReusableField("training_event_id", db.hrm_training_event,
                                             sortby = "start_date",
                                             label = T("Training Event"),
-                                            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                            "hrm_training_event.id",
-                                                                            hrm_training_event_represent,
-                                                                            orderby="~hrm_training_event.start_date",
-                                                                            )),
+                                            requires = IS_ONE_OF(db,
+                                                                 "hrm_training_event.id",
+                                                                 hrm_training_event_represent,
+                                                                 orderby="~hrm_training_event.start_date",
+                                                                ),
                                             represent = hrm_training_event_represent,
                                             comment = course_help,
                                             ondelete = "RESTRICT",
@@ -1408,13 +1408,14 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_training"
         table = define_table(tablename,
-                             person_id( #@ToDo: Create a way to add new people to training as staff/volunteers
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Participant"),
-                                                                        T("Start typing the Participant's name.")
-                                                                        )
-                                                      )
-                                            ),
+                             #@ToDo: Create a way to add new people to training as staff/volunteers
+                             person_id(empty=False, 
+                                       comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (T("Participant"),
+                                                            T("Start typing the Participant's name.")
+                                                            )
+                                          )
+                                ),
                              training_event_id(),
                              # This field can only be filled-out by specific roles
                              # Once this has been filled-out then the other fields are locked
