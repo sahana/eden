@@ -1610,6 +1610,7 @@ class S3XML(S3Codec):
         else:
             obj = {}
             findall = element.findall
+            xpath = element.xpath
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1617,22 +1618,28 @@ class S3XML(S3Codec):
                 if tag[0] == "{":
                     tag = tag.rsplit("}", 1)[1]
                 collapse = True
+                single = False
                 if native:
+                    is_single = lambda t, a, v: len(xpath("%s[@%s='%s']" % (t, a, v))) == 1
                     if tag == TAG.resource:
                         resource = child.get(ATTRIBUTE.name)
                         tag = "%s_%s" % (PREFIX.resource, resource)
                         collapse = False
                     elif tag == TAG.options:
-                        resource = child.get(ATTRIBUTE.resource)
-                        tag = "%s_%s" % (PREFIX.options, resource)
+                        r = child.get(ATTRIBUTE.resource)
+                        tag = "%s_%s" % (PREFIX.options, r)
+                        single = is_single(TAG.options, ATTRIBUTE.resource, r)
                     elif tag == TAG.reference:
-                        tag = "%s_%s" % (PREFIX.reference,
-                                         child.get(ATTRIBUTE.field))
+                        f = child.get(ATTRIBUTE.field)
+                        tag = "%s_%s" % (PREFIX.reference, f)
+                        single = is_single(TAG.reference, ATTRIBUTE.field, f)
                     elif tag == TAG.data:
                         tag = child.get(ATTRIBUTE.field)
+                        single = is_single(TAG.data, ATTRIBUTE.field, tag)
+                else:
+                    single = len(findall(tag)) == 1
                 child_obj = element2json(child, native=native)
                 if child_obj:
-                    single = len(findall(tag)) == 1
                     if tag not in obj:
                         if single and collapse:
                             obj[tag] = child_obj

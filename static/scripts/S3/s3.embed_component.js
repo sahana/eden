@@ -83,7 +83,13 @@ $(function() {
                             $(field_id).val(id);
                         } else
                         if (data.hasOwnProperty('@value')) {
-                            $(field_id).val(data['@value']);
+                            try {
+                                val = JSON.parse(data['@value']);
+                            }
+                            catch(e) {
+                                val = data['@value'];
+                            }
+                            $(field_id).val(val);
                         }
                         else {
                             $(field_id).val(data);

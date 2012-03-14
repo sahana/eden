@@ -424,6 +424,17 @@ class S3OrganisationModel(S3Model):
         add_component("doc_document", org_organisation="organisation_id")
         add_component("doc_image", org_organisation="organisation_id")
 
+        # Branches
+        add_component("org_organisation",
+                      org_organisation=Storage(
+                                    name="branch",
+                                    link="org_organisation_branch",
+                                    joinby="organisation_id",
+                                    key="branch_id",
+                                    actuate="embed",
+                                    autocomplete="name",
+                                    autodelete=False))
+
         # Assets
         # @ToDo
         #add_component("asset_asset",
@@ -465,6 +476,19 @@ class S3OrganisationModel(S3Model):
                                                      _title="%s|%s" % (ADD_DONOR,
                                                                        ADD_DONOR_HELP))),
                                    ondelete = "SET NULL")
+
+        # ---------------------------------------------------------------------
+        # Organisation Branches
+        #
+        tablename = "org_organisation_branch"
+        table = define_table(tablename,
+                             organisation_id(),
+                             organisation_id("branch_id"),
+                             *meta_fields())
+
+        configure(tablename,
+                  onaccept=self.org_branch_onaccept,
+                  ondelete=self.org_branch_onaccept)
 
         # ---------------------------------------------------------------------
         # Organisation <-> User
@@ -660,6 +684,13 @@ class S3OrganisationModel(S3Model):
             donor = db(query).select(table.name,
                                      limitby=(0, 1)).first()
             return donor and donor.name or NONE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_branch_onaccept(form):
+
+        print "org_branch_onaccept"
+        return
 
 # =============================================================================
 class S3SiteModel(S3Model):

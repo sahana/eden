@@ -838,7 +838,7 @@ class S3CRUD(S3Method):
                     vars.update(iSortingCols="1",
                                 iSortCol_0=scol,
                                 sSortDir_0="asc")
-                    orderby = self.ssp_orderby(table, list_fields, left=left)
+                    orderby = self.ssp_orderby(resource, list_fields, left=left)
                     del vars["iSortingCols"]
                     del vars["iSortCol_0"]
                     del vars["sSortDir_0"]
@@ -965,7 +965,7 @@ class S3CRUD(S3Method):
 
             # SSPag sorting
             if vars.iSortingCols:
-                orderby = self.ssp_orderby(table, list_fields, left=left)
+                orderby = self.ssp_orderby(resource, list_fields, left=left)
             if r.method == "search" and not orderby:
                 orderby = fields[0]
             if orderby is None:
@@ -2003,7 +2003,7 @@ class S3CRUD(S3Method):
         return searchq
 
     # -------------------------------------------------------------------------
-    def ssp_orderby(self, table, fields, left=[]):
+    def ssp_orderby(self, resource, fields, left=[]):
         """
             Convert the SSPag GET vars into a sorting query
 
@@ -2014,8 +2014,13 @@ class S3CRUD(S3Method):
         """
 
         vars = self.request.get_vars
-        resource = self.resource
+        table = resource.table
         tablename = table._tablename
+
+        if resource.linked is not None:
+            skip = [resource.linked.tablename]
+        else:
+            skip = []
 
         iSortingCols = int(vars["iSortingCols"])
 
@@ -2036,21 +2041,22 @@ class S3CRUD(S3Method):
             if fieldtype.startswith("reference") and \
                hasattr(c, "sortby") and c.sortby:
                 tn = fieldtype[10:]
-                try:
-                    join = [j for j in left if j.first._tablename == tn]
-                except:
-                    # Old DAL version?
-                    join = [j for j in left if j.table._tablename == tn]
-                if not join:
-                    left.append(current.db[tn].on(c == current.db[tn].id))
-                else:
+                if tn not in skip:
                     try:
-                        join[0].query = (join[0].second) | \
-                                        (c == current.db[tn].id)
+                        join = [j for j in left if j.first._tablename == tn]
                     except:
                         # Old DAL version?
-                        join[0].query = (join[0].query) | \
-                                        (c == current.db[tn].id)
+                        join = [j for j in left if j.table._tablename == tn]
+                    if not join:
+                        left.append(current.db[tn].on(c == current.db[tn].id))
+                    else:
+                        try:
+                            join[0].query = (join[0].second) | \
+                                            (c == current.db[tn].id)
+                        except:
+                            # Old DAL version?
+                            join[0].query = (join[0].query) | \
+                                            (c == current.db[tn].id)
                 if not isinstance(c.sortby, (list, tuple)):
                     orderby.append("%s.%s%s" % (tn, c.sortby, direction(i)))
                 else:
