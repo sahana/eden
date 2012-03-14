@@ -486,6 +486,26 @@ class S3OrganisationModel(S3Model):
                              organisation_id("branch_id"),
                              *meta_fields())
 
+        # CRUD strings
+        ADD_BRANCH = T("Add Branch Organization")
+        LIST_BRANCHES = T("List Branch Organizations")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_BRANCH,
+            title_display = T("Branch Organization Details"),
+            title_list = LIST_BRANCHES,
+            title_update = T("Edit Branch Organization"),
+            title_search = T("Search Branch Organizations"),
+            title_upload = T("Import Branch Organizations"),
+            subtitle_create = T("Add New Branch Organization"),
+            subtitle_list = T("Branch Organizations"),
+            label_list_button = LIST_BRANCHES,
+            label_create_button = T("Add New Branch"),
+            label_delete_button = T("Delete Branch"),
+            msg_record_created = T("Branch Organization added"),
+            msg_record_modified = T("Branch Organization updated"),
+            msg_record_deleted = T("Branch Organization deleted"),
+            msg_list_empty = T("No Branch Organizations currently registered"))
+
         configure(tablename,
                   onaccept=self.org_branch_onaccept,
                   ondelete=self.org_branch_onaccept)
@@ -688,8 +708,41 @@ class S3OrganisationModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def org_branch_onaccept(form):
+        """
+            Remove any duplicate memberships and update affiliations
+        """
 
-        print "org_branch_onaccept"
+        db = current.db
+        s3db = current.s3db
+
+        ltable = s3db.org_organisation_branch
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+        if _id:
+            record = db(ltable.id == _id).select(limitby=(0, 1)).first()
+        else:
+            return
+        if record:
+            branch_id = record.branch_id
+            organisation_id = record.organisation_id
+            if branch_id and organisation_id and not record.deleted:
+                import gluon.contrib.simplejson as json
+                query = (ltable.branch_id == branch_id) & \
+                        (ltable.organisation_id == organisation_id) & \
+                        (ltable.id != record.id) & \
+                        (ltable.deleted != True)
+                deleted_fk = {"branch_id": branch_id,
+                              "organisation_id": organisation_id}
+                db(query).update(deleted = True,
+                                 branch_id = None,
+                                 organisation_id = None,
+                                 deleted_fk = json.dumps(deleted_fk))
+            s3db.pr_update_affiliations(ltable, record)
         return
 
 # =============================================================================
@@ -1335,6 +1388,7 @@ def org_rheader(r, tabs=[]):
                     (T("Offices"), "office"),
                     (T("Projects"), "project"),
                     #(T("Tasks"), "task"),
+                    (T("Branches"), "branch"),
                    ]
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
