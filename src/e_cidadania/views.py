@@ -28,6 +28,7 @@ from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.list import ListView
 from django.contrib import messages
+from django.core.mail import EmailMessage
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -174,3 +175,23 @@ class ListNews(ListView):
 
         return news
 
+def invite(request):
+
+    """
+    Simple view to send invitations to friends via mail. Making the invitation
+    system as a view, guarantees that no invitation will be monitored or saved
+    to the hard disk.
+    """
+    if request.method == "POST":
+        mail_addr = request.POST['email_addr']
+        raw_addr_list = mail_addr.split(',')
+        addr_list = [x.strip() for x in raw_addr_list]
+        print addr_list
+        mail_msg = request.POST['mail_msg']
+        email = EmailMessage('Invitation to join e-cidadania', mail_msg, 
+                'noreply@ecidadania.org', [], addr_list)
+        email.send(fail_silently=False)
+        return render_to_response('invite_done.html', context_instance=RequestContext(request))
+        
+    return render_to_response('invite.html', context_instance=RequestContext(request))
+    

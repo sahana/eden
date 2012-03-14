@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% comment %}
+READ THIS: There is a reason why I made this instead of creating a proper
+application with txt files and that's efficiency.
+{% endcomment %}
+
+{% block title %}{% trans "Invite your friends to e-cidadania" %}{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="span12">
+            <h2>{% trans "Invite your friends"%}</h2>
+
+            <form action="/invite/" method="post">{% csrf_token %}
+                <label><h4>{% trans "Invite via E-mail" %}</h4></label>
+                <input name="email_addr" id="email_addr" type="text" class="span3" placeholder="{% trans 'Write the e-mail adresses here' %}">
+                <p class="help-block">{% trans "If you want to invite more than one person, you will have to write their adresses separated by commas. Example: this@that.com, foo@bar.net, black@white.org" %}</p><br />
+                <textarea name="mail_msg" id="mail_msg" rows="10" style="width:500px;">{% trans "Hi!, I would like you to join e-cidadania, the participative democracy platform for citizens."%}</textarea>
+                <p class="help-block">{% trans "You can write here whatever text you want for your invitation, or leave it by default." %}</p>
+                <button type="submit" class="btn btn-large">{% trans "Submit" %}</button>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

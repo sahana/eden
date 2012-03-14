@@ -50,7 +50,10 @@ urlpatterns = patterns('',
 
     # Spaces
     (r'^spaces/', include('e_cidadania.apps.spaces.urls')),
-
+    
+    # Invitations
+    (r'^invite/', 'e_cidadania.views.invite', name='invite'),
+    
     # News (this view of news is only for the index)
     url(r'^news/$', ListNews.as_view(), name='list-site-news'),
     

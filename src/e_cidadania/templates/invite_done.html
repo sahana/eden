@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Invite your friends to e-cidadania" %}{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="span12">
+            <h2>{% trans "Invite your friends"%}</h2>
+            <p>{% trans "The email(s) have been sent" %}</p>
+            <a href="{% url 'site-index' %}" class="btn">{% trans "Go to index" %}</a>
+        </div>
+    </div>
+
+{% endblock %}
