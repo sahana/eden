@@ -612,6 +612,7 @@ class S3XML(S3Codec):
     def gis_encode(self,
                    resource,
                    record,
+                   element,
                    rmap,
                    download_url="",
                    marker=None,
@@ -621,6 +622,7 @@ class S3XML(S3Codec):
 
             @param resource: the referencing resource
             @param record: the particular record
+            @param element: the XML element
             @param rmap: list of references to encode
             @param download_url: download URL of this instance
             @param marker: marker dict or filename
@@ -685,8 +687,8 @@ class S3XML(S3Codec):
             if LATFIELD not in fields or \
                LONFIELD not in fields:
                 continue
-            element = r.element
-            attr = element.attrib
+            relement = r.element
+            attr = relement.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
@@ -709,35 +711,50 @@ class S3XML(S3Codec):
             elif "polygons" in current.request.get_vars:
                 # Display Polygons not Points
                 if WKTFIELD in fields:
+                    #if current.deployment_settings.get_gis_spatialdb():
+                    #   Do the Simplify & GeoJSON direct from the DB
+                    #else:
                     WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
                                                        limitby=(0, 1))
-                
-            
+                    if WKT:
+                        WKT = WKT.first()
+                        wkt = WKT[WKTFIELD]
+                        if wkt is None:
+                            continue
+                        if current.auth.permission.format == "geojson":
+                            # Simplify the polygon to reduce download size
+                            geojson = gis.simplify(wkt, output="geojson")
+                            # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                            geometry = etree.SubElement(element, "geometry")
+                            geometry.set("value", geojson)
+                        else:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(wkt)
+                            # Convert the WKT in XSLT
+                            attr[ATTRIBUTE.wkt] = wkt
+
             if not LatLon and not WKT:
                 # Normal Location lookup
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
                                                       limitby=(0, 1))
+            if LatLon:
+                LatLon = LatLon.first()
+                lat = LatLon[LATFIELD]
+                lon = LatLon[LONFIELD]
+                if lat is None or lon is None:
+                    continue
+                attr[ATTRIBUTE.lat] = "%.6f" % lat
+                attr[ATTRIBUTE.lon] = "%.6f" % lon
+                if not marker_url:
+                    marker = gis.get_marker()
+                    marker_url = "%s/%s" % (download_url, marker.image)
+                attr[ATTRIBUTE.marker] = marker_url
+                attr[ATTRIBUTE.sym] = symbol
+
             if LatLon or WKT:
-                if LatLon:
-                    LatLon = LatLon.first()
-                    lat = LatLon[LATFIELD]
-                    lon = LatLon[LONFIELD]
-                    if lat is None or lon is None:
-                        continue
-                    attr[ATTRIBUTE.lat] = "%.6f" % lat
-                    attr[ATTRIBUTE.lon] = "%.6f" % lon
-                    if not marker_url:
-                        marker = gis.get_marker()
-                        marker_url = "%s/%s" % (download_url, marker.image)
-                    attr[ATTRIBUTE.marker] = marker_url
-                    attr[ATTRIBUTE.sym] = symbol
-                if WKT:
-                    WKT = WKT.first()
-                    wkt = WKT[WKTFIELD]
-                    if wkt is None:
-                        continue
-                    attr[ATTRIBUTE.wkt] = wkt
                 if popup_fields:
                     # Feature Layer
                     # Build the HTML for the onHover Tooltip
@@ -918,12 +935,14 @@ class S3XML(S3Codec):
 
         postp = None
         if postprocess is not None:
-            try:
+            if isinstance(postprocess, dict):
                 postp = postprocess.get(str(table), None)
-            except:
+            else:
                 postp = postprocess
         if postp and callable(postp):
-            elem = postp(table, elem)
+            result = postp(table, record, elem)
+            if isinstance(result, etree._Element):
+                elem = result
 
         return elem
 
@@ -1577,6 +1596,7 @@ class S3XML(S3Codec):
 
         if element.tag == TAG.list:
             obj = []
+            append = obj.append
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1585,10 +1605,12 @@ class S3XML(S3Codec):
                     tag = tag.rsplit("}", 1)[1]
                 child_obj = element2json(child, native=native)
                 if child_obj:
-                    obj.append(child_obj)
+                    append(child_obj)
             return obj
         else:
             obj = {}
+            findall = element.findall
+            xpath = element.xpath
             for child in element:
                 tag = child.tag
                 if not isinstance(tag, basestring):
@@ -1596,46 +1618,62 @@ class S3XML(S3Codec):
                 if tag[0] == "{":
                     tag = tag.rsplit("}", 1)[1]
                 collapse = True
+                single = False
                 if native:
+                    is_single = lambda t, a, v: len(xpath("%s[@%s='%s']" % (t, a, v))) == 1
                     if tag == TAG.resource:
                         resource = child.get(ATTRIBUTE.name)
                         tag = "%s_%s" % (PREFIX.resource, resource)
                         collapse = False
                     elif tag == TAG.options:
-                        resource = child.get(ATTRIBUTE.resource)
-                        tag = "%s_%s" % (PREFIX.options, resource)
+                        r = child.get(ATTRIBUTE.resource)
+                        tag = "%s_%s" % (PREFIX.options, r)
+                        single = is_single(TAG.options, ATTRIBUTE.resource, r)
                     elif tag == TAG.reference:
-                        tag = "%s_%s" % (PREFIX.reference,
-                                         child.get(ATTRIBUTE.field))
+                        f = child.get(ATTRIBUTE.field)
+                        tag = "%s_%s" % (PREFIX.reference, f)
+                        single = is_single(TAG.reference, ATTRIBUTE.field, f)
                     elif tag == TAG.data:
                         tag = child.get(ATTRIBUTE.field)
-                child_obj = cls.__element2json(child, native=native)
+                        single = is_single(TAG.data, ATTRIBUTE.field, tag)
+                else:
+                    single = len(findall(tag)) == 1
+                child_obj = element2json(child, native=native)
                 if child_obj:
-                    if not tag in obj:
-                        if isinstance(child_obj, list) or not collapse:
-                            obj[tag] = [child_obj]
-                        else:
+                    if tag not in obj:
+                        if single and collapse:
                             obj[tag] = child_obj
+                        else:
+                            obj[tag] = [child_obj]
                     else:
                         if not isinstance(obj[tag], list):
                             obj[tag] = [obj[tag]]
                         obj[tag].append(child_obj)
 
             attributes = element.attrib
+            skip_text = False
+            tag = element.tag
             for a in attributes:
+                v = element.get(a)
                 if native:
-                    if a == ATTRIBUTE.name and \
-                       element.tag == TAG.resource:
+                    if a == ATTRIBUTE.name and tag == TAG.resource:
                         continue
-                    if a == ATTRIBUTE.resource and \
-                       element.tag == TAG.options:
+                    if a == ATTRIBUTE.resource and tag == TAG.options:
                         continue
-                    if a == ATTRIBUTE.field and \
-                       element.tag in (TAG.data, TAG.reference):
+                    if a == ATTRIBUTE.field and tag in (TAG.data, TAG.reference):
                         continue
-                obj[PREFIX.attribute + a] = element.get(a)
+                else:
+                    if a == ATTRIBUTE.value:
+                        try:
+                            obj[TAG.item] = json.loads(v)
+                        except:
+                            pass
+                        else:
+                            skip_text = True
+                        continue
+                obj[PREFIX.attribute + a] = v
 
-            if element.text:
+            if element.text and not skip_text:
                 obj[PREFIX.text] = cls.xml_decode(element.text)
 
             if len(obj) == 1 and obj.keys()[0] in \

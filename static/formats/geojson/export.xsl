@@ -208,10 +208,60 @@
     <xsl:template match="resource">
         <xsl:if test="./reference[@field='location_id']">
         
+            <xsl:variable name="geometry" select="./geometry/@value"/>
             <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
 
             <xsl:choose>
+                <xsl:when test="$geometry!='null'">
+                    <!-- Use pre-prepared GeoJSON -->
+                    <type>Feature</type>
+                    <geometry>  
+                        <xsl:attribute name="value">
+                            <xsl:value-of select="$geometry"/>
+                        </xsl:attribute>
+                    </geometry>
+                    <properties>
+                        <id>
+                            <xsl:value-of select="reference[@field='location_id']/@uuid"/>
+                        </id>
+                        <xsl:choose>
+                            <xsl:when test="data[@field='name']!=''">
+                                <name>
+                                    <xsl:value-of select="data[@field='name']"/>
+                                </name>
+                            </xsl:when>
+                            <xsl:when test="reference[@field='location_id']/text()!=''">
+                                <name>
+                                    <xsl:value-of select="reference[@field='location_id']/text()"/>
+                                </name>
+                            </xsl:when>
+                        </xsl:choose>
+                        <xsl:if test="data[@field='colour']!=''">
+                            <colour>
+                                <xsl:value-of select="data[@field='colour']"/>
+                            </colour>
+                        </xsl:if>
+                        <xsl:if test="reference[@field='location_id']/@marker!=''">
+                            <marker>
+                                <xsl:value-of select="reference[@field='location_id']/@marker"/>
+                            </marker>
+                        </xsl:if>
+                        <xsl:if test="reference[@field='location_id']/@popup!=''">
+                            <popup>
+                                <xsl:value-of select="reference[@field='location_id']/@popup"/>
+                            </popup>
+                        </xsl:if>
+                        <xsl:if test="reference[@field='location_id']/@url!=''">
+                            <url>
+                                <xsl:value-of select="reference[@field='location_id']/@url"/>
+                            </url>
+                        </xsl:if>
+                    </properties>
+                </xsl:when>
                 <xsl:when test="$wkt!='null'">
+                    <!-- Convert WKT to GeoJSON in XSLT. Note that this can hit the libxslt default recursion limit
+                         http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                         This shouldn't be called any more but is left in as an example -->
                     <type>Feature</type>
                     <geometry>
                         <xsl:choose>
@@ -220,11 +270,13 @@
                                     <xsl:text>Point</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="Point">
-                                        <xsl:with-param name="point">
-                                            <xsl:value-of select="substring-before(substring-after(normalize-space(substring-after($wkt,'POINT')),'('),')')"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="Point">
+                                            <xsl:with-param name="point">
+                                                <xsl:value-of select="substring-before(substring-after(normalize-space(substring-after($wkt,'POINT')),'('),')')"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                             <xsl:when test="starts-with($wkt,'LINESTRING')">
@@ -232,11 +284,13 @@
                                     <xsl:text>LineString</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="LineString">
-                                        <xsl:with-param name="linestring">
-                                            <xsl:value-of select="normalize-space(substring-after($wkt,'LINESTRING'))"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="LineString">
+                                            <xsl:with-param name="linestring">
+                                                <xsl:value-of select="normalize-space(substring-after($wkt,'LINESTRING'))"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                             <xsl:when test="starts-with($wkt,'POLYGON')">
@@ -244,11 +298,13 @@
                                     <xsl:text>Polygon</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="Polygon">
-                                        <xsl:with-param name="polygon">
-                                            <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="Polygon">
+                                            <xsl:with-param name="polygon">
+                                                <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                             <xsl:when test="starts-with($wkt,'MULTIPOLYGON')">
@@ -256,11 +312,13 @@
                                     <xsl:text>MultiPolygon</xsl:text>
                                 </type>
                                 <coordinates>
-                                    <xsl:call-template name="MultiPolygon">
-                                        <xsl:with-param name="multipolygon">
-                                            <xsl:value-of select="normalize-space(substring-after($wkt,'MULTIPOLYGON'))"/>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
+                                    <xsl:attribute name="value">
+                                        <xsl:call-template name="MultiPolygon">
+                                            <xsl:with-param name="multipolygon">
+                                                <xsl:value-of select="normalize-space(substring-after($wkt,'MULTIPOLYGON'))"/>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:attribute>
                                 </coordinates>
                             </xsl:when>
                         </xsl:choose>

@@ -27,7 +27,13 @@ def save_webpage_screenshot(url, width, height, file_name = None):
     app = QApplication(sys.argv)
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    webpage = QWebPage()
+    class MyQWebPage(QWebPage):
+        @pyqtSlot()
+        def shouldInterruptJavaScript(qwebpage):
+            print "not interrupting"
+            return False
+        
+    webpage = MyQWebPage()
 
     # set page dimensions
     webpage.setViewportSize(QSize(int(width), int(height)))

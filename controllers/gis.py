@@ -1129,6 +1129,23 @@ def disable_layer(r):
     redirect(URL(args=[]))
 
 # -----------------------------------------------------------------------------
+def layer_config():
+    """ RESTful CRUD controller """
+
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    layer = request.get_vars.get("layer", None)
+    if layer:
+        csv_stylesheet = "layer_%s.xsl" % layer
+    else:
+        # Cannot import without a specific layer type
+        csv_stylesheet = None
+        
+    output = s3_rest_controller(csv_stylesheet = csv_stylesheet)
+    return output
+
+# -----------------------------------------------------------------------------
 def layer_entity():
     """ RESTful CRUD controller """
 
@@ -1158,7 +1175,8 @@ def layer_entity():
                     field = ltable.base
                     field.readable = False
                     field.writable = False
-                elif type in ("gis_layer_bing",
+                elif type in ("gis_layer_empty",
+                              "gis_layer_bing",
                               "gis_layer_google",
                               "gis_layer_tms",
                               ):
@@ -1379,6 +1397,59 @@ def layer_bing():
 
     # CRUD Strings
     type = "Bing"
+    EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
+    s3.crud_strings[tablename] = Storage(
+        title_create=ADD_LAYER,
+        title_update=EDIT_LAYER,
+        msg_record_created=LAYER_ADDED,
+        msg_record_modified=LAYER_UPDATED)
+
+    s3mgr.configure(tablename,
+                    deletable=False,
+                    listadd=False)
+
+    # Pre-processor
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "config":
+                ltable = s3db.gis_layer_config
+                field = ltable.visible
+                field.readable = False
+                field.writable = False
+                if r.method != "update":
+                    # Only show Configs with no definition yet for this layer
+                    table = r.table
+                    # Find the records which are used
+                    query = (ltable.layer_id == table.layer_id) & \
+                            (table.id == r.id)
+                    rows = db(query).select(ltable.config_id)
+                    # Filter them out
+                    ltable.config_id.requires = IS_ONE_OF(db,
+                                                         "gis_config.id",
+                                                         "%(name)s",
+                                                         not_filterby="config_id",
+                                                         not_filter_opts=[row.config_id for row in rows]
+                                                         )
+
+        return True
+    response.s3.prep = prep
+
+    output = s3_rest_controller(rheader=s3db.gis_rheader)
+
+    return output
+
+# -----------------------------------------------------------------------------
+def layer_empty():
+    """ RESTful CRUD controller """
+
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load(tablename)
+
+    # CRUD Strings
+    type = "Empty"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
         title_create=ADD_LAYER,
@@ -3038,13 +3109,13 @@ def proxy():
                 try:
                     y = urllib2.urlopen(r)
                 except urllib2.URLError:
-                    raise(HTTP(400, "Unable to reach host %s" % r))
+                    raise(HTTP(504, "Unable to reach host %s" % r))
             else:
                 # GET
                 try:
                     y = urllib2.urlopen(url)
                 except urllib2.URLError:
-                    raise(HTTP(400, "Unable to reach host %s" % url))
+                    raise(HTTP(504, "Unable to reach host %s" % url))
 
             # Check for allowed content types
             i = y.info()

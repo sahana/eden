@@ -23,7 +23,7 @@ def operation_grid_sizes(binop):
     binop.grid_sizes = best_grid_sizes = left_grid_sizes.intersection(right_grid_sizes)
     if len(best_grid_sizes) == 0:
         binop.grid_size_error = MismatchedGridSize(
-            (operation, left_grid_sizes, right_grid_sizes)
+            (binop, left_grid_sizes, right_grid_sizes)
         )
     return binop.grid_sizes
 

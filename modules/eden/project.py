@@ -1118,7 +1118,7 @@ class S3ProjectDRRModel(S3Model):
         }
         project_organisation_lead_role = 1
 
-        organisation_help = T("Add all organisations which are involved in different roles in this project")
+        organisation_help = T("Add all organizations which are involved in different roles in this project")
 
         tablename = "project_organisation"
         table = self.define_table(tablename,
@@ -1860,6 +1860,7 @@ class S3ProjectTaskModel(S3Model):
                   orderby="project_task.priority",
                   onvalidation=self.task_onvalidation,
                   create_onaccept=self.task_create_onaccept,
+                  create_next=URL(f="task", args=["[id]"]),
                   onaccept=self.task_onaccept,
                   search_method=task_search,
                   list_fields=["id",

@@ -861,7 +861,8 @@ class S3RequestItemModel(S3Model):
             table.quantity_transit.writable = table.quantity_transit.readable= False
 
         # pack_quantity virtual field
-        table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        if item_pack_virtualfields:
+            table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
         # CRUD strings
         ADD_REQUEST_ITEM = T("Add New Item to Request")
@@ -1443,7 +1444,8 @@ class S3CommitItemModel(S3Model):
                                   *s3.meta_fields())
 
         # pack_quantity virtual field
-        table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        if item_pack_virtualfields:
+            table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
         # CRUD strings
         ADD_COMMIT_ITEM = T("Add Item to Commitment")
