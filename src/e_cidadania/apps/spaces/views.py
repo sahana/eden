@@ -403,6 +403,11 @@ class EditDocument(UpdateView):
         cur_doc = get_object_or_404(Document, pk=self.kwargs['doc_id'])
         return cur_doc
         
+    def get_context_data(self, **kwargs):
+        context = super(EditDocument, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+        
     @method_decorator(permission_required('spaces.edit_document'))
     def dispatch(self, *args, **kwargs):
         return super(EditDocument, self).dispatch(*args, **kwargs)
@@ -480,9 +485,10 @@ class ViewEvent(DetailView):
         context = super(ViewEvent, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
-        
-def add_event(request, space_name):
-    
+
+
+class AddEvent(FormView):
+
     """
     Returns an empty MeetingForm to create a new Meeting. Space and author fields
     are automatically filled with the request data.
@@ -490,23 +496,27 @@ def add_event(request, space_name):
     :rtype: HTML Form
     :context: form, get_place
     """
-    form = EventForm(request.POST or None)
-    place = get_object_or_404(Space, url=space_name)
-    
-    if request.method == 'POST':
-        if form.is_valid():
-            form_uncommited = form.save(commit=False)
-            form_uncommited.event_author = request.user
-            form_uncommited.space = place
-            form_uncommited.save()
-            #messages.success(request, _('Event added successfully.'))
-            return redirect('/spaces/' + space_name)
-    
-    return render_to_response('spaces/event_add.html',
-                              {'form': form, 'get_place': place},
-                              context_instance=RequestContext(request))
+    form_class = EventForm
+    template_name = 'spaces/event_add.html'
 
-def edit_event(request, space_name, event_id):
+    def get_success_url(self):
+         return '/spaces/' + self.space.name
+
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwarspace_name)
+        form_uncommited = form.save(commit=False)
+        form_uncommited.event_author = self.request.user
+        form_uncommited.space = self.space
+        form_uncommited.save()
+        #messages.success(request, _('Event added successfully.'))
+
+    def get_context_data(self, **kwargs):
+        context = super(AddEvent, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
+
+class EditEvent(UpdateView):
 
     """
     Returns a MeetingForm filled with the current Meeting data to be edited.
@@ -514,16 +524,25 @@ def edit_event(request, space_name, event_id):
     :rtype: HTML Form
     :context: event, get_place
     """
-    place = get_object_or_404(Space, url=space_name)
+    model = Event
+    template_name = 'spaces/event_edit.html'
 
-    return update_object(request,
-                         model = Event,
-                         object_id = event_id,
-                         login_required = True,
-                         template_name = 'spaces/event_edit.html',
-                         template_object_name = 'event',
-                         post_save_redirect = '/',
-                         extra_context = {'get_place': place})
+    def get_object(self):
+        cur_event = get_object_or_404(Event, pk=self.kwargs['event_id'])
+        return cur_event
+        
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return '/spaces/' + self.space.name
+    
+    def get_context_data(self, **kwargs):
+        context = super(EditEvent, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+        
+    @method_decorator(permission_required('spaces.edit_event'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditEvent, self).dispatch(*args, **kwargs)
 
 
 class DeleteEvent(DeleteView):

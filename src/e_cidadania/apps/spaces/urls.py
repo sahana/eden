@@ -28,7 +28,7 @@ from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,
                                           DeleteSpace, ListDocs, DeleteDocument, \
                                           ListEvents, DeleteEvent, ViewEvent, \
                                           ListPosts, SpaceFeed, AddDocument, \
-                                          EditDocument
+                                          EditDocument, AddEvent, EditEvent
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -67,9 +67,9 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 # Event URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    url(r'^(?P<space_name>\w+)/event/add/$', 'add_event', name='add-event'),
+    url(r'^(?P<space_name>\w+)/event/add/$', AddEvent.as_view(), name='add-event'),
 
-    url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/edit/$', 'edit_event', name='edit-event'),
+    url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/edit/$', EditEvent.as_view(), name='edit-event'),
 
     url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/delete/$', DeleteEvent.as_view(), name='delete-event'),
     
