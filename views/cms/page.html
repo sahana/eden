@@ -1,0 +1,7 @@
+{{extend "layout.html"}}
+<div id='home'>
+<div id='text'>
+{{try:}}{{=XML(item)}}
+{{except:}}{{pass}}
+</div>
+</div>

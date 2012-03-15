@@ -535,6 +535,22 @@ class S3OptionsMenu:
                 )
 
     # -------------------------------------------------------------------------
+    def cms(self):
+        """ CMS / Content Management System """
+
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Posts", f="post")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("View as Pages", f="page"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def delphi(self):
         """ DELPHI / Delphi Decision Maker """
 

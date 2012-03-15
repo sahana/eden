@@ -13,33 +13,34 @@ current.models = models
 current.s3db = s3db = S3Model()
 
 # Explicit import statements to have them reload automatically in debug mode
-import eden.pr
-import eden.gis
-import eden.sit
-import eden.org
-import eden.auth
-import eden.msg
-import eden.doc
-import eden.hrm
-import eden.project
-import eden.supply
-import eden.inv
-import eden.proc
 import eden.asset
-import eden.scenario
-import eden.event
-import eden.req
-import eden.vehicle
-import eden.irs
-import eden.fire
+import eden.auth
+import eden.cms
 import eden.delphi
+import eden.doc
 import eden.dvi
+import eden.event
+import eden.fire
+import eden.gis
+import eden.hms
+import eden.hrm
+import eden.inv
+import eden.irs
+import eden.msg
+import eden.ocr
+import eden.org
+import eden.patient
+import eden.pr
+import eden.sit
+import eden.proc
+import eden.project
+import eden.req
+import eden.scenario
+import eden.supply
 import eden.support
 import eden.survey
-import eden.hms
 import eden.sync
-import eden.patient
-import eden.ocr
+import eden.vehicle
 
 # =============================================================================
 # Import S3 meta fields into global namespace

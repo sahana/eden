@@ -934,6 +934,9 @@ class S3IRSResponseModel(S3Model):
                                                  T("Yes"))[incident_commander == True]),
                                  *s3.meta_fields())
 
+        if not current.deployment_settings.has_module("vehicle"):
+            return None
+        
         # ---------------------------------------------------------------------
         # Vehicles assigned to an Incident
         #

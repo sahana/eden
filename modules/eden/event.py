@@ -537,6 +537,9 @@ class S3EventAssetModel(S3Model):
 
     def model(self):
 
+        if not current.deployment_settings.has_module("asset"):
+            return None
+        
         T = current.T
         s3 = current.response.s3
 
@@ -636,6 +639,9 @@ class S3EventIReportModel(S3Model):
 
     def model(self):
 
+        if not current.deployment_settings.has_module("irs"):
+            return None
+        
         T = current.T
         s3 = current.response.s3
 
@@ -780,6 +786,9 @@ class S3EventTaskModel(S3Model):
 
     def model(self):
 
+        if not current.deployment_settings.has_module("project"):
+            return None
+        
         T = current.T
         s3 = current.response.s3
 
