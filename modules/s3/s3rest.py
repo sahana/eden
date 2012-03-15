@@ -60,7 +60,7 @@ from gluon import *
 from gluon.tools import callback
 import gluon.contrib.simplejson as json
 
-from s3validators import IS_ONE_OF
+from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
 from s3tools import SQLTABLES3
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
@@ -4403,17 +4403,22 @@ class S3Resource(object):
             if field is not None:
                 return repr_row(field, record=row, linkto=linkto)
             else:
-                tname = f.tname
-                fname = f.fname
-                if (tname, fname) in columns:
-                    if tname in row:
-                        row = row[tname]
-                    if fname in row:
-                        return str(row[fname])
+                if type(row.get(f.fname)) is int:
+                    return IS_INT_AMOUNT.represent(row[f.fname])
+                elif type(row.get(f.fname)) is float:
+                    return IS_FLOAT_AMOUNT.represent(row[f.fname], precision=2)
+                else:
+                    tname = f.tname
+                    fname = f.fname
+                    if (tname, fname) in columns:
+                        if tname in row:
+                            row = row[tname]
+                        if fname in row:
+                            return str(row[fname])
+                        else:
+                            return None
                     else:
                         return None
-                else:
-                    return None
 
         # Render as...
         if as_page:

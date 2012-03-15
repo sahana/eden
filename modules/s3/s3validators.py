@@ -168,16 +168,21 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
 
     @staticmethod
     def represent(number):
+        """ Change the format of the number depending on the language
+    
+            Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
+        """
+
         if number is None:
             return ""
 
         THOUSAND_SEPARATOR = current.T("THOUSAND_SEPARATOR")
         if THOUSAND_SEPARATOR == "THOUSAND_SEPARATOR":
-            THOUSAND_SEPARATOR = u" " # ISO standard
+            THOUSAND_SEPARATOR = current.deployment_settings.L10n.get("thousands_separator", u"\u00A0")
         
         NUMBER_GROUPING = current.T("NUMBER_GROUPING")
         if NUMBER_GROUPING == "NUMBER_GROUPING":
-            NUMBER_GROUPING = 3
+            NUMBER_GROUPING = current.deployment_settings.L10n.get("thousands_grouping", 3)
 
         # the negative/positive sign for the number
         if float(number) < 0:
@@ -237,19 +242,19 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
     @staticmethod
     def represent(number, precision=None):
-        if number is None:
-            return ""
-
         """ Change the format of the number depending on the language
     
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
         """
-        
+
+        if number is None:
+            return ""
+
         # We need to check that we actually get the separators
         # otherwise we use the English defaults
         DECIMAL_SEPARATOR = current.T("DECIMAL_SEPARATOR")
         if DECIMAL_SEPARATOR == "DECIMAL_SEPARATOR":
-            DECIMAL_SEPARATOR = u"," # ISO standard
+            DECIMAL_SEPARATOR = current.deployment_settings.L10n.get("decimal_separator", ",")
 
         str_number = unicode(number)
 
@@ -264,7 +269,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
         if dec_part:
             dec_part = DECIMAL_SEPARATOR + dec_part
 
-        int_part = IS_INT_AMOUNT.represent(int_part)
+        int_part = IS_INT_AMOUNT.represent(int(int_part))
         
         return int_part + dec_part
 
