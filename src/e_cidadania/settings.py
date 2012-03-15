@@ -4,10 +4,10 @@ __author__ = "Oscar Carballal Prego"
 __copyright__ = "Cidadania Sociedade Cooperativa Galega"
 __credits__ = ["Oscar Carballal Prego"]
 __license__ = "GPLv3"
-__version__ = "0.1"
+__version__ = "0.1.5"
 __maintainer__ = "Oscar Carballal Prego"
 __email__ = "oscar.carballal@cidadania.coop"
-__status__ = "final"
+__status__ = "beta"
 
 # Get the current directory
 import os
@@ -28,9 +28,13 @@ GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHx
 # Values: ckeditor, empty
 DJANGO_WYSIWYG_FLAVOR = "ckeditor"
 DJANGO_WYSIWYG_MEDIA_URL = "/static/ckeditor/"
+
 # Registration mail settings
-EMAIL_HOST = 'localhost'
-DEFAULT_FROM_EMAIL = 'accounts@cidadania.coop'
+#EMAIL_HOST = ""
+#EMAIL_PORT=
+#EMAIL_HOST_USER=""
+#EMAIL_HOST_PASSWORD=""
+#DEFAULT_FROM_EMAIL = ""
 
 # Calendar
 FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday

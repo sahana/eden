@@ -101,41 +101,54 @@ class SpaceFeed(Feed):
 # SPACE VIEWS
 #
 
-class GoToSpace(RedirectView):
+# Please take in mind that the create_space view can't be replaced by a CBV
+# (class-based view) since it manipulates two forms at the same time. Apparently
+# that creates some trouble in the django API. See this ticket:
+# https://code.djangoproject.com/ticket/16256
+@permission_required('spaces.add_space')
+def create_space(request):
 
     """
-    Sends the user to the selected space. This view only accepts GET petitions.
-    GoToSpace is a django generic :class:`RedirectView`.
+    Returns a SpaceForm form to fill with data to create a new space. There
+    is an attached EntityFormset to save the entities related to the space. Only
+    site administrators are allowed to create spaces.
     
-    :Attributes: **self.place** - Selected space object
-    :rtype: Redirect
+    :attributes: - space_form: empty SpaceForm instance
+                 - entity_forms: empty EntityFormSet
+    :rtype: Space object, multiple entity objects.
+    :context: form, entityformset
     """
-    def get_redirect_url(self, **kwargs):
-        self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
-        return '/spaces/%s' % self.place.url
-
-
-class ListSpaces(ListView):
-
-    """
-    Return a list of spaces in the system (except private ones) using a generic view.
-    The users associated to a private spaces will see it, but not the other private
-    spaces. ListSpaces is a django generic :class:`ListView`.
+    space_form = SpaceForm(request.POST or None, request.FILES or None)
+    entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
+                                 queryset=Entity.objects.none())
     
-    :rtype: Object list
-    :contexts: object_list
-    """
-    paginate_by = 10
+    if request.user.is_staff:    
+        if request.method == 'POST':
+            if space_form.is_valid() and entity_forms.is_valid():
+                space_form_uncommited = space_form.save(commit=False)
+                space_form_uncommited.author = request.user
+                
+                new_space = space_form_uncommited.save()
+                space = get_object_or_404(Space, name=space_form_uncommited.name)
     
-    def get_queryset(self):
-        public_spaces = Space.objects.all().filter(public=True)
-        
-        if not self.request.user.is_anonymous():
-            user_spaces = self.request.user.profile.spaces.all()
-            return public_spaces | user_spaces
-            
-        return public_spaces
-
+                ef_uncommited = entity_forms.save(commit=False)
+                for ef in ef_uncommited:
+                    ef.space = space
+                    ef.save()
+                # We add the created spaces to the user allowed spaces
+    
+                request.user.profile.spaces.add(space)
+                #messages.success(request, _('Space %s created successfully.') % space.name)
+                return redirect('/spaces/' + space.url)
+    
+        return render_to_response('spaces/space_add.html',
+                              {'form': space_form,
+                               'entityformset': entity_forms},
+                              context_instance=RequestContext(request))
+    else:
+        return render_to_response('not_allowed.html',
+                                  context_instance=RequestContext(request))
+                                  
 
 class ViewSpaceIndex(DetailView):
 
@@ -191,7 +204,7 @@ class ViewSpaceIndex(DetailView):
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
         context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
         return context
-
+        
 
 # Please take in mind that the edit_space view can't be replaced by a CBV
 # (class-based view) since it manipulates two forms at the same time. Apparently
@@ -245,6 +258,7 @@ def edit_space(request, space_name):
             
     return render_to_response('not_allowed.html', context_instance=RequestContext(request))
 
+
 class DeleteSpace(DeleteView):
 
     """
@@ -263,94 +277,47 @@ class DeleteSpace(DeleteView):
 
     def get_object(self):
         return get_object_or_404(Space, url = self.kwargs['space_name'])
+      
 
-
-# Please take in mind that the create_space view can't be replaced by a CBV
-# (class-based view) since it manipulates two forms at the same time. Apparently
-# that creates some trouble in the django API. See this ticket:
-# https://code.djangoproject.com/ticket/16256
-@permission_required('spaces.add_space')
-def create_space(request):
+class GoToSpace(RedirectView):
 
     """
-    Returns a SpaceForm form to fill with data to create a new space. There
-    is an attached EntityFormset to save the entities related to the space. Only
-    site administrators are allowed to create spaces.
+    Sends the user to the selected space. This view only accepts GET petitions.
+    GoToSpace is a django generic :class:`RedirectView`.
     
-    :attributes: - space_form: empty SpaceForm instance
-                 - entity_forms: empty EntityFormSet
-    :rtype: Space object, multiple entity objects.
-    :context: form, entityformset
+    :Attributes: **self.place** - Selected space object
+    :rtype: Redirect
     """
-    space_form = SpaceForm(request.POST or None, request.FILES or None)
-    entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
-                                 queryset=Entity.objects.none())
+    def get_redirect_url(self, **kwargs):
+        self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
+        return '/spaces/%s' % self.place.url
+
+
+class ListSpaces(ListView):
+
+    """
+    Return a list of spaces in the system (except private ones) using a generic view.
+    The users associated to a private spaces will see it, but not the other private
+    spaces. ListSpaces is a django generic :class:`ListView`.
     
-    if request.user.is_staff:    
-        if request.method == 'POST':
-            if space_form.is_valid() and entity_forms.is_valid():
-                space_form_uncommited = space_form.save(commit=False)
-                space_form_uncommited.author = request.user
-                
-                new_space = space_form_uncommited.save()
-                space = get_object_or_404(Space, name=space_form_uncommited.name)
+    :rtype: Object list
+    :contexts: object_list
+    """
+    paginate_by = 10
     
-                ef_uncommited = entity_forms.save(commit=False)
-                for ef in ef_uncommited:
-                    ef.space = space
-                    ef.save()
-                # We add the created spaces to the user allowed spaces
-    
-                request.user.profile.spaces.add(space)
-                #messages.success(request, _('Space %s created successfully.') % space.name)
-                return redirect('/spaces/' + space.url)
-    
-        return render_to_response('spaces/space_add.html',
-                              {'form': space_form,
-                               'entityformset': entity_forms},
-                              context_instance=RequestContext(request))
-    else:
-        return render_to_response('not_allowed.html',
-                                  context_instance=RequestContext(request))
+    def get_queryset(self):
+        public_spaces = Space.objects.all().filter(public=True)
+        
+        if not self.request.user.is_anonymous():
+            user_spaces = self.request.user.profile.spaces.all()
+            return public_spaces | user_spaces
+            
+        return public_spaces
+ 
 
 #
 # DOCUMENTS VIEWS
 #
-
-class ListDocs(ListView):
-
-    """
-    Returns a list of documents attached to the current space.
-    
-    :rtype: Object list
-    :context: object_list, get_place
-    """
-    paginate_by = 25
-    context_object_name = 'document_list'
-
-    def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
-        
-        if self.request.user.is_staff:
-            return objects
-        
-        if self.request.user.is_anonymous():
-            self.template_name = 'not_allowed.html'
-            return objects
-        
-        for i in self.request.user.profile.spaces.all():
-            if i.url == place:
-                return objects
-        
-        self.template_name = 'not_allowed.html'
-        return objects
-
-    def get_context_data(self, **kwargs):
-        context = super(ListDocs, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return context
-
 
 class AddDocument(FormView):
 
@@ -365,8 +332,7 @@ class AddDocument(FormView):
     
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        space_name = self.space.name
-        return '/spaces/' + space_name
+        return '/spaces/' + self.space.name
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
@@ -398,6 +364,10 @@ class EditDocument(UpdateView):
     """
     model = Document
     template_name = 'spaces/document_edit.html'
+
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return '/spaces/' + self.space.name
 
     def get_object(self):
         cur_doc = get_object_or_404(Document, pk=self.kwargs['doc_id'])
@@ -434,58 +404,45 @@ class DeleteDocument(DeleteView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
 
-#
-# EVENT VIEWS
-#
 
-class ListEvents(ListView):
+class ListDocs(ListView):
 
     """
-    List all the events attached to a space.
+    Returns a list of documents attached to the current space.
     
     :rtype: Object list
-    :context: event_list, get_place
+    :context: object_list, get_place
     """
     paginate_by = 25
-    context_object_name = 'event_list'
+    context_object_name = 'document_list'
 
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = Event.objects.all().filter(space=place.id).order_by\
-            ('event_date')
+        objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
+        
+        if self.request.user.is_staff:
+            return objects
+        
+        if self.request.user.is_anonymous():
+            self.template_name = 'not_allowed.html'
+            return objects
+        
+        for i in self.request.user.profile.spaces.all():
+            if i.url == place:
+                return objects
+        
+        self.template_name = 'not_allowed.html'
         return objects
 
     def get_context_data(self, **kwargs):
-        context = super(ListEvents, self).get_context_data(**kwargs)
+        context = super(ListDocs, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
-
-
-class ViewEvent(DetailView):
-    
-    """
-    View the content of a event.
-    
-    :rtype: Object
-    :context: event, get_place
-    """
-    context_object_name = 'event'
-    template_name = 'spaces/event_detail.html'
-
-    def get_object(self):
-        space_name = self.kwargs['space_name']
-
-        if self.request.user.is_anonymous():
-            self.template_name = 'not_allowed.html'
-            return get_object_or_404(Space, url = space_name)
-
-        return get_object_or_404(Event, pk = self.kwargs['event_id'])
-
-    def get_context_data(self, **kwargs):
-        context = super(ViewEvent, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return context
-
+        
+        
+#
+# EVENT VIEWS
+#
 
 class AddEvent(FormView):
 
@@ -512,6 +469,32 @@ class AddEvent(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(AddEvent, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
+
+class ViewEvent(DetailView):
+    
+    """
+    View the content of a event.
+    
+    :rtype: Object
+    :context: event, get_place
+    """
+    context_object_name = 'event'
+    template_name = 'spaces/event_detail.html'
+
+    def get_object(self):
+        space_name = self.kwargs['space_name']
+
+        if self.request.user.is_anonymous():
+            self.template_name = 'not_allowed.html'
+            return get_object_or_404(Space, url = space_name)
+
+        return get_object_or_404(Event, pk = self.kwargs['event_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewEvent, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
 
@@ -543,8 +526,8 @@ class EditEvent(UpdateView):
     @method_decorator(permission_required('spaces.edit_event'))
     def dispatch(self, *args, **kwargs):
         return super(EditEvent, self).dispatch(*args, **kwargs)
-
-
+        
+      
 class DeleteEvent(DeleteView):
 
     """
@@ -566,6 +549,33 @@ class DeleteEvent(DeleteView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
         
+          
+class ListEvents(ListView):
+
+    """
+    List all the events attached to a space.
+    
+    :rtype: Object list
+    :context: event_list, get_place
+    """
+    paginate_by = 25
+    context_object_name = 'event_list'
+
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        objects = Event.objects.all().filter(space=place.id).order_by\
+            ('event_date')
+        return objects
+
+    def get_context_data(self, **kwargs):
+        context = super(ListEvents, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
+#
+# NEWS RELATED
+#
+
 class ListPosts(ListView):
 
     """

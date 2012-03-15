@@ -21,15 +21,15 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 
-from e_cidadania.apps.news.views import DeletePost, ViewPost
+from e_cidadania.apps.news.views import DeletePost, ViewPost, AddPost, EditPost
 
 urlpatterns = patterns('e_cidadania.apps.news.views',
     
-    url(r'^add/$', 'add_post', name='add-post'),
+    url(r'^add/$', AddPost.as_view(), name='add-post'),
     
     url(r'^(?P<post_id>\d+)/delete/$', DeletePost.as_view(), name='delete-post'),
     
-    url(r'^(?P<post_id>\d+)/edit/$', 'edit_post', name='edit-post'),
+    url(r'^(?P<post_id>\d+)/edit/$', EditPost.as_view(), name='edit-post'),
     
     url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name='view-post')
 

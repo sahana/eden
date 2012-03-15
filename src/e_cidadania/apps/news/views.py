@@ -37,6 +37,40 @@ from e_cidadania.apps.spaces.models import Space
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
 
+
+class AddPost(FormView):
+
+    """
+    Create a new post. Only registered users belonging to a concrete group
+    are allowed to create news. nly site administrators will be able to
+    post news in the index page.
+    """
+    form_class = NewsForm
+    template_name = 'news/post_add.html'
+    
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return '/spaces/' + self.space.name
+        
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        form_uncommited = form.save(commit=False)
+        form_uncommited.author = self.request.user
+        form_uncommited.space = self.space
+        form_uncommited.save()
+        return super(AddPost, self).form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(AddPost, self).get_context_data(**kwargs)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = self.space
+        return context
+        
+    @method_decorator(permission_required('news.add_post'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddDocument, self).dispatch(*args, **kwargs)
+
+
 class ViewPost(DetailView):
 
     """
@@ -61,54 +95,30 @@ class ViewPost(DetailView):
         return context
 
 
-@permission_required('news.add_post')
-def add_post(request, space_name):
-
-    """
-    Create a new post. Only registered users belonging to a concrete group
-    are allowed to create news. nly site administrators will be able to
-    post news in the index page.
-    """
-    current_space = get_object_or_404(Space, url=space_name)
-    form = NewsForm(request.POST or None)
-
-    if request.method == 'POST':
-        if form.is_valid():
-            form_uncommited = form.save(commit=False)
-            form_uncommited.author = request.user
-
-            # Get space id
-            place = Space.objects.get(url=space_name)
-            form_uncommited.space = place
-
-            # This should not be necessay since the editor filters the
-            # script tags
-            #if "<script>" in form_uncommited.post_message:
-            #    return "SCRIPT TAGS ARE NOT ALLOWED"
-        
-            form_uncommited.save()
-            return redirect('/spaces/' + space_name)
-
-    return render_to_response('news/post_add.html',
-                              {'form': form, 'get_place': current_space},
-                              context_instance = RequestContext(request))
-
-
-@permission_required('news.edit_post')
-def edit_post(request, space_name, post_id):
+class EditPost(UpdateView):
 
     """
     Edit an existent post.
     """
-    current_space = get_object_or_404(Space, url=space_name)
+    model = Post
+    template_name = 'news/post_edit.html'
 
-    return update_object(request,
-                         model = Post,
-                         object_id = post_id,
-                         login_required = True,
-                         template_name = 'news/post_edit.html',
-                         post_save_redirect = '../',
-                         extra_context = {'get_place': current_space})
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return '/spaces/' + self.space.name
+
+    def get_object(self):
+        cur_post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        return cur_post
+        
+    def get_context_data(self, **kwargs):
+        context = super(EditPost, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+        
+    @method_decorator(permission_required('news.edit_post'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditPost, self).dispatch(*args, **kwargs)
 
 
 class DeletePost(DeleteView):
