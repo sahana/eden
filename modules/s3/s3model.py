@@ -1316,7 +1316,7 @@ class S3MultiPath:
     def __and__(self, sequence):
         """
             Check whether sequence is the start sequence of any of
-            the paths in this multi-path (for de-duplciation)
+            the paths in this multi-path (for de-duplication)
 
             @param sequence: sequence of node IDs (or path)
         """
@@ -1412,14 +1412,14 @@ class S3MultiPath:
             while head in tail:
                 pos = index(head)
                 append(tail[:pos])
-                tail = tail[pos+1:]
+                tail = tail[pos + 1:]
             append(tail)
             r = []
             append = r.append
             for tail in tails:
                 nt = resolve(tail)
                 for t in nt:
-                    append([head]+t)
+                    append([head] + t)
             return r
         else:
             return [seq]

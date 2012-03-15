@@ -85,12 +85,14 @@ class S3PersonEntity(S3Model):
         T = current.T
         s3 = current.response.s3
 
-        define_table = self.define_table
-        super_entity = self.super_entity
-        super_link = self.super_link
-        super_key = self.super_key
-        configure = self.configure
         add_component = self.add_component
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        meta_fields= s3.meta_fields
+        super_entity = self.super_entity
+        super_key = self.super_key
+        super_link = self.super_link
 
         YES = T("yes") #current.messages.YES
         NO = T("no") #current.messages.NO
@@ -166,7 +168,7 @@ class S3PersonEntity(S3Model):
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
                              Field("user_id", utable),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Role (Affiliates Group)
@@ -203,7 +205,7 @@ class S3PersonEntity(S3Model):
                              Field("sub_type", "integer",
                                    readable = False,
                                    writable = False),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
@@ -211,7 +213,7 @@ class S3PersonEntity(S3Model):
         table.pe_id.represent = pr_pentity_represent
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Role"),
             title_display = T("Role Details"),
             title_list = T("Roles"),
@@ -249,14 +251,14 @@ class S3PersonEntity(S3Model):
                                         label=T("Entity"),
                                         readable=True,
                                         writable=True),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent, sort=True)
         table.pe_id.represent = pr_pentity_represent
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Affiliation"),
             title_display = T("Affiliation Details"),
             title_list = T("Affiliations"),

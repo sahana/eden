@@ -2616,12 +2616,12 @@ def project_rheader(r, tabs=[]):
         query = (ltable.deleted == False) & \
                 (ltable.task_id == r.id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.name,
+        project = db(query).select(ptable.id,
                                    limitby=(0, 1)).first()
         if project:
             project = TR(
                             TH("%s: " % T("Project")),
-                            project.name
+                            s3db.project_project_represent(project.id)
                         )
         else:
             project = ""

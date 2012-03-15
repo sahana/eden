@@ -114,8 +114,18 @@ def warehouse():
                 #                onaccept=address_onaccept)
 
             if r.component:
-                if r.component.name == "inv_item" or \
-                   r.component.name == "recv" or \
+                if r.component.name == "inv_item":
+                    # Filter out items which are already in this inventory
+                    s3db.inv_prep(r)
+                    # Remove the Warehouse Name from the list_fields
+                    list_fields = s3mgr.model.get_config("inv_inv_item", "list_fields")
+                    try:
+                        list_fields.remove("site_id")
+                        s3mgr.configure("inv_inv_item", list_fields=list_fields)
+                    except:
+                        pass
+
+                elif r.component.name == "recv" or \
                    r.component.name == "send":
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
