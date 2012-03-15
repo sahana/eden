@@ -386,34 +386,9 @@ class AddDocument(FormView):
     @method_decorator(permission_required('spaces.add_document'))
     def dispatch(self, *args, **kwargs):
         return super(AddDocument, self).dispatch(*args, **kwargs)
+        
 
-#@permission_required('spaces.add_document')
-#def add_doc(request, space_name):
-
-#    form = DocForm(request.POST or None, request.FILES or None)
-#    place = get_object_or_404(Space, url=space_name)
-#    
-#    for i in request.user.profile.spaces.all():
-#        if i.url == space_name or request.user.is_staff:
-#    
-#            if request.method == 'POST':
-#                if form.is_valid():
-#                    form_uncommited = form.save(commit=False)
-#                    form_uncommited.space = place
-#                    form_uncommited.author = request.user
-#    
-#                    form_uncommited.save()
-#                    #messages.success(request, _('The document has been added successfully.'))
-#                    return redirect('/spaces/' + space_name)
-#        
-#            return render_to_response('spaces/document_add.html',
-#                                      {'form': form, 'get_place': place},
-#                                      context_instance=RequestContext(request))
-#    return render_to_response('not_allowed.html',
-#                              context_instance=RequestContext(request))
-
-@permission_required('spaces.edit_document')
-def edit_doc(request, space_name, doc_id):
+class EditDocument(UpdateView):
 
     """
     Returns a DocForm filled with the current document data.
@@ -421,19 +396,17 @@ def edit_doc(request, space_name, doc_id):
     :rtype: HTML Form
     :context: doc, get_place
     """
-    place = get_object_or_404(Space, url=space_name)
-    messages.success(request, _('Document edited successfully.'))
+    model = Document
+    template_name = 'spaces/document_edit.html'
 
-    return update_object(request,
-                         model = Document,
-                         object_id = doc_id,
-                         login_required = True,
-                         template_name = 'spaces/document_edit.html',
-                         template_object_name = 'doc',
-                         post_save_redirect = '/',
-                         extra_context = {'get_place': place,
-                                          'doc': get_object_or_404(Document, pk=doc_id)}
-                        )
+    def get_object(self):
+        cur_doc = get_object_or_404(Document, pk=self.kwargs['doc_id'])
+        return cur_doc
+        
+    @method_decorator(permission_required('spaces.edit_document'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditDocument, self).dispatch(*args, **kwargs)
+        
 
 class DeleteDocument(DeleteView):
 
