@@ -27,7 +27,7 @@ from django.conf.urls.defaults import *
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
                                           DeleteSpace, ListDocs, DeleteDocument, \
                                           ListEvents, DeleteEvent, ViewEvent, \
-                                          ListPosts, SpaceFeed
+                                          ListPosts, SpaceFeed, AddDocument
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -53,7 +53,7 @@ urlpatterns = patterns('e_cidadania.apps.spaces.views',
 # Document URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-    url(r'^(?P<space_name>\w+)/docs/add/$', 'add_doc', name='add-document'),
+    url(r'^(?P<space_name>\w+)/docs/add/$', AddDocument.as_view(), name='add-document'),
 
     url(r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/$', 'edit_doc', name='edit-document'),
 

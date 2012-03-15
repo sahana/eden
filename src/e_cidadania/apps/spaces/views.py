@@ -30,6 +30,7 @@ from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
+from django.views.generic import FormView
 
 # Decorators. the first is a wrapper to convert function-based decorators
 # to method decorators that can be put in subclass methods.
@@ -192,29 +193,10 @@ class ViewSpaceIndex(DetailView):
         return context
 
 
-#class EditSpace(UpdateView):
-
-#    """
-#    Class-based edit space view
-#    """
-#    form_class = SpaceForm
-#    context_object_name = 'form'
-#    template_name = 'spaces/space_edit.html'
-#    
-
-#    
-#    def get_success_url(self):
-#        return '/spaces/' + self.kwargs['space_name']
-#    
-#    def form_valid(self, form):
-#        form_uncommited = form.save(commit = False)
-#        form_uncommited.author = request.user
-#        form_uncommited.save()
-#        space = form_uncommited.url
-    
-#    def form_invalid(self):
-#        self.template_name = 'space
-    
+# Please take in mind that the edit_space view can't be replaced by a CBV
+# (class-based view) since it manipulates two forms at the same time. Apparently
+# that creates some trouble in the django API. See this ticket:
+# https://code.djangoproject.com/ticket/16256
 @permission_required('spaces.edit_space')
 def edit_space(request, space_name):
 
@@ -283,6 +265,10 @@ class DeleteSpace(DeleteView):
         return get_object_or_404(Space, url = self.kwargs['space_name'])
 
 
+# Please take in mind that the create_space view can't be replaced by a CBV
+# (class-based view) since it manipulates two forms at the same time. Apparently
+# that creates some trouble in the django API. See this ticket:
+# https://code.djangoproject.com/ticket/16256
 @permission_required('spaces.add_space')
 def create_space(request):
 
@@ -366,8 +352,7 @@ class ListDocs(ListView):
         return context
 
 
-@permission_required('spaces.add_document')
-def add_doc(request, space_name):
+class AddDocument(FormView):
 
     """
     Upload a new document and attach it to the current space.
@@ -375,27 +360,57 @@ def add_doc(request, space_name):
     :rtype: Object
     :context: form, get_place
     """
-    form = DocForm(request.POST or None, request.FILES or None)
-    place = get_object_or_404(Space, url=space_name)
+    form_class = DocForm
+    template_name = 'spaces/document_add.html'
     
-    for i in request.user.profile.spaces.all():
-        if i.url == space_name or request.user.is_staff:
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        space_name = self.space.name
+        return '/spaces/' + space_name
+
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        form_uncommited = form.save(commit=False)
+        form_uncommited.space = self.space
+        form_uncommited.author = self.request.user
+        form_uncommited.save()
+        #print form.cleaned_data
+        return super(AddDocument, self).form_valid(form)
     
-            if request.method == 'POST':
-                if form.is_valid():
-                    form_uncommited = form.save(commit=False)
-                    form_uncommited.space = place
-                    form_uncommited.author = request.user
-    
-                    form_uncommited.save()
-                    #messages.success(request, _('The document has been added successfully.'))
-                    return redirect('/spaces/' + space_name)
+    def get_context_data(self, **kwargs):
+        context = super(AddDocument, self).get_context_data(**kwargs)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = self.space
+        return context
         
-            return render_to_response('spaces/document_add.html',
-                                      {'form': form, 'get_place': place},
-                                      context_instance=RequestContext(request))
-    return render_to_response('not_allowed.html',
-                              context_instance=RequestContext(request))
+    @method_decorator(permission_required('spaces.add_document'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddDocument, self).dispatch(*args, **kwargs)
+
+#@permission_required('spaces.add_document')
+#def add_doc(request, space_name):
+
+#    form = DocForm(request.POST or None, request.FILES or None)
+#    place = get_object_or_404(Space, url=space_name)
+#    
+#    for i in request.user.profile.spaces.all():
+#        if i.url == space_name or request.user.is_staff:
+#    
+#            if request.method == 'POST':
+#                if form.is_valid():
+#                    form_uncommited = form.save(commit=False)
+#                    form_uncommited.space = place
+#                    form_uncommited.author = request.user
+#    
+#                    form_uncommited.save()
+#                    #messages.success(request, _('The document has been added successfully.'))
+#                    return redirect('/spaces/' + space_name)
+#        
+#            return render_to_response('spaces/document_add.html',
+#                                      {'form': form, 'get_place': place},
+#                                      context_instance=RequestContext(request))
+#    return render_to_response('not_allowed.html',
+#                              context_instance=RequestContext(request))
 
 @permission_required('spaces.edit_document')
 def edit_doc(request, space_name, doc_id):
