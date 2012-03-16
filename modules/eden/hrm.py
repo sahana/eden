@@ -140,6 +140,31 @@ class S3HRModel(S3Model):
                                             hrm_human_resource_represent,
                                             orderby="hrm_human_resource.type"))
 
+        if not settings.get_hrm_show_staff():
+            title_list = T("Volunteers")
+            title_search = T("Search Volunteers")
+        elif not settings.get_hrm_show_vols():
+            title_list = T("Staff")
+            title_search = T("Search Staff")
+        else:
+            title_list = T("Staff & Volunteers")
+            title_search = T("Search Staff & Volunteers")
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Staff Member"),
+            title_display = T("Staff Member Details"),
+            title_list = title_list,
+            title_update = T("Edit Record"),
+            title_search = title_search,
+            subtitle_create = T("Add New Staff Member"),
+            subtitle_list = T("Staff Members"),
+            label_list_button = T("List All Records"),
+            label_create_button = T("Add Staff Member"),
+            label_delete_button = T("Delete Record"),
+            msg_record_created = T("Staff member added"),
+            msg_record_modified = T("Record updated"),
+            msg_record_deleted = T("Record deleted"),
+            msg_list_empty = T("No staff or volunteers currently registered"))
+
         # Used by Scenarios, Events, Tasks & RAT
         human_resource_id = S3ReusableField("human_resource_id",
                                             db.hrm_human_resource,

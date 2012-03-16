@@ -71,11 +71,14 @@ class S3ContentModel(S3Model):
                              Field("name",
                                    notnull=True,
                                    label = T("Name")),
-                             comments(),
-                             #Field("replies", "boolean",
+                             #Field("avatar", "boolean",
                              #      default = False,
-                             #      label=T("Comments permitted?")),
-                             roles_permitted(),    # Multiple Roles
+                             #      label=T("Show author picture?")),
+                             Field("replies", "boolean",
+                                   default = False,
+                                   label=T("Comments permitted?")),
+                             comments(),
+                             #roles_permitted(),    # Multiple Roles
                              *meta_fields())
 
         # CRUD Strings
@@ -115,7 +118,7 @@ class S3ContentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  create_next=URL(f="series'", args=["[id]", "post"]))
+                  create_next=URL(f="series", args=["[id]", "post"]))
 
         # ---------------------------------------------------------------------
         # Posts
@@ -126,7 +129,7 @@ class S3ContentModel(S3Model):
         modules = {}
         _modules = current.deployment_settings.modules
         for module in _modules:
-            if module in ["default", "admin", "appadmin", "errors", "sync"]:
+            if module in ["appadmin", "errors", "sync"]:
                 continue
             modules[module] = _modules[module].name_nice
 
@@ -148,15 +151,19 @@ class S3ContentModel(S3Model):
                                    label = T("Title")),
                              Field("body", "text",
                                    notnull=True,
+                                   widget = s3_richtext_widget,
                                    label = T("Body")),
+                             #Field("avatar", "boolean",
+                             #      default = False,
+                             #      label=T("Show author picture?")),
+                             Field("replies", "boolean",
+                                   default = False,
+                                   label=T("Comments permitted?")),
                              #Field("published", "boolean",
                              #      default = True,
                              #      label=T("Published")),
                              comments(),
-                             #Field("replies", "boolean",
-                             #      default = False,
-                             #      label=T("Comments permitted?")),
-                             roles_permitted(),    # Multiple Roles
+                             #roles_permitted(),    # Multiple Roles
                              *meta_fields())
 
         # CRUD Strings
@@ -273,7 +280,7 @@ def cms_rheader(r, tabs=[]):
         # Tabs
         tabs = [(T("Basic Details"), None),
                 (T("Posts"), "post"),
-                ]
+               ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(
@@ -286,8 +293,9 @@ def cms_rheader(r, tabs=[]):
     elif resourcename == "post":
         # Tabs
         tabs = [(T("Basic Details"), None),
-                #(T("Comments"), "discuss")
                ]
+        if record.replies:
+            tabs.append((T("Comments"), "discuss"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(

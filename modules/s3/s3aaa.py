@@ -1070,7 +1070,6 @@ class AuthS3(Auth):
         db = current.db
         manager = current.manager
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         user_id = form.vars.id
         if not user_id:
@@ -1108,8 +1107,13 @@ class AuthS3(Auth):
             row = db(query).select(htable.id, limitby=(0, 1)).first()
 
             if not row:
+                if current.deployment_settings.get_hrm_show_staff():
+                    type = 1 # Staff
+                else:
+                    type = 2 # Volunteer
                 id = htable.insert(person_id=person_id,
                                    organisation_id=organisation_id,
+                                   type=type,
                                    owned_by_user=user_id,
                                    owned_by_organisation=owned_by_organisation,
                                    owned_by_facility=owned_by_facility)
@@ -1496,7 +1500,7 @@ class AuthS3(Auth):
         mtable = self.settings.table_membership
         utable = self.settings.table_user
 
-        # User own their own HRM records
+        # User owns their own HRM records
         query = (htable.person_id == person_id)
         db(query).update(owned_by_user=user_id)
 

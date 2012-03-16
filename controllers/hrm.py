@@ -147,23 +147,6 @@ def human_resource():
     table = s3db[tablename]
     ptable = s3db.pr_person
 
-    # Configure CRUD strings
-    s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Staff Member"),
-        title_display = T("Staff Member Details"),
-        title_list = T("Staff & Volunteers"),
-        title_update = T("Edit Record"),
-        title_search = T("Search Staff & Volunteers"),
-        subtitle_create = T("Add New Staff Member"),
-        subtitle_list = T("Staff Members"),
-        label_list_button = T("List All Records"),
-        label_create_button = T("Add Staff Member"),
-        label_delete_button = T("Delete Record"),
-        msg_record_created = T("Staff member added"),
-        msg_record_modified = T("Record updated"),
-        msg_record_deleted = T("Record deleted"),
-        msg_list_empty = T("No staff or volunteers currently registered"))
-
     # NB Change these & change the list_fields.pop() later
     list_fields = ["id",
                    "person_id",
@@ -793,12 +776,14 @@ def group():
     table.group_type.label = T("Team Type")
     table.description.label = T("Team Description")
     table.name.label = T("Team Name")
-    s3db.pr_group_membership.group_id.label = T("Team ID")
-    s3db.pr_group_membership.group_head.label = T("Team Leader")
+    mtable = s3db.pr_group_membership
+    mtable.group_id.label = T("Team ID")
+    mtable.group_head.label = T("Team Leader")
 
     # Set Defaults
-    table.group_type.default = 3  # 'Relief Team'
-    table.group_type.readable = table.group_type.writable = False
+    _group_type = table.group_type
+    _group_type.default = 3  # 'Relief Team'
+    _group_type.readable = _group_type.writable = False
 
     # CRUD Strings
     ADD_TEAM = T("Add Team")
