@@ -20,13 +20,14 @@
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
 
-# Generic class-based views
 from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
+from django.views.generic import FormView
 
 from django.template import RequestContext
 from django.views.generic.create_update import create_object
@@ -42,7 +43,7 @@ class AddPost(FormView):
 
     """
     Create a new post. Only registered users belonging to a concrete group
-    are allowed to create news. nly site administrators will be able to
+    are allowed to create news. only site administrators will be able to
     post news in the index page.
     """
     form_class = NewsForm
@@ -68,7 +69,7 @@ class AddPost(FormView):
         
     @method_decorator(permission_required('news.add_post'))
     def dispatch(self, *args, **kwargs):
-        return super(AddDocument, self).dispatch(*args, **kwargs)
+        return super(AddPost, self).dispatch(*args, **kwargs)
 
 
 class ViewPost(DetailView):
@@ -80,9 +81,6 @@ class ViewPost(DetailView):
     template_name = 'news/post_detail.html'
 
     def get_object(self):
-
-        """
-        """
         return Post.objects.get(pk=self.kwargs['post_id'])
 
     def get_context_data(self, **kwargs):
@@ -144,6 +142,4 @@ class DeletePost(DeleteView):
         context = super(DeletePost, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
-
-#@permission_required('news.delete_post')
 

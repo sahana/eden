@@ -20,9 +20,11 @@
 
 from django.conf.urls.defaults import *
 
+from e_cidadania.apps.staticpages.views import ViewPage
+
 urlpatterns = patterns('e_cidadania.apps.staticpages.views',
 
-    url(r'^$', 'view_page', name='view-page'),
+    url(r'^$', ViewPage.as_view(), name='view-page'),
 
     url(r'^edit/', 'edit_page', name='edit-page'),
     

@@ -30,7 +30,7 @@ class PageAdmin(admin.ModelAdmin):
     list_display = ('name', 'uri', 'pub_date', 'author')
     search_fields = ('name', 'uri', 'author')
     
-    change_form_template = 'staticpages/change_form.html'
+    #change_form_template = 'staticpages/change_form.html'
     
     fieldsets = [
         (None, {'fields':

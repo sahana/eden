@@ -27,23 +27,16 @@ from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
 
+from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.detail import DetailView
+
 from django.views.generic.list_detail import object_list, object_detail
 from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 from e_cidadania.apps.staticpages.models import StaticPage
 
-def view_page(request, slug):
-
-    """
-    Get the request page and view it. There are no view restrictions on views.
-    """
-    page = get_object_or_404(StaticPage, uri=slug)
-    return object_detail(request,
-                         queryset = StaticPage.objects.all(),
-                         object_id = page.id,
-                         template_name = 'staticpages/staticpages_index.html',
-                         template_object_name = 'page')
 
 @permission_required('staticpages.add_staticpage')
 def add_page(request, slug):
@@ -52,21 +45,22 @@ def add_page(request, slug):
     Thisd function goes into the administration
     """
     pass
-#    page = get_object_or_404(StaticPage, uri=slug)
+    
+    
+class ViewPage(DetailView):
 
-#    form = SpaceForm(request.POST or None, request.FILES or None, instance=space)
+    """
+    Get the request page and view it. There are no view restrictions on views.
+    """
+    context_object_name = 'staticpage'
+    template_name = 'staticpages/staticpages_index.html'
+    
+    def get_object(self):
+        self.page = get_object_or_404(StaticPage, uri=self.kwargs['slug'])
+        return self.page
+        
 
-#    if request.POST:
-#        form_uncommited = form.save(commit=False)
-#        form_uncommited.author = request.user
-#        if form.is_valid():
-#            form_uncommited.save()
-#            space = form_uncommited.url
-#            return redirect('/spaces/' + space)
-
-#    return render_to_response('spaces/space_add.html',
-#                              {'form': form},
-#                              context_instance=RequestContext(request))
+#class EditPage(UpdateView):
 
 @permission_required('staticpages.edit_staticpage')                         
 def edit_page(request, slug):
@@ -80,7 +74,7 @@ def edit_page(request, slug):
                          object_id = page.id,
                          login_required = True,
                          template_name = 'staicpages/staticpages_edit.html',
-                         template_object_name = 'page',
+                         template_object_name = 'staticpage',
                          post_save_redirect = '/',
                          extra_context = {'get_place': place})
                          

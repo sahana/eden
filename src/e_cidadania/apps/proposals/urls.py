@@ -24,15 +24,15 @@ Proposal module URLs.
 
 from django.conf.urls.defaults import *
 from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
-    DeleteProposal
+    DeleteProposal, EditProposal, AddProposal
 
 urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
     url(r'^$', ListProposals.as_view(), name='list-proposals'),
 
-    url(r'^add/', 'add_proposal', name='add-proposal'),
+    url(r'^add/', AddProposal.as_view(), name='add-proposal'),
 
-    url(r'^(?P<prop_id>\w+)/edit/$', 'edit_proposal', name='edit-proposal'),
+    url(r'^(?P<prop_id>\w+)/edit/$', EditProposal.as_view(), name='edit-proposal'),
 
     url(r'^(?P<prop_id>\w+)/delete/$', DeleteProposal.as_view(), name='delete-proposal'),
 
