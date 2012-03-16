@@ -1051,7 +1051,8 @@ class S3ContingencyTable(TABLE):
             row = rvals[i]
             v = represent(rows, row.value)
             add_row_title(s3_truncate(unicode(v)))
-            rowhdr = TD(DIV(v))
+            #rowhdr = TD(DIV(v))
+            rowhdr = TD(v)
             add_cell(rowhdr)
 
             # Result cells
@@ -1073,12 +1074,14 @@ class S3ContingencyTable(TABLE):
                     else:
                         add_value(unicode(value))
                 vals = " / ".join(vals)
-                add_cell(TD(DIV(vals)))
+                #add_cell(TD(DIV(vals)))
+                add_cell(TD(vals))
 
             # Row total
             totals = get_total(row, layers, append=add_row_total)
             if show_totals and cols is not None:
-                add_cell(TD(DIV(totals)))
+                #add_cell(TD(DIV(totals)))
+                add_cell(TD(totals))
 
             add_row(tr)
 
@@ -1096,12 +1099,14 @@ class S3ContingencyTable(TABLE):
         for j in xrange(numcols):
             col = report.col[j]
             totals = get_total(col, layers, append=add_col_total)
-            add_total(TD(DIV(totals)))
+            #add_total(TD(DIV(totals)))
+            add_total(TD(totals))
 
         # Grand total
         if cols is not None:
             grand_totals = get_total(report.totals, layers)
-            add_total(TD(DIV(grand_totals)))
+            #add_total(TD(DIV(grand_totals)))
+            add_total(TD(grand_totals))
 
         tfoot = TFOOT(col_total)
 
