@@ -2726,15 +2726,14 @@ class S3ImportJob():
             components = model.get_components(table, names=components)
             for alias in components:
                 component = components[alias]
-                pkey = component.pkey
-                if component.linktable:
-                    ctable = component.linktable
-                    ctablename = ctable._tablename
-                    fkey = component.lkey
+                if component.link:
+                    target = component.link
                 else:
-                    ctable = component.table
-                    ctablename = component.tablename
-                    fkey = component.fkey
+                    target = component
+                ctable = component.table
+                ctablename = component.tablename
+                pkey = component.pkey
+                fkey = component.fkey
 
                 celements = xml.select_resources(element, ctablename)
                 if celements:
