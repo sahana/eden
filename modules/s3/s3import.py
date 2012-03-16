@@ -2726,14 +2726,14 @@ class S3ImportJob():
             components = model.get_components(table, names=components)
             for alias in components:
                 component = components[alias]
-                if component.link:
-                    target = component.link
-                else:
-                    target = component
-                ctable = component.table
-                ctablename = component.tablename
                 pkey = component.pkey
-                fkey = component.fkey
+                if component.linktable:
+                    ctable = component.linktable
+                    fkey = component.lkey
+                else:
+                    ctable = component.table
+                    fkey = component.fkey
+                ctablename = ctable._tablename
 
                 celements = xml.select_resources(element, ctablename)
                 if celements:
@@ -2905,7 +2905,7 @@ class S3ImportJob():
                     if directory is not None:
                         entry = directory.get((tablename, attr, uid), None)
                     if not entry:
-                        expr = './/%s[@%s="%s" and @%s="%s"]' % (
+                        expr = ".//%s[@%s='%s' and @%s='%s']" % (
                                     xml.TAG.resource,
                                     xml.ATTRIBUTE.name,
                                     tablename,
