@@ -2626,13 +2626,12 @@ class S3Resource(object):
             return self[key]
         else:
             master = self[key]
-            try:
+            if component in self.components:
                 c = self.components[component]
-            except:
-                try:
-                    c = self.links[component]
-                except:
-                    raise AttributeError
+            elif component in self.links:
+                c = self.links[component]
+            else:
+                raise AttributeError("Undefined component %s" % component)
             if c._rows is None:
                 c.load()
             rows = c._rows
@@ -3047,34 +3046,39 @@ class S3Resource(object):
                 if components and component.tablename not in components:
                     continue
 
+                if component.link is not None:
+                    c = component.link
+                else:
+                    c = component
+
                 # Add MCI filter to component
-                ctable = component.table
+                ctable = c.table
                 if xml.filter_mci and xml.MCI in ctable.fields:
                     mci_filter = (ctable[xml.MCI] >= 0)
-                    component.add_filter(mci_filter)
+                    c.add_filter(mci_filter)
 
                 # Split fields
-                _skip = skip+[component.fkey]
-                crfields, cdfields = component.split_fields(skip=_skip)
+                _skip = skip+[c.fkey]
+                crfields, cdfields = c.split_fields(skip=_skip)
 
                 # Load records if necessary
-                if component._rows is None:
-                    component.load()
+                if c._rows is None:
+                    c.load()
 
                 # Construct the component base URL
                 if record_url:
-                    component_url = "%s/%s" % (record_url, component.alias)
+                    component_url = "%s/%s" % (record_url, c.alias)
                 else:
                     component_url = None
 
                 # Find related records
-                crecords = self(record.id, component=component.alias)
-                if not component.multiple and len(crecords):
+                crecords = self(record.id, component=c.alias)
+                if not c.multiple and len(crecords):
                     crecords = [crecords[0]]
 
                 # Export records
-                export = component.__export_record
-                map_record = component.__map_record
+                export = c.__export_record
+                map_record = c.__map_record
                 for crecord in crecords:
                     # Construct the component record URL
                     if component_url:
