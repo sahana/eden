@@ -212,7 +212,6 @@ class S3MainMenu:
                             MM("Settings", f="settings"),
                             MM("Users", f="user"),
                             MM("Database", c="appadmin", f="index"),
-                            MM("Import", f="import_file"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Tickets", f="errors"),
                         )
@@ -719,22 +718,26 @@ class S3OptionsMenu:
     def hrm(self):
         """ HRM / Human Resources Management """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        settings = current.deployment_settings
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
-        manager_mode = lambda i: session.s3.hrm.mode is None
-        personal_mode = lambda i: session.s3.hrm.mode is not None
-        is_org_admin = lambda i: session.s3.hrm.orgs and True or \
-                                 ADMIN in session.s3.roles
+        manager_mode = lambda i: s3.hrm.mode is None
+        personal_mode = lambda i: s3.hrm.mode is not None
+        is_org_admin = lambda i: s3.hrm.orgs and True or \
+                                 ADMIN in s3.roles
+
+        show_staff = lambda i: settings.get_hrm_show_staff()
+        show_vols = lambda i: settings.get_hrm_show_vols()
 
         staff = dict(group="staff")
         volunteers = dict(group="volunteer")
 
         return M(c="hrm")(
                     M("Staff", f="human_resource",
-                      check=manager_mode, vars=staff)(
+                      check=[manager_mode, show_staff], vars=staff)(
                         M("New Staff Member", m="create",
                           vars=staff),
                         M("List All",
@@ -754,7 +757,7 @@ class S3OptionsMenu:
                         #M("Dashboard", f="index"),
                     ),
                     M("Volunteers", f="human_resource",
-                      check=manager_mode, vars=volunteers)(
+                      check=[manager_mode, show_vols], vars=volunteers)(
                         M("New Volunteer", m="create",
                           vars=volunteers),
                         M("List All",

@@ -200,6 +200,9 @@ input, select, textarea {
 textarea.comments {
     height: 50px;
 }
+textarea.richtext {
+    height: 100px;
+}
 .hide {
     display: none;
 }

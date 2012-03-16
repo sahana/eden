@@ -217,7 +217,7 @@
     <xsl:template name="Organisation">
         <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
 
-        <xsl:if test="OrganisationName!=''">
+        <xsl:if test="$OrganisationName!=''">
             <resource name="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$OrganisationName"/>
@@ -233,7 +233,7 @@
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
         <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
 
-        <xsl:if test="ProjectName!=''">
+        <xsl:if test="$ProjectName!=''">
             <resource name="project_project">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$ProjectName"/>
