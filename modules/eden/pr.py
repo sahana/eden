@@ -544,7 +544,9 @@ class S3PersonModel(S3Model):
                                    readable=False,
                                    writable=False,
                                    default=False),
-                             Field("first_name", notnull=True,
+                             Field("first_name",
+                                   notnull=True,
+                                   default="?",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
                                    # http://eden.sahanafoundation.org/ticket/834
