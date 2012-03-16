@@ -127,13 +127,13 @@ def index():
     title = deployment_settings.get_system_name()
     response.title = title
 
-    table = s3db.cms_post
-    item = db(table.module == module).select(table.body,
-                                             limitby=(0, 1)).first()
-    if item:
-        item = DIV(XML(item.body))
-    else:
-        item = ""
+    item = ""
+    if deployment_settings.has_module("cms"):
+        table = s3db.cms_post
+        item = db(table.module == module).select(table.body,
+                                                 limitby=(0, 1)).first()
+        if item:
+            item = DIV(XML(item.body))
 
     if deployment_settings.has_module("cr"):
         s3mgr.load("cr_shelter")
