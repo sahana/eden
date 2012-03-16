@@ -611,6 +611,12 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
+    #("cms", Storage(
+    #       name_nice = T("Content Management"),
+    #       description = T("Content Management System"),
+    #       restricted = True,
+    #       module_type = 10,
+    #   )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),
     #       description = T("Fire Station Management"),

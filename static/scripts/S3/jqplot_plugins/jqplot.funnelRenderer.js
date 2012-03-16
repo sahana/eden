@@ -1,18 +1,30 @@
 /**
- * Copyright (c) 2009 - 2010 Chris Leonello
+ * jqPlot
+ * Pure JavaScript plotting plugin using jQuery
+ *
+ * Version: 1.0.0b2_r1012
+ *
+ * Copyright (c) 2009-2011 Chris Leonello
  * jqPlot is currently available for use in all personal or commercial projects 
- * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * under both the MIT (http://www.opensource.org/licenses/mit-license.php) and GPL 
+ * version 2.0 (http://www.gnu.org/licenses/gpl-2.0.html) licenses. This means that you can 
  * choose the license that best suits your project and use it accordingly. 
  *
- * The author would appreciate an email letting him know of any substantial
- * use of jqPlot.  You can reach the author at: chris at jqplot dot com 
- * or see http://www.jqplot.com/info.php .  This is, of course, 
- * not required.
+ * Although not required, the author would appreciate an email letting him 
+ * know of any substantial use of jqPlot.  You can reach the author at: 
+ * chris at jqplot dot com or see http://www.jqplot.com/info.php .
  *
  * If you are feeling kind and generous, consider supporting the project by
  * making a donation at: http://www.jqplot.com/donate.php .
  *
- * Thanks for using jqPlot!
+ * sprintf functions contained in jqplot.sprintf.js by Ash Searle:
+ *
+ *     version 2007.04.27
+ *     author Ash Searle
+ *     http://hexmen.com/blog/2007/03/printf-sprintf/
+ *     http://hexmen.com/js/sprintf.js
+ *     The author (Ash Searle) has placed this code in the public domain:
+ *     "This code is unrestricted: you are free to use it however you like."
  * 
  */
 (function($) {
@@ -134,6 +146,7 @@
         // Threshhold in percentage (0 - 100) of pie area, below which no label will be displayed.
         // This applies to all label types, not just to percentage labels.
         this.dataLabelThreshold = 3;
+        this._type = 'funnel';
         
         this.tickRenderer = $.jqplot.FunnelTickRenderer;
         
@@ -781,7 +794,7 @@
     function postInit(target, data, options) {
         // if multiple series, add a reference to the previous one so that
         // funnel rings can nest.
-        for (i=0; i<this.series.length; i++) {
+        for (var i=0; i<this.series.length; i++) {
             if (this.series[i].renderer.constructor == $.jqplot.FunnelRenderer) {
                 // don't allow mouseover and mousedown at same time.
                 if (this.series[i].highlightMouseOver) {
@@ -789,14 +802,13 @@
                 }
             }
         }
-        this.target.bind('mouseout', {plot:this}, function (ev) { unhighlight(ev.data.plot); });
     }
     
     // called with scope of plot
     function postParseOptions(options) {
         for (var i=0; i<this.series.length; i++) {
             this.series[i].seriesColors = this.seriesColors;
-            this.series[i].colorGenerator = this.colorGenerator;
+            this.series[i].colorGenerator = $.jqplot.colorGenerator;
         }
     }
     
@@ -890,19 +902,26 @@
     // create a canvas which we can draw on.
     // insert it before the eventCanvas, so eventCanvas will still capture events.
     function postPlotDraw() {
+        // Memory Leaks patch    
+        if (this.plugins.funnelRenderer && this.plugins.funnelRenderer.highlightCanvas) {
+            this.plugins.funnelRenderer.highlightCanvas.resetCanvas();
+            this.plugins.funnelRenderer.highlightCanvas = null;
+        }
+
         this.plugins.funnelRenderer = {};
         this.plugins.funnelRenderer.highlightCanvas = new $.jqplot.GenericCanvas();
         
         // do we have any data labels?  if so, put highlight canvas before those
         var labels = $(this.targetId+' .jqplot-data-label');
         if (labels.length) {
-            $(labels[0]).before(this.plugins.funnelRenderer.highlightCanvas.createElement(this._gridPadding, 'jqplot-funnelRenderer-highlight-canvas', this._plotDimensions));
+            $(labels[0]).before(this.plugins.funnelRenderer.highlightCanvas.createElement(this._gridPadding, 'jqplot-funnelRenderer-highlight-canvas', this._plotDimensions, this));
         }
         // else put highlight canvas before event canvas.
         else {
-            this.eventCanvas._elem.before(this.plugins.funnelRenderer.highlightCanvas.createElement(this._gridPadding, 'jqplot-funnelRenderer-highlight-canvas', this._plotDimensions));
+            this.eventCanvas._elem.before(this.plugins.funnelRenderer.highlightCanvas.createElement(this._gridPadding, 'jqplot-funnelRenderer-highlight-canvas', this._plotDimensions, this));
         }
         var hctx = this.plugins.funnelRenderer.highlightCanvas.setContext();
+        this.eventCanvas._elem.bind('mouseleave', {plot:this}, function (ev) { unhighlight(ev.data.plot); });
     }
     
     $.jqplot.preInitHooks.push(preInit);

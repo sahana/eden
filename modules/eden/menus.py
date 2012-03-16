@@ -299,6 +299,24 @@ class S3MainMenu:
                 )
         return gis_menu
 
+    @staticmethod
+    def menu_climate(**attr):
+        settings = current.deployment_settings
+        module = settings.modules["climate"]
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
+        menu_climate = MM(
+            module.name_nice,
+            c="climate",
+            **attr
+        )(
+            MM("Station Parameters", f="station_parameter"),
+            #MM("Saved Queries", f="save_query"),
+            MM("Purchase Data", f="purchase"),
+            MM("DataSet Prices", f="prices", restrict=[ADMIN]),
+        )
+        return menu_climate
+
 # =============================================================================
 class S3OptionsMenu:
     """
@@ -514,6 +532,22 @@ class S3OptionsMenu:
                         M("List / Add Services", m="create"),
                         M("List / Add Types"),
                     )
+                )
+
+    # -------------------------------------------------------------------------
+    def cms(self):
+        """ CMS / Content Management System """
+
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Posts", f="post")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("View as Pages", f="page"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -770,13 +804,13 @@ class S3OptionsMenu:
                       check=manager_mode)(
                         M("New Training Course", m="create"),
                         M("List All"),
-                        M("Course Certificates", f="course_certificate"),
+                        #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
                         M("New Certificate", m="create"),
                         M("List All"),
-                        M("Skill Equivalence", f="certificate_skill"),
+                        #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),

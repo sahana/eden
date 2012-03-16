@@ -1,4 +1,4 @@
-"ADM1_NAME","ADM2_NAME","Code"
+"ADM1_NAME","ADM2_NAME","ADM2_CODE"
 "Aileu","Aileu Vila",201
 "Aileu","Laulara",204
 "Aileu","Liquidoe",802
@@ -37,11 +37,11 @@
 "Ermera","Hatolia",705
 "Ermera","Letefoho",703
 "Ermera","Railaco",701
-"Lautém","Iliomar",903
-"Lautém","Lautém",902
-"Lautém","Lospalos",901
-"Lautém","Luro",904
-"Lautém","Tutuala",905
+"Lautem","Iliomar",903
+"Lautem","Lautem",902
+"Lautem","Lospalos",901
+"Lautem","Luro",904
+"Lautem","Tutuala",905
 "Liquiçá","Bazartete",801
 "Liquiçá","Liquiçá",202
 "Liquiçá","Maubara",803

@@ -690,7 +690,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        url = URL(c="pr", f="person",
+        url = URL(c="pr", f="person_search",
                   args="search.json",
                   vars={"filter":"~"})
 

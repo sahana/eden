@@ -242,6 +242,17 @@ def person():
 
     return output
 
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        Person REST controller
+        - limited to just search.json for use in Autocompletes
+        - allows differential access permissions
+    """
+
+    response.s3.prep = lambda r: r.representation == "json" and \
+                                 r.method == "search"
+    return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
 def group():

@@ -79,14 +79,15 @@ try:
 except ImportError:
     s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
-# Map WKT types to db types (multi-geometry types are mapped to single types)
+# Map WKT types to db types
 GEOM_TYPES = {
     "point": 1,
-    "multipoint": 1,
     "linestring": 2,
-    "multilinestring": 2,
     "polygon": 3,
-    "multipolygon": 3,
+    "multipoint": 4,
+    "multilinestring": 5,
+    "multipolygon": 6,
+    "geometrycollection": 7,
 }
 
 # km
@@ -233,15 +234,15 @@ class GIS(object):
         #messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
         messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"
         messages.unknown_type = "Unknown Type!"
-        messages.invalid_wkt_point = "Invalid WKT: Must be like POINT(3 4)!"
-        messages.invalid_wkt_linestring = "Invalid WKT: Must be like LINESTRING(3 4,10 50,20 25)!"
-        messages.invalid_wkt_polygon = "Invalid WKT: Must be like POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2, 3 2, 3 3, 2 3,2 2))!"
+        messages.invalid_wkt_point = "Invalid WKT: must be like POINT(3 4)"
+        messages.invalid_wkt = "Invalid WKT: see http://en.wikipedia.org/wiki/Well-known_text"
         messages.lon_empty = "Invalid: Longitude can't be empty if Latitude specified!"
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
         self.gps_symbols = GPS_SYMBOLS
         self.DEFAULT_SYMBOL = "White Dot"
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
+        self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
         self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
         # Info for countries. These will be filled in once the gis_location
@@ -1062,11 +1063,22 @@ class GIS(object):
             Returns the location hierarchy and it's labels
 
             @param: level - a specific level for which to lookup the label
+                            (this use is to be discouraged, especially for the early runs as the result won't be cached)
             @param: location - the location_id to lookup the location for
                                currently only the actual location is supported
                                @ToDo: Do a search of parents to allow this
                                       lookup for any location
         """
+
+        _levels = self.hierarchy_levels
+        _location = location
+
+        if not location and _levels:
+            # Use cached value
+            if level:
+                return _levels[level]
+            else:
+                return _levels
 
         T = current.T
         COUNTRY = str(T("Country"))
@@ -1111,7 +1123,6 @@ class GIS(object):
                 if key == "L0":
                     levels[key] = COUNTRY
                 else:
-                    # Only include rows with values
                     levels[key] = key
             return levels
 
@@ -1130,6 +1141,9 @@ class GIS(object):
                 elif key in row and row[key]:
                     # Only include rows with values
                     levels[key] = str(T(row[key]))
+            if not _location:
+                # Cache the value
+                self.hierarchy_levels = levels
             return levels
 
     # -------------------------------------------------------------------------
@@ -2161,10 +2175,22 @@ class GIS(object):
                 else:
                     query = (table.code == code)
                     wkt = geom.ExportToWkt()
+                    if wkt.startswith("LINESTRING"):
+                        gis_feature_type = 2
+                    elif wkt.startswith("POLYGON"):
+                        gis_feature_type = 3
+                    elif wkt.startswith("MULTIPOINT"):
+                        gis_feature_type = 4
+                    elif wkt.startswith("MULTILINESTRING"):
+                        gis_feature_type = 5
+                    elif wkt.startswith("MULTIPOLYGON"):
+                        gis_feature_type = 6
+                    elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        gis_feature_type = 7
                     code2 = feat.GetField(code2Field)
                     area = feat.GetField("Shape_Area")
                     try:
-                        db(query).update(gis_feature_type=3,
+                        db(query).update(gis_feature_type=gis_feature_type,
                                          wkt=wkt,
                                          code2=code2,
                                          area=area)
@@ -2505,9 +2531,21 @@ class GIS(object):
                                  area=area)
                 else:
                     wkt = geom.ExportToWkt()
+                    if wkt.startswith("LINESTRING"):
+                        gis_feature_type = 2
+                    elif wkt.startswith("POLYGON"):
+                        gis_feature_type = 3
+                    elif wkt.startswith("MULTIPOINT"):
+                        gis_feature_type = 4
+                    elif wkt.startswith("MULTILINESTRING"):
+                        gis_feature_type = 5
+                    elif wkt.startswith("MULTIPOLYGON"):
+                        gis_feature_type = 6
+                    elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        gis_feature_type = 7
                     table.insert(name=name,
                                  level=level,
-                                 gis_feature_type=3,
+                                 gis_feature_type=gis_feature_type,
                                  wkt=wkt,
                                  parent=parent.id,
                                  code=code,
@@ -2875,66 +2913,46 @@ class GIS(object):
     def wkt_centroid(form):
         """
             OnValidation callback:
-            If a Point has LonLat defined: calculate the WKT.
-            If a Line/Polygon has WKT defined: validate the format,
+            If a WKT is defined: validate the format,
                 calculate the LonLat of the Centroid, and set bounds
-            Centroid and bounds calculation is done using Shapely, which wraps Geos.
-            A nice description of the algorithm is provided here:
-                http://www.jennessent.com/arcgis/shapes_poster.htm
+            Else if a LonLat is defined: calculate the WKT for the Point.
 
-            Relies on Shapely.
+            Uses Shapely.
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
         messages = current.messages
         vars = form.vars
 
-        if not "gis_feature_type" in vars:
-            # Default to point
-            vars.gis_feature_type = "1"
-        elif not vars.gis_feature_type:
-            # Default to point
-            vars.gis_feature_type = "1"
-
-        if vars.gis_feature_type == "1" or \
-           vars.gis_feature_type == 1:
-            # Point
-            if (vars.lon is None and vars.lat is None) or \
-               (vars.lon == "" and vars.lat == ""):
-                # No geo to create WKT from, so skip
-                return
-            elif vars.lat is None or vars.lat == "":
-                form.errors["lat"] = messages.lat_empty
-                return
-            elif vars.lon is None or vars.lon == "":
-                form.errors["lon"] = messages.lon_empty
-                return
-            else:
-                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                vars.lon_min = vars.lon_max = vars.lon
-                vars.lat_min = vars.lat_max = vars.lat
-                return
-
-        elif vars.gis_feature_type in ("2", "3", 2, 3):
-            # Parse WKT for LineString, Polygon
+        if vars.wkt:
+            # Parse WKT for LineString, Polygon, etc
             try:
+                shape = wkt_loads(vars.wkt)
+            except:
                 try:
-                    shape = wkt_loads(vars.wkt)
+                    # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
+                    linestring = "LINESTRING%s" % vars.wkt[8:-1]
+                    shape = wkt_loads(linestring)
+                    vars.wkt = linestring
                 except:
-                    if vars.gis_feature_type  == "3":
-                        # POLYGON
-                        try:
-                            # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                            linestring = "LINESTRING%s" % vars.wkt[8:-1]
-                            shape = wkt_loads(linestring)
-                            vars.gis_feature_type = 2
-                            vars.wkt = linestring
-                        except:
-                            form.errors["wkt"] = messages.invalid_wkt_polygon
-                    else:
-                        # "2"
-                        form.errors["wkt"] = messages.invalid_wkt_linestring
-                    return
+                    form.errors["wkt"] = messages.invalid_wkt
+                return
+            gis_feature_type = shape.type
+            if gis_feature_type == "Point":
+                vars.gis_feature_type = 1
+            elif gis_feature_type == "LineString":
+                vars.gis_feature_type = 2
+            elif gis_feature_type == "Polygon":
+                vars.gis_feature_type = 3
+            elif gis_feature_type == "MultiPoint":
+                vars.gis_feature_type = 4
+            elif gis_feature_type == "MultiLineString":
+                vars.gis_feature_type = 5
+            elif gis_feature_type == "MultiPolygon":
+                vars.gis_feature_type = 6
+            elif gis_feature_type == "GeometryCollection":
+                vars.gis_feature_type = 7
+            try:
                 centroid_point = shape.centroid
                 vars.lon = centroid_point.x
                 vars.lat = centroid_point.y
@@ -2945,8 +2963,29 @@ class GIS(object):
                 vars.lat_max = bounds[3]
             except:
                 form.errors.gis_feature_type = messages.centroid_error
+
+        elif (vars.lon is None and vars.lat is None) or \
+             (vars.lon == "" and vars.lat == ""):
+            # No Geometry available
+            # Don't clobber existing records (e.g. in Prepop)
+            #vars.gis_feature_type = "0"
+            # Cannot create WKT, so Skip
+            return
         else:
-            form.errors.gis_feature_type = messages.unknown_type
+            # Point
+            vars.gis_feature_type = "1"
+            if vars.lat is None or vars.lat == "":
+                form.errors["lat"] = messages.lat_empty
+            elif vars.lon is None or vars.lon == "":
+                form.errors["lon"] = messages.lon_empty
+            else:
+                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
+                vars.lon_min = vars.lon_max = vars.lon
+                vars.lat_min = vars.lat_max = vars.lat
+
+        if current.deployment_settings.get_gis_spatialdb():
+            # Also populate the spatial field
+            vars.the_geom = vars.wkt
 
         return
 
@@ -3069,6 +3108,30 @@ class GIS(object):
                              lat_min=table.lat,
                              lon_max=table.lon,
                              lat_max=table.lat)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
+        """
+            Simplify a complex Polygon
+        """
+
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+
+        shape = wkt_loads(wkt)
+        simplified = shape.simplify(tolerance, preserve_topology)
+        if output == "wkt":
+            output = simplified.to_wkt()
+        elif output == "geojson":
+            from ..geojson import dumps
+            output = dumps(simplified)
+
+        return output
 
     # -------------------------------------------------------------------------
     def show_map( self,
@@ -3878,19 +3941,21 @@ S3.gis.layers_feature_queries[%i] = {
         if catalogue_layers:
             # Add all Layers from the Catalogue
             layer_types = [
-                OSMLayer,
                 BingLayer,
+                EmptyLayer,
                 GoogleLayer,
+                OSMLayer,
                 TMSLayer,
                 WMSLayer,
-                FeatureLayer,
+                JSLayer,
+                ThemeLayer,
                 GeoJSONLayer,
-                GeoRSSLayer,
                 GPXLayer,
+                CoordinateLayer,
+                GeoRSSLayer,
                 KMLLayer,
                 WFSLayer,
-                JSLayer,
-                CoordinateLayer,
+                FeatureLayer,
             ]
         else:
             # Add just the default Base Layer
@@ -4348,6 +4413,32 @@ class CoordinateLayer(Layer):
             return None
 
 # -----------------------------------------------------------------------------
+class EmptyLayer(Layer):
+    """
+        Empty Layer from Catalogue
+        - there should only be one of these
+    """
+
+    tablename = "gis_layer_empty"
+
+    # -------------------------------------------------------------------------
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        sublayers = self.sublayers
+        if sublayers:
+            sublayer = sublayers[0]
+            name = str(current.T(sublayer.name))
+            name_safe = re.sub("'", "", name)
+            output = "S3.gis.EmptyLayer='%s';" % name_safe
+            return output
+        else:
+            return None
+
+# -----------------------------------------------------------------------------
 class FeatureLayer(Layer):
     """
         Feature Layers from Catalogue
@@ -4597,7 +4688,7 @@ class GoogleLayer(Layer):
                 add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % apikey)
             else:
                 # v3 API
-                add_script("http://maps.google.com/maps/api/js?v=3.2&sensor=false")
+                add_script("http://maps.google.com/maps/api/js?v=3.6&sensor=false")
                 if "StreetviewButton" in output:
                     # Streetview doesn't work with v2 API
                     output["StreetviewButton"] = str(T("Click where you want to open Streetview"))
@@ -4834,6 +4925,31 @@ class OSMLayer(Layer):
                 attribution = (self.attribution, (None,)),
             )
             self.setup_folder_and_visibility(output)
+            return output
+
+# -----------------------------------------------------------------------------
+class ThemeLayer(Layer):
+    """
+        Theme Layers from Catalogue
+    """
+
+    tablename = "gis_layer_theme"
+    js_array = "S3.gis.layers_theme"
+
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1" % \
+                (URL(c="gis", f="theme_data"),
+                 self.id)
+
+            # Mandatory attributes
+            output = {
+                "name": self.safe_name,
+                "url": url,
+            }
+            #
+            self.setup_folder_and_visibility(output)
+
             return output
 
 # -----------------------------------------------------------------------------

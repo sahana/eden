@@ -1863,6 +1863,7 @@ class S3Resource(object):
                  parent=None,
                  linked=None,
                  linktable=None,
+                 alias=None,
                  components=None,
                  include_deleted=False):
         """
@@ -1902,7 +1903,7 @@ class S3Resource(object):
         # Basic properties
         self.prefix = prefix
         self.name = name
-        self.alias = name
+        self.alias = alias or name
 
         # Tablename and table
         tablename = "%s_%s" % (prefix, name)
@@ -1913,6 +1914,16 @@ class S3Resource(object):
             raise KeyError(manager.error)
         self.tablename = tablename
         self.table = table
+
+        # Table alias (needed for self-joins)
+        self._alias = tablename
+        if parent is not None:
+            if parent.tablename == self.tablename:
+                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
+                pkey = table._id.name
+                self.table = table.with_alias(alias)
+                self.table._id = self.table[pkey]
+                self._alias = alias
 
         # Resource Filter
         self.rfilter = None
@@ -1961,6 +1972,7 @@ class S3Resource(object):
                 c = hooks[alias]
                 component = S3Resource(manager, c.prefix, c.name,
                                        parent=self,
+                                       alias=alias,
                                        linktable=c.linktable,
                                        include_deleted=self.include_deleted)
 
@@ -1982,7 +1994,6 @@ class S3Resource(object):
                     link = component.link
                     link.pkey = component.pkey
                     link.fkey = component.lkey
-                    link.alias = component.alias
                     link.actuate = component.actuate
                     link.autodelete = component.autodelete
                     link.multiple = component.multiple
@@ -2278,6 +2289,7 @@ class S3Resource(object):
 
             @param ondelete: on-delete callback
             @param format: the representation format of the request (optional)
+            @param cascade: this is a cascade delete (prevents rollbacks/commits)
 
             @returns: number of records deleted
 
@@ -3114,10 +3126,13 @@ class S3Resource(object):
         """
 
         manager = current.manager
+        model = manager.model
         xml = manager.xml
 
         tablename = self.tablename
         table = self.table
+
+        postprocess = model.get_config(tablename, "onexport", None)
 
         default = (None, None)
 
@@ -3145,6 +3160,7 @@ class S3Resource(object):
         # Generate the element
         element = xml.resource(parent, table, record,
                                fields=dfields,
+                               postprocess=postprocess,
                                url=url)
         # Add the references
         xml.add_references(element, rmap,
@@ -3152,7 +3168,7 @@ class S3Resource(object):
 
         # GIS-encode the element
         download_url = manager.s3.download_url
-        xml.gis_encode(self, record, rmap,
+        xml.gis_encode(self, record, element, rmap,
                        download_url=download_url,
                        marker=marker)
 
@@ -3707,7 +3723,6 @@ class S3Resource(object):
 
         db = current.db
         table = self.table
-        tablename = self.tablename
 
         # Collect the extra fields
         flist = list(fields)
@@ -3786,7 +3801,7 @@ class S3Resource(object):
         s3db = current.s3db
         manager = current.manager
         xml = manager.xml
-        tablename = self.tablename
+        tablename = self._alias
 
         distinct = False
         original = selector
@@ -3804,15 +3819,15 @@ class S3Resource(object):
             tn = None
             fn = selector
 
-        if tn and tn != self.name:
+        if tn and tn != self.alias:
             # Build component join
             if tn in self.components:
                 c = self.components[tn]
-                ctn = c.tablename
                 distinct = c.link is not None
                 j = c.get_join()
-                left[ctn] = [c.table.on(j)]
-                tn = ctn
+                tn = c._alias
+                left[tn] = [c.table.on(j)] # @todo: this is wrong - not a valid left join
+                table = c.table
             else:
                 raise KeyError("%s is not a component of %s" % (tn, tablename))
         else:
@@ -3821,9 +3836,10 @@ class S3Resource(object):
                 original = "%s$%s" % (fn, tail)
             else:
                 original = fn
+            table = self.table
 
         # Load the table
-        table = s3db[tn]
+        #table = s3db[tn]
         if table is None:
             raise KeyError("undefined table %s" % tn)
         else:
@@ -4159,6 +4175,10 @@ class S3Resource(object):
             @param record: the new component record to be linked
         """
 
+        db = current.db
+        manager = current.manager
+        model = manager.model
+
         if self.parent is None or self.linked is None:
             return None
 
@@ -4177,14 +4197,21 @@ class S3Resource(object):
         if not _lkey or not _rkey:
             return None
 
-        # Create the link if it does not already exist
-        db = current.db
         ltable = self.table
+        ltn = ltable._tablename
+        onaccept = model.get_config(ltn, "create_onaccept",
+                   model.get_config(ltn, "onaccept", None))
+
+        # Create the link if it does not already exist
         query = ((ltable[lkey] == _lkey) &
                  (ltable[rkey] == _rkey))
         row = db(query).select(ltable._id, limitby=(0, 1)).first()
         if not row:
-            link_id = ltable.insert(**{lkey:_lkey, rkey:_rkey})
+            form = Storage(vars=Storage({lkey:_lkey, rkey:_rkey}))
+            link_id = ltable.insert(**form.vars)
+            if link_id and onaccept:
+                form.vars[ltable._id.name] = link_id
+                callback(onaccept, form)
         else:
             link_id = row[ltable._id.name]
         return link_id
@@ -4285,10 +4312,9 @@ class S3Resource(object):
             attributes.update(left=left_joins)
 
         # Joins
-        qstr = str(query)
         for join in joins.values():
             for j in join:
-                if str(j) not in qstr:
+                if str(j) not in str(query):
                     query &= j
 
         # Column names and headers
@@ -4436,6 +4462,7 @@ class S3ResourceFilter:
         andf = self._andf
 
         manager = current.manager
+        xml = manager.xml
         model = manager.model
         DELETED = manager.DELETED
 
@@ -4741,16 +4768,35 @@ class S3ResourceFilter:
                         # Badly-formed bbox - ignore
                         continue
                     else:
+                        bbox_filter = None
                         if tablename == "gis_feature_query" or \
                            tablename == "gis_cache":
                             gtable = table
                         else:
                             gtable = current.s3db.gis_location
-
-                        bbox_filter = (gtable.lon > float(minLon)) & \
-                                      (gtable.lon < float(maxLon)) & \
-                                      (gtable.lat > float(minLat)) & \
-                                      (gtable.lat < float(maxLat))
+                            if current.deployment_settings.get_gis_spatialdb():
+                                # Use the Spatial Database
+                                minLon = float(minLon)
+                                maxLon = float(maxLon)
+                                minLat = float(minLat)
+                                maxLat = float(maxLat)
+                                bbox = "POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))" % \
+                                            (minLon, minLat,
+                                             minLon, maxLat,
+                                             maxLon, maxLat,
+                                             maxLon, minLat,
+                                             minLon, minLat)
+                                try:
+                                    # Spatial DAL & Database
+                                    bbox_filter = gtable.the_geom.st_intersects(bbox)
+                                except:
+                                    # Old DAL or non-spatial database
+                                    pass
+                        if not bbox_filter:
+                            bbox_filter = (gtable.lon > float(minLon)) & \
+                                          (gtable.lon < float(maxLon)) & \
+                                          (gtable.lat > float(minLat)) & \
+                                          (gtable.lat < float(maxLat))
                         if fname is not None:
                             # Need a join
                             join = (gtable.id == table[fname])
@@ -4760,6 +4806,7 @@ class S3ResourceFilter:
                     if bbox_query is None:
                         bbox_query = bbox
                     else:
+                        # Merge with the previous BBOX
                         bbox_query = bbox_query & bbox
         return bbox_query
 

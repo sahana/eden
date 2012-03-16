@@ -1258,7 +1258,7 @@ class S3Importer(S3CRUD):
                 start = None # use default
             # Using the sort variables sent from dataTables
             if vars.iSortingCols:
-                orderby = self.ssp_orderby(table, list_fields)
+                orderby = self.ssp_orderby(resource, list_fields)
 
             # Echo
             sEcho = int(vars.sEcho or 0)
@@ -1307,7 +1307,7 @@ class S3Importer(S3CRUD):
                 vars[colName] = colValue
                 vars[dirnName] = dirnValue
             # Now using these sort variables generate the order by statement
-            orderby = self.ssp_orderby(table, list_fields)
+            orderby = self.ssp_orderby(resource, list_fields)
 
             del vars["iSortingCols"]
             for col in sort_by:
