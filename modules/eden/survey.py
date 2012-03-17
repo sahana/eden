@@ -1717,22 +1717,22 @@ class S3SeriesModel(S3Model):
                                           )
                 if r.representation == "html":
                     table = buildTableFromCompletedList(items)
-#                        exporter = S3Exporter()
-#                        table = exporter.html(items)
+                        #exporter = S3Exporter()
+                        #table = exporter.html(items)
                 output["items"] = table
-                output["sortby"] = [[0,"asc"]]
+                output["sortby"] = [[0, "asc"]]
                 url_pdf = URL(c="survey",
                               f="series",
-                              args=[series_id,"summary.pdf"],
-                              vars = {"mode":mode,"selected":vars["selected"]}
+                              args=[series_id, "summary.pdf"],
+                              vars = {"mode":mode, "selected":vars["selected"]}
                              )
                 url_xls = URL(c="survey",
                               f="series",
-                              args=[series_id,"summary.xls"],
-                              vars = {"mode":mode,"selected":vars["selected"]}
+                              args=[series_id, "summary.xls"],
+                              vars = {"mode":mode, "selected":vars["selected"]}
                              )
-                s3.formats["pdf"]=url_pdf
-                s3.formats["xls"]=url_xls
+                s3.formats["pdf"] = url_pdf
+                s3.formats["xls"] = url_xls
             else:
                 output["items"] = None
             output["title"] = crud_strings.title_selected

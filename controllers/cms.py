@@ -45,23 +45,54 @@ def series():
             table = s3db.cms_post
             _module = table.module
             _module.readable = _module.writable = False
-            #_roles_permitted = table.roles_permitted
-            #_roles_permitted.readable = _roles_permitted.writable = False
-            #_roles_permitted.default = r.record.roles_permitted
-            #_avatar = table.avatar
-            #_avatar.readable = _avatar.writable = False
-            #_avatar.default = r.record.avatar
+            _avatar = table.avatar
+            _avatar.readable = _avatar.writable = False
+            _avatar.default = r.record.avatar
             _replies = table.replies
             _replies.readable = _replies.writable = False
             _replies.default = r.record.replies
+            _roles_permitted = table.roles_permitted
+            _roles_permitted.readable = _roles_permitted.writable = False
+            _roles_permitted.default = r.record.roles_permitted
+            # Titles do show up
+            table.name.comment = ""
         return True
     response.s3.prep = prep
 
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
 # -----------------------------------------------------------------------------
+def blog():
+    """
+        RESTful CRUD controller for display of a series of posts as a full-page
+        read-only showing last 5 items in reverse time order
+    """
+
+    # Pre-process
+    def prep(r):
+        s3mgr.configure(r.tablename, listadd=False)
+        return True
+    response.s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.record:
+            response.view = "cms/blog.html"
+        return output
+    response.s3.postp = postp
+
+    output = s3_rest_controller("cms", "series")
+    return output
+
+# -----------------------------------------------------------------------------
 def post():
     """ RESTful CRUD controller """
+
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    # Filter out those posts which are parts of a series
+    response.s3.filter = (table.series_id == None)
 
     # Custom Method to add Comments
     s3mgr.model.set_method(module, resourcename,
@@ -74,6 +105,7 @@ def post():
 def page():
     """
         RESTful CRUD controller for display of a post as a full-page read-only
+        - with optional Comments
     """
 
     # Pre-process
@@ -231,45 +263,29 @@ def comment_parse(comment, comments, post_id=None):
 
 # -----------------------------------------------------------------------------
 def comments():
-    """ Function accessed by AJAX from discuss() to handle Comments """
-
-    resourcename = request.args(0)
-    if not resourcename:
-        raise HTTP(400)
+    """
+        Function accessed by AJAX to handle Comments
+        - for discuss(() & page()
+    """
 
     try:
-        id = request.args[1]
+        post_id = request.args[0]
     except:
         raise HTTP(400)
 
-    if resourcename == "post":
-        post_id = id
-    else:
-        raise HTTP(400)
-
     table = s3db.cms_comment
-    if post_id:
-        table.post_id.default = post_id
-        table.post_id.writable = table.post_id.readable = False
-    else:
-        table.post_id.label = T("Related to Post (optional)")
-        table.post_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                       "cms_post.id",
-                                                       "%(name)s"
-                                                      ))
 
     # Form to add a new Comment
+    table.post_id.default = post_id
+    table.post_id.writable = table.post_id.readable = False
     form = crud.create(table)
 
     # List of existing Comments
-    if post_id:
-        comments = db(table.post_id == post_id).select(table.id,
-                                                       table.parent,
-                                                       table.body,
-                                                       table.created_by,
-                                                       table.created_on)
-    else:
-        comments = ""
+    comments = db(table.post_id == post_id).select(table.id,
+                                                   table.parent,
+                                                   table.body,
+                                                   table.created_by,
+                                                   table.created_on)
 
     output = UL(_id="comments")
     for comment in comments:
@@ -297,6 +313,78 @@ $('#submit_record__row input').click(function(){$('#comment-form').hide();$('#cm
                      _id="comment-form",
                      _class="clear"),
                  SCRIPT(script))
+
+    return XML(output)
+
+
+# -----------------------------------------------------------------------------
+def posts():
+    """
+        Function accessed by AJAX to handle a Series of Posts
+    """
+
+    try:
+        series_id = request.args[0]
+    except:
+        raise HTTP(400)
+
+    try:
+        recent = request.args[1]
+    except:
+        recent = 5
+
+    table = s3db.cms_post
+
+    # List of Posts in this Series
+    query = (table.series_id == series_id)
+    posts = db(query).select(table.name,
+                             table.body,
+                             table.avatar,
+                             table.created_by,
+                             table.created_on,
+                             limitby=(0, recent))
+
+    output = UL(_id="comments")
+    for post in posts:
+        author = B(T("Anonymous"))
+        if post.created_by:
+            utable = s3db.auth_user
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
+            query = (utable.id == post.created_by)
+            left = [ltable.on(ltable.user_id == utable.id),
+                    ptable.on(ptable.pe_id == ltable.pe_id)]
+            row = db(query).select(utable.email,
+                                   ptable.first_name,
+                                   ptable.middle_name,
+                                   ptable.last_name,
+                                   left=left, limitby=(0, 1)).first()
+            if row:
+                person = row.pr_person
+                user = row[utable._tablename]
+                username = s3_fullname(person)
+                email = user.email.strip().lower()
+                import md5
+                hash = md5.new(email).hexdigest()
+                url = "http://www.gravatar.com/%s" % hash
+                author = B(A(username, _href=url, _target="top"))
+        header = H4(post.name)
+        if post.avatar:
+            avatar = s3_avatar_represent(post.created_by)
+        else:
+            avatar = ""
+        row = LI(DIV(avatar,
+                     DIV(DIV(header,
+                             _class="comment-header"),
+                         DIV(XML(post.body)),
+                         _class="comment-text"),
+                         DIV(DIV(post.created_on,
+                                 _class="comment-date"),
+                             _class="fright"),
+                         DIV(author,
+                             _class="comment-footer"),
+                     _class="comment-box"))
+        output.append(row)
 
     return XML(output)
 

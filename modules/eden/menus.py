@@ -541,6 +541,7 @@ class S3OptionsMenu:
                     M("Series", f="series")(
                         M("New", m="create"),
                         M("List All"),
+                        M("View as Pages", f="blog"),
                     ),
                     M("Posts", f="post")(
                         M("New", m="create"),
@@ -671,12 +672,50 @@ class S3OptionsMenu:
     def gis(self):
         """ GIS / GIS Controllers """
 
-        session = current.session
-        MAP_ADMIN = session.s3.system_roles.MAP_ADMIN
+        auth = current.auth
+        db = current.db
+        s3db = current.s3db
+        s3 = current.session.s3
+        MAP_ADMIN = s3.system_roles.MAP_ADMIN
+
+        def config_menu(i):
+            if not auth.is_logged_in():
+                # Anonymous users can never cofnigure the Map
+                return False
+            if auth.s3_has_permission("create",
+                                      s3db.gis_config):
+                # If users can create configs then they can see the menu item
+                return True
+            # Look for this user's config
+            table = s3db.gis_config
+            query = (table.pe_id == auth.user.pe_id)
+            config = db(query).select(table.id,
+                                      limitby=(0, 1),
+                                      cache=s3db.cache).first()
+            if config:
+                return True
+
+        def config_args():
+            if auth.s3_has_role(MAP_ADMIN):
+                # Full List
+                return []
+
+            # Look for this user's config
+            table = s3db.gis_config
+            query = (table.pe_id == auth.user.pe_id)
+            config = db(query).select(table.id,
+                                      limitby=(0, 1),
+                                      cache=s3db.cache).first()
+            if config:
+                # Link direct to the User's config
+                return [config.id, "layer_entity"]
+            # Link to the Create form
+            return ["create"]
 
         return M(c="gis")(
                     M("Fullscreen Map", f="map_viewing_client"),
-                    M("Configuration", f="config"),
+                    M("Configuration", f="config", args=config_args(),
+                      check=config_menu),
                     # Currently not got geocoding support
                     #M("Bulk Uploader", c="doc", f="bulk_upload"),
                     M("Locations", f="location",

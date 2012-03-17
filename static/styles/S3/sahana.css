@@ -1277,7 +1277,7 @@ div#last_update {
     width: 16px;
     float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
-    background-position: -32px -16px;
+    background-position: -64px -16px;
 }
 .expanded {
     /*position: static;*/
@@ -1285,7 +1285,7 @@ div#last_update {
     width: 16px;
     float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
-    background-position: -64px -16px;
+    background-position: -32px -16px;
 }
 
 
@@ -1354,10 +1354,13 @@ div#last_update {
 }
 .comment-text {
     padding: 0 0 0 20px;
-    float: left
+    float: left;
 }
 .comment-header {
     margin: 0 0 10px 0;
+}
+.comment-footer {
+    clear: left;
 }
 .comment-date {
     font-size: 11px;
