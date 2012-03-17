@@ -994,13 +994,17 @@ $(document).ready(function() {
             form.vars.track_org_id = record.organisation_id
         # If their is a tracking number check that it is unique within the org
         if form.vars.tracking_no:
-            org_repr = current.response.s3.org_organisation_represent
-            query = (ttable.track_org_id == form.vars.track_org_id) & \
-                    (ttable.tracking_no == form.vars.tracking_no)
-            record = db(query).select(limitby=(0, 1)).first()
-            if record:
-                form.errors.tracking_no = T("The Tracking Number %s is already used by %s.") % (form.vars.tracking_no,
-                                                                                                org_repr(record.track_org_id))
+            if form.record.tracking_no and form.record.tracking_no == form.vars.tracking_no:
+                # the tracking number hasn't changes so no validation needed
+                pass
+            else:
+                org_repr = current.response.s3.org_organisation_represent
+                query = (ttable.track_org_id == form.vars.track_org_id) & \
+                        (ttable.tracking_no == form.vars.tracking_no)
+                record = db(query).select(limitby=(0, 1)).first()
+                if record:
+                    form.errors.tracking_no = T("The Tracking Number %s is already used by %s.") % (form.vars.tracking_no,
+                                                                                                    org_repr(record.track_org_id))
 
         # copy the data from the donated stock
         if form.vars.send_stock_id:

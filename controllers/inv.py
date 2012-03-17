@@ -394,8 +394,75 @@ def send():
                                )
     return output
 
-# -----------------------------------------------------------------------------
+# ==============================================================================
 
+def send_commit():
+    """
+        function to send items according to a commit.
+        copy data from a commit into a send
+        arg: commit_id
+        @ToDo: This function needs to be able to detect the site to send the items from,
+        site_id is currently undefined and this will not work.
+    """
+
+    commit_id = request.args[0]
+    r_commit = s3db.req_commit[commit_id]
+    r_req = s3db.req_req[r_commit.req_id]
+
+    # User must have permissions over site which is sending
+    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
+                                                          r_commit.site_id)
+    if not auth.s3_has_permission("update",
+                                  "%s_%s" % (prefix, resourcename),
+                                  record_id=id):
+        session.error = T("You do not have permission to send a shipment from this site.")
+        redirect(URL(c = "req",
+                     f = "commit",
+                     args = [commit_id]))
+
+    #rtable = s3db.req_req
+    #stable = s3db.org_site
+    #query = (rtable.id == r_commit.req_id) & \
+    #        (stable.id == rtable.site_id)
+    #to_location_id = db(query).select(stable.location_id,
+    #                                  limitby = (0, 1)).first().location_id
+
+    # Create a new send record
+    send_id = s3db.inv_send.insert( date = request.utcnow,
+                                    site_id = r_commit.site_id,
+                                    to_site_id = r_req.site_id )
+
+    # Only select items which are in the warehouse
+    ctable = s3db.req_commit_item
+    rtable = s3db.req_req_item
+    itable = s3db.inv_inv_item
+    query = (ctable.commit_id == commit_id) & \
+            (ctable.req_item_id == rtable.id) & \
+            (rtable.item_id == itable.item_id) & \
+            (itable.site_id == r_commit.site_id) & \
+            (ctable.deleted == False) & \
+            (rtable.deleted == False) & \
+            (itable.deleted == False)
+    commit_items = db(query).select(itable.id,
+                                    ctable.quantity,
+                                    ctable.item_pack_id,
+                                    ctable.req_item_id)
+
+    stable = s3db.inv_send_item
+    for commit_item in commit_items:
+        req_commit_item = commit_item.req_commit_item
+        send_item_id = stable.insert( send_id = send_id,
+                                      send_stock_id = commit_item.inv_inv_item.id,
+                                      quantity = req_commit_item.quantity,
+                                      item_pack_id = req_commit_item.item_pack_id,
+                                      req_item_id = req_commit_item.req_item_id)
+
+    # Redirect to send
+    redirect(URL(c = "inv",
+                 f = "send",
+                 args = [send_id, "send_item"]))
+
+# -----------------------------------------------------------------------------
 def send_process():
     """ Send a Shipment """
     # @todo need to update the status of request items
@@ -1258,73 +1325,15 @@ def recv_sent():
     redirect(URL(c = "inv",
                  f = "recv",
                  args = [recv_id, "recv_item"]))
-
-#==============================================================================
-def send_commit():
-    """
-        function to send items according to a commit.
-        copy data from a commit into a send
-        arg: commit_id
-        @ToDo: This function needs to be able to detect the site to send the items from,
-        site_id is currently undefined and this will not work.
-    """
-
-    commit_id = request.args[0]
-    r_commit = s3db.req_commit[commit_id]
-    r_req = s3db.req_req[r_commit.req_id]
-
-    # User must have permissions over site which is sending
-    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
-                                                          r_commit.site_id)
-    if not auth.s3_has_permission("update",
-                                  "%s_%s" % (prefix, resourcename),
-                                  record_id=id):
-        session.error = T("You do not have permission to send a shipment from this site.")
-        redirect(URL(c = "req",
-                     f = "commit",
-                     args = [commit_id]))
-
-    #rtable = s3db.req_req
-    #stable = s3db.org_site
-    #query = (rtable.id == r_commit.req_id) & \
-    #        (stable.id == rtable.site_id)
-    #to_location_id = db(query).select(stable.location_id,
-    #                                  limitby = (0, 1)).first().location_id
-
-    # Create a new send record
-    send_id = s3db.inv_send.insert( date = request.utcnow,
-                                    site_id = r_commit.site_id,
-                                    to_site_id = r_req.site_id )
-
-    # Only select items which are in the warehouse
-    ctable = s3db.req_commit_item
-    rtable = s3db.req_req_item
-    itable = s3db.inv_inv_item
-    query = (ctable.commit_id == commit_id) & \
-            (ctable.req_item_id == rtable.id) & \
-            (rtable.item_id == itable.item_id) & \
-            (itable.site_id == r_commit.site_id) & \
-            (ctable.deleted == False) & \
-            (rtable.deleted == False) & \
-            (itable.deleted == False)
-    commit_items = db(query).select(itable.id,
-                                    ctable.quantity,
-                                    ctable.item_pack_id,
-                                    ctable.req_item_id)
-
-    stable = s3db.inv_send_item
-    for commit_item in commit_items:
-        req_commit_item = commit_item.req_commit_item
-        send_item_id = stable.insert( send_id = send_id,
-                                      send_stock_id = commit_item.inv_inv_item.id,
-                                      quantity = req_commit_item.quantity,
-                                      item_pack_id = req_commit_item.item_pack_id,
-                                      req_item_id = req_commit_item.req_item_id)
-
-    # Redirect to send
-    redirect(URL(c = "inv",
-                 f = "send",
-                 args = [send_id, "send_item"]))
+# =============================================================================
+def track_item():
+    """ RESTful CRUD controller """
+    output = s3_rest_controller("inv",
+                                "track_item",
+                                rheader=response.s3.inv_warehouse_rheader,
+                               )
+    return output
+# =============================================================================
 
 def adj():
     """ RESTful CRUD controller """

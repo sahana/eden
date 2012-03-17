@@ -66,7 +66,7 @@ def req_controller():
         if r.interactive:
             # Set Fields and Labels depending on type
             type = ( r.record and r.record.type ) or \
-                   ( request.vars and request.vars.default_type )
+                   ( request.vars and request.vars.type )
             if type:
                 type = int(type)
                 req_table.type.default = int(type)

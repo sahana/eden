@@ -18,13 +18,20 @@
            You can add a third argument &ignore_errors
          CSV fields:
          Catalogue.......................supply_catalog.name
-         Cat Code........................supply_item_category.code
+         Category Code...................supply_item_category.code
          Category........................supply_item_category.name
          Brand...........................supply_brand.name
-         Model...........................supply_item.model
-         Name............................supply_item.name
+         Item Code.......................supply_item.code
+         Item Name.......................supply_item.name
          Unit of Measure.................supply_item.um
-         Notes...........................supply_item.comments
+         Model...........................supply_item.model
+         Year............................supply_item.year
+         Weight..........................supply_item.weight
+         Length..........................supply_item.length
+         Width...........................supply_item.width
+         Height..........................supply_item.height
+         Volume..........................supply_item.volume
+         Comments........................supply_item.comments
 
          supply_catalog_item uses references to supply_catalog,
                                                 supply_item_category,
@@ -63,7 +70,7 @@
                     <xsl:value-of select="$CatalogName"/>
                 </xsl:attribute>
             </reference>
-            <data field="code"><xsl:value-of select="col[@field='Cat Code']"/></data>
+            <data field="code"><xsl:value-of select="col[@field='Category Code']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Category']"/></data>
         </resource>
 
@@ -78,7 +85,7 @@
         <!-- Supply Item -->
         <resource name="supply_item">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="col[@field='Name']"/>
+                <xsl:value-of select="col[@field='Item Name']"/>
             </xsl:attribute>
             <reference field="item_category_id" resource="supply_item_category">
                 <xsl:attribute name="tuid">
@@ -90,12 +97,18 @@
                     <xsl:value-of select="col[@field='Brand']"/>
                 </xsl:attribute>
             </reference>
-            <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Item Name']"/></data>
+            <data field="code"><xsl:value-of select="col[@field='Item Code']"/></data>
             <data field="um"><xsl:value-of select="col[@field='Unit of Measure']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Notes']"/></data>
+            <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
+            <data field="year"><xsl:value-of select="col[@field='Year']"/></data>
+            <data field="weight"><xsl:value-of select="col[@field='Weight']"/></data>
+            <data field="length"><xsl:value-of select="col[@field='Length']"/></data>
+            <data field="width"><xsl:value-of select="col[@field='Width']"/></data>
+            <data field="height"><xsl:value-of select="col[@field='Height']"/></data>
+            <data field="volume"><xsl:value-of select="col[@field='Volume']"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
-
         <!-- Supply Catalogue Item -->
         <resource name="supply_catalog_item">
             <reference field="catalog_id" resource="supply_catalog">
@@ -110,7 +123,7 @@
             </reference>
             <reference field="item_id" resource="supply_item">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Name']"/>
+                    <xsl:value-of select="col[@field='Item Name']"/>
                 </xsl:attribute>
             </reference>
         </resource>
