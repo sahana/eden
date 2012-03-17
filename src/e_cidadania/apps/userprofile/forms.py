@@ -113,7 +113,8 @@ class RegistrationForm(forms.Form):
         """
         email = self.cleaned_data.get("email")
 
-        if not email: return  email
+        if not email:
+            raise forms.ValidationError(_("E-mail address cannot be blank"))
 
         try:
             User.objects.get(email=email)

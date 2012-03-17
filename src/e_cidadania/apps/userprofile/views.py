@@ -300,9 +300,8 @@ def register(request):
             password = form.cleaned_data.get('password1')
             newuser = User.objects.create_user(username=username, email='', password=password)
 
-            if form.cleaned_data.get('email'):
-                newuser.email = form.cleaned_data.get('email')
-                EmailValidation.objects.add(user=newuser, email=newuser.email)
+            newuser.email = form.cleaned_data.get('email')
+            EmailValidation.objects.add(user=newuser, email=newuser.email)
 
             newuser.save()
             return HttpResponseRedirect('%scomplete/' % request.path_info)
