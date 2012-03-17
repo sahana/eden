@@ -314,7 +314,7 @@ def register(request):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 @login_required
-def email_validation_reset(request, space_name):
+def email_validation_reset(request):
     """
     Resend the validation email for the authenticated user.
     """
