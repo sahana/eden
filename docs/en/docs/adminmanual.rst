@@ -1,7 +1,7 @@
 Administration manual
 =====================
 
-This is a small introoductory manual to teach you about how to use e-cidadania
+This is a small introductory manual to teach you about how to use e-cidadania
 without messing everything up :).
 
 User registration
