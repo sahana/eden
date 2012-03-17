@@ -212,7 +212,6 @@ class S3MainMenu:
                             MM("Settings", f="settings"),
                             MM("Users", f="user"),
                             MM("Database", c="appadmin", f="index"),
-                            MM("Import", f="import_file"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Tickets", f="errors"),
                         )
@@ -298,6 +297,24 @@ class S3MainMenu:
                     )
                 )
         return gis_menu
+
+    @staticmethod
+    def menu_climate(**attr):
+        settings = current.deployment_settings
+        module = settings.modules["climate"]
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
+        menu_climate = MM(
+            module.name_nice,
+            c="climate",
+            **attr
+        )(
+            MM("Station Parameters", f="station_parameter"),
+            #MM("Saved Queries", f="save_query"),
+            MM("Purchase Data", f="purchase"),
+            MM("DataSet Prices", f="prices", restrict=[ADMIN]),
+        )
+        return menu_climate
 
 # =============================================================================
 class S3OptionsMenu:
@@ -517,6 +534,22 @@ class S3OptionsMenu:
                 )
 
     # -------------------------------------------------------------------------
+    def cms(self):
+        """ CMS / Content Management System """
+
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Posts", f="post")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("View as Pages", f="page"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def delphi(self):
         """ DELPHI / Delphi Decision Maker """
 
@@ -685,22 +718,26 @@ class S3OptionsMenu:
     def hrm(self):
         """ HRM / Human Resources Management """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        settings = current.deployment_settings
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
-        manager_mode = lambda i: session.s3.hrm.mode is None
-        personal_mode = lambda i: session.s3.hrm.mode is not None
-        is_org_admin = lambda i: session.s3.hrm.orgs and True or \
-                                 ADMIN in session.s3.roles
+        manager_mode = lambda i: s3.hrm.mode is None
+        personal_mode = lambda i: s3.hrm.mode is not None
+        is_org_admin = lambda i: s3.hrm.orgs and True or \
+                                 ADMIN in s3.roles
+
+        show_staff = lambda i: settings.get_hrm_show_staff()
+        show_vols = lambda i: settings.get_hrm_show_vols()
 
         staff = dict(group="staff")
         volunteers = dict(group="volunteer")
 
         return M(c="hrm")(
                     M("Staff", f="human_resource",
-                      check=manager_mode, vars=staff)(
+                      check=[manager_mode, show_staff], vars=staff)(
                         M("New Staff Member", m="create",
                           vars=staff),
                         M("List All",
@@ -720,7 +757,7 @@ class S3OptionsMenu:
                         #M("Dashboard", f="index"),
                     ),
                     M("Volunteers", f="human_resource",
-                      check=manager_mode, vars=volunteers)(
+                      check=[manager_mode, show_vols], vars=volunteers)(
                         M("New Volunteer", m="create",
                           vars=volunteers),
                         M("List All",
@@ -770,13 +807,13 @@ class S3OptionsMenu:
                       check=manager_mode)(
                         M("New Training Course", m="create"),
                         M("List All"),
-                        M("Course Certificates", f="course_certificate"),
+                        #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
                         M("New Certificate", m="create"),
                         M("List All"),
-                        M("Skill Equivalence", f="certificate_skill"),
+                        #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),

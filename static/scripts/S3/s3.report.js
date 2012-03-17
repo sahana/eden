@@ -45,6 +45,14 @@ $(function() {
                         diameter:250
                     }
                 },
+                highlighter: {
+                    show: true,
+                    formatString:'%s: %s',
+//                     tooltipPosition: 'e',
+                    tooltipOffset: -200,
+                    tooltipAxes: 'xy',
+                    useAxesFormatters:false
+                },
                 title: layer + ' ' + title,
                 legend: { show:true, location: 'e', escapeHtml:true }
             }
@@ -74,6 +82,12 @@ $(function() {
                     barMargin: 20,
                     varyBarColor: true
                 }
+            },
+            highlighter: {
+                show: true,
+                formatString:'%s',
+                tooltipAxes: 'y',
+                useAxesFormatters: false
             },
             axes: {
                 xaxis: {

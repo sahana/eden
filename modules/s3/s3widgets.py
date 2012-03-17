@@ -55,6 +55,7 @@ __all__ = ["S3HiddenWidget",
            "S3SliderWidget",
            "comments_widget",
            "S3InvBinWidget",
+           "s3_richtext_widget",
            ]
 
 import copy
@@ -691,7 +692,7 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        url = URL(c="pr", f="person",
+        url = URL(c="pr", f="person_search",
                   args="search.json",
                   vars={"filter":"~"})
 
@@ -3017,11 +3018,45 @@ class S3EmbedComponentWidget(FormWidget):
                        divider)
 
 # -----------------------------------------------------------------------------
-def comments_widget(field, value):
+def s3_comments_widget(field, value):
+    """
+        A smaller-than-normal textarea
+        to be used by the s3.comments() Reusable field
+    """
+
     return TEXTAREA(_name=field.name,
                     _id="%s_%s" % (field._tablename, field.name),
                     _class="comments %s" % (field.type),
                     value=value,
+                    requires=field.requires)
+
+# -----------------------------------------------------------------------------
+def s3_richtext_widget(field, value):
+    """
+        A larger-than-normal textarea to be used by the CMS Post Body field
+    """
+
+    s3 = current.response.s3
+    id = "%s_%s" % (field._tablename, field.name)
+
+    # Load the scripts
+    ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
+    s3.scripts.append(ckeditor)
+    adapter = URL(c="static", f="ckeditor", args=["adapters",
+                                                  "jquery.js"])
+    s3.scripts.append(adapter)
+
+    # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
+    js = "var ck_config = {toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};"
+    s3.js_global.append(js)
+    
+    js = "$('#%s').ckeditor(ck_config);" % id
+    s3.jquery_ready.append(js)
+
+    return TEXTAREA(_name=field.name,
+                    _id=id,
+                    _class="richtext %s" % (field.type),
+                    _value=value,
                     requires=field.requires)
 
 # -----------------------------------------------------------------------------

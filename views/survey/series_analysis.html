@@ -1,11 +1,11 @@
 {{extend "layout.html"}}
-  
+
 {{try:}}
  {{=H2(title)}}
 {{except:}}
 {{pass}}
 {{try:}}
-{{=s3_ocr_buttons(r)}}
+{{=s3db.ocr_buttons(r)}}
 {{except:}}
 {{pass}}
 <div id='rheader'>

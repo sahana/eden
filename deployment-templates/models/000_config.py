@@ -382,7 +382,12 @@ deployment_settings.security.archive_not_delete = True
 #deployment_settings.supply.catalog_default = T("Other Items")
 
 # Human Resource Management
+# Uncomment to allow Staff & Volunteers to be registered without an email address
 #deployment_settings.hrm.email_required = False
+# Uncomment to hide the Staff resource
+#deployment_settings.hrm.show_staff = False
+# Uncomment to hide the Volunteer resource
+#deployment_settings.hrm.show_vols = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #deployment_settings.hrm.skill_types = True
 
@@ -611,6 +616,12 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
+    #("cms", Storage(
+    #       name_nice = T("Content Management"),
+    #       description = T("Content Management System"),
+    #       restricted = True,
+    #       module_type = 10,
+    #   )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),
     #       description = T("Fire Station Management"),

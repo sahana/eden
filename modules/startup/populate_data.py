@@ -1367,3 +1367,4 @@ if populate > 0:
         # Restore view
         response.view = "default/index.html"
 
+    auth.override = False

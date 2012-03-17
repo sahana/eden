@@ -1,4 +1,4 @@
-# Script to import all
+# Script to import all countries in Asia Pacific (except Timor Leste, for which we use the UN dataset)
 #
 # run as python web2py.py -S eden -M -R applications/eden/private/prepopulate/import_gadm.py
 #

@@ -1117,8 +1117,8 @@ class S3ProjectDRRModel(S3Model):
             4: T("Customer"), # T("Beneficiary")?
         }
         project_organisation_lead_role = 1
-        
-        organisation_help = T("Add all organisations which are involved in different roles in this project")
+
+        organisation_help = T("Add all organizations which are involved in different roles in this project")
 
         tablename = "project_organisation"
         table = self.define_table(tablename,
@@ -1133,7 +1133,7 @@ class S3ProjectDRRModel(S3Model):
                                                                 DIV(_class="tooltip",
                                                                     _title="%s|%s" % (T("Organization"),
                                                                                       organisation_help))
-                                                                ) 
+                                                                )
                                                   ),
                                   Field("role", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
@@ -1577,10 +1577,12 @@ class S3ProjectTaskModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
+        comments = s3.comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
+        meta_fields = s3.meta_fields
 
         # ---------------------------------------------------------------------
         # Project Milestone
@@ -1597,9 +1599,9 @@ class S3ProjectTaskModel(S3Model):
                                    label = T("Date"),
                                    represent = s3_date_represent,
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
-                             s3.comments(),
+                             comments(),
                              format="%(name)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # CRUD Strings
         ADD_MILESTONE = T("Add Milestone")
@@ -1703,7 +1705,7 @@ class S3ProjectTaskModel(S3Model):
                                    represent = lambda opt, row=None: \
                                                project_task_priority_opts.get(opt,
                                                                               UNKNOWN_OPT)),
-                             # Could be an Organisation, a Team or a Person
+                             # Could be a Person, Team or Organisation
                              super_link("pe_id", "pr_pentity",
                                         readable = staff,
                                         writable = staff,
@@ -1756,7 +1758,7 @@ class S3ProjectTaskModel(S3Model):
                                    represent = lambda opt, row=None: \
                                                project_task_status_opts.get(opt,
                                                                             UNKNOWN_OPT)),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configurations
         # Comment these if you don't need a Site associated with Tasks
@@ -1796,6 +1798,13 @@ class S3ProjectTaskModel(S3Model):
                         #label = T("Project"),
                         #field = ["project"],
                         #cols = 3
+                    #),
+                    # This Syntax not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                    #    name = "task_search_project",
+                    #    label = T("Project"),
+                    #    field = ["task.task_id:project_task:project_id$name"],
+                    #    cols = 3
                     #),
                     # Virtual fields not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
@@ -1858,6 +1867,7 @@ class S3ProjectTaskModel(S3Model):
                   orderby="project_task.priority",
                   onvalidation=self.task_onvalidation,
                   create_onaccept=self.task_create_onaccept,
+                  create_next=URL(f="task", args=["[id]"]),
                   onaccept=self.task_onaccept,
                   search_method=task_search,
                   list_fields=["id",
@@ -1886,6 +1896,12 @@ class S3ProjectTaskModel(S3Model):
                                                              title=ADD_TASK,
                                                              tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
                                   ondelete = "CASCADE")
+
+        # ---------------------------------------------------------------------
+        # Custom Methods
+        self.set_method("project_task",
+                        method="dispatch",
+                        action=self.task_dispatch)
 
         # Components
         # Projects (for imports)
@@ -1951,7 +1967,7 @@ class S3ProjectTaskModel(S3Model):
         table = define_table(tablename,
                              task_id(),
                              project_id(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         # CRUD Strings
@@ -1967,7 +1983,7 @@ class S3ProjectTaskModel(S3Model):
         table = define_table(tablename,
                              task_id(),
                              activity_id(),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         # CRUD Strings
@@ -1997,7 +2013,7 @@ class S3ProjectTaskModel(S3Model):
                              Field("body", "text",
                                    notnull=True,
                                    label = T("Comment")),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration?
 
@@ -2033,9 +2049,9 @@ class S3ProjectTaskModel(S3Model):
                              Field("hours", "double",
                                    label = "%s (%s)" % (T("Time"),
                                                         T("hours"))),
-                             s3.comments(),
+                             comments(),
                              format="%(comments)s",
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # CRUD Strings
         ADD_TIME = T("Log Time Spent")
@@ -2199,6 +2215,59 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def task_dispatch(r, **attr):
+        """
+            Send a Task Dispatch notice from a Task
+            - if a location is supplied, this will be formatted as an OpenGeoSMS
+        """
+
+        T = current.T
+        msg = current.msg
+        response = current.response
+
+        if r.representation == "html" and \
+           r.name == "task" and r.id and not r.component:
+
+            record = r.record
+            text = "%s: %s" % (record.name,
+                               record.description)
+
+            # Encode the message as an OpenGeoSMS
+            message = msg.prepare_opengeosms(record.location_id,
+                                             code="ST",
+                                             map="google",
+                                             text=text)
+
+            # URL to redirect to after message sent
+            url = URL(c="project",
+                      f="task",
+                      args=r.id)
+
+            # Create the form
+            if record.pe_id:
+                opts = dict(recipient=record.pe_id)
+            else:
+                opts = dict(recipient_type="pr_person")
+            output = msg.compose(type="SMS",
+                                 message = message,
+                                 url = url,
+                                 **opts)
+
+            # Maintain RHeader for consistency
+            if "rheader" in attr:
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
+
+            output["title"] = T("Send Task Notification")
+            response.view = "msg/compose.html"
+            return output
+
+        else:
+            raise HTTP(501, BADMETHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def time_onaccept(form):
         """ When Time is logged, update the Task & Activity """
 
@@ -2330,11 +2399,52 @@ class S3ProjectTaskIReportModel(S3Model):
                                   ireport_id(),
                                   *s3.meta_fields())
 
+        self.configure(tablename,
+                       onaccept=self.task_ireport_onaccept)
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
         return dict(
-        )
+            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_ireport_onaccept(form):
+        """
+            When a Task is linked to an IReport, then populate the location_id
+        """
+
+        vars = form.vars
+        ireport_id = vars.ireport_id
+        task_id = vars.task_id
+
+        db = current.db
+        s3db = current.s3db
+
+        # Check if we already have a Location for the Task
+        table = s3db.project_task
+        query = (table.id == task_id)
+        record = db(query).select(table.location_id,
+                                  limitby=(0, 1)).first()
+        if not record or record.location_id:
+            return
+
+        # Find the Incident Location
+        itable = s3db.irs_ireport
+        query = (itable.id == ireport_id)
+        record = db(query).select(itable.location_id,
+                                  limitby=(0, 1)).first()
+        if not record or not record.location_id:
+            return
+
+        location_id = record.location_id
+
+        # Update the Task
+        query = (table.id == task_id)
+        db(query).update(location_id=location_id)
+
+        return
 
 # -----------------------------------------------------------------------------
 def project_assignee_represent(id):
@@ -2499,6 +2609,8 @@ def project_rheader(r, tabs=[]):
             append((T("Time"), "time")),
         append((T("Comments"), "discuss"))
         append((T("Attachments"), "document"))
+        if settings.has_module("msg"):
+            append((T("Notify"), "dispatch"))
         #(T("Roles"), "job_role"),
         #(T("Assignments"), "human_resource"),
         #(T("Requests"), "req")
@@ -2511,12 +2623,12 @@ def project_rheader(r, tabs=[]):
         query = (ltable.deleted == False) & \
                 (ltable.task_id == r.id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.name,
+        project = db(query).select(ptable.id,
                                    limitby=(0, 1)).first()
         if project:
             project = TR(
                             TH("%s: " % T("Project")),
-                            project.name
+                            s3db.project_project_represent(project.id)
                         )
         else:
             project = ""

@@ -19,7 +19,6 @@ if s3.debug:
     track_changes(True)
 
 import datetime
-import md5
 import re
 import time
 

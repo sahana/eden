@@ -589,9 +589,9 @@ $(document).ready(function() {
                                                 if field.writable and
                                                 field.name != "id"]
 
-        self.configure("supply_item", deduplicate=self.item_duplicate)
-        self.configure("supply_catalog_item", deduplicate=self.item_duplicate)
-        self.configure("supply_item_category", deduplicate=self.item_duplicate)
+        configure("supply_item", deduplicate=self.item_duplicate)
+        configure("supply_catalog_item", deduplicate=self.item_duplicate)
+        configure("supply_item_category", deduplicate=self.item_duplicate)
 
         # =====================================================================
         # Item Pack
@@ -857,6 +857,28 @@ S3FilterFieldChange({
                 supply_item_duplicate_fields = item_duplicate_fields,
                 supply_item_add = self.supply_item_add,
                 supply_item_pack_represent = self.item_pack_represent,
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Return safe defaults for names in case the model is disabled """
+
+        supply_item_id = S3ReusableField("item_id", "integer",
+                                         writable=False,
+                                         readable=False)
+        item_id = S3ReusableField("item_entity_id", "integer",
+                                  writable=False,
+                                  readable=False)()
+        item_pack_id = S3ReusableField("item_pack_id", "integer",
+                                       writable=False,
+                                       readable=False)
+        supply_item_pack_virtualfields = None
+        return Storage(
+                supply_item_id = supply_item_id,
+                supply_item_entity_id = item_id,
+                supply_item_pack_id = item_pack_id,
+                supply_item_pack_virtualfields = supply_item_pack_virtualfields,
                 )
 
     # -------------------------------------------------------------------------

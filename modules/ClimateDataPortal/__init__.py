@@ -6,13 +6,13 @@
     @author: Mike Amy
 """
 
-from gluon import current
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
-db = current.db
-
 same = lambda x: x
 # keyed off the units field in the sample_table_spec table
+standard_unit = {
+    "in": same,
+    "out": same
+}
+# be careful to use floats for all of these numbers
 units_in_out = {
     "Celsius": {
         "in": lambda celsius: celsius + 273.15,
@@ -22,15 +22,25 @@ units_in_out = {
         "in": lambda fahreinheit: (fahreinheit + 459.67) + (5.0/9.0),
         "out": lambda kelvin: (kelvin * (9.0/5.0)) - 459.67
     },
-    "Kelvin": {
-        "in": same,
-        "out": same
+    "Kelvin": standard_unit,
+    "hPa": standard_unit,
+    "Pa": {
+        "in": lambda pascals: pascals / 100.0,
+        "out": lambda hectopascals: hectopascals * 100.0
+    },
+
+    "mm": standard_unit,
+    "kg m-2 s-1": {
+        "in": lambda precipitation_rate: precipitation_rate * 2592000.0,
+        "out": lambda mm: mm / 2592000.0
     },
     
-    "mm": {
-        "in": same,
-        "out": same
-    }
+    "%": {
+        "in": lambda x: x / 100.0,
+        "out": lambda x: x * 100.0
+    },
+    "ratio": standard_unit,
+    "m/s": standard_unit,
 }
 
 # date handling
@@ -42,9 +52,10 @@ start_date = date(start_year, start_month_0_indexed+1, 11)
 start_day_number = start_date.toordinal()
 
 class DateMapping(object):
-    def __init__(date_mapper, from_year_month_day, from_date):
+    def __init__(date_mapper, from_year_month_day, from_date, to_date):
         date_mapper.year_month_day_to_time_period = from_year_month_day
         date_mapper.date_to_time_period = from_date
+        date_mapper.to_date= to_date
 
 def date_to_month_number(date):
     """This function converts a date to a month number.
@@ -67,7 +78,13 @@ def month_number_to_year_month(month_number):
     month_number += start_month_0_indexed
     return (month_number / 12)+start_year, ((month_number % 12) + 1)
 
+def month_number_to_date(month_number):
+    year, month = month_number_to_year_month(month_number)
+    return date(year, month, 1)
+
 from math import floor
+
+from calendar import isleap
 
 def rounded_date_to_month_number(date):
     """This function converts a date to a month number by rounding
@@ -78,13 +95,35 @@ def rounded_date_to_month_number(date):
     timetuple = date.timetuple()
     year = timetuple.tm_year
     day_of_year = timetuple.tm_yday
-    month0 = floor(((day_of_year / 365.0) * 12) + 0.5)
+    month0 = floor(((day_of_year / (isleap(year) and 366.0 or 365.0)) * 12) + 0.5)
     return ((year-start_year) * 12) + (month0) - start_month_0_indexed
 
-print "WARNING: NetCDF imports using unusual date semantics might not work"
+def floored_twelfth_of_a_year(date):
+    """This function converts a date to a month number by flooring
+    to the nearest 12th of a year.
+    """
+    timetuple = date.timetuple()
+    year = timetuple.tm_year
+    day_of_year = timetuple.tm_yday
+    month0 = floor((day_of_year / (isleap(year) and 366.0 or 365.0)) * 12)
+    return ((year-start_year) * 12) + (month0) - start_month_0_indexed
+
+def floored_twelfth_of_a_360_day_year(date):
+    """This function converts a date to a month number by flooring
+    to the nearest 12th of a 360 day year. Used by PRECIS projection.
+    """
+    timetuple = date.timetuple()
+    year = timetuple.tm_year
+    day_of_year = timetuple.tm_yday
+    month0 = floor((day_of_year / 360) * 12)
+    return ((year-start_year) * 12) + (month0) - start_month_0_indexed
+
+#import logging
+#logging.warn("NetCDF imports using unusual date semantics might not work")
 monthly = DateMapping(
     from_year_month_day = year_month_to_month_number,
     from_date = date_to_month_number, # Different for different data sets!
+    to_date = month_number_to_date
 )
 
 def date_to_day_number(date):
@@ -93,21 +132,35 @@ def date_to_day_number(date):
 def year_month_day_to_day_number(year, month, day):
     return date_to_day_number(date(year, month, day))
 
+def day_number_to_date(day_number):
+    return start_date + timedelta(days=day_number)
+
 daily = DateMapping(
     from_year_month_day = year_month_day_to_day_number,
-    from_date = date_to_day_number
+    from_date = date_to_day_number,
+    to_date = day_number_to_date
 )
 
 class Observed(object):
     code = "O"
+Observed.__name__ = "Observed Station"
     
 class Gridded(object):
     code = "G"
+Gridded.__name__ = "Observed Gridded"
     
 class Projected(object):
     code = "P"
 
-SampleTableTypes = (Observed, Gridded, Projected)
+from simplejson import OrderedDict
+sample_table_types = (Observed, Gridded, Projected)
+sample_table_types_by_code = OrderedDict()
+for SampleTableType in sample_table_types:
+    sample_table_types_by_code[SampleTableType.code] = SampleTableType
+
+
+from gluon import current
+db = current.db
 
 class SampleTable(object):
     # Samples always have places and time (periods)
@@ -130,9 +183,6 @@ class SampleTable(object):
     # We don't want web2py messing with or complaining about the schemas.
     # It is likely we will need spatial database extensions i.e. PostGIS.
     # May be better to cluster places by region.
-    __types = OrderedDict()
-    for SampleTableType in SampleTableTypes:
-        __types[SampleTableType.code] = SampleTableType
         
     __date_mapper = {
         "daily": daily,
@@ -144,6 +194,12 @@ class SampleTable(object):
     @staticmethod
     def with_name(name):
         return SampleTable.__names[name]
+
+    __by_ids = {}
+    @staticmethod
+    def with_id(id):
+        SampleTable_by_ids = SampleTable.__by_ids
+        return SampleTable_by_ids[id]
     
     @staticmethod
     def name_exists(name, error):
@@ -158,46 +214,87 @@ class SampleTable(object):
     @staticmethod
     def matching(
         parameter_name,
-        sample_type_code,
+        sample_type_code
     ):
-        return SampleTable.__objects[(parameter_name, sample_type_code)]
+        try:
+            return SampleTable.__objects[(parameter_name, sample_type_code)]
+        except KeyError:
+            pass
+            #print SampleTable.__objects.keys()
 
     @staticmethod
     def add_to_client_config_dict(config_dict):
         data_type_option_names = []
-        for SampleTableType in SampleTableTypes:
+        for SampleTableType in sample_table_types:
             data_type_option_names.append(SampleTableType.__name__)                
 
+        parameter_names = []
+        for name, sample_table in SampleTable.__names.iteritems():
+            if sample_table.date_mapping_name == "monthly":
+                parameter_names.append(name)
         config_dict.update(
             data_type_option_names = data_type_option_names,
-            parameter_names = SampleTable.__names.keys()
+            parameter_names = parameter_names
         )
     
     def __init__(
         sample_table, 
         db, 
         name, # please change to parameter_name
-        sample_type,
         date_mapping_name,
         field_type,
         units_name,
+        grid_size,
+        sample_type = None,
+        sample_type_code = None,
         id = None
     ):
-        assert sample_type in SampleTableTypes
-        sample_table.type = sample_type
-        sample_table.db = db
-        sample_table.parameter_name = name
+        parameter_name = name
+        assert units_name in units_in_out.keys(), \
+            "units must be one of %s" % units_in_out.keys()
+        assert sample_type is None or sample_type in sample_table_types
+        assert (sample_type is not None) ^ (sample_type_code is not None), \
+            "either parameters sample_type or sample_type_code must be set"
+        sample_table_type = sample_type or sample_table_types_by_code[sample_type_code]
+
+        if id is not None:
+            if id in SampleTable.__by_ids:
+                # other code shouldn't be creating SampleTables that already
+                # exist. Or, worse, different ones with the same id.
+                raise Exception(
+                    "SampleTable %i already exists. "
+                    "Use SampleTable.with_id(%i) instead." % (id, id)
+                )
+                #return SampleTable.__by_ids[id]
+            else:
+                sample_table.set_id(id)
+                SampleTable.__by_ids[id] = sample_table
+
+        sample_table.type = sample_table_type
+        sample_table.units_name = units_name
+        sample_table.parameter_name = parameter_name
         sample_table.date_mapping_name = date_mapping_name
         sample_table.date_mapper = SampleTable.__date_mapper[date_mapping_name]
         sample_table.field_type = field_type
-        assert units_name in units_in_out.keys(), \
-            "units must be one of %s" % units_in_out.keys()
-        sample_table.units_name = units_name
-        if id is not None:
-            sample_table.set_id(id)
+        sample_table.grid_size = grid_size
+        sample_table.db = db
+
+        SampleTable.__objects[
+            (parameter_name, sample_table.type.code)
+        ] = sample_table
+        SampleTable.__names["%s %s" % (
+            sample_table.type.__name__, 
+            parameter_name
+        )] = sample_table
     
+    def __repr__(sample_table):
+        return '%s %s' % (
+            sample_table.type.__name__,
+            sample_table.parameter_name
+        )
+
     def __str__(sample_table):
-        return '"%s %s"' % (sample_table.type.__name__, sample_table.parameter_name)
+        return '"%s"' % repr(sample_table)
     
     @staticmethod
     def table_name(id):
@@ -235,7 +332,8 @@ class SampleTable(object):
                     name = sample_table.parameter_name,
                     units = sample_table.units_name,
                     field_type = sample_table.field_type,
-                    date_mapping = sample_table.date_mapping_name
+                    date_mapping = sample_table.date_mapping_name,
+                    grid_size = sample_table.grid_size
                 )
             )
             db.executesql(
@@ -254,18 +352,6 @@ class SampleTable(object):
                 );
                 """ % sample_table.__dict__
             )
-            for field in (
-                "time_period",
-                "place_id",
-                "value"
-            ):
-                db.executesql(
-                    "CREATE INDEX %(table_name)s_%(field)s__idx "
-                    "on %(table_name)s(%(field)s);" % dict(
-                        sample_table.__dict__,
-                        field = field
-                    )
-                )
             use_table_name(sample_table.table_name)
 
         def complain_that_table_already_exists(
@@ -274,7 +360,7 @@ class SampleTable(object):
         ):
             raise Exception(
                 "Table for %s %s already exists as '%s'" % (
-                    sample_table.sample_type.__name__,
+                    sample_table.type.__name__,
                     sample_table.parameter_name, 
                     existing_table_name
                 )
@@ -283,6 +369,22 @@ class SampleTable(object):
             not_found = create_table,
             found = complain_that_table_already_exists
         )
+        
+    def create_indices(sample_table):
+        db = sample_table.db
+        for field in (
+            "time_period",
+            "place_id",
+            "value"
+        ):
+            db.executesql(
+                "CREATE INDEX %(table_name)s_%(field)s__idx "
+                "on %(table_name)s(%(field)s);" % dict(
+                    sample_table.__dict__,
+                    field = field
+                )
+            )
+        use_table_name(sample_table.table_name)
 
     def drop(sample_table, use_table_name):
         db = sample_table.db
@@ -316,41 +418,103 @@ class SampleTable(object):
         )
 
     def insert_values(sample_table, values):
-        sample_table.db.executesql(
-            "INSERT INTO %s (time_period, place_id, value) VALUES %s;" % (
-                sample_table.table_name,
-                ",".join(values)
-            )
+        sql = "INSERT INTO %s (time_period, place_id, value) VALUES %s;" % (
+            sample_table.table_name,
+            ",".join(values)
+        )
+        try:
+            sample_table.db.executesql(sql)
+        except:
+            print sql
+            raise
+    
+    def pull_real_time_data(sample_table):
+        import_sql = (
+            "SELECT AVG(value), station_id, obstime "
+            "FROM weather_data_nepal "
+            "WHERE parameter = 'T' "
+            "GROUP BY station_id, obstime"
+            "ORDER BY station_id, obstime;"
+        )
+        sample_table.cldb.executesql(
+            import_sql
         )
 
+    def csv_data(
+        sample_table, 
+        place_id,
+        date_from,
+        date_to
+    ):
+        sample_table_id = sample_table.id
+        date_mapper = sample_table.date_mapper
+        start_date_number = date_mapper.date_to_time_period(date_from)
+        end_date_number = date_mapper.date_to_time_period(date_to)
+        
+        data = [
+            "date,"+sample_table.units_name
+        ]
+        for record in db.executesql(
+            "SELECT * "
+            "FROM climate_sample_table_%(sample_table_id)i "
+            "WHERE time_period >= %(start_date_number)i "
+            "AND place_id = %(place_id)i "
+            "AND time_period <= %(end_date_number)i"
+            "ORDER BY time_period ASC;" % locals()
+        ):
+            place_id, time_period, value = record
+            date_format = {
+                monthly: "%Y-%m",
+                daily: "%Y-%m-%d"
+            }[date_mapper]
+            data.append(
+                ",".join((
+                    date_mapper.to_date(time_period).strftime(date_format),
+                    str(value)
+                ))
+            )
+        data.append("")
+        return "\n".join(data)
+        
+    def get_available_years(
+        sample_table
+    ):
+        years = []
+        for (year,) in db.executesql(
+            "SELECT sub.year FROM ("
+                "SELECT (((time_period + %(start_month_0_indexed)i) / 12) + %(start_year)i)"
+                " AS year "
+                "FROM climate_sample_table_%(sample_table_id)i "
+            ") as sub GROUP BY sub.year;" % dict(
+                start_year = start_year,
+                start_month_0_indexed = start_month_0_indexed,
+                sample_table_id = sample_table.id
+            )
+        ):
+            years.append(year)
+        return years
+
 def init_SampleTable():
-    for SampleTableType in SampleTableTypes:
+    for SampleTableType in sample_table_types:
         for sample_table_spec in db(
-            db.climate_sample_table_spec.sample_type_code == SampleTableType.code
+            (db.climate_sample_table_spec.sample_type_code == SampleTableType.code) 
         ).select(
             orderby = db.climate_sample_table_spec.name
         ):
             sample_type_code = sample_table_spec.sample_type_code
             parameter_name = sample_table_spec.name
-            sample_table_types = SampleTable._SampleTable__types
-            sample_type = sample_table_types[sample_table_spec.sample_type_code]
+            sample_type = sample_table_types_by_code[sample_table_spec.sample_type_code]
             date_mapper = SampleTable._SampleTable__date_mapper
-            sample_table = SampleTable(
+            SampleTable(
                 name = sample_table_spec.name,
                 id = sample_table_spec.id,
                 units_name = sample_table_spec.units,
                 field_type = sample_table_spec.field_type,
                 date_mapping_name = sample_table_spec.date_mapping,
-                sample_type = sample_type, 
-                db=db
+                sample_type = sample_type,
+                grid_size = sample_table_spec.grid_size,
+                db = db
             )
-            SampleTable._SampleTable__objects[
-                (parameter_name, sample_type_code)
-            ] = sample_table
-            SampleTable._SampleTable__names["%s %s" % (
-                sample_type.__name__, 
-                parameter_name
-            )] = sample_table
 init_SampleTable()
 
 from MapPlugin import MapPlugin

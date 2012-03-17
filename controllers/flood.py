@@ -98,7 +98,7 @@ freport_id = S3ReusableField("freport_id", table,
                              requires = IS_NULL_OR(IS_ONE_OF(db, "flood_freport.id", "%(datetime)s")),
                              represent = lambda id: (id and [db(db.flood_freport.id == id).select(db.flood_freport.datetime, limitby=(0, 1)).first().datetime] or ["None"])[0],
                              label = T("Flood Report"),
-                             ondelete = "RESTRICT")
+                             ondelete = "CASCADE")
 
 # -----------------------------------------------------------------------------
 # Locations

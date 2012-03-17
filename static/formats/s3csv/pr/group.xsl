@@ -43,6 +43,7 @@
                 </xsl:attribute>
             </xsl:if>
             <data field="name"><xsl:value-of select="$GroupName"/></data>
+            <data field="group_type"><xsl:value-of select="col[@field='Type']"/></data>
         </resource>
 
     </xsl:template>

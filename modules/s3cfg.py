@@ -268,7 +268,12 @@ class S3Config(Storage):
     def get_gis_geoserver_password(self):
         return self.gis.get("geoserver_password", "")
     def get_gis_spatialdb(self):
-        return self.gis.get("spatialdb", False)
+        db_type = self.get_database_type()
+        if db_type != "postgres":
+            # Only Postgres supported currently
+            return False
+        else:
+            return self.gis.get("spatialdb", False)
 
     # -------------------------------------------------------------------------
     # L10N Settings
@@ -461,7 +466,22 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Human Resource Management
     def get_hrm_email_required(self):
+        """
+            If set to True then Staff & Volunteers require an email address
+        """
         return self.hrm.get("email_required", True)
+
+    def get_hrm_show_staff(self):
+        """
+            If set to True then HRM module exposes the Staff resource
+        """
+        return self.hrm.get("show_staff", True)
+
+    def get_hrm_show_vols(self):
+        """
+            If set to True then HRM module exposes the Volunteer resource
+        """
+        return self.hrm.get("show_vols", True)
 
     def get_hrm_skill_types(self):
         """

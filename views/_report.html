@@ -5,8 +5,6 @@
 {{pass}}
 {{try:}}{{=H2(title)}}
 {{except:}}{{pass}}
-{{try:}}{{=s3_ocr_buttons(r)}}
-{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
 </div>
@@ -76,6 +74,7 @@ var json_data = {cols:null, rows:null};
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.report.js"></script>
 {{else:}}
@@ -86,6 +85,7 @@ var json_data = {cols:null, rows:null};
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.report.min.js"></script>
 {{pass}}

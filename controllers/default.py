@@ -127,6 +127,14 @@ def index():
     title = deployment_settings.get_system_name()
     response.title = title
 
+    item = ""
+    if deployment_settings.has_module("cms"):
+        table = s3db.cms_post
+        item = db(table.module == module).select(table.body,
+                                                 limitby=(0, 1)).first()
+        if item:
+            item = DIV(XML(item.body))
+
     if deployment_settings.has_module("cr"):
         s3mgr.load("cr_shelter")
         SHELTERS = s3.crud_strings["cr_shelter"].subtitle_list
@@ -365,6 +373,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl);"""))
         response.s3.js_global.append( feed_control )
 
     return dict(title = title,
+                item = item,
 
                 sit_dec_res_box = sit_dec_res_box,
                 facility_box = facility_box,

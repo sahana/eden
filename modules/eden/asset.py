@@ -490,6 +490,16 @@ $(document).ready(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def defaults():
+        """ Return safe defaults for names in case the model is disabled """
+
+        asset_id = S3ReusableField("asset_id", "integer",
+                                   writable=False,
+                                   readable=False)
+        return Storage(asset_asset_id=asset_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def asset_represent(id):
         """
         """

@@ -42,7 +42,7 @@ from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 
-# =========================================================================
+# =============================================================================
 
 class S3MainMenuLayout(S3NavigationItem):
     """ Application Main Menu Layout """
@@ -67,14 +67,15 @@ class S3MainMenuLayout(S3NavigationItem):
                 else:
                     _class = "fleft"
                 if item.components:
-                    # Submenu
-                    _href = item.url()
-                    return LI(DIV(A(item.label,
-                                    _href=_href),
-                                    _class="hoverable"),
-                                UL(items,
-                                    _class="submenu"),
-                                _class=_class)
+                    # Submenu, render only if there's at list one active item
+                    if item.get_first(enabled=True):
+                        _href = item.url()
+                        return LI(DIV(A(item.label,
+                                        _href=_href),
+                                        _class="hoverable"),
+                                  UL(items,
+                                     _class="submenu"),
+                                  _class=_class)
                 else:
                     # Menu item
                     if item.parent.parent is None:
@@ -155,7 +156,7 @@ class S3MainMenuLayout(S3NavigationItem):
 # Shortcut
 MM = S3MainMenuLayout
 
-# =========================================================================
+# =============================================================================
 
 class S3OptionsMenuLayout(S3NavigationItem):
     """ Controller Options Menu Layout """
@@ -205,7 +206,7 @@ class S3OptionsMenuLayout(S3NavigationItem):
 # Shortcut
 M = S3OptionsMenuLayout
 
-# =========================================================================
+# =============================================================================
 
 class S3MenuSeparatorLayout(S3NavigationItem):
     """ Simple menu separator """
@@ -222,7 +223,7 @@ class S3MenuSeparatorLayout(S3NavigationItem):
 # Shortcut
 SEP = S3MenuSeparatorLayout
 
-# =========================================================================
+# =============================================================================
 
 class S3BreadcrumbsLayout(S3NavigationItem):
     """ Breadcrumbs layout """
@@ -240,7 +241,7 @@ class S3BreadcrumbsLayout(S3NavigationItem):
                 _class = "ancestor"
             return LI(A(item.label, _href=item.url(), _class=_class))
 
-# =========================================================================
+# =============================================================================
 def homepage(module=None, *match, **attr):
     """
         Shortcut for module homepage menu items using the MM layout,

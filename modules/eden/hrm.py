@@ -140,6 +140,31 @@ class S3HRModel(S3Model):
                                             hrm_human_resource_represent,
                                             orderby="hrm_human_resource.type"))
 
+        if not settings.get_hrm_show_staff():
+            title_list = T("Volunteers")
+            title_search = T("Search Volunteers")
+        elif not settings.get_hrm_show_vols():
+            title_list = T("Staff")
+            title_search = T("Search Staff")
+        else:
+            title_list = T("Staff & Volunteers")
+            title_search = T("Search Staff & Volunteers")
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Staff Member"),
+            title_display = T("Staff Member Details"),
+            title_list = title_list,
+            title_update = T("Edit Record"),
+            title_search = title_search,
+            subtitle_create = T("Add New Staff Member"),
+            subtitle_list = T("Staff Members"),
+            label_list_button = T("List All Records"),
+            label_create_button = T("Add Staff Member"),
+            label_delete_button = T("Delete Record"),
+            msg_record_created = T("Staff member added"),
+            msg_record_modified = T("Record updated"),
+            msg_record_deleted = T("Record deleted"),
+            msg_list_empty = T("No staff or volunteers currently registered"))
+
         # Used by Scenarios, Events, Tasks & RAT
         human_resource_id = S3ReusableField("human_resource_id",
                                             db.hrm_human_resource,
@@ -154,7 +179,7 @@ class S3HRModel(S3Model):
                                             #                                                                     none_value = None),
                                             #                                    ),
                                             label = T("Human Resource"),
-                                            ondelete = "SET NULL")
+                                            ondelete = "RESTRICT")
 
         human_resource_search = S3Search(
             simple=(self.human_resource_search_simple_widget("simple")),
@@ -385,9 +410,11 @@ class S3HRModel(S3Model):
             if not person_id:
                 return
 
+            s3db.pr_update_affiliations(htable, record)
+
             query = (ptable.id == person_id) & \
                     (ltable.pe_id == ptable.pe_id) & \
-                    (utable.id == ptable.user_id)
+                    (utable.id == ltable.user_id)
             user = db(query).select(utable.id,
                                     limitby=(0, 1)).first()
         if not user:
@@ -431,6 +458,9 @@ class S3HRModel(S3Model):
             return
 
         data = Storage()
+
+        # Affiliation
+        s3db.pr_update_affiliations(htable, record)
 
         if record.type == 1 and record.site_id:
             # Staff: update the location ID from the selected site
@@ -594,7 +624,7 @@ class S3HRJobModel(S3Model):
                                                     DIV(DIV(_class="tooltip",
                                                             _title="%s|%s" % (label_create,
                                                                               T("Add a new job role to the catalog."))))),
-                                      ondelete = "RESTRICT")
+                                      ondelete = "SET NULL")
 
         # =========================================================================
         # Positions
@@ -648,7 +678,7 @@ class S3HRJobModel(S3Model):
         #                                            DIV(DIV(_class="tooltip",
         #                                                    _title="%s|%s" % (label_create,
         #                                                                      T("Add a new job role to the catalog."))))),
-        #                              ondelete = "RESTRICT")
+        #                              ondelete = "SET NULL")
 
         # =========================================================================
         # Availability
@@ -862,7 +892,7 @@ class S3HRSkillModel(S3Model):
                                                                                 T("Add a new skill type to the catalog."))))),
                                         ondelete = "RESTRICT")
 
-        configure("hrm_skill_type",
+        configure(tablename,
                   deduplicate=self.hrm_skill_type_duplicate)
 
         # ---------------------------------------------------------------------
@@ -919,7 +949,7 @@ class S3HRSkillModel(S3Model):
                         represent = lambda id: \
                             (id and [db.hrm_skill[id].name] or [T("None")])[0],
                         comment = skill_help,
-                        ondelete = "RESTRICT",
+                        ondelete = "SET NULL",
                         # Uncomment this to use an Autocomplete & not a Dropdown
                         # (NB FilterField widget needs fixing for that too)
                         #widget = S3AutocompleteWidget("hrm",
@@ -936,7 +966,7 @@ class S3HRSkillModel(S3Model):
                                                         multiple=True)),
                         represent = hrm_multi_skill_represent,
                         #comment = skill_help,
-                        ondelete = "RESTRICT",
+                        ondelete = "SET NULL",
                         widget = S3MultiSelectWidget()
                         )
 
@@ -1107,7 +1137,7 @@ class S3HRSkillModel(S3Model):
         #                                         DIV(DIV(_class="tooltip",
         #                                                 _title="%s|%s" % (label_create,
         #                                                                   T("Add a new skill provision to the catalog."))))),
-        #                           ondelete = "RESTRICT")
+        #                           ondelete = "SET NULL")
 
 
         # =====================================================================
@@ -1253,6 +1283,7 @@ class S3HRSkillModel(S3Model):
                                 )
 
         configure("hrm_course",
+                  create_next=URL(f="course", args=["[id]", "course_certificate"]),
                   deduplicate=self.hrm_course_duplicate)
 
         # Components
@@ -1323,11 +1354,11 @@ class S3HRSkillModel(S3Model):
         training_event_id = S3ReusableField("training_event_id", db.hrm_training_event,
                                             sortby = "start_date",
                                             label = T("Training Event"),
-                                            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                            "hrm_training_event.id",
-                                                                            hrm_training_event_represent,
-                                                                            orderby="~hrm_training_event.start_date",
-                                                                            )),
+                                            requires = IS_ONE_OF(db,
+                                                                 "hrm_training_event.id",
+                                                                 hrm_training_event_represent,
+                                                                 orderby="~hrm_training_event.start_date",
+                                                                ),
                                             represent = hrm_training_event_represent,
                                             comment = course_help,
                                             ondelete = "RESTRICT",
@@ -1402,13 +1433,14 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_training"
         table = define_table(tablename,
-                             person_id( #@ToDo: Create a way to add new people to training as staff/volunteers
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Participant"),
-                                                                        T("Start typing the Participant's name.")
-                                                                        )
-                                                      )
-                                            ),
+                             #@ToDo: Create a way to add new people to training as staff/volunteers
+                             person_id(empty=False, 
+                                       comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (T("Participant"),
+                                                            T("Start typing the Participant's name.")
+                                                            )
+                                          )
+                                ),
                              training_event_id(),
                              # This field can only be filled-out by specific roles
                              # Once this has been filled-out then the other fields are locked
@@ -1594,7 +1626,11 @@ class S3HRSkillModel(S3Model):
                                          ondelete = "RESTRICT")
 
         configure("hrm_certificate",
+                  create_next=URL(f="certificate", args=["[id]", "certificate_skill"]),
                   deduplicate=self.hrm_certificate_duplicate)
+
+        # Components
+        add_component("hrm_certificate_skill", hrm_certificate="certificate_id")
 
         # =====================================================================
         # Certifications

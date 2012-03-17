@@ -930,6 +930,7 @@ class S3ModelExtensions(object):
                    widget=None,
                    empty=True,
                    default=DEFAULT,
+                   ondelete="CASCADE",
                    readable=False,
                    writable=False):
         """
@@ -976,7 +977,7 @@ class S3ModelExtensions(object):
                      comment = comment,
                      represent = represent,
                      widget = widget,
-                     ondelete = "RESTRICT")
+                     ondelete = ondelete)
 
     # -------------------------------------------------------------------------
     def update_super(self, table, record):
@@ -1014,12 +1015,12 @@ class S3ModelExtensions(object):
             # Get the shared field map
             shared = self.get_config(tablename, "%s_fields" % s._tablename)
             if shared:
-                data = dict([(f, _record[shared[f]])
-                             for f in shared
-                             if shared[f] in _record and f in s.fields and f != key])
+                data = Storage([(f, _record[shared[f]])
+                                for f in shared
+                                if shared[f] in _record and f in s.fields and f != key])
             else:
-                data = dict([(f, _record[f])
-                             for f in s.fields if f in _record and f != key])
+                data = Storage([(f, _record[f])
+                               for f in s.fields if f in _record and f != key])
             # Add instance type and deletion status
             data.update(instance_type=tablename,
                         deleted=_record.get("deleted", False))
@@ -1031,8 +1032,9 @@ class S3ModelExtensions(object):
                 query = s[key] == skey
                 row = current.db(query).select(s[key], limitby=(0, 1)).first()
             else:
-                row = None
+                row = Storage()
             _tablename = s._tablename
+            form = Storage(vars=row)
             if row:
                 onaccept = self.get_config(_tablename, "update_onaccept",
                            self.get_config(_tablename, "onaccept", None))
@@ -1043,7 +1045,8 @@ class S3ModelExtensions(object):
                     current.db(table.id == id).update(**k)
                 data.update(k)
                 if onaccept:
-                    onaccept(dict(vars=_record).update(data))
+                    form.vars.update(data)
+                    onaccept(form)
             else:
                 onaccept = self.get_config(_tablename, "create_onaccept",
                            self.get_config(_tablename, "onaccept", None))
@@ -1053,7 +1056,8 @@ class S3ModelExtensions(object):
                     super_keys.update({key:k})
                 data.update({key:k})
                 if onaccept:
-                    onaccept(dict(vars=_record).update(data))
+                    form.vars.update(data)
+                    onaccept(form)
         record.update(super_keys)
         return True
 
@@ -1065,6 +1069,8 @@ class S3ModelExtensions(object):
             @param table: the instance table
             @param record: the instance record
         """
+
+        manager = current.manager
 
         supertable = self.get_config(table._tablename, "super_entity")
         if not supertable:
@@ -1079,9 +1085,11 @@ class S3ModelExtensions(object):
                     s = S3Model.table(s)
                 if s is None:
                     continue
-                if "deleted" in s.fields:
-                    current.db(s.uuid == uid).update(deleted=True)
-
+                tn = s._tablename
+                prefix, name = tn.split("_", 1)
+                resource = manager.define_resource(prefix, name, uid=uid)
+                ondelete = self.get_config(tn, "ondelete")
+                resource.delete(ondelete=ondelete, cascade=True)
         return True
 
     # -------------------------------------------------------------------------
@@ -1196,6 +1204,8 @@ class S3MultiPath:
 
         if isinstance(path, Path):
             path = path.nodes
+        else:
+            path = Path(path).nodes
         multipath = None
 
         # Normalize any recurrent paths
@@ -1204,13 +1214,13 @@ class S3MultiPath:
         append = self.paths.append
         for p in paths:
             p = Path(p)
-            if p not in self:
+            if not self & p:
                 append(p)
                 multipath = self
         return multipath
 
     # -------------------------------------------------------------------------
-    def extend(self, head, ancestors=None):
+    def extend(self, head, ancestors=None, cut=None):
         """
             Extend this multi-path with a new vertex ancestors<-head
 
@@ -1222,7 +1232,7 @@ class S3MultiPath:
         if isinstance(ancestors, S3MultiPath):
             extend = self.extend
             for p in ancestors.paths:
-                extend(head, p)
+                extend(head, p, cut=cut)
             return self
 
         # Split-extend all paths which contain the head node
@@ -1230,6 +1240,10 @@ class S3MultiPath:
         Path = self.Path
         append = extensions.append
         for p in self.paths:
+            if cut:
+                pos = p.find(cut)
+                if pos > 0:
+                    p.nodes = p.nodes[:pos-1]
             i = p.find(head)
             if i > 0:
                 path = Path(p.nodes[:i]).extend(head, ancestors)
@@ -1287,6 +1301,10 @@ class S3MultiPath:
         """ Serialize this multi-path as string """
         return ",".join([str(p) for p in self.paths])
 
+    def as_list(self):
+        """ Return this multi-path as list of node lists """
+        return [p.as_list() for p in self.paths if len(p)]
+
     # -------------------------------------------------------------------------
     # Introspection
     #
@@ -1298,7 +1316,7 @@ class S3MultiPath:
     def __and__(self, sequence):
         """
             Check whether sequence is the start sequence of any of
-            the paths in this multi-path (for de-duplciation)
+            the paths in this multi-path (for de-duplication)
 
             @param sequence: sequence of node IDs (or path)
         """
@@ -1394,14 +1412,14 @@ class S3MultiPath:
             while head in tail:
                 pos = index(head)
                 append(tail[:pos])
-                tail = tail[pos+1:]
+                tail = tail[pos + 1:]
             append(tail)
             r = []
             append = r.append
             for tail in tails:
                 nt = resolve(tail)
                 for t in nt:
-                    append([head]+t)
+                    append([head] + t)
             return r
         else:
             return [seq]
@@ -1441,6 +1459,8 @@ class S3MultiPath:
             if node is None:
                 return True
             n = str(node)
+            if not n:
+                return True
             if n not in self.nodes:
                 self.nodes.append(n)
                 return True
@@ -1503,6 +1523,10 @@ class S3MultiPath:
         def __parse(self, value):
             """ Parse a string into nodes """
             return value.strip().strip("[").strip("]").strip("|").split("|")
+
+        def as_list(self):
+            """ Return the list of nodes """
+            return list(self.nodes)
 
         # ---------------------------------------------------------------------
         # Item access

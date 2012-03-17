@@ -4,6 +4,8 @@ module = "climate"
 resourcename = request.function
 
 # @todo: re-write this for new framework:
+
+
 #response.menu = s3_menu_dict[module]["menu"]
 #response.menu.append(s3.menu_help)
 #response.menu.append(s3.menu_auth)
@@ -14,14 +16,11 @@ ClimateDataPortal = local_import("ClimateDataPortal")
 SampleTable = ClimateDataPortal.SampleTable
 DSL = local_import("ClimateDataPortal.DSL")
 
-sample_types = SampleTable._SampleTable__types.values()
-variable_names = SampleTable._SampleTable__names.keys()
-
-def map_plugin(**client_config):
+def _map_plugin(**client_config):
     return ClimateDataPortal.MapPlugin(
         env = Storage(globals()),
         year_max = 2100,
-        year_min = 1950,
+        year_min = 1940,
         place_table = climate_place,
         client_config = client_config
     )
@@ -34,9 +33,6 @@ def index():
 
     # Include an embedded Overview Map on the index page
     config = gis.get_config()
-
-    search = True
-    catalogue_layers = False
 
     if config.wmsbrowser_url:
         wms_browser = {
@@ -52,14 +48,26 @@ def index():
     else:
         print_tool = {}
 
-    map = gis.show_map(
-        lat = 28.5,
-        lon = 84.1,
-        zoom = 7,
-        toolbar = False,
+    if request.vars.get("zoom", None) is not None:
+        zoom = int(request.vars["zoom"])
+    else:
+        zoom = 7
+        
+    if request.vars.get("coords", None) is not None:
+        lon, lat = map(float, request.vars["coords"].split(","))
+    else:
+        lon = 84.1
+        lat = 28.5
+
+    gis_map = gis.show_map(
+        lon = lon,
+        lat = lat,
+        zoom = zoom,
+        toolbar = request.vars.get("display_mode", None) != "print",
+        googleEarth = True,
         wms_browser = wms_browser, # dict
         plugins = [
-            map_plugin(
+            _map_plugin(
                 **request.vars
             )
         ]
@@ -68,65 +76,12 @@ def index():
     response.title = module_name
     return dict(
         module_name=module_name,
-        map=map
+        map=gis_map
     )
-
-month_names = dict(
-    January=1,
-    February=2,
-    March=3,
-    April=4,
-    May=5,
-    June=6,
-    July=7,
-    August=8,
-    September=9,
-    October=10,
-    November=11,
-    December=12
-)
-
-for name, number in month_names.items():
-    month_names[name[:3]] = number
-for name, number in month_names.items():
-    month_names[name.upper()] = number
-for name, number in month_names.items():
-    month_names[name.lower()] = number
-
-def convert_date(default_month):
-    def converter(year_month):
-        components = year_month.split("-")
-        year = int(components[0])
-        assert 1960 <= year, "year must be >= 1960"
-
-        try:
-            month_value = components[1]
-        except IndexError:
-            month = default_month
-        else:
-            try:
-                month = int(month_value)
-            except TypeError:
-                month = month_names[month_value]
-
-        assert 1 <= month <= 12, "month must be in range 1:12"
-        return datetime.date(year, month, 1)
-    return converter
-
-def one_of(options):
-    def validator(choice):
-        assert choice in options, "should be one of %s, not '%s'" % (
-            options,
-            choice
-        )
-        return choice
-    return validator
-
-aggregation_names = ("Maximum", "Minimum", "Average")
 
 def climate_overlay_data():
     kwargs = dict(request.vars)
-
+    
     arguments = {}
     errors = []
     for kwarg_name, converter in dict(
@@ -142,38 +97,71 @@ def climate_overlay_data():
             except TypeError:
                 errors.append("%s is wrong type" % kwarg_name)
             except AssertionError, assertion_error:
-                errors.append("%s: %s" % (kwarg_name, assertion_error))
+                errors.append("%s: %s" % (kwarg_name, assertion_error))                
     if kwargs:
         errors.append("Unexpected arguments: %s" % kwargs.keys())
-
+    
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
         import gluon.contrib.simplejson as JSON
         try:
-            data_path = map_plugin().get_overlay_data(**arguments)
-        except SyntaxError, syntax_error:
+            data_path = _map_plugin().get_overlay_data(**arguments)
+        # only DSL exception types should be raised here
+        except DSL.DSLSyntaxError, syntax_error:
             raise HTTP(400, JSON.dumps({
                 "error": "SyntaxError",
                 "lineno": syntax_error.lineno,
                 "offset": syntax_error.offset,
                 "understood_expression": syntax_error.understood_expression
             }))
-        except (DSL.MeaninglessUnitsException, TypeError), exception:
+        except (
+            DSL.MeaninglessUnitsException,
+            DSL.DimensionError,
+            DSL.DSLTypeError
+        ), exception:
             raise HTTP(400, JSON.dumps({
                 "error": exception.__class__.__name__,
                 "analysis": str(exception)
             }))
         else:
             return response.stream(
-                open(data_path,"rb"),
+                open(data_path, "rb"),
                 chunk_size=4096
             )
 
-def list_of(converter):
-    def convert_list(choices):
-        return map(converter, choices)
-    return convert_list
+def climate_csv_location_data():
+    kwargs = dict(request.vars)
+    
+    arguments = {}
+    errors = []
+    for kwarg_name, converter in dict(
+        query_expression = str,
+    ).iteritems():
+        try:
+            value = kwargs.pop(kwarg_name)
+        except KeyError:
+            errors.append("%s missing" % kwarg_name)
+        else:
+            try:
+                arguments[kwarg_name] = converter(value)
+            except TypeError:
+                errors.append("%s is wrong type" % kwarg_name)
+            except AssertionError, assertion_error:
+                errors.append("%s: %s" % (kwarg_name, assertion_error))                
+    if kwargs:
+        errors.append("Unexpected arguments: %s" % kwargs.keys())
+    
+    if errors:
+        raise HTTP(400, "<br />".join(errors))
+    else:
+        import gluon.contrib.simplejson as JSON
+        data_path = _map_plugin().get_csv_location_data(**arguments)
+        # only DSL exception types should be raised here
+        return response.stream(
+            open(data_path, "rb"),
+            chunk_size=4096
+        )
 
 def climate_chart():
     import gluon.contenttype
@@ -187,9 +175,12 @@ def _climate_chart(content_type):
     kwargs = dict(request.vars)
     import gluon.contrib.simplejson as JSON
     specs = JSON.loads(kwargs.pop("spec"))
-
+    def list_of(converter):
+        def convert_list(choices):
+            return map(converter, choices)
+        return convert_list
     checked_specs = []
-    for spec in specs:
+    for label, spec in specs.iteritems():
         arguments = {}
         errors = []
         for name, converter in dict(
@@ -209,13 +200,13 @@ def _climate_chart(content_type):
                     errors.append("%s: %s" % (name, assertion_error))
         if spec:
             errors.append("Unexpected arguments: %s" % spec.keys())
-        checked_specs.append(arguments)
+        checked_specs.append((label, arguments))
 
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
         response.headers["Content-Type"] = content_type
-        data_image_file_path = map_plugin().render_plots(
+        data_image_file_path = _map_plugin().render_plots(
             specs = checked_specs,
             width = int(kwargs.pop("width")),
             height = int(kwargs.pop("height"))
@@ -246,14 +237,15 @@ def stations():
     append = stations_strings.append
     extend = stations_strings.extend
 
+    table = db.climate_place
     for place_row in db(
-        (db.climate_place.id == db.climate_place_elevation.id) &
-        (db.climate_place.id == db.climate_place_station_id.id) &
-        (db.climate_place.id == db.climate_place_station_name.id)
+        (table.id == db.climate_place_elevation.id) &
+        (table.id == db.climate_place_station_id.id) &
+        (table.id == db.climate_place_station_name.id) 
     ).select(
-        db.climate_place.id,
-        db.climate_place.longitude,
-        db.climate_place.latitude,
+        table.id,
+        table.longitude,
+        table.latitude,
         db.climate_place_elevation.elevation_metres,
         db.climate_place_station_id.station_id,
         db.climate_place_station_name.name
@@ -269,26 +261,43 @@ def stations():
     return "[%s]" % ",".join(stations_strings)
 
 def places():
-    response.headers["Expires"] = "Sat, 25 Dec 2011 20:00:00 GMT"
+    from datetime import datetime, timedelta
+    response.headers["Expires"] = (
+        datetime.now() + timedelta(days = 7)
+    ).strftime("%a, %d %b %Y %H:%M:%S GMT") # not GMT, but can't find a way
     return response.stream(
-        open(map_plugin().place_data(),"rb"),
+        open(_map_plugin().place_data(),"rb"),
         chunk_size=4096
     )
 
 # =============================================================================
 def sample_table_spec():
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def station_parameter():
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def purchase():
-
+    table = db.climate_purchase
+    if not auth.is_logged_in():
+        redirect(URL(c = "default",
+                     f = "user",
+                     args = ["login"],
+                     vars = {"_next":URL(c ="climate",
+                                         f = "purchase")}))
+    
+    if not s3_has_role(1):
+        table.paid.writable = False
+        table.price.writable = False
+        response.s3.filter = (db.climate_purchase.created_by == auth.user.id)
+    
     def prep(r):
+        if not s3_has_role(1) and r.record and r.record.paid:
+            for f in table.fields:
+                table[f].writable = False
+                
         if r.method == "read":
             response.s3.rfooter = DIV(
                 T("Please make your payment in person at the DHM office, or by bank Transfer to:"),
@@ -303,12 +312,52 @@ def purchase():
                 )
             )
         return True
-
+    
+    def rheader(r):
+        record = r.record
+        if record and record.paid:
+            # these are the parameters to download the data export file 
+            # see models/climate.py for more details
+            return A(
+                "Download this data", 
+                _href='/eden/climate/download_purchased_data?purchase_id=%(record_id)s'% {
+                    "record_id": record.id,
+                    "station_id": record.station_id,
+                    "parameter_id": record.parameter_id,
+                    "date_from": record.date_from,
+                    "date_to": record.date_to
+                },
+                _style="border:1px solid black; padding:0.5em; background-color:#0F0; color:black; text-decoration:none;"
+            )
+        else:
+            return None
+    
     response.s3.prep = prep
-
-    output = s3_rest_controller()
+    
+    output = s3_rest_controller(rheader = rheader)
     output["addheader"] = T("Please enter the details of the data you wish to purchase")
     return output
+
+def prices():
+    prices_table = db.climate_prices
+    if not auth.is_logged_in():
+        redirect(
+            URL(
+                c = "default",
+                f = "user",
+                args = ["login"],
+                vars = {
+                    "_next": URL(
+                        c = "climate",
+                        f = "prices"
+                    )
+                }
+            )
+        )
+    else:
+        if s3_has_role(1):
+            return s3_rest_controller()
+    
 
 # =============================================================================
 def save_query():
@@ -316,48 +365,85 @@ def save_query():
     return output
 
 def request_image():
-    vars = request.vars
-    import subprocess
-    #screenshot_renderer_stdout = StringIO.StringIO()
-    url = (
-        "http://%(http_host)s/%(application_name)s/%(controller)s"
-        "?expression=%(expression)s"
-        "&filter=%(filter)s"
-        "&display_mode=print"
-    ) % dict(
-        vars,
-        controller = request.controller,
-        application_name = request.application,
-        http_host = request.env.http_host,
-        server_port = request.env.server_port,
-    )
-    width = int(vars["width"])
-    height = int(vars["height"])
-
-    # PyQT4 signals don't like not being run in the main thread
-    # run in a subprocess to give it it's own thread
-    subprocess_args = (
-        request.env.applications_parent+"/applications/"+
-        request.application+"/modules/webkit_url2png.py",
-        url,
-        str(width),
-        str(height)
-    )
-    stdoutdata, stderrdata = subprocess.Popen(
-        subprocess_args,
-        bufsize = 4096,
-        stdout = subprocess.PIPE, # StringIO doesn't work
-        stderr = subprocess.PIPE
-    ).communicate()
-#    if stderrdata:
-#        raise Exception(stderrdata)
-#    else:
+    from datetime import datetime, timedelta
+    response.headers["Expires"] = (
+        datetime.now() + timedelta(days = 7)
+    ).strftime("%a, %d %b %Y %H:%M:%S GMT") # not GMT, but can't find a way
     response.headers["Content-Type"] = "application/force-download"
     response.headers["Content-disposition"] = (
         "attachment; filename=MapScreenshot.png"
     )
-    import StringIO
+    vars = request.vars
     return response.stream(
-        StringIO.StringIO(stdoutdata),
+        open(
+            _map_plugin().printable_map_image_file(
+                command = (
+                    request.env.applications_parent+"/applications/"+
+                    "eden/modules/webkit_url2png.py"
+                ),
+                url_prefix = (
+                    "http://%(http_host)s/eden/%(controller)s"
+                ) % dict(
+                    controller = request.controller,
+                    #application_name = request.application,
+                    http_host = request.env.http_host, # includes port
+                ),
+                query_string = request.env.query_string,
+                width = int(vars["width"]),
+                height = int(vars["height"])
+            ),
+            "rb"
+        ),
+        chunk_size=4096
+    )
+
+def download_purchased_data():
+    purchase_id = request.vars["purchase_id"]
+    climate_purchase = db(
+        db.climate_purchase.id == purchase_id
+    ).select().first()
+    if climate_purchase is not None and climate_purchase.paid:
+        sample_table = SampleTable.with_id(climate_purchase.parameter_id)        
+        parameter_name = repr(sample_table)
+        # climate_purchase.station_id is currently actually the place_id
+        place_id = climate_purchase.station_id
+        station = db(
+            (db.climate_place_station_id.id == place_id) &
+            (db.climate_place_station_name.id == place_id)
+        ).select(
+            db.climate_place_station_name.name,
+            db.climate_place_station_id.station_id
+        ).first()
+        
+        station_id = station.climate_place_station_id.station_id
+        station_name = station.climate_place_station_name.name
+        date_from = climate_purchase.date_from
+        date_to = climate_purchase.date_to
+        
+        csv_data = sample_table.csv_data(
+            place_id = place_id,
+            date_from = date_from,
+            date_to = date_to
+        )
+        response.headers["Content-Type"] = "application/force-download"
+        response.headers["Content-disposition"] = (
+            "attachment; filename="
+            "%(parameter_name)s"
+            "_%(station_id)i"
+            "_%(station_name)s"
+            "_%(date_from)s"
+            "_%(date_to)s.csv" % locals()
+        )
+        return csv_data
+    else:
+        return
+    
+def get_years():
+    from datetime import datetime, timedelta
+    response.headers["Expires"] = (
+        datetime.now() + timedelta(days = 7)
+    ).strftime("%a, %d %b %Y %H:%M:%S GMT") # not GMT, but can't find a way
+    return response.stream(
+        open(_map_plugin().get_available_years(request.vars["dataset_name"]),"rb"),
         chunk_size=4096
     )

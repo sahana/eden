@@ -147,23 +147,6 @@ def human_resource():
     table = s3db[tablename]
     ptable = s3db.pr_person
 
-    # Configure CRUD strings
-    s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Staff Member"),
-        title_display = T("Staff Member Details"),
-        title_list = T("Staff & Volunteers"),
-        title_update = T("Edit Record"),
-        title_search = T("Search Staff & Volunteers"),
-        subtitle_create = T("Add New Staff Member"),
-        subtitle_list = T("Staff Members"),
-        label_list_button = T("List All Records"),
-        label_create_button = T("Add Staff Member"),
-        label_delete_button = T("Delete Record"),
-        msg_record_created = T("Staff member added"),
-        msg_record_modified = T("Record updated"),
-        msg_record_deleted = T("Record deleted"),
-        msg_list_empty = T("No staff or volunteers currently registered"))
-
     # NB Change these & change the list_fields.pop() later
     list_fields = ["id",
                    "person_id",
@@ -212,18 +195,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-        # Fix the breadcrumb
-        #breadcrumbs[2] = (T("Volunteers"), False,
-        #                  URL(c=request.controller,
-        #                      f=request.function,
-        #                      args=request.args,
-        #                      vars=request.vars))
-        #if "create" in request.args:
-        #    breadcrumbs[3] = (T("New Volunteer"), True,
-        #                      URL(c=request.controller,
-        #                          f=request.function,
-        #                          args=request.args,
-        #                          vars=request.vars))
 
     elif group == "staff":
         #s3mgr.configure(table._tablename, insertable=False)
@@ -256,12 +227,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-        # Fix the breadcrumb
-        #breadcrumbs[2] = (T("Staff"), False,
-        #                  URL(c=request.controller,
-        #                      f=request.function,
-        #                      args=request.args,
-        #                      vars=request.vars))
 
     s3mgr.configure(tablename,
                     list_fields = list_fields)
@@ -407,6 +372,17 @@ def person():
 
         @ToDo: Volunteers should be redirected to vol/person?
     """
+
+    if deployment_settings.has_module("asset"):
+        # Assets as component of people
+        s3mgr.model.add_component("asset_asset",
+                                  pr_person="assigned_to_id")
+        # Edits should always happen via the Asset Log
+        # @ToDo: Allow this method too, if we can do so safely
+        s3mgr.configure("asset_asset",
+                        insertable = False,
+                        editable = False,
+                        deletable = False)
 
     group = request.get_vars.get("group", "staff")
     hr_id = request.get_vars.get("human_resource.id", None)
@@ -744,6 +720,34 @@ def hrm_rheader(r, tabs=[]):
                                     ),
                               rheader_tabs)
 
+        elif r.name == "certificate":
+            # Tabs
+            tabs = [(T("Certificate Details"), None),
+                    (T("Skill Equivalence"), "certificate_skill")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            table = r.table
+            certificate = r.record
+            if certificate:
+                rheader = DIV(TABLE(
+                                    TR(TH("%s: " % table.name.label),
+                                       certificate.name),
+                                    ),
+                              rheader_tabs)
+
+        elif r.name == "course":
+            # Tabs
+            tabs = [(T("Course Details"), None),
+                    (T("Course Certificates"), "course_certificate")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            table = r.table
+            course = r.record
+            if course:
+                rheader = DIV(TABLE(
+                                    TR(TH("%s: " % table.name.label),
+                                       course.name),
+                                    ),
+                              rheader_tabs)
+
         elif r.name == "human_resource":
             hr = r.record
             if hr:
@@ -772,12 +776,14 @@ def group():
     table.group_type.label = T("Team Type")
     table.description.label = T("Team Description")
     table.name.label = T("Team Name")
-    s3db.pr_group_membership.group_id.label = T("Team ID")
-    s3db.pr_group_membership.group_head.label = T("Team Leader")
+    mtable = s3db.pr_group_membership
+    mtable.group_id.label = T("Team ID")
+    mtable.group_head.label = T("Team Leader")
 
     # Set Defaults
-    table.group_type.default = 3  # 'Relief Team'
-    table.group_type.readable = table.group_type.writable = False
+    _group_type = table.group_type
+    _group_type.default = 3  # 'Relief Team'
+    _group_type.readable = _group_type.writable = False
 
     # CRUD Strings
     ADD_TEAM = T("Add Team")
@@ -950,7 +956,7 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader=hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -976,7 +982,7 @@ def certificate():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader=hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------

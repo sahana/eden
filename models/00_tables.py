@@ -13,96 +13,39 @@ current.models = models
 current.s3db = s3db = S3Model()
 
 # Explicit import statements to have them reload automatically in debug mode
-import eden.pr
-import eden.gis
-import eden.sit
-import eden.org
-import eden.auth
-import eden.msg
-import eden.doc
-import eden.hrm
-import eden.project
-import eden.supply
-import eden.inv
-import eden.proc
 import eden.asset
-import eden.scenario
-import eden.event
-import eden.req
-import eden.vehicle
-import eden.irs
-import eden.fire
+import eden.auth
+import eden.cms
 import eden.delphi
+import eden.doc
 import eden.dvi
+import eden.event
+import eden.fire
+import eden.gis
+import eden.hms
+import eden.hrm
+import eden.inv
+import eden.irs
+import eden.msg
+import eden.ocr
+import eden.org
+import eden.patient
+import eden.pr
+import eden.sit
+import eden.proc
+import eden.project
+import eden.req
+import eden.scenario
+import eden.supply
 import eden.support
 import eden.survey
-import eden.hms
 import eden.sync
-import eden.patient
+import eden.vehicle
 
 # =============================================================================
 # Import S3 meta fields into global namespace
 #
 from s3.s3fields import *
-
-# =============================================================================
-# Representations for Auth Users & Groups
-def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
-    """ Represent a User as their profile picture or Gravatar """
-
-    table = s3db[tablename]
-
-    email = None
-    image = None
-
-    if tablename == "auth_user":
-        user = db(table.id == id).select(table.email,
-                                         table.image,
-                                         limitby=(0, 1),
-                                         cache=s3db.cache).first()
-        if user:
-            email = user.email.strip().lower()
-            image = user.image
-    elif tablename == "pr_person":
-        user = db(table.id == id).select(table.pe_id,
-                                         table.picture,
-                                         limitby=(0, 1),
-                                         cache=s3db.cache).first()
-        if user:
-            image = user.picture
-            ctable = db.pr_contact
-            query = (ctable.pe_id == id) & (ctable.contact_method == "EMAIL")
-            email = db(query).select(ctable.value,
-                                     limitby=(0, 1),
-                                     cache=s3db.cache).first()
-            if email:
-                email = email.value
-
-    if image:
-        url = URL(c="default", f="download",
-                  args=image)
-    elif email:
-        # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
-        hash = md5.new(email).hexdigest()
-        url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
-
-    else:
-        url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
-
-    return IMG(_src=url,
-               _class=_class,
-               _height=50, _width=50)
-
-def s3_role_represent(id):
-    """ Represent a Role by Name """
-
-    table = s3db.auth_group
-    role = db(table.id == id).select(table.role,
-                                     limitby=(0, 1),
-                                     cache=s3db.cache).first()
-    if role:
-        return role.role
-    return None
 
 # =============================================================================
 # Record authorship meta-fields
@@ -261,7 +204,7 @@ role_required = S3ReusableField("role_required", db.auth_group,
                                                                 T("If this record should be restricted then select which role is required to access the record here."))),
                                 ondelete = "RESTRICT")
 
-roles_permitted = S3ReusableField("roles_permitted", db.auth_group,
+roles_permitted = S3ReusableField("roles_permitted", 'list:reference auth_group',
                                   sortby="role",
                                   requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                   "auth_group.id",
@@ -289,7 +232,7 @@ s3.roles_permitted = roles_permitted
 # Reusable comments field to include in other table definitions
 s3_comments = S3ReusableField("comments", "text",
                               label = T("Comments"),
-                              widget = comments_widget,
+                              widget = s3_comments_widget,
                               comment = DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Comments"),
                                                               T("Please use this field to record any additional information, including a history of the record if it is updated."))))
@@ -635,144 +578,5 @@ s3.crud_strings = Storage(
     msg_list_empty = T("No Records currently available"),
     msg_match = T("Matching Records"),
     msg_no_match = T("No Matching Records"))
-
-# =============================================================================
-# Deployment-dependend CRUD Strings
-#
-if deployment_settings.get_inv_shipment_name() == "order":
-    ADD_RECV = T("Add Order")
-    LIST_RECV = T("List Orders")
-    s3.crud_strings["inv_recv"] = Storage(
-        title_create = ADD_RECV,
-        title_display = T("Order Details"),
-        title_list = LIST_RECV,
-        title_update = T("Edit Order"),
-        title_search = T("Search Orders"),
-        subtitle_create = ADD_RECV,
-        subtitle_list = T("Orders"),
-        label_list_button = LIST_RECV,
-        label_create_button = ADD_RECV,
-        label_delete_button = T("Delete Order"),
-        msg_record_created = T("Order Created"),
-        msg_record_modified = T("Order updated"),
-        msg_record_deleted = T("Order canceled"),
-        msg_list_empty = T("No Orders registered")
-    )
-else:
-    ADD_RECV = T("Receive Shipment")
-    LIST_RECV = T("List Received Shipments")
-    s3.crud_strings["inv_recv"] = Storage(
-        title_create = ADD_RECV,
-        title_display = T("Received Shipment Details"),
-        title_list = LIST_RECV,
-        title_update = T("Edit Received Shipment"),
-        title_search = T("Search Received Shipments"),
-        subtitle_create = ADD_RECV,
-        subtitle_list = T("Received Shipments"),
-        label_list_button = LIST_RECV,
-        label_create_button = ADD_RECV,
-        label_delete_button = T("Delete Received Shipment"),
-        msg_record_created = T("Shipment Created"),
-        msg_record_modified = T("Received Shipment updated"),
-        msg_record_deleted = T("Received Shipment canceled"),
-        msg_list_empty = T("No Received Shipments")
-    )
-
-# =============================================================================
-# Common tables
-
-# Import Files
-# @ToDo: Replace with Importer UI which is accessible to non-Admins
-import_type_opts = {
-    "asset_asset": T("Assets"),
-    "hrm_person": T("Human Resources"),
-    "inv_inv_item": T("Inventory Items"),
-    "supply_item_category": T("Supply Item Categories"),
-    "inv_warehouse": T("Warehouses")
-}
-
-tablename = "admin_import_file"
-table = db.define_table(tablename,
-                        Field("type", label = T("Type"),
-                              comment = A(T("Download Template"),
-                                          _id="dl_template",
-                                          _class="hidden"),
-                              requires = IS_IN_SET(import_type_opts),
-                              represent = lambda opt: import_type_opts.get(opt,
-                                                                           NONE)),
-                        Field("filename",
-                              readable=False, # Just shows up in List View
-                              writable=False,
-                              label = T("File name")),
-                        Field("file", "upload", autodelete=True,
-                              requires = IS_UPLOAD_FILENAME(extension="csv"),
-                              uploadfolder = os.path.join(request.folder,
-                                                          "uploads",
-                                                          "imports"),
-                              comment = DIV( _class="tooltip",
-                                             _title="%s|%s" % (T("Import File"),
-                                                               T("Upload a CSV file formatted according to the Template."))),
-                              label = T("Import File")),
-                        s3_comments(),
-                        *s3_timestamp())
-
-# -----------------------------------------------------------------------------
-# Theme
-# @ToDo: Fix or remove completely
-#tablename = "admin_theme"
-#table = db.define_table(tablename,
-#                        Field("name",
-#                              requires = [IS_NOT_EMPTY(),
-#                                          IS_NOT_ONE_OF(db,
-#                                                        "%s.name" % tablename)]),
-#                        Field("logo"),
-#                        Field("header_background"),
-#                        Field("col_background", requires = IS_HTML_COLOUR()),
-#                        Field("col_txt", requires = IS_HTML_COLOUR()),
-#                        Field("col_txt_background", requires = IS_HTML_COLOUR()),
-#                        Field("col_txt_border", requires = IS_HTML_COLOUR()),
-#                        Field("col_txt_underline", requires = IS_HTML_COLOUR()),
-#                        Field("col_menu", requires = IS_HTML_COLOUR()),
-#                        Field("col_highlight", requires = IS_HTML_COLOUR()),
-#                        Field("col_input", requires = IS_HTML_COLOUR()),
-#                        Field("col_border_btn_out", requires = IS_HTML_COLOUR()),
-#                        Field("col_border_btn_in", requires = IS_HTML_COLOUR()),
-#                        Field("col_btn_hover", requires = IS_HTML_COLOUR()),
-#                        )
-
-# -----------------------------------------------------------------------------
-# Settings - systemwide
-# @ToDo: Move these to deployment_settings
-#tablename = "s3_setting"
-#table = db.define_table(tablename,
-#                        #Field("admin_name"),
-#                        #Field("admin_email"),
-#                        #Field("admin_tel"),
-#                        Field("theme", db.admin_theme,
-#                              requires = IS_IN_DB(db, "admin_theme.id",
-#                                                  "admin_theme.name",
-#                                                  zero=None),
-#                              represent = lambda name: \
-#                                db(db.admin_theme.id == name).select(db.admin_theme.name,
-#                                                                     limitby=(0, 1)).first().name),
-#                         *s3_timestamp())
-
-# Define CRUD strings (NB These apply to all Modules' "settings" too)
-ADD_SETTING = T("Add Setting")
-LIST_SETTINGS = T("List Settings")
-s3.crud_strings["setting"] = Storage(
-    title_create = ADD_SETTING,
-    title_display = T("Setting Details"),
-    title_list = LIST_SETTINGS,
-    title_update = T("Edit Setting"),
-    title_search = T("Search Settings"),
-    subtitle_create = T("Add New Setting"),
-    subtitle_list = T("Settings"),
-    label_list_button = LIST_SETTINGS,
-    label_create_button = ADD_SETTING,
-    msg_record_created = T("Setting added"),
-    msg_record_modified = T("Setting updated"),
-    msg_record_deleted = T("Setting deleted"),
-    msg_list_empty = T("No Settings currently defined"))
 
 # END =========================================================================
