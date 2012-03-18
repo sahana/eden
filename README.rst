@@ -12,7 +12,7 @@ To install e-cidadania follow these steps:
 
 * Download the source code from git, or from the official webpage.
 * Copy the directory **src/e_cidadania** into your web root.
-* You need to install python package which is specified in requirement.txt for e-cidadania, you can do it with pip::
+* You need to install python packages which is specified in requirement.txt for e-cidadania, you can do it with pip::
 
     sudo pip install -r requirements.txt
 
