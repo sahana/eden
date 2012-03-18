@@ -1799,6 +1799,13 @@ class S3ProjectTaskModel(S3Model):
                         #field = ["project"],
                         #cols = 3
                     #),
+                    # This Syntax not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                    #    name = "task_search_project",
+                    #    label = T("Project"),
+                    #    field = ["task.task_id:project_task:project_id$name"],
+                    #    cols = 3
+                    #),
                     # Virtual fields not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
                         #name = "task_search_activity",
@@ -2616,12 +2623,12 @@ def project_rheader(r, tabs=[]):
         query = (ltable.deleted == False) & \
                 (ltable.task_id == r.id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.name,
+        project = db(query).select(ptable.id,
                                    limitby=(0, 1)).first()
         if project:
             project = TR(
                             TH("%s: " % T("Project")),
-                            project.name
+                            s3db.project_project_represent(project.id)
                         )
         else:
             project = ""

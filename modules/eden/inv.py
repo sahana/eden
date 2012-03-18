@@ -31,6 +31,7 @@ __all__ = ["S3InventoryModel",
            "S3IncomingModel",
            "S3DistributionModel",
            "inv_tabs",
+           "inv_recv_crud_strings",
            "inv_recv_rheader",
            "inv_send_rheader",
            "inv_ship_status",
@@ -224,8 +225,7 @@ $(document).ready(function() {
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        list_fields = ["id",
-                                      # This is added in req/req_item_inv_item controller
-                                      #"site_id",
+                                      "site_id",
                                       "item_id",
                                       "quantity",
                                       "pack_value",
@@ -458,11 +458,14 @@ class S3IncomingModel(S3Model):
                                   s3.comments(),
                                   *s3.meta_fields())
 
-        # Reusable Field
+        # CREUD Strings
+        inv_recv_crud_strings()
         if settings.get_inv_shipment_name() == "order":
             recv_id_label = T("Order")
         else:
             recv_id_label = T("Receive Shipment")
+
+        # Reusable Field
         recv_id = S3ReusableField("recv_id", db.inv_recv, sortby="date",
                                   requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                   "inv_recv.id",
@@ -1046,6 +1049,55 @@ def inv_tabs(r):
         return inv_tabs
     else:
         return []
+
+# =============================================================================
+def inv_recv_crud_strings():
+    """
+        CRUD Strings for inv_recv which ened to be visible to menus without a
+        model load
+    """
+
+    if current.deployment_settings.get_inv_shipment_name() == "order":
+        recv_id_label = T("Order")
+        ADD_RECV = T("Add Order")
+        LIST_RECV = T("List Orders")
+        current.response.s3.crud_strings["inv_recv"] = Storage(
+            title_create = ADD_RECV,
+            title_display = T("Order Details"),
+            title_list = LIST_RECV,
+            title_update = T("Edit Order"),
+            title_search = T("Search Orders"),
+            subtitle_create = ADD_RECV,
+            subtitle_list = T("Orders"),
+            label_list_button = LIST_RECV,
+            label_create_button = ADD_RECV,
+            label_delete_button = T("Delete Order"),
+            msg_record_created = T("Order Created"),
+            msg_record_modified = T("Order updated"),
+            msg_record_deleted = T("Order canceled"),
+            msg_list_empty = T("No Orders registered")
+        )
+    else:
+        recv_id_label = T("Receive Shipment")
+        ADD_RECV = T("Receive Shipment")
+        LIST_RECV = T("List Received Shipments")
+        current.response.s3.crud_strings["inv_recv"] = Storage(
+            title_create = ADD_RECV,
+            title_display = T("Received Shipment Details"),
+            title_list = LIST_RECV,
+            title_update = T("Edit Received Shipment"),
+            title_search = T("Search Received Shipments"),
+            subtitle_create = ADD_RECV,
+            subtitle_list = T("Received Shipments"),
+            label_list_button = LIST_RECV,
+            label_create_button = ADD_RECV,
+            label_delete_button = T("Delete Received Shipment"),
+            msg_record_created = T("Shipment Created"),
+            msg_record_modified = T("Received Shipment updated"),
+            msg_record_deleted = T("Received Shipment canceled"),
+            msg_list_empty = T("No Received Shipments")
+        )
+    return
 
 # =============================================================================
 def inv_recv_rheader(r):

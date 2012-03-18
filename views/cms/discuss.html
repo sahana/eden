@@ -1,0 +1,7 @@
+{{extend "layout.html"}}
+<div id='rheader'>
+ {{=rheader}}
+</div>
+<div id='component'>
+{{=LOAD("cms", "comments.load", args=id, ajax=True)}}
+</div>

@@ -2305,6 +2305,7 @@ class S3Resource(object):
         archive_not_delete = settings.archive_not_delete
 
         table = self.table
+        pkey = table._id.name
 
         # Reset error
         manager.error = None
@@ -2329,7 +2330,7 @@ class S3Resource(object):
             rfields = [(tn, fn) for tn, fn in references
                                 if db[tn][fn].ondelete == "RESTRICT"]
             restricted = []
-            ids = [row.id for row in rows]
+            ids = [row[pkey] for row in rows]
             for tn, fn in rfields:
                 rtable = db[tn]
                 rfield = rtable[fn]
@@ -2338,7 +2339,7 @@ class S3Resource(object):
                     query &= (rtable.deleted != True)
                 rrows = db(query).select(rfield)
                 restricted += [r[fn] for r in rrows if r[fn] not in restricted]
-            deletable = [row.id for row in rows if row.id not in restricted]
+            deletable = [row[pkey] for row in rows if row[pkey] not in restricted]
 
 
             # Get custom ondelete-cascade
@@ -2347,7 +2348,7 @@ class S3Resource(object):
             for row in rows:
 
                 # Check permission to delete this row
-                if not self.permit("delete", self.table, record_id=row.id):
+                if not self.permit("delete", self.table, record_id=row[pkey]):
                     continue
 
                 # Store prior error
@@ -2360,13 +2361,13 @@ class S3Resource(object):
                     if manager.error:
                         # Row is not deletable
                         continue
-                    if row.id not in deletable:
+                    if row[pkey] not in deletable:
                         # Check deletability again
                         restrict = False
                         for tn, fn in rfields:
                             rtable = db[tn]
                             rfield = rtable[fn]
-                            query = (rfield == row.id)
+                            query = (rfield == row[pkey])
                             if "deleted" in rtable:
                                 query &= (rtable.deleted != True)
                             rrow = db(query).select(rfield,
@@ -2374,9 +2375,9 @@ class S3Resource(object):
                             if rrow:
                                 restrict = True
                         if not restrict:
-                            deletable.append(row.id)
+                            deletable.append(row[pkey])
 
-                if row.id not in deletable:
+                if row[pkey] not in deletable:
                     # Row is not deletable => skip with error status
                     manager.error = self.ERROR.INTEGRITY_ERROR
                     continue
@@ -2389,7 +2390,7 @@ class S3Resource(object):
 
                         # Delete the referencing records
                         rprefix, rname = tn.split("_", 1)
-                        query = rfield == row.id
+                        query = rfield == row[pkey]
                         rresource = manager.define_resource(rprefix, rname, filter=query)
                         ondelete = model.get_config(tn, "ondelete")
                         rresource.delete(ondelete=ondelete, cascade=True)
@@ -2400,7 +2401,7 @@ class S3Resource(object):
 
                     elif rfield.ondelete == "SET NULL":
                         try:
-                            db(rfield == row.id).update(**{fn:None})
+                            db(rfield == row[pkey]).update(**{fn:None})
                         except:
                             # Can't set the reference to None
                             manager.error = self.ERROR.INTEGRITY_ERROR
@@ -2408,7 +2409,7 @@ class S3Resource(object):
 
                     elif rfield.ondelete == "SET DEFAULT":
                         try:
-                            db(rfield == row.id).update(**{fn:rfield.default})
+                            db(rfield == row[pkey]).update(**{fn:rfield.default})
                         except:
                             # Can't set the reference to default value
                             manager.error = self.ERROR.INTEGRITY_ERROR
@@ -2445,7 +2446,7 @@ class S3Resource(object):
 
                     # Clear session
                     if manager.get_session(prefix=self.prefix,
-                                           name=self.name) == row.id:
+                                           name=self.name) == row[pkey]:
                         manager.clear_session(prefix=self.prefix, name=self.name)
 
                     # Pull back prior error status
@@ -2459,7 +2460,7 @@ class S3Resource(object):
                         # "Park" foreign keys to resolve constraints,
                         # "un-delete" will have to restore valid FKs
                         # from this field!
-                        record = self.table[row.id]
+                        record = self.table[row[pkey]]
                         fk = {}
                         for f in self.table.fields:
                             ftype = str(self.table[f].type)
@@ -2474,11 +2475,11 @@ class S3Resource(object):
                             fields.update(deleted_fk=json.dumps(fk))
 
                     # Update the row to set deleted=True, finally
-                    db(self.table.id == row.id).update(**fields)
+                    db(self.table._id == row[pkey]).update(**fields)
 
                     numrows += 1
                     self.audit("delete", self.prefix, self.name,
-                                record=row.id, representation=format)
+                                record=row[pkey], representation=format)
                     model.delete_super(self.table, row)
                     if ondelete:
                         callback(ondelete, row)
@@ -2493,16 +2494,16 @@ class S3Resource(object):
             for row in rows:
 
                 # Check permission to delete this row
-                if not self.permit("delete", self.table, record_id=row.id):
+                if not self.permit("delete", self.table, record_id=row[pkey]):
                     continue
 
                 # Clear session
                 if manager.get_session(prefix=self.prefix,
-                                       name=self.name) == row.id:
+                                       name=self.name) == row[pkey]:
                     manager.clear_session(prefix=self.prefix, name=self.name)
 
                 try:
-                    del table[row.id]
+                    del table[row[pkey]]
                 except:
                     # Row is not deletable
                     manager.error = self.ERROR.INTEGRITY_ERROR
@@ -2511,7 +2512,7 @@ class S3Resource(object):
                     # Successfully deleted
                     numrows += 1
                     self.audit("delete", self.prefix, self.name,
-                                record=row.id, representation=format)
+                                record=row[pkey], representation=format)
                     model.delete_super(self.table, row)
                     if ondelete:
                         callback(ondelete, row)
@@ -2625,13 +2626,12 @@ class S3Resource(object):
             return self[key]
         else:
             master = self[key]
-            try:
+            if component in self.components:
                 c = self.components[component]
-            except:
-                try:
-                    c = self.links[component]
-                except:
-                    raise AttributeError
+            elif component in self.links:
+                c = self.links[component]
+            else:
+                raise AttributeError("Undefined component %s" % component)
             if c._rows is None:
                 c.load()
             rows = c._rows
@@ -2704,8 +2704,10 @@ class S3Resource(object):
             String representation of this resource
         """
 
+        pkey = self.table._id.name
+
         if self._rows:
-            ids = [r.id for r in self]
+            ids = [r[pkey] for r in self]
             return "<S3Resource %s %s>" % (self.tablename, ids)
         else:
             return "<S3Resource %s>" % self.tablename
@@ -3044,34 +3046,39 @@ class S3Resource(object):
                 if components and component.tablename not in components:
                     continue
 
+                if component.link is not None:
+                    c = component.link
+                else:
+                    c = component
+
                 # Add MCI filter to component
-                ctable = component.table
+                ctable = c.table
                 if xml.filter_mci and xml.MCI in ctable.fields:
                     mci_filter = (ctable[xml.MCI] >= 0)
-                    component.add_filter(mci_filter)
+                    c.add_filter(mci_filter)
 
                 # Split fields
-                _skip = skip+[component.fkey]
-                crfields, cdfields = component.split_fields(skip=_skip)
+                _skip = skip+[c.fkey]
+                crfields, cdfields = c.split_fields(skip=_skip)
 
                 # Load records if necessary
-                if component._rows is None:
-                    component.load()
+                if c._rows is None:
+                    c.load()
 
                 # Construct the component base URL
                 if record_url:
-                    component_url = "%s/%s" % (record_url, component.alias)
+                    component_url = "%s/%s" % (record_url, c.alias)
                 else:
                     component_url = None
 
                 # Find related records
-                crecords = self(record.id, component=component.alias)
-                if not component.multiple and len(crecords):
+                crecords = self(record.id, component=c.alias)
+                if not c.multiple and len(crecords):
                     crecords = [crecords[0]]
 
                 # Export records
-                export = component.__export_record
-                map_record = component.__map_record
+                export = c.__export_record
+                map_record = c.__map_record
                 for crecord in crecords:
                     # Construct the component record URL
                     if component_url:

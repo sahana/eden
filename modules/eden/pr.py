@@ -51,6 +51,7 @@ __all__ = ["S3PersonEntity",
            "pr_delete_role",
            "pr_add_to_role",
            "pr_remove_from_role",
+           "pr_get_role_paths",
            "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
@@ -85,12 +86,14 @@ class S3PersonEntity(S3Model):
         T = current.T
         s3 = current.response.s3
 
-        define_table = self.define_table
-        super_entity = self.super_entity
-        super_link = self.super_link
-        super_key = self.super_key
-        configure = self.configure
         add_component = self.add_component
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        meta_fields= s3.meta_fields
+        super_entity = self.super_entity
+        super_key = self.super_key
+        super_link = self.super_link
 
         YES = T("yes") #current.messages.YES
         NO = T("no") #current.messages.NO
@@ -166,7 +169,7 @@ class S3PersonEntity(S3Model):
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
                              Field("user_id", utable),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Role (Affiliates Group)
@@ -203,7 +206,7 @@ class S3PersonEntity(S3Model):
                              Field("sub_type", "integer",
                                    readable = False,
                                    writable = False),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
@@ -211,7 +214,7 @@ class S3PersonEntity(S3Model):
         table.pe_id.represent = pr_pentity_represent
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Role"),
             title_display = T("Role Details"),
             title_list = T("Roles"),
@@ -249,14 +252,14 @@ class S3PersonEntity(S3Model):
                                         label=T("Entity"),
                                         readable=True,
                                         writable=True),
-                             *s3.meta_fields())
+                             *meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent, sort=True)
         table.pe_id.represent = pr_pentity_represent
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Affiliation"),
             title_display = T("Affiliation Details"),
             title_list = T("Affiliations"),
@@ -542,7 +545,9 @@ class S3PersonModel(S3Model):
                                    readable=False,
                                    writable=False,
                                    default=False),
-                             Field("first_name", notnull=True,
+                             Field("first_name",
+                                   notnull=True,
+                                   default="?",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
                                    # http://eden.sahanafoundation.org/ticket/834
@@ -3241,6 +3246,53 @@ def pr_remove_from_role(role_id, pe_id):
 # =============================================================================
 # Back-end Path Tools
 #
+def pr_get_role_paths(pe_id, roles=None, role_types=None):
+    """
+        Get the ancestor paths of the ancester OU's this person entity
+        is affiliated with, sorted by roles
+
+        @param pe_id: the person entity ID
+        @param roles: list of roles to limit the search
+        @param role_types: list of role types to limit the search
+
+        @note: role_types is ignored if roles gets specified
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == pe_id) & \
+            (rtable.deleted != True)
+    if roles is not None:
+        if not isinstance(roles, (list, tuple)):
+            roles = [roles]
+        query &= (rtable.role.belongs(roles))
+    elif role_types is not None:
+        if not isinstance(role_types, (list, tuple)):
+            role_types = [role_types]
+        query &= (rtable.role_type.belongs(role_types))
+    rows = db(query).select(rtable.role,
+                            rtable.path,
+                            rtable.pe_id)
+    role_paths = Storage()
+    for role in rows:
+        name = role.role
+        if name in role_paths:
+            multipath = role_paths[name]
+            multipath.append([role.pe_id])
+        else:
+            multipath = S3MultiPath([role.pe_id])
+        path = pr_get_path(role.pe_id)
+        multipath.extend(role.pe_id, path, cut=pe_id)
+        role_paths[name] = multipath.clean()
+    return role_paths
+
+# =============================================================================
 def pr_get_path(pe_id):
     """
         Get all ancestor paths of a person entity

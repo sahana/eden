@@ -1258,7 +1258,7 @@ class S3Importer(S3CRUD):
                 start = None # use default
             # Using the sort variables sent from dataTables
             if vars.iSortingCols:
-                orderby = self.ssp_orderby(table, list_fields)
+                orderby = self.ssp_orderby(resource, list_fields)
 
             # Echo
             sEcho = int(vars.sEcho or 0)
@@ -1307,7 +1307,7 @@ class S3Importer(S3CRUD):
                 vars[colName] = colValue
                 vars[dirnName] = dirnValue
             # Now using these sort variables generate the order by statement
-            orderby = self.ssp_orderby(table, list_fields)
+            orderby = self.ssp_orderby(resource, list_fields)
 
             del vars["iSortingCols"]
             for col in sort_by:
@@ -2729,12 +2729,11 @@ class S3ImportJob():
                 pkey = component.pkey
                 if component.linktable:
                     ctable = component.linktable
-                    ctablename = ctable._tablename
                     fkey = component.lkey
                 else:
                     ctable = component.table
-                    ctablename = component.tablename
                     fkey = component.fkey
+                ctablename = ctable._tablename
 
                 celements = xml.select_resources(element, ctablename)
                 if celements:
@@ -2858,10 +2857,7 @@ class S3ImportJob():
                 tablename = ktablename
             # Super-entity references must use the super-key:
             if tablename != ktablename:
-                if field != ktable._id.name:
-                    continue
-                else:
-                    field = (field, field)
+                field = (ktable._id.name, field)
             # Ignore direct references to super-entities:
             if tablename == ktablename and ktable._id.name != "id":
                 continue
@@ -2906,7 +2902,7 @@ class S3ImportJob():
                     if directory is not None:
                         entry = directory.get((tablename, attr, uid), None)
                     if not entry:
-                        expr = './/%s[@%s="%s" and @%s="%s"]' % (
+                        expr = ".//%s[@%s='%s' and @%s='%s']" % (
                                     xml.TAG.resource,
                                     xml.ATTRIBUTE.name,
                                     tablename,

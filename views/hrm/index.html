@@ -7,7 +7,8 @@
 {{pass}}
 <div style='margin:20px auto; width:95%; max-width:1000px;'>
     <div style='width:25%; float:left;'>
-        {{if session.s3.hrm.mode is None:}}
+      {{if session.s3.hrm.mode is None:}}
+        {{if deployment_settings.get_hrm_show_staff():}}
         <h4>{{=T("Staff")}}</h4>
         <ul>
             {{=LI(A(T("Add staff members"),
@@ -20,6 +21,8 @@
                                   vars={"human_resource.type":"1"})))}}
             {{pass}}
         </ul>
+        {{else:}}{{pass}}
+        {{if deployment_settings.get_hrm_show_vols():}}
         <h4>{{=T("Volunteer Management")}}</h4>
         <ul>
             {{=LI(A(T("Add volunteers"),
@@ -32,36 +35,33 @@
                                   vars={"human_resource.type":"2"})))}}
             {{pass}}
         </ul>
+        {{else:}}{{pass}}
         <h4>{{=T("Skills Management")}}</h4>
         <ul>
             <li>{{=A(T("Skills Catalog"), _href=URL(f="skill"))}}</li>
         </ul>
         <h4>{{=T("Import")}}</h4>
         <ul>
-            <li>{{=A(T("Import Staff & Volunteers"), _href=URL(f="person", args=["import"]))}}</li>
+            <li>{{=A(response.s3.crud_strings["hrm_human_resource"].title_import, _href=URL(f="person", args=["import"]))}}</li>
         </ul>
-        {{else:}}
-        {{pass}}
+      {{else:}}{{pass}}
     </div>
     <div style='width:55%; float:right;min-width:500px;' id='table-container'>
         {{try:}}
             {{if r.method == "search":}}
-                <h4>{{=T("Search for Staff or Volunteers")}}</h4>
+                <h4>{{=response.s3.crud_strings["hrm_human_resource"].title_search}}</h4>
                 {{=form}}
                 {{if items:}}
                     <h4>{{=T("Matching Records")}}</h4>
                     {{=items}}
-                {{else:}}
-                {{pass}}
+                {{else:}}{{pass}}
             {{else:}}
                 {{if items:}}
                     <h4>{{=T("Current Records")}}</h4>
                     {{=items}}
-                {{else:}}
-                {{pass}}
+                {{else:}}{{pass}}
             {{pass}}
-        {{except:}}
-        {{pass}}
+        {{except:}}{{pass}}
     </div>
 </div>
 </div>
