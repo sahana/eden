@@ -1916,12 +1916,29 @@ def inv_warehouse_rheader(r):
     if tablename == "org_organisation" or tablename == "org_office":
         rheader = s3.org_rheader(r)
     rfooter = TAG[""]()
-    if "id" not in record:
+    if "id" in record:
+        as_btn = A( T("Adjust Stock"),
+                      _href = URL(c = "inv",
+                                  f = "adj",
+                                  args = [record.id, "create"]
+                                  ),
+                      _class = "action-btn"
+                      )
+        rfooter.append(as_btn)
+    else:
         ns_btn = A( T("Receive New Stock"),
                       _href = URL(c = "inv",
                                   f = "recv",
                                   args = ["create"]
+                                  ),
+                      _class = "action-btn"
+                      )
+        rfooter.append(ns_btn)
 
+    s3.rfooter = rfooter
+    return rheader
+
+# =============================================================================
 def inv_recv_crud_strings():
     """
         CRUD Strings for inv_recv which ened to be visible to menus without a
@@ -1970,49 +1987,7 @@ def inv_recv_crud_strings():
         )
     return
 
-# =============================================================================
-def inv_recv_rheader(r):
-    """ Resource Header for Receiving """
 
-    if r.representation == "html" and r.name == "recv":
-        record = r.record
-        if record:
-
-            T = current.T
-            s3 = current.response.s3
-            auth = current.auth
-
-            tabs = [(T("Edit Details"), None),
-                    (T("Items"), "recv_item"),
-                    ]
-
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            table = r.table
-
-            rheader = DIV( TABLE(
-                               TR( TH( "%s: " % table.eta.label),
-                                   table.eta.represent(record.eta),
-                                   TH("%s: " % table.status.label),
-                                   table.status.represent(record.status),
-                                  ),
-                               TR( TH( "%s: " % table.date.label),
-                                   table.date.represent(record.date),
-                                  ),
-                               TR( TH( "%s: " % table.site_id.label),
-                                   table.site_id.represent(record.site_id),
-                                  ),
-                               TR( TH( "%s: " % table.from_site_id.label),
-                                   table.from_site_id.represent(record.from_site_id),
-                                   #TH( "%s: " % table.organisation_id.label),
-                                   #table.organisation_id.represent(record.organisation_id),
-                                  ),
-                      _class = "action-btn"
-                      )
-        rfooter.append(ns_btn)
-
-    s3.rfooter = rfooter
-    return rheader
 # =============================================================================
 def inv_send_rheader(r):
     """ Resource Header for Send """
