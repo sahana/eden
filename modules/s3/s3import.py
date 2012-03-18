@@ -2857,10 +2857,7 @@ class S3ImportJob():
                 tablename = ktablename
             # Super-entity references must use the super-key:
             if tablename != ktablename:
-                if field != ktable._id.name:
-                    continue
-                else:
-                    field = (field, field)
+                field = (ktable._id.name, field)
             # Ignore direct references to super-entities:
             if tablename == ktablename and ktable._id.name != "id":
                 continue
