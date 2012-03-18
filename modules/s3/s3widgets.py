@@ -53,8 +53,8 @@ __all__ = ["S3HiddenWidget",
            "S3TimeIntervalWidget",
            "S3EmbedComponentWidget",
            "S3SliderWidget",
-           "comments_widget",
            "S3InvBinWidget",
+           "s3_comments_widget",
            "s3_richtext_widget",
            ]
 

@@ -39,6 +39,7 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+
     <!-- shipping status, see modules/eden/inv.py -->
     <inv:shipstatus code="0">In Process</inv:shipstatus>
     <inv:shipstatus code="1">Received</inv:shipstatus>
@@ -75,11 +76,11 @@
 
     <xsl:key name="pr_sender"
              match="row"
-             use="col[@field='sender']"/>
+             use="col[@field='Name of Sender']"/>
 
     <xsl:key name="pr_recipient"
              match="row"
-             use="col[@field='recipient']"/>
+             use="col[@field='Name of Recipient']"/>
 
     <xsl:key name="inv_item"
              match="row"
@@ -131,9 +132,9 @@
                  ****************************************************************** -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('warehouse',
-                                                        col[@field='warehouse'])[1])]">
+                                                        col[@field='Warehouse'])[1])]">
                 <xsl:call-template name="Site">
-                    <xsl:with-param name="placename" select="col[@field='warehouse']"/>
+                    <xsl:with-param name="placename" select="col[@field='Warehouse']"/>
                 </xsl:call-template>
             </xsl:for-each>
 
@@ -235,55 +236,17 @@
         <xsl:variable name="tuid" select="concat($item, '/', $warehouse, '/', $destination, '/', $date)"/>
 
         <!-- Find the inventory record that is sending the items -->
-        <resource name="inv_inv_item">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$s_tuid"/>
-            </xsl:attribute>
-            <!-- Link to warehouse -->
-            <reference field="site_id" resource="org_office">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$warehouse"/>
-                </xsl:attribute>
-            </reference>
-            <!-- Link to supply_item -->
-            <reference field="item_id" resource="supply_item">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item_tuid"/>
-                </xsl:attribute>
-            </reference>
-            <!-- Link to supply_item_pack -->
-            <reference field="item_pack_id" resource="supply_item_pack">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item_tuid"/>
-                </xsl:attribute>
-            </reference>
-        </resource>
+        <xsl:call-template name="StockItem">
+            <xsl:with-param name="site" select="col[@field='Warehouse']"/>
+            <xsl:with-param name="bin" select="col[@field='Bin']"/>
+        </xsl:call-template>
 
+        <!-- Find the inventory record that is receiving the items -->
         <xsl:if test="$r_status">
-            <!-- Find the inventory record that is receiving the items -->
-            <resource name="inv_inv_item">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$r_tuid"/>
-                </xsl:attribute>
-                <!-- Link to warehouse -->
-                <reference field="site_id" resource="org_office">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$destination"/>
-                    </xsl:attribute>
-                </reference>
-                <!-- Link to supply_item -->
-                <reference field="item_id" resource="supply_item">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$item_tuid"/>
-                    </xsl:attribute>
-                </reference>
-                <!-- Link to supply_item_pack -->
-                <reference field="item_pack_id" resource="supply_item_pack">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$item_tuid"/>
-                    </xsl:attribute>
-                </reference>
-            </resource>
+            <xsl:call-template name="StockItem">
+                <xsl:with-param name="site" select="col[@field='Destination Site']"/>
+                <xsl:with-param name="bin" select="col[@field='Receiving Bin']"/>
+            </xsl:call-template>
         </xsl:if>
 
         <resource name="inv_track_item">
@@ -375,7 +338,7 @@
     <xsl:template name="Site">
         <xsl:param name="placename"/>
 
-        <resource name="org_office">
+        <resource name="org_site">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$placename"/>
             </xsl:attribute>
@@ -468,13 +431,13 @@
             </xsl:if>
             <data field="comments"><xsl:value-of select="$comments"/></data>
             <!-- Link to warehouse -->
-            <reference field="site_id" resource="org_office">
+            <reference field="site_id" resource="org_site">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$warehouse"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to destination -->
-            <reference field="to_site_id" resource="org_office">
+            <reference field="to_site_id" resource="org_site">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$destination"/>
                 </xsl:attribute>
@@ -526,13 +489,13 @@
                 <data field="status"><xsl:value-of select="$r_status"/></data>
                 <data field="comments"><xsl:value-of select="$comments"/></data>
                 <!-- Link to warehouse -->
-                <reference field="from_site_id" resource="org_office">
+                <reference field="from_site_id" resource="org_site">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$warehouse"/>
                     </xsl:attribute>
                 </reference>
                 <!-- Link to destination -->
-                <reference field="site_id" resource="org_office">
+                <reference field="site_id" resource="org_site">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$destination"/>
                     </xsl:attribute>
@@ -552,6 +515,46 @@
             </resource>
         </xsl:if>
     </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="StockItem">
+        
+        <xsl:param name="site"/>
+        <xsl:param name="bin"/>
+        
+        <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
+        <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
+        <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
+        <xsl:variable name="item_tuid" select="concat($item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $site, '/', $bin)"/>
+
+        <resource name="inv_inv_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$s_tuid"/>
+            </xsl:attribute>
+            <data field="bin"><xsl:value-of select="$bin"/></data>
+            <!-- Link to warehouse -->
+            <reference field="site_id" resource="org_site">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$site"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to supply_item -->
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$item_tuid"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to supply_item_pack -->
+            <reference field="item_pack_id" resource="supply_item_pack">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$item_tuid"/>
+                </xsl:attribute>
+            </reference>
+        </resource>
+
+    </xsl:template>
+
 
     <!-- ****************************************************************** -->
 

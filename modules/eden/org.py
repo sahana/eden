@@ -843,6 +843,9 @@ class S3SiteModel(S3Model):
         add_component("req_commit",
                       org_site=super_key(table))
 
+        self.configure("org_site",
+                       deduplicate=self.org_site_deduplicate,
+                      )
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
@@ -850,6 +853,28 @@ class S3SiteModel(S3Model):
                     org_site_id = site_id
                 )
 
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def org_site_deduplicate(item):
+        """
+            Import item deduplication, match by name
+
+            @param item: the S3ImportItem instance
+        """
+
+        db = current.db
+
+        if item.id:
+            return
+        if item.tablename == "org_site":
+            table = item.table
+            name = "name" in item.data and item.data.name
+            query = (table.name.lower() == name.lower())
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 # =============================================================================
 class S3FacilityModel(S3Model):
     """

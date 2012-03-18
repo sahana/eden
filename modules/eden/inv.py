@@ -256,7 +256,8 @@ $(document).ready(function() {
                        report_fact = ["quantity", (T("Total Value"), "total_value")],
                        report_method=["sum"],
                        report_groupby = self.inv_inv_item.site_id,
-                       report_hide_comments = True
+                       report_hide_comments = True,
+                       deduplicate = self.inv_item_duplicate
                        )
 
         # Component
@@ -325,6 +326,27 @@ $(document).ready(function() {
             return record.name
         else:
             return None
+
+    @staticmethod
+    def inv_item_duplicate(job):
+        """
+          Rules for finding a duplicate:
+           - Look for a record with the same site,
+                                             bin,
+                                             supply item and,
+                                             pack item
+        """
+        if job.tablename == "inv_inv_item":
+            table = job.table
+            site_id = "site_id" in job.data and job.data.site_id
+            item_id = "item_id" in job.data and job.data.item_id
+            pack_id = "item_pack_id" in job.data and job.data.item_pack_id
+            bin = "bin" in job.data and job.data.bin
+            query = (table.site_id == site_id) & \
+                    (table.item_id == item_id) & \
+                    (table.item_pack_id == pack_id) & \
+                    (table.bin == bin)
+            return duplicator(job, query)
 
 class S3TrackingModel(S3Model):
     """
@@ -500,13 +522,13 @@ class S3TrackingModel(S3Model):
                                             comment = self.pr_person_comment(child="sender_id"),
                                             ),
                                   Field("from_site_id",
-                                        self.org_site,
+                                        "reference org_site",
                                         label = T("From Facility"),
-                                        requires = IS_ONE_OF(db,
-                                                             "org_site.site_id",
-                                                             lambda id: org_site_represent(id, link = False),
-                                                             sort=True,
-                                                            ),
+#                                        requires = IS_ONE_OF(db,
+#                                                             "org_site.site_id",
+#                                                             lambda id: org_site_represent(id, link = False),
+#                                                             sort=True,
+#                                                            ),
                                         represent = org_site_represent
                                         ),
                                   Field("eta", "date",
@@ -520,11 +542,14 @@ class S3TrackingModel(S3Model):
                                             label = T("Received By"),
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="recipient_id")),
-                                  self.super_link("site_id", "org_site",
+                                  Field("site_id",
+                                        "reference org_site",
+#                                  self.super_link("site_id", "org_site",
                                                   label=T("By Facility"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                                   readable = True,
                                                   writable = True,
+                                                  widget = S3SiteAutocompleteWidget(),
                                                   represent=org_site_represent),
                                   Field("date", "date",
                                         label = T("Date Received"),
@@ -579,8 +604,44 @@ class S3TrackingModel(S3Model):
         # Reusable Field
         if settings.get_inv_shipment_name() == "order":
             recv_id_label = T("Order")
+            ADD_RECV = T("Add Order")
+            LIST_RECV = T("List Orders")
+            s3.crud_strings["inv_recv"] = Storage(
+                title_create = ADD_RECV,
+                title_display = T("Order Details"),
+                title_list = LIST_RECV,
+                title_update = T("Edit Order"),
+                title_search = T("Search Orders"),
+                subtitle_create = ADD_RECV,
+                subtitle_list = T("Orders"),
+                label_list_button = LIST_RECV,
+                label_create_button = ADD_RECV,
+                label_delete_button = T("Delete Order"),
+                msg_record_created = T("Order Created"),
+                msg_record_modified = T("Order updated"),
+                msg_record_deleted = T("Order canceled"),
+                msg_list_empty = T("No Orders registered")
+            )
         else:
             recv_id_label = T("Receive Shipment")
+            ADD_RECV = recv_id_label
+            LIST_RECV = T("List Received Shipments")
+            s3.crud_strings["inv_recv"] = Storage(
+                title_create = ADD_RECV,
+                title_display = T("Received Shipment Details"),
+                title_list = LIST_RECV,
+                title_update = T("Edit Received Shipment"),
+                title_search = T("Search Received Shipments"),
+                subtitle_create = ADD_RECV,
+                subtitle_list = T("Received Shipments"),
+                label_list_button = LIST_RECV,
+                label_create_button = ADD_RECV,
+                label_delete_button = T("Delete Received Shipment"),
+                msg_record_created = T("Shipment Created"),
+                msg_record_modified = T("Received Shipment updated"),
+                msg_record_deleted = T("Received Shipment canceled"),
+                msg_list_empty = T("No Received Shipments")
+            )
         recv_id = S3ReusableField("recv_id", db.inv_recv, sortby="date",
                                   requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                   "inv_recv.id",
@@ -2477,6 +2538,30 @@ def inv_adj_rheader(r):
             return rheader
     return None
 
+# Generic function called by the duplicator methods to determine if the
+# record already exists on the database.
+def duplicator(job, query):
+    """
+      This callback will be called when importing records it will look
+      to see if the record being imported is a duplicate.
+
+      @param job: An S3ImportJob object which includes all the details
+                  of the record being imported
+
+      If the record is a duplicate then it will set the job method to update
+    """
+    # ignore this processing if the id is set
+    if job.id:
+        return
+
+    db = current.db
+
+    table = job.table
+    _duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+    if _duplicate:
+        job.id = _duplicate.id
+        job.data.id = _duplicate.id
+        job.method = job.METHOD.UPDATE
 
 # =============================================================================
 class InvItemVirtualFields:
