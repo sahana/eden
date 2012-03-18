@@ -8,11 +8,11 @@ The e-cidadania objective is to maintain the platform as easy as possible while 
 Installation
 ------------
 
-To install e-cidadania follow this steps:
+To install e-cidadania follow these steps:
 
 * Download the source code from git, or from the official webpage.
 * Copy the directory **src/e_cidadania** into your web root.
-* You need to install the requirements for e-cidadania, you can do it with pip::
+* You need to install python packages which is specified in requirement.txt for e-cidadania, you can do it with pip::
 
     sudo pip install -r requirements.txt
 
@@ -45,9 +45,10 @@ Getting help
 ------------
 
  * `Documentation <http://trac.cidadania.coop/wiki/Documentation>`_ e-cidadania documentation.
- * `Mailing lists <http://trac.cidadania.coop/wiki/MailingLists>`_ mailing lists, global and local.
- * `Social networks <http://trac.cidadania.coop/wiki/SocialNetworks>`_ social networks where e-cidadania is.
+ * `Mailing lists <http://trac.cidadania.coop/wiki/MailingLists>`_ global and local.
+ * `Social networks <http://trac.cidadania.coop/wiki/SocialNetworks>`_ where e-cidadania present.
  * `Website <http://ecidadania.org>`_ e-cidadania official website.
+ * `IRC channels <irc://irc.freenode.net#ecidadania-dev>` #ecidadania-dev and #ecidadania for e-cidadania.
 
 Useful information
 ------------------
