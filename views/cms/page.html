@@ -6,7 +6,7 @@
 </div>
 {{if r.record.replies:}}
 <div id='component'>
-{{=LOAD("cms", "comments.load", args=["post", request.args[0]], ajax=True)}}
+{{=LOAD("cms", "comments.load", args=request.args[0], ajax=True)}}
 </div>
 {{else:}}{{pass}}
 </div>

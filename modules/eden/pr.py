@@ -51,6 +51,7 @@ __all__ = ["S3PersonEntity",
            "pr_delete_role",
            "pr_add_to_role",
            "pr_remove_from_role",
+           "pr_get_role_paths",
            "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
@@ -3245,6 +3246,53 @@ def pr_remove_from_role(role_id, pe_id):
 # =============================================================================
 # Back-end Path Tools
 #
+def pr_get_role_paths(pe_id, roles=None, role_types=None):
+    """
+        Get the ancestor paths of the ancester OU's this person entity
+        is affiliated with, sorted by roles
+
+        @param pe_id: the person entity ID
+        @param roles: list of roles to limit the search
+        @param role_types: list of role types to limit the search
+
+        @note: role_types is ignored if roles gets specified
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == pe_id) & \
+            (rtable.deleted != True)
+    if roles is not None:
+        if not isinstance(roles, (list, tuple)):
+            roles = [roles]
+        query &= (rtable.role.belongs(roles))
+    elif role_types is not None:
+        if not isinstance(role_types, (list, tuple)):
+            role_types = [role_types]
+        query &= (rtable.role_type.belongs(role_types))
+    rows = db(query).select(rtable.role,
+                            rtable.path,
+                            rtable.pe_id)
+    role_paths = Storage()
+    for role in rows:
+        name = role.role
+        if name in role_paths:
+            multipath = role_paths[name]
+            multipath.append([role.pe_id])
+        else:
+            multipath = S3MultiPath([role.pe_id])
+        path = pr_get_path(role.pe_id)
+        multipath.extend(role.pe_id, path, cut=pe_id)
+        role_paths[name] = multipath.clean()
+    return role_paths
+
+# =============================================================================
 def pr_get_path(pe_id):
     """
         Get all ancestor paths of a person entity

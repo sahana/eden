@@ -134,6 +134,8 @@ def index():
                                                  limitby=(0, 1)).first()
         if item:
             item = DIV(XML(item.body))
+        else:
+            item = ""
 
     if deployment_settings.has_module("cr"):
         s3mgr.load("cr_shelter")

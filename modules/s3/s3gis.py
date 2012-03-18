@@ -947,6 +947,7 @@ class GIS(object):
         mtable = s3db.gis_marker
         ptable = s3db.gis_projection
         stable = s3db.gis_symbology
+        ltable = s3db.gis_layer_config
 
         row = None
         if config_id:
@@ -997,6 +998,16 @@ class GIS(object):
                 cache[key] = projection[key] if key in projection else None
             for key in ["image", "height", "width"]:
                 cache["marker_%s" % key] = marker[key] if key in marker else None
+            # Default Base Layer?
+            query = (ltable.config_id == config_id) & \
+                    (ltable.base == True) & \
+                    (ltable.enabled == True)
+            base = db(query).select(ltable.layer_id,
+                                    limitby=(0, 1)).first()
+            if base:
+                cache["base"] = base.layer_id
+            else:
+                cache["base"] = None
 
         # Store the values
         s3.gis.config = cache
@@ -3337,7 +3348,6 @@ class GIS(object):
                                            args=["markers", config.marker_image]))
         symbology = config.symbology_id
 
-        mtable = s3db.gis_marker
         markers = {}
 
         html = DIV(_id="map_wrapper")
@@ -3798,6 +3808,7 @@ S3.gis.lon = %s;
             layers_feature_queries = """
 S3.gis.layers_feature_queries = new Array();"""
             counter = -1
+            mtable = s3db.gis_marker
         else:
             layers_feature_queries = ""
         for layer in feature_queries:
@@ -3959,12 +3970,31 @@ S3.gis.layers_feature_queries[%i] = {
             ]
         else:
             # Add just the default Base Layer
-            # @ToDo
-            layer_types = [
-                OSMLayer,
-                # v3 doesn't work when initially hidden
-                #GoogleLayer,
-            ]
+            response.s3.gis.base = True
+            layer_types = []
+            base = config["base"]
+            if base:
+                ltable = s3db.gis_layer_entity
+                query = (ltable.id == base)
+                layer = db(query).select(ltable.instance_type,
+                                         limitby=(0, 1)).first()
+                if layer:
+                    layer_type = layer.instance_type
+                    if layer_type == "gis_layer_openstreetmap":
+                        layer_types = [OSMLayer]
+                    elif layer_type == "gis_layer_google":
+                        # NB v3 doesn't work when initially hidden
+                        layer_types = [GoogleLayer]
+                    elif layer_type == "gis_layer_bing":
+                        layer_types = [BingLayer]
+                    elif layer_type == "gis_layer_tms":
+                        layer_types = [TMSLayer]
+                    elif layer_type == "gis_layer_wms":
+                        layer_types = [WMSLayer]
+                    elif layer_type == "gis_layer_empty":
+                        layer_types = [EmptyLayer]
+            if not layer_types:
+                layer_types = [EmptyLayer]
 
         layers_config = ""
         for LayerType in layer_types:
@@ -4209,6 +4239,13 @@ class Layer(object):
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.enabled == True) & \
                 (ltable.config_id == current.session.s3.gis_config_id)
+        if current.response.s3.gis.base == True:
+            if self.tablename == "gis_layer_empty":
+                # Show even if disabled (as fallback)
+                query = (table.id > 0)
+            else:
+                # Only show the default base layer
+                query = query & (ltable.base == True)
         rows = current.db(query).select(*fields)
         for _record in rows:
             # Check user is allowed to access the layer
