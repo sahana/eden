@@ -48,7 +48,7 @@ Getting help
  * `Mailing lists <http://trac.cidadania.coop/wiki/MailingLists>`_ global and local.
  * `Social networks <http://trac.cidadania.coop/wiki/SocialNetworks>`_ where e-cidadania present.
  * `Website <http://ecidadania.org>`_ e-cidadania official website.
- * `IRC channels <irc://irc.freenode.net#ecidadania-dev>` #ecidadania-dev and #ecidadania for e-cidadania.
+ * `IRC channels <irc://irc.freenode.net#ecidadania-dev>`_ #ecidadania-dev and #ecidadania for e-cidadania.
 
 Useful information
 ------------------
