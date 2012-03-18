@@ -32,6 +32,8 @@ __all__ = ["S3InventoryModel",
            "S3AdjustModel",
            "inv_tabs",
            "inv_warehouse_rheader",
+           "inv_recv_crud_strings",
+           "inv_recv_rheader",
            "inv_send_rheader",
            "inv_recv_rheader",
            "inv_ship_status",
@@ -600,48 +602,16 @@ class S3TrackingModel(S3Model):
                                         ),
                                   s3.comments(),
                                   *s3.meta_fields())
-    
-        # Reusable Field
+
+
+        # CRUD Strings
+        inv_recv_crud_strings()
         if settings.get_inv_shipment_name() == "order":
             recv_id_label = T("Order")
-            ADD_RECV = T("Add Order")
-            LIST_RECV = T("List Orders")
-            s3.crud_strings["inv_recv"] = Storage(
-                title_create = ADD_RECV,
-                title_display = T("Order Details"),
-                title_list = LIST_RECV,
-                title_update = T("Edit Order"),
-                title_search = T("Search Orders"),
-                subtitle_create = ADD_RECV,
-                subtitle_list = T("Orders"),
-                label_list_button = LIST_RECV,
-                label_create_button = ADD_RECV,
-                label_delete_button = T("Delete Order"),
-                msg_record_created = T("Order Created"),
-                msg_record_modified = T("Order updated"),
-                msg_record_deleted = T("Order canceled"),
-                msg_list_empty = T("No Orders registered")
-            )
         else:
             recv_id_label = T("Receive Shipment")
-            ADD_RECV = recv_id_label
-            LIST_RECV = T("List Received Shipments")
-            s3.crud_strings["inv_recv"] = Storage(
-                title_create = ADD_RECV,
-                title_display = T("Received Shipment Details"),
-                title_list = LIST_RECV,
-                title_update = T("Edit Received Shipment"),
-                title_search = T("Search Received Shipments"),
-                subtitle_create = ADD_RECV,
-                subtitle_list = T("Received Shipments"),
-                label_list_button = LIST_RECV,
-                label_create_button = ADD_RECV,
-                label_delete_button = T("Delete Received Shipment"),
-                msg_record_created = T("Shipment Created"),
-                msg_record_modified = T("Received Shipment updated"),
-                msg_record_deleted = T("Received Shipment canceled"),
-                msg_list_empty = T("No Received Shipments")
-            )
+
+        # Reusable Field
         recv_id = S3ReusableField("recv_id", db.inv_recv, sortby="date",
                                   requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                   "inv_recv.id",
@@ -1951,6 +1921,91 @@ def inv_warehouse_rheader(r):
                       _href = URL(c = "inv",
                                   f = "recv",
                                   args = ["create"]
+
+def inv_recv_crud_strings():
+    """
+        CRUD Strings for inv_recv which ened to be visible to menus without a
+        model load
+    """
+
+    if current.deployment_settings.get_inv_shipment_name() == "order":
+        recv_id_label = T("Order")
+        ADD_RECV = T("Add Order")
+        LIST_RECV = T("List Orders")
+        current.response.s3.crud_strings["inv_recv"] = Storage(
+            title_create = ADD_RECV,
+            title_display = T("Order Details"),
+            title_list = LIST_RECV,
+            title_update = T("Edit Order"),
+            title_search = T("Search Orders"),
+            subtitle_create = ADD_RECV,
+            subtitle_list = T("Orders"),
+            label_list_button = LIST_RECV,
+            label_create_button = ADD_RECV,
+            label_delete_button = T("Delete Order"),
+            msg_record_created = T("Order Created"),
+            msg_record_modified = T("Order updated"),
+            msg_record_deleted = T("Order canceled"),
+            msg_list_empty = T("No Orders registered")
+        )
+    else:
+        recv_id_label = T("Receive Shipment")
+        ADD_RECV = T("Receive Shipment")
+        LIST_RECV = T("List Received Shipments")
+        current.response.s3.crud_strings["inv_recv"] = Storage(
+            title_create = ADD_RECV,
+            title_display = T("Received Shipment Details"),
+            title_list = LIST_RECV,
+            title_update = T("Edit Received Shipment"),
+            title_search = T("Search Received Shipments"),
+            subtitle_create = ADD_RECV,
+            subtitle_list = T("Received Shipments"),
+            label_list_button = LIST_RECV,
+            label_create_button = ADD_RECV,
+            label_delete_button = T("Delete Received Shipment"),
+            msg_record_created = T("Shipment Created"),
+            msg_record_modified = T("Received Shipment updated"),
+            msg_record_deleted = T("Received Shipment canceled"),
+            msg_list_empty = T("No Received Shipments")
+        )
+    return
+
+# =============================================================================
+def inv_recv_rheader(r):
+    """ Resource Header for Receiving """
+
+    if r.representation == "html" and r.name == "recv":
+        record = r.record
+        if record:
+
+            T = current.T
+            s3 = current.response.s3
+            auth = current.auth
+
+            tabs = [(T("Edit Details"), None),
+                    (T("Items"), "recv_item"),
+                    ]
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            table = r.table
+
+            rheader = DIV( TABLE(
+                               TR( TH( "%s: " % table.eta.label),
+                                   table.eta.represent(record.eta),
+                                   TH("%s: " % table.status.label),
+                                   table.status.represent(record.status),
+                                  ),
+                               TR( TH( "%s: " % table.date.label),
+                                   table.date.represent(record.date),
+                                  ),
+                               TR( TH( "%s: " % table.site_id.label),
+                                   table.site_id.represent(record.site_id),
+                                  ),
+                               TR( TH( "%s: " % table.from_site_id.label),
+                                   table.from_site_id.represent(record.from_site_id),
+                                   #TH( "%s: " % table.organisation_id.label),
+                                   #table.organisation_id.represent(record.organisation_id),
                                   ),
                       _class = "action-btn"
                       )
