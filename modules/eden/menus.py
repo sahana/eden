@@ -696,6 +696,10 @@ class S3OptionsMenu:
                 return True
 
         def config_args():
+            if not auth.user:
+                # Won't show anyway due to check
+                return []
+
             if auth.s3_has_role(MAP_ADMIN):
                 # Full List
                 return []

@@ -1656,9 +1656,10 @@ class S3ProjectTaskModel(S3Model):
             6: T("On Hold"),
             7: T("Cancelled"),
             8: T("Duplicate"),
-            9: T("Completed"),
+            9: T("Ready"),
             10: T("Verified"),
             11: T("Reopened"),
+            12: T("Completed"),
             #99: T("unspecified")
         }
 
