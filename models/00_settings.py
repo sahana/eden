@@ -465,7 +465,7 @@ if session.s3.debug:
 # CRUD
 ######
 
-def s3_formstyle(id, label, widget, comment):
+def s3_formstyle(id, label, widget, comment, hidden=False):
 
     """
         Provide the Sahana Eden Form Style
@@ -476,10 +476,15 @@ def s3_formstyle(id, label, widget, comment):
 
     row = []
 
+    if hidden:
+        _class = "hidden"
+    else:
+        _class = ""
+
     # Label on the 1st row
-    row.append(TR(TD(label, _class="w2p_fl"), TD(""), _id=id + "1"))
+    row.append(TR(TD(label, _class="w2p_fl"), TD(""), _id=id + "1", _class=_class))
     # Widget & Comment on the 2nd Row
-    row.append(TR(widget, TD(comment, _class="w2p_fc"), _id=id))
+    row.append(TR(widget, TD(comment, _class="w2p_fc"), _id=id, _class=_class))
 
     return tuple(row)
 

@@ -153,15 +153,21 @@
                 <xsl:when test="col[@field='Status']='Duplicate'">
                     <data field="status">8</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Completed'">
+                <xsl:when test="col[@field='Status']='Ready'">
                     <data field="status">9</data>
                 </xsl:when>
                 <xsl:when test="col[@field='Status']='Verified'">
                     <data field="status">10</data>
                 </xsl:when>
+                <xsl:when test="col[@field='Status']='Reopened'">
+                    <data field="status">11</data>
+                </xsl:when>
+                <xsl:when test="col[@field='Status']='Completed'">
+                    <data field="status">12</data>
+                </xsl:when>
                 <xsl:when test="col[@field='Status']='Closed'">
                     <!-- Completed -->
-                    <data field="status">9</data>
+                    <data field="status">12</data>
                 </xsl:when>
                 <xsl:otherwise>
                     <!-- Open -->

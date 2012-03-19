@@ -443,7 +443,7 @@ class HospitalDataModel(S3Model):
         #
         tablename = "hms_contact"
         table = define_table(tablename,
-                             hospital_id(),
+                             hospital_id(ondelete="CASCADE"),
                              person_id(label = T("Contact"),
                                        requires = IS_ONE_OF(db, "pr_person.id",
                                                             self.pr_person_represent,
@@ -497,7 +497,7 @@ class HospitalDataModel(S3Model):
         #
         tablename = "hms_activity"
         table = define_table(tablename,
-                             hospital_id(),
+                             hospital_id(ondelete="CASCADE"),
                              Field("date", "datetime", unique=True,  # Date&Time the entry applies to
                                    requires = IS_UTC_DATETIME(allow_future=False),
                                    represent = s3_datetime_represent,
@@ -580,7 +580,7 @@ class HospitalDataModel(S3Model):
 
         tablename = "hms_bed_capacity"
         table = define_table(tablename,
-                             hospital_id(),
+                             hospital_id(ondelete="CASCADE"),
                              Field("unit_id", length=128, unique=True,
                                    readable=False,
                                    writable=False),
@@ -653,7 +653,7 @@ class HospitalDataModel(S3Model):
         #
         tablename = "hms_services"
         table = define_table(tablename,
-                             hospital_id(),
+                             hospital_id(ondelete="CASCADE"),
                              Field("burn", "boolean", default=False,
                                    label = T("Burn")),
                              Field("card", "boolean", default=False,
@@ -728,7 +728,7 @@ class HospitalDataModel(S3Model):
 
         tablename = "hms_ctc_capability"
         table = define_table(tablename,
-                             hospital_id(),
+                             hospital_id(ondelete="CASCADE"),
                              Field("ctc", "boolean", default=False,
                                    represent = lambda opt: \
                                                opt and T("yes") or T("no"),
@@ -822,7 +822,7 @@ class HospitalDataModel(S3Model):
         #
         tablename = "hms_resources"
         table = define_table(tablename,
-                             hospital_id(),
+                             hospital_id(ondelete="CASCADE"),
                              Field("type"),
                              Field("description"),
                              Field("quantity"),

@@ -934,8 +934,10 @@ class S3GroupModel(S3Model):
         resourcename = "group_membership"
         tablename = "pr_group_membership"
         table = define_table(tablename,
-                             group_id(label = T("Group")),
-                             person_id(label = T("Person")),
+                             group_id(label = T("Group"),
+                                      ondelete="CASCADE"),
+                             person_id(label = T("Person"),
+                                       ondelete="CASCADE"),
                              Field("group_head", "boolean",
                                    label = T("Group Head"),
                                    default=False),
@@ -1551,7 +1553,8 @@ class S3PersonIdentityModel(S3Model):
 
         tablename = "pr_identity"
         table = self.define_table(tablename,
-                                  person_id(label = T("Person")),
+                                  person_id(label = T("Person"),
+                                            ondelete="CASCADE"),
                                   Field("type", "integer",
                                         requires = IS_IN_SET(pr_id_type_opts, zero=None),
                                         default = 1,
@@ -1636,6 +1639,7 @@ class S3SavedSearch(S3Model):
                                   Field("subscribed","boolean",
                                         default=False),
                                   person_id(label = T("Person"),
+                                            ondelete="CASCADE",
                                             default = auth.s3_logged_in_person()),
                                   *s3_timestamp())
 
