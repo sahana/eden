@@ -1684,7 +1684,7 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def tree2json(cls, tree, pretty_print=False):
+    def tree2json(cls, tree, pretty_print=False, native=False):
         """
             Converts an element tree into JSON
 
@@ -1697,7 +1697,7 @@ class S3XML(S3Codec):
         else:
             root = tree
 
-        if root.tag == cls.TAG.root:
+        if native or root.tag == cls.TAG.root:
             native = True
         else:
             native = False
