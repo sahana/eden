@@ -2145,8 +2145,35 @@ class S3ProjectTaskModel(S3Model):
     @staticmethod
     def task_onaccept(form):
         """
+            process the additional fields: Project/Activity
             If the task is assigned to someone then notify them
         """
+
+        db = current.db
+        s3db = current.s3db
+
+        id = form.vars.id
+        vars = current.request.post_vars
+
+        if "project_id" in vars:
+            table = s3db.project_task_project
+            # Remove any existing link
+            db(table.task_id == id).update(deleted=True)
+            if vars.project_id:
+                # Create the link to the Project
+                table.update_or_insert(task_id=id,
+                                       project_id=vars.project_id,
+                                       deleted=False)
+
+        if "activity_id" in vars:
+            table = s3db.project_task_activity
+            # Remove any existing link
+            db(table.task_id == id).update(deleted=True)
+            if vars.activity_id:
+                # Create the link to the Activity
+                table.update_or_insert(task_id=id,
+                                       activity_id=vars.activity_id,
+                                       deleted=False)
 
         # Notify Assignee
         task_notify(form)

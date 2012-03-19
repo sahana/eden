@@ -1209,13 +1209,12 @@ class S3OptionsMenu:
                         M("List All Projects"),
                         M("Open Tasks for Project", vars={"tasks":1}),
                     ),
-                    #M("Tasks", f="task")(
-                        #M("Add New Task", m="create"),
-                        #M("List All Tasks"),
-                        #M("Search", m="search"),
-                    #),
+                    M("Tasks", f="task")(
+                        M("Add New Task", m="create"),
+                        M("List All Tasks"),
+                        M("Search", m="search"),
+                    ),
                     M("Daily Work", f="time")(
-                        M("All Tasks", f="task", m="search"),
                         M("My Logged Hours", vars={"mine":1}),
                         M("Last Week's Work", m="report",
                           vars=Storage(rows="person_id",
@@ -1248,7 +1247,14 @@ class S3OptionsMenu:
             project_menu(
                     M("Projects", f="project")(
                         M("List All Projects"),
-                    )
+                        M("Open Tasks for Project", vars={"tasks":1}),
+                    ),
+                    M("Tasks", f="task")(
+                        M("Add New Task", m="create"),
+                        M("List All Tasks"),
+                        M("Search", m="search"),
+                    ),
+                    
                 )
 
         return project_menu
