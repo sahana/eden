@@ -106,6 +106,9 @@ class S3Config(Storage):
     def get_auth_registration_organisation_hidden(self):
         " Hide the Organisation field in the registration form unless an email is entered which isn't whitelisted "
         return self.auth.get("registration_organisation_hidden", False)
+    def get_auth_registration_organisation_default(self):
+        " Default the Organisation during registration "
+        return self.auth.get("registration_organisation_default", None)
     def get_auth_registration_requests_image(self):
         " Have the registration form request an Image "
         return self.auth.get("registration_requests_image", False)

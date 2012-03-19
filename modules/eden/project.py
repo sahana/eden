@@ -1685,7 +1685,7 @@ class S3ProjectTaskModel(S3Model):
                                    label = T("Short Description"),
                                    length=100,
                                    notnull=True,
-                                   requires = IS_NOT_EMPTY()),
+                                   requires = IS_LENGTH(maxsize=100, minsize=1)),
                              Field("description", "text",
                                    label = T("Detailed Description/URL"),
                                    comment = DIV(_class="tooltip",
@@ -1867,9 +1867,9 @@ class S3ProjectTaskModel(S3Model):
                   copyable=True,
                   orderby="project_task.priority",
                   onvalidation=self.task_onvalidation,
-                  create_onaccept=self.task_create_onaccept,
                   create_next=URL(f="task", args=["[id]"]),
-                  onaccept=self.task_onaccept,
+                  create_onaccept=self.task_create_onaccept,
+                  update_onaccept=self.task_update_onaccept,
                   search_method=task_search,
                   list_fields=["id",
                                "priority",
@@ -2143,37 +2143,104 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_onaccept(form):
+    def task_update_onaccept(form):
         """
-            process the additional fields: Project/Activity
-            If the task is assigned to someone then notify them
+            * Process the additional fields: Project/Activity
+            * Log changes as comments
+            * If the task is assigned to someone then notify them
         """
 
         db = current.db
         s3db = current.s3db
+        s3mgr = current.manager
 
-        id = form.vars.id
+        vars = form.vars
+        id = vars.id
+        record = form.record
+
+        table = s3db.project_task
+
+        changed = {}
+        for var in vars:
+            vvar = vars[var]
+            rvar = record[var]
+            if vvar != rvar:
+                if table[var].type == "integer":
+                    vvar = int(vvar)
+                    if vvar == rvar:
+                        continue
+                represent = table[var].represent
+                if not represent:
+                    represent = lambda o: o
+                if rvar:
+                    changed[var] = "%s changed from %s to %s" % \
+                        (table[var].label, represent(rvar), represent(vvar))
+                else:
+                    changed[var] = "%s changed to %s" % \
+                        (table[var].label, represent(vvar))
+
+        if changed:
+            table = s3db.project_comment
+            text = s3_user_represent(current.auth.user.id)
+            for var in changed:
+                text = "%s\n%s" % (text, changed[var])
+            table.insert(task_id=id,
+                         body=text)
+                
         vars = current.request.post_vars
-
         if "project_id" in vars:
-            table = s3db.project_task_project
-            # Remove any existing link
-            db(table.task_id == id).update(deleted=True)
+            ptable = s3db.project_project
+            ltable = s3db.project_task_project
+            filter = (ltable.task_id == id)
             if vars.project_id:
                 # Create the link to the Project
-                table.update_or_insert(task_id=id,
-                                       project_id=vars.project_id,
-                                       deleted=False)
+                #master = s3mgr.define_resource("project", "task", id=id)
+                #record = db(ptable.id == vars.project_id).select(ptable.id,
+                #                                                 limitby=(0, 1)).first()
+                #link = s3mgr.define_resource("project", "task_project")
+                #link_id = link.update_link(master, record)
+                query = (ltable.task_id == id) & \
+                        (ltable.project_id == vars.project_id)
+                record = db(query).select(ltable.id, limitby=(0, 1)).first()
+                if record:
+                    link_id = record.id
+                else:
+                    link_id = ltable.insert(task_id = id,
+                                            project_id = vars.project_id)
+                filter = filter & (ltable.id != link_id)
+            # Remove any other links
+            links = s3mgr.define_resource("project", "task_project",
+                                          filter=filter)
+            ondelete = s3mgr.model.get_config("project_task_project",
+                                              "ondelete")
+            links.delete(ondelete=ondelete)
 
         if "activity_id" in vars:
-            table = s3db.project_task_activity
-            # Remove any existing link
-            db(table.task_id == id).update(deleted=True)
+            atable = s3db.project_activity
+            ltable = s3db.project_task_activity
+            filter = (ltable.task_id == id)
             if vars.activity_id:
                 # Create the link to the Activity
-                table.update_or_insert(task_id=id,
-                                       activity_id=vars.activity_id,
-                                       deleted=False)
+                #master = s3mgr.define_resource("project", "task", id=id)
+                #record = db(atable.id == vars.activity_id).select(atable.id,
+                #                                                  limitby=(0, 1)).first()
+                #link = s3mgr.define_resource("project", "task_activity")
+                #link_id = link.update_link(master, record)
+                query = (ltable.task_id == id) & \
+                        (ltable.activity_id == vars.activity_id)
+                record = db(query).select(ltable.id, limitby=(0, 1)).first()
+                if record:
+                    link_id = record.id
+                else:
+                    link_id = ltable.insert(task_id = id,
+                                            activity_id = vars.activity_id)
+                filter = filter & (ltable.id != link_id)
+            # Remove any other links
+            links = s3mgr.define_resource("project", "task_activity",
+                                          filter=filter)
+            ondelete = s3mgr.model.get_config("project_task_activity",
+                                              "ondelete")
+            links.delete(ondelete=ondelete)
 
         # Notify Assignee
         task_notify(form)
@@ -2184,8 +2251,10 @@ class S3ProjectTaskModel(S3Model):
     def task_create_onaccept(form):
         """
             When a Task is created:
-                create associated Link Tables
-                ensure that it is owned by the Project Customer
+                * Process the additional fields: Project/Activity
+                * create associated Link Tables
+                * ensure that it is owned by the Project Customer
+                * notify assignee
         """
 
         db = current.db
@@ -2193,18 +2262,35 @@ class S3ProjectTaskModel(S3Model):
         session = current.session
 
         vars = form.vars
-        task_id = form.vars.id
+        id = vars.id
+        _vars = current.request.post_vars
 
         if session.s3.event:
             # Create a link between this Task & the active Event
             etable = s3db.event_task
             etable.insert(event_id=session.s3.event,
-                          task_id=vars.id)
+                          task_id=id)
+
+        vars = current.request.post_vars
+        table = s3db.project_task
+        if "project_id" in vars:
+            # Create Link to Project
+            ltable = s3db.project_task_project
+            if vars.project_id:
+                link_id = ltable.insert(task_id = id,
+                                        project_id = _vars.project_id)
+
+        if "activity_id" in vars:
+            # Create Link to Activity
+            ltable = s3db.project_task_activity
+            if vars.activity_id:
+                link_id = ltable.insert(task_id = id,
+                                        activity_id = _vars.activity_id)
 
         # Find the associated Project
         ptable = db.project_project
         ltable = db.project_task_project
-        query = (ltable.task_id == vars.id) & \
+        query = (ltable.task_id == id) & \
                 (ltable.project_id == ptable.id)
         project = db(query).select(ptable.organisation_id,
                                    limitby=(0, 1)).first()
@@ -2222,20 +2308,21 @@ class S3ProjectTaskModel(S3Model):
 
         # Make sure the task is also linked to the project
         # when created under an activity
-        if task_id:
+        if id:
             lta = s3db.project_task_activity
             ltp = s3db.project_task_project
             ta = s3db.project_activity
-            query = (ltp.deleted != True) & \
-                    (ltp.task_id == task_id)
-            row = db(query).select(ltp.project_id, limitby=(0, 1)).first()
+            query = (ltp.task_id == id)
+            row = db(query).select(ltp.project_id,
+                                   limitby=(0, 1)).first()
             if not row:
-                query = (lta.deleted != True) & \
-                        (lta.task_id == task_id) & \
+                query = (lta.task_id == task_id) & \
                         (lta.activity_id == ta.id)
-                row = db(query).select(ta.project_id, limitby=(0, 1)).first()
+                row = db(query).select(ta.project_id,
+                                       limitby=(0, 1)).first()
                 if row and row.project_id:
-                    ltp.insert(task_id=task_id, project_id=row.project_id)
+                    ltp.insert(task_id=id,
+                               project_id=row.project_id)
 
         # Notify Assignee
         task_notify(form)

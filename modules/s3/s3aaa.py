@@ -728,6 +728,7 @@ class AuthS3(Auth):
         else:
             user.organisation_id.readable = False
             user.organisation_id.writable = False
+        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_default()
         # @ToDo: Option to request Facility during Registration
         user.site_id.readable = False
         labels, required = s3_mark_required(user)
@@ -806,10 +807,11 @@ class AuthS3(Auth):
                 # Ensure that we add to the correct Organization
                 approver, organisation_id = self.s3_approver(form.vars)
 
-                # @ToDo: Is it correct to override the organisation entered by the user?
-                #        Ideally (if the deployment_settings.auth.registration_requests_organisation = True
-                #        the org could be selected based on the email and the user could then override
-                form.vars.organisation = organisation_id
+                if organisation_id:
+                    # @ToDo: Is it correct to override the organisation entered by the user?
+                    #        Ideally (if the deployment_settings.auth.registration_requests_organisation = True
+                    #        the org could be selected based on the email and the user could then override
+                    form.vars.organisation = organisation_id
 
                 # Send the Verification email
                 if not settings.mailer or \
@@ -829,7 +831,8 @@ class AuthS3(Auth):
                 # Identify the Approver &
                 # ensure that we add to the correct Organization
                 approver, organisation_id = self.s3_approver(form.vars)
-                form.vars.organisation_id = organisation_id
+                if organisation_id:
+                    form.vars.organisation_id = organisation_id
 
                 if approver:
                     # Send the Authorisation email
@@ -849,6 +852,8 @@ class AuthS3(Auth):
                 # No verification or approval needed
                 approved = True
                 approver, organisation_id = self.s3_approver(form.vars)
+                if organisation_id:
+                    form.vars.organisation = organisation_id
                 form.vars.registration_key = ""
                 form.vars.approver = approver
                 settings.verify_email_onaccept(form.vars)
