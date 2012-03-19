@@ -338,7 +338,7 @@
     <xsl:template name="Site">
         <xsl:param name="placename"/>
 
-        <resource name="org_site">
+        <resource name="org_office">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$placename"/>
             </xsl:attribute>
@@ -431,13 +431,13 @@
             </xsl:if>
             <data field="comments"><xsl:value-of select="$comments"/></data>
             <!-- Link to warehouse -->
-            <reference field="site_id" resource="org_site">
+            <reference field="site_id" resource="org_office">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$warehouse"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to destination -->
-            <reference field="to_site_id" resource="org_site">
+            <reference field="to_site_id" resource="org_office">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$destination"/>
                 </xsl:attribute>
@@ -489,13 +489,13 @@
                 <data field="status"><xsl:value-of select="$r_status"/></data>
                 <data field="comments"><xsl:value-of select="$comments"/></data>
                 <!-- Link to warehouse -->
-                <reference field="from_site_id" resource="org_site">
+                <reference field="from_site_id" resource="org_office">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$warehouse"/>
                     </xsl:attribute>
                 </reference>
                 <!-- Link to destination -->
-                <reference field="site_id" resource="org_site">
+                <reference field="site_id" resource="org_office">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$destination"/>
                     </xsl:attribute>
@@ -534,7 +534,7 @@
             </xsl:attribute>
             <data field="bin"><xsl:value-of select="$bin"/></data>
             <!-- Link to warehouse -->
-            <reference field="site_id" resource="org_site">
+            <reference field="site_id" resource="org_office">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$site"/>
                 </xsl:attribute>
