@@ -26,11 +26,11 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
-
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
-
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.generic.list_detail import object_list, object_detail
 from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object

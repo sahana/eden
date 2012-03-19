@@ -32,6 +32,9 @@ from django.core.mail import EmailMessage
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
+from django.views.generic import FormView
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required, permission_required
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm

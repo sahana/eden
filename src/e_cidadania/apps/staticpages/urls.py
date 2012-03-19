@@ -20,15 +20,15 @@
 
 from django.conf.urls.defaults import *
 
-from e_cidadania.apps.staticpages.views import ViewPage
+from e_cidadania.apps.staticpages.views import ViewPage, EditPage, DeletePage
 
 urlpatterns = patterns('e_cidadania.apps.staticpages.views',
 
     url(r'^$', ViewPage.as_view(), name='view-page'),
 
-    url(r'^edit/', 'edit_page', name='edit-page'),
+    url(r'^edit/', EditPage.as_view(), name='edit-page'),
     
-    url(r'^delete/', 'delete_page', name='delete-page'),
+    url(r'^delete/', DeletePage.as_view(), name='delete-page'),
     
     url(r'^add/', 'add_page', name='add-page')
 )
