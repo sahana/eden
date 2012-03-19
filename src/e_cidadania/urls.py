@@ -24,7 +24,8 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic.simple import direct_to_template
 
-from e_cidadania.views import IndexEntriesFeed, ListNews
+from e_cidadania.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
+                              DeletePost, ViewPost
 
 admin.autodiscover()
 
@@ -57,13 +58,13 @@ urlpatterns = patterns('',
     # News (this view of news is only for the index)
     url(r'^news/$', ListNews.as_view(), name='list-site-news'),
     
-    url(r'^news/add/$', 'e_cidadania.views.add_news', name='add-site-post'),
+    url(r'^news/add/$', AddPost.as_view(), name='add-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/delete/$', 'e_cidadania.views.delete_post', name='delete-site-post'),
+    url(r'^news/(?P<post_id>\w+)/delete/$', DeletePost.as_view(), name='delete-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/edit/$', 'e_cidadania.views.edit_post', name='edit-site-post'),
+    url(r'^news/(?P<post_id>\w+)/edit/$', EditPost.as_view(), name='edit-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/$', 'e_cidadania.views.view_post', name='view-site-post'),
+    url(r'^news/(?P<post_id>\w+)/$', ViewPost.as_view(), name='view-site-post'),
     
     # RSS Feed for the index news ONLY
     url(r'^rss/$', IndexEntriesFeed(), name='site-feed'),

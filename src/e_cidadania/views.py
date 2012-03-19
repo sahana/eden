@@ -29,6 +29,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.list import ListView
 from django.contrib import messages
 from django.core.mail import EmailMessage
+from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.detail import DetailView
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -66,6 +69,7 @@ def index_view(request):
                               extra_context,
                               context_instance=RequestContext(request))
 
+
 class IndexEntriesFeed(Feed):
 
     """
@@ -89,6 +93,7 @@ class IndexEntriesFeed(Feed):
     def item_description(self, item):
         return item.post_message
 
+
 ###############
 # BIG WARNING #
 ###############
@@ -96,71 +101,75 @@ class IndexEntriesFeed(Feed):
 # The following code violates the DRY principle. Repeating exactly the same
 # code as in apps/news/views.py
 
-@permission_required('news.add_post')
-def add_news(request):
+class AddPost(FormView):
 
     """
     This is a DRY violation. This is a reimplementation of the news view
     located at apps.news.views
     """
-    form = NewsForm(request.POST or None)
-
-    if request.method == 'POST':
+    form_class = NewsForm
+    template_name = 'news/post_add.html'
+    success_url = '/'
+    
+    def form_valid(self, form):
         form_uncommited = form.save(commit=False)
-        form_uncommited.author = request.user
+        form_uncommited.author = self.request.user
         form_uncommited.pub_index = True
+        form_uncommited.save()
+        
+        messages.success(request, _('Post added successfully.'))
+        
+    @method_decorator(permission_required('news.add_post'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddPost, self).dispatch(*args, **kwargs)
+        
 
-        if form.is_valid():
-            form_uncommited.save()
-            messages.success(request, _('Post added successfully.'))
-            return redirect('/')
+class ViewPost(DetailView):
 
-    return render_to_response('news/post_add.html',
-                              {'form': form},
-                              context_instance=RequestContext(request))
+    """
+    View a post with comments.
+    """
+    context_object_name = 'news'
+    template_name = 'news/post_detail_index.html'
+    
+    def get_object(self):
+        self.post_id = self.kwargs['post_id']
+        return get_object_or_404(Post, pk = self.post_id)
+    
 
-@permission_required('news.delete_post')
-def delete_post(request, post_id):
+class EditPost(UpdateView):
+
+    """
+    Edit an existent post.
+    """
+    model = Post
+    template_name = 'news/post_edit.html'
+    success_url = '/'
+    
+    def get_object(self):
+        cur_post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        return cur_post
+        
+    @method_decorator(permission_required('news.edit_post'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditPost, self).dispatch(*args, **kwargs)
+
+
+class DeletePost(DeleteView):
 
     """
     Delete an existent post. Post deletion is only reserved to spaces
     administrators or site admins.
     """
+    success_url = '/'
+    
+    def get_object(self):
+        return get_object_or_404(Post, pk = self.kwargs['post_id'])
+    
+    @method_decorator(permission_required('news.delete_post'))
+    def dispatch(self, *args, **kwargs):
+        return super(DeletePost, self).dispatch(*args, **kwargs)
 
-    return delete_object(request,
-                         model = Post,
-                         object_id = post_id,
-                         login_required=True,
-                         template_name = 'news/post_confirm_delete.html',
-                         post_delete_redirect = '/',
-                         extra_context = {'messages': messages.success(request, _('Post deleted successfully.'))})
-
-@permission_required('news.edit_post')
-def edit_post(request, post_id):
-
-    """
-    Edit an existent post.
-    """
-
-    return update_object(request,
-                         model = Post,
-                         object_id = post_id,
-                         login_required = True,
-                         post_save_redirect = '/',
-                         template_name = 'news/post_edit.html',
-                         extra_context = {'messages': messages.success(request, _('Post edited successfully.'))})
-
-def view_post(request, post_id):
-
-    """
-    View a post with comments.
-    """
-
-    return object_detail(request,
-                         queryset = Post.objects.all(),
-                         object_id = post_id,
-                         template_name = 'news/post_detail_index.html',
-                         template_object_name = 'news')
 
 class ListNews(ListView):
 
