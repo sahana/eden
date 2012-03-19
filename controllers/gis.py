@@ -33,37 +33,7 @@ def index():
                      toolbar=toolbar,
                      maximizable=True)
 
-    # Don't bother with breadcrumbs as they use up real-estate needlessly
-    breadcrumbs = []
-
-    # Provide access to the Personalised config
-    pconfig = ""
-    config_id = session.s3.gis_config_id
-    if auth.is_logged_in():
-        if config_id == 1:
-            pconfig = T("You are using the site-wide map configuration. To create or use a personal map configuration, click %(here)s") % \
-                        dict(here=A(T("here"),
-                                    _class="marron",
-                                    _style="font-weight:bold;",
-                                    _href=URL(c="pr", f="person",
-                                              args=["config"],
-                                              vars={"person.pe_id":auth.user.pe_id})))
-        else:
-            table = s3db.gis_config
-            query = (table.id == config_id)
-            config = db(query).select(table.pe_id,
-                                      limitby=(0, 1)).first()
-            if config and config.pe_id:
-                if auth.user and auth.user.pe_id == config.pe_id:
-                    pconfig = T("You are using a personal map configuration. To edit your personal configuration, click %(here)s") % \
-                                dict(here=A(T("here"),
-                                            _class="marron",
-                                            _style="font-weight:bold;",
-                                            _href=URL(c="pr", f="person",
-                                                      args=["config"],
-                                                      vars={"person.pe_id":auth.user.pe_id})))
-
-    return dict(map=map, breadcrumbs=breadcrumbs, pconfig=pconfig)
+    return dict(map=map)
 
 # =============================================================================
 def map_viewing_client():
@@ -711,164 +681,6 @@ def location_links():
     return output
 
 # =============================================================================
-def map_service_catalogue():
-    """
-        Map Service Catalogue.
-        Allows selection of which Layers are active.
-    """
-
-    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-        auth.permission.fail()
-
-    subtitle = T("List Layers")
-    # Start building the Return with the common items
-    output = dict(subtitle=subtitle)
-
-    # Hack: We control all perms from this 1 table
-    table = s3db.gis_layer_entity
-    authorised = s3_has_permission("update", table)
-    item_list = []
-    even = True
-    ltable = s3db.gis_layer_config
-    if authorised:
-        # List View with checkboxes to Enable/Disable layers
-        for type in response.s3.gis_layer_types:
-            table = s3db[type]
-            query = (table.id > 0) & (ltable.layer_id == table.layer_id)
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.description,
-                                    ltable.enabled)
-            for row in rows:
-                row = row[type]
-                lrow = row.gis_layer_config
-                if even:
-                    theclass = "even"
-                    even = False
-                else:
-                    theclass = "odd"
-                    even = True
-                description = row.description or ""
-                label = "%s_%s" % (type, str(row.id))
-                if lrow.enabled:
-                    enabled = INPUT(_type="checkbox", value=True, _name=label)
-                else:
-                    enabled = INPUT(_type="checkbox", _name=label)
-                item_list.append(TR(TD(A(row.name,
-                                         _href=URL("layer_%s" % type,
-                                                   args=row.id))),
-                                    TD(description),
-                                    TD(enabled),
-                                    _class=theclass))
-        table_header = THEAD(TR(TH(T("Layer")),
-                                TH(T("Description")),
-                                TH(T("Enabled?"))))
-        table_footer = TFOOT(TR(TD(INPUT(_id="submit_button",
-                                         _type="submit",
-                                         _value=T("Update")),
-                                   _colspan=3)),
-                             _align="right")
-        items = DIV(FORM(TABLE(table_header,
-                               TBODY(item_list),
-                               table_footer,
-                               _id="table-container"),
-                    _name="custom",
-                    _method="post",
-                    _enctype="multipart/form-data",
-                    _action=URL(f="layers_enable")))
-
-    else:
-        # Simple List View
-        for type in response.s3.gis_layer_types:
-            table = s3db[type]
-            query = (table.id > 0) & (ltable.layer_id == table.layer_id)
-            rows = db(table.id > 0).select(table.id,
-                                           table.name,
-                                           table.description,
-                                           ltable.enabled)
-            for row in rows:
-                row = row[type]
-                lrow = row.gis_layer_config
-                if even:
-                    theclass = "even"
-                    even = False
-                else:
-                    theclass = "odd"
-                    even = True
-                description = row.description or ""
-                if lrow.enabled:
-                    enabled = INPUT(_type="checkbox",
-                                    value="on",
-                                    _disabled="disabled")
-                else:
-                    enabled = INPUT(_type="checkbox",
-                                    _disabled="disabled")
-                item_list.append(TR(TD(A(row.name,
-                                         _href=URL("layer_%s" % type,
-                                                   args=row.id))),
-                                    TD(description),
-                                    TD(enabled),
-                                    _class=theclass))
-
-        table_header = THEAD(TR(TH(T("Layer")),
-                                TH(T("Description")),
-                                TH(T("Enabled?"))))
-        items = DIV(TABLE(table_header,
-                          TBODY(item_list),
-                          _id="table-container"))
-
-    output.update(dict(items=items))
-    return output
-
-# -----------------------------------------------------------------------------
-def layers_enable():
-    """
-        Enable/Disable Layers
-    """
-
-    table = s3db.gis_layer_config
-    authorised = s3_has_permission("update", table)
-    vars = request.vars
-    if authorised:
-        for resourcename in response.s3.gis_layer_types:
-            table = s3db[resourcename]
-            rows = db(table.id > 0).select(table.id)
-            for row in rows:
-                query_inner = (table.id == row.id)
-                var = "%s_%i" % (resourcename, row.id)
-                # Read current state
-                if db(query_inner).select(table.enabled,
-                                          limitby=(0, 1)).first().enabled:
-                    # Old state: Enabled
-                    if var in vars:
-                        # Do nothing
-                        pass
-                    else:
-                        # Disable
-                        db(query_inner).update(enabled=False)
-                        # Audit
-                        s3_audit("update", module, resourcename, record=row.id,
-                                 representation="html")
-                else:
-                    # Old state: Disabled
-                    if var in vars:
-                        # Enable
-                        db(query_inner).update(enabled=True)
-                        # Audit
-                        s3_audit("update", module, resourcename, record=row.id,
-                                 representation="html")
-                    else:
-                        # Do nothing
-                        pass
-
-        session.confirmation = T("Layers updated")
-
-    else:
-        session.error = T("Not authorised!")
-
-    redirect(URL(f="map_service_catalogue"))
-
-# =============================================================================
 # Common CRUD strings for all layers
 ADD_LAYER = T("Add Layer")
 LAYER_DETAILS = T("Layer Details")
@@ -891,6 +703,16 @@ NO_TYPE_LAYERS_FMT = "No %s Layers currently defined"
 # -----------------------------------------------------------------------------
 def config():
     """ RESTful CRUD controller """
+
+    # Custom Methods to enable/disable layers
+    s3mgr.model.set_method(module, resourcename,
+                           component_name="layer_entity",
+                           method="enable",
+                           action=enable_layer)
+    s3mgr.model.set_method(module, resourcename,
+                           component_name="layer_entity",
+                           method="disable",
+                           action=disable_layer)
 
     # Pre-process
     def prep(r):
@@ -969,8 +791,77 @@ def config():
         return True
     response.s3.prep = prep
 
+    # Post-processor
+    def postp(r, output):
+        if r.interactive:
+            if r.component_name == "layer_entity":
+                s3_action_buttons(r, deletable=False)
+                # Show the enable button if the layer is not currently disabled
+                ltable = s3db.gis_layer_config
+                query = (ltable.enabled == False) & \
+                        (ltable.config_id == r.table.id)
+                rows = db(query).select(ltable.layer_id)
+                restrict = [str(row.layer_id) for row in rows]
+                response.s3.actions.append(dict(label=str(T("Enable")),
+                                                _class="action-btn",
+                                                url=URL(args=[r.id, "layer_entity", "[id]", "enable"]),
+                                                restrict = restrict
+                                                )
+                                            )
+                # Show the disable button if the layer is not currently disabled
+                ltable = s3db.gis_layer_config
+                query = (ltable.enabled != False) & \
+                        (ltable.config_id == r.table.id)
+                rows = db(query).select(ltable.layer_id)
+                restrict = [str(row.layer_id) for row in rows]
+                response.s3.actions.append(dict(label=str(T("Disable")),
+                                                _class="action-btn",
+                                                url=URL(args=[r.id, "layer_entity", "[id]", "disable"]),
+                                                restrict = restrict
+                                                )
+                                            )
+
+        return output
+    response.s3.postp = postp
+
     output = s3_rest_controller(rheader=s3db.gis_rheader)
     return output
+
+# -----------------------------------------------------------------------------
+def enable_layer(r, **attr):
+    """
+        Enable a Layer
+            designed to be a custom method called by an action button
+    """
+
+    if r.component_name != "layer_entity":
+        session.error = T("Incorrect parameters")
+        redirect(URL(args=[r.id, "layer_entity"]))
+
+    ltable = s3db.gis_layer_config
+    query = (ltable.config_id == r.id) & \
+            (ltable.layer_id == r.component_id)
+    db(query).update(enabled = True)
+    session.confirmation = T("Layer has been Enabled")
+    redirect(URL(args=[r.id, "layer_entity"]))
+
+# -----------------------------------------------------------------------------
+def disable_layer(r, **attr):
+    """
+        Disable a Layer
+            designed to be a custom method called by an action button in config/layer_entity
+    """
+
+    if r.component_name != "layer_entity":
+        session.error = T("Incorrect parameters")
+        redirect(URL(args=[r.id, "layer_entity"]))
+
+    ltable = s3db.gis_layer_config
+    query = (ltable.config_id == r.id) & \
+            (ltable.layer_id == r.component_id)
+    db(query).update(enabled = False)
+    session.confirmation = T("Layer has been Disabled")
+    redirect(URL(args=[r.id, "layer_entity"]))
 
 # -----------------------------------------------------------------------------
 def hierarchy():
@@ -1093,42 +984,6 @@ def track():
     return s3_rest_controller()
 
 # =============================================================================
-def enable_layer(r):
-    """
-        Enable a Layer
-            designed to be a custom method called by an action button
-        @ToDo: See if we want to reinstate somethign like this for the new data model (currently unsued)
-    """
-
-    if not r.id:
-        session.error = T("Can only enable 1 record at a time!")
-        redirect(URL(args=[]))
-
-    ltable = s3db.gis_layer_config
-    query = (r.table.id == r.id) & (ltable.layer_id == table.layer_id)
-    #db(query).update(ltable.enabled = True)
-    session.confirmation = T("Layer has been Enabled")
-    redirect(URL(args=[]))
-
-# -----------------------------------------------------------------------------
-def disable_layer(r):
-    """
-        Disable a Layer
-            designed to be a custom method called by an action button
-        @ToDo: See if we want to reinstate somethign like this for the new data model (currently unsued)
-    """
-
-    if not r.id:
-        session.error = T("Can only disable 1 record at a time!")
-        redirect(URL(args=[]))
-
-    ltable = s3db.gis_layer_config
-    query = (r.table.id == r.id) & (ltable.layer_id == table.layer_id)
-    #db(query).update(ltable.enabled = False)
-    session.confirmation = T("Layer has been Disabled")
-    redirect(URL(args=[]))
-
-# -----------------------------------------------------------------------------
 def layer_config():
     """ RESTful CRUD controller """
 

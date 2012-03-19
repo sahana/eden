@@ -1,0 +1,6 @@
+{{extend "layout.html"}}
+<div id='home'>
+<div id='text'>
+{{=LOAD("cms", "posts.load", args=request.args[0], ajax=True)}}
+</div>
+</div>

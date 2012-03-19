@@ -71,16 +71,23 @@ class S3ContentModel(S3Model):
                              Field("name",
                                    notnull=True,
                                    label = T("Name")),
+                             Field("avatar", "boolean",
+                                   default = False,
+                                   label=T("Show author picture?")),
+                             Field("replies", "boolean",
+                                   default = False,
+                                   label=T("Comments permitted?")),
                              comments(),
-                             #Field("replies", "boolean",
-                             #      default = False,
-                             #      label=T("Comments permitted?")),
-                             roles_permitted(),    # Multiple Roles
+                             # Multiple Roles (@ToDo: Implement the restriction)
+                             roles_permitted(
+                                             readable = False,
+                                             writable = False
+                                            ),
                              *meta_fields())
 
         # CRUD Strings
         ADD_SERIES = T("Add Series")
-        LIST_SERIES = T("ListSeries")
+        LIST_SERIES = T("List Series")
         crud_strings[tablename] = Storage(
             title_create = ADD_SERIES,
             title_display = T("Series Details"),
@@ -99,23 +106,18 @@ class S3ContentModel(S3Model):
 
         # Reusable field
         series_id = S3ReusableField("series_id", db.cms_series,
-                                    label = T("Series"),
-                                    sortby="name",
+                                    readable=False,
+                                    writable=False,
                                     requires = IS_NULL_OR(IS_ONE_OF(db, "cms_series.id", "%(name)s")),
-                                    represent = lambda id, row=None: \
-                                                    (id and [db.cms_series[id].name] or [NONE])[0],
-                                    comment = s3_popup_comment(c="cms",
-                                                               f="series",
-                                                               title=ADD_SERIES,
-                                                               tooltip=T("A list of news items or blog posts.")),
                                     ondelete = "CASCADE")
-
-        # Components
-        add_component("cms_post", cms_series="series_id")
 
         # Resource Configuration
         configure(tablename,
-                  create_next=URL(f="series'", args=["[id]", "post"]))
+                  onaccept = self.series_onaccept,
+                  create_next=URL(f="series", args=["[id]", "post"]))
+
+        # Components
+        add_component("cms_post", cms_series="series_id")
 
         # ---------------------------------------------------------------------
         # Posts
@@ -126,17 +128,13 @@ class S3ContentModel(S3Model):
         modules = {}
         _modules = current.deployment_settings.modules
         for module in _modules:
-            if module in ["default", "admin", "appadmin", "errors", "sync"]:
+            if module in ["appadmin", "errors", "sync"]:
                 continue
             modules[module] = _modules[module].name_nice
 
         tablename = "cms_post"
         table = define_table(tablename,
-                             series_id(
-                                       # Only accessed as a component of a series
-                                       readable=False,
-                                       writable=False,
-                                       ),
+                             series_id(),
                              Field("module",
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
                                             sort_dict_by_values(modules))),
@@ -148,15 +146,23 @@ class S3ContentModel(S3Model):
                                    label = T("Title")),
                              Field("body", "text",
                                    notnull=True,
+                                   widget = s3_richtext_widget,
                                    label = T("Body")),
+                             Field("avatar", "boolean",
+                                   default = False,
+                                   label=T("Show author picture?")),
+                             Field("replies", "boolean",
+                                   default = False,
+                                   label=T("Comments permitted?")),
                              #Field("published", "boolean",
                              #      default = True,
                              #      label=T("Published")),
                              comments(),
-                             #Field("replies", "boolean",
-                             #      default = False,
-                             #      label=T("Comments permitted?")),
-                             roles_permitted(),    # Multiple Roles
+                             # Multiple Roles (@ToDo: Implement the restriction)
+                             roles_permitted(
+                                             readable = False,
+                                             writable = False
+                                            ),
                              *meta_fields())
 
         # CRUD Strings
@@ -236,9 +242,26 @@ class S3ContentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def series_onaccept(form):
+        """
+            cascade values down to all component Posts
+        """
+
+        vars = form.vars
+
+        table = current.s3db.cms_post
+        query = (table.series_id == vars.id)
+        current.db(query).update(avatar = vars.avatar,
+                                 replies = vars.replies,
+                                 roles_permitted = vars.roles_permitted,
+                                 )
+
+        return
+    
+    # -------------------------------------------------------------------------
+    @staticmethod
     def post_onaccept(form):
         """
-            
         """
 
         vars = form.vars
@@ -273,7 +296,7 @@ def cms_rheader(r, tabs=[]):
         # Tabs
         tabs = [(T("Basic Details"), None),
                 (T("Posts"), "post"),
-                ]
+               ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(
@@ -286,8 +309,9 @@ def cms_rheader(r, tabs=[]):
     elif resourcename == "post":
         # Tabs
         tabs = [(T("Basic Details"), None),
-                #(T("Comments"), "discuss")
                ]
+        if record.replies:
+            tabs.append((T("Comments"), "discuss"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(

@@ -620,7 +620,11 @@ class S3CRUD(S3Method):
             last_update = self.last_update()
             if last_update:
                 output["modified_on"] = last_update["modified_on"]
-                output["modified_by"] = last_update["modified_by"]
+                try:
+                    output["modified_by"] = last_update["modified_by"]
+                except:
+                    # Field not in table - e.g. auth_user
+                    pass
 
             # Redirection
             update_next = _config("update_next")

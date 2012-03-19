@@ -568,8 +568,6 @@ class S3Msg(object):
                              system_generated = system_generated)
             except:
                 return False
-        # Explicitly commit DB operations when running from Cron
-        db.commit()
 
         # @ToDo: Process Outbox (once this can be done async)
         # - or is this better to do in the wrapper script?

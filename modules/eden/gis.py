@@ -1245,7 +1245,7 @@ class S3GISConfigModel(S3Model):
                                    # @ToDo: Remove default once we have cascading working
                                    default = 22),
 
-                              *meta_fields())
+                             *meta_fields())
 
         # Reusable field - used by Events & Scenarios
         config_id = S3ReusableField("config_id", db.gis_config,
@@ -1291,6 +1291,7 @@ class S3GISConfigModel(S3Model):
         configure(tablename,
                   onvalidation=self.gis_config_onvalidation,
                   onaccept=self.gis_config_onaccept,
+                  create_next=URL(args=["[id]", "layer_entity"]),
                   # @ToDo: Not currently allowing delete, but with some
                   # restrictions, we could.
                   #delete_onaccept=self.gis_config_ondelete,
@@ -1866,6 +1867,9 @@ class S3LayerEntityModel(S3Model):
                     msg_record_deleted = T("Profile Configuration removed"),
                     msg_list_empty = T("No Profiles currently have Configurations for this Layer"))
 
+        self.configure(tablename,
+                       onaccept=self.layer_config_onaccept)
+
         # =====================================================================
         #  Layer Symbology link table
 
@@ -1906,6 +1910,31 @@ class S3LayerEntityModel(S3Model):
                 gis_layer_types = layer_types,
             )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def layer_config_onaccept(form):
+        """
+            If this is the default base layer then remove this flag from all
+            others in this config.
+        """
+
+        vars = form.vars
+        base = vars.base
+        enabled = vars.enabled
+
+        if base and enabled:
+            db = current.db
+            s3db = current.s3db
+            ctable = s3db.gis_config
+            ltable = s3db.gis_layer_config
+            query = (ltable.id == vars.id) & \
+                    (ltable.config_id == ctable.id)
+            config = db(query).select(ctable.id,
+                                      limitby=(0, 1)).first()
+            # Set all others in this config as not the default Base Layer
+            query  = (ltable.config_id == config.id) & \
+                     (ltable.id != vars.id)
+            db(query).update(base = False)
 
 # =============================================================================
 class S3FeatureLayerModel(S3Model):

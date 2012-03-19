@@ -1801,6 +1801,13 @@ class S3ProjectTaskModel(S3Model):
                         #field = ["project"],
                         #cols = 3
                     #),
+                    # This Syntax not supported by Search Widgets yet
+                    #S3SearchOptionsWidget(
+                    #    name = "task_search_project",
+                    #    label = T("Project"),
+                    #    field = ["task.task_id:project_task:project_id$name"],
+                    #    cols = 3
+                    #),
                     # Virtual fields not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
                         #name = "task_search_activity",

@@ -47,6 +47,8 @@ __all__ = ["URL2",
            "s3_comments_represent",
            "s3_url_represent",
            "s3_user_represent",
+           "s3_avatar_represent",
+           "s3_role_represent",
            "sort_dict_by_values",
            "jaro_winkler",
            "jaro_winkler_distance_row",
@@ -54,8 +56,9 @@ __all__ = ["URL2",
 
 import sys
 import os
-import re
 import hashlib
+import md5
+import re
 import uuid
 
 from gluon import *
@@ -650,6 +653,93 @@ def s3_user_represent(id):
     if user:
         return user.email
     return None
+
+# =============================================================================
+def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
+    """ Represent a User as their profile picture or Gravatar """
+
+    db = current.db
+    s3db = current.s3db
+    cache = s3db.cache
+
+    table = s3db[tablename]
+
+    email = None
+    image = None
+
+    if tablename == "auth_user":
+        user = db(table.id == id).select(table.email,
+                                         table.image,
+                                         limitby=(0, 1),
+                                         cache=cache).first()
+        if user:
+            email = user.email.strip().lower()
+            image = user.image
+    elif tablename == "pr_person":
+        user = db(table.id == id).select(table.pe_id,
+                                         table.picture,
+                                         limitby=(0, 1),
+                                         cache=cache).first()
+        if user:
+            image = user.picture
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == id) & (ctable.contact_method == "EMAIL")
+            email = db(query).select(ctable.value,
+                                     limitby=(0, 1),
+                                     cache=cache).first()
+            if email:
+                email = email.value
+
+    if image:
+        url = URL(c="default", f="download",
+                  args=image)
+    elif email:
+        # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
+        hash = md5.new(email).hexdigest()
+        url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+
+    else:
+        url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
+
+    return IMG(_src=url,
+               _class=_class,
+               _height=50, _width=50)
+
+# =============================================================================
+def s3_role_represent(opt):
+    """ Represent Role(s) by Name """
+
+    s3db = current.s3db
+
+    table = s3db.auth_group
+    set = current.db(table.id > 0).select(table.id,
+                                          table.role,
+                                          cache=s3db.cache).as_dict()
+
+    if isinstance(opt, (list, tuple)):
+        opts = opt
+        vals = [str(set.get(o)["role"]) for o in opts]
+        multiple = True
+    elif isinstance(opt, int):
+        opts = [opt]
+        vals = str(set.get(opt)["role"])
+        multiple = False
+    else:
+        try:
+            opt = int(opt)
+        except:
+            return current.messages.NONE
+        else:
+            opts = [opt]
+            vals = str(set.get(opt)["role"])
+            multiple = False
+
+    if multiple:
+        if len(opts) > 1:
+            vals = ", ".join(vals)
+        else:
+            vals = len(vals) and vals[0] or ""
+    return vals
 
 # =============================================================================
 def sort_dict_by_values(adict):
