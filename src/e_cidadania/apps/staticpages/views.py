@@ -42,7 +42,7 @@ from e_cidadania.apps.staticpages.models import StaticPage
 def add_page(request, slug):
 
     """
-    Thisd function goes into the administration
+    This function goes into the administration
     """
     pass
     
@@ -60,36 +60,38 @@ class ViewPage(DetailView):
         return self.page
         
 
-#class EditPage(UpdateView):
-
-@permission_required('staticpages.edit_staticpage')                         
-def edit_page(request, slug):
-
-    """
-    Edit an static page.
-    """
-    page = get_object_or_404(StaticPage, uri=slug)
-    return update_object(request,
-                         model = StaticPage,
-                         object_id = page.id,
-                         login_required = True,
-                         template_name = 'staicpages/staticpages_edit.html',
-                         template_object_name = 'staticpage',
-                         post_save_redirect = '/',
-                         extra_context = {'get_place': place})
-                         
-@permission_required('staticpages.delete_staticpage')
-def delete_page(request, slug):
+class EditPage(UpdateView):
 
     """
     """
-    page = get_object_or_404(StaticPage, uri=slug)
-    
-    return delete_object(request,
-                         model = StaticPage,
-                         object_id = page.id,
-                         login_required = True,
-                         template_name = 'staticpages/delete_staticpage.html',
-                         template_object_name = 'page',
-                         post_delete_redirect = '/',
-                         extra_context = {'get_place': place})
+    model = StaticPage
+    template_name = 'staticpages/staticpages_edit.html'
+    success_url = '/'
+
+    def get_object(self):
+        self.page = get_object_or_404(StaticPage, uri=self.kwargs['slug'])
+        return self.page
+        
+#    def get_context_data(self, **kwargs):
+#        context = super(EditPage, self).get_context_data(**kwargs)
+#        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+#        return context
+        
+    @method_decorator(permission_required('staticpages.edit_staticpage'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditPage, self).dispatch(*args, **kwargs)
+        
+                       
+class DeletePage(DeleteView):
+
+    """
+    """
+    sucess_url = '/'
+
+    def get_object(self):
+        return get_object_or_404(StaticPage, uri = self.kwargs['slug'])
+           
+    @method_decorator(permission_required('staticpages.delete_staticpage'))
+    def dispatch(self, *args, **kwargs):
+        return super(DeletePage, self).dispatch(*args, **kwargs)
+        
