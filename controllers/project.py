@@ -425,6 +425,10 @@ def task():
     # Pre-process
     def prep(r):
         if r.interactive:
+            if r.record:
+                # Put the Comments in the RFooter
+                ckeditor()
+                response.s3.rfooter = LOAD("project", "comments.load", args=["task", r.id], ajax=True)
             if r.component:
                 if r.component_name == "req":
                     if deployment_settings.has_module("hrm"):
@@ -434,23 +438,24 @@ def task():
                         s3db.req_create_form_mods()
                 elif r.component_name == "human_resource":
                     r.component.table.type.default = 2
-            elif not auth.s3_has_role("STAFF"):
-                # Hide fields to avoid confusion (both of inputters & recipients)
-                table = r.table
-                field = table.source
-                field.readable = field.writable = False
-                field = table.pe_id
-                field.readable = field.writable = False
-                field = table.date_due
-                field.readable = field.writable = False
-                field = table.milestone_id
-                field.readable = field.writable = False
-                field = table.time_estimated
-                field.readable = field.writable = False
-                field = table.time_actual
-                field.readable = field.writable = False
-                field = table.status
-                field.readable = field.writable = False
+            else:
+                if not auth.s3_has_role("STAFF"):
+                    # Hide fields to avoid confusion (both of inputters & recipients)
+                    table = r.table
+                    field = table.source
+                    field.readable = field.writable = False
+                    field = table.pe_id
+                    field.readable = field.writable = False
+                    field = table.date_due
+                    field.readable = field.writable = False
+                    field = table.milestone_id
+                    field.readable = field.writable = False
+                    field = table.time_estimated
+                    field.readable = field.writable = False
+                    field = table.time_actual
+                    field.readable = field.writable = False
+                    field = table.status
+                    field.readable = field.writable = False
         return True
     response.s3.prep = prep
 
@@ -604,18 +609,8 @@ def time():
 # =============================================================================
 # Comments
 # =============================================================================
-def discuss(r, **attr):
-    """ Custom Method to manage the discussion of a Task """
-
-    #if r.component:
-    #    resourcename = "activity"
-    #    id = r.component_id
-    #else:
-    resourcename = "task"
-    id = r.id
-
-    # Add the RHeader to maintain consistency with the other pages
-    rheader = s3db.project_rheader(r)
+def ckeditor():
+    """ Load the Project Comments JS """
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
     response.s3.scripts.append(ckeditor)
@@ -642,6 +637,22 @@ function comment_reply(id) {
 }"""))
 
     response.s3.js_global.append(js)
+
+def discuss(r, **attr):
+    """ Custom Method to manage the discussion of a Task """
+
+    #if r.component:
+    #    resourcename = "activity"
+    #    id = r.component_id
+    #else:
+    resourcename = "task"
+    id = r.id
+
+    # Add the RHeader to maintain consistency with the other pages
+    rheader = s3db.project_rheader(r)
+
+    # Load the Project Comments JS
+    ckeditor()
 
     response.view = "project/discuss.html"
     return dict(rheader=rheader,

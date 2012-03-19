@@ -2722,7 +2722,7 @@ def project_rheader(r, tabs=[]):
         staff = auth.s3_has_role("STAFF")
         if staff:
             append((T("Time"), "time")),
-        append((T("Comments"), "discuss"))
+        #append((T("Comments"), "discuss"))
         append((T("Attachments"), "document"))
         if settings.has_module("msg"):
             append((T("Notify"), "dispatch"))
@@ -2813,31 +2813,31 @@ def project_rheader(r, tabs=[]):
             time_actual = ""
 
         # Comments
-        if r.method == "discuss":
-            comments = ""
-        else:
-            ctable = s3db.project_comment
-            query = (ctable.deleted == False) & \
-                    (ctable.task_id == r.id)
-            comments = db(query).select(ctable.body).last()
-            if comments:
-                try:
-                    markup = etree.XML(comments.body)
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except etree.XMLSyntaxError:
-                    t = html.fromstring(comments.body)
-                    text = t.text_content()
-                comments = TR(
-                                TH("%s: " % T("Latest Comment")),
-                                A(text,
-                                  _href=URL(args=[r.id, "discuss"]))
-                            )
-            else:
-                comments = ""
+        # if r.method == "discuss":
+            # comments = ""
+        # else:
+            # ctable = s3db.project_comment
+            # query = (ctable.deleted == False) & \
+                    # (ctable.task_id == r.id)
+            # comments = db(query).select(ctable.body).last()
+            # if comments:
+                # try:
+                    # markup = etree.XML(comments.body)
+                    # text = markup.xpath(".//text()")
+                    # if text:
+                        # text = " ".join(text)
+                    # else:
+                        # text = ""
+                # except etree.XMLSyntaxError:
+                    # t = html.fromstring(comments.body)
+                    # text = t.text_content()
+                # comments = TR(
+                                # TH("%s: " % T("Latest Comment")),
+                                # A(text,
+                                  # _href=URL(args=[r.id, "discuss"]))
+                            # )
+            # else:
+                # comments = ""
 
         rheader = DIV(TABLE(
             project,
@@ -2852,7 +2852,7 @@ def project_rheader(r, tabs=[]):
             assignee,
             time_estimated,
             time_actual,
-            comments,
+            #comments,
             ), rheader_tabs)
 
     return rheader
