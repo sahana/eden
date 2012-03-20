@@ -24,7 +24,7 @@ documents, meetings and entities. Most of the forms are directly generated
 from the data models.
 """
 
-from django.forms import ModelForm
+from django.forms import ModelForm, ValidationError
 from django.forms.models import modelformset_factory
 
 from e_cidadania.apps.spaces.models import Space, Document, Event, Entity
@@ -41,6 +41,24 @@ class SpaceForm(ModelForm):
     """
     class Meta:
         model = Space
+
+    def clean_logo(self):
+        valid_image_extensions = ['jpg', 'jpeg', 'png', 'gif']
+        logo_file = self.cleaned_data['logo']
+        for extension in valid_image_extensions:
+            if logo_file.name.endswith(''.join(['.', extension])):
+                return logo_file
+
+        raise ValidationError("Invalid file extension")
+
+    def clean_banner(self):
+        valid_image_extensions = ['jpg', 'jpeg', 'png', 'gif']
+        banner_file = self.cleaned_data['banner']
+        for extension in valid_image_extensions:
+            if banner_file.name.endswith(''.join(['.', extension])):
+                return banner_file
+
+        raise ValidationError("Invalid file extension")
 
 # Create a formset for entities. This formset can be attached to any other form
 # but will be usually attached to SpaceForm
