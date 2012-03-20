@@ -189,7 +189,7 @@ class ViewSpaceIndex(DetailView):
         
         messages.warning(self.request, _("You're not registered to this space."))
         self.template_name = 'not_allowed.html'
-        return space_object.none()
+        return space_object
 
     # Get extra context data
     def get_context_data(self, **kwargs):

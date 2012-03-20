@@ -24,19 +24,10 @@ documents, meetings and entities. Most of the forms are directly generated
 from the data models.
 """
 
-import re
-
-from django import forms
 from django.forms import ModelForm
 from django.forms.models import modelformset_factory
 
 from e_cidadania.apps.spaces.models import Space, Document, Event, Entity
-
-def is_valid_space_url(space_url):
-    if re.match('^[a-z0-9_]+$', space_url):
-        return True
-    else:
-        return False
 
 class SpaceForm(ModelForm):
     
@@ -50,13 +41,6 @@ class SpaceForm(ModelForm):
     """
     class Meta:
         model = Space
-
-    def clean_url(self):
-        space_url = self.cleaned_data['url']
-        if not is_valid_space_url(space_url):
-            raise forms.ValidationError("Invalid characters in the space URL.")
-        else:
-            return space_url
 
 # Create a formset for entities. This formset can be attached to any other form
 # but will be usually attached to SpaceForm
