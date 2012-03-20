@@ -249,6 +249,9 @@ $(document).ready(function() {
                                       # This is added in req/req_item_inv_item controller
                                       #"site_id",
                                       "item_id",
+                                      (T("Code"), "item_code"),
+                                      (T("Category"), "item_category"),
+                                      "site_id",
                                       "quantity",
                                       "pack_value",
                                       (T("Total Value"), "total_value"),
@@ -481,6 +484,26 @@ class S3TrackingModel(S3Model):
                                         default = SHIP_STATUS_IN_PROCESS,
                                         label = T("Status"),
                                         writable = False,
+                                        ),
+                                  Field("vehicle_type",
+                                        "string",
+                                        label = T("Type of Vehicle"),
+                                        ),
+                                  Field("vehicle_plate_no",
+                                        "string",
+                                        label = T("Vehicle Plate Number"),
+                                        ),
+                                  Field("driver_name",
+                                        "string",
+                                        label = T("Name of Driver"),
+                                        ),
+                                  Field("time_in",
+                                        "time",
+                                        label = T("Time In"),
+                                        ),
+                                  Field("time_out",
+                                        "time",
+                                        label = T("Time Out"),
                                         ),
                                   s3.comments(),
                                   *s3.meta_fields())
@@ -1091,6 +1114,30 @@ $(document).ready(function() {
             if not form.vars.pack_value:
                 # @todo: move this into the javascript ajax call on the item selected
                 form.vars.pack_value = record.pack_value
+
+
+        """
+            When a inv item record is being created with a source number
+            then the source number needs to be unique within the organisation.
+        """
+        s3db = current.s3db
+        db = current.db
+        itable = s3db.inv_inv_item
+        stable = s3db.org_site
+
+        # If their is a tracking number check that it is unique within the org
+        if form.vars.item_source_no:
+            if form.record.item_source_no and form.record.item_source_no == form.vars.item_source_no:
+                # the tracking number hasn't changes so no validation needed
+                pass
+            else:
+                query = (itable.track_org_id == form.vars.track_org_id) & \
+                        (itable.item_source_no == form.vars.item_source_no)
+                record = db(query).select(limitby=(0, 1)).first()
+                if record:
+                    org_repr = current.response.s3.org_organisation_represent
+                    form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % (form.vars.item_source_no,
+                                                                                                    org_repr(record.track_org_id))
 
         # If their is a receiving bin select the right one
         if form.vars.recv_bin:
@@ -2681,6 +2728,20 @@ class InvItemVirtualFields:
         """ Year/Month of the start date of the training event """
         try:
             return self.inv_inv_item.quantity * self.inv_inv_item.pack_value
+        except:
+            # not available
+            return current.messages.NONE
+
+    def item_code(self):
+        try:
+            return self.inv_inv_item.item_id.code
+        except:
+            # not available
+            return current.messages.NONE
+
+    def item_category(self):
+        try:
+            return self.inv_inv_item.item_id.item_category_id.name
         except:
             # not available
             return current.messages.NONE
