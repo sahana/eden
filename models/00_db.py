@@ -120,6 +120,7 @@ crud = s3base.CrudS3()
 current.crud = crud
 S3Comment = s3base.S3Comment
 S3DateTime = s3base.S3DateTime
+S3ResourceHeader = s3base.S3ResourceHeader
 
 from gluon.tools import Service
 service = Service()

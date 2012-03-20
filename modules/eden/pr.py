@@ -145,15 +145,16 @@ class S3PersonEntity(S3Model):
         add_component("pr_physical_description",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
-        add_component("dvi_identification",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("dvi_effects",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("dvi_checklist",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
+        if current.deployment_settings.has_module("dvi"):
+            add_component("dvi_identification",
+                          pr_pentity=dict(joinby=pe_id,
+                                          multiple=False))
+            add_component("dvi_effects",
+                          pr_pentity=dict(joinby=pe_id,
+                                          multiple=False))
+            add_component("dvi_checklist",
+                          pr_pentity=dict(joinby=pe_id,
+                                          multiple=False))
         # Map Configs
         #   - Personalised configurations
         #   - OU configurations (Organisation/Branch/Facility/Team)
@@ -934,8 +935,10 @@ class S3GroupModel(S3Model):
         resourcename = "group_membership"
         tablename = "pr_group_membership"
         table = define_table(tablename,
-                             group_id(label = T("Group")),
-                             person_id(label = T("Person")),
+                             group_id(label = T("Group"),
+                                      ondelete="CASCADE"),
+                             person_id(label = T("Person"),
+                                       ondelete="CASCADE"),
                              Field("group_head", "boolean",
                                    label = T("Group Head"),
                                    default=False),
@@ -1551,7 +1554,8 @@ class S3PersonIdentityModel(S3Model):
 
         tablename = "pr_identity"
         table = self.define_table(tablename,
-                                  person_id(label = T("Person")),
+                                  person_id(label = T("Person"),
+                                            ondelete="CASCADE"),
                                   Field("type", "integer",
                                         requires = IS_IN_SET(pr_id_type_opts, zero=None),
                                         default = 1,
@@ -1636,6 +1640,7 @@ class S3SavedSearch(S3Model):
                                   Field("subscribed","boolean",
                                         default=False),
                                   person_id(label = T("Person"),
+                                            ondelete="CASCADE",
                                             default = auth.s3_logged_in_person()),
                                   *s3_timestamp())
 

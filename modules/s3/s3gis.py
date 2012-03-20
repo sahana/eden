@@ -3125,6 +3125,11 @@ class GIS(object):
     def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
         """
             Simplify a complex Polygon
+            - NB This uses Python, better performance will be gaiend by doing
+                 this direct from the database if you are using PostGIS:
+            ST_Simplify() is available as
+            db(query).select(table.the_geom.st_simplify(tolerance).st_astext().with_alias('wkt')).first().wkt
+            db(query).select(table.the_geom.st_simplify(tolerance).st_asgeojson().with_alias('geojson')).first().geojson
         """
 
         try:

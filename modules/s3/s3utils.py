@@ -722,7 +722,10 @@ def s3_role_represent(opt):
         multiple = True
     elif isinstance(opt, int):
         opts = [opt]
-        vals = str(set.get(opt)["role"])
+        try:
+            vals = str(set.get(opt)["role"])
+        except:
+            return current.messages.NONE
         multiple = False
     else:
         try:
