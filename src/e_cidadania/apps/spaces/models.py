@@ -49,7 +49,7 @@ class Space(models.Model):
     name = models.CharField(_('Name'), max_length=250, unique=True,
                             help_text=_('Max: 250 characters'))
     url = models.CharField(_('URL'), max_length=100, unique=True,
-                            help_text=_('Valid characters are lowercase, digits and underscores. This will be the \
+                            help_text=_('All lowercase. This will be the \
                                         accesible URL'))
     description = models.TextField(_('Description'),
                                     default=_('Write here your description.'))
