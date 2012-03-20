@@ -145,15 +145,16 @@ class S3PersonEntity(S3Model):
         add_component("pr_physical_description",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
-        add_component("dvi_identification",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("dvi_effects",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("dvi_checklist",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
+        if current.deployment_settings.has_module("dvi"):
+            add_component("dvi_identification",
+                          pr_pentity=dict(joinby=pe_id,
+                                          multiple=False))
+            add_component("dvi_effects",
+                          pr_pentity=dict(joinby=pe_id,
+                                          multiple=False))
+            add_component("dvi_checklist",
+                          pr_pentity=dict(joinby=pe_id,
+                                          multiple=False))
         # Map Configs
         #   - Personalised configurations
         #   - OU configurations (Organisation/Branch/Facility/Team)
