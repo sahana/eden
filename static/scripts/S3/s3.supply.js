@@ -33,7 +33,18 @@ $(document).ready(function() {
         if ($('#inv_quantity_ajax_throbber').length == 0 ) {
         	$('[name = "quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
         }
-        var url = S3.Ap.concat('/inv/inv_item_quantity/' + $('[name = "inv_item_id"]').val());
+        if ($('[name = "inv_item_id"]').length > 0) {
+            id = $('[name = "inv_item_id"]').val()
+        }
+        else if  ($('[name = "send_stock_id"]').length > 0) {
+            id = $('[name = "send_stock_id"]').val()
+        }
+        else if  ($('[name = "item_id"]').length > 0) {
+            id = $('[name = "item_id"]').val()
+        }
+        else
+            return
+        var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
         
 	    // Save JSON Request by element id
         S3.JSONRequest[$(this).attr('id')] = $.getJSON(url, function(data) {
@@ -57,7 +68,7 @@ $(document).ready(function() {
             $('[name = "quantity"]').after(TotalQuantity);
         });
     };
-    $('#inv_send_item_item_pack_id').change(InvItemPackIDChange);
+    $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
 /**
     // Item ID Field
     // Assets don't use Packs, so skip
