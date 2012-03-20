@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
@@ -49,8 +50,12 @@ class Space(models.Model):
     name = models.CharField(_('Name'), max_length=250, unique=True,
                             help_text=_('Max: 250 characters'))
     url = models.CharField(_('URL'), max_length=100, unique=True,
-                            help_text=_('All lowercase. This will be the \
-                                        accesible URL'))
+                            validators=[RegexValidator(
+                                        regex='^[a-z0-9_]+$',
+                                        message='Invalid characters in the space URL.'
+                                       )],
+                            help_text=_('Valid characters are lowercase, digits and \
+                                         underscore. This will be the accesible URL'))
     description = models.TextField(_('Description'),
                                     default=_('Write here your description.'))
     date = models.DateTimeField(_('Date of creation'), auto_now_add=True)
