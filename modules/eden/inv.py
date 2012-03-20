@@ -67,6 +67,9 @@ shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
 
+itn_label = T("Item Source Tracking Number")
+# Overwrite the label until we have a better way to do this
+itn_label = T("CTN")
 tn_label = T("Tracking Number")
 # =============================================================================
 class S3InventoryModel(S3Model):
@@ -147,10 +150,10 @@ class S3InventoryModel(S3Model):
                                         "string",
                                         length = 16,
                                         ),
-                                  Field("tracking_no",
+                                  Field("item_source_no",
                                         "string",
                                         length = 16,
-                                        label = tn_label,
+                                        label = itn_label,
                                         ),
                                   org_id(name = "supply_org_id",
                                          label = "Supplying Organisation"), # original donating org
@@ -251,6 +254,7 @@ $(document).ready(function() {
                                       (T("Total Value"), "total_value"),
                                       "currency"
                                       ],
+                       onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
                        report_filter = report_filter,
                        report_rows = ["item_id","currency"],
@@ -275,6 +279,32 @@ $(document).ready(function() {
                     inv_prep = self.inv_prep,
                 )
     # ---------------------------------------------------------------------
+
+    @staticmethod
+    def inv_inv_item_onvalidate(form):
+        """
+            When a inv item record is being created with a source number
+            then the source number needs to be unique within the organisation.
+        """
+        s3db = current.s3db
+        db = current.db
+        itable = s3db.inv_inv_item
+        stable = s3db.org_site
+
+        # If their is a tracking number check that it is unique within the org
+        if form.vars.item_source_no:
+            if form.record.item_source_no and form.record.item_source_no == form.vars.item_source_no:
+                # the tracking number hasn't changes so no validation needed
+                pass
+            else:
+                query = (itable.track_org_id == form.vars.track_org_id) & \
+                        (itable.item_source_no == form.vars.item_source_no)
+                record = db(query).select(limitby=(0, 1)).first()
+                if record:
+                    org_repr = current.response.s3.org_organisation_represent
+                    form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % (form.vars.item_source_no,
+                                                                                                    org_repr(record.track_org_id))
+
     @staticmethod
     def inv_prep(r):
         """
@@ -399,6 +429,11 @@ class S3TrackingModel(S3Model):
         #
         tablename = "inv_send"
         table = self.define_table("inv_send",
+                                  Field("tracking_no",
+                                        "string",
+                                        label = tn_label,
+                                        writable = False
+                                        ),
                                   person_id(name = "sender_id",
                                             label = T("Sent By"),
                                             default = auth.s3_logged_in_person(),
@@ -499,6 +534,7 @@ class S3TrackingModel(S3Model):
         send_item_url = URL(f="send", args=["[id]",
                                             "track_item"])
         self.configure(tablename,
+                       onaccept = self.inv_send_onaccept,
                        create_next = send_item_url,
                        update_next = send_item_url)
 
@@ -519,6 +555,11 @@ class S3TrackingModel(S3Model):
     
         tablename = "inv_recv"
         table = self.define_table("inv_recv",
+                                  Field("tracking_no",
+                                        "string",
+                                        label = tn_label,
+                                        writable = False
+                                        ),
                                   person_id(name = "sender_id",
                                             label = T("Sent By Person"),
                                             comment = self.pr_person_comment(child="sender_id"),
@@ -737,11 +778,10 @@ class S3TrackingModel(S3Model):
                                          ondelete = "NO ACTION",
                                          readable = False,
                                          writable = False),
-                                  Field("tracking_no",
+                                  Field("item_source_no",
                                         "string",
                                         length = 16,
-                                        required = True,
-                                        label = tn_label,
+                                        label = itn_label,
                                         ),
                                   Field("status",
                                         "integer",
@@ -872,6 +912,20 @@ $(document).ready(function() {
                         )
         else:
             return current.messages.NONE
+
+    @staticmethod
+    def inv_send_onaccept(form):
+        """
+           When a inv send record is created then create the tracking number.
+        """
+        s3db = current.s3db
+        db = current.db
+        stable = s3db.inv_send
+        oldTotal = 0
+        # If the tracking number is blank then set it up
+        if not form.record:
+            id = form.vars.id
+            db(stable.id == id).update(tracking_no = "TN-%07d" % (10000+id))
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1023,28 +1077,20 @@ $(document).ready(function() {
                                       limitby=(0, 1)).first()
 
             form.vars.track_org_id = record.organisation_id
-        # If their is a tracking number check that it is unique within the org
-        if form.vars.tracking_no:
-            if form.record.tracking_no and form.record.tracking_no == form.vars.tracking_no:
-                # the tracking number hasn't changes so no validation needed
-                pass
-            else:
-                org_repr = current.response.s3.org_organisation_represent
-                query = (ttable.track_org_id == form.vars.track_org_id) & \
-                        (ttable.tracking_no == form.vars.tracking_no)
-                record = db(query).select(limitby=(0, 1)).first()
-                if record:
-                    form.errors.tracking_no = T("The Tracking Number %s is already used by %s.") % (form.vars.tracking_no,
-                                                                                                    org_repr(record.track_org_id))
 
         # copy the data from the donated stock
         if form.vars.send_stock_id:
             query = (itable.id == form.vars.send_stock_id)
             record = db(query).select(limitby=(0, 1)).first()
             form.vars.item_id = record.item_id
+            form.vars.item_source_no = record.item_source_no
             form.vars.expiry_date = record.expiry_date
             form.vars.bin = record.bin
             form.vars.supply_org_id = record.supply_org_id
+            # If no pack value was entered then copy the value from the inv item
+            if not form.vars.pack_value:
+                # @todo: move this into the javascript ajax call on the item selected
+                form.vars.pack_value = record.pack_value
 
         # If their is a receiving bin select the right one
         if form.vars.recv_bin:
@@ -1053,6 +1099,7 @@ $(document).ready(function() {
                     form.vars.recv_bin = form.vars.recv_bin[1]
                 else:
                     form.vars.recv_bin = form.vars.recv_bin[0]
+
         return
 
     @staticmethod
@@ -1063,6 +1110,7 @@ $(document).ready(function() {
         """
         s3db = current.s3db
         db = current.db
+        tracktable = s3db.inv_track_item
         table = s3db.inv_inv_item
         oldTotal = 0
         # only modify the original stock total if we have a quantity on the form
@@ -1086,9 +1134,14 @@ $(document).ready(function() {
         db = current.db
         tracktable = s3db.inv_track_item
         stocktable = s3db.inv_inv_item
+        ritable = s3db.req_req_item
         record = tracktable[id]
         if record.status != 1:
             return False
+        # if this is linked to a request
+        # then remove these items from the quantity in transit
+        if record.req_item_id:
+            db(ritable.id == record.req_item_id).update(quantity_transit = ritable.quantity_transit - record.quantity)
         # Check that we have a link to a warehouse
         if record.send_stock_id:
             trackTotal = record.quantity
@@ -1135,7 +1188,7 @@ $(document).ready(function() {
                                          bin = record.recv_bin,
                                          supply_org_id = record.supply_org_id,
                                          quantity = record.recv_quantity,
-                                         tracking_no = record.tracking_no,
+                                         item_source_no = record.item_source_no,
                                         )
         db(tracktable.id == id).update(recv_stock_id = stock_id)
         # If the receive quantity doesn't equal the sent quantity
@@ -2008,45 +2061,64 @@ def inv_send_rheader(r):
 
             table = r.table
 
-            rheader = DIV( TABLE(
-                               TR( TH("%s: " % table.date.label),
-                                   table.date.represent(record.date),
-                                   TH("%s: " % table.delivery_date.label),
-                                   table.delivery_date.represent(record.delivery_date),
-                                  ),
-                               TR( TH("%s: " % table.site_id.label),
-                                   table.site_id.represent(record.site_id),
-                                   TH("%s: " % table.to_site_id.label),
-                                   table.to_site_id.represent(record.to_site_id),
-                                  ),
-                               TR( TH("%s: " % table.status.label),
-                                   table.status.represent(record.status),
-                                   TH("%s: " % table.comments.label),
-                                   TD(record.comments or "", _colspan=3)
-                                  )
-                                 ),
-                            rheader_tabs
-                            )
-
+            rData = TABLE(
+                           TR( TH("%s: " % table.date.label),
+                               table.date.represent(record.date),
+                               TH("%s: " % table.delivery_date.label),
+                               table.delivery_date.represent(record.delivery_date),
+                              ),
+                           TR( TH("%s: " % table.site_id.label),
+                               table.site_id.represent(record.site_id),
+                               TH("%s: " % table.to_site_id.label),
+                               table.to_site_id.represent(record.to_site_id),
+                              ),
+                           TR( TH("%s: " % table.status.label),
+                               table.status.represent(record.status),
+                               TH("%s: " % table.comments.label),
+                               TD(record.comments or "", _colspan=3)
+                              )
+                         )
+            rSubdata = TABLE ()
             rfooter = TAG[""]()
 
             if record.status == SHIP_STATUS_IN_PROCESS:
                 if auth.s3_has_permission("update",
                                           "inv_send",
                                           record_id=record.id):
-                    send_btn = A( T("Send Shipment"),
-                                  _href = URL(c = "inv",
-                                              f = "send_process",
-                                              args = [record.id]
-                                              ),
-                                  _id = "send_process",
-                                  _class = "action-btn"
-                                  )
 
-                    send_btn_confirm = SCRIPT("S3ConfirmClick('#send_process', '%s')"
-                                              % T("Do you want to send this shipment?") )
-                    rfooter.append(send_btn)
-                    rfooter.append(send_btn_confirm)
+                    tracktable = current.s3db.inv_track_item
+                    query = (tracktable.send_id == record.id) & \
+                            (tracktable.send_stock_id == None) & \
+                            (tracktable.deleted == False)
+                    row = current.db(query).select(tracktable.id,
+                                        limitby=(0, 1)).first()
+                    if row == None:
+                        send_btn = A( T("Send Shipment"),
+                                      _href = URL(c = "inv",
+                                                  f = "send_process",
+                                                  args = [record.id]
+                                                  ),
+                                      _id = "send_process",
+                                      _class = "action-btn"
+                                      )
+    
+                        send_btn_confirm = SCRIPT("S3ConfirmClick('#send_process', '%s')"
+                                                  % T("Do you want to send this shipment?") )
+                        rfooter.append(send_btn)
+                        rfooter.append(send_btn_confirm)
+                    ritable = current.s3db.req_req_item
+                    rcitable = current.s3db.req_commit_item
+                    query = (tracktable.send_id == record.id) & \
+                            (rcitable.req_item_id == tracktable.req_item_id) & \
+                            (tracktable.req_item_id == ritable.id) & \
+                            (tracktable.deleted == False)
+                    records = current.db(query).select()
+                    for record in records:
+                        rSubdata.append(TR( TH("%s: " % ritable.item_id.label),
+                                   ritable.item_id.represent(record.req_req_item.item_id),
+                                   TH("%s: " % rcitable.quantity.label),
+                                   record.req_commit_item.quantity,
+                                  ))
             else:
                 cn_btn = A( T("Waybill"),
                               _href = URL(f = "send",
@@ -2117,6 +2189,10 @@ def inv_send_rheader(r):
                             rfooter.append(cancel_btn_confirm)
 
             s3.rfooter = rfooter
+            rheader = DIV (rData,
+                           rheader_tabs,
+                           rSubdata
+                          )
             return rheader
     return None
 

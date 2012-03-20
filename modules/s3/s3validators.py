@@ -1627,7 +1627,17 @@ class QUANTITY_INV_ITEM(object):
     def __call__(self, value):
 
         db = current.db
-
+        s3db = current.s3db
+        args = current.request.args
+        track_quantity = 0
+        if args[1] == "track_item" and len(args) > 2:
+            # look to see if we already have a quantity stored in the track item
+            id = args[2]
+            track_record = s3db.inv_track_item[id]
+            track_quantity = track_record.quantity
+            if track_quantity >= float(value):
+                # value reduced or unchanged
+                return (value, None)
         error = "Invalid Quantity" # @todo: better error catching
         query = (db.inv_inv_item.id == self.inv_item_id) & \
                 (db.inv_inv_item.item_pack_id == db.supply_item_pack.id)
@@ -1637,7 +1647,7 @@ class QUANTITY_INV_ITEM(object):
                                            limitby = (0, 1)).first() # @todo: this should be a virtual field
         if inv_item_record and value:
             query = (db.supply_item_pack.id == self.item_pack_id)
-            send_quantity = float(value) * db(query).select(db.supply_item_pack.quantity,
+            send_quantity = (float(value) - track_quantity) * db(query).select(db.supply_item_pack.quantity,
                                                             limitby=(0, 1)).first().quantity
             inv_quantity = inv_item_record.inv_inv_item.quantity * \
                              inv_item_record.supply_item_pack.quantity
