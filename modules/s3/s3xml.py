@@ -711,29 +711,46 @@ class S3XML(S3Codec):
             elif "polygons" in current.request.get_vars:
                 # Display Polygons not Points
                 if WKTFIELD in fields:
-                    #if current.deployment_settings.get_gis_spatialdb():
-                    #   Do the Simplify & GeoJSON direct from the DB
-                    #else:
-                    WKT = db(ktable.id == r_id).select(ktable[WKTFIELD],
-                                                       limitby=(0, 1))
-                    if WKT:
-                        WKT = WKT.first()
-                        wkt = WKT[WKTFIELD]
-                        if wkt is None:
-                            continue
+                    query = (ktable.id == r_id)
+                    if current.deployment_settings.get_gis_spatialdb():
                         if current.auth.permission.format == "geojson":
-                            # Simplify the polygon to reduce download size
-                            geojson = gis.simplify(wkt, output="geojson")
-                            # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                            geometry = etree.SubElement(element, "geometry")
-                            geometry.set("value", geojson)
+                            # Do the Simplify & GeoJSON direct from the DB
+                            geojson = db(query).select(ktable.the_geom.st_simplify(0.001).st_asgeojson().with_alias('geojson'),
+                                                       limitby=(0, 1)).first().geojson
+                            if geojson:
+                                # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                                geometry = etree.SubElement(element, "geometry")
+                                geometry.set("value", geojson)
+                                WKT = True
                         else:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(wkt)
-                            # Convert the WKT in XSLT
-                            attr[ATTRIBUTE.wkt] = wkt
+                            # Do the Simplify direct from the DB
+                            wkt = db(query).select(ktable.the_geom.st_simplify(0.001).st_astext().with_alias('wkt'),
+                                                   limitby=(0, 1)).first().wkt
+                            if wkt:
+                                # Convert the WKT in XSLT
+                                attr[ATTRIBUTE.wkt] = wkt
+                                WKT = True
+                    else:
+                        WKT = db(query).select(ktable[WKTFIELD],
+                                               limitby=(0, 1))
+                        if WKT:
+                            WKT = WKT.first()
+                            wkt = WKT[WKTFIELD]
+                            if wkt is None:
+                                continue
+                            if current.auth.permission.format == "geojson":
+                                # Simplify the polygon to reduce download size
+                                geojson = gis.simplify(wkt, output="geojson")
+                                # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                                geometry = etree.SubElement(element, "geometry")
+                                geometry.set("value", geojson)
+                            else:
+                                # Simplify the polygon to reduce download size
+                                # & also to work around the recursion limit in libxslt
+                                # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                                wkt = gis.simplify(wkt)
+                                # Convert the WKT in XSLT
+                                attr[ATTRIBUTE.wkt] = wkt
 
             if not LatLon and not WKT:
                 # Normal Location lookup
@@ -1684,7 +1701,7 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def tree2json(cls, tree, pretty_print=False):
+    def tree2json(cls, tree, pretty_print=False, native=False):
         """
             Converts an element tree into JSON
 
@@ -1697,7 +1714,7 @@ class S3XML(S3Codec):
         else:
             root = tree
 
-        if root.tag == cls.TAG.root:
+        if native or root.tag == cls.TAG.root:
             native = True
         else:
             native = False

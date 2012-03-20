@@ -411,8 +411,6 @@ def task():
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
         s3mgr.configure(tablename,
-                        # Block Add until we get the injectable component lookups
-                        insertable=False,
                         report_filter=[
                             s3base.S3SearchOptionsWidget(field=["project"],
                                                          name="project",
@@ -427,6 +425,10 @@ def task():
     # Pre-process
     def prep(r):
         if r.interactive:
+            if r.record:
+                # Put the Comments in the RFooter
+                ckeditor()
+                response.s3.rfooter = LOAD("project", "comments.load", args=["task", r.id], ajax=True)
             if r.component:
                 if r.component_name == "req":
                     if deployment_settings.has_module("hrm"):
@@ -436,7 +438,24 @@ def task():
                         s3db.req_create_form_mods()
                 elif r.component_name == "human_resource":
                     r.component.table.type.default = 2
-
+            else:
+                if not auth.s3_has_role("STAFF"):
+                    # Hide fields to avoid confusion (both of inputters & recipients)
+                    table = r.table
+                    field = table.source
+                    field.readable = field.writable = False
+                    field = table.pe_id
+                    field.readable = field.writable = False
+                    field = table.date_due
+                    field.readable = field.writable = False
+                    field = table.milestone_id
+                    field.readable = field.writable = False
+                    field = table.time_estimated
+                    field.readable = field.writable = False
+                    field = table.time_actual
+                    field.readable = field.writable = False
+                    field = table.status
+                    field.readable = field.writable = False
         return True
     response.s3.prep = prep
 
@@ -447,10 +466,108 @@ def task():
                 update_url = URL(args=["[id]"], vars=request.get_vars)
                 s3mgr.crud.action_buttons(r,
                                           update_url=update_url)
+                if not r.component and \
+                   r.method != "search" and \
+                   "form" in output:
+                    # Insert fields to control the Project & Activity
+                    sep = ": "
+                    if auth.s3_has_role("STAFF"):
+                        # Activity not easy for non-Staff to know about, so don't add
+                        table = s3db.project_task_activity
+                        field = table.activity_id
+                        if r.record:
+                            query = (table.task_id == r.record.id)
+                            default = db(query).select(table.activity_id,
+                                                       limitby=(0, 1)).first()
+                            if default:
+                                default = default.activity_id
+                        else:
+                            default = field.default
+                        widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                        field_id = '%s_%s' % (table._tablename, field.name)
+                        label = field.label
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                        activity = s3.crud.formstyle(row_id, label, widget, field.comment)
+                        try:
+                            output["form"][0].insert(0, activity[1])
+                        except:
+                            # A non-standard formstyle with just a single row
+                            pass
+                        try:
+                            output["form"][0].insert(0, activity[0])
+                        except:
+                            pass
+                        s3.scripts.append("%s/s3.project.js" % s3_script_dir)
+                    if "project" in request.get_vars:
+                        widget = INPUT(value=request.get_vars.project, _name="project_id")
+                        project = s3.crud.formstyle("project_task_project__row", "", widget, "")
+                    else:
+                        table = s3db.project_task_project
+                        field = table.project_id
+                        if r.record:
+                            query = (table.task_id == r.record.id)
+                            default = db(query).select(table.project_id,
+                                                       limitby=(0, 1)).first()
+                            if default:
+                                default = default.project_id
+                        else:
+                            default = field.default
+                        widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                        field_id = '%s_%s' % (table._tablename, field.name)
+                        label = field.label
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        comment = field.comment if auth.s3_has_role("STAFF") else ""
+                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                        project = s3.crud.formstyle(row_id, label, widget, comment)
+                    try:
+                        output["form"][0].insert(0, project[1])
+                    except:
+                        # A non-standard formstyle with just a single row
+                        pass
+                    try:
+                        output["form"][0].insert(0, project[0])
+                    except:
+                        pass
+                    
         return output
     response.s3.postp = postp
 
     return s3_rest_controller(rheader=s3db.project_rheader)
+
+# =============================================================================
+def task_project():
+    """ RESTful CRUD controller """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    response.s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+def task_activity():
+    """ RESTful CRUD controller """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    response.s3.prep = prep
+
+    return s3_rest_controller()
 
 # =============================================================================
 def milestone():
@@ -492,18 +609,8 @@ def time():
 # =============================================================================
 # Comments
 # =============================================================================
-def discuss(r, **attr):
-    """ Custom Method to manage the discussion of a Task """
-
-    #if r.component:
-    #    resourcename = "activity"
-    #    id = r.component_id
-    #else:
-    resourcename = "task"
-    id = r.id
-
-    # Add the RHeader to maintain consistency with the other pages
-    rheader = s3db.project_rheader(r)
+def ckeditor():
+    """ Load the Project Comments JS """
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
     response.s3.scripts.append(ckeditor)
@@ -530,6 +637,22 @@ function comment_reply(id) {
 }"""))
 
     response.s3.js_global.append(js)
+
+def discuss(r, **attr):
+    """ Custom Method to manage the discussion of a Task """
+
+    #if r.component:
+    #    resourcename = "activity"
+    #    id = r.component_id
+    #else:
+    resourcename = "task"
+    id = r.id
+
+    # Add the RHeader to maintain consistency with the other pages
+    rheader = s3db.project_rheader(r)
+
+    # Load the Project Comments JS
+    ckeditor()
 
     response.view = "project/discuss.html"
     return dict(rheader=rheader,

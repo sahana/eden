@@ -107,7 +107,7 @@ class S3LocationModel(S3Model):
         if current.deployment_settings.get_gis_spatialdb():
             # Add a spatial field
             # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
-            meta_spatial_fields = (meta_fields() + (Field("the_geom", "geometry:geometry()"),))
+            meta_spatial_fields = (meta_fields() + (Field("the_geom", "geometry()"),))
         else:
             meta_spatial_fields = meta_fields()
 
