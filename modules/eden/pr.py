@@ -146,14 +146,14 @@ class S3PersonEntity(S3Model):
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
         add_component("dvi_identification",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
+                        pr_pentity=dict(joinby=pe_id,
+                                        multiple=False))
         add_component("dvi_effects",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
+                        pr_pentity=dict(joinby=pe_id,
+                                        multiple=False))
         add_component("dvi_checklist",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
+                        pr_pentity=dict(joinby=pe_id,
+                                        multiple=False))
         # Map Configs
         #   - Personalised configurations
         #   - OU configurations (Organisation/Branch/Facility/Team)

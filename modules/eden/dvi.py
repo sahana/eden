@@ -41,7 +41,6 @@ class S3DVIModel(S3Model):
     names = ["dvi_recreq",
              "dvi_body",
              "dvi_morgue",
-             "dvi_body",
              "dvi_checklist",
              "dvi_effects",
              "dvi_identification"]

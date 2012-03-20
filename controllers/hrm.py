@@ -773,7 +773,8 @@ def group():
     tablename = "pr_group"
     table = s3db[tablename]
 
-    table.group_type.label = T("Team Type")
+    _group_type = table.group_type
+    _group_type.label = T("Team Type")
     table.description.label = T("Team Description")
     table.name.label = T("Team Name")
     mtable = s3db.pr_group_membership
@@ -781,9 +782,13 @@ def group():
     mtable.group_head.label = T("Team Leader")
 
     # Set Defaults
-    _group_type = table.group_type
     _group_type.default = 3  # 'Relief Team'
     _group_type.readable = _group_type.writable = False
+
+    # Only show Relief Teams
+    # Do not show system groups
+    response.s3.filter = (table.system == False) & \
+                         (_group_type == 3)
 
     # CRUD Strings
     ADD_TEAM = T("Add Team")
@@ -820,8 +825,6 @@ def group():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
-    response.s3.filter = (table.system == False) # do not show system groups
-
     s3mgr.configure(tablename, main="name", extra="description",
                     # Redirect to member list when a new group has been created
                     create_next = URL(f="group",
@@ -837,7 +840,8 @@ def group():
 
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=False)
+                update_url = URL(args=["[id]", "group_membership"])
+                s3_action_buttons(r, deletable=False, update_url=update_url)
                 if "msg" in deployment_settings.modules:
                     response.s3.actions.append({
                         "url": URL(f="compose",
@@ -853,10 +857,11 @@ def group():
             # Team should be contacted either via the Leader or
             # simply by sending a message to the group as a whole.
             #(T("Contact Data"), "contact"),
-            (T("Members"), "group_membership")]
+            (T("Members"), "group_membership")
+            ]
 
     output = s3_rest_controller("pr", resourcename,
-                                rheader=lambda r: s3db.pr_rheader(r, tabs = tabs))
+                                rheader=lambda r: s3db.pr_rheader(r, tabs=tabs))
 
     return output
 
