@@ -62,8 +62,10 @@ class Space(models.Model):
     author = models.ForeignKey(User, blank=True, null=True,
                                 verbose_name=_('Space creator'))
 
-    logo = StdImageField(upload_to='spaces/logos', size=(100, 75, False))
-    banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False))
+    logo = StdImageField(upload_to='spaces/logos', size=(100, 75, False), 
+                         help_text = _('Valid extensions are jpg, jpeg, png and gif'))
+    banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False),
+                           help_text = _('Valid extensions are jpg, jpeg, png and gif'))
 #    logo = models.ImageField(upload_to='spaces/logos',
 #                             verbose_name=_('Logotype'),
 #                             help_text=_('100x75 pixels'))
