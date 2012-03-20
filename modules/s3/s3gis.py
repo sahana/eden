@@ -3130,6 +3130,9 @@ class GIS(object):
             ST_Simplify() is available as
             db(query).select(table.the_geom.st_simplify(tolerance).st_astext().with_alias('wkt')).first().wkt
             db(query).select(table.the_geom.st_simplify(tolerance).st_asgeojson().with_alias('geojson')).first().geojson
+
+            @ToDo: Reduce the number of decimal points to 4
+                   - requires patching modules/geojson?
         """
 
         try:
@@ -3145,7 +3148,8 @@ class GIS(object):
             output = simplified.to_wkt()
         elif output == "geojson":
             from ..geojson import dumps
-            output = dumps(simplified)
+            # Compact Encoding
+            output = dumps(simplified, separators=(",", ":"))
 
         return output
 
