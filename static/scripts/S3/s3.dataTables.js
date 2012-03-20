@@ -188,7 +188,7 @@ $(document).ready(function() {
     }
 
     if (S3.dataTables.Selectable) {
-        var selected = [];
+        var selected = jQuery.parseJSON($('#importSelected').val())
         var selectionMode = 'Inclusive';
         if (S3.dataTables.SelectAll) {
         	var selectionMode = 'Exclusive';

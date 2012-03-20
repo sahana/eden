@@ -255,6 +255,20 @@ class S3OrganisationModel(S3Model):
                                                                   zero = SELECT_LOCATION)),
                                    represent = lambda code: \
                                         gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                             Field("logo_bmp",
+                                   "upload",
+                                   label = T("Logo (bitmap)"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Logo"),
+                                                                   T("Logo of the organization. This should be a bmp file and it should be no larger than 200x200")))
+                                  ),
+                             Field("logo_png",
+                                   "upload",
+                                   label = T("Logo (png)"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Logo"),
+                                                                   T("Logo of the organization. This should be a png file and it should be no larger than 200x200")))
+                                  ),
                              Field("website", label = T("Website"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = s3_url_represent),

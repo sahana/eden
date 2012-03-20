@@ -1,1 +1,1 @@
-Warehouse,Category,Item description,Catalog,Tracking number (CTN),Remark,Outbound,UM,UM Value,Currency,Price,Stock
+"Warehouse","Category","Category Code","Catalog","Item Name","Item Code","Brand","Unit of Measure","Model","Year","Weight","Length","Width","Height","Volume","Quantity","Expiry Date","Unit","Unit Value","Currency","Supplier/Donor","Organisation/Department","Tracking Number ","Bin","Comments"
