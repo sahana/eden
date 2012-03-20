@@ -5,20 +5,23 @@
 {% block robots %}noindex,nofollow{% endblock %}
 
 {% block extrajs %}
-<script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.imgareaselect-0.4.2.min.js"></script>
+<!--<script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.imgareaselect-0.4.2.min.js"></script>-->
+<!------Adding new image select js and css files ---------->
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/imgareaselect-default.css" />
+<script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.min.js"></script>
+<script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.imgareaselect.pack.js"></script>
 <script type="text/javascript">
-	$(function() {
-		function updateValues(img, selection) {
-			$("input[name='left']").val(selection.x1);
-			$("input[name='top']").val(selection.y1);
-			$("input[name='right']").val(selection.x2);
-			$("input[name='bottom']").val(selection.y2);
-		}
-		$(window).load(function() {
-			$("#cropimage").imgAreaSelect({ aspectRatio: "1:1", onSelectEnd: updateValues });
-		});
-	});
-</script>
+    $(document).ready(function () {
+      $('#cropimage').imgAreaSelect({
+      onSelectEnd: function (img, selection) {
+       $('input[name="left"]').val(selection.x1);
+       $('input[name="top"]').val(selection.y1);
+       $('input[name="right"]').val(selection.x2);
+       $('input[name="bottom"]').val(selection.y2);            
+         }
+       });
+     });
+ </script>  
 {% endblock %}
 
 {% block nav-main %}
@@ -27,6 +30,7 @@
 
 {% block content %}
 	<form action="{{ request.path_info }}" method="post" accept-charset="utf-8">
+        {% csrf_token %}
 	<fieldset>
 		<legend>{% trans "Crop &amp; resize the area you want" %}</legend>
 
