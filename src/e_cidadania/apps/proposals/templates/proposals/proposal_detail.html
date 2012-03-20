@@ -21,15 +21,25 @@
             var request = $.ajax({
                 type: "POST",
                 url: "../add_support_vote/",
-                data: { propid: proposal }
+                data: { propid: proposal },
+               success: function(data)
+               {
+
+               var cur_votes = $("div.span1 p");
+               cur_votes.text(cur_votes.text()*1+1);
+               $("div.span1 button").attr('disabled', 'disabled');
+
+               }
+
             });
 
-            request.done(function(msg) {
+          /*  request.done(function(msg) {
                 var cur_votes = parseInt($(".span1 p").html());
-                var votes = cur_votes + 1;
+                alert("here");
+             //   var votes = cur_votes + 1;
                 $(".span1 p").html(votes);
                 $(".span1 button").attr('disabled', 'disabled');
-            });
+            });*/
 
             request.fail(function(jqXHR, textStatus) {
                 $("#jsnotify").notify("create", {
