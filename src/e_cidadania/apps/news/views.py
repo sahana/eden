@@ -103,7 +103,7 @@ class EditPost(UpdateView):
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return '/spaces/' + self.space.name
+        return '/spaces/' + self.space.url
 
     def get_object(self):
         cur_post = get_object_or_404(Post, pk=self.kwargs['post_id'])
