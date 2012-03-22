@@ -487,7 +487,8 @@ def send_process():
         session.error = T("This shipment has already been sent.")
 
     # Get the track items that are part of this shipment
-    query = ( tracktable.send_id == send_id )
+    query = ( tracktable.send_id == send_id ) & \
+            (tracktable.deleted == False)
     track_items = db(query).select()
     if not track_items:
         session.error = T("No items have been selected for shipping.")
@@ -918,7 +919,8 @@ def recv_cancel():
 
     # Go through each item in the shipment remove them from the site store 
     # and put them back in the track item record
-    query = (tracktable.recv_id == recv_id)
+    query = (tracktable.recv_id == recv_id) & \
+            (tracktable.deleted == False)
     recv_items = db(query).select()
     send_id = None
     for recv_item in recv_items:
@@ -1076,7 +1078,8 @@ def adj_close():
                      args = [adj_id]))
 
     # Go through all the adj_items
-    query = ( aitable.adj_id == adj_id )
+    query = ( aitable.adj_id == adj_id ) & \
+            (aitable.deleted == False)
     adj_items = db(query).select()
     for adj_item in adj_items:
         # if we don't have a stock item then create it

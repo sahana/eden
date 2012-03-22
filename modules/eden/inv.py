@@ -110,6 +110,8 @@ class S3InventoryModel(S3Model):
         # Inventory Item
         #
         tablename = "inv_inv_item"
+        # ondelete references have been set to RESTRICT because the stock items
+        # should never be automatically deleted
         table = self.define_table(tablename,
                                   self.super_link("site_id",
                                                   "org_site",
@@ -118,6 +120,7 @@ class S3InventoryModel(S3Model):
                                                   readable = True,
                                                   writable = True,
                                                   empty = False,
+                                                  ondelete = "RESTRICT",
                                                   # Comment these to use a Dropdown & not an Autocomplete
                                                   #widget = S3SiteAutocompleteWidget(),
                                                   #comment = DIV(_class="tooltip",
@@ -125,8 +128,8 @@ class S3InventoryModel(S3Model):
                                                   #                                T("Enter some characters to bring up a list of possible matches"))),
                                                   represent=org_site_represent),
                                   item_id,
-                                  supply_item_id(),
-                                  item_pack_id(),
+                                  supply_item_id(ondelete = "RESTRICT"),
+                                  item_pack_id(ondelete = "RESTRICT"),
                                   Field("quantity",
                                         "double",
                                         label = T("Quantity"),
@@ -156,7 +159,8 @@ class S3InventoryModel(S3Model):
                                         label = itn_label,
                                         ),
                                   org_id(name = "supply_org_id",
-                                         label = "Supplying Organisation"), # original donating org
+                                         label = "Supplying Organisation",
+                                         ondelete = "SET NULL"), # original donating org
                                   # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                                   #Field("status"),
                                   s3.comments(),
@@ -440,6 +444,7 @@ class S3TrackingModel(S3Model):
                                   person_id(name = "sender_id",
                                             label = T("Sent By"),
                                             default = auth.s3_logged_in_person(),
+                                            ondelete = "SET NULL",
                                             comment = self.pr_person_comment(child="sender_id")),
                                   self.super_link("site_id",
                                                   "org_site",
@@ -447,7 +452,8 @@ class S3TrackingModel(S3Model):
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                                   readable = True,
                                                   writable = True,
-                                                  represent=org_site_represent
+                                                  represent=org_site_represent,
+                                                  ondelete = "SET NULL"
                                                   ),
                                   Field("date",
                                         "date",
@@ -459,6 +465,7 @@ class S3TrackingModel(S3Model):
                                         ),
                                   person_id(name = "recipient_id",
                                             label = T("To Person"),
+                                            ondelete = "SET NULL",
                                             comment = self.pr_person_comment(child="recipient_id")),
                                   Field("delivery_date",
                                         "date",
@@ -475,6 +482,7 @@ class S3TrackingModel(S3Model):
                                                              lambda id: org_site_represent(id, link = False),
                                                              sort=True,
                                                              ),
+                                        ondelete = "SET NULL",
                                         represent =  org_site_represent
                                        ),
                                   Field("status",
@@ -585,16 +593,13 @@ class S3TrackingModel(S3Model):
                                         ),
                                   person_id(name = "sender_id",
                                             label = T("Sent By Person"),
+                                            ondelete = "SET NULL",
                                             comment = self.pr_person_comment(child="sender_id"),
                                             ),
                                   Field("from_site_id",
                                         "reference org_site",
                                         label = T("From Facility"),
-#                                        requires = IS_ONE_OF(db,
-#                                                             "org_site.site_id",
-#                                                             lambda id: org_site_represent(id, link = False),
-#                                                             sort=True,
-#                                                            ),
+                                        ondelete = "SET NULL",
                                         represent = org_site_represent
                                         ),
                                   Field("eta", "date",
@@ -606,17 +611,18 @@ class S3TrackingModel(S3Model):
                                         ),
                                   person_id(name = "recipient_id",
                                             label = T("Received By"),
+                                            ondelete = "SET NULL",
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="recipient_id")),
                                   Field("site_id",
                                         "reference org_site",
-#                                  self.super_link("site_id", "org_site",
-                                                  label=T("By Facility"),
-                                                  default = auth.user.site_id if auth.is_logged_in() else None,
-                                                  readable = True,
-                                                  writable = True,
-                                                  widget = S3SiteAutocompleteWidget(),
-                                                  represent=org_site_represent),
+                                         label=T("By Facility"),
+                                         ondelete = "SET NULL",
+                                         default = auth.user.site_id if auth.is_logged_in() else None,
+                                         readable = True,
+                                         writable = True,
+                                         widget = S3SiteAutocompleteWidget(),
+                                         represent=org_site_represent),
                                   Field("date", "date",
                                         label = T("Date Received"),
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
@@ -798,7 +804,7 @@ class S3TrackingModel(S3Model):
         table = self.define_table("inv_track_item",
                                   org_id(name = "track_org_id",
                                          label = T("Shipping Organization"),
-                                         ondelete = "NO ACTION",
+                                         ondelete = "SET NULL",
                                          readable = False,
                                          writable = False),
                                   Field("item_source_no",
@@ -814,7 +820,7 @@ class S3TrackingModel(S3Model):
                                         represent = lambda opt: tracking_status[opt],
                                         writable = False),
                                   inv_item_id(name="send_stock_id",
-                                              ondelete = "NO ACTION",
+                                              ondelete = "RESTRICT",
                                               script = SCRIPT("""
 $(document).ready(function() {
     S3FilterFieldChange({
@@ -829,8 +835,8 @@ $(document).ready(function() {
     });
 });""") # need to redefine the script because of the change in the field name :/
                                 ),  # original inventory
-                                  item_id(ondelete = "NO ACTION"),      # supply item
-                                  item_pack_id(ondelete = "NO ACTION"), # pack table
+                                  item_id(ondelete = "RESTRICT"),      # supply item
+                                  item_pack_id(ondelete = "SET NULL"), # pack table
                                   Field("quantity",
                                         "double",
                                         label = T("Quantity Sent"),
@@ -862,7 +868,7 @@ $(document).ready(function() {
                                               required = False,
                                               readable = False,
                                               writable = False,
-                                              ondelete = "NO ACTION"),  # received inventory
+                                              ondelete = "RESTRICT"),  # received inventory
                                   Field("recv_bin",                # The bin at destination 
                                         "string",
                                         length = 16,
@@ -871,8 +877,9 @@ $(document).ready(function() {
                                         widget = S3InvBinWidget("inv_track_item")
                                         ),
                                   org_id(name = "supply_org_id",
-                                         label = "Supplying Organisation"), # original donating org
-                                  adj_item_id(), # any adjustment record
+                                         label = "Supplying Organisation",
+                                         ondelete = "SET NULL"), # original donating org
+                                  adj_item_id(ondelete = "RESTRICT"), # any adjustment record
                                   s3.comments(),
                                   req_item_id(readable = False,
                                               writable = False),
@@ -1159,6 +1166,8 @@ $(document).ready(function() {
         db = current.db
         tracktable = s3db.inv_track_item
         table = s3db.inv_inv_item
+        stable = s3db.inv_send
+        rtable = s3db.inv_recv
         oldTotal = 0
         # only modify the original stock total if we have a quantity on the form
         # Their'll not be one if it is being received since by then it is read only
@@ -1169,6 +1178,8 @@ $(document).ready(function() {
                     db(table.id == form.record.send_stock_id).update(quantity = table.quantity + oldTotal)
             newTotal = form.vars.quantity
             db(table.id == form.vars.send_stock_id).update(quantity = table.quantity - newTotal)
+        if form.vars.send_id and form.vars.recv_id:
+            db(rtable.id == form.vars.recv_id).update(tracking_no = stable[form.vars.send_id].tracking_no)
 
     @staticmethod
     def inv_track_item_deleting(id):
@@ -2016,7 +2027,7 @@ def inv_warehouse_rheader(r):
     if tablename == "org_organisation" or tablename == "org_office":
         rheader = s3.org_rheader(r)
     rfooter = TAG[""]()
-    if "id" in record:
+    if record and "id" in record:
         as_btn = A( T("Adjust Stock"),
                       _href = URL(c = "inv",
                                   f = "adj",
@@ -2408,11 +2419,13 @@ class S3AdjustModel(S3Model):
         table = self.define_table("inv_adj",
                                   person_id(name = "adjuster_id",
                                             label = T("Actioning officer"),
+                                            ondelete = "RESTRICT",
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="adjuster_id")),
 
                                   self.super_link("site_id",
                                                   "org_site",
+                                                  ondelete = "SET_NULL",
                                                   label = T("Warehouse"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                                   readable = True,
@@ -2458,7 +2471,7 @@ class S3AdjustModel(S3Model):
                                                                   self.inv_adj_represent,
                                                                   orderby="inv_adj.adjustment_date",
                                                                   sort=True)),
-                                   represent = self.inv_adj_represent,
+                                  represent = self.inv_adj_represent,
                                   label = T("Inventory Adjustment"),
                                   ondelete = "RESTRICT")
 
@@ -2473,7 +2486,7 @@ class S3AdjustModel(S3Model):
         # @todo add the optional adj_id
         tablename = "inv_adj_item"
         table = self.define_table("inv_adj_item",
-                                  item_id(ondelete = "NO ACTION"),      # supply item
+                                  item_id(ondelete = "RESTRICT"),      # supply item
                                   Field("reason",
                                         "integer",
                                         required = True,
@@ -2481,9 +2494,9 @@ class S3AdjustModel(S3Model):
                                         default = 1,
                                         represent = lambda opt: adjust_reason[opt],
                                         writable = False),
-                                  inv_item_id(ondelete = "NO ACTION",
+                                  inv_item_id(ondelete = "RESTRICT",
                                         writable = False),  # original inventory
-                                  item_pack_id(ondelete = "NO ACTION"), # pack table
+                                  item_pack_id(ondelete = "SET NULL"), # pack table
                                   Field("old_quantity",
                                         "double",
                                         label = T("Original Quantity"),
@@ -2562,7 +2575,8 @@ class S3AdjustModel(S3Model):
             site_id = form.vars.site_id
             # Only get stock items with a positive quantity
             query = (stocktable.site_id == site_id) & \
-                    (stocktable.quantity > 0)
+                    (stocktable.quantity > 0) & \
+                    (stocktable.deleted == False)
             inv_item_row = db(query).select()
             for inv_item in inv_item_row:
                 # add an adjustment item record

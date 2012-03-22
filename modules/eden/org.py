@@ -257,6 +257,8 @@ class S3OrganisationModel(S3Model):
                                         gis.get_country(code, key_type="code") or UNKNOWN_OPT),
                              Field("logo_bmp",
                                    "upload",
+                                   requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(200, 200),
+                                                                   error_message=T("Upload an image file (bmp), max. 200x200 pixels!"))),
                                    label = T("Logo (bitmap)"),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Logo"),
@@ -264,6 +266,8 @@ class S3OrganisationModel(S3Model):
                                   ),
                              Field("logo_png",
                                    "upload",
+                                   requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(200, 200),
+                                                                   error_message=T("Upload an image file (png), max. 200x200 pixels!"))),
                                    label = T("Logo (png)"),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Logo"),
@@ -1423,14 +1427,29 @@ def org_rheader(r, tabs=[]):
         else:
             website = ""
 
-        rheader = DIV(TABLE(
-            TR(
-                TH("%s: " % table.name.label),
-                record.name,
-                ),
-            website,
-            sectors,
-        ), rheader_tabs)
+        rheader = DIV()
+        logo = None
+        if record.logo_png:
+            logo = IMG(_src=URL(c="default",
+                                f="download",
+                                args=record.logo_png
+                                ),
+                       _alt="%s logo" % table.acronym,
+                       _height = "60px",
+                      )
+        rData = TABLE(
+                        TR(
+                            TH("%s: " % table.name.label),
+                            record.name,
+                          ),
+                        website,
+                        sectors,
+                        )
+        if logo:
+            rheader.append(TABLE(TR(TD(logo),TD(rData))))
+        else:
+            rheader.append(rData)
+        rheader.append(rheader_tabs)
 
     elif tablename == "org_office":
         s3 = current.response.s3
@@ -1452,7 +1471,8 @@ def org_rheader(r, tabs=[]):
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        rheader = DIV(TABLE(
+        rheader = DIV()
+        rheader.append(TABLE(
                       TR(
                          TH("%s: " % table.name.label),
                          record.name,
@@ -1477,7 +1497,8 @@ def org_rheader(r, tabs=[]):
                       #                  vars={"_next": _next})))
                       #   )
                           ),
-                      rheader_tabs)
+                      )
+        rheader.append(rheader_tabs)
 
         #if r.component and r.component.name == "req":
             # Inject the helptext script

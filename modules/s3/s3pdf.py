@@ -412,6 +412,8 @@ class S3PDF(S3Method):
                 # Add details to the document
                 if componentname == None:
                     # Document that only has a resource list
+                    if "rheader" in attr and attr["rheader"]:
+                        self.extractrHeader(attr["rheader"])
                     self.addTable(self.resource,
                                   list_fields=list_fields,
                                   report_groupby=report_groupby,
@@ -2587,6 +2589,28 @@ class S3PDF(S3Method):
             self.content += result
 
 
+    def extractrHeader(self,
+                       rHeader
+                      ):
+        """
+            Method to convert the HTML generated for a rHeader into PDF
+        """
+        # let's assume that it's a callable rHeader
+        try:
+            # switch the representation to html so the rHeader doesn't barf
+            repr = self.r.representation
+            self.r.representation = "html"
+            html = rHeader(self.r)
+            self.r.representation = repr
+        except:
+            # okay so maybe it wasn't ... it could be an HTML object
+            html = rHeader
+        parser = S3html2pdf(exclude_class_list=["tabs"])
+        result = parser.parse(html)
+        if result != None:
+            self.content += result
+
+
     def addrHeader(self,
                    resource = None,
                    raw_data = None,
@@ -3564,6 +3588,161 @@ class S3PDFRHeader():
         content.append(table)
         return content
 # end of class S3PDFRHeader
+
+class S3html2pdf():
+        
+    def __init__(self,
+                 exclude_class_list = []):
+        """
+            Method that takes html in the web2py helper objects
+            and converts it to pdf 
+        """
+        self.exclude_class_list = exclude_class_list
+        self.fontsize = 12
+
+    def parse(self, html):
+        result = self.select_tag(html)
+        return result
+
+    def select_tag(self, html):
+        if self.exclude_tag(html):
+            return None
+        if isinstance(html,TABLE):
+            return self.parse_table(html)
+        elif isinstance(html,A):
+            return self.parse_a(html)
+        elif isinstance(html,P):
+            return self.parse_p(html)
+        elif isinstance(html,IMG):
+            return self.parse_img(html)
+        elif isinstance(html,DIV):
+            return self.parse_div(html)
+        elif (isinstance(html,str) or current.T(html) == html):
+            return html
+        return None
+
+    def exclude_tag(self, html):
+        try:
+            if html.attributes["_class"] in self.exclude_class_list:
+                return True
+        except:
+            pass
+        return False
+
+    def parse_div (self,
+                   html
+                  ):
+        content = []
+        for component in html.components:
+            result = self.select_tag(component)
+            if result != None:
+                content += result
+        if content == []:
+            return None
+        return content
+
+    def parse_a (self,
+                 html
+                ):
+        content = ""
+        for component in html.components:
+            result = self.select_tag(component)
+            if result != None:
+                content += result
+        if content == "":
+            return None
+        return content
+
+    def parse_img (self,
+                   html
+                  ):
+        I = None
+        from reportlab.platypus import Image
+        if "_src" in html.attributes:
+            src = html.attributes["_src"]
+            if os.path.exists(src):
+                I = Image(src)
+            else:
+                src = src.rsplit("/",1)
+                src = os.path.join(current.request.folder,"uploads/", src[1])
+                if os.path.exists(src):
+                    I = Image(src)
+        if not I:
+            return None
+
+        iwidth = I.drawWidth
+        iheight = I.drawHeight
+        # @todo: extract the number from a 60px value
+#        if "_height" in html.attributes:
+#            height = int(html.attributes["_height"]) * inch / 80.0
+#            width = iwidth * (height/iheight)
+#        elif "_width" in html.attributes:
+#            width = int(html.attributes["_width"]) * inch / 80.0
+#            height = iheight * (width/iwidth)
+#        else:
+#            height = 1.0 * inch
+#            width = iwidth * (height/iheight)
+        height = 1.0 * inch
+        width = iwidth * (height/iheight)
+        I.drawHeight = height
+        I.drawWidth = width
+        return [I]
+
+
+    def parse_p (self,
+                 html
+                ):
+        content = ""
+        for component in html.components:
+            result = self.select_tag(component)
+            if result != None:
+                content += result
+        if content == "":
+            return None
+        return content
+
+    def parse_table (self,
+                     html
+                    ):
+        content = []
+        for component in html.components:
+            if self.exclude_tag(component):
+                continue
+            if isinstance(component,TR):
+                result = self.parse_tr(component)
+            if result != None:
+                content.append(result)
+        if content == []:
+            return None
+        style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
+                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                 ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+                 ("FONTNAME", (1, 0), (1, -1), "Helvetica"),
+                ]
+        table = Table(content,
+                      repeatRows=1,
+#                      style=style,
+                      hAlign="LEFT",
+                     )
+        return [table]
+
+    def parse_tr (self,
+                  html
+                 ):
+        row = []
+        for component in html.components:
+            if isinstance(component,(TH,TD)):
+                if self.exclude_tag(component):
+                    continue
+                for detail in component.components:
+                    result = self.select_tag(detail)
+                    if result != None:
+                        row.append(result)
+        if row == []:
+            return None
+        return row
+
+# end of class S3html2pdf
 
 
 # =============================================================================

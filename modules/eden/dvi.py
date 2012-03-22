@@ -29,7 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DVIModel", "dvi_rheader"]
+__all__ = ["S3DVIModel"]
 
 from gluon import *
 from gluon.storage import Storage
