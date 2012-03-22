@@ -23,9 +23,12 @@
                             {% endif %}
                         </div>
                     {% endif %}
-                    <div id="votes">
-                        <span style="font-size:30px;text-align:center;">{{ p.support_votes }}</span><br/>apoyos
+
+                    <div class="span1">
+                        <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ p.support_votes__count }}</p>
+                        <button style="margin-left:-15px;" onclick="upvote({{ p.id }})" class="btn btn-small" {% if user in p.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
                     </div>
+
                     <!-- Here goes the voting button -->
                     <div id="proposal">
                         <div class="title"><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></div>
