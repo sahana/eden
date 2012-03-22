@@ -161,37 +161,53 @@
     
                 {% for entity in entityformset %}
                     {{ entity.id }}
-                    <div class="clearfix"> 
-                        {{ entity.errors }}
+                    <div class="clearfix" {% if entity.name.errors %}error {% endif %}> 
                         <label for="prependedInput">{{ entity.name.label }}</label> 
                         <div class="input">
                             {{ entity.name }}
-                            <span class="help-inline">{{ entity.name.help_text }}</span>
+                            <span class="help-inline">
+                                {% if entity.name.errors %} 
+                                    {% for error in entity.name.errors %}
+                                        {{ error|escape}} 
+                                    {% endfor %} 
+                                {% else %}
+                                     {{ entity.name.help_text }}
+                                {% endif %}
+                            </span>
                         </div> 
                     </div>
                     
-                    <div class="clearfix">
-                        {{ entity.errors }}
+                    <div class="clearfix" {% if entity.website.errors %}error{% endif %}>
                         <label for="prependedInput">{{ entity.website.label }}</label> 
                         <div class="input"> 
                             {{ entity.website }}
-                            <span class="help-inline">{{ entity.website.help_text }}</span>
+                            <span class="help-inline">
+                                {% if entity.website.errors %}
+                                {% for error in entity.website.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                                {% else %}   
+                                {{ entity.website.help_text }}
+                                {% endif %}
+                            </span>
                         </div> 
                     </div>
     
-                    <div class="clearfix"> 
-                        {{ entity.errors }}
+                    <div class="clearfix" {%if entity.logo.errors %}error{% endif %}> 
                         <label for="prependedInput">{{ entity.logo.label }}</label> 
                         <div class="input"> 
                             {{ entity.logo }}
-                            <span class="help-inline">{{ entity.logo.help_text }}</span>
+                            <span class="help-inline">
+                                {% if entity.logo.errors %}
+                                {% for error in entity.logo.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                                {% else %}
+                                {{ entity.logo.help_text }}
+                                {% endif %}
+                            </span>
                         </div> 
                     </div>
-                    
-                    <div class="clearfix">
-                        <label for="prependedInput"><hr /></label>
-                    </div>           
-                
                 {% endfor %}
            
                 <hr />
