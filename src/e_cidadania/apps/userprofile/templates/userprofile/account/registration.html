@@ -8,6 +8,9 @@
 
     <div class="row">
         <div class="span12">
+         {% if user.is_authenticated %}
+           <p> You are already logged in as <strong>{{user.username}}</strong> </p>
+         {% else %}
             <form action="" method="post" accept-charset="utf-8">
                 {% csrf_token %}
                 <h4>{% trans "User registration" %}</h4>
@@ -84,6 +87,7 @@
 
                 <p><input type="submit" value="{% trans 'Register' %}" class="btn btn-large" /></p>
             </form>
+          {% endif %}
         </div>
     </div>
 
