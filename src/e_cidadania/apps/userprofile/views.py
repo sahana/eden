@@ -111,7 +111,7 @@ def overview(request):
     # Get the data of what the user did
     # WARNING, THIS IS HARDCODED, MUST BE IMPLEMENTED WELL
     # AFTER TESTING
-    proposals = Proposal.objects.all().filter(author=request.user.id)
+    proposals = Proposal.objects.annotate(models.Count('support_votes')).filter(author=request.user.id).order_by('pub_date')
     profile, created = Profile.objects.get_or_create(user=request.user)
     validated = False
     try:
