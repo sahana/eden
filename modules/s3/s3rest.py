@@ -4969,6 +4969,11 @@ class S3ResourceFilter:
                 self._add_query(q, component=component, master=master)
             else:
                 self._add_vfltr(f, component=component, master=master)
+            joins, distinct = f.joins(self.resource)
+            for join in joins.values():
+                for q in join:
+                    self._add_query(q, component=component, master=master)
+            self.distinct |= distinct
         else:
             self._add_query(f, component=component, master=master)
         return
