@@ -3689,9 +3689,7 @@ class S3html2pdf():
         return [I]
 
 
-    def parse_p (self,
-                 html
-                ):
+    def parse_p (self, html):
         content = ""
         for component in html.components:
             result = self.select_tag(component)
@@ -3701,35 +3699,36 @@ class S3html2pdf():
             return None
         return content
 
-    def parse_table (self,
-                     html
-                    ):
+    def parse_table (self, html):
+        style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
+                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                 ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+                ]
         content = []
+        rowCnt = 0
+        colWidths = []
         for component in html.components:
             if self.exclude_tag(component):
                 continue
             if isinstance(component,TR):
-                result = self.parse_tr(component)
+                result = self.parse_tr(component, style, rowCnt, colWidths)
+                rowCnt += 1
             if result != None:
                 content.append(result)
         if content == []:
             return None
-        style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
-                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                 ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-                 ("FONTNAME", (1, 0), (1, -1), "Helvetica"),
-                ]
         table = Table(content,
-                      repeatRows=1,
-#                      style=style,
+                      colWidths=colWidths,
+                      style=style,
                       hAlign="LEFT",
+                      vAlign="Top",
                      )
+        cw = table._colWidths
         return [table]
 
-    def parse_tr (self,
-                  html
-                 ):
+    def parse_tr (self, html, style, rowCnt, colWidths):
         row = []
+        colCnt = 0
         for component in html.components:
             if isinstance(component,(TH,TD)):
                 if self.exclude_tag(component):
@@ -3737,7 +3736,18 @@ class S3html2pdf():
                 for detail in component.components:
                     result = self.select_tag(detail)
                     if result != None:
+                        try:
+                            width = result[0].drawWidth
+                        except:
+                            width = None
+                        if colCnt == len(colWidths):
+                            colWidths.append(width)
+                        elif width > colWidths[colCnt]:
+                            colWidths.append(width)
                         row.append(result)
+                        if isinstance(component,TH):
+                            style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
+                        colCnt += 1
         if row == []:
             return None
         return row
