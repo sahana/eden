@@ -51,7 +51,9 @@ if deployment_settings.has_module("cr"):
                 msg_record_created = T("Camp Type added"),
                 msg_record_modified = T("Camp Type updated"),
                 msg_record_deleted = T("Camp Type deleted"),
-                msg_list_empty = T("No Camp Types currently registered"))
+                msg_list_empty = T("No Camp Types currently registered"),
+                name_nice = T("Camp"),
+                name_nice_plural = T("Camps"))
         else:
             ADD_SHELTER_TYPE = T("Add Shelter Type")
             LIST_SHELTER_TYPES = T("List Shelter Types")
@@ -69,7 +71,9 @@ if deployment_settings.has_module("cr"):
                 msg_record_created = T("Shelter Type added"),
                 msg_record_modified = T("Shelter Type updated"),
                 msg_record_deleted = T("Shelter Type deleted"),
-                msg_list_empty = T("No Shelter Types currently registered"))
+                msg_list_empty = T("No Shelter Types currently registered"),
+                name_nice = T("Shelter"),
+                name_nice_plural = T("Shelters"))
 
         shelter_type_id = S3ReusableField("shelter_type_id", db.cr_shelter_type,
                                           requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -124,7 +128,9 @@ if deployment_settings.has_module("cr"):
                 msg_record_created = T("Camp Service added"),
                 msg_record_modified = T("Camp Service updated"),
                 msg_record_deleted = T("Camp Service deleted"),
-                msg_list_empty = T("No Camp Services currently registered"))
+                msg_list_empty = T("No Camp Services currently registered"),
+                name_nice = T("Camp Service"),
+                name_nice_plural = T("Camp Services"))
         else:
             ADD_SHELTER_SERVICE = T("Add Shelter Service")
             LIST_SHELTER_SERVICES = T("List Shelter Services")
@@ -142,7 +148,9 @@ if deployment_settings.has_module("cr"):
                 msg_record_created = T("Shelter Service added"),
                 msg_record_modified = T("Shelter Service updated"),
                 msg_record_deleted = T("Shelter Service deleted"),
-                msg_list_empty = T("No Shelter Services currently registered"))
+                msg_list_empty = T("No Shelter Services currently registered"),
+                name_nice = T("Shelter Service"),
+                name_nice_plural = T("Shelter Services"))
 
         def cr_shelter_service_represent(shelter_service_ids):
             table = db.cr_shelter_service
@@ -228,7 +236,10 @@ if deployment_settings.has_module("cr"):
                 msg_record_created = T("Camp added"),
                 msg_record_modified = T("Camp updated"),
                 msg_record_deleted = T("Camp deleted"),
-                msg_list_empty = T("No Camps currently registered"))
+                msg_list_empty = T("No Camps currently registered"),
+                name_nice = T("Camp Service"),
+                name_nice_plural = T("Camp Services"))
+
         else:
             ADD_SHELTER = T("Add Shelter")
             LIST_SHELTERS = T("List Shelters")
@@ -247,7 +258,9 @@ if deployment_settings.has_module("cr"):
                 msg_record_created = T("Shelter added"),
                 msg_record_modified = T("Shelter updated"),
                 msg_record_deleted = T("Shelter deleted"),
-                msg_list_empty = T("No Shelters currently registered"))
+                msg_list_empty = T("No Shelters currently registered"),
+                name_nice = T("Shelter"),
+                name_nice_plural = T("Shelters"))
 
         # Reusable field
         shelter_id = S3ReusableField("shelter_id", db.cr_shelter,
