@@ -159,7 +159,7 @@ class S3InventoryModel(S3Model):
                                         label = itn_label,
                                         ),
                                   org_id(name = "supply_org_id",
-                                         label = "Supplying Organisation",
+                                         label = "Supplying Organization",
                                          ondelete = "SET NULL"), # original donating org
                                   # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                                   #Field("status"),
@@ -877,7 +877,7 @@ $(document).ready(function() {
                                         widget = S3InvBinWidget("inv_track_item")
                                         ),
                                   org_id(name = "supply_org_id",
-                                         label = "Supplying Organisation",
+                                         label = "Supplying Organization",
                                          ondelete = "SET NULL"), # original donating org
                                   adj_item_id(ondelete = "RESTRICT"), # any adjustment record
                                   s3.comments(),
@@ -975,7 +975,7 @@ $(document).ready(function() {
         site = table.site_id.represent(site_id,False)
         # hide the inv_item field
         tracktable.send_stock_id.readable = False
-        tracktable.recv_stock_item.readable = False
+        tracktable.recv_stock_id.readable = False
 
         exporter = S3PDF()
         return exporter(r,
@@ -1108,6 +1108,24 @@ $(document).ready(function() {
 
             form.vars.track_org_id = record.organisation_id
 
+        """
+            When a inv item record is being created with a source number
+            then the source number needs to be unique within the organisation.
+        """
+        # If their is a tracking number check that it is unique within the org
+        if form.vars.item_source_no:
+            if form.record and form.record.item_source_no == form.vars.item_source_no:
+                # the tracking number hasn't changes so no validation needed
+                pass
+            else:
+                query = (ttable.track_org_id == form.vars.track_org_id) & \
+                        (ttable.item_source_no == form.vars.item_source_no)
+                record = db(query).select(limitby=(0, 1)).first()
+                if record:
+                    org_repr = current.response.s3.org_organisation_represent
+                    form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % (form.vars.item_source_no,
+                                                                                                    org_repr(record.track_org_id))
+
         # copy the data from the donated stock
         if form.vars.send_stock_id:
             query = (itable.id == form.vars.send_stock_id)
@@ -1122,29 +1140,9 @@ $(document).ready(function() {
                 # @todo: move this into the javascript ajax call on the item selected
                 form.vars.pack_value = record.pack_value
 
-
-        """
-            When a inv item record is being created with a source number
-            then the source number needs to be unique within the organisation.
-        """
-        s3db = current.s3db
-        db = current.db
-        itable = s3db.inv_inv_item
-        stable = s3db.org_site
-
-        # If their is a tracking number check that it is unique within the org
-        if form.vars.item_source_no:
-            if form.record.item_source_no and form.record.item_source_no == form.vars.item_source_no:
-                # the tracking number hasn't changes so no validation needed
-                pass
-            else:
-                query = (itable.track_org_id == form.vars.track_org_id) & \
-                        (itable.item_source_no == form.vars.item_source_no)
-                record = db(query).select(limitby=(0, 1)).first()
-                if record:
-                    org_repr = current.response.s3.org_organisation_represent
-                    form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % (form.vars.item_source_no,
-                                                                                                    org_repr(record.track_org_id))
+        # if we have no send id then copy the quantity sent directly into the received field
+        if not form.vars.send_id:
+            form.vars.recv_quantity = form.vars.quantity
 
         # If their is a receiving bin select the right one
         if form.vars.recv_bin:
@@ -2028,14 +2026,15 @@ def inv_warehouse_rheader(r):
         rheader = s3.org_rheader(r)
     rfooter = TAG[""]()
     if record and "id" in record:
-        as_btn = A( T("Adjust Stock"),
-                      _href = URL(c = "inv",
-                                  f = "adj",
-                                  args = [record.id, "create"]
-                                  ),
-                      _class = "action-btn"
-                      )
-        rfooter.append(as_btn)
+        if r.component and r.component.name == "inv_item":
+            as_btn = A( T("Adjust Stock"),
+                          _href = URL(c = "inv",
+                                      f = "adj",
+                                      args = [record.id, "create"]
+                                      ),
+                          _class = "action-btn"
+                          )
+            rfooter.append(as_btn)
     else:
         ns_btn = A( T("Receive New Stock"),
                       _href = URL(c = "inv",
@@ -2045,7 +2044,7 @@ def inv_warehouse_rheader(r):
                       _class = "action-btn"
                       )
         rfooter.append(ns_btn)
-
+    
     s3.rfooter = rfooter
     return rheader
 
@@ -2303,7 +2302,8 @@ def inv_recv_rheader(r):
 
             rfooter = TAG[""]()
 
-            if record.status == SHIP_STATUS_SENT:
+            if record.status == SHIP_STATUS_SENT or \
+               record.status == SHIP_STATUS_IN_PROCESS:
                 if auth.s3_has_permission("update",
                                           "inv_recv",
                                           record_id=record.id):
@@ -2425,7 +2425,7 @@ class S3AdjustModel(S3Model):
 
                                   self.super_link("site_id",
                                                   "org_site",
-                                                  ondelete = "SET_NULL",
+                                                  ondelete = "SET NULL",
                                                   label = T("Warehouse"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                                   readable = True,

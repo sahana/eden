@@ -43,6 +43,7 @@ import math
 import json
 import subprocess
 import unicodedata
+from copy import deepcopy
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -2605,7 +2606,8 @@ class S3PDF(S3Method):
         except:
             # okay so maybe it wasn't ... it could be an HTML object
             html = rHeader
-        parser = S3html2pdf(exclude_class_list=["tabs"])
+        parser = S3html2pdf(pageWidth = self.getPageWidth(),
+                            exclude_class_list=["tabs"])
         result = parser.parse(html)
         if result != None:
             self.content += result
@@ -3592,19 +3594,28 @@ class S3PDFRHeader():
 class S3html2pdf():
         
     def __init__(self,
+                 pageWidth,
                  exclude_class_list = []):
         """
             Method that takes html in the web2py helper objects
             and converts it to pdf 
         """
         self.exclude_class_list = exclude_class_list
+        self.pageWidth = pageWidth
         self.fontsize = 12
+        styleSheet = getSampleStyleSheet()
+        self.normalstyle = styleSheet["Normal"]
+        self.normalstyle.fontName = "Helvetica"
+        self.normalstyle.fontSize = 10
+        self.titlestyle = deepcopy(styleSheet["Normal"])
+        self.titlestyle.fontName = "Helvetica-Bold"
+        self.titlestyle.fontSize = 11
 
     def parse(self, html):
         result = self.select_tag(html)
         return result
 
-    def select_tag(self, html):
+    def select_tag(self, html, title=False):
         if self.exclude_tag(html):
             return None
         if isinstance(html,TABLE):
@@ -3618,7 +3629,10 @@ class S3html2pdf():
         elif isinstance(html,DIV):
             return self.parse_div(html)
         elif (isinstance(html,str) or current.T(html) == html):
-            return html
+            if title:
+                return [Paragraph(html, self.titlestyle)]
+            else:
+                return [Paragraph(html, self.normalstyle)]
         return None
 
     def exclude_tag(self, html):
@@ -3644,12 +3658,12 @@ class S3html2pdf():
     def parse_a (self,
                  html
                 ):
-        content = ""
+        content = []
         for component in html.components:
             result = self.select_tag(component)
             if result != None:
                 content += result
-        if content == "":
+        if content == []:
             return None
         return content
 
@@ -3690,12 +3704,12 @@ class S3html2pdf():
 
 
     def parse_p (self, html):
-        content = ""
+        content = []
         for component in html.components:
             result = self.select_tag(component)
             if result != None:
                 content += result
-        if content == "":
+        if content == []:
             return None
         return content
 
@@ -3734,7 +3748,7 @@ class S3html2pdf():
                 if self.exclude_tag(component):
                     continue
                 for detail in component.components:
-                    result = self.select_tag(detail)
+                    result = self.select_tag(detail, title=isinstance(component,TH))
                     if result != None:
                         try:
                             width = result[0].drawWidth

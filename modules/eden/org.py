@@ -33,6 +33,7 @@ __all__ = ["S3OrganisationModel",
            "S3RoomModel",
            "S3OfficeModel",
            "org_organisation_represent",
+           "org_organisation_logo",
            "org_rheader",
            "org_site_represent",
            "org_organisation_controller",
@@ -1309,6 +1310,42 @@ def org_organisation_represent(id, showlink=False, acronym=True):
     return represent
 
 # =============================================================================
+def org_organisation_logo(id, type="png"):
+    """
+        Return a logo of the organisation with the given id, if one exists
+        
+        The id can either be the id of the organisation 
+               or a Row of the organisation
+
+        The type can either be png or bmp and is the format of the saved image
+    """
+    if isinstance(id, Row):
+        # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
+        record = id
+    else:
+        table = current.s3db.org_organisation
+        query = (table.id == id)
+        record = current.db(query).select(limitby = (0, 1)).first()
+    field = "logo_png"
+    if type == "bmp":
+        field = "logo_bmp"
+    if record and record[field]:
+        if record.acronym == None or record.acronym == "":
+            alt = "%s logo" % record.name
+        else:
+            alt = "%s logo" % record.acronym
+        logo = IMG(_src=URL(c="default",
+                                f="download",
+                                args=record[field],
+                                ),
+                       _alt=alt,
+                       _height = "60px",
+                      )
+        return logo
+    return None
+    
+
+# =============================================================================
 def org_site_represent(id, link=True):
     """ Represent a Facility in option fields or list views """
 
@@ -1428,15 +1465,7 @@ def org_rheader(r, tabs=[]):
             website = ""
 
         rheader = DIV()
-        logo = None
-        if record.logo_png:
-            logo = IMG(_src=URL(c="default",
-                                f="download",
-                                args=record.logo_png
-                                ),
-                       _alt="%s logo" % table.acronym,
-                       _height = "60px",
-                      )
+        logo = org_organisation_logo(record)
         rData = TABLE(
                         TR(
                             TH("%s: " % table.name.label),
@@ -1457,7 +1486,6 @@ def org_rheader(r, tabs=[]):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
-                (T("Attachments"), "document"),
                ]
         try:
             tabs = tabs + current.s3db.inv_tabs(r)
@@ -1467,12 +1495,12 @@ def org_rheader(r, tabs=[]):
             tabs = tabs + s3.req_tabs(r)
         except:
             pass
-
+        tabs.append((T("Attachments"), "document"))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
+        logo = org_organisation_logo(record.organisation_id)
 
-        rheader = DIV()
-        rheader.append(TABLE(
+        rData = TABLE(
                       TR(
                          TH("%s: " % table.name.label),
                          record.name,
@@ -1496,8 +1524,12 @@ def org_rheader(r, tabs=[]):
                       #                  args=[r.id, "update"],
                       #                  vars={"_next": _next})))
                       #   )
-                          ),
-                      )
+                          )
+        rheader = DIV()
+        if logo:
+            rheader.append(TABLE(TR(TD(logo),TD(rData))))
+        else:
+            rheader.append(rData)
         rheader.append(rheader_tabs)
 
         #if r.component and r.component.name == "req":
