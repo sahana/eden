@@ -132,7 +132,7 @@
                             {% for p in proposals %}
                                 <div id="proposal-wrapper">
                                     <div id="votes">
-                                        <span style="font-size:24px;text-align:center;">{{ p.support_votes__count }}</span><br/>{% trans "support votes" %}
+                                        <span style="font-size:24px;text-align:center;">{{ p.support_votes.count }}</span><br/>{% trans "support votes" %}
                                     </div>
                                     <!-- Here goes the voting button -->
                                     <div id="proposal">
