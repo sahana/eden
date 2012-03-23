@@ -44,6 +44,8 @@ from s3utils import s3_debug
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3
 
+from s3rest import S3QueryField
+
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
            "S3SearchMinMaxWidget",
@@ -89,6 +91,8 @@ class S3SearchWidget(object):
         self.other = None
 
         self.field = field
+        self.fields = field
+
         if not self.field:
             raise SyntaxError("No search field specified.")
 
@@ -182,9 +186,9 @@ class S3SearchWidget(object):
                 ktable = db[reference]
                 ktablename = reference
                 # Do not add queries for empty tables
-                if not db(ktable.id > 0).select(ktable.id,
-                                                limitby=(0, 1)).first():
-                   continue
+                if not db(ktable.id > 0).select(ktable.id, limitby=(0, 1)).first():
+                    continue
+
 
             # Master queries
             # @todo: update this for new QueryBuilder (S3ResourceFilter)
@@ -276,67 +280,97 @@ class S3SearchSimpleWidget(S3SearchWidget):
         return INPUT(**self.attr)
 
     # -------------------------------------------------------------------------
-    def query(self, resource, value):
+    def query(self, resource, search_string):
         """
             Returns a sub-query for this search option
 
             @param resource: the resource to search in
             @param value: the value returned from the widget
         """
-
-        prefix = resource.prefix
-        name = resource.name
+        
+#        prefix = resource.prefix
+#        name = resource.name
         table = resource.table
-
-        db = current.db
-        model = current.manager.model
+#
+#        db = current.db
+#        model = current.manager.model
 
         DEFAULT = (table.id == None)
 
         # Get master query and search fields
-        self.build_master_query(resource)
-        master_query = self.master_query
-        search_field = self.search_field
+#        self.build_master_query(resource)
+#        master_query = self.master_query
+#        search_field = self.search_field
 
         # No search fields?
-        if not search_field:
+        if not self.fields:
             return DEFAULT
 
         # Default search (wildcard)
-        if not value:
+        if not search_string:
             return None
 
-        # Build search query
-        if value and isinstance(value, str):
-            values = value.split()
-            squery = None
 
-            for v in values:
-                wc = "%"
-                _v = "%s%s%s" % (wc, v.lower(), wc)
-                query = None
-                for tablename in search_field:
-                    hq = master_query[tablename]
-                    fq = None
-                    fields = search_field[tablename]
-                    for f in fields:
-                        if fq:
-                            fq = (f.lower().like(_v)) | fq
-                        else:
-                            fq = (f.lower().like(_v))
-                    q = hq & fq
-                    if query is None:
-                        query = q
+        if search_string and isinstance(search_string, str):
+            values = search_string.split()
+            
+            final_query = None
+
+            # Create a set of queries for each value
+            for value in values:
+                field_queries = None
+
+                # Create a queries that test the current value against each field
+                for field in self.fields:
+                    field_query = S3QueryField(field).like(value)
+                    
+                    # We want a match against any field
+                    if field_queries:
+                        field_queries = field_query | field_queries
                     else:
-                        query = query | q
-                if squery is not None:
-                    squery = squery & query
+                        field_queries = field_query
+                
+                # We want all values to be matched
+                if final_query:
+                    final_query = field_queries & final_query
                 else:
-                    squery = query
+                    final_query = field_queries
 
-            return squery
+            return final_query
         else:
             return DEFAULT
+
+        # Build search query
+#        if search_string and isinstance(search_string, str):
+#            values = search_string.split()
+#            squery = None
+#
+#            for v in values:
+#                wc = "%"
+#                _v = "%s%s%s" % (wc, v.lower(), wc)
+#                query = None
+#                for tablename in search_field:
+#                    hq = master_query[tablename]
+#                    fq = None
+#                    fields = search_field[tablename]
+#                    for f in fields:
+#                        if fq:
+#                            fq = (f.lower().like(_v)) | fq
+#                        else:
+#                            fq = (f.lower().like(_v))
+#                    q = hq & fq
+#                    if query is None:
+#                        query = q
+#                    else:
+#                        query = query | q
+#                if squery is not None:
+#                    squery = squery & query
+#                else:
+#                    squery = query
+#
+#            return squery
+#        else:
+#            return DEFAULT
 
 # =============================================================================
 
@@ -1014,6 +1048,8 @@ class S3Search(S3CRUD):
                                               name=name,
                                               label=args.label,
                                               comment=args.comment)
+
+        # Create a list of Simple search form widgets, by name, and throw an error if a duplicate is found
         names = []
         self.__simple = []
         if not isinstance(simple, (list, tuple)):
@@ -1030,6 +1066,7 @@ class S3Search(S3CRUD):
                     self.__simple.append((name, widget))
                     names.append(name)
 
+        # Create a list of Advanced search form widgets, by name, and throw an error if a duplicate is found
         names = []
         self.__advanced = []
         if not isinstance(advanced, (list, tuple)):
@@ -1078,8 +1115,7 @@ class S3Search(S3CRUD):
             output = self.save_search(r, **attr)
 
         # Interactive or saved search
-        elif "load" in r.vars or \
-             r.interactive and self.__interactive:
+        elif "load" in r.vars or r.interactive and self.__interactive:
             output = self.search_interactive(r, **attr)
 
         # SSPag response => CRUD native
@@ -1118,13 +1154,16 @@ class S3Search(S3CRUD):
             value = None
         if hasattr(widget, "validate"):
             errors = widget.validate(resource, value)
+
         if not errors:
             q = widget.query(resource, value)
+
             if q is not None:
                 if query is None:
                     query = q
                 else:
                     query = query & q
+        
         return (query, errors)
 
     # -------------------------------------------------------------------------
@@ -1392,6 +1431,7 @@ class S3Search(S3CRUD):
                                                  download_url=self.download_url,
                                                  as_page=True,
                                                  format=representation)
+                    
                     aadata = dict(aaData = sqltable or [])
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
