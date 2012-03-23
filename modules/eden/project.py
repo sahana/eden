@@ -1580,6 +1580,14 @@ class S3ProjectTaskModel(S3Model):
             4:T("Low")
         }
 
+        project_task_difficulty_opts = {
+                    1:T("Hard"),
+                    2:T("Mediium"),
+                    3:T("Easy")
+                }
+        
+
+
         #staff = auth.s3_has_role("STAFF")
         staff = True
 
@@ -1668,6 +1676,16 @@ class S3ProjectTaskModel(S3Model):
                                    represent = lambda opt, row=None: \
                                                project_task_status_opts.get(opt,
                                                                             UNKNOWN_OPT)),
+        
+                             Field("difficulty", "integer",
+                                    requires = IS_IN_SET(project_task_difficulty_opts,
+                                                         zero=None),
+                                    default = 2,
+                                    label = T("Difficulty"),
+                                    represent = lambda opt, row=None: \
+                                                project_task_difficulty_opts.get(opt,
+                                                                               UNKNOWN_OPT)),
+                             
                              *s3.meta_fields())
 
         # Field configurations
@@ -1768,6 +1786,7 @@ class S3ProjectTaskModel(S3Model):
                                "time_estimated",
                                 "created_on",
                                "status",
+                               "difficulty",
                                #"site_id"
                                ],
                   extra="description")
