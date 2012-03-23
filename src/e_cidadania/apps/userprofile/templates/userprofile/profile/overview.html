@@ -136,7 +136,7 @@
                                     </div>
                                     <!-- Here goes the voting button -->
                                     <div id="proposal">
-                                        <div class="title" style="font-size: 1.5em;"><a href="/spaces/{{ p.author }}/proposal/{{ p.id }}/">{{ p.title }}</a></div>
+                                        <div class="title" style="font-size: 1.5em;"><a href="/spaces/{{ p.space.url }}/proposal/{{ p.id }}/">{{ p.title }}</a></div>
                                         <div class="creator">{{ p.pub_date|date:"j/m/Y G:i" }}</div>
                                     </div>
                                     {% comment %}

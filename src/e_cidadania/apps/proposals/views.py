@@ -180,7 +180,7 @@ class ListProposals(ListView):
 
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = Proposal.objects.all().filter(space=place.id).order_by('pub_date')
+        objects = Proposal.objects.annotate(Count('support_votes')).filter(space=place.id).order_by('pub_date')
         return objects
 
     def get_context_data(self, **kwargs):
