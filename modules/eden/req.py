@@ -80,7 +80,8 @@ class S3RequestModel(S3Model):
         settings = current.deployment_settings
 
         org_site_represent = self.org_site_represent
-        human_resource_id = self.hrm_human_resource_id
+#        human_resource_id = self.hrm_human_resource_id
+        human_resource_id = self.pr_person_id
         event_id = self.event_event_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
