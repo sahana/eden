@@ -7,8 +7,6 @@
 // Main jQuery function
 $(function() {
 
-    var google = S3.gis.Google;
-
     if ( typeof(S3.gis.location_id) == 'undefined' ) {
         // This page doesn't include the Location Selector Widget
     } else {
@@ -29,12 +27,14 @@ $(function() {
         }
 
         // Load Google API for Geocoder
-        if (google && S3.gis.geocoder) {
-            // Google already loaded, so don't load again
-            s3_gis_initGeocoder();
-        } else if (S3.gis.geocoder) {
-            s3_gis_loadGoogle();
-        }
+        try {
+            if (google && S3.gis.geocoder) {
+                // Google already loaded, so don't load again
+                s3_gis_initGeocoder();
+            } else if (S3.gis.geocoder) {
+                s3_gis_loadGoogle();
+            }
+        } catch(err) {};
 
         // Set initial Autocompletes
         s3_gis_autocompletes();

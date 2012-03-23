@@ -452,8 +452,6 @@ function addWMSBrowser() {
 // The buttons called from here are defined in s3.gis.controls.js
 function addToolbar() {
 
-    var google = S3.gis.Google;
-
     var toolbar = S3.gis.mapPanelContainer.getTopToolbar();
 
     var zoomfull = new GeoExt.Action({
