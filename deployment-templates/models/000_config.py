@@ -43,6 +43,8 @@ deployment_settings.auth.registration_requests_mobile_phone = True
 #deployment_settings.auth.registration_organisation_mandatory = True
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #deployment_settings.auth.registration_organisation_hidden = True
+# Uncomment this to default the Organisation during registration
+#deployment_settings.auth.registration_organisation_default = 1
 # Uncomment this to request an image when users register
 #deployment_settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details

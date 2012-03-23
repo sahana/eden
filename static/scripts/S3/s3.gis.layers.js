@@ -503,6 +503,7 @@ function addGoogleLayers() {
     var google = S3.gis.Google;
     var layer;
     if (google.MapMaker || google.MapMakerHybrid) {
+        // v2 API
         if (google.Satellite) {
             layer = new OpenLayers.Layer.Google(
                 google.Satellite, {
@@ -558,6 +559,7 @@ function addGoogleLayers() {
             map.addLayer(layer);
         }
     } else {
+        // v3 API
         if (google.Satellite) {
             layer = new OpenLayers.Layer.Google(
                 google.Satellite, {

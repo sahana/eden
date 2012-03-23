@@ -26,7 +26,10 @@ $(function() {
         }
 
         // Load Google API for Geocoder
-        if (S3.gis.geocoder) {
+        if (google && S3.gis.geocoder) {
+            // Google already loaded, so don't load again
+            s3_gis_initGeocoder();
+        } else if (S3.gis.geocoder) {
             s3_gis_loadGoogle();
         }
 
@@ -959,7 +962,7 @@ function s3_gis_hide_search_fields() {
 function s3_gis_loadGoogle() {
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = 'http://maps.google.com/maps/api/js?v=3.2&sensor=false&callback=s3_gis_initGeocoder';
+    script.src = 'http://maps.google.com/maps/api/js?v=3.6&sensor=false&callback=s3_gis_initGeocoder';
     document.body.appendChild(script);
 }
 function s3_gis_initGeocoder() {

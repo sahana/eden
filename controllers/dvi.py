@@ -107,9 +107,10 @@ def morgue():
     morgue_tabs = [(T("Morgue Details"), ""),
                    (T("Bodies"), "body")]
 
-    rheader = response.s3.dvi_rheader
-    output = s3_rest_controller(rheader=lambda r: \
-                                        rheader(r, tabs=morgue_tabs))
+    rheader = S3ResourceHeader([
+                    [(T("Morgue"), "name")]
+              ], tabs=morgue_tabs)
+    output = s3_rest_controller(rheader=rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -147,9 +148,12 @@ def body():
                 (T("Journal"), "note"),
                 (T("Identification"), "identification")]
 
-    rheader = s3db.dvi_rheader
-    output = s3_rest_controller(rheader=lambda r: \
-                                        rheader(r, tabs=dvi_tabs))
+    rheader = S3ResourceHeader([
+                    [(T("ID Tag Number"), "pe_label")],
+                    ["gender"],
+                    ["age_group"],
+                ], tabs=dvi_tabs)
+    output = s3_rest_controller(rheader=rheader)
     return output
 
 # -----------------------------------------------------------------------------

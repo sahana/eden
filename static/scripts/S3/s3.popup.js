@@ -145,10 +145,10 @@ function s3_tb_refresh() {
         }
 
         // IE6 needs time for DOM to settle: http://csharperimage.jeremylikness.com/2009/05/jquery-ie6-and-could-not-set-selected.html
-        setTimeout( function() {
+        //setTimeout( function() {
                 // Set the newly-created value (one with highest value)
-                selector.val(value_high).change();
-            }, 1);
+        //        selector.val(value_high).change();
+        //    }, 1);
 
         // Clean-up
         s3_tb_call_cleanup(caller);

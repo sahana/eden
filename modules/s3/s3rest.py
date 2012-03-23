@@ -3600,7 +3600,8 @@ class S3Resource(object):
                                         fields=fields)
 
             if as_json:
-                return self.xml.tree2json(tree, pretty_print=False)
+                return self.xml.tree2json(tree, pretty_print=False,
+                                          native=True)
             else:
                 return self.xml.tostring(tree, pretty_print=False)
 
