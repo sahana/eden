@@ -112,6 +112,9 @@ class S3Config(Storage):
     def get_auth_registration_requests_image(self):
         " Have the registration form request an Image "
         return self.auth.get("registration_requests_image", False)
+    def get_auth_registration_roles(self):
+        " The list of role UUIDs to assign to newly-registered users "
+        return self.auth.get("registration_roles", [])
     def get_auth_registration_volunteer(self):
         " Redirect the newly-registered user to their volunteer details page "
         return self.auth.get("registration_volunteer", False)
