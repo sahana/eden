@@ -39,6 +39,9 @@ S3.project_task_update_fields = function () {
                 // Set the newly-created value (one with highest value)
         //        selector.val(value_high).change();
         //    }, 1);
+
+        // Don't hassle users about unsaved data just for these dropdown settings
+        S3ClearNavigateAwayConfirm();
     });
     // Milestone Filter
     var url = S3.Ap.concat('/project/task/options.s3json?field=milestone_id');
@@ -70,6 +73,9 @@ S3.project_task_update_fields = function () {
                 // Set the newly-created value (one with highest value)
         //        selector.val(value_high).change();
         //    }, 1);
+
+        // Don't hassle users about unsaved data just for these dropdown settings
+        S3ClearNavigateAwayConfirm();
     });
 }
 
