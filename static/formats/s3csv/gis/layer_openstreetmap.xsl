@@ -10,8 +10,9 @@
          Name.................string..........Layer Name
          Description..........string..........Layer Description
          Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
-         Base.................boolean.........Layer Base?
          Visible..............boolean.........Layer Visible in SITE_DEFAULT config?
+         Base.................boolean.........Layer Base?
+         Default..............boolean.........Layer Default Base?
          Folder...............string..........Layer Folder
          URL..................string..........Layer URL
          URL2.................string..........Layer URL2
@@ -62,6 +63,9 @@
             </reference>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
+            <xsl:if test="col[@field='Default']!=''">
+                <data field="base"><xsl:value-of select="col[@field='Default']"/></data>
+            </xsl:if>
         </resource>
 
     </xsl:template>
