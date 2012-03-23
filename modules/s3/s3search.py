@@ -90,7 +90,10 @@ class S3SearchWidget(object):
 
         self.other = None
 
+        # todo: remove this property when all search widgets have been changed to use self.fields
         self.field = field
+        
+        # Updating search widgets to use this property instead of self.field
         self.fields = field
 
         if not self.field:
@@ -285,22 +288,11 @@ class S3SearchSimpleWidget(S3SearchWidget):
             Returns a sub-query for this search option
 
             @param resource: the resource to search in
-            @param value: the value returned from the widget
+            @param search_string: the value returned from the widget
         """
-        
-#        prefix = resource.prefix
-#        name = resource.name
-        table = resource.table
-#
-#        db = current.db
-#        model = current.manager.model
 
-        DEFAULT = (table.id == None)
-
-        # Get master query and search fields
-#        self.build_master_query(resource)
-#        master_query = self.master_query
-#        search_field = self.search_field
+        # This is a query that will always result in no records being found
+        DEFAULT = (resource.table._id == None)
 
         # No search fields?
         if not self.fields:
@@ -310,7 +302,7 @@ class S3SearchSimpleWidget(S3SearchWidget):
         if not search_string:
             return None
 
-
+        # Build the query
         if search_string and isinstance(search_string, str):
             values = search_string.split()
             
@@ -340,37 +332,6 @@ class S3SearchSimpleWidget(S3SearchWidget):
         else:
             return DEFAULT
 
-        # Build search query
-#        if search_string and isinstance(search_string, str):
-#            values = search_string.split()
-#            squery = None
-#
-#            for v in values:
-#                wc = "%"
-#                _v = "%s%s%s" % (wc, v.lower(), wc)
-#                query = None
-#                for tablename in search_field:
-#                    hq = master_query[tablename]
-#                    fq = None
-#                    fields = search_field[tablename]
-#                    for f in fields:
-#                        if fq:
-#                            fq = (f.lower().like(_v)) | fq
-#                        else:
-#                            fq = (f.lower().like(_v))
-#                    q = hq & fq
-#                    if query is None:
-#                        query = q
-#                    else:
-#                        query = query | q
-#                if squery is not None:
-#                    squery = squery & query
-#                else:
-#                    squery = query
-#
-#            return squery
-#        else:
-#            return DEFAULT
 
 # =============================================================================
 
