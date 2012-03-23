@@ -1,8 +1,8 @@
 Style guide
 ===========
 
-The style guide stablish a series of rules to follow when coding in e-cidadania.
-This rules are unbreakable. The style guide follows closely the `PEP8`_ document,
+The style guide establish a series of rules to follow when coding in e-cidadania.
+These rules are unbreakable. The style guide follows closely the `PEP8`_ document,
 with some exceptions provided from the internal style guide at `Pocoo`_.
 
 .. _PEP8: http://www.python.org/dev/peps/pep-0008
@@ -62,10 +62,10 @@ Python
 
 **Indentation**
     Indentation must be *always* 4 spaces per level, no exceptions. You can not
-    use tabs for indentig.
+    use tabs for indenting.
 
 **Blank lines**
-    Every function and classes must be separated by two blank lines. The code
+    Every classes and method must be separated by two blank lines. The code
     inside a class or method by one blank line.
 
     *Example*::
@@ -131,11 +131,11 @@ CSS
         }
 
 **Colors**
-    Colors must be always wrote in hexadecimal. You are allowed to use three digits
+    Colors must be always written in hexadecimal. You are allowed to use three digits
     abbreviations.
 
 **Font size**
-    Font size must be declared in **em's** except a presentation requirement.
+    Font size must be declared in **em's** except for presentation requirement.
 
 
 JavaScript
