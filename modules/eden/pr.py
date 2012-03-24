@@ -1680,11 +1680,11 @@ class S3SavedSearch(S3Model):
     @staticmethod
     def get_criteria(id):
         import cPickle
-
+        import re
         s = ""
         try:
             id = id.replace("&apos;", "'")
-            search_vars = cPickle.loads(id)
+            search_vars = cPickle.loads(str(id))
             s = "<p>"
             pat = '_'
             for var in search_vars.iterkeys():
