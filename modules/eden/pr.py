@@ -547,7 +547,7 @@ class S3PersonModel(S3Model):
                                    default=False),
                              Field("first_name",
                                    notnull=True,
-                                   default="?",
+                                   default = "?" if current.auth.permission.format != "html" else "",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
                                    # http://eden.sahanafoundation.org/ticket/834
