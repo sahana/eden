@@ -33,6 +33,12 @@ def register_validation(form):
             form.errors.mobile = T("Invalid phone number")
     elif deployment_settings.get_auth_registration_mobile_phone_mandatory():
         form.errors.mobile = T("Phone number is required")
+
+    org = deployment_settings.get_auth_registration_organisation_default()
+    if org:
+        # Add to default organisation
+        form.vars.organisation_id = org
+
     return
 
 # -----------------------------------------------------------------------------
@@ -40,14 +46,37 @@ def register_onaccept(form):
     """ Tasks to be performed after a new user registers """
     # Add newly-registered users to Person Registry, add 'Authenticated' role
     # If Organisation is provided, then: add HRM record & add to 'Org_X_Access' role
-    person = auth.s3_register(form)
+    person_id = auth.s3_register(form)
+
+    if form.vars.organisation_id and not deployment_settings.get_hrm_show_staff():
+        # Convert HRM record to a volunteer
+        htable = s3db.hrm_human_resource
+        query = (htable.person_id == person_id)
+        db(query).update(type=2)
+
+    # Add to required roles:
+    roles = deployment_settings.get_auth_registration_roles()
+    if roles:
+        utable = auth.settings.table_user
+        gtable = auth.settings.table_group
+        mtable = auth.settings.table_membership
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        query = (ltable.pe_id == ptable.pe_id) & \
+                (ptable.id == person_id)
+        user_id = db(query).select(ltable.user_id,
+                                   limitby=(0, 1)).first().user_id
+        query = (gtable.uuid.belongs(roles))
+        rows = db(query).select(gtable.id)
+        for role in rows:
+            mtable.insert(user_id=user_id, group_id=role.id)
 
     if deployment_settings.has_module("delphi"):
         # Add user as a participant of the default problem group
         utable = auth.settings.table_user
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
-        query = (ptable.id == person) & \
+        query = (ptable.id == person_id) & \
                 (ptable.pe_id == ltable.pe_id) & \
                 (ltable.user_id == utable.id)
         user_id = db(query).select(utable.id, limitby=(0, 1)).first().id

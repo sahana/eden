@@ -6,6 +6,7 @@
 
 // Main jQuery function
 $(function() {
+
     if ( typeof(S3.gis.location_id) == 'undefined' ) {
         // This page doesn't include the Location Selector Widget
     } else {
@@ -26,16 +27,18 @@ $(function() {
         }
 
         // Load Google API for Geocoder
-        if (google && S3.gis.geocoder) {
-            // Google already loaded, so don't load again
-            s3_gis_initGeocoder();
-        } else if (S3.gis.geocoder) {
-            s3_gis_loadGoogle();
-        }
+        try {
+            if (google && S3.gis.geocoder) {
+                // Google already loaded, so don't load again
+                s3_gis_initGeocoder();
+            } else if (S3.gis.geocoder) {
+                s3_gis_loadGoogle();
+            }
+        } catch(err) {};
 
         // Set initial Autocompletes
         s3_gis_autocompletes();
-        
+
         // Listen for Events & take appropriate Actions
 
         // Name
@@ -623,7 +626,7 @@ function s3_gis_search_tab() {
 
 function s3_gis_add_tab() {
     // 'Create New Location' tab has been selected
-    
+
     // Hide the Search rows
     s3_gis_hide_search_fields();
 
@@ -1039,7 +1042,7 @@ function s3_gis_geocode() {
                 var lat = myLatLng.lat();
                 var lon = myLatLng.lng();
                 var newPoint = new OpenLayers.LonLat(lon, lat);
-                
+
                 var myLatLngBounds = results[0].geometry.viewport;
                 if (myLatLngBounds) {
                     // Zoom to the Viewport (Bounds)
@@ -1062,7 +1065,7 @@ function s3_gis_geocode() {
                 // @ToDo: Set the Marker to the center of this viewport?
                 // Better to let the user do this manually?
                 //var marker = new google.maps.Marker({
-                //    map: map, 
+                //    map: map,
                 //    position: results[0].geometry.location
                 //});
 

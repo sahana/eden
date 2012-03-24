@@ -1920,7 +1920,11 @@ class S3LayerEntityModel(S3Model):
 
         vars = form.vars
         base = vars.base
+        if base == 'False':
+            base = False
         enabled = vars.enabled
+        if enabled == 'False':
+            enabled = False
 
         if base and enabled:
             db = current.db

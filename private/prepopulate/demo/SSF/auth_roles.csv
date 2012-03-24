@@ -1,5 +1,6 @@
 "uid","role"," description","controller","function","table","uacl","oacl","org","facility","hidden","system","protected"
 "AUTHENTICATED","Authenticated","","pr","person_search",,"READ",,,,,,
+"STAFF","Staff","Can access all fields in Tasks.",,,,,,,,,,
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","hrm",,,"ALL",,,,,,
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","hrm","human_resource",,"ALL",,,,,,
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","hrm","person",,"ALL",,,,,,

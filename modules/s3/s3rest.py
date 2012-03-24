@@ -2298,14 +2298,28 @@ class S3Resource(object):
         """
 
         db = current.db
+
         manager = current.manager
+        define_resource = manager.define_resource
+        get_session = manager.get_session
+        clear_session = manager.clear_session
+        DELETED = manager.DELETED
+
         model = manager.model
+        get_config = model.get_config
+        delete_super = model.delete_super
+
+        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
+        permit = self.permit
+        audit = self.audit
+        prefix = self.prefix
+        name = self.name
+        tablename = self.tablename
+        table = self.table
+        pkey = table._id.name
 
         settings = manager.s3.crud
         archive_not_delete = settings.archive_not_delete
-
-        table = self.table
-        pkey = table._id.name
 
         # Reset error
         manager.error = None
@@ -2317,16 +2331,16 @@ class S3Resource(object):
             rows = self.select(table._id)
 
         if not rows:
-            # No rows in this resource => return success here
+            # No rows? => that was it already :)
             return 0
 
-        numrows = 0 # number of rows deleted
-        if archive_not_delete and "deleted" in self.table:
+        numrows = 0
+        deletable = []
 
-            # Don't delete, but set deleted-flag
+        if archive_not_delete and DELETED in table:
 
-            # Find deletable rows
-            references = self.table._referenced_by
+            # Find all deletable rows
+            references = table._referenced_by
             rfields = [(tn, fn) for tn, fn in references
                                 if db[tn][fn].ondelete == "RESTRICT"]
             restricted = []
@@ -2335,31 +2349,26 @@ class S3Resource(object):
                 rtable = db[tn]
                 rfield = rtable[fn]
                 query = (rfield.belongs(ids))
-                if "deleted" in rtable:
-                    query &= (rtable.deleted != True)
+                if DELETED in rtable:
+                    query &= (rtable[DELETED] != True)
                 rrows = db(query).select(rfield)
                 restricted += [r[fn] for r in rrows if r[fn] not in restricted]
             deletable = [row[pkey] for row in rows if row[pkey] not in restricted]
 
-
             # Get custom ondelete-cascade
-            ondelete_cascade = model.get_config(self.tablename, "ondelete_cascade")
+            ondelete_cascade = get_config(tablename, "ondelete_cascade")
 
             for row in rows:
-
-                # Check permission to delete this row
-                if not self.permit("delete", self.table, record_id=row[pkey]):
+                if not permit("delete", table, record_id=row[pkey]):
                     continue
-
-                # Store prior error
                 error = manager.error
                 manager.error = None
 
-                # Run custom ondelete_cascade
+                # Run custom ondelete_cascade first
                 if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=self.tablename)
+                    callback(ondelete_cascade, row, tablename=tablename)
                     if manager.error:
-                        # Row is not deletable
+                        # Row is not deletable (custom RESTRICT)
                         continue
                     if row[pkey] not in deletable:
                         # Check deletability again
@@ -2368,8 +2377,8 @@ class S3Resource(object):
                             rtable = db[tn]
                             rfield = rtable[fn]
                             query = (rfield == row[pkey])
-                            if "deleted" in rtable:
-                                query &= (rtable.deleted != True)
+                            if DELETED in rtable:
+                                query &= (rtable[DELETED] != True)
                             rrow = db(query).select(rfield,
                                                     limitby=(0, 1)).first()
                             if rrow:
@@ -2379,91 +2388,76 @@ class S3Resource(object):
 
                 if row[pkey] not in deletable:
                     # Row is not deletable => skip with error status
-                    manager.error = self.ERROR.INTEGRITY_ERROR
+                    manager.error = INTEGRITY_ERROR
                     continue
 
+                # Run automatic ondelete-cascade
                 for tn, fn in references:
                     rtable = db[tn]
                     rfield = rtable[fn]
-
+                    query = (rfield == row[pkey])
                     if rfield.ondelete == "CASCADE":
-
-                        # Delete the referencing records
                         rprefix, rname = tn.split("_", 1)
-                        query = rfield == row[pkey]
-                        rresource = manager.define_resource(rprefix, rname, filter=query)
-                        ondelete = model.get_config(tn, "ondelete")
+                        rresource = define_resource(rprefix, rname, filter=query)
+                        ondelete = get_config(tn, "ondelete")
                         rresource.delete(ondelete=ondelete, cascade=True)
-
                         if manager.error:
-                            # Can't delete the reference
                             break
-
                     elif rfield.ondelete == "SET NULL":
                         try:
-                            db(rfield == row[pkey]).update(**{fn:None})
+                            db(query).update(**{fn:None})
                         except:
-                            # Can't set the reference to None
-                            manager.error = self.ERROR.INTEGRITY_ERROR
+                            manager.error = INTEGRITY_ERROR
                             break
-
                     elif rfield.ondelete == "SET DEFAULT":
                         try:
-                            db(rfield == row[pkey]).update(**{fn:rfield.default})
+                            db(query).update(**{fn:rfield.default})
                         except:
-                            # Can't set the reference to default value
-                            manager.error = self.ERROR.INTEGRITY_ERROR
+                            manager.error = INTEGRITY_ERROR
                             break
 
                 if manager.error:
-                    # Rollback all cascade actions on error
+                    # Error in ondelete-cascade: roll back + skip row
                     if not cascade:
                         db.rollback()
                     continue
-
                 else:
-                    # Cascade successful!
-
-                    # Linked table auto-delete
-                    component = self.linked
-                    if component and self.autodelete and component.autodelete:
-                        rkey = component.rkey
+                    # Auto-delete linked records if this was the last link
+                    linked = self.linked
+                    if linked and self.autodelete and linked.autodelete:
+                        rkey = linked.rkey
+                        fkey = linked.fkey
                         if rkey in table:
-                            this = db(table._id == row[table._id.name]).select(table._id, table[rkey],
-                                                                               limitby=(0, 1)).first()
-                            query = (table._id != this[table._id.name]) & \
+                            query = (table._id == row[pkey])
+                            this = db(query).select(table._id,
+                                                    table[rkey],
+                                                    limitby=(0, 1)).first()
+                            query = (table._id != this[pkey]) & \
                                     (table[rkey] == this[rkey])
-                            if "deleted" in table:
-                                query != (table.deleted != True)
-                            remaining = db(query).select(table._id, limitby=(0, 1)).first()
+                            if DELETED in table:
+                                query != (table[DELETED] != True)
+                            remaining = db(query).select(table._id,
+                                                         limitby=(0, 1)).first()
                             if not remaining:
-                                query = component.table[component.fkey] == this[rkey]
-                                linked = manager.define_resource(component.prefix,
-                                                                 component.name,
-                                                                 filter=query)
-                                ondelete = model.get_config(component.tablename, "ondelete")
+                                query = linked.table[fkey] == this[rkey]
+                                linked = define_resource(linked.prefix,
+                                                         linked.name,
+                                                         filter=query)
+                                ondelete = get_config(linked.tablename, "ondelete")
                                 linked.delete(ondelete=ondelete, cascade=True)
-
-                    # Clear session
-                    if manager.get_session(prefix=self.prefix,
-                                           name=self.name) == row[pkey]:
-                        manager.clear_session(prefix=self.prefix, name=self.name)
 
                     # Pull back prior error status
                     manager.error = error
                     error = None
 
-                    # Collect fields
+                    # "Park" foreign keys to resolve constraints, "un-delete"
+                    # would then restore any still-valid FKs from this field!
                     fields = dict(deleted=True)
-
-                    if "deleted_fk" in self.table:
-                        # "Park" foreign keys to resolve constraints,
-                        # "un-delete" will have to restore valid FKs
-                        # from this field!
-                        record = self.table[row[pkey]]
+                    if "deleted_fk" in table:
+                        record = table[row[pkey]]
                         fk = {}
-                        for f in self.table.fields:
-                            ftype = str(self.table[f].type)
+                        for f in table.fields:
+                            ftype = str(table[f].type)
                             if record[f] is not None and \
                                 (ftype[:9] == "reference" or \
                                  ftype[:14] == "list:reference"):
@@ -2474,52 +2468,59 @@ class S3Resource(object):
                         if fk:
                             fields.update(deleted_fk=json.dumps(fk))
 
-                    # Update the row to set deleted=True, finally
-                    db(self.table._id == row[pkey]).update(**fields)
-
+                    # Update the row, finally
+                    db(table._id == row[pkey]).update(**fields)
                     numrows += 1
-                    self.audit("delete", self.prefix, self.name,
-                                record=row[pkey], representation=format)
-                    model.delete_super(self.table, row)
+                    # Clear session
+                    if get_session(prefix=prefix, name=name) == row[pkey]:
+                        clear_session(prefix=prefix, name=name)
+                    # Audit
+                    audit("delete", prefix, name,
+                          record=row[pkey], representation=format)
+                    # Delete super-entity
+                    delete_super(table, row)
+                    # On-delete hook
                     if ondelete:
                         callback(ondelete, row)
-
-                    # Commit after each row to not be rolled back by
+                    # Commit after each row to not have it rolled back by
                     # subsequent cascade errors
                     if not cascade:
                         db.commit()
-
         else:
             # Hard delete
             for row in rows:
 
                 # Check permission to delete this row
-                if not self.permit("delete", self.table, record_id=row[pkey]):
+                if not permit("delete", table, record_id=row[pkey]):
                     continue
-
-                # Clear session
-                if manager.get_session(prefix=self.prefix,
-                                       name=self.name) == row[pkey]:
-                    manager.clear_session(prefix=self.prefix, name=self.name)
-
                 try:
                     del table[row[pkey]]
                 except:
                     # Row is not deletable
-                    manager.error = self.ERROR.INTEGRITY_ERROR
+                    manager.error = INTEGRITY_ERROR
                     continue
                 else:
                     # Successfully deleted
                     numrows += 1
-                    self.audit("delete", self.prefix, self.name,
-                                record=row[pkey], representation=format)
-                    model.delete_super(self.table, row)
+                    # Clear session
+                    if get_session(prefix=prefix, name=name) == row[pkey]:
+                        clear_session(prefix=prefix, name=name)
+                    # Audit
+                    audit("delete", prefix, name,
+                          record=row[pkey], representation=format)
+                    # Delete super-entity
+                    delete_super(table, row)
+                    # On-delete hook
                     if ondelete:
                         callback(ondelete, row)
+                    # Commit after each row to not have it rolled back by
+                    # subsequent cascade errors
+                    if not cascade:
+                        db.commit()
 
         if numrows == 0 and not deletable:
             # No deletable rows found
-            manager.error = self.ERROR.INTEGRITY_ERROR
+            manager.error = INTEGRITY_ERROR
 
         return numrows
 
@@ -4969,6 +4970,11 @@ class S3ResourceFilter:
                 self._add_query(q, component=component, master=master)
             else:
                 self._add_vfltr(f, component=component, master=master)
+            joins, distinct = f.joins(self.resource)
+            for join in joins.values():
+                for q in join:
+                    self._add_query(q, component=component, master=master)
+            self.distinct |= distinct
         else:
             self._add_query(f, component=component, master=master)
         return
