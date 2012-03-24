@@ -30,7 +30,7 @@ Permissions
 Permissions in e-cidadania are inherited directly from the django auth system.
 This way we have group based permissions and user based permissions. For the first
 release is enough, but **it would be extremely recommended to not use the platform
-yet, if security if your priority**.
+yet, if security is your priority**.
 
 e-cidadania 0.2 will have a row-level permission system, more detailed and secure
 than the current ones.
@@ -45,7 +45,7 @@ to give them another permission for a specific task.
 Spaces
 ------
 
-Spaces are where partivipative processes take place.
+Spaces are where participative processes take place.
 
 Modules
 -------
@@ -62,7 +62,7 @@ tasks which are: creation, editing and deletion.
 
 **Creation**
   Depending on the moderation grade that you have been given, you can add simple
-  content or more complex. The highest moderation leves have a very high detail
+  content or more complex. The highest moderation levels have a very high detail
   grade when adding content.
 
 **Editing**
