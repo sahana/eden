@@ -89,6 +89,8 @@ class S3Config(Storage):
         return self.auth.get("hmac_key", "akeytochange")
     def get_auth_openid(self):
         return self.auth.get("openid", False)
+    def get_auth_gmail_domains(self):
+        return self.auth.get("gmail_domains", [])
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):

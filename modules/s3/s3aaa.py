@@ -562,10 +562,12 @@ class AuthS3(Auth):
                             onvalidation=onvalidation):
                 accepted_form = True
                 if username == "email":
-                    domain = form.vars[username].split("@")[1]
-                    if domain in current.deployment_settings.auth.email_domains:
-                        self.settings.login_methods.append(
-                        email_auth("smtp.gmail.com:587", "@"+domain))
+                    gmail_domains = current.deployment_settings.get_auth_gmail_domains()
+                    if gmail_domains:
+                        domain = form.vars[username].split("@")[1]
+                        if domain in gmail_domains:
+                            self.settings.login_methods.append(
+                                email_auth("smtp.gmail.com:587", "@%s" % domain))
                 # check for username in db
                 query = (table_user[username] == form.vars[username])
                 users = db(query).select()
