@@ -32,6 +32,7 @@ deployment_settings.auth.hmac_key = "akeytochange"
 deployment_settings.security.self_registration = True
 deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
+deployment_settings.auth.email_domains = ["sahanafoudnation.org","gmail.com"]
 
 # Uncomment this to request the Mobile Phone when a user registers
 deployment_settings.auth.registration_requests_mobile_phone = True
