@@ -577,6 +577,8 @@ s3.crud_strings = Storage(
     msg_record_deleted = T("Record deleted"),
     msg_list_empty = T("No Records currently available"),
     msg_match = T("Matching Records"),
-    msg_no_match = T("No Matching Records"))
+    msg_no_match = T("No Matching Records"),
+    name_nice = T("Record"),
+    name_nice_plural = T("Records"))
 
 # END =========================================================================

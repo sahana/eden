@@ -547,7 +547,7 @@ class S3PersonModel(S3Model):
                                    default=False),
                              Field("first_name",
                                    notnull=True,
-                                   default="?",
+                                   default = "?" if current.auth.permission.format != "html" else "",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
                                    # http://eden.sahanafoundation.org/ticket/834
@@ -605,7 +605,7 @@ class S3PersonModel(S3Model):
                                    autodelete=True,
                                    label = T("Picture"),
                                    requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                                   error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 300x300 pixels!"))),
+                                                                   error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                    represent = lambda image: image and \
                                                         DIV(A(IMG(_src=URL(c="default", f="download",
                                                                            args=image),

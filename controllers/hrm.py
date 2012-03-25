@@ -145,7 +145,6 @@ def human_resource():
 
     tablename = "hrm_human_resource"
     table = s3db[tablename]
-    ptable = s3db.pr_person
 
     # NB Change these & change the list_fields.pop() later
     list_fields = ["id",
