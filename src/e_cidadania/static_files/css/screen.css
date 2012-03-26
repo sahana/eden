@@ -41,14 +41,14 @@ hr { /* This hr replaces the bootstrap one */
     border: 1px solid #FF6666;
 }
 
-.help-inline{
-    display:inline-block;
-    *display:inline;
-    *zoom:1;
-    margin-bottom:9px;
-    vertical-align:middle;
-    padding-left:5px;
-    color:#ff0000;
+.help-inline {
+    display: inline-block;
+    *display: inline;
+    *zoom: 1;
+    margin-bottom: 9px;
+    vertical-align: middle;
+    padding-left: 5px;
+    color: #F00;
 }
 
 @font-face {
@@ -417,7 +417,7 @@ tbody td.criteria-title, tbody th.criteria-title {
 .handler {
     float: left;
     height: 10px;
-    width: 80px;
+    width: 110px;
     background-color: #867794;
     margin: -5px 0px 0px -5px;
 }
@@ -434,7 +434,7 @@ tbody td.criteria-title, tbody th.criteria-title {
 .note, .note-alpha {
     background-color: #dbdbfb; /*#b9a6cf; /*url('../assets/note.png');*/
     font-size: 0.8em;
-    width: 70px;
+    width: 100px;
     height: 70px;
     float: left;
     margin: 5px;
