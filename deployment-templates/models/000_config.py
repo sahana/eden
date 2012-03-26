@@ -54,7 +54,9 @@ deployment_settings.auth.registration_requests_mobile_phone = True
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #deployment_settings.auth.registration_volunteer = True
 # Uncomment this to allow users to Login using OpenID
-deployment_settings.auth.openid = False
+#deployment_settings.auth.openid = True
+# Uncomment this to allow users to Login using Gmail's SMTP
+#deployment_settings.auth.gmail_domains = ["gmail.com"]
 
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 deployment_settings.auth.always_notify_approver = True

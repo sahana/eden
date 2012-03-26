@@ -46,6 +46,7 @@ class S3Config(Storage):
 
     def __init__(self):
         self.auth = Storage()
+        self.auth.email_domains=[]
         self.base = Storage()
         self.database = Storage()
         self.frontpage = Storage()
@@ -88,6 +89,8 @@ class S3Config(Storage):
         return self.auth.get("hmac_key", "akeytochange")
     def get_auth_openid(self):
         return self.auth.get("openid", False)
+    def get_auth_gmail_domains(self):
+        return self.auth.get("gmail_domains", [])
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
@@ -120,7 +123,7 @@ class S3Config(Storage):
         return self.auth.get("registration_volunteer", False)
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", False)
-
+        
     # @ToDo: Deprecate
     def get_aaa_default_uacl(self):
         return self.aaa.get("default_uacl", self.aaa.acl.READ)

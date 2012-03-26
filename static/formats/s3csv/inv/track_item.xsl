@@ -10,7 +10,7 @@
 
         CSV fields:
         Organisation..................track_org_id
-        Tracking Number...............tracking_no
+        Tracking Number...............item_source_no
         Shipping Status...............status
         Warehouse.....................inv_inv_item.site_id, inv_send.site_id, inv_recv.from_site_id
         Supply Item...................inv_inv_item.item_id, supply_item.name
@@ -88,15 +88,13 @@
                          col[@field='Item Model'], '/',
                          col[@field='Unit of Measure'])"/>
 
-    <xsl:key name="send_item"
+    <xsl:key name="shipping"
              match="row"
-             use="concat(col[@field='Supply Item'],
-                         col[@field='Bin'])"/>
-
-    <xsl:key name="recv_item"
-             match="row"
-             use="concat(col[@field='Supply Item'],
-                         col[@field='Receiving Bin'])"/>
+             use="concat(col[@field='Name of Sender'],
+                         col[@field='Name of Recipient'],
+                         col[@field='Warehouse'],
+                         col[@field='Destination Site'],
+                         col[@field='Date Sent'])"/>
 
     <xsl:key name="supply_item"
              match="row"
@@ -179,21 +177,20 @@
             </xsl:for-each>
 
             <!-- ******************************************************************
-                 Search for each stock item
+                 Search for each shipping
                  ****************************************************************** -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('send_item',
-                                                        concat(col[@field='Supply Item'],
-                                                               col[@field='Bin']))[1])]">
+                                        generate-id(key('shipping',
+                                                        concat(col[@field='Name of Sender'],
+                                                               col[@field='Name of Recipient'],
+                                                               col[@field='Warehouse'],
+                                                               col[@field='Destination Site'],
+                                                               col[@field='Date Sent']
+                                                              ))[1])]">
                 <xsl:call-template name="Send"/>
-            </xsl:for-each>
-
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('recv_item',
-                                                        concat(col[@field='Supply Item'],
-                                                               col[@field='Receiving Bin']))[1])]">
                 <xsl:call-template name="Recv"/>
             </xsl:for-each>
+
         </s3xml>
     </xsl:template>
 
@@ -221,7 +218,7 @@
 
         <xsl:variable name="sender" select="col[@field='Name of Sender']/text()"/>
         <xsl:variable name="recipient" select="col[@field='Name of Recipient']/text()"/>
-        <xsl:variable name="date" select="col[@field='Date Received']/text()"/>
+        <xsl:variable name="date" select="col[@field='Date Sent']/text()"/>
         <xsl:variable name="eta" select="col[@field='Estimated Date of Arrival']/text()"/>
         <xsl:variable name="comments" select="col[@field='Comments']/text()"/>
         <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
@@ -231,9 +228,10 @@
         <xsl:variable name="item_tuid" select="concat($item, '/', $pack, '/', $model)"/>
         <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $warehouse, '/', $s_bin)"/>
         <xsl:variable name="r_tuid" select="concat($item_tuid, '/', $destination, '/', $r_bin)"/>
-        <xsl:variable name="send_tuid" select="concat($item, '/', $s_bin)"/>
-        <xsl:variable name="recv_tuid" select="concat($item, '/', $r_bin)"/>
-        <xsl:variable name="tuid" select="concat($item, '/', $warehouse, '/', $destination, '/', $date)"/>
+
+        <xsl:variable name="send_tuid" select="concat('inv_send/', $sender, '/', $recipient, '/', $warehouse, '/', $destination, '/', $date)"/>
+        <xsl:variable name="recv_tuid" select="concat('inv_recv/', $sender, '/', $recipient, '/', $warehouse, '/', $destination, '/', $date)"/>
+        <xsl:variable name="tuid" select="concat('track_item/', $item, '/', $warehouse, '/', $destination, '/', $date)"/>
 
         <!-- Find the inventory record that is sending the items -->
         <xsl:call-template name="StockItem">
@@ -253,7 +251,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$tuid"/>
             </xsl:attribute>
-            <data field="tracking_no"><xsl:value-of select="$tracking_no"/></data>
+            <data field="item_source_no"><xsl:value-of select="$tracking_no"/></data>
             <data field="status"><xsl:value-of select="$status"/></data>
             <data field="quantity"><xsl:value-of select="$s_quantity"/></data>
             <data field="recv_quantity"><xsl:value-of select="$r_quantity"/></data>
@@ -267,13 +265,13 @@
             <!-- Link to the shipping org -->
             <reference field="track_org_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$orgName"/>
+                    <xsl:value-of select="concat('org_org/',$orgName)"/>
                 </xsl:attribute>
             </reference>
-            <!-- Link to the shipping org -->
+            <!-- Link to the supply org -->
             <reference field="supply_org_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$donorName"/>
+                    <xsl:value-of select="concat('org_org/',$donorName)"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to supply_item -->
@@ -326,7 +324,7 @@
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
+                <xsl:value-of select="concat('org_org/',$OrgName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$OrgName"/></data>
         </resource>
@@ -406,15 +404,14 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Send">
-        <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
-        <xsl:variable name="bin" select="col[@field='Bin']/text()"/>
-        <xsl:variable name="tuid" select="concat($item, '/', $bin)"/>
+
         <xsl:variable name="sender" select="col[@field='Name of Sender']/text()"/>
         <xsl:variable name="recipient" select="col[@field='Name of Recipient']/text()"/>
-        <xsl:variable name="date" select="col[@field='Date Sent']/text()"/>
-        <xsl:variable name="delivery_date" select="col[@field='Estimated Date of Arrival']/text()"/>
         <xsl:variable name="warehouse" select="col[@field='Warehouse']/text()"/>
         <xsl:variable name="destination" select="col[@field='Destination Site']/text()"/>
+        <xsl:variable name="date" select="col[@field='Date Sent']/text()"/>
+        <xsl:variable name="tuid" select="concat('inv_send/', $sender, '/', $recipient, '/', $warehouse, '/', $destination, '/', $date)"/>
+        <xsl:variable name="delivery_date" select="col[@field='Estimated Date of Arrival']/text()"/>
         <xsl:variable name="s_statusname" select="col[@field='Sent Status']"/>
         <xsl:variable name="s_status" select="document('')//inv:shipstatus[text()=normalize-space($s_statusname)]/@code"/>
         <xsl:variable name="comments" select="col[@field='Send Comments']/text()"/>
@@ -459,15 +456,13 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Recv">
-        <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
-        <xsl:variable name="bin" select="col[@field='Receiving Bin']/text()"/>
-        <xsl:variable name="tuid" select="concat($item, '/', $bin)"/>
         <xsl:variable name="sender" select="col[@field='Name of Sender']/text()"/>
         <xsl:variable name="recipient" select="col[@field='Name of Recipient']/text()"/>
-        <xsl:variable name="date" select="col[@field='Date Received']/text()"/>
-        <xsl:variable name="eta" select="col[@field='Estimated Date of Arrival']/text()"/>
         <xsl:variable name="warehouse" select="col[@field='Warehouse']/text()"/>
         <xsl:variable name="destination" select="col[@field='Destination Site']/text()"/>
+        <xsl:variable name="date" select="col[@field='Date Sent']/text()"/>
+        <xsl:variable name="tuid" select="concat('inv_recv/', $sender, '/', $recipient, '/', $warehouse, '/', $destination, '/', $date)"/>
+        <xsl:variable name="eta" select="col[@field='Estimated Date of Arrival']/text()"/>
 
         <xsl:variable name="r_typename" select="col[@field='Receiving Type']"/>
         <xsl:variable name="r_type" select="document('')//inv:recvtype[text()=normalize-space($r_typename)]/@code"/>
@@ -525,6 +520,8 @@
         <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
         <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
         <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
+        <xsl:variable name="donorName" select="col[@field='Supplier/Donor']/text()"/>
+        <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
         <xsl:variable name="item_tuid" select="concat($item, '/', $pack, '/', $model)"/>
         <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $site, '/', $bin)"/>
 
@@ -533,6 +530,7 @@
                 <xsl:value-of select="$s_tuid"/>
             </xsl:attribute>
             <data field="bin"><xsl:value-of select="$bin"/></data>
+            <data field="item_source_no"><xsl:value-of select="$tracking_no"/></data>
             <!-- Link to warehouse -->
             <reference field="site_id" resource="org_office">
                 <xsl:attribute name="tuid">
@@ -549,6 +547,12 @@
             <reference field="item_pack_id" resource="supply_item_pack">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$item_tuid"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to the supply org -->
+            <reference field="supply_org_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('org_org/',$donorName)"/>
                 </xsl:attribute>
             </reference>
         </resource>
