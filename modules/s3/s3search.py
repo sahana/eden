@@ -90,11 +90,7 @@ class S3SearchWidget(object):
 
         self.other = None
 
-        # todo: remove this property when all search widgets have been changed to use self.fields
         self.field = field
-        
-        # Updating search widgets to use this property instead of self.field
-        self.fields = field
 
         if not self.field:
             raise SyntaxError("No search field specified.")
@@ -189,7 +185,8 @@ class S3SearchWidget(object):
                 ktable = db[reference]
                 ktablename = reference
                 # Do not add queries for empty tables
-                if not db(ktable.id > 0).select(ktable.id, limitby=(0, 1)).first():
+                if not db(ktable.id > 0).select(ktable.id,
+                                                limitby=(0, 1)).first():
                     continue
 
 
@@ -283,28 +280,28 @@ class S3SearchSimpleWidget(S3SearchWidget):
         return INPUT(**self.attr)
 
     # -------------------------------------------------------------------------
-    def query(self, resource, search_string):
+    def query(self, resource, value):
         """
             Returns a sub-query for this search option
 
             @param resource: the resource to search in
-            @param search_string: the value returned from the widget
+            @param value: the value returned from the widget
         """
 
         # This is a query that will always result in no records being found
         DEFAULT = (resource.table._id == None)
 
         # No search fields?
-        if not self.fields:
+        if not self.field:
             return DEFAULT
 
         # Default search (wildcard)
-        if not search_string:
+        if not value:
             return None
 
         # Build the query
-        if search_string and isinstance(search_string, str):
-            values = search_string.split()
+        if value and isinstance(value, str):
+            values = value.split()
             
             final_query = None
 
@@ -312,8 +309,9 @@ class S3SearchSimpleWidget(S3SearchWidget):
             for value in values:
                 field_queries = None
 
-                # Create a queries that test the current value against each field
-                for field in self.fields:
+                # Create a queries that test the current
+                # value against each field
+                for field in self.field:
                     field_query = S3QueryField(field).like(value)
                     
                     # We want a match against any field
@@ -715,30 +713,23 @@ class S3SearchOptionsWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param value: the value returned from the widget
         """
-        s_resource = resource
-
-        resource, field, kfield = self._get_reference_resource(resource)
 
         if value:
             if not isinstance(value, (list, tuple)):
                 value = [value]
+            
             try:
-                _field = resource.table[field]
+                # self.field is a list, but we only want one
+                field = resource.table[self.field[0]]
             except:
-                field_type = "virtual"
+                # field is virtual
                 raise NotImplementedError
-            else:
-                field_type = str(_field.type)
 
-            if field_type.startswith("list"):
-                query = (_field.contains(value))
+            if str(field.type).startswith("list"):
+                query = S3QueryField(field.name).contains(value)
             else:
-                query = (_field.belongs(value))
-            if kfield:
-                # This is searching a referenced resource
-                # Add join query
-                query  = query & \
-                         (s_resource.table[kfield] == resource.table.id)
+                query = S3QueryField(field.name).belongs(value)
+            
             return query
         else:
             return None
@@ -1010,7 +1001,8 @@ class S3Search(S3CRUD):
                                               label=args.label,
                                               comment=args.comment)
 
-        # Create a list of Simple search form widgets, by name, and throw an error if a duplicate is found
+        # Create a list of Simple search form widgets, by name,
+        # and throw an error if a duplicate is found
         names = []
         self.__simple = []
         if not isinstance(simple, (list, tuple)):
@@ -1027,7 +1019,8 @@ class S3Search(S3CRUD):
                     self.__simple.append((name, widget))
                     names.append(name)
 
-        # Create a list of Advanced search form widgets, by name, and throw an error if a duplicate is found
+        # Create a list of Advanced search form widgets, by name,
+        # and throw an error if a duplicate is found
         names = []
         self.__advanced = []
         if not isinstance(advanced, (list, tuple)):
@@ -1076,7 +1069,8 @@ class S3Search(S3CRUD):
             output = self.save_search(r, **attr)
 
         # Interactive or saved search
-        elif "load" in r.vars or r.interactive and self.__interactive:
+        elif "load" in r.vars or \
+                r.interactive and self.__interactive:
             output = self.search_interactive(r, **attr)
 
         # SSPag response => CRUD native
