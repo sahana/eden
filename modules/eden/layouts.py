@@ -71,7 +71,8 @@ class S3MainMenuLayout(S3NavigationItem):
                     if item.get_first(enabled=True):
                         _href = item.url()
                         return LI(DIV(A(item.label,
-                                        _href=_href),
+                                        _href=_href,
+                                        _id=item.id),
                                         _class="hoverable"),
                                   UL(items,
                                      _class="submenu"),
@@ -90,7 +91,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                        _class="hoverable")
                         else:
                             link = DIV(A(item.label,
-                                         _href=item.url()),
+                                         _href=item.url(),
+                                         _id=item.id),
                                        _class="hoverable")
                         return LI(link, _class=_class)
                     else:
@@ -104,7 +106,7 @@ class S3MainMenuLayout(S3NavigationItem):
                                 return None
                         else:
                             label = item.label
-                        link = A(label, _href=item.url())
+                        link = A(label, _href=item.url(), _id=item.id)
                         return LI(link)
             else:
                 # Main menu

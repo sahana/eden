@@ -406,12 +406,12 @@ def person():
                                     filter_opts=[session.s3.hrm.org]))
     if hr_id:
         if group == "staff":
-        table.site_id.writable = True
-        table.site_id.readable = True
+            table.site_id.writable = True
+            table.site_id.readable = True
         else:
             # Volunteer
-        table.location_id.writable = True
-        table.location_id.readable = True
+            table.location_id.writable = True
+            table.location_id.readable = True
             table.location_id.label = T("Home Address")
     else:
         table.location_id.readable = True

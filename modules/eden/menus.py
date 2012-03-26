@@ -164,6 +164,7 @@ class S3MainMenu:
                 login_next = request.get_vars["_next"]
 
             menu_auth = MM("Login", c="default", f="user", m="login",
+                           id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
                             MM("Login", m="login",
                                vars=dict(_next=login_next),
@@ -175,8 +176,9 @@ class S3MainMenu:
                         )
         else:
             menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False, link=False, **attr)(
-                            MM("Logout", m="logout"),
+                           translate=False, link=False, id="auth_menu_email",
+                           **attr)(
+                            MM("Logout", m="logout", id="auth_menu_logout"),
                             MM("User Profile", m="profile"),
                             MM("Personal Data", c="pr", f="person", m="update",
                                 vars={"person.pe_id" : auth.user.pe_id}),

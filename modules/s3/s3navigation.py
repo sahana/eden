@@ -93,6 +93,7 @@ class S3NavigationItem:
     #
     def __init__(self,
                  label=None,
+                 id=None,
                  c=None,
                  f=None,
                  args=[],
@@ -116,6 +117,7 @@ class S3NavigationItem:
             Constructor
 
             @param label: the label
+            @param id: define an ID for the item
 
             @param c: the controller
             @param f: the function
@@ -148,6 +150,9 @@ class S3NavigationItem:
             self.label = T(label)
         else:
             self.label = label
+
+        # ID
+        self.id = id
 
         # Register tags
         if tags:
