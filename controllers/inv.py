@@ -858,16 +858,10 @@ def recv_process():
                                owned_by_user = None,
                                owned_by_role = ADMIN
                             )
-    # Change the status for all track items in this shipment to Arrived
+    # Change the status for all track items in this shipment to Unloading
+    # the onaccept will then move the values into the site update any request
+    # record, create any adjustment if needed and change the status to Arrived
     db(tracktable.recv_id == recv_id).update(status = 3)
-    # Move each item to the site
-    track_rows = db(tracktable.recv_id == recv_id).select()
-    adj_id = None
-    for track_item in track_rows:
-        adj_id = s3.inv_track_item_unload(track_item.id, site_id, adj_id)
-        # if this is linked to a request then update the quantity fulfil
-        if track_item.req_item_id:
-            db(ritable.id == track_item.req_item_id).update(quantity_fulfil = ritable.quantity_fulfil + track_item.quantity)
 
     # Go to the Inventory of the Site which has received these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,

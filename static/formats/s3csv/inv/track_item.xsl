@@ -244,6 +244,7 @@
             <xsl:call-template name="StockItem">
                 <xsl:with-param name="site" select="col[@field='Destination Site']"/>
                 <xsl:with-param name="bin" select="col[@field='Receiving Bin']"/>
+                <xsl:with-param name="recv">true</xsl:with-param>
             </xsl:call-template>
         </xsl:if>
 
@@ -516,9 +517,12 @@
         
         <xsl:param name="site"/>
         <xsl:param name="bin"/>
+        <xsl:param name="recv"/>
         
         <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
         <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
+        <xsl:variable name="currency" select="col[@field='Currency']/text()"/>
+        <xsl:variable name="unit_value" select="col[@field='Unit Value']/text()"/>
         <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
         <xsl:variable name="donorName" select="col[@field='Supplier/Donor']/text()"/>
         <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
@@ -531,6 +535,11 @@
             </xsl:attribute>
             <data field="bin"><xsl:value-of select="$bin"/></data>
             <data field="item_source_no"><xsl:value-of select="$tracking_no"/></data>
+            <data field="currency"><xsl:value-of select="$currency"/></data>
+            <data field="pack_value"><xsl:value-of select="$unit_value"/></data>
+            <xsl:if test="$recv">
+                <data field="quantity">0</data>
+            </xsl:if>
             <!-- Link to warehouse -->
             <reference field="site_id" resource="org_office">
                 <xsl:attribute name="tuid">
