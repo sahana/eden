@@ -74,18 +74,7 @@
                                     {% endfor %}
                                 </ul>
                             {% endif %}
-                            
-                            {% if get_place.mod_proposals %}
-                                <h6>{% trans "Proposals" %}</h6>
-                                <ul class="unstyled">
-                                    {% for proposal in proposals %}
-                                        <li><a href="{% url 'profile_public' proposal.author %}">{{ proposal.author }}</a> {% trans "proposed" %} <a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "on" %} {{ proposal.pub_date|date:"d F Y" }}</li>
-                                    {% empty %}
-                                        <li>{% trans "No proposals available." %}</li>
-                                    {% endfor %} 
-                                </ul>
-                            {% endif %}
-                            
+
                             {% if get_place.mod_debate %}
                                 <h6>{% trans "Debates" %}</h6>
                                 <ul class="unstyled">
@@ -96,6 +85,17 @@
                                     {% endfor %}
                                 </ul>
                             {% endif %} 
+
+                            {% if get_place.mod_proposals %}
+                                <h6>{% trans "Proposals" %}</h6>
+                                <ul class="unstyled">
+                                    {% for proposal in proposals %}
+                                        <li><a href="{% url 'profile_public' proposal.author %}">{{ proposal.author }}</a> {% trans "proposed" %} <a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "on" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    {% empty %}
+                                        <li>{% trans "No proposals available." %}</li>
+                                    {% endfor %} 
+                                </ul>
+                            {% endif %}
                             
                             {% if get_place.mod_cal %}
                                 <h6>{% trans "Events" %}</h6>
