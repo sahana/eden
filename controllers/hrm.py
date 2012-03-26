@@ -48,7 +48,7 @@ def hrm_vars(session):
             session.s3.hrm.orgs = None
 
     # Set mode
-    if mode != "personal":
+    if session.s3.hrm.mode != "personal":
         if (ADMIN in roles or session.s3.hrm.orgs) or \
             deployment_settings.get_security_policy() in (1, 2):
             session.s3.hrm.mode = None
