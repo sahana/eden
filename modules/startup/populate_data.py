@@ -1249,7 +1249,7 @@ if populate > 0:
                                        "countries.csv")
             table.import_from_csv_file(open(import_file, "r"))
             map_admin = db(db.auth_group.uuid==sysroles.MAP_ADMIN).select().first().id
-            db(table.level=="L0").update(owned_by_role=map_admin)
+            db(table.level=="L0").update(owned_by_group=map_admin)
         # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
         field = "name"
         db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))

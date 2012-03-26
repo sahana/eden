@@ -2186,7 +2186,7 @@ class S3ProjectTaskModel(S3Model):
                 text = "%s\n%s" % (text, changed[var])
             table.insert(task_id=id,
                          body=text)
-                
+
         vars = current.request.post_vars
         if "project_id" in vars:
             ptable = s3db.project_project

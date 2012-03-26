@@ -363,7 +363,7 @@ class AuthS3(Auth):
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
 
-        if security_policy not in (1, 2, 3, 4, 5, 6, 7) and \
+        if security_policy not in (1, 2, 3, 4, 5, 6) and \
            not settings.table_permission:
             # Permissions table (group<->permission)
             # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
@@ -531,7 +531,7 @@ class AuthS3(Auth):
             log = self.messages.login_log
 
         user = None # default
-        
+
         # do we use our own login form, or from a central source?
         if self.settings.login_form == self:
             form = SQLFORM(
@@ -618,7 +618,7 @@ class AuthS3(Auth):
                 # we need to pass through login again before going on
                 next = "%s?_next=%s" % (URL(r=request), next)
                 redirect(cas.login_url(next))
-        
+
         # Process authenticated users
         if user:
             user = Storage(table_user._filter_fields(user, id=True))
@@ -1020,30 +1020,6 @@ class AuthS3(Auth):
         return None
 
     # -------------------------------------------------------------------------
-    def s3_lookup_site_role(self, site_id):
-        """
-            Lookup the Facility Access Role from the ID of the Facility
-        """
-
-        if not site_id:
-            return None
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.org_site
-        query = (table.id == site_id)
-        site = db(query).select(table.instance_type).first()
-        if site:
-            instance_type = site.instance_type
-            itable = db[instance_type]
-            query = (itable.site_id == site_id)
-            _site = db(query).select(itable.owned_by_facility).first()
-            if _site:
-                return _site.owned_by_facility
-
-        return None
-
-    # -------------------------------------------------------------------------
     def s3_impersonate(self, user_id):
         """
             S3 framework function
@@ -1125,17 +1101,9 @@ class AuthS3(Auth):
         else:
             owned_by_organisation = None
 
-        # For admin/user/create, lookup facility role
-        site_id = vars.get("site_id", None)
-        if site_id:
-            owned_by_facility = self.s3_lookup_site_role(site_id)
-        else:
-            owned_by_facility = None
-
         # Add to Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(vars, # user
-                                           owned_by_organisation,
-                                           owned_by_facility)
+                                           owned_by_organisation)
 
         if "image" in vars:
             if hasattr(vars.image, "file"):
@@ -1147,7 +1115,7 @@ class AuthS3(Auth):
                                          limitby=(0, 1)).first()
                 if pe_id:
                     pe_id = pe_id.pe_id
-                    itable = s3db.pr_image 
+                    itable = s3db.pr_image
                     field = itable.image
                     newfilename = field.store(source_file, original_filename, field.uploadfolder)
                     url = URL(c="default", f="download", args=newfilename)
@@ -1177,8 +1145,7 @@ class AuthS3(Auth):
                                    organisation_id=organisation_id,
                                    type=type,
                                    owned_by_user=user_id,
-                                   owned_by_organisation=owned_by_organisation,
-                                   owned_by_facility=owned_by_facility)
+                                   owned_by_organisation=owned_by_organisation)
                 record = Storage(id=id)
                 manager.model.update_super(htable, record)
 
@@ -1192,17 +1159,6 @@ class AuthS3(Auth):
                                         limitby=(0, 1)).first():
                     table.insert(user_id=user_id,
                                  group_id=owned_by_organisation)
-
-            if owned_by_facility:
-                # Add user to the Site Access Role
-                table = self.settings.table_membership
-                query = (table.deleted != True) & \
-                        (table.user_id == user_id) & \
-                        (table.group_id == owned_by_facility)
-                if not db(query).select(table.id,
-                                        limitby=(0, 1)).first():
-                    table.insert(user_id=user_id,
-                                 group_id=owned_by_facility)
 
         # Return person_id for init scripts
         return person_id
@@ -1255,14 +1211,12 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_link_to_person(self,
                           user=None,
-                          owned_by_organisation=None,
-                          owned_by_facility=None):
+                          owned_by_organisation=None):
         """
             Links user accounts to person registry entries
 
             @param user: the user record
             @param owned_by_organisation: the role of the owner organisation
-            @param owned_by_facility: the role of the owner facility
 
             Policy for linking to pre-existing person records:
 
@@ -1319,8 +1273,7 @@ class AuthS3(Auth):
             user = u[utn]
 
             owner = Storage(owned_by_user=user.id,
-                            owned_by_organisation=owned_by_organisation,
-                            owned_by_facility=owned_by_facility)
+                            owned_by_organisation=owned_by_organisation)
 
             if "email" in user:
 
@@ -1431,7 +1384,7 @@ class AuthS3(Auth):
                                 team_id = team_rec.id
                             gm_table.insert(group_id = team_id,
                                             person_id = new_id)
-    
+
                     # Set pe_id if this is the current user
                     if self.user and self.user.id == user.id:
                         self.user.pe_id = pe_id
@@ -1588,10 +1541,8 @@ class AuthS3(Auth):
 
         query &= ((htable.status == 1) &
                   (htable.deleted != True))
-        rows = db(query).select(htable.owned_by_organisation,
-                                htable.owned_by_facility)
+        rows = db(query).select(htable.owned_by_organisation)
         org_roles = []
-        fac_roles = []
         for row in rows:
             org_role = row.owned_by_organisation
             if org_role and org_role not in org_roles:
@@ -1601,18 +1552,8 @@ class AuthS3(Auth):
                 if not db(query).select(limitby=(0, 1)).first():
                     org_roles.append(dict(user_id=user_id,
                                           group_id=org_role))
-            fac_role = row.owned_by_facility
-            if fac_role and fac_role not in fac_roles:
-                query = (mtable.deleted != True) & \
-                        (mtable.user_id == user_id) & \
-                        (mtable.group_id == fac_role)
-                if not db(query).select(limitby=(0, 1)).first():
-                    fac_roles.append(dict(user_id=user_id,
-                                          group_id=fac_role))
         if org_roles:
             mtable.bulk_insert(org_roles)
-        if fac_roles:
-            mtable.bulk_insert(fac_roles)
 
     # -------------------------------------------------------------------------
     def s3_logged_in(self):
@@ -1923,7 +1864,7 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_update_acl(self, role,
                       c=None, f=None, t=None, oacl=None, uacl=None,
-                      organisation=None, facility=None):
+                      organisation=None):
         """
             Back-end method to update an ACL
         """
@@ -1933,10 +1874,6 @@ class AuthS3(Auth):
         all_organisations = organisation == ALL
         if all_organisations:
             organisation = None
-
-        all_facilities = facility == ALL
-        if all_facilities:
-            facility = None
 
         table = self.permission.table
         if not table:
@@ -1968,9 +1905,7 @@ class AuthS3(Auth):
                        oacl=oacl,
                        uacl=uacl,
                        all_organisations=all_organisations,
-                       organisation=organisation,
-                       all_facilities=all_facilities,
-                       facility=facility)
+                       organisation=organisation)
             if record:
                 success = record.update_record(**acl)
             else:
@@ -2182,7 +2117,7 @@ class AuthS3(Auth):
         elif policy == 2:
             # "editor" security policy: show all records
             return table.id > 0
-        elif policy in (3, 4, 5, 6, 7):
+        elif policy in (3, 4, 5, 6):
             # ACLs: use S3Permission method
             query = self.permission.accessible_query(table, method)
             return query
@@ -2332,7 +2267,7 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_set_record_owner(self, table, record):
         """
-            Set the owner organisation and facility for a record
+            Set the owner organisation for a record
 
             @param table: the table or table name
             @param record: the record (as row) or record ID
@@ -2345,17 +2280,12 @@ class AuthS3(Auth):
         site_types = self.org_site_types
 
         OWNED_BY_ORG = "owned_by_organisation"
-        OWNED_BY_FAC = "owned_by_facility"
         ORG_ID = "organisation_id"
-        FAC_ID = "site_id"
         ORG_PREFIX = "Org_%s"
-        FAC_PREFIX = "Fac_%s"
         ORG_TABLENAME = "org_organisation"
-        FAC_TABLENAME = "org_site"
         NAME = "name"
 
         org_table = s3db[ORG_TABLENAME]
-        fac_table = s3db[FAC_TABLENAME]
         grp_table = self.settings.table_group
 
         # Get the table
@@ -2368,9 +2298,7 @@ class AuthS3(Auth):
         fields = [table._id.name,
                   NAME,
                   ORG_ID,
-                  FAC_ID,
-                  OWNED_BY_ORG,
-                  OWNED_BY_FAC]
+                  OWNED_BY_ORG]
         fields = [table[f] for f in fields if f in table.fields]
 
         # Get the record
@@ -2434,57 +2362,10 @@ class AuthS3(Auth):
                 if organisation:
                     org_role = organisation[OWNED_BY_ORG]
 
-        # Get the facility ID
-        fac_role = None
-        if tablename in site_types:
-            site_id = record[FAC_ID]
-            if OWNED_BY_FAC in record:
-                fac_role = record[OWNED_BY_FAC]
-            if not fac_role:
-                # Create a new fac_role
-                uuid = FAC_PREFIX % site_id
-                if NAME in table:
-                    name = record[NAME]
-                else:
-                    name = uuid
-                role = Storage(uuid=uuid,
-                               deleted=False,
-                               hidden=False,
-                               system=True,
-                               protected=True,
-                               role="%s (Facility)" % name,
-                               description="All Staff of Facility %s" % name)
-                query = (grp_table.uuid == role.uuid) | \
-                        (grp_table.role == role.role)
-                record =  db(query).select(grp_table.id,
-                                           limitby=(0, 1)).first()
-                if not record:
-                    fac_role = grp_table.insert(**role)
-                else:
-                    record.update_record(**role)
-                    fac_role = record.id
-        elif FAC_ID in table:
-            # Get the fac_role from the site
-            site_id = record[FAC_ID]
-            if site_id:
-                query = fac_table[FAC_ID] == site_id
-                site = db(query).select(fac_table.instance_type,
-                                        fac_table.uuid,
-                                        limitby=(0, 1)).first()
-                if site:
-                    inst_table = s3db[site.instance_type]
-                    query = inst_table.uuid == site.uuid
-                    facility = db(query).select(inst_table[OWNED_BY_FAC],
-                                                limitby=(0, 1)).first()
-                    if facility:
-                        fac_role = facility[OWNED_BY_FAC]
-
         # Update the record as necessary
         data = Storage()
         if org_role and OWNED_BY_ORG in table:
             data[OWNED_BY_ORG] = org_role
-        if fac_role and OWNED_BY_FAC in table:
-            data[OWNED_BY_FAC] = fac_role
         if data and hasattr(record, "update_record"):
             record.update_record(**data)
         elif data and record_id:
@@ -2558,29 +2439,23 @@ class S3Permission(object):
         self.policy = settings.get_security_policy()
 
         # Which level of granularity do we want?
-        self.use_cacls = self.policy in (3, 4, 5, 6, 7) # Controller ACLs
-        self.use_facls = self.policy in (4, 5, 6, 7)    # Function ACLs
-        self.use_tacls = self.policy in (5, 6, 7)       # Table ACLs
-        self.org_roles = self.policy in (6, 7)          # OrgAuth
+        self.use_cacls = self.policy in (3, 4, 5, 6) # Controller ACLs
+        self.use_facls = self.policy in (4, 5, 6)    # Function ACLs
+        self.use_tacls = self.policy in (5, 6)       # Table ACLs
+        self.org_roles = self.policy == 6            # OrgAuth
         self.modules = settings.modules
 
         # If a large number of roles in the system turnes into a bottleneck
-        # in policies 6 and 7, then we could reduce the number of roles in
+        # in policy 6, then we could reduce the number of roles in
         # subsequent queries; this would though add another query (or even two
         # more queries) to the request, so the hypothetic performance gain
         # should first be confirmed by tests:
-        #if self.policy in (6, 7):
+        #if self.policy == 6:
             #gtable = auth.settings.table_group
             #org_roles = current.db(gtable.uid.like("Org_%")).select(gtable.id)
             #self.org_roles = [r.id for r in org_roles]
         #else:
             #self.org_roles = []
-        #if self.policy == 7:
-            #gtable = auth.settings.table_group
-            #fac_roles = current.db(gtable.uid.like("Fac_%")).select(gtable.id)
-            #self.fac_roles = [r.id for r in fac_roles]
-        #else:
-            #self.fac_roles = []
 
         # Permissions table
         self.tablename = tablename or self.TABLENAME
@@ -2658,14 +2533,6 @@ class S3Permission(object):
                                   table_group,
                                   requires = IS_NULL_OR(IS_IN_DB(
                                                 db, table_group.id))),
-                            # Only apply to records owned by this
-                            # facility role (policy 7 only):
-                            Field("all_facilities", "boolean",
-                                  default=False),
-                            Field("facility",
-                                  table_group,
-                                  requires = IS_NULL_OR(IS_IN_DB(
-                                                db, table_group.id))),
                             migrate=migrate,
                             fake_migrate=fake_migrate,
                             *(s3_uid()+s3_timestamp()+s3_deletion_status()))
@@ -2686,7 +2553,7 @@ class S3Permission(object):
             @param record: the record ID (or the Row if already loaded)
 
             @note: if passing a Row, it must contain all available ownership
-                   fields (id, owned_by_user, owned_by_role), otherwise the
+                   fields (id, owned_by_user, owned_by_group), otherwise the
                    record will be re-loaded by this function
         """
 
@@ -2726,26 +2593,20 @@ class S3Permission(object):
 
         # Do we need to check the owner role (i.e. table+record given)?
         is_owner = False
-        require_org = require_fac = None
+        require_org = None
         if table is not None and record is not None:
-            owner_role, owner_user, owner_org, owner_fac = \
+            owner_role, owner_user, owner_org = \
                 self.get_owners(table, record)
             is_owner = self.is_owner(table, None,
                                      owner_role=owner_role,
                                      owner_user=owner_user,
-                                     owner_org=owner_org,
-                                     owner_fac=owner_fac)
+                                     owner_org=owner_org)
             if self.policy == 6:
                 require_org = owner_org
-                require_fac = None
-            elif self.policy == 7:
-                require_org = owner_org
-                require_fac = owner_fac
 
         # Get the applicable ACLs
         page_acl = self.page_acl(c=c, f=f,
-                                 require_org=require_org,
-                                 require_fac=require_fac)
+                                 require_org=require_org)
         if table is None or not self.use_tacls:
             acl = page_acl
         else:
@@ -2755,8 +2616,7 @@ class S3Permission(object):
                 table_acl = self.table_acl(table=table,
                                            c=c,
                                            default=page_acl,
-                                           require_org=require_org,
-                                           require_fac=require_fac)
+                                           require_org=require_org)
             acl = self.most_restrictive((page_acl, table_acl))
 
         # Decide which ACL to use for this case
@@ -2774,9 +2634,7 @@ class S3Permission(object):
         return acl
 
     # -------------------------------------------------------------------------
-    def page_acl(self, c=None, f=None,
-                 require_org=None,
-                 require_fac=None):
+    def page_acl(self, c=None, f=None, require_org=None):
         """
             Get the ACL for a page
 
@@ -2815,9 +2673,7 @@ class S3Permission(object):
                 page_acl = (self.READ, self.READ)
         else:
             # Lookup cached result
-            page_acl = self.page_acls.get((page,
-                                           require_org,
-                                           require_fac), None)
+            page_acl = self.page_acls.get((page, require_org), None)
 
         if page_acl is None:
             page_acl = (self.NONE, self.NONE) # default
@@ -2829,14 +2685,10 @@ class S3Permission(object):
             else:
                 query = (t.group_id == None) & q
             # Additional restrictions in OrgAuth
-            if policy in (6, 7) and require_org:
+            if policy == 6 and require_org:
                 field = t.organisation
                 query &= ((t.all_organisations == True) | \
                           (field == require_org) | (field == None))
-            if policy == 7 and require_fac:
-                field = t.facility
-                query &= ((t.all_facilities == True) | \
-                          (field == require_fac) | (field == None))
             rows = current.db(query).select()
             if rows:
                 # ACLs found, check for function-specific
@@ -2854,16 +2706,13 @@ class S3Permission(object):
                     page_acl = most_permissive(controller_acl)
 
             # Remember this result
-            self.page_acls.update({(page,
-                                    require_org,
-                                    require_fac): page_acl})
+            self.page_acls.update({(page, require_org): page_acl})
 
         return page_acl
 
     # -------------------------------------------------------------------------
     def table_acl(self, table=None, c=None, default=None,
-                  require_org=None,
-                  require_fac=None):
+                  require_org=None):
         """
             Get the ACL for a table
 
@@ -2899,9 +2748,7 @@ class S3Permission(object):
             tablename = table._tablename
         else:
             tablename = table
-        table_acl = self.table_acls.get((tablename,
-                                         require_org,
-                                         require_fac), None)
+        table_acl = self.table_acls.get((tablename, require_org), None)
 
         if table_acl is None:
             q = ((t.deleted != True) & \
@@ -2912,14 +2759,10 @@ class S3Permission(object):
             else:
                 query = (t.group_id == None) & q
             # Additional restrictions in OrgAuth
-            if policy in (6, 7) and require_org:
+            if policy == 6 and require_org:
                 field = t.organisation
                 query &= ((t.all_organisations == True) | \
                           (field == require_org) | (field == None))
-            if policy == 7 and require_fac:
-                field = t.facility
-                query &= ((t.all_facilities == True) | \
-                          (field == require_fac) | (field == None))
             rows = current.db(query).select()
             table_acl = [(r.oacl, r.uacl) for r in rows]
             if table_acl:
@@ -2930,22 +2773,19 @@ class S3Permission(object):
                 table_acl = default
 
             # Remember this result
-            self.table_acls.update({(tablename,
-                                     require_org,
-                                     require_fac): table_acl})
+            self.table_acls.update({(tablename, require_org): table_acl})
         return table_acl
 
     # -------------------------------------------------------------------------
     def get_owners(self, table, record):
         """
-            Get the organisation/facility/group/user owning a record
+            Get the organisation/group/user owning a record
 
             @param table: the table
             @param record: the record ID (or the Row, if already loaded)
         """
 
         owner_org = None
-        owner_fac = None
         owner_role = None
         owner_user = None
 
@@ -2953,9 +2793,8 @@ class S3Permission(object):
 
         # Check which ownership fields the table defines
         ownership_fields = ("owned_by_user",
-                            "owned_by_role",
-                            "owned_by_organisation",
-                            "owned_by_facility")
+                            "owned_by_group",
+                            "owned_by_organisation")
         fields = [f for f in ownership_fields if f in table.fields]
         if not fields:
             # Ownership is not defined for this table
@@ -2983,22 +2822,19 @@ class S3Permission(object):
             # Record does not exist
             return (None, None, None, None)
 
-        if "owned_by_role" in record:
-            owner_role = record["owned_by_role"]
+        if "owned_by_group" in record:
+            owner_role = record["owned_by_group"]
         if "owned_by_user" in record:
             owner_user = record["owned_by_user"]
         if "owned_by_organisation" in record:
             owner_org = record["owned_by_organisation"]
-        if "owned_by_facility" in record:
-            owner_fac = record["owned_by_facility"]
-        return (owner_role, owner_user, owner_org, owner_fac)
+        return (owner_role, owner_user, owner_org)
 
     # -------------------------------------------------------------------------
     def is_owner(self, table, record,
                  owner_role=None,
                  owner_user=None,
-                 owner_org=None,
-                 owner_fac=None):
+                 owner_org=None):
         """
             Establish the ownership of a record
 
@@ -3007,10 +2843,9 @@ class S3Permission(object):
             @param owner_role: owner_role of the record (if already known)
             @param owner_user: owner_user of the record (if already known)
             @param owner_org: owner_org of the record (if already known)
-            @param owner_fac: owner_fac of the record (if already known)
 
             @note: if passing a Row, it must contain all available ownership
-                   fields (id, owned_by_user, owned_by_role), otherwise the
+                   fields (id, owned_by_user, owned_by_group), otherwise the
                    record will be re-loaded by this function
         """
 
@@ -3029,7 +2864,7 @@ class S3Permission(object):
             # Admin owns all records
             return True
         elif record:
-            owner_role, owner_user, owner_org, owner_fac = \
+            owner_role, owner_user, owner_org = \
                 self.get_owners(table, record)
 
         try:
@@ -3053,13 +2888,6 @@ class S3Permission(object):
         if self.policy == 6 and owner_org:
             # Must have the organisation's staff role
             if owner_org not in roles:
-                return False
-        elif self.policy == 7:
-            # Must have both, the organisation's and the
-            # facilities staff role
-            if owner_org and owner_org not in roles:
-                return False
-            if owner_fac and owner_fac not in roles:
                 return False
 
         # Owner?
@@ -3236,10 +3064,9 @@ class S3Permission(object):
             if f and self.use_facls:
                 query = (query | (table.function == f))
             query &= (table.controller == c)
-            # Do not use delegated ACLs except for policy 6 and 7
-            if self.policy not in (6, 7):
-                query &= ((table.organisation == None) & \
-                          (table.facility == None))
+            # Do not use delegated ACLs except for policy 6
+            if self.policy != 6:
+                query &= (table.organisation == None)
             # Restrict to available roles
             if roles:
                 query &= (table.group_id.belongs(roles))
@@ -3269,10 +3096,9 @@ class S3Permission(object):
                      (table.tablename == t))
             # Is the table restricted at all?
             restricted = db(query).select(limitby=(0, 1)).first() is not None
-            # Do not use delegated ACLs except for policy 6 and 7
-            if self.policy not in (6, 7):
-                query &= ((table.organisation == None) & \
-                          (table.facility == None))
+            # Do not use delegated ACLs except for policy 6
+            if self.policy != 6:
+                query &= (table.organisation == None)
             # Restrict to available roles
             if roles:
                 query = (table.group_id.belongs(roles)) & query
@@ -3331,11 +3157,9 @@ class S3Permission(object):
         sr = self.auth.get_system_roles()
 
         OWNED_BY_ORG = "owned_by_organisation"
-        OWNED_BY_FAC = "owned_by_facility"
         OWNED_BY_USER = "owned_by_user"
-        OWNED_BY_ROLE = "owned_by_role"
+        OWNED_BY_GROUP = "owned_by_group"
         ALL_ORGS = "all_organisations"
-        ALL_FACS = "all_facilities"
 
         # Default queries
         query = (table._id != None)
@@ -3361,14 +3185,11 @@ class S3Permission(object):
             _debug("Admin/Editor in Roles, query=%s" % query)
             return query
 
-        # Org/Fac roles the user has
+        # Org roles the user has
         org_roles = []
-        fac_roles = []
-        all_orgs = all_facs = False
-        if policy in (6, 7):
+        all_orgs = False
+        if policy == 6:
             org_roles = list(roles)
-        if policy == 7:
-            fac_roles = list(roles)
 
         # Applicable ACLs
         acls = self.applicable_acls(roles, racl, t=table)
@@ -3386,18 +3207,12 @@ class S3Permission(object):
                 if acl.uacl & racl == racl:
                     ownership_required = False
                     _debug("uACL found - no ownership required")
-                if policy in (6, 7):
+                if policy == 6:
                     org_role = acl.organisation
                     if acl[ALL_ORGS]:
                         all_orgs = True
                     elif org_role and org_role not in org_roles:
                         org_roles.append(org_role)
-                if policy == 7:
-                    fac_role = acl.facility
-                    if acl[ALL_FACS]:
-                        all_facs = True
-                    elif fac_role and fac_role not in fac_roles:
-                        fac_roles.append(fac_role)
 
         if not permitted:
             _debug("No access")
@@ -3409,9 +3224,6 @@ class S3Permission(object):
         if OWNED_BY_ORG in table:
             has_org_role = ((table[OWNED_BY_ORG] == None) | \
                             (table[OWNED_BY_ORG].belongs(org_roles)))
-        if OWNED_BY_FAC in table:
-            has_fac_role = ((table[OWNED_BY_FAC] == None) | \
-                            (table[OWNED_BY_FAC].belongs(fac_roles)))
         if OWNED_BY_USER in table:
             user_owns_record = (table[OWNED_BY_USER] == user_id)
 
@@ -3420,16 +3232,6 @@ class S3Permission(object):
         if policy == 6 and OWNED_BY_ORG in table and not all_orgs:
             q = has_org_role
             if user_id and OWNED_BY_USER in table:
-                q |= user_owns_record
-        elif policy == 7:
-            if OWNED_BY_ORG in table and not all_orgs:
-                q = has_org_role
-            if OWNED_BY_FAC in table and not all_facs:
-                if q is not None:
-                    q &= has_fac_role
-                else:
-                    q = has_fac_role
-            if q is not None and user_id and OWNED_BY_USER in table:
                 q |= user_owns_record
         if q is not None:
             query = q
@@ -3448,8 +3250,8 @@ class S3Permission(object):
                             query = (table._id.belongs(records))
             else:
                 qowner = qrole = quser = None
-                if OWNED_BY_ROLE in table:
-                    qrole = (table.owned_by_role.belongs(roles))
+                if OWNED_BY_GROUP in table:
+                    qrole = (table.owned_by_group.belongs(roles))
                 if OWNED_BY_USER in table and user_id:
                     quser = (table.owned_by_user == user_id)
 
@@ -3517,7 +3319,7 @@ class S3Permission(object):
         if not permitted:
             pkey = table.fields[0]
             query = (table[pkey] == None)
-        elif "owned_by_role" in table or "owned_by_user" in table:
+        elif "owned_by_group" in table or "owned_by_user" in table:
             ownership_required = permitted and acl[1] & racl != racl
 
         return ownership_required
@@ -3533,7 +3335,7 @@ class S3Permission(object):
                            any of "create", "read", "update", "delete"
 
             @note: when submitting a record, the record ID and the ownership
-                   fields (="owned_by_user", "owned_by_role") must be contained
+                   fields (="owned_by_user", "owned_by_group") must be contained
                    if available, otherwise the record will be re-loaded
         """
 

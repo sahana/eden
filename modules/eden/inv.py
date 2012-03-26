@@ -402,7 +402,7 @@ class S3TrackingModel(S3Model):
         A module to manage the shipment of inventory items
         - Sent Items
         - Received Items
-        - And audit trail of the shipment process 
+        - And audit trail of the shipment process
     """
 
     names = ["inv_send",
@@ -570,7 +570,7 @@ class S3TrackingModel(S3Model):
         self.set_method(tablename,
                         method="form",
                         action=self.inv_send_form )
-        
+
         # Redirect to the Items tabs after creation
         send_item_url = URL(f="send", args=["[id]",
                                             "track_item"])
@@ -587,13 +587,13 @@ class S3TrackingModel(S3Model):
                           2: T("Donation"),
                           3: T("Supplier"),
                         }
-    
+
         ship_doc_status = { SHIP_DOC_PENDING  : T("Pending"),
                             SHIP_DOC_COMPLETE : T("Complete") }
-    
+
         radio_widget = lambda field, value: \
                                 RadioWidget().widget(field, value, cols = 2)
-    
+
         tablename = "inv_recv"
         table = self.define_table("inv_recv",
                                   Field("tracking_no",
@@ -701,7 +701,7 @@ class S3TrackingModel(S3Model):
                                   represent = self.inv_recv_represent,
                                   label = recv_id_label,
                                   ondelete = "RESTRICT")
-    
+
         # Search Method
         if settings.get_inv_shipment_name() == "order":
             recv_search_comment = T("Search for an order by looking for text in any field.")
@@ -771,7 +771,7 @@ class S3TrackingModel(S3Model):
                         cols = 2
                       ),
             ))
-    
+
         # Redirect to the Items tabs after creation
         recv_item_url = URL(f="recv", args=["[id]",
                                             "track_item"])
@@ -788,12 +788,12 @@ class S3TrackingModel(S3Model):
         # Component
         self.add_component("inv_track_item",
                            inv_recv="recv_id")
-    
+
         # Print Forms
         self.set_method(tablename,
                         method="form",
                         action=self.inv_recv_form)
-    
+
         self.set_method(tablename,
                         method="cert",
                         action=self.inv_recv_donation_cert )
@@ -868,7 +868,7 @@ $(document).ready(function() {
                                         represent = s3_date_represent,
                                         widget = S3DateWidget()
                                         ),
-                                  Field("bin",                # The bin at origin 
+                                  Field("bin",                # The bin at origin
                                         "string",
                                         length = 16,
                                         ),
@@ -880,7 +880,7 @@ $(document).ready(function() {
                                               readable = False,
                                               writable = False,
                                               ondelete = "RESTRICT"),  # received inventory
-                                  Field("recv_bin",                # The bin at destination 
+                                  Field("recv_bin",                # The bin at destination
                                         "string",
                                         length = 16,
                                         readable = False,
@@ -896,7 +896,7 @@ $(document).ready(function() {
                                               writable = False),
                                   *s3.meta_fields()
                                   )
-    
+
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
@@ -919,7 +919,7 @@ $(document).ready(function() {
             msg_record_deleted = T("Sent Item deleted"),
             msg_list_empty = T("No Sent Items currently registered"))
 
-        # Update owned_by_role to the send's owned_by_role
+        # Resource configuration
         self.configure(tablename,
                        onaccept = self.inv_track_item_onaccept,
                        onvalidation = self.inv_track_item_onvalidate,
@@ -1278,7 +1278,6 @@ $(document).ready(function() {
                                            comments = "%sQuantity was: %s" % (stocktable.comments, trackTotal))
         return True
 
-
 # =============================================================================
 def inv_tabs(r):
     """
@@ -1369,7 +1368,7 @@ def inv_warehouse_rheader(r):
                       _class = "action-btn"
                       )
         rfooter.append(ns_btn)
-    
+
     s3.rfooter = rfooter
     return rheader
 
@@ -1483,7 +1482,7 @@ def inv_send_rheader(r):
                                       _id = "send_process",
                                       _class = "action-btn"
                                       )
-    
+
                         send_btn_confirm = SCRIPT("S3ConfirmClick('#send_process', '%s')"
                                                   % T("Do you want to send this shipment?") )
                         rfooter.append(send_btn)
@@ -1697,7 +1696,7 @@ class S3AdjustModel(S3Model):
         A module to manage the shipment of inventory items
         - Sent Items
         - Received Items
-        - And audit trail of the shipment process 
+        - And audit trail of the shipment process
     """
 
     names = ["inv_adj",
@@ -1887,7 +1886,7 @@ class S3AdjustModel(S3Model):
     def inv_adj_onaccept(form):
         """
            When an adjustment record is created and it is of type inventory
-           then an adj_item record for each inv_inv_item in the site will be 
+           then an adj_item record for each inv_inv_item in the site will be
            created. If needed, extra adj_item records can be created later.
         """
         s3db = current.s3db

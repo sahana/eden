@@ -316,6 +316,9 @@ class S3HRModel(S3Model):
             @param record: the hrm_human_resource record
             @param user_id: the auth_user record ID of the person the
                             record belongs to.
+
+            @todo: rewrite for new OrgAuth model (pr_restriction)
+            @todo: combine with pr_human_resource_update_affiliation?
         """
 
         db = current.db
@@ -326,7 +329,6 @@ class S3HRModel(S3Model):
         mtable = auth.settings.table_membership
 
         org_role = record.owned_by_organisation
-        fac_role = record.owned_by_facility
 
         if record.deleted:
             try:
@@ -358,22 +360,8 @@ class S3HRModel(S3Model):
                     query = (mtable.user_id == user_id) & \
                             (mtable.group_id == org_role)
                     db(query).delete()
-            remove_fac_role = True
-            if fac_role:
-                if site_id and person_id:
-                    # Check whether the person has another active
-                    # HR record at the same site
-                    query = (htable.person_id == person_id) & \
-                            (htable.site_id == site_id) & \
-                            (htable.id != record.id) & \
-                            (htable.status == 1) & \
-                            (htable.deleted != True)
-                    if db(query).select(htable.id, limitby=(0, 1)).first():
-                        remove_fac_role = False
-                if remove_fac_role:
-                    query = (mtable.user_id == user_id) & \
-                            (mtable.group_id == fac_role)
-                    db(query).delete()
+            # @todo:
+            # Remove from "staff" group (all memberships for the site)
         else:
             if org_role:
                 query = (mtable.user_id == user_id) & \
@@ -382,13 +370,8 @@ class S3HRModel(S3Model):
                 if not role:
                     mtable.insert(user_id = user_id,
                                   group_id = org_role)
-            if fac_role:
-                query = (mtable.user_id == user_id) & \
-                        (mtable.group_id == fac_role)
-                role = db(query).select(limitby=(0, 1)).first()
-                if not role:
-                    mtable.insert(user_id = user_id,
-                                  group_id = fac_role)
+            # @todo:
+            # Add to "staff" group with restriction to the site
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -458,7 +441,6 @@ class S3HRModel(S3Model):
                                       htable.organisation_id,
                                       # Needed by hrm_update_staff_role()
                                       htable.owned_by_organisation,
-                                      htable.owned_by_facility,
                                       htable.status,
                                       htable.deleted,
                                       htable.deleted_fk,

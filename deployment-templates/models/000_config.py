@@ -282,7 +282,6 @@ deployment_settings.security.archive_not_delete = True
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
 # 6: Apply Controller, Function, Table & Organisation ACLs
-# 7: Apply Controller, Function, Table, Organisation & Facility ACLs
 #
 #deployment_settings.security.policy = 6 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl

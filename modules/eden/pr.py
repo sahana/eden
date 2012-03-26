@@ -30,6 +30,7 @@
 """
 
 __all__ = ["S3PersonEntity",
+           "S3OrgAuthModel",
            "S3PersonModel",
            "S3GroupModel",
            "S3ContactModel",
@@ -53,6 +54,7 @@ __all__ = ["S3PersonEntity",
            "pr_add_to_role",
            "pr_remove_from_role",
            "pr_get_role_paths",
+           "pr_get_role_branches",
            "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
@@ -78,6 +80,7 @@ class S3PersonEntity(S3Model):
              "pr_affiliation",
              "pr_role",
              "pr_role_types",
+             "pr_role_id",
              "pr_pe_label",
              "pr_pe_types"]
 
@@ -288,6 +291,7 @@ class S3PersonEntity(S3Model):
             pr_pe_types=pe_types,
             pr_pe_label=pr_pe_label,
             pr_role_types=role_types,
+            pr_role_id=role_id,
         )
 
     # -------------------------------------------------------------------------
@@ -433,6 +437,51 @@ class S3PersonEntity(S3Model):
             if pe_id:
                 s3db.pr_rebuild_path(pe_id, clear=True)
         return
+
+# =============================================================================
+class S3OrgAuthModel(S3Model):
+    """ Organisation-based Authorization Model """
+
+    names = ["pr_restriction", "pr_delegation"]
+
+    def model(self):
+
+        auth = current.auth
+        s3 = current.response.s3
+        role_id = current.s3db.pr_role_id
+
+        define_table = self.define_table
+        super_link = self.super_link
+        meta_fields = s3.meta_fields
+
+        # ---------------------------------------------------------------------
+        # Restriction: Person Entity <-> Auth Membership Link
+        # This restricts the permissions assigned by an auth-group membership
+        # to the records owned by this person entity.
+        #
+        mtable = auth.settings.table_membership
+        tablename = "pr_restriction"
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("membership_id", mtable,
+                                   ondelete="CASCADE"),
+                             *meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Delegation: Role <-> Auth Group Link
+        # This "delegates" the permissions of a user group for the records
+        # owned by a person entity to a group of affiliated entities.
+        #
+        gtable = auth.settings.table_group
+        tablename = "pr_delegation"
+        table = define_table(tablename,
+                             role_id(),
+                             Field("group_id", gtable,
+                                   ondelete="CASCADE"),
+                             *meta_fields())
+
+        # ---------------------------------------------------------------------
+        return Storage()
 
 # =============================================================================
 class S3PersonModel(S3Model):
@@ -3568,6 +3617,43 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
     return role_paths
 
 # =============================================================================
+def pr_get_role_branches(pe_id, roles=None, role_types=None, entity_type=None):
+    """
+        Get all descendants of the immediate ancestors of the entity
+        within these roles/role types
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+    etable = s3db.pr_pentity
+
+    rn = rtable._tablename
+    en = etable._tablename
+
+    query = (atable.deleted != True) & \
+            (atable.pe_id == pe_id) & \
+            (atable.role_id == rtable.id) & \
+            (rtable.pe_id == etable.pe_id)
+
+    if roles is not None:
+        if not isinstance(roles, (list, tuple)):
+            roles = [roles]
+        query &= (rtable.role.belongs(roles))
+    elif role_types is not None:
+        if not isinstance(role_types, (list, tuple)):
+            role_types = [role_types]
+        query &= (rtable.role_type.belongs(role_types))
+    rows = db(query).select(rtable.pe_id, etable.instance_type)
+
+    nodes = [r[rn].pe_id for r in rows]
+    result = [r[rn].pe_id for r in rows if entity_type is None or r[en].instance_type == entity_type]
+    branches = pr_get_descendants(nodes, entity_type=entity_type)
+    return result+branches
+
+# =============================================================================
 def pr_get_path(pe_id):
     """
         Get all ancestor paths of a person entity
@@ -3638,7 +3724,7 @@ def pr_get_ancestors(pe_id):
     return ancestors
 
 # =============================================================================
-def pr_get_descendants(pe_ids, skip=[]):
+def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
     """
         Find descendant entities of a person entity in the OU hierarchy
         (performs a real search, not a path lookup).
@@ -3652,33 +3738,46 @@ def pr_get_descendants(pe_ids, skip=[]):
     db = current.db
     s3db = current.s3db
 
+    etable = s3db.pr_pentity
     rtable = s3db.pr_role
     atable = s3db.pr_affiliation
+
+    en = etable._tablename
+    an = atable._tablename
 
     if type(pe_ids) is not list:
         pe_ids = [pe_ids]
     pe_ids = [i for i in pe_ids if i not in skip]
     if not pe_ids:
         return []
-    skip = skip + pe_ids
-
     query = (rtable.deleted != True) & \
             (rtable.pe_id.belongs(pe_ids)) & \
+            (~(rtable.pe_id.belongs(skip))) &\
             (rtable.role_type == OU) & \
             (atable.deleted != True) & \
-            (atable.role_id == rtable.id)
-    rows = db(query).select(atable.pe_id)
-    nodes = [r.pe_id for r in rows]
+            (atable.role_id == rtable.id) & \
+            (etable.pe_id == atable.pe_id)
+    skip = skip + pe_ids
+    rows = db(query).select(atable.pe_id,
+                            etable.instance_type)
+    nodes = [(r[an].pe_id, r[en].instance_type) for r in rows]
     result = []
     append = result.append
     for n in nodes:
         if n not in result:
             append(n)
-    descendants = pr_get_descendants(result, skip=skip)
+    node_ids = [n[0] for n in result]
+    descendants = pr_get_descendants(node_ids, skip=skip, ids=False)
     for d in descendants:
         if d not in result:
             append(d)
-    return result
+
+    if ids:
+        return [n[0]
+                for n in result
+                if entity_type is None or n[1] == entity_type]
+    else:
+        return result
 
 # =============================================================================
 # Internal Path Tools

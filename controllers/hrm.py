@@ -16,34 +16,14 @@ if session.s3.hrm is None:
 session.s3.hrm.mode = request.vars.get("mode", None)
 
 # =============================================================================
-def org_filter():
-    """
-        Find the Organisation(s) this user is entitled to view
-        i.e. they have the organisation access role or a site access role
-    """
-
-    table = s3db.org_organisation
-    orgs = db(table.owned_by_organisation.belongs(roles)).select(table.id)
-    orgs = [org.id for org in orgs]
-
-    stable = s3db.org_site
-    siteorgs = db(stable.owned_by_facility.belongs(roles)).select(stable.organisation_id)
-    for org in siteorgs:
-        if org.organisation_id not in orgs:
-            orgs.append(org.organisation_id)
-
-    if orgs:
-        session.s3.hrm.orgs = orgs
-    else:
-        session.s3.hrm.orgs = None
-
-# =============================================================================
 @auth.requires_login()
-def s3_menu_prep():
-    # @todo: rewrite this for new framework
-    """ Application Menu """
+def hrm_vars(session):
+    """
+        Set session and response variables
 
-    # Module Name
+        @param session: the session, parameter to prevent this function
+                        from being called by a direct request
+    """
     try:
         module_name = deployment_settings.modules[module].name_nice
     except:
@@ -51,18 +31,31 @@ def s3_menu_prep():
     response.title = module_name
 
     # Automatically choose an organisation
-    if session.s3.hrm.orgs is None:
-        org_filter()
+    if "orgs" not in session.s3.hrm:
+        # Find all organisations the current user is a staff
+        # member of (+all their branches)
+        user = auth.user.pe_id
+        branches = s3db.pr_get_role_branches(user,
+                                             roles="Staff",
+                                             entity_type="org_organisation")
+        otable = s3db.org_organisation
+        query = (otable.pe_id.belongs(branches))
+        orgs = db(query).select(otable.id)
+        orgs = [org.id for org in orgs]
+        if orgs:
+            session.s3.hrm.orgs = orgs
+        else:
+            session.s3.hrm.orgs = None
 
     # Set mode
-    if session.s3.hrm.mode != "personal":
+    if mode != "personal":
         if (ADMIN in roles or session.s3.hrm.orgs) or \
-           deployment_settings.get_security_policy() in (1, 2):
+            deployment_settings.get_security_policy() in (1, 2):
             session.s3.hrm.mode = None
     else:
         session.s3.hrm.mode = "personal"
 
-s3_menu_prep()
+hrm_vars(session)
 
 # =============================================================================
 def index():
@@ -907,9 +900,10 @@ def training():
         ttable = s3db.hrm_training
         hrtable = s3db.hrm_human_resource
         orgtable = s3db.org_organisation
+        orgs = session.s3.hrm.orgs
         query = (ttable.person_id == hrtable.person_id) & \
                 (hrtable.organisation_id == orgtable.id) & \
-                (orgtable.owned_by_organisation.belongs(session.s3.roles))
+                (orgtable.pe_id.belongs(orgs))
         response.s3.filter = query
 
     output = s3_rest_controller(interactive_report = True)

@@ -49,7 +49,7 @@ __all__ = ["URL2",
            "s3_url_represent",
            "s3_user_represent",
            "s3_avatar_represent",
-           "s3_role_represent",
+           "s3_auth_group_represent",
            "sort_dict_by_values",
            "jaro_winkler",
            "jaro_winkler_distance_row",
@@ -740,8 +740,8 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
                _height=50, _width=50)
 
 # =============================================================================
-def s3_role_represent(opt):
-    """ Represent Role(s) by Name """
+def s3_auth_group_represent(opt):
+    """ Represent a user group (role) by its name """
 
     s3db = current.s3db
 
