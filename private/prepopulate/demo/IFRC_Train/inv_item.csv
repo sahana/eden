@@ -1,8 +1,8 @@
 "Warehouse","Category","Category Code","Catalog","Item Name","Item Code","Brand","Unit of Measure","Model","Year","Weight","Length","Width","Height","Volume","Quantity","Expiry Date","Unit","Unit Value","Currency","Supplier/Donor","Organisation/Department","Tracking Number ","Bin","Comments"
 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,5000,,,"4.5","USD",,,,,
 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Jerry Cans",,,"Piece",,,,,,,,4000,,,"1.2","USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"Unit",,,,,,,,500,,,28,"USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,500,,,25,"USD",,,,,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"Unit",,,,,,,,900,,,28,"USD",,,,,
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,1250,,,25,"USD",,,,,
 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Plastic Sheets",,,"m2",,,,,,,,10000,,,"0.5","USD",,,,,
 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Food",,"Standard","Rice",,,"kg",,,,,,,,20000,,,"1.2","USD",,,,,
 "Ainaro Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,150,,,6,"USD",,,,,

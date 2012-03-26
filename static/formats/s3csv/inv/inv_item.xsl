@@ -54,7 +54,8 @@
     <xsl:key name="item_category" match="row" use="col[@field='Category']"/>
     <xsl:key name="supply_item" match="row" use="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
     <xsl:key name="brand" match="row" use="col[@field='Brand']"/>
-    <xsl:key name="organisation" match="row" use="col[@field='Supplier/Donor']"/>
+    <xsl:key name="donor" match="row" use="col[@field='Supplier/Donor']"/>
+    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
 
@@ -72,8 +73,16 @@
             </xsl:for-each>
 
             <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Supplier/Donor'])[1])]">
-                <xsl:call-template name="Organisation"/>
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('donor', col[@field='Supplier/Donor'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName" select="col[@field='Supplier/Donor']"/>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName" select="col[@field='Organisation']"/>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Item Categories -->
@@ -157,7 +166,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
-        <xsl:variable name="OrgName" OrgName="select[@col='Supplier/Donor']/text()"/>
+        <xsl:param name="OrgName"/>
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">
@@ -179,7 +188,13 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$warehouse"/></data>
             <data field="type">5</data>
-        </resource>
+            <!-- Link to Supplier donor org -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Organisation']/text()"/>
+                </xsl:attribute>
+            </reference>
+       </resource>
 
     </xsl:template>
 
