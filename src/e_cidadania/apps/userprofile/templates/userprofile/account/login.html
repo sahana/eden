@@ -7,78 +7,53 @@
   
 <div class="row" style="margin-top:100px;margin-bottom:100px;">
     <div class="span3 offset3">
-<<<<<<< HEAD
         {% if user.is_authenticated %}
             <p> You are already logged in as <strong>{{ user.username }}</strong> </p>
         {% else %}
-	        <form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8" class="form-stacked">{% csrf_token %}
-	          <fieldset>
-		          <legend>{% trans "User login" %}</legend>
-		          
-		          <div class="clearfix">
-		              <label for="id_username">{% trans "Username" %}</label>
-		              <div class="input">
-		                  {{ form.username }}
-		    	          {% if form.username.errors %}
-		    		          <span class="help-inline">{{ form.username.html_error_list }}</span>
-		    	          {% endif %}
-		    	      </div>
-		    	  </div>
-=======
-	<form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8" class="form-stacked">{% csrf_token %}
-	    <fieldset>
-		<legend>{% trans "User login" %}</legend>
-			<div class="clearfix">
-				<label for="id_username">{% trans "Username" %}</label>
-		        <div class="input">
-					{{ form.username }}
-					<span class="help-inline">
-						{% if form.username.errors %}
-                        	{% for error in form.username.errors %}
-                        	    {{ error|escape }}
-                        	{% endfor %}
-                        {% endif %}      
-                     </span>
-		    	 </div>
-		    </div>
->>>>>>> 67a739fde8d5df52444b91d4f77e7091898bb51f
-		    
-		    <div class="clearfix">
-		    	<label for="id_password">{% trans "Password" %}</label>
-		        <div class="input">
-		        	{{ form.password }}
-		    		<span class="help-inline">
-                    	{% if form.password.errors %}
-                    		{% for error in form.password.errors %}
-                            	{{ error|escape }}
-                            {% endfor %}
-                        {% endif %}
-                      </span>
-		          </div>
-<<<<<<< HEAD
-		          {% if form.non_field_errors %}
-		    	      <ul class="help-inline">{{ form.non_field_errors.as_ul }}</ul>
-		          {% endif %}
-	          </fieldset><br />
-	    
-	        <p><input type="submit" class="btn" value="{% trans 'Login' %}" /></p>
-        </form>
+            <form action="{% if next %}?next={{ next }}{% endif %}" method="post" accept-charset="utf-8" class="form-stacked">{% csrf_token %}
+                <fieldset>
+                    <legend>{% trans "User login" %}</legend>
+                    <div class="clearfix">
+                        <label for="id_username">{% trans "Username" %}</label>
+                        <div class="input">
+                            {{ form.username }}
+                            <span class="help-inline">
+                                {% if form.username.errors %}
+                                    {% for error in form.username.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="clearfix">
+                        <label for="id_password">{% trans "Password" %}</label>
+                        <div class="input">
+                            {{ form.password }}
+                            <span class="help-inline">
+                                {% if form.password.errors %}
+                                    {% for error in form.password.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <span class="help-inline">
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% endif %}
+                        </span>
+
+                </fieldset><br />
+
+                <p><input type="submit" class="btn" value="{% trans 'Login' %}" /></p>
+            </form>
         {% endif %}
-=======
-		     </div>
-             <span class="help-inline">
-             	{% if form.non_field_errors %}
-                	{% for error in form.non_field_errors %}
-                    	{{ error|escape }}
-                    {% endfor %}
-                {% endif %}  
-              </span>
-		          
-		</fieldset><br />
-	    <p><input type="submit" class="btn" value="{% trans 'Login' %}" /></p>
-	</form>
->>>>>>> 67a739fde8d5df52444b91d4f77e7091898bb51f
     </div>
+
 
     <div class="span4 offset2">
         <h4>{% trans "Helpful links" %}</h4>
