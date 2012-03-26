@@ -41,6 +41,16 @@ hr { /* This hr replaces the bootstrap one */
     border: 1px solid #FF6666;
 }
 
+.help-inline{
+    display:inline-block;
+    *display:inline;
+    *zoom:1;
+    margin-bottom:9px;
+    vertical-align:middle;
+    padding-left:5px;
+    color:#ff0000;
+}
+
 @font-face {
     font-family: "SansationRegular";
     src: url('http://www.fontsforweb.com/public/fonts/424/SansationRegular.eot');
@@ -518,4 +528,6 @@ table .criteria-title {
     background: transparent;
     border: none;
 }
+
 /* END DEBATE */
+
