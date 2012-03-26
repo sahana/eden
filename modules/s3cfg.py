@@ -95,6 +95,12 @@ class S3Config(Storage):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
+    def get_auth_opt_in_team_list(self):
+        return self.auth.get("opt_in_team_list", [])
+    def get_auth_opt_in_to_email(self):
+        return self.get_auth_opt_in_team_list() != []
+    def get_auth_opt_in_default(self):
+        return self.auth.get("opt_in_default", False)
     def get_auth_registration_requests_mobile_phone(self):
         return self.auth.get("registration_requests_mobile_phone", False)
     def get_auth_registration_mobile_phone_mandatory(self):
@@ -112,6 +118,19 @@ class S3Config(Storage):
     def get_auth_registration_organisation_default(self):
         " Default the Organisation during registration "
         return self.auth.get("registration_organisation_default", None)
+    def get_auth_registration_organisation_id_default(self):
+        " Default the Organisation during registration - will return the organisation_id"
+        name = self.auth.get("registration_organisation_default", None)
+        if name:
+            otable = current.s3db.org_organisation
+            orow = current.db(otable.name == name).select(otable.id).first()
+            if orow:
+                organisation_id = orow.id
+            else:
+                organisation_id = otable.insert(name = name)
+        else:
+            organisation_id = None
+        return organisation_id
     def get_auth_registration_requests_image(self):
         " Have the registration form request an Image "
         return self.auth.get("registration_requests_image", False)

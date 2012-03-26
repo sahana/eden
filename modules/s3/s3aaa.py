@@ -129,11 +129,11 @@ class AuthS3(Auth):
         self.messages.label_organisation_id = "Organization"
         self.messages.label_site_id = "Facility"
         self.messages.label_utc_offset = "UTC Offset"
-        self.messages.label_view_image = "View Image"
-        self.messages.label_no_image = "No Image"
+        self.messages.label_image = "Profile Image"
         self.messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
         self.messages.help_mobile_phone = "Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages."
         self.messages.help_organisation = "Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions."
+        self.messages.help_image = "You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50."
         #self.messages.logged_in = "Signed In"
         #self.messages.submit_button = "Signed In"
         #self.messages.logged_out = "Signed Out"
@@ -212,13 +212,6 @@ class AuthS3(Auth):
                     Field("site_id", "integer",
                           writable=False,
                           label=messages.label_site_id),
-                    Field("image", "upload", autodelete=True,
-                          represent = lambda image: image and \
-                                        DIV(A(IMG(_src=URL(c="default", f="download",
-                                                           args=image),
-                                                  _height=60, _alt=self.messages.label_view_image),
-                                                  _href=URL(c="default", f="download",
-                                                            args=image))) or self.messages.label_no_image),
                     Field("registration_key", length=512,
                           writable=False, readable=False, default="",
                           label=messages.label_registration_key),
@@ -256,13 +249,6 @@ class AuthS3(Auth):
                     Field("site_id", "integer",
                           writable=False,
                           label=messages.label_site_id),
-                    Field("image", "upload", autodelete=True,
-                          represent = lambda image: image and \
-                                        DIV(A(IMG(_src=URL(c="default", f="download",
-                                                           args=image),
-                                                  _height=60, _alt=self.messages.label_view_image),
-                                                  _href=URL(c="default", f="download",
-                                                            args=image))) or self.messages.label_no_image),
                     Field("registration_key", length=512,
                           writable=False, readable=False, default="",
                           label=messages.label_registration_key),
@@ -633,7 +619,7 @@ class AuthS3(Auth):
                 next = "%s?_next=%s" % (URL(r=request), next)
                 redirect(cas.login_url(next))
         
-        # process authenticated users
+        # Process authenticated users
         if user:
             user = Storage(table_user._filter_fields(user, id=True))
             # If the user hasn't set a personal UTC offset,
@@ -656,7 +642,7 @@ class AuthS3(Auth):
         if log and self.user:
             self.log_event(log % self.user)
 
-        # how to continue
+        # How to continue
         if self.settings.login_form == self:
             if accepted_form:
                 if onaccept:
@@ -736,7 +722,7 @@ class AuthS3(Auth):
         else:
             user.organisation_id.readable = False
             user.organisation_id.writable = False
-        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_default()
+        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
         # @ToDo: Option to request Facility during Registration
         user.site_id.readable = False
         labels, required = s3_mark_required(user)
@@ -768,6 +754,23 @@ class AuthS3(Auth):
                         SPAN("*", _class="req"),
                 "", _id=field_id + SQLFORM.ID_ROW_SUFFIX))
                 #form[0].insert(i + 1, row)
+        # add an opt in clause to receive emails depending on the deployment settings
+        if deployment_settings.get_auth_opt_in_to_email():
+            field_id = "%s_opt_in" % user._tablename
+            comment = DIV(DIV(_class="tooltip",
+                            _title="%s|%s" % ("Mailing list",
+                                              "By selecting this you agree that we may contact you.")))
+            checked = deployment_settings.get_auth_opt_in_default() and "selected"
+            form[0].insert(-1,
+                           TR(TD(LABEL("%s:" % "Receive updates",
+                                       _for="opt_in",
+                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                 _class="w2p_fl"),
+                                 INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
+                              TD(comment,
+                                 _class="w2p_fc"),
+                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
             field_id = "%s_mobile" % user._tablename
@@ -783,6 +786,27 @@ class AuthS3(Auth):
                                        _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
                                  _class="w2p_fl"),
                                  INPUT(_name="mobile", _id=field_id),
+                              TD(comment,
+                                 _class="w2p_fc"),
+                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+
+        # S3: Insert Photo widget into form
+        if deployment_settings.get_auth_registration_requests_image():
+            label = self.messages.label_image
+            comment = DIV(_class="stickytip",
+                          _title="%s|%s" % (label,
+                                            self.messages.help_image % \
+                                                dict(gravatar = A("Gravatar",
+                                                                  _target="top",
+                                                                  _href="http://gravatar.com"))))
+            field_id = "%s_image" % user._tablename
+            widget = SQLFORM.widgets["upload"].widget(current.s3db.pr_image.image, None)
+            form[0].insert(-1,
+                           TR(TD(LABEL("%s:" % label,
+                                       _for="image",
+                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                 _class="w2p_fl"),
+                                 widget,
                               TD(comment,
                                  _class="w2p_fc"),
                            _id=field_id + SQLFORM.ID_ROW_SUFFIX))
@@ -1076,6 +1100,7 @@ class AuthS3(Auth):
             Whenever someone registers, it:
                 - adds them to the 'Authenticated' role
                 - adds their name to the Person Registry
+                - creates their profile picture
                 - creates an HRM record
                 - adds them to the Org_x Access role
         """
@@ -1084,7 +1109,8 @@ class AuthS3(Auth):
         manager = current.manager
         s3db = current.s3db
 
-        user_id = form.vars.id
+        vars = form.vars
+        user_id = vars.id
         if not user_id:
             return None
 
@@ -1093,23 +1119,46 @@ class AuthS3(Auth):
         self.add_membership(authenticated, user_id)
 
         # Link to organisation, lookup org role
-        organisation_id = self.s3_link_to_organisation(form.vars)
+        organisation_id = self.s3_link_to_organisation(vars)
         if organisation_id:
             owned_by_organisation = self.s3_lookup_org_role(organisation_id)
         else:
             owned_by_organisation = None
 
         # For admin/user/create, lookup facility role
-        site_id = form.vars.get("site_id", None)
+        site_id = vars.get("site_id", None)
         if site_id:
             owned_by_facility = self.s3_lookup_site_role(site_id)
         else:
             owned_by_facility = None
 
         # Add to Person Registry and Email/Mobile to pr_contact
-        person_id = self.s3_link_to_person(form.vars, # user
+        person_id = self.s3_link_to_person(vars, # user
                                            owned_by_organisation,
                                            owned_by_facility)
+
+        if "image" in vars:
+            if hasattr(vars.image, "file"):
+                source_file = vars.image.file
+                original_filename = vars.image.filename
+                ptable = s3db.pr_person
+                query = (ptable.id == person_id)
+                pe_id = db(query).select(ptable.pe_id,
+                                         limitby=(0, 1)).first()
+                if pe_id:
+                    pe_id = pe_id.pe_id
+                    itable = s3db.pr_image 
+                    field = itable.image
+                    newfilename = field.store(source_file, original_filename, field.uploadfolder)
+                    url = URL(c="default", f="download", args=newfilename)
+                    fields = dict(pe_id=pe_id,
+                                  profile=True,
+                                  image=newfilename,
+                                  url = url,
+                                  title=current.T("Profile Picture"))
+                    if isinstance(field.uploadfield, str):
+                        fields[field.uploadfield] = source_file.read()
+                    itable.insert(**fields)
 
         htable = s3db.table("hrm_human_resource")
         if htable and organisation_id:
@@ -1285,7 +1334,8 @@ class AuthS3(Auth):
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.value.lower() == email)
                 person = db(query).select(ptable.id,
-                                          ptable.pe_id).first()
+                                          ptable.pe_id,
+                                          limitby=(0, 1)).first()
 
                 if person and \
                    not db(ltable.pe_id == person.pe_id).count():
@@ -1328,10 +1378,15 @@ class AuthS3(Auth):
                 if pe_id:
 
                     # Create a new person record
+                    if current.request.vars.get("opt_in", None):
+                        opt_in = current.deployment_settings.get_auth_opt_in_team_list()
+                    else:
+                        opt_in = ""
                     new_id = ptable.insert(pe_id = pe_id,
                                            track_id = track_id,
                                            first_name = first_name,
                                            last_name = last_name,
+                                           opt_in = opt_in,
                                            modified_by = user.id,
                                            **owner)
 
@@ -1363,6 +1418,20 @@ class AuthS3(Auth):
                                     **owner)
                         person_ids.append(new_id)
 
+                        # Add the user to each team if they have chosen to opt-in
+                        g_table = s3db["pr_group"]
+                        gm_table = s3db["pr_group_membership"]
+                        for team in opt_in:
+                            query = (g_table.name == team)
+                            team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                            # if the team doesn't exist then add it
+                            if team_rec == None:
+                                team_id = g_table.insert(name = team, group_type = 5)
+                            else:
+                                team_id = team_rec.id
+                            gm_table.insert(group_id = team_id,
+                                            person_id = new_id)
+    
                     # Set pe_id if this is the current user
                     if self.user and self.user.id == user.id:
                         self.user.pe_id = pe_id
@@ -1696,6 +1765,8 @@ class AuthS3(Auth):
 
             @param roles: list of role IDs or UIDs (or mixed)
         """
+
+        db = current.db
 
         if not isinstance(roles, (list, tuple)):
             roles = [roles]

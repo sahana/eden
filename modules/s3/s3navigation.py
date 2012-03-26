@@ -1201,9 +1201,13 @@ def s3_rheader_resource(r):
     _vars = r.get_vars
 
     if "viewing" in _vars:
-        tablename, record_id = _vars.viewing.rsplit(".", 1)
-        db = current.db
-        record = db[tablename][record_id]
+        try:
+            tablename, record_id = _vars.viewing.rsplit(".", 1)
+            db = current.db
+            record = db[tablename][record_id]
+        except:
+            tablename = r.tablename
+            record = r.record
     else:
         tablename = r.tablename
         record = r.record

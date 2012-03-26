@@ -9,7 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-if not (deployment_settings.has_module("inv") or deployment_settings.has_module("asset")):
+if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================

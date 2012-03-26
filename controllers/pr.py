@@ -112,6 +112,11 @@ def person():
                          #(s3db.auth_user.id == s3db.pr_person_user.user_id) & \
                          #(s3db.auth_user.registration_key != "disabled")
 
+    # Custom Method for Contacts
+    s3mgr.model.set_method(module, resourcename,
+                           method="contacts",
+                           action=s3db.pr_contacts)
+
     def prep(r):
         if r.representation == "json" and \
            not r.component and session.s3.filter_staff:
@@ -133,6 +138,11 @@ def person():
                 _config.name.readable = _config.name.writable = False
                 # Hide region fields
                 _config.region_location_id.readable = _config.region_location_id.writable = False
+
+            elif r.component_name == "competency":
+                ctable = s3db.hrm_competency
+                ctable.organisation_id.writable = False
+                ctable.skill_id.comment = None
 
             #elif r.component_name == "pe_subscription":
             #    # Load all Tables
@@ -204,42 +214,117 @@ def person():
 
     # Basic tabs
     tabs = [(T("Basic Details"), None),
-            (T("Address"), "address"),
-            (T("Contact Details"), "contact"),
+            #(T("Address"), "address"),
+            #(T("Contacts"), "contact"),
+            (T("Contact Details"), "contacts"),
+            (T("Images"), "image"),
             (T("Identity"), "identity"),
             (T("Groups"), "group_membership"),
-            (T("Images"), "pimage")]
-    if deployment_settings.has_module("dvi") or \
-       deployment_settings.has_module("mpr"):
-        tabs.append((T("Journal"), "note"))
-
-    # HR tabs
-    if deployment_settings.has_module("hrm"):
-        # Load Models
-        s3mgr.load("hrm_competency")
-        db.hrm_competency.organisation_id.writable = False
-        db.hrm_competency.skill_id.comment = None
-        s3mgr.model.add_component("hrm_competency",
-                                  pr_person="person_id")
-        tabs.append((T("Skills"), "competency"))
-        s3mgr.model.add_component("hrm_training",
-                                  pr_person="person_id")
-        tabs.append((T("Training"), "training"))
+            (T("Journal"), "note"),
+            (T("Skills"), "competency"),
+            (T("Training"), "training"),
+        ]
+        
     # Configuration tabs
     if deployment_settings.get_save_search_widget():
-        tabs = tabs + [#(T("Subscriptions"), "pe_subscription"),
-                       (T("Saved Searches"), "save_search"),
+        tabs = tabs + [(T("Saved Searches"), "save_search"),
                        (T("Subscription Details"), "subscription")]
     tabs.append((T("Map Settings"), "config"))
 
     s3mgr.configure("pr_person", listadd=False, insertable=True)
 
-    output = s3_rest_controller(prefix, resourcename,
-                                main="first_name",
+    output = s3_rest_controller(main="first_name",
                                 extra="last_name",
                                 rheader=lambda r: \
                                         s3db.pr_rheader(r, tabs=tabs))
 
+    return output
+
+# -----------------------------------------------------------------------------
+def address():
+    """
+        RESTful controller to allow creating/editing of address records within
+        contacts()
+    """
+
+    # CRUD pre-process
+    def prep(r):
+        person_id = request.get_vars.get("person", None)
+        if person_id:
+            s3mgr.configure("pr_address",
+                            create_next=URL(f="person",
+                                            args=[person_id, "contacts"]),
+                            update_next=URL(f="person",
+                                            args=[person_id, "contacts"])
+                            )
+            if r.method == "create":
+                table = s3db.pr_person
+                query = (table.id == person_id)
+                pe_id = db(query).select(table.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                s3db.pr_address.pe_id.default = pe_id
+        return True
+    response.s3.prep = prep
+
+    output = s3_rest_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def contact():
+    """
+        RESTful controller to allow creating/editing of contact records within
+        contacts()
+    """
+
+    # CRUD pre-process
+    def prep(r):
+        person_id = request.get_vars.get("person", None)
+        if person_id:
+            s3mgr.configure("pr_contact",
+                            create_next=URL(f="person",
+                                            args=[person_id, "contacts"]),
+                            update_next=URL(f="person",
+                                            args=[person_id, "contacts"])
+                            )
+            if r.method == "create":
+                table = s3db.pr_person
+                query = (table.id == person_id)
+                pe_id = db(query).select(table.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                s3db.pr_contact.pe_id.default = pe_id
+        return True
+    response.s3.prep = prep
+
+    output = s3_rest_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def contact_emergency():
+    """
+        RESTful controller to allow creating/editing of emergency contact
+        records within contacts()
+    """
+
+    # CRUD pre-process
+    def prep(r):
+        person_id = request.get_vars.get("person", None)
+        if person_id:
+            s3mgr.configure("pr_contact_emergency",
+                            create_next=URL(f="person",
+                                            args=[person_id, "contacts"]),
+                            update_next=URL(f="person",
+                                            args=[person_id, "contacts"])
+                            )
+            if r.method == "create":
+                table = s3db.pr_person
+                query = (table.id == person_id)
+                pe_id = db(query).select(table.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                s3db.pr_contact_emergency.pe_id.default = pe_id
+        return True
+    response.s3.prep = prep
+
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
@@ -252,7 +337,7 @@ def person_search():
 
     response.s3.prep = lambda r: r.representation == "json" and \
                                  r.method == "search"
-    return s3_rest_controller("pr", "person")
+    return s3_rest_controller(module, "person")
 
 # -----------------------------------------------------------------------------
 def group():
@@ -281,22 +366,22 @@ def group():
     return output
 
 # -----------------------------------------------------------------------------
-def pimage():
+def image():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def contact():
-    """ RESTful CRUD controller """
-
-    table = s3db.pr_contact
-
-    table.pe_id.label = T("Person/Group")
-    table.pe_id.readable = True
-    table.pe_id.writable = True
-
-    return s3_rest_controller()
+#def contact():
+#    """ RESTful CRUD controller """
+#
+#    table = s3db.pr_contact
+#
+#    table.pe_id.label = T("Person/Group")
+#    table.pe_id.readable = True
+#    table.pe_id.writable = True
+#
+#    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def presence():
@@ -580,6 +665,5 @@ def load_search():
         break
     redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
     return
-
 
 # END =========================================================================

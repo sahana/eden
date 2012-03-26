@@ -68,11 +68,6 @@ s3_menu_prep()
 def index():
     """ Dashboard """
 
-    if response.error:
-        return dict(r=None,
-                    ns=None,
-                    nv=None)
-
     mode = session.s3.hrm.mode
     if mode is not None:
         redirect(URL(f="person"))
@@ -372,6 +367,11 @@ def person():
         @ToDo: Volunteers should be redirected to vol/person?
     """
 
+    # Custom Method for Contacts
+    s3mgr.model.set_method("pr", resourcename,
+                           method="contacts",
+                           action=s3db.pr_contacts)
+
     if deployment_settings.has_module("asset"):
         # Assets as component of people
         s3mgr.model.add_component("asset_asset",
@@ -411,17 +411,19 @@ def person():
                                     s3db.org_site_represent,
                                     filterby="organisation_id",
                                     filter_opts=[session.s3.hrm.org]))
-    table.type.readable = True
-    table.type.writable = True
-    if group == "staff" and hr_id:
+    if hr_id:
+        if group == "staff":
         table.site_id.writable = True
         table.site_id.readable = True
-    elif group == "volunteer" and hr_id:
+        else:
+            # Volunteer
         table.location_id.writable = True
         table.location_id.readable = True
-    elif not hr_id:
+            table.location_id.label = T("Home Address")
+    else:
         table.location_id.readable = True
         table.site_id.readable = True
+
     if session.s3.hrm.mode is not None:
         s3mgr.configure(tablename,
                         list_fields=["id",
@@ -460,8 +462,7 @@ def person():
         table.occupation.readable = False
         table.occupation.writable = False
         # Just have a Home Address
-        s3mgr.load("pr_address")
-        table = db.pr_address
+        table = s3db.pr_address
         table.type.default = 1
         table.type.readable = False
         table.type.writable = False
@@ -471,7 +472,6 @@ def person():
         s3mgr.model.add_component("pr_address",
                                   pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
                                                   multiple=False))
-        address_tab_name = T("Home Address")
         # Default type for HR
         table = s3db.hrm_human_resource
         table.type.default = 1
@@ -479,7 +479,6 @@ def person():
     else:
         s3.crud_strings[tablename].update(
             title_upload = T("Import Volunteers"))
-        address_tab_name = T("Addresses")
         # Default type for HR
         table = db.hrm_human_resource
         table.type.default = 2
@@ -520,18 +519,6 @@ def person():
                         insertable = False,
                         editable = False,
                         deletable = False)
-        tabs = [(T("Person Details"), None),
-                (address_tab_name, "address"),
-                (T("Contact Details"), "contact"),
-                (T("Trainings"), "training"),
-                (T("Certificates"), "certification"),
-                (T("Skills"), "competency"),
-                #(T("Credentials"), "credential"),
-                (T("Mission Record"), "experience"),
-                (T("Positions"), "human_resource"),
-                (T("Teams"), "group_membership")]
-        if deployment_settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
@@ -540,25 +527,10 @@ def person():
             s3.crud_strings[tablename].update(
                 title_display = T("Staff Member Details"),
                 title_update = T("Staff Member Details"))
-            hr_record = T("Staff Record")
         elif group == "volunteer":
             s3.crud_strings[tablename].update(
                 title_display = T("Volunteer Details"),
                 title_update = T("Volunteer Details"))
-            hr_record = T("Volunteer Record")
-        tabs = [(T("Person Details"), None),
-                (hr_record, "human_resource"),
-                (address_tab_name, "address"),
-                (T("Contact Data"), "contact"),
-                (T("Trainings"), "training"),
-                (T("Certificates"), "certification"),
-                (T("Skills"), "competency"),
-                (T("Credentials"), "credential"),
-                (T("Mission Record"), "experience"),
-                (T("Teams"), "group_membership")]
-
-        if deployment_settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
 
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -670,94 +642,14 @@ def person():
         orgname=session.s3.hrm.orgname
     else:
         orgname=None
-    rheader = lambda r, tabs=tabs: hrm_rheader(r, tabs)
 
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
-                                rheader=rheader,
+                                rheader=s3db.hrm_rheader,
                                 orgname=orgname,
                                 template="person",
                                 replace_option=T("Remove existing data before import"))
     return output
-
-# -----------------------------------------------------------------------------
-def hrm_rheader(r, tabs=[]):
-    """ Resource headers for component views """
-
-    rheader = None
-
-    if r.representation == "html":
-
-        if r.name == "person":
-            # Tabs defined in controller
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            person = r.record
-            if person:
-                rheader = DIV(DIV(s3_avatar_represent(person.id,
-                                                      "pr_person",
-                                                      _class="fleft"),
-                                  _style="padding-bottom:10px;"),
-                              TABLE(
-                    TR(TH(s3_fullname(person))),
-                    ), rheader_tabs)
-
-        elif r.name == "training_event":
-            # Tabs
-            tabs = [(T("Training Event Details"), None),
-                    (T("Participants"), "participant")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            event = r.record
-            if event:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.course_id.label),
-                                       table.course_id.represent(event.course_id)),
-                                    TR(TH("%s: " % table.site_id.label),
-                                       table.site_id.represent(event.site_id)),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "certificate":
-            # Tabs
-            tabs = [(T("Certificate Details"), None),
-                    (T("Skill Equivalence"), "certificate_skill")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            certificate = r.record
-            if certificate:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.name.label),
-                                       certificate.name),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "course":
-            # Tabs
-            tabs = [(T("Course Details"), None),
-                    (T("Course Certificates"), "course_certificate")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            course = r.record
-            if course:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.name.label),
-                                       course.name),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "human_resource":
-            hr = r.record
-            if hr:
-                pass
-
-        elif r.name == "organisation":
-            org = r.record
-            if org:
-                pass
-
-    return rheader
 
 # =============================================================================
 # Teams
@@ -960,7 +852,7 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -986,7 +878,7 @@ def certificate():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1056,7 +948,7 @@ def training_event():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # =============================================================================

@@ -15,6 +15,10 @@ if len(pop_list) > 0:
 
     # Add core data as long as at least one populate setting is on
 
+    if deployment_settings.get_auth_opt_in_to_email():
+        table = db["pr_group"]
+        for team in deployment_settings.get_auth_opt_in_team_list():
+            table.insert(name = team, group_type = 5)
     # Scheduled Tasks
     if deployment_settings.has_module("msg"):
         # Send Messages from Outbox

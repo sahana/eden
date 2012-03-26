@@ -1525,6 +1525,23 @@ div#last_update {
     font-weight: bold;
 }
 
+/* hrm/contacts */
+.contacts-wrapper {
+    width: 500px;
+}
+
+.contacts-wrapper p {
+   margin-bottom: 5px;
+}
+.contacts-wrapper div.margin {
+   margin-bottom: 10px;
+}
+
+.contacts-wrapper .contact.saving .editBtn,
+.contacts-wrapper .contact.edit .editBtn {
+    display: none;
+}
+
 /* Styles added for the layout of the survey questionnaire form */
 tr.survey_section th{
     color: #003399;

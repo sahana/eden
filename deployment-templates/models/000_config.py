@@ -33,8 +33,12 @@ deployment_settings.security.self_registration = True
 deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
 
+# The name of the teams that users are added to when they opt-in to receive alerts
+#deployment_settings.auth.opt_in_team_list = ["Updates"]
+# Uncomment this to set the opt in default to True
+#deployment_settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers
-deployment_settings.auth.registration_requests_mobile_phone = True
+#deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Mobile Phone selection during registration be mandatory
 #deployment_settings.auth.registration_mobile_phone_mandatory = True
 # Uncomment this to request the Organisation when a user registers
@@ -44,9 +48,9 @@ deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #deployment_settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
-#deployment_settings.auth.registration_organisation_default = 1
+#deployment_settings.auth.registration_organisation_default = "My Organisation"
 # Uncomment & populate these to set the default roelsd assigned to newly-registered users
-#deployment_settings.auth.registration_roles = ["PROJECT_EDIT"]
+#deployment_settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to request an image when users register
 #deployment_settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
@@ -177,7 +181,7 @@ deployment_settings.L10n.religions = {
     "none":T("none"),
     "christian":T("Christian"),
     "muslim":T("Muslim"),
-    "jew":T("Jew"),
+	"jewish":T("Jewish"),
     "buddhist":T("Buddhist"),
     "hindu":T("Hindu"),
     "bahai":T("Bahai"),
