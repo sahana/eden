@@ -163,7 +163,6 @@ input:focus:required:invalid,textarea:focus:required:invalid,select:focus:requir
 :-moz-placeholder{color:#999999;}
 ::-webkit-input-placeholder{color:#999999;}
 .help-block{margin-top:5px;margin-bottom:0;color:#999999;}
-.help-inline{display:inline-block;*display:inline;*zoom:1;margin-bottom:9px;vertical-align:middle;padding-left:5px;}
 .input-prepend,.input-append{margin-bottom:5px;*zoom:1;}.input-prepend:before,.input-append:before,.input-prepend:after,.input-append:after{display:table;content:"";}
 .input-prepend:after,.input-append:after{clear:both;}
 .input-prepend input,.input-append input,.input-prepend .uneditable-input,.input-append .uneditable-input{-webkit-border-radius:0 3px 3px 0;-moz-border-radius:0 3px 3px 0;border-radius:0 3px 3px 0;}.input-prepend input:focus,.input-append input:focus,.input-prepend .uneditable-input:focus,.input-append .uneditable-input:focus{position:relative;z-index:2;}
