@@ -2130,7 +2130,7 @@ class S3ProjectTaskModel(S3Model):
     @staticmethod
     def task_onvalidation(form):
         """ Task form validation """
-
+        T = current.T
         vars = form.vars
         if str(vars.status) == "3" and not vars.pe_id:
             form.errors.pe_id = \
@@ -2186,7 +2186,7 @@ class S3ProjectTaskModel(S3Model):
                 text = "%s\n%s" % (text, changed[var])
             table.insert(task_id=id,
                          body=text)
-                
+
         vars = current.request.post_vars
         if "project_id" in vars:
             ptable = s3db.project_project
@@ -2316,7 +2316,7 @@ class S3ProjectTaskModel(S3Model):
             row = db(query).select(ltp.project_id,
                                    limitby=(0, 1)).first()
             if not row:
-                query = (lta.task_id == task_id) & \
+                query = (lta.task_id == id) & \
                         (lta.activity_id == ta.id)
                 row = db(query).select(ta.project_id,
                                        limitby=(0, 1)).first()

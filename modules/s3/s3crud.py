@@ -551,6 +551,8 @@ class S3CRUD(S3Method):
                 response.view = self._view(r, "update.html")
             elif representation in ("popup", "iframe"):
                 response.view = self._view(r, "popup.html")
+            elif representation == "plain":
+                response.view = self._view(r, "plain.html")
 
             # Title and subtitle
             crud_string = self.crud_string
@@ -637,9 +639,6 @@ class S3CRUD(S3Method):
                     self.next = update_next(self)
                 except TypeError:
                     self.next = update_next
-
-        #elif representation == "plain":
-            #pass
 
         elif representation == "url":
             return self.import_url(r)

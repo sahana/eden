@@ -34,7 +34,7 @@ def create():
 
     for field in table.fields:
         if field in ["id", "created_on", "modified_on", "uuid", "mci", "deleted",
-                     "created_by", "modified_by", "deleted_fk", "owned_by_role",
+                     "created_by", "modified_by", "deleted_fk", "owned_by_group",
                      "owned_by_user"]:
             # This will get added server-side
             pass
@@ -342,7 +342,7 @@ def formList():
     #xml = TAG.forms(*[TAG.form(getName(t), _url = "http://" + request.env.http_host + URL(f="create", args=t)) for t in db.tables()])
 
     # List of a couple simple tables to avoid a giant list of all the tables
-    tables = ["rms_req", "pf_missing_report", "cr_shelter", "pr_presence", "pr_person", "pr_pimage"]
+    tables = ["rms_req", "pf_missing_report", "cr_shelter", "pr_presence", "pr_person", "pr_image"]
     xml = TAG.forms()
     for table in tables:
         xml.append(TAG.form(get_name(table), _url = "http://" + request.env.http_host + URL(f="create", args=db[table])))

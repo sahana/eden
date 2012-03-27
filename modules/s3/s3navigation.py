@@ -93,6 +93,7 @@ class S3NavigationItem:
     #
     def __init__(self,
                  label=None,
+                 id=None,
                  c=None,
                  f=None,
                  args=[],
@@ -116,6 +117,7 @@ class S3NavigationItem:
             Constructor
 
             @param label: the label
+            @param id: define an ID for the item
 
             @param c: the controller
             @param f: the function
@@ -148,6 +150,9 @@ class S3NavigationItem:
             self.label = T(label)
         else:
             self.label = label
+
+        # ID
+        self.id = id
 
         # Register tags
         if tags:
@@ -1201,9 +1206,13 @@ def s3_rheader_resource(r):
     _vars = r.get_vars
 
     if "viewing" in _vars:
-        tablename, record_id = _vars.viewing.rsplit(".", 1)
-        db = current.db
-        record = db[tablename][record_id]
+        try:
+            tablename, record_id = _vars.viewing.rsplit(".", 1)
+            db = current.db
+            record = db[tablename][record_id]
+        except:
+            tablename = r.tablename
+            record = r.record
     else:
         tablename = r.tablename
         record = r.record

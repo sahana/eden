@@ -503,8 +503,7 @@ def send_process():
     stable[send_id] = dict(date = request.utcnow,
                            status = eden.inv.inv_ship_status["SENT"],
                            owned_by_user = None,
-                           owned_by_role = ADMIN
-                        )
+                           owned_by_group = ADMIN)
     # if this is linked to a request then update the quantity in transit
     for track_item in track_items:
         if track_item.req_item_id:
@@ -575,8 +574,7 @@ def send_cancel():
     stable[send_id] = dict(date = request.utcnow,
                            status = eden.inv.inv_ship_status["CANCEL"],
                            owned_by_user = None,
-                           owned_by_role = ADMIN
-                        )
+                           owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
                                                         limitby = (0, 1)).first()
     if recv_row:
@@ -584,8 +582,7 @@ def send_cancel():
         rtable[recv_id] = dict(date = request.utcnow,
                                status = eden.inv.inv_ship_status["CANCEL"],
                                owned_by_user = None,
-                               owned_by_role = ADMIN
-                            )
+                               owned_by_group = ADMIN)
 
 
     # Change the track items status to canceled and then delete them
@@ -847,8 +844,7 @@ def recv_process():
     rtable[recv_id] = dict(date = request.utcnow,
                            status = eden.inv.inv_ship_status["RECEIVED"],
                            owned_by_user = None,
-                           owned_by_role = ADMIN
-                          )
+                           owned_by_group = ADMIN)
     send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
                                                         limitby = (0, 1)).first()
     if send_row:
@@ -856,18 +852,11 @@ def recv_process():
         stable[send_id] = dict(date = request.utcnow,
                                status = eden.inv.inv_ship_status["RECEIVED"],
                                owned_by_user = None,
-                               owned_by_role = ADMIN
-                            )
-    # Change the status for all track items in this shipment to Arrived
+                               owned_by_group = ADMIN)
+    # Change the status for all track items in this shipment to Unloading
+    # the onaccept will then move the values into the site update any request
+    # record, create any adjustment if needed and change the status to Arrived
     db(tracktable.recv_id == recv_id).update(status = 3)
-    # Move each item to the site
-    track_rows = db(tracktable.recv_id == recv_id).select()
-    adj_id = None
-    for track_item in track_rows:
-        adj_id = s3.inv_track_item_unload(track_item.id, site_id, adj_id)
-        # if this is linked to a request then update the quantity fulfil
-        if track_item.req_item_id:
-            db(ritable.id == track_item.req_item_id).update(quantity_fulfil = ritable.quantity_fulfil + track_item.quantity)
 
     # Go to the Inventory of the Site which has received these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
@@ -887,10 +876,10 @@ def recv_process():
 
 # -----------------------------------------------------------------------------
 def recv_cancel():
-    """ 
+    """
     Cancel a Received Shipment
-    
-    @todo what to do if the quantity cancelled doesn't exist? 
+
+    @todo what to do if the quantity cancelled doesn't exist?
     """
 
     recv_id = request.args[0]
@@ -915,7 +904,7 @@ def recv_cancel():
                      f = "recv",
                      args = [recv_id]))
 
-    # Go through each item in the shipment remove them from the site store 
+    # Go through each item in the shipment remove them from the site store
     # and put them back in the track item record
     query = (tracktable.recv_id == recv_id) & \
             (tracktable.deleted == False)
@@ -939,18 +928,16 @@ def recv_cancel():
     rtable[recv_id] = dict(date = request.utcnow,
                            status = eden.inv.inv_ship_status["CANCEL"],
                            owned_by_user = None,
-                           owned_by_role = ADMIN
-                           )
+                           owned_by_group = ADMIN)
     if send_id != None:
-        # The sent record is now set back to SENT the warehouse can now cancel 
+        # The sent record is now set back to SENT the warehouse can now cancel
         # this record to get the stock back into their warehouse.
-        # IMPORTANT reports need to locate this record otherwise it can be 
-        # a mechanism to circumvent the auditing of stock 
+        # IMPORTANT reports need to locate this record otherwise it can be
+        # a mechanism to circumvent the auditing of stock
         stable[send_id] = dict(date = request.utcnow,
                                status = eden.inv.inv_ship_status["SENT"],
                                owned_by_user = None,
-                               owned_by_role = ADMIN
-                               )
+                               owned_by_group = ADMIN)
     redirect(URL(c = "inv",
                  f = "recv",
                  args = [recv_id]))

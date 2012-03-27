@@ -15,6 +15,10 @@ if len(pop_list) > 0:
 
     # Add core data as long as at least one populate setting is on
 
+    if deployment_settings.get_auth_opt_in_to_email():
+        table = db["pr_group"]
+        for team in deployment_settings.get_auth_opt_in_team_list():
+            table.insert(name = team, group_type = 5)
     # Scheduled Tasks
     if deployment_settings.has_module("msg"):
         # Send Messages from Outbox
@@ -116,7 +120,7 @@ if len(pop_list) > 0:
         query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
         map_admin = db(query).select(db.auth_group.id,
                                      limitby=(0, 1)).first().id
-        db(table.level == "L0").update(owned_by_role=map_admin)
+        db(table.level == "L0").update(owned_by_group=map_admin)
     # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
     field = "name"
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % \

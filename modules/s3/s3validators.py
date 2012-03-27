@@ -766,12 +766,12 @@ class IS_LOCATION_SELECTOR(Validator):
                 L4_allowed = config.edit_L4
                 L5_allowed = config.edit_L5
             else:
-                # default is deployment_setting
-                L1_allowed = current.deployment_settings.get_gis_edit_lx()
-                L2_allowed = L1_allowed
-                L3_allowed = L1_allowed
-                L4_allowed = L1_allowed
-                L5_allowed = L1_allowed
+                # default is True
+                L1_allowed = True
+                L2_allowed = True
+                L3_allowed = True
+                L4_allowed = True
+                L5_allowed = True
 
         # We don't need to do onvalidation of the Location Hierarchy records
         # separately as we don't have anything extra to validate than we have
