@@ -1,11 +1,37 @@
-from django.shortcuts import render_to_response
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2010 Cidadanía Coop.
+# Written by: Oscar Carballal Prego <info@oscarcp.com>
+#
+# This file is part of e-cidadania.
+#
+# e-cidadania is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# e-cidadania is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
+
+import base64
+import cPickle as pickle
+import Image
+import os
+import random
+import urllib
+import urllib2
+from xml.dom import minidom
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
-from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, EmailValidationForm, \
-                              ProfileForm, RegistrationForm, LocationForm, \
-                              PublicFieldsForm
 from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ImproperlyConfigured
@@ -13,18 +39,15 @@ from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from django.db import models
 from django.contrib.auth.models import User, SiteProfileNotAvailable
-from e_cidadania.apps.userprofile.models import EmailValidation, Avatar
 from django.template import RequestContext
 from django.conf import settings
-from xml.dom import minidom
-import urllib2
-import random
-import cPickle as pickle
-import base64
-import Image
-import urllib
-import os
+
 from e_cidadania.apps.proposals.models import Proposal
+from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, EmailValidationForm, \
+                              ProfileForm, RegistrationForm, LocationForm, \
+                              PublicFieldsForm
+from e_cidadania.apps.userprofile.models import EmailValidation, Avatar
+
 
 if not settings.AUTH_PROFILE_MODULE:
     raise SiteProfileNotAvailable
@@ -57,8 +80,10 @@ if AVATAR_WEBSEARCH:
     import gdata.service
     import gdata.photos.service
 
+
 def get_profiles():
     return Profile.objects.order_by("-date")
+
 
 def fetch_geodata(request, lat, lng):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
@@ -75,6 +100,7 @@ def fetch_geodata(request, lat, lng):
     else:
         raise Http404()
 
+
 def public(request, username):
     try:
         profile = User.objects.get(username=username).get_profile()
@@ -84,6 +110,7 @@ def public(request, username):
     template = "userprofile/profile/public.html"
     data = { 'profile': profile, 'GOOGLE_MAPS_API_KEY': GOOGLE_MAPS_API_KEY, }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 @login_required
 def searchimages(request):
@@ -102,6 +129,7 @@ def searchimages(request):
     template = "userprofile/avatar/search.html"
     data = { 'section': 'avatar', 'images': images, }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 @login_required
 def overview(request):
@@ -125,6 +153,7 @@ def overview(request):
              'email': email, 'validated': validated, 'proposals': proposals }
     return render_to_response(template, data, context_instance=RequestContext(request))
 
+
 @login_required
 def personal(request):
     """
@@ -144,6 +173,7 @@ def personal(request):
     data = { 'section': 'personal', 'GOOGLE_MAPS_API_KEY': GOOGLE_MAPS_API_KEY,
              'form': form, }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 @login_required
 def location(request):
@@ -165,6 +195,7 @@ def location(request):
              'form': form, }
     return render_to_response(template, data, context_instance=RequestContext(request))
 
+
 @login_required
 def delete(request):
     if request.method == "POST":
@@ -184,6 +215,7 @@ def delete(request):
     template = "userprofile/profile/delete.html"
     data = { 'section': 'delete', }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 @login_required
 def avatarchoose(request):
@@ -221,6 +253,7 @@ def avatarchoose(request):
              'AVATAR_WEBSEARCH': AVATAR_WEBSEARCH, 'section': 'avatar', }
     return render_to_response(template, data, context_instance=RequestContext(request))
 
+
 @login_required
 def avatarcrop(request):
     """
@@ -252,6 +285,7 @@ def avatarcrop(request):
     data = { 'section': 'avatar', 'avatar': avatar, 'form': form, }
     return render_to_response(template, data, context_instance=RequestContext(request))
 
+
 @login_required
 def avatardelete(request, avatar_id=False):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
@@ -262,6 +296,7 @@ def avatardelete(request, avatar_id=False):
             return HttpResponse(simplejson.dumps({'success': False}))
     else:
         raise Http404()
+
 
 def email_validation_process(request, key):
     """
@@ -275,6 +310,7 @@ def email_validation_process(request, key):
     template = "userprofile/account/email_validation_done.html"
     data = { 'successful': successful, }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 def email_validation(request, space_name):
     """
@@ -291,6 +327,7 @@ def email_validation(request, space_name):
     template = "userprofile/account/email_validation.html"
     data = { 'form': form, }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 def register(request):
     if request.method == 'POST':
@@ -311,6 +348,7 @@ def register(request):
     template = "userprofile/account/registration.html"
     data = { 'form': form, }
     return render_to_response(template, data, context_instance=RequestContext(request))
+
 
 @login_required
 def email_validation_reset(request):
