@@ -204,6 +204,6 @@ def invite(request):
                 'noreply@ecidadania.org', [], addr_list)
         email.send(fail_silently=False)
         return render_to_response('invite_done.html', context_instance=RequestContext(request))
-        
-    return render_to_response('invite.html', context_instance=RequestContext(request))
+    uri = request.build_absolute_uri("/")    
+    return render_to_response('invite.html', {"uri":uri}, context_instance=RequestContext(request))
     
