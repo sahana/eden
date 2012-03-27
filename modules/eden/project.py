@@ -1672,7 +1672,7 @@ class S3ProjectTaskModel(S3Model):
         }
 
         #staff = auth.s3_has_role("STAFF")
-        staff = True
+        staff = settings.project.milestone
 
         tablename = "project_task"
         table = define_table(tablename,
@@ -1860,7 +1860,19 @@ class S3ProjectTaskModel(S3Model):
                     ),
                 )
             )
-
+        listo=["id",
+               "priority",
+               (T("ID"), "task_id"),
+               "name",
+               "pe_id",
+               "date_due",
+               "time_estimated",
+               "created_on",
+               "status",
+               #"site_id"
+               ]
+        if settings.project.milestone:
+            listo+=["milestone_id",]                
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
@@ -1871,18 +1883,7 @@ class S3ProjectTaskModel(S3Model):
                   create_onaccept=self.task_create_onaccept,
                   update_onaccept=self.task_update_onaccept,
                   search_method=task_search,
-                  list_fields=["id",
-                               "priority",
-                               (T("ID"), "task_id"),
-                               "name",
-                               "pe_id",
-                               "milestone_id",
-                               "date_due",
-                               "time_estimated",
-                                "created_on",
-                               "status",
-                               #"site_id"
-                               ],
+                  list_fields=listo,
                   extra="description")
 
         # Reusable field
