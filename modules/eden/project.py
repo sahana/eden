@@ -1673,7 +1673,8 @@ class S3ProjectTaskModel(S3Model):
 
         #staff = auth.s3_has_role("STAFF")
         staff = True
-
+        milestones=settings.get_project_milestones()
+        
         tablename = "project_task"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -1734,8 +1735,8 @@ class S3ProjectTaskModel(S3Model):
                                                              future=8760),  # Hours, so 1 year
                                    represent = s3_date_represent),
                              milestone_id(
-                                   readable = staff,
-                                   writable = staff,
+                                   readable = milestones,
+                                   writable = milestones,
                                    ),
                              Field("time_estimated", "double",
                                    readable = staff,
@@ -1860,7 +1861,21 @@ class S3ProjectTaskModel(S3Model):
                     ),
                 )
             )
-
+        list_fields=["id",
+               "priority",
+               (T("ID"), "task_id"),
+               "name",
+               "pe_id",
+               "date_due",
+               "time_estimated",
+               "created_on",
+               "status",
+               #"site_id"
+               ]
+               
+        if settings.get_project_milestones():
+            list_fields+=["milestone_id",]
+            
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
@@ -1871,18 +1886,7 @@ class S3ProjectTaskModel(S3Model):
                   create_onaccept=self.task_create_onaccept,
                   update_onaccept=self.task_update_onaccept,
                   search_method=task_search,
-                  list_fields=["id",
-                               "priority",
-                               (T("ID"), "task_id"),
-                               "name",
-                               "pe_id",
-                               "milestone_id",
-                               "date_due",
-                               "time_estimated",
-                                "created_on",
-                               "status",
-                               #"site_id"
-                               ],
+                  list_fields=list_fields,
                   extra="description")
 
         # Reusable field
