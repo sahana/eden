@@ -403,8 +403,8 @@ deployment_settings.security.archive_not_delete = True
 # Project Tracking
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #deployment_settings.project.drr = True
-#Milestones settings:Uncomment this to configure Milestones in project/task.
-#deployment_settings.project.milestones=False
+# Uncomment this to use Milestones in project/task.
+#deployment_settings.project.milestones = True
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False
