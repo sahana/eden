@@ -2634,7 +2634,7 @@ def project_rheader(r, tabs=[]):
     settings = current.deployment_settings
     drr = settings.get_project_drr()
     pca = settings.get_project_community_activity()
-
+    milestones=settings.get_project_milestones()
     if resourcename == "project":
         # Tabs
         tabs = [(T("Basic Details"), None)]
@@ -2648,7 +2648,7 @@ def project_rheader(r, tabs=[]):
         staff = True
         if staff or drr:
             append((T("Communities") if pca else T("Activities"), "activity"))
-        if staff and not drr:
+        if staff and not drr and milestones:
             append((T("Milestones"), "milestone"))
         if not drr:
             append((T("Tasks"), "task"))
