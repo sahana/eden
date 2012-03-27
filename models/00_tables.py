@@ -26,6 +26,7 @@ import eden.hms
 import eden.hrm
 import eden.inv
 import eden.irs
+import eden.member
 import eden.msg
 import eden.ocr
 import eden.org

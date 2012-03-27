@@ -403,6 +403,8 @@ deployment_settings.security.archive_not_delete = True
 # Project Tracking
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #deployment_settings.project.drr = True
+# Uncomment this to use Milestones in project/task.
+#deployment_settings.project.milestones = True
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False
@@ -625,12 +627,18 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
-    #("cms", Storage(
-    #       name_nice = T("Content Management"),
-    #       description = T("Content Management System"),
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
+    ("cms", Storage(
+          name_nice = T("Content Management"),
+          description = T("Content Management System"),
+          restricted = True,
+          module_type = 10,
+      )),
+    ("member", Storage(
+           name_nice = T("Members"),
+           description = T("Membership Management System"),
+           restricted = True,
+           module_type = 10,
+       )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),
     #       description = T("Fire Station Management"),

@@ -526,7 +526,8 @@ class S3Config(Storage):
         return self.project.get("drr", False)
     def get_project_community_activity(self):
         return self.project.get("community_activity", False)
-
+    def get_project_milestones(self):
+        return self.project.get("milestones", False)
     # Save Search and Subscription
     def get_save_search_widget(self):
         return self.save_search.get("widget", True)
