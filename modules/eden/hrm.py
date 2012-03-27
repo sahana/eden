@@ -80,7 +80,6 @@ class S3HRModel(S3Model):
         hrm_type_opts = {
             1: T("Staff"),
             2: T("Volunteer"),
-            #3: T("Member")
         }
 
         hrm_status_opts = {
@@ -110,6 +109,14 @@ class S3HRModel(S3Model):
                                                               UNKNOWN_OPT)),
                                   #Field("code", label=T("Staff ID")),
                                   Field("job_title", label=T("Job Title")),
+                                  #Field("job_title", "list:reference db.hrm_job_role", label=T("Job Title"),
+                                  #      requires = IS_NULL_OR(IS_ONE_OF(db,
+                                  #                                      "hrm_job_role.id",
+                                  #                                      self.job_title_multirepresent,
+                                  #                                      sort=True,
+                                  #                                      multiple=True)),
+                                  #      represent = self.job_title_multirepresent, # @ToDo
+                                  #      ),
                                   # Current status
                                   Field("status", "integer",
                                         requires = IS_IN_SET(hrm_status_opts,
@@ -225,11 +232,11 @@ class S3HRModel(S3Model):
                         label=T("Facility"),
                         field=["site_id"]
                       ),
-                      # S3SearchSkillsWidget(
-                        # name="human_resource_search_skills",
-                        # label=T("Skills"),
-                        # field=["skill_id"]
-                      # ),
+                      S3SearchSkillsWidget(
+                        name="human_resource_search_skills",
+                        label=T("Skills"),
+                        field=["skill_id"]
+                      ),
                       # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
                       #S3SearchMinMaxWidget(
                       #  name="human_resource_search_date",
@@ -2434,117 +2441,104 @@ def hrm_training_event_represent(id):
 def hrm_rheader(r, tabs=[]):
     """ Resource headers for component views """
 
-    rheader = None
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+    record = r.record
+    if record is None:
+        # List or Create form: rheader makes no sense here
+        return None
 
-    if r.representation == "html":
+    T = current.T
+    table = r.table
+    resourcename = r.name
 
-        T = current.T
-        if r.name == "person":
-            group = current.request.get_vars.get("group", "staff")
-            # Tabs
-            if current.session.s3.hrm.mode is not None:
-                # Configure for personal mode
-                #if group == "staff":
-                #    address_tab_name = T("Home Address")
-                #else:
-                #    address_tab_name = T("Addresses")
-                tabs = [(T("Person Details"), None),
-                        #(address_tab_name, "address"),
-                        (T("Contacts"), "contacts"),
-                        (T("Trainings"), "training"),
-                        (T("Certificates"), "certification"),
-                        (T("Skills"), "competency"),
-                        #(T("Credentials"), "credential"),
-                        (T("Mission Record"), "experience"),
-                        (T("Positions"), "human_resource"),
-                        (T("Teams"), "group_membership"),
-                        (T("Assets"), "asset"),
-                       ]
-            else:
-                # Configure for HR manager mode
-                if group == "staff":
-                    hr_record = T("Staff Record")
-                    #address_tab_name = T("Home Address")
-                elif group == "volunteer":
-                    hr_record = T("Volunteer Record")
-                    #address_tab_name = T("Addresses")
-                tabs = [(T("Person Details"), None),
-                        (hr_record, "human_resource"),
-                        #(address_tab_name, "address"),
-                        (T("Contacts"), "contacts"),
-                        (T("Trainings"), "training"),
-                        (T("Certificates"), "certification"),
-                        (T("Skills"), "competency"),
-                        (T("Credentials"), "credential"),
-                        (T("Mission Record"), "experience"),
-                        (T("Teams"), "group_membership"),
-                        (T("Assets"), "asset"),
-                       ]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            person = r.record
-            if person:
-                rheader = DIV(DIV(s3_avatar_represent(person.id,
-                                                      "pr_person",
-                                                      _class="fleft"),
-                                  _style="padding-bottom:10px;"),
-                              TABLE(
-                    TR(TH(s3_fullname(person))),
-                    ), rheader_tabs)
-        elif r.name == "training_event":
-            # Tabs
-            tabs = [(T("Training Event Details"), None),
-                    (T("Participants"), "participant")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            event = r.record
-            if event:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.course_id.label),
-                                       table.course_id.represent(event.course_id)),
-                                    TR(TH("%s: " % table.site_id.label),
-                                       table.site_id.represent(event.site_id)),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
-                                    ),
-                              rheader_tabs)
+    if resourcename == "person":
+        group = current.request.get_vars.get("group", "staff")
+        # Tabs
+        if current.session.s3.hrm.mode is not None:
+            # Configure for personal mode
+            #if group == "staff":
+            #    address_tab_name = T("Home Address")
+            #else:
+            #    address_tab_name = T("Addresses")
+            tabs = [(T("Person Details"), None),
+                    #(address_tab_name, "address"),
+                    (T("Contacts"), "contacts"),
+                    (T("Trainings"), "training"),
+                    (T("Certificates"), "certification"),
+                    (T("Skills"), "competency"),
+                    #(T("Credentials"), "credential"),
+                    (T("Mission Record"), "experience"),
+                    (T("Positions"), "human_resource"),
+                    (T("Teams"), "group_membership"),
+                    (T("Assets"), "asset"),
+                   ]
+        else:
+            # Configure for HR manager mode
+            if group == "staff":
+                hr_record = T("Staff Record")
+                #address_tab_name = T("Home Address")
+            elif group == "volunteer":
+                hr_record = T("Volunteer Record")
+                #address_tab_name = T("Addresses")
+            tabs = [(T("Person Details"), None),
+                    (hr_record, "human_resource"),
+                    #(address_tab_name, "address"),
+                    (T("Contacts"), "contacts"),
+                    (T("Trainings"), "training"),
+                    (T("Certificates"), "certification"),
+                    (T("Skills"), "competency"),
+                    (T("Credentials"), "credential"),
+                    (T("Mission Record"), "experience"),
+                    (T("Teams"), "group_membership"),
+                    (T("Assets"), "asset"),
+                   ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader = DIV(DIV(s3_avatar_represent(record.id,
+                                              "pr_person",
+                                              _class="fleft"),
+                          _style="padding-bottom:10px;"),
+                      TABLE(
+            TR(TH(s3_fullname(record))),
+            ), rheader_tabs)
 
-        elif r.name == "certificate":
-            # Tabs
-            tabs = [(T("Certificate Details"), None),
-                    (T("Skill Equivalence"), "certificate_skill")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            certificate = r.record
-            if certificate:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.name.label),
-                                       certificate.name),
-                                    ),
-                              rheader_tabs)
+    elif resourcename == "training_event":
+        # Tabs
+        tabs = [(T("Training Event Details"), None),
+                (T("Participants"), "participant")]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.course_id.label),
+                               table.course_id.represent(record.course_id)),
+                            TR(TH("%s: " % table.site_id.label),
+                               table.site_id.represent(record.site_id)),
+                            TR(TH("%s: " % table.start_date.label),
+                               table.start_date.represent(record.start_date)),
+                            ),
+                      rheader_tabs)
 
-        elif r.name == "course":
-            # Tabs
-            tabs = [(T("Course Details"), None),
-                    (T("Course Certificates"), "course_certificate")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            course = r.record
-            if course:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.name.label),
-                                       course.name),
-                                    ),
-                              rheader_tabs)
+    elif resourcename == "certificate":
+        # Tabs
+        tabs = [(T("Certificate Details"), None),
+                (T("Skill Equivalence"), "certificate_skill")]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.name.label),
+                               record.name),
+                            ),
+                      rheader_tabs)
 
-        elif r.name == "human_resource":
-            hr = r.record
-            if hr:
-                pass
-
-        elif r.name == "organisation":
-            org = r.record
-            if org:
-                pass
+    elif resourcename == "course":
+        # Tabs
+        tabs = [(T("Course Details"), None),
+                (T("Course Certificates"), "course_certificate")]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader = DIV(TABLE(
+                            TR(TH("%s: " % table.name.label),
+                               record.name),
+                            ),
+                      rheader_tabs)
 
     return rheader
 

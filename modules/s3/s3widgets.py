@@ -3057,7 +3057,7 @@ def s3_richtext_widget(field, value):
     return TEXTAREA(_name=field.name,
                     _id=id,
                     _class="richtext %s" % (field.type),
-                    _value=value,
+                    value=value,
                     requires=field.requires)
 
 # -----------------------------------------------------------------------------

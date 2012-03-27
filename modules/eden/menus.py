@@ -1015,6 +1015,18 @@ class S3OptionsMenu:
                 )
 
     # -------------------------------------------------------------------------
+    def member(self):
+        """ Membership Management """
+
+        return M(c="member")(
+                    M("Members", f="membership")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def mpr(self):
         """ MPR / Missing Person Registry """
 

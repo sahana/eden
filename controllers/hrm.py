@@ -244,11 +244,11 @@ def human_resource():
                 # Don't redirect Map popups
                 pass
             elif r.id:
+                # Redirect to person controller
                 vars = {"human_resource.id": r.id}
                 if group:
                     vars.update(group=group)
                 redirect(URL(f="person",
-                             #args=["human_resource"],
                              vars=vars))
         return True
     response.s3.prep = prep
@@ -632,9 +632,9 @@ def person():
 
     # REST Interface
     if session.s3.hrm.orgname and mode is None:
-        orgname=session.s3.hrm.orgname
+        orgname = session.s3.hrm.orgname
     else:
-        orgname=None
+        orgname = None
 
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
