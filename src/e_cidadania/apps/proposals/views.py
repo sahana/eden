@@ -95,10 +95,18 @@ class ViewProposal(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ViewProposal, self).get_context_data(**kwargs)
-        support_votes_count = Proposal.objects.annotate(Count('support_votes'))
-        current_proposal = int(self.kwargs['prop_id']) - 1
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
-        context['support_votes_count'] = support_votes_count[current_proposal].support_votes__count
+        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        support_votes_count = Proposal.objects.filter(space=current_space)\
+                             .annotate(Count('support_votes'))
+        # We are going to get the proposal position in the list
+        self.get_position = 0
+        for i,x in enumerate(support_votes_count):
+            if x.id == int(self.kwargs['prop_id']):
+                self.get_position = i
+                print i
+                
+        context['get_place'] = current_space
+        context['support_votes_count'] = support_votes_count[int(self.get_position)].support_votes__count
         return context
 
 
