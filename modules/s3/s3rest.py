@@ -540,6 +540,36 @@ class S3RequestManager(object):
         # No match or multiple matches
         return None
 
+    # -------------------------------------------------------------------------
+    def onaccept(self, table, record, method="create"):
+
+        model = self.model
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
+
+        onaccept = model.get_config(tablename, "%s_onaccept" % method,
+                   model.get_config(tablename, "onaccept"))
+        if onaccept:
+            callback(onaccept, record, tablename=tablename)
+        return
+
+    # -------------------------------------------------------------------------
+    def onvalidation(self, table, record, method="create"):
+
+        model = self.model
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
+
+        onvalidation = model.get_config(tablename, "%s_onvalidation" % method,
+                       model.get_config(tablename, "onvalidation"))
+        if onaccept:
+            callback(onvalidation, record, tablename=tablename)
+        return
+
 # =============================================================================
 
 class S3Request(object):
@@ -1905,7 +1935,7 @@ class S3Resource(object):
         self.name = name
         self.alias = alias or name
 
-        # Tablename and table
+        # Table properties
         tablename = "%s_%s" % (prefix, name)
         try:
             table = s3db[tablename]
@@ -1914,7 +1944,6 @@ class S3Resource(object):
             raise KeyError(manager.error)
         self.tablename = tablename
         self.table = table
-
         # Table alias (needed for self-joins)
         self._alias = tablename
         if parent is not None:
@@ -1924,6 +1953,8 @@ class S3Resource(object):
                 self.table = table.with_alias(alias)
                 self.table._id = self.table[pkey]
                 self._alias = alias
+        self.fields = self.table.fields
+        self._id = self.table._id
 
         # Resource Filter
         self.rfilter = None
@@ -1931,7 +1962,6 @@ class S3Resource(object):
         self.fvfltr = None
 
         self.include_deleted = include_deleted
-        self.values = Storage() # @todo: needed? => not internally
 
         # The Rows
         self._rows = None
@@ -1941,7 +1971,6 @@ class S3Resource(object):
         self._ids = []
         self._uids = []
         self._length = None
-        self._slice = False # @todo: needed? => not internally
 
         # Request attributes
         self.vars = None # set during build_query
@@ -2156,12 +2185,9 @@ class S3Resource(object):
                 if limit is not None:
                     limit = limit - start
                 del attr["limitby"]
-                self._slice = True
             else:
                 start = limit = None
             # @todo: override fields => needed for vfilter
-        elif "limitby" in attr:
-            self._slice = True
 
         # Get the rows
         rows = db(query).select(*fields, **attr)
@@ -2232,15 +2258,12 @@ class S3Resource(object):
                 rows = []
             if not limitby:
                 self._length = len(rows)
-            else:
-                self._slice = True
         else:
             if limitby:
                 if fields is not None:
                     rows = self.select(limitby=limitby, *fields)
                 else:
                     rows = self.select(table.ALL, limitby=limitby)
-                self._slice = True
             else:
                 if fields is not None:
                     rows = self.select(*fields)
@@ -2553,7 +2576,6 @@ class S3Resource(object):
         self._ids = []
         self._uids = []
         self.files = Storage()
-        self._slice = False
 
         if self.components:
             for c in self.components:
@@ -5015,6 +5037,7 @@ class S3ResourceFilter:
                 self.vfltr &= f
             else:
                 self.vfltr = f
+            joins = self.joins
             qj, d = f.joins(resource)
             if qj:
                 self.distinct = self.distinct or d
