@@ -39,55 +39,55 @@ Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
         }
     }
 
-Modo Debug
+Debug mode
 ----------
 
-El modo debug viene activado por defecto y se recomienda encarecidamente
-desactivarlo para comenzar a utilizar e-cidadania en producción. Para ello
-hay que desactivarlo en el fichero `settings.py`::
+Debug mode comes activated by default and is strongly recommended to deactivate it
+to start using e-cidadania in production. To do it you need to deactivate it in
+the `settings.py` file::
 
     DEBUG = False
 
-Perfiles de usuario
--------------------
+User profiles
+-------------
 
-*ACCOUNT_ACTIVATION_DAYS* (número)
+*ACCOUNT_ACTIVATION_DAYS* (number)
 
-    Esta variable especifica cuándos días tiene el usuario para activar su
-    cuenta desde que recibe el correo de confirmación.
+    This variable specifies how many days the user has to activate the user account
+    since he receibes the confirmation e-mail.
 
 *GOOGLE_MAPS_API_KEY* (hash)
 
-    Llave de la API de Google para poder utilizar la interfaz de mapas. Debes
-    crearte una propia a pesar de que e-cidadania venga con una configurada,
-    ya que sólo funcionará en el dominio que hayas especificado.
+    Google API key to use the maps interface. You shall create your own API key even
+    if e-cidadania comes with one of his own. That's because the API is domain
+    dependant.
 
-Correo electrónico
-------------------
+E-mail
+------
 
-*ADMINS* (lista)
+*ADMINS* (list)
 
-    Lista de adminsitradores y cuentas de correo para la notificación
-    de errores del servidor. Sólo funciona si DEBUG = False
+    Administrators and e-mail adresses list for the server error notifications. It
+    only works if DEBUG = False
     
-*EMAIL_HOST* (servidor)
+*EMAIL_HOST* (server)
 
-    Servidor de correo desde el cual se enviarán los correos a los usuarios.
+    Mail server from which e-mails will be sent to the users.
     
 *DEFAULT_FROM_EMAIL*
 
-    Dirección por defecto desde la que se enviarán los correos si no se especifica
-    otra.
+    Default e-mail address from which the mails will be sent it other is not
+    specified.
 
-Idioma
-------
+Language
+--------
 
-*LANGUAGE_CODE* (código de idioma)
+*LANGUAGE_CODE* (language code)
 
-    Idioma con el cual funcionará django por defecto.
+    Default language for the django installation.
 
 Plugins
 -------
 
-.. note:: Esta sección está sin redactar.
+.. note:: This section is still on development.
 

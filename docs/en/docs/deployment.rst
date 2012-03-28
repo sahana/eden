@@ -1,23 +1,22 @@
-Despliegue
+Deployment
 ==========
 
 Apache 2
 --------
 
-Esta sección está en desarrollo.
+.. note:: This section is still on development.
 
 nginx + FastCGI
 ---------------
 
-.. note:: La instalación a través de FastCGI debería funcionar para otros tipos
-          de servidor, ya que FastCGI es el que se encarga de ejecutar la aplicación
-          mientras que el servidor sólo se encarga del contenido estático.
+.. note:: The installation through FastCGI should work for other server types, since
+          FastCGI is the one who executes e-cidadania while the server just serves
+          the static content.
 
-.. warning:: Esta sección está en desarrollo.
+.. warning:: This section is still on development.
 
 DreamHost
 ---------
 
-Las instrucciones de instalación para un servidor compartido en DreamHost son
-demasiado extensas para incluír en esta documentación, por favor, visita el
-blog de `Oscar Carballal <http://blog.oscarcp.com>`_ para ver cómo hacerlo.
+The instructions for deployment on a DreamHost shared server are too extensive
+to include here. You can find them in the `Oscar Carballal blog <http://blog.oscarcp.com>`_
