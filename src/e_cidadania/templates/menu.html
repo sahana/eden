@@ -7,14 +7,25 @@
     {% endif %}
 </ul>
 
-{% for lang in LANGUAGES %}
-    <form style="padding-bottom: 0px;padding-top: 12px;" class="nav pull-right" name="setLang{{ lang.1}}" action="/i18n/setlang/" method="POST">{% csrf_token %}
-        <input type="hidden" name="language" value="{{ lang.0 }}" />
-        <a href="#" onclick="document.setLang{{ lang.1 }}.submit();return false;">
-            <img src="{{ STATIC_URL }}/assets/flags/{{ lang.0 }}.gif" title="{{ lang.1 }}" alt="{{ lang.1 }}"/>
-        </a>
-    </form>
-{% endfor %}    
+<ul class="nav pull-right">
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %}<b class="caret"></b></a>
+        <ul class="dropdown-menu">
+            {% for lang in LANGUAGES %}
+                <li>
+                    <form class="languageform" name="setLang{{ lang.1}}" action="/i18n/setlang/" method="POST">{% csrf_token %}
+                        <input name="next" type="hidden" value="/" />
+                        <input type="hidden" name="language" value="{{ lang.0 }}" />
+                        <a href="#" onclick="document.setLang{{ lang.1 }}.submit();return false;">
+                            <img src="{{ STATIC_URL }}/assets/flags/{{ lang.0 }}.gif" title="{{ lang.1 }}" alt="{{ lang.1 }}"/>
+                            {{ lang.1 }}
+                        </a>
+                    </form>
+                </li>
+            {% endfor %}    
+        </ul>
+    </li>
+</ul>
 
 {% if user.is_authenticated %}
     <ul class="nav pull-right">
