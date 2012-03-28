@@ -103,8 +103,6 @@ class ViewProposal(DetailView):
         for i,x in enumerate(support_votes_count):
             if x.id == int(self.kwargs['prop_id']):
                 self.get_position = i
-                print i
-                
         context['get_place'] = current_space
         context['support_votes_count'] = support_votes_count[int(self.get_position)].support_votes__count
         return context

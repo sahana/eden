@@ -1,51 +1,50 @@
-Apariencias de e-cidadania
-==========================
+e-cidadania themes
+==================
 
-Otras apariencias
------------------
+Other themes
+------------
 
-Este es un pequeño índice de apariencias de e-cidadania.
+This is a little index of the e-cidadania themes.
 
-Crea tu propia apariencia para e-cidadania
-------------------------------------------
+Create your own theme for e-cidadania
+-------------------------------------
 
-Crear una nueva apariencia para e-cidadania puede llegar a ser algo difícil,
-pero no por ello imposible. Aquí te daremos las instrucciones precisas.
+Creating a new theme for e-cidadania can be hard, but not impossible. We will give
+you the precise instructions here.
 
-Referencia
-----------
+Reference
+---------
 
-Los temas de e-cidadania se localizan mayoritariamente en los propios módulos.
-Cada aplicación gestiona por separado sus apariencias, no en cuanto a estilo
-pero sí en cuanto a distribución.
+e-cidadania themes are mostly located in the proper modules. Every application
+manages its own themes, not regarding the style, but the distribution.
 
-Además de esto, existen algunas platillas generales que están situadas en el
-directorio `templates`.
+Apart from this, there are some general templates located at the "templates"
+directory.
 
 General
 .......
 
-asdasd
+.. note:: Still on development.
 
-Perfil de usuario
-.................
+User profile
+............
 
-asdasdas
+.. note:: Still on development.
 
-Propuestas
-..........
+Proposals
+.........
 
-sdfsdfs
+.. note:: Still on development.
 
 Debates
 .......
 
-sdfsdfsd
+.. note:: Still on development.
 
-Noticias
-........
+News
+....
 
-sdfsdf
+.. note:: Still on development.
 
-Documentos
-..........
+Documents
+.........

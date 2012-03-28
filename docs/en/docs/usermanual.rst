@@ -14,49 +14,47 @@ the registration link. It will ask your name, e-mail and password.
 How to send a proposal
 ----------------------
 
-Sending proposals is very easy. Enviar una propuesta es de lo más sencillo. Basta con acceder al espacio de
-participación correspondiente y hacer clic en "Añadir una propuesta" en la
-columna de la derecha.
+Sending proposals is very easy. You just have to access to your participative space
+and click on "Proposals", after that you need to click on "Add new proposal" on
+the right column.
 
-Aparecerá un formulario sencillo que tiene varios campos:
+A simple form will appear with several fields:
 
-Título
-    El título de la propuesta. Debe ser una síntesis concisa de la propuesta.
+Title
+    The proposal title. It must be a sinthesis of the proposal.
     
-Descripción
-    Una descripción más extensa de la propuesta. Se pueden vincular elementos
-    externos como páginas web, imágenes, vídeos, etc.
+Description
+    An extensive description of the proposal. You can link various external elements
+    like images, websites, videos, etc.
 
-Latitud/Longitud
-    Ahora mismo e-cidadania cuenta con un sistema básico de geoposicionamiento.
-    Si quieres situar tu propuesta en un mapa tendrás que poner las coordenadas.
+Latitude/Longitude
+    Right now e-cidadania has a simple geolocation sustem. If you want your proposal
+    to be geolocated to need to put the coordinates.
 
-Etiquetas
-    Las etiquetas identifican de forma sencilla tu propuesta, por ejemplo::
+Tags
+    Tags make proposal identification easier, for example::
 
-        Titulo: La acera de Cobián Roffignac está rota
-        Etiquetas: acera, cobian roffignac, pontevedra, roto
+        Title: The Apple Store sidewalk is broken
+        Tags: broken, sidewalk, apple, store
 
-Cómo participar en un debate
-----------------------------
-
-El sistema de debates es nuevo, así que procura prestar atención para no
-perderte, esto no es un foro de internet.
-
-Se han trasladado diversos modelos de debate presencial hasta esta
-plataforma, y uno de ellos es el que te vamos a enseñar ahora. ¡Ya
-verás qué rápido te acostumbras!
-
-Cómo consultar documentos
--------------------------
-
-Basta con hacer clic en el documento que quieras leer para que comience a
-descargarse. Si el documento que quieres no figura en la columna de la derecha
-puedes darle al botón "Ver todos los documentos" y se cargará una página
-nueva que te mostrará todos los documentos que están almacenados en ese espacio.
-
-
-Preguntas frecuentes
+How to join a debate
 --------------------
 
-Si tienes alguna pregunta frecuente que no está aquí por favor dínoslo!
+The debates system is new, so pay attention to not get lost, this is not like an
+internet forum.
+
+We have moved in-person debate models to this platform, and one of them is the
+one we're going to show you. You'll see how fast you get used!
+
+How to view documents
+---------------------
+
+To see or download any document you just have to click on the document and it
+will start downloading. If the document tou want doesn't appear in the list
+you just have to make click on "See all documents" and a page will come up with
+all the documents related to that participative process.
+
+Frequently Asked Questions
+--------------------------
+
+If you have any frequently asked questions that doens't appear here please tell us!
