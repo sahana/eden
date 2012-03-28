@@ -2214,13 +2214,11 @@ class S3Resource(object):
         xml = manager.xml
         table = self.table
 
-        if not len(table.virtualfields):
-            if self.tablename == "gis_location":
-                fields = [f for f in table if f.name != "wkt"]
-            else:
-                fields = [f for f in table]
+        if self.tablename == "gis_location":
+            fields = [f for f in table if f.name != "wkt"]
         else:
-            fields = None
+            fields = [f for f in table]
+        fnames = [f.name for f in fields]
 
         if self._rows is not None:
             self.clear()
@@ -2243,33 +2241,17 @@ class S3Resource(object):
             if not limitby:
                 start = None
                 limit = None
-            if fields is not None:
-                fnames = [f.name for f in fields]
-                rows = self.sqltable(fnames,
-                                     start=start,
-                                     limit=limit,
-                                     as_rows=True)
-            else:
-                rows = self.sqltable(None,
-                                     start=start,
-                                     limit=limit,
-                                     as_rows=True)
+            rows = self.sqltable(fnames,
+                                 start=start,
+                                 limit=limit,
+                                 as_rows=True)
             if rows is None:
                 rows = []
             if not limitby:
                 self._length = len(rows)
         else:
-            if limitby:
-                if fields is not None:
-                    rows = self.select(limitby=limitby, *fields)
-                else:
-                    rows = self.select(table.ALL, limitby=limitby)
-            else:
-                if fields is not None:
-                    rows = self.select(*fields)
-                else:
-                    rows = self.select(table.ALL)
-                self._length = len(rows)
+            rows = self.select(limitby=limitby, *fields)
+            self._length = len(rows)
         id = table._id.name
         self._ids = [row[id] for row in rows]
         uid = manager.xml.UID
