@@ -72,10 +72,18 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
     url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/edit/$', EditEvent.as_view(), name='edit-event'),
 
     url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/delete/$', DeleteEvent.as_view(), name='delete-event'),
-    
+
     url(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/$', ViewEvent.as_view(), name='view-event'),
 
     url(r'^(?P<space_name>\w+)/event/$', ListEvents.as_view(), name='list-events'),
+
+)
+
+# Intent URLs
+urlpatterns += patterns('e_cidadania.apps.spaces.views',
+
+    url(r'^(?P<space_name>\w+)/intent/$', 'add_intent', name='add-intent'),
+    url(r'^(?P<space_name>\w+)/intent/approve/(?P<token>\w+)/$', 'validate_intent', name='validate-intent'),
 
 )
 

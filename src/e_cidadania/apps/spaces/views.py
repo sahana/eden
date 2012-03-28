@@ -36,6 +36,7 @@ from django.views.generic import FormView
 # to method decorators that can be put in subclass methods.
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Response types
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -48,6 +49,7 @@ from django.template import RequestContext
 from django.contrib.syndication.views import Feed, FeedDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from django.db import connection
+from django.core.mail import send_mail
 
 # Function-based views
 from django.views.generic.list_detail import object_list, object_detail
@@ -55,7 +57,7 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # e-cidadania data models
-from e_cidadania.apps.spaces.models import Space, Entity, Document, Event
+from e_cidadania.apps.spaces.models import Space, Entity, Document, Event, Intent
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, EventForm, \
      EntityFormSet
@@ -98,6 +100,52 @@ class SpaceFeed(Feed):
         return sorted(results, key=lambda x: x.pub_date, reverse=True)
 
 #
+# INTENT VIEWS
+#
+
+@login_required
+def add_intent(request, space_name):
+     """
+     """
+     import hashlib
+     space = get_object_or_404(Space, url=space_name)
+     try:
+         intent = Intent.objects.get(user=request.user, space=space)
+         heading = _("Access has been already authorized")
+     except Intent.DoesNotExist:
+         token = hashlib.md5("%s%s%s" % (request.user, space, datetime.datetime.now())).hexdigest()
+         intent = Intent(user=request.user, space=space, token=token)
+         intent.save()
+         subject = _("New participation request")
+         body = _("User %s wants to participate in space %s.\n \
+                  Plese click on the link below to approve.\n %s" \
+                  % (request.user.username, space.name, intent.get_approve_url()))
+         heading = _("")
+         send_mail(subject=subject, message=body, from_email=None, recipient_list=[space.author.email])
+
+
+     return render_to_response('space_intent.html', \
+             {'space_name': space_name, 'heading': heading}, \
+                               context_instance=RequestContext(request))
+
+@staff_member_required
+def validate_intent(request, space_name, token):
+     """
+     """
+     space = get_object_or_404(Space, url=space_name)
+     try:
+         intent = Intent.objects.get(token=token)
+         intent.user.profile.spaces.add(space)
+         intent.delete()
+         heading = _("The user has been authorized to participate in space \"%s\"." % space.name)
+     except Intent.DoesNotExist:
+         heading = _("The requested intent does not exist!")
+
+     return render_to_response('validate_intent.html', \
+             {'space_name': space_name, 'heading': heading}, \
+             context_instance=RequestContext(request))
+
+
 # SPACE VIEWS
 #
 
