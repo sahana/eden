@@ -762,6 +762,7 @@ class S3PersonModel(S3Model):
 
         # HR Record as component of Persons
         add_component("hrm_human_resource", pr_person="person_id")
+        add_component("member_membership", pr_person="person_id")
 
         # Skills as components of Persons
         add_component("hrm_certification", pr_person="person_id")
@@ -2840,7 +2841,13 @@ def pr_contacts(r, **attr):
     response.view = "pr/contacts.html"
 
     # RHeader for consistency
-    rheader = s3db.hrm_rheader(r)
+    controller = current.request.controller
+    if controller == "hrm":
+        rheader = s3db.hrm_rheader(r)
+    elif controller == "member":
+        rheader = s3db.member_rheader(r)
+    elif controller == "pr":
+        rheader = s3db.pr_rheader(r)
 
     return dict(
             title = T("Contacts"),

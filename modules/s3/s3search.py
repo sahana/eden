@@ -922,7 +922,7 @@ class S3SearchLocationWidget(S3SearchWidget):
 
 class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     """
-        Options Widge to search for HRMs with specified Credentials
+        Options Widget to search for HRMs with specified Credentials
     """
 
     def widget(self, resource, vars):
