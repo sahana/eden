@@ -15,47 +15,7 @@ if session.s3.hrm is None:
     session.s3.hrm = Storage()
 session.s3.hrm.mode = request.vars.get("mode", None)
 
-# =============================================================================
-@auth.requires_login()
-def hrm_vars(session):
-    """
-        Set session and response variables
-
-        @param session: the session, parameter to prevent this function
-                        from being called by a direct request
-    """
-    try:
-        module_name = deployment_settings.modules[module].name_nice
-    except:
-        module_name = T("Human Resources Management")
-    response.title = module_name
-
-    # Automatically choose an organisation
-    if "orgs" not in session.s3.hrm:
-        # Find all organisations the current user is a staff
-        # member of (+all their branches)
-        user = auth.user.pe_id
-        branches = s3db.pr_get_role_branches(user,
-                                             roles="Staff",
-                                             entity_type="org_organisation")
-        otable = s3db.org_organisation
-        query = (otable.pe_id.belongs(branches))
-        orgs = db(query).select(otable.id)
-        orgs = [org.id for org in orgs]
-        if orgs:
-            session.s3.hrm.orgs = orgs
-        else:
-            session.s3.hrm.orgs = None
-
-    # Set mode
-    if session.s3.hrm.mode != "personal":
-        if (ADMIN in roles or session.s3.hrm.orgs) or \
-            deployment_settings.get_security_policy() in (1, 2):
-            session.s3.hrm.mode = None
-    else:
-        session.s3.hrm.mode = "personal"
-
-hrm_vars(session)
+s3db.hrm_vars()
 
 # =============================================================================
 def index():
