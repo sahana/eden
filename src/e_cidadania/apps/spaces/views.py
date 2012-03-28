@@ -129,16 +129,15 @@ def create_space(request):
                 space_form_uncommited.author = request.user
                 
                 new_space = space_form_uncommited.save()
-                space = get_object_or_404(Space, name=space_form_uncommited.name)
+                space = get_object_or_404(Space,
+                                          name=space_form_uncommited.name)
     
                 ef_uncommited = entity_forms.save(commit=False)
                 for ef in ef_uncommited:
                     ef.space = space
                     ef.save()
                 # We add the created spaces to the user allowed spaces
-    
                 request.user.profile.spaces.add(space)
-                #messages.success(request, _('Space %s created successfully.') % space.name)
                 return redirect('/spaces/' + space.url)
     
         return render_to_response('spaces/space_add.html',
@@ -171,15 +170,17 @@ class ViewSpaceIndex(DetailView):
         if space_object.public == True or self.request.user.is_staff:
             if self.request.user.is_anonymous():
                 messages.info(self.request, _("Hello anonymous user. Remember \
-                                              that this space is public to view, but \
-                                              you must <a href=\"/accounts/register\">register</a> \
-                                              or <a href=\"/accounts/login\">login</a> to participate."))
+                              that this space is public to view, but you must \
+                              <a href=\"/accounts/register\">register</a> \
+                              or <a href=\"/accounts/login\">login</a> to \
+                              participate."))
             return space_object
 
         if self.request.user.is_anonymous():
             messages.info(self.request, _("You're an anonymous user. \
                           You must <a href=\"/accounts/register\">register</a> \
-                          or <a href=\"/accounts/login\">login</a> to access here."))
+                          or <a href=\"/accounts/login\">login</a> to access \
+                          here."))
             self.template_name = 'not_allowed.html'
             return space_object
 
@@ -187,7 +188,8 @@ class ViewSpaceIndex(DetailView):
             if i.url == space_name:
                 return space_object
         
-        messages.warning(self.request, _("You're not registered to this space."))
+        messages.warning(self.request, _("You're not registered to this \
+                         space."))
         self.template_name = 'not_allowed.html'
         return space_object
 
@@ -457,7 +459,7 @@ class AddEvent(FormView):
     template_name = 'spaces/event_add.html'
 
     def get_success_url(self):
-         return '/spaces/' + self.space.name
+        return '/spaces/' + self.space.name
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwarspace_name)

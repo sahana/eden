@@ -1,5 +1,10 @@
 # Django settings for e_cidadania project.
 
+"""
+Main configuration file for e-cidadania. Please refer to the documentation on
+http://docs.ecidadania.org before you modift anything.
+"""
+
 __author__ = "Oscar Carballal Prego"
 __copyright__ = "Cidadania Sociedade Cooperativa Galega"
 __credits__ = ["Oscar Carballal Prego"]

@@ -43,9 +43,9 @@ from django.template import RequestContext
 from django.conf import settings
 
 from e_cidadania.apps.proposals.models import Proposal
-from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, EmailValidationForm, \
-                              ProfileForm, RegistrationForm, LocationForm, \
-                              PublicFieldsForm
+from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, \
+                          EmailValidationForm, ProfileForm, RegistrationForm, \
+                          LocationForm, PublicFieldsForm
 from e_cidadania.apps.userprofile.models import EmailValidation, Avatar
 
 

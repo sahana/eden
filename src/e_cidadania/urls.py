@@ -18,11 +18,14 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Main URLs for the e-cidadania platform.
+"""
+
 from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.views.generic.simple import direct_to_template
 
 from e_cidadania.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
                               DeletePost, ViewPost
@@ -36,7 +39,6 @@ js_info_dict = {
 }
 
 urlpatterns = patterns('',
-
 
     (r'^grappelli/', include('grappelli.urls')),
     
@@ -60,11 +62,14 @@ urlpatterns = patterns('',
     
     url(r'^news/add/$', AddPost.as_view(), name='add-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/delete/$', DeletePost.as_view(), name='delete-site-post'),
+    url(r'^news/(?P<post_id>\w+)/delete/$', DeletePost.as_view(),
+                                            name='delete-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/edit/$', EditPost.as_view(), name='edit-site-post'),
+    url(r'^news/(?P<post_id>\w+)/edit/$', EditPost.as_view(),
+                                          name='edit-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/$', ViewPost.as_view(), name='view-site-post'),
+    url(r'^news/(?P<post_id>\w+)/$', ViewPost.as_view(),
+                                     name='view-site-post'),
     
     # RSS Feed for the index news ONLY
     url(r'^rss/$', IndexEntriesFeed(), name='site-feed'),

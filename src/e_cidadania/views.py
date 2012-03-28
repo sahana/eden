@@ -18,15 +18,15 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Main e-cidadania views file, including some features related to the platform.
+"""
+
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required, permission_required
-from django.views.generic.create_update import update_object
-from django.views.generic.create_update import delete_object
-from django.views.generic.list_detail import object_detail
 from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic.list import ListView
 from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.views.generic.list import ListView
@@ -34,7 +34,6 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic import FormView
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required, permission_required
 
 from e_cidadania.apps.news.models import Post
 from e_cidadania.apps.news.forms import NewsForm
@@ -66,8 +65,8 @@ def index_view(request):
 
     if request.user.is_anonymous():
         messages.info(request, _("Hi! It seems that it's your first time here. \
-                                 Maybe you want to <a href=\"/accounts/register\">register</a> \
-                                 or <a href=\"/accounts/login\">login</a> if you have an account."))
+            Maybe you want to <a href=\"/accounts/register\">register</a> \
+            or <a href=\"/accounts/login\">login</a> if you have an account."))
     return render_to_response('site_index.html',
                               extra_context,
                               context_instance=RequestContext(request))
@@ -88,6 +87,9 @@ class IndexEntriesFeed(Feed):
     description = _('Updates on the main e-cidadania site.')
 
     def items(self):
+        """
+        Get all the posts published publicly.
+        """
         return Post.objects.all().order_by('-pub_date')[:10]
 
     def item_title(self, item):
@@ -136,8 +138,8 @@ class ViewPost(DetailView):
     template_name = 'news/post_detail_index.html'
     
     def get_object(self):
-        self.post_id = self.kwargs['post_id']
-        return get_object_or_404(Post, pk = self.post_id)
+        post_id = self.kwargs['post_id']
+        return get_object_or_404(Post, pk = post_id)
     
 
 class EditPost(UpdateView):
@@ -203,7 +205,9 @@ def invite(request):
         email = EmailMessage('Invitation to join e-cidadania', mail_msg, 
                 'noreply@ecidadania.org', [], addr_list)
         email.send(fail_silently=False)
-        return render_to_response('invite_done.html', context_instance=RequestContext(request))
+        return render_to_response('invite_done.html',
+                                  context_instance=RequestContext(request))
         
-    return render_to_response('invite.html', context_instance=RequestContext(request))
+    return render_to_response('invite.html',
+                              context_instance=RequestContext(request))
     
