@@ -221,7 +221,8 @@ class S3SupplyModel(S3Model):
                                    ondelete = "RESTRICT"),
                              Field("code", length=16,
                                    label = T("Code"),
-                                   required = True),
+                                   #required = True
+                                   ),
                              Field("name", length=128,
                                    label = T("Name")
                                    ),
@@ -290,6 +291,18 @@ class S3SupplyModel(S3Model):
         # Categories as component of Categories
         add_component("supply_item_category",
                       supply_item_category="parent_item_category_id")
+
+        def supply_item_category_onvalidate(form):
+            """
+                Checks that either a Code OR a Name are entered
+            """
+            # If their is a tracking number check that it is unique within the org
+            if not (form.vars.code or form.vars.name):
+                form.errors.code = form.errors.name = T("An Item Category must have a Code OR a Name.")
+
+        self.configure(tablename,
+                       onvalidation = supply_item_category_onvalidate,
+                       )
 
         # =====================================================================
         # Item
@@ -1113,7 +1126,8 @@ S3FilterFieldChange({
             resource_duplicate("supply_item_category", job,
                                fields = ["catalog_id",
                                          "parent_item_category_id",
-                                         "code"])
+                                         "code",
+                                         "name"])
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1129,6 +1143,7 @@ S3FilterFieldChange({
         resource_duplicate(tablename, job,
                            fields = ["name",
                                      "item_id",
+                                     "quantity",
                                     ])
 
     # -------------------------------------------------------------------------
@@ -1238,6 +1253,15 @@ def resource_duplicate(tablename, job, fields=None):
                     field_query = (table[field].lower() == value.lower())
                 except:
                     field_query = (table[field] == value)
+
+                # Hack for identifying Item duplicates basd on code
+                if tablename == "supply_item" and field == "code":
+                    _duplicate = db(field_query).select(table.id,
+                                          limitby=(0, 1)).first()
+                    if _duplicate:
+                        job.id = _duplicate.id
+                        job.method = job.METHOD.UPDATE
+                        return
 
             # if not value:
                 # # Workaround

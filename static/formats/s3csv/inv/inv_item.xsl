@@ -25,12 +25,14 @@
          Category...............supply_item_category
          Category Code..........supply_item_category.code
          Catalog................supply_catalog.name
-         Brand..................supply_brand.name
          Item Code..............supply_item.code
          Item Name..............supply_item.name
          Unit of Measure........supply_item.um
+         Brand..................supply_brand.name
          Model..................supply_item.model
          Year...................supply_item.year
+         Pack............................supply_item_pack.name
+         Pack Quantity...................supply_item_pack.quantity
          Weight.................supply_item.weight
          Length.................supply_item.length
          Width..................supply_item.width
@@ -98,7 +100,6 @@
             <!-- Items -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('supply_item', concat(col[@field='Item Name'],col[@field='Item Code']))[1])]">
                 <xsl:call-template name="SupplyItem"/>
-                <xsl:call-template name="SupplyItemPack"/>
             </xsl:for-each>
 
             <!-- Inventory Items -->
@@ -229,12 +230,14 @@
 
     </xsl:template>
 
-
     <!-- ****************************************************************** -->
     <xsl:template name="SupplyItem">
         <xsl:variable name="item" select="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
+        <xsl:variable name="um" select="col[@field='Unit of Measure']"/>
+        <xsl:variable name="pack" select="col[@field='Pack']"/>
+        <xsl:variable name="pack_quantity" select="col[@field='Pack Quantity']"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
@@ -263,12 +266,12 @@
                     <xsl:value-of select="$category"/>
                 </xsl:attribute>
             </reference>
-            <!-- Link to Supply Item Pack-->
-            <reference field="item_pack_id" resource="supply_item_pack">
+            <!-- Nest to Supply Item Pack-->
+            <resource resource="supply_item_pack">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$item"/>
                 </xsl:attribute>
-            </reference>
+            </resource>
             <!-- Nest to Supply Catalog -->
 	        <resource name="supply_catalog_item">
 	            <xsl:attribute name="tuid">
@@ -286,27 +289,18 @@
 	                    <xsl:value-of select="$category"/>
 	                </xsl:attribute>
 	            </reference>
+	            <!-- Nest to Supply Item Pack-->
+	            <resource name="supply_item_pack">
+	                <data field="name"><xsl:value-of select="$um"/></data>
+	                <data field="quantity">1</data>
+	            </resource>
+	            <xsl:if test="$pack!=''">
+	                <resource name="supply_item_pack">
+	                    <data field="name"><xsl:value-of select="$pack"/></data>
+	                    <data field="quantity"><xsl:value-of select="$pack_quantity"/></data>
+	                </resource>
+	            </xsl:if>
 	        </resource>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="SupplyItemPack">
-        <xsl:variable name="item" select="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
-
-        <resource name="supply_item_pack">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$item"/>
-            </xsl:attribute>
-            <!-- Link to Supply Item -->
-            <reference field="item_id" resource="supply_item">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item"/>
-                </xsl:attribute>
-            </reference>
-            <data field="name"><xsl:value-of select="col[@field='Unit of Measure']/text()"/></data>
-            <data field="quantity">1</data>
         </resource>
 
     </xsl:template>

@@ -35,7 +35,6 @@ __all__ = ["S3InventoryModel",
            "inv_recv_crud_strings",
            "inv_recv_rheader",
            "inv_send_rheader",
-           "inv_recv_rheader",
            "inv_ship_status",
            "inv_adj_rheader",
           ]
@@ -113,8 +112,7 @@ class S3InventoryModel(S3Model):
         # ondelete references have been set to RESTRICT because the stock items
         # should never be automatically deleted
         table = self.define_table(tablename,
-                                  self.super_link("site_id",
-                                                  "org_site",
+                                  self.super_link("site_id", "org_site",
                                                   label = T("Warehouse"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                                   readable = True,
@@ -1146,6 +1144,7 @@ $(document).ready(function() {
 
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_onaccept(form):
         """
@@ -1250,6 +1249,7 @@ $(document).ready(function() {
                 # copy the adj_item_id to the tracking record
                 db(tracktable.id == id).update(adj_item_id = adj_item_id)
 
+
     @staticmethod
     def inv_track_item_deleting(id):
         """
@@ -1277,6 +1277,7 @@ $(document).ready(function() {
             db(tracktable.id == id).update(quantity = 0,
                                            comments = "%sQuantity was: %s" % (stocktable.comments, trackTotal))
         return True
+
 
 # =============================================================================
 def inv_tabs(r):
@@ -2055,6 +2056,7 @@ def duplicator(job, query):
         job.method = job.METHOD.UPDATE
         return _duplicate.id
     return False
+
 
 # =============================================================================
 class InvItemVirtualFields:

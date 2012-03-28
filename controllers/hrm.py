@@ -10,12 +10,7 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-roles = session.s3.roles or []
-if session.s3.hrm is None:
-    session.s3.hrm = Storage()
-session.s3.hrm.mode = request.vars.get("mode", None)
-
-s3db.hrm_vars()
+s3db.hrm_vars(module)
 
 # =============================================================================
 def index():
@@ -28,6 +23,7 @@ def index():
     tablename = "hrm_human_resource"
     table = s3db.hrm_human_resource
 
+    roles = session.s3.roles or []
     if ADMIN not in roles:
         orgs = session.s3.hrm.orgs or [None]
         org_filter = (table.organisation_id.belongs(orgs))
@@ -855,8 +851,9 @@ def training():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    if ADMIN not in session.s3.roles and \
-       EDITOR not in session.s3.roles:
+    roles = session.s3.roles or []
+    if ADMIN not in roles and \
+       EDITOR not in roles:
         ttable = s3db.hrm_training
         hrtable = s3db.hrm_human_resource
         orgtable = s3db.org_organisation

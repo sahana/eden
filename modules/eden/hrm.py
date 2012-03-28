@@ -2250,11 +2250,14 @@ S3FilterFieldChange({
 
 # =============================================================================
 @current.auth.requires_login()
-def hrm_vars():
+def hrm_vars(module):
     """ Set session and response variables """
 
     s3db = current.s3db
     session = current.session
+    
+    if session.s3.hrm is None:
+        session.s3.hrm = Storage()
     hrm_vars = session.s3.hrm
 
     settings = current.deployment_settings
@@ -2282,6 +2285,7 @@ def hrm_vars():
             hrm_vars.orgs = None
 
     # Set mode
+    hrm_vars.mode = current.request.vars.get("mode", None)
     if hrm_vars.mode != "personal":
         sr = session.s3.system_roles
         if sr.ADMIN in session.s3.roles or \

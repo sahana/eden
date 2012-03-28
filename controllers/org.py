@@ -163,7 +163,7 @@ def incoming():
     return inv_incoming()
 
 # =============================================================================
-def req_match():
+def match():
     """ Match Requests """
 
     return s3db.req_match()
