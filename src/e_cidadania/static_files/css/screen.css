@@ -95,6 +95,15 @@ footer {
 .introtitle {
     font-size: 3em;
 }
+
+.languageform {
+    margin:0px;
+}
+
+.languageform img {
+    float:left; 
+    padding-right:15px;
+}
 /* END MAIN INDEX */
 
 /* SPACE INDEX */
