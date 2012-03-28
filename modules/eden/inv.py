@@ -895,7 +895,6 @@ $(document).ready(function() {
                                   *s3.meta_fields()
                                   )
 
-
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
@@ -1143,10 +1142,9 @@ $(document).ready(function() {
                 else:
                     form.vars.recv_bin = form.vars.recv_bin[0]
 
-
         return
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_onaccept(form):
         """
