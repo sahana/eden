@@ -459,15 +459,16 @@ class AddEvent(FormView):
     template_name = 'spaces/event_add.html'
 
     def get_success_url(self):
-        return '/spaces/' + self.space.name
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return '/spaces/' + self.space.url
 
     def form_valid(self, form):
-        self.space = get_object_or_404(Space, url=self.kwarspace_name)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
         form_uncommited = form.save(commit=False)
         form_uncommited.event_author = self.request.user
         form_uncommited.space = self.space
         form_uncommited.save()
-        #messages.success(request, _('Event added successfully.'))
+        return super(AddEvent, self).form_valid(form) 
 
     def get_context_data(self, **kwargs):
         context = super(AddEvent, self).get_context_data(**kwargs)
