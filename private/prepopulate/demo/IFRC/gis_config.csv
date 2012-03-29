@@ -3,3 +3,4 @@
 ,"AU","Australia","Australia",6,-24.764639,136.180729,900913,"IFRC",-45,-4,105,165,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"PH","Philippines","Philippines",6,12.567606,122.419227,900913,"IFRC",4,21,114,130,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"TL","Timor-Leste","Timor-Leste",8,-8.88,125.92,900913,"IFRC",-9.5,-8.4,124.04,127.3,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+,"NZ","New Zealand","New Zealand",6,-41.99,172.34,900913,"IFRC",-53,-28,165,180,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
