@@ -74,7 +74,12 @@ def index():
         output["ns"] = ns
         output["nv"] = nv
 
-        module_name = deployment_settings.modules[module].name_nice
+        try:
+            module_name = deployment_settings.modules[module].name_nice
+        except:
+            module_name = T("Human Resources Management")
+        response.title = module_name
+
         output["title"] = module_name
 
     return output

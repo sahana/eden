@@ -2134,15 +2134,97 @@ class S3ProjectTaskModel(S3Model):
     @staticmethod
     def task_onvalidation(form):
         """ Task form validation """
-        T = current.T
+
         vars = form.vars
         if str(vars.status) == "3" and not vars.pe_id:
             form.errors.pe_id = \
-                T("Status 'assigned' requires the %(fieldname)s to not be blank") % \
+                current.T("Status 'assigned' requires the %(fieldname)s to not be blank") % \
                     dict(fieldname=current.db.project_task.pe_id.label)
         elif vars.pe_id and str(vars.status) == "2":
             # Set the Status to 'Assigned' if left at default 'New'
             vars.status = 3
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_create_onaccept(form):
+        """
+            When a Task is created:
+                * Process the additional fields: Project/Activity
+                * create associated Link Tables
+                * ensure that it is owned by the Project Customer
+                * notify assignee
+        """
+
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+
+        vars = form.vars
+        id = vars.id
+        _vars = current.request.post_vars
+
+        if session.s3.event:
+            # Create a link between this Task & the active Event
+            etable = s3db.event_task
+            etable.insert(event_id=session.s3.event,
+                          task_id=id)
+
+        vars = current.request.post_vars
+        table = s3db.project_task
+        if "project_id" in vars:
+            # Create Link to Project
+            ltable = s3db.project_task_project
+            if vars.project_id:
+                link_id = ltable.insert(task_id = id,
+                                        project_id = _vars.project_id)
+
+        if "activity_id" in vars:
+            # Create Link to Activity
+            ltable = s3db.project_task_activity
+            if vars.activity_id:
+                link_id = ltable.insert(task_id = id,
+                                        activity_id = _vars.activity_id)
+
+        # Find the associated Project
+        ptable = db.project_project
+        ltable = db.project_task_project
+        query = (ltable.task_id == id) & \
+                (ltable.project_id == ptable.id)
+        project = db(query).select(ptable.organisation_id,
+                                   limitby=(0, 1)).first()
+        if project:
+            # Set Task to be owned by this Organisation
+            organisation_id = project.organisation_id
+            otable = s3db.org_organisation
+            query = (otable.id == organisation_id)
+            role = db(query).select(otable.owned_by_organisation,
+                                    limitby=(0, 1)).first()
+            if role:
+                table = s3db.project_task
+                query = (table.id == vars.id)
+                db(query).update(owned_by_organisation=role.owned_by_organisation)
+
+        # Make sure the task is also linked to the project
+        # when created under an activity
+        if id:
+            lta = s3db.project_task_activity
+            ltp = s3db.project_task_project
+            ta = s3db.project_activity
+            query = (ltp.task_id == id)
+            row = db(query).select(ltp.project_id,
+                                   limitby=(0, 1)).first()
+            if not row:
+                query = (lta.task_id == id) & \
+                        (lta.activity_id == ta.id)
+                row = db(query).select(ta.project_id,
+                                       limitby=(0, 1)).first()
+                if row and row.project_id:
+                    ltp.insert(task_id=id,
+                               project_id=row.project_id)
+
+        # Notify Assignee
+        task_notify(form)
         return
 
     # -------------------------------------------------------------------------
@@ -2245,88 +2327,6 @@ class S3ProjectTaskModel(S3Model):
             ondelete = s3mgr.model.get_config("project_task_activity",
                                               "ondelete")
             links.delete(ondelete=ondelete)
-
-        # Notify Assignee
-        task_notify(form)
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def task_create_onaccept(form):
-        """
-            When a Task is created:
-                * Process the additional fields: Project/Activity
-                * create associated Link Tables
-                * ensure that it is owned by the Project Customer
-                * notify assignee
-        """
-
-        db = current.db
-        s3db = current.s3db
-        session = current.session
-
-        vars = form.vars
-        id = vars.id
-        _vars = current.request.post_vars
-
-        if session.s3.event:
-            # Create a link between this Task & the active Event
-            etable = s3db.event_task
-            etable.insert(event_id=session.s3.event,
-                          task_id=id)
-
-        vars = current.request.post_vars
-        table = s3db.project_task
-        if "project_id" in vars:
-            # Create Link to Project
-            ltable = s3db.project_task_project
-            if vars.project_id:
-                link_id = ltable.insert(task_id = id,
-                                        project_id = _vars.project_id)
-
-        if "activity_id" in vars:
-            # Create Link to Activity
-            ltable = s3db.project_task_activity
-            if vars.activity_id:
-                link_id = ltable.insert(task_id = id,
-                                        activity_id = _vars.activity_id)
-
-        # Find the associated Project
-        ptable = db.project_project
-        ltable = db.project_task_project
-        query = (ltable.task_id == id) & \
-                (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.organisation_id,
-                                   limitby=(0, 1)).first()
-        if project:
-            # Set Task to be owned by this Customer
-            organisation_id = project.organisation_id
-            otable = s3db.org_organisation
-            query = (otable.id == organisation_id)
-            role = db(query).select(otable.owned_by_organisation,
-                                    limitby=(0, 1)).first()
-            if role:
-                table = s3db.project_task
-                query = (table.id == vars.id)
-                db(query).update(owned_by_organisation=role.owned_by_organisation)
-
-        # Make sure the task is also linked to the project
-        # when created under an activity
-        if id:
-            lta = s3db.project_task_activity
-            ltp = s3db.project_task_project
-            ta = s3db.project_activity
-            query = (ltp.task_id == id)
-            row = db(query).select(ltp.project_id,
-                                   limitby=(0, 1)).first()
-            if not row:
-                query = (lta.task_id == id) & \
-                        (lta.activity_id == ta.id)
-                row = db(query).select(ta.project_id,
-                                       limitby=(0, 1)).first()
-                if row and row.project_id:
-                    ltp.insert(task_id=id,
-                               project_id=row.project_id)
 
         # Notify Assignee
         task_notify(form)
