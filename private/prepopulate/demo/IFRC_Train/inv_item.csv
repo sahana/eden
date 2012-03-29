@@ -1,27 +1,27 @@
-"Warehouse","Category","Category Code","Catalog","Item Name","Item Code","Brand","Unit of Measure","Model","Year","Weight","Length","Width","Height","Volume","Quantity","Expiry Date","Unit","Unit Value","Currency","Supplier/Donor","Organisation/Department","Tracking Number ","Bin","Comments"
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,5000,,,"4.5","USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Jerry Cans",,,"Piece",,,,,,,,4000,,,"1.2","USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"Unit",,,,,,,,900,,,28,"USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,1250,,,25,"USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item",,"Standard","Plastic Sheets",,,"m2",,,,,,,,10000,,,"0.5","USD",,,,,
-"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Food",,"Standard","Rice",,,"kg",,,,,,,,20000,,,"1.2","USD",,,,,
-"Ainaro Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,150,,,6,"USD",,,,,
-"Ainaro Warehouse","Relief Item",,"Standard","Jerry Cans",,,"Piece",,,,,,,,200,,,3,"USD",,,,,
-"Ainaro Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"m2",,,,,,,,2500,,,19,"USD",,,,,
-"Ainaro Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,50,,,21,"USD",,,,,
-"Lospalos Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,500,,,7,"USD",,,,,
-"Lospalos Warehouse","Relief Item",,"Standard","Jerry Cans",,,"Piece",,,,,,,,100,,,2,"USD",,,,,
-"Lospalos Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"m2",,,,,,,,50,,,15,"USD",,,,,
-"Lospalos Warehouse","Relief Item",,"Standard","Plastic Sheets",,,"m2",,,,,,,,800,,,1,"USD",,,,,
-"Manatuto Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,150,,,4,"USD",,,,,
-"Manatuto Warehouse","Relief Item",,"Standard","Jerry Cans",,,"Piece",,,,,,,,100,,,4,"USD",,,,,
-"Manatuto Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,10,,,16,"USD",,,,,
-"Manatuto Warehouse","Relief Item",,"Standard","Plastic Sheets",,,"m2",,,,,,,,1000,,,"0.75","USD",,,,,
-"Same Warehouse","Relief Item",,"Standard","Blankets",,,"Piece",,,,,,,,600,,,3,"USD",,,,,
-"Same Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"m2",,,,,,,,75,,,18,"USD",,,,,
-"Same Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,75,,,20,"USD",,,,,
-"Same Warehouse","Relief Item",,"Standard","Plastic Sheets",,,"m2",,,,,,,,2000,,,1,"USD",,,,,
-"Viqueque Warehouse","Relief Item",,"Standard","Jerry Cans",,,"Piece",,,,,,,,100,,,"3.5","USD",,,,,
-"Viqueque Warehouse","Relief Item",,"Standard","Kitchen Sets",,,"m2",,,,,,,,200,,,17,"USD",,,,,
-"Viqueque Warehouse","Relief Item",,"Standard","Hygiene Kits",,,"Unit",,,,,,,,200,,,18,"USD",,,,,
-"Viqueque Warehouse","Relief Item",,"Standard","Plastic Sheets",,,"m2",,,,,,,,500,,,1,"USD",,,,,
+"Warehouse","Category","Item description","Catalog","UM","Currency","UM Value","Stock"
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item","Blankets","Standard","Piece","USD","4.5",5000
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item","Jerry Cans","Standard","Piece","USD","1.2",4000
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item","Kitchen Sets","Standard","Unit","USD",28,500
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item","Hygiene Kits","Standard","Unit","USD",25,500
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Relief Item","Plastic Sheets","Standard","m2","USD","0.5",10000
+"Cruz Vermelha de Timor-Leste (CVTL) National Warehouse","Food","Rice","Standard","kg","USD","1.2",20000
+"Ainaro Warehouse","Relief Item","Blankets","Standard","Piece","USD",6,150
+"Ainaro Warehouse","Relief Item","Jerry Cans","Standard","Piece","USD",3,200
+"Ainaro Warehouse","Relief Item","Kitchen Sets","Standard","m2","USD",19,2500
+"Ainaro Warehouse","Relief Item","Hygiene Kits","Standard","Unit","USD",21,50
+"Lospalos Warehouse","Relief Item","Blankets","Standard","Piece","USD",7,500
+"Lospalos Warehouse","Relief Item","Jerry Cans","Standard","Piece","USD",2,100
+"Lospalos Warehouse","Relief Item","Kitchen Sets","Standard","m2","USD",15,50
+"Lospalos Warehouse","Relief Item","Plastic Sheets","Standard","m2","USD",1,800
+"Manatuto Warehouse","Relief Item","Blankets","Standard","Piece","USD",4,150
+"Manatuto Warehouse","Relief Item","Jerry Cans","Standard","Piece","USD",4,100
+"Manatuto Warehouse","Relief Item","Hygiene Kits","Standard","Unit","USD",16,10
+"Manatuto Warehouse","Relief Item","Plastic Sheets","Standard","m2","USD","0.75",1000
+"Same Warehouse","Relief Item","Blankets","Standard","Piece","USD",3,600
+"Same Warehouse","Relief Item","Kitchen Sets","Standard","m2","USD",18,75
+"Same Warehouse","Relief Item","Hygiene Kits","Standard","Unit","USD",20,75
+"Same Warehouse","Relief Item","Plastic Sheets","Standard","m2","USD",1,2000
+"Viqueque Warehouse","Relief Item","Jerry Cans","Standard","Piece","USD","3.5",100
+"Viqueque Warehouse","Relief Item","Kitchen Sets","Standard","m2","USD",17,200
+"Viqueque Warehouse","Relief Item","Hygiene Kits","Standard","Unit","USD",18,200
+"Viqueque Warehouse","Relief Item","Plastic Sheets","Standard","m2","USD",1,500

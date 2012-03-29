@@ -181,8 +181,7 @@ def warehouse():
 
 
 
-    output = s3_rest_controller(module,
-                                resourcename,
+    output = s3_rest_controller(module, resourcename,
                                 rheader=rheader,
                                 csv_template = csv_template,
                                 csv_stylesheet = csv_stylesheet,
@@ -944,7 +943,12 @@ def recv_cancel():
 
 
 
+
+
 # -----------------------------------------------------------------------------
+
+
+
 
 
 

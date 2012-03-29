@@ -1497,6 +1497,7 @@ def org_rheader(r, tabs=[]):
             pass
         tabs.append((T("Attachments"), "document"))
 
+
         rheader_tabs = s3_rheader_tabs(r, tabs)
         logo = org_organisation_logo(record.organisation_id)
 
