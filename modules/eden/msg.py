@@ -29,7 +29,7 @@
 
 __all__ = ["S3MessagingModel",
            "S3CAPModel",
-           "S3EmailModel",
+           "S3InboundEmailModel",
            "S3SMSModel",
            "S3SubscriptionModel",
            "S3TropoModel",
@@ -332,39 +332,71 @@ class S3CAPModel(S3Model):
         return Storage()
 
 # =============================================================================
-class S3EmailModel(S3Model):
+class S3InboundEmailModel(S3Model):
     """
-        Settings for Inbound Email
+        Inbound Email
 
         Outbound Email is handled via deployment_settings
     """
 
-    names = ["msg_email_settings",
+    names = ["msg_inbound_email_settings",
+             "msg_inbound_email_status",
+             "msg_email_inbox",
             ]
 
     def model(self):
 
         # @ToDo: i18n labels
-        #T = current.T
+        T = current.T
         s3 = current.response.s3
 
         # ---------------------------------------------------------------------
-        tablename = "msg_email_settings"
+        tablename = "msg_inbound_email_settings"
         table = self.define_table(tablename,
-                                  Field("inbound_mail_server"),
-                                  Field("inbound_mail_type",
+                                  Field("server"),
+                                  Field("protocol",
                                         requires = IS_IN_SET(["imap", "pop3"],
                                                              zero=None)),
-                                  Field("inbound_mail_ssl", "boolean"),
-                                  Field("inbound_mail_port", "integer"),
-                                  Field("inbound_mail_username"),
-                                  Field("inbound_mail_password"),
-                                  Field("inbound_mail_delete", "boolean"),
-                                  # Also needs to be used by Auth (order issues), DB calls are overheads
-                                  # - as easy for admin to edit source in 000_config.py as to edit DB (although an admin panel can be nice)
-                                  #Field("outbound_mail_server"),
-                                  #Field("outbound_mail_from"),
+                                  Field("use_ssl", "boolean"),
+                                  Field("port", "integer"),
+                                  Field("username"),
+                                  Field("password"),
+                                  # Set true to delete messages from the remote
+                                  # inbox after fetching them.
+                                  Field("delete_from_server", "boolean"),
                                   *s3.meta_fields())
+
+        # Incoming Email
+        tablename = "msg_email_inbox"
+        table = self.define_table(tablename,
+                                  Field('sender', notnull=True),
+                                  Field('subject', length=78),    # RFC 2822
+                                  Field('body', 'text'),
+                                  *s3.meta_fields())
+        table.sender.requires = IS_EMAIL()
+        table.sender.label = T('Sender')
+        #table.sender.comment = SPAN("*", _class="req")
+        table.subject.label = T('Subject')
+        table.body.label = T('Body')
+        VIEW_EMAIL_INBOX = T('View Email InBox')
+        s3.crud_strings[tablename] = Storage(
+            #title_create = T('Add Incoming Email'),
+            title_display = T('Email Details'),
+            title_list = VIEW_EMAIL_INBOX,
+            #title_update = T('Edit Email'),
+            title_search = T('Search Email InBox'),
+            subtitle_list = T('Email InBox'),
+            label_list_button = VIEW_EMAIL_INBOX,
+            #label_create_button = T('Add Incoming Email'),
+            #msg_record_created = T('Email added'),
+            #msg_record_modified = T('Email updated'),
+            msg_record_deleted = T('Email deleted'),
+            msg_list_empty = T('No Emails currently in InBox'))
+
+        # Status
+        tablename = "msg_inbound_email_status"
+        table = self.define_table(tablename,
+                                  Field("status"))
 
         # ---------------------------------------------------------------------
         return Storage()
