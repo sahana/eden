@@ -793,43 +793,6 @@ def load_search(id):
 
 
 # -----------------------------------------------------------------------------
-def get_criteria(id):
-    s = ""
-    try:
-        id = id.replace("&apos;","'")
-        search_vars = cPickle.loads(id)
-        s = "<p>"
-        pat = '_'
-        for var in search_vars.iterkeys():
-            if var == "criteria" :
-                c_dict = search_vars[var]
-                #s = s + crud_string("pr_save_search", "Search Criteria")
-                for j in c_dict.iterkeys():
-                    if not re.match(pat,j):
-                        st = str(j)
-                        st = st.replace("_search_"," ")
-                        st = st.replace("_advanced","")
-                        st = st.replace("_simple","")
-                        st = st.replace("text","text matching")
-                        """st = st.replace(search_vars["function"],"")
-                        st = st.replace(search_vars["prefix"],"")"""
-                        st = st.replace("_"," ")
-                        s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
-            elif var == "simple" or var == "advanced":
-                continue
-            else:
-                if var == "function":
-                    v1 = "Resource Name"
-                elif var == "prefix":
-                    v1 = "Module"
-                s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
-        s = s + "</p>"
-        return s
-    except:
-        return s
-
-
-# -----------------------------------------------------------------------------
 def check_updates(user_id):
     #Check Updates for all the Saved Searches Subscribed by the User
     message = "<h2>Saved Searches' Update</h2>"
@@ -839,7 +802,7 @@ def check_updates(user_id):
     for row in rows :
         if row.subscribed:
             records = load_search(row.id)
-            #message = message + "<b>" + get_criteria(row.id) + "</b>"
+            message = message + "<b>" + search_vars_represent(row.search_vars) + "</b>"
             if str(records["items"]) != "No Matching Records":
                 message = message + str(records["items"]) + "<br />" #Include the Saved Search details
                 flag = 1
