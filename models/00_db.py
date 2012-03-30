@@ -19,7 +19,6 @@ if s3.debug:
     track_changes(True)
 
 import datetime
-import md5
 import re
 import time
 
@@ -121,6 +120,7 @@ crud = s3base.CrudS3()
 current.crud = crud
 S3Comment = s3base.S3Comment
 S3DateTime = s3base.S3DateTime
+S3ResourceHeader = s3base.S3ResourceHeader
 
 from gluon.tools import Service
 service = Service()
@@ -171,9 +171,10 @@ def s3_auth_on_login(form):
     if "owned_records" in session:
         del session["owned_records"]
 
-    # HRM session vars
-    if "hrm" in session:
-        del session["hrm"]
+    if "s3" in session:
+        # HRM session vars
+        if "hrm" in session.s3:
+            del session.s3["hrm"]
 
 # -----------------------------------------------------------------------------
 def s3_auth_on_logout(user):
@@ -185,9 +186,10 @@ def s3_auth_on_logout(user):
     # S3XRC last seen records (rcvars)
     s3mgr.clear_session()
 
-    # HRM session vars
-    if "hrm" in session:
-        del session["hrm"]
+    if "s3" in session:
+        # HRM session vars
+        if "hrm" in session.s3:
+            del session.s3["hrm"]
 
     # Reset UTC offset
     try:

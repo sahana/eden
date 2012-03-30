@@ -40,6 +40,7 @@
 """
 
 __all__ = ["S3NavigationItem",
+           "S3ResourceHeader",
            "s3_popup_comment",
            "s3_rheader_tabs",
            "s3_rheader_resource"]
@@ -109,6 +110,7 @@ class S3NavigationItem:
                  check=None,
                  restrict=None,
                  link=True,
+                 mandatory=False,
                  **attributes):
         """
             Constructor
@@ -219,10 +221,11 @@ class S3NavigationItem:
         self.components = []
 
         # Flags
-        self.enabled = True     # Item is enabled/disabled
-        self.selected = None    # Item is in the current selected-path
-        self.visible = None     # Item is visible
-        self.link = link        # Item shall be linked
+        self.enabled = True             # Item is enabled/disabled
+        self.selected = None            # Item is in the current selected-path
+        self.visible = None             # Item is visible
+        self.link = link                # Item shall be linked
+        self.mandatory = mandatory      # Item is always active
 
         # Role restriction
         self.restrict = restrict
@@ -263,6 +266,10 @@ class S3NavigationItem:
         c = self.get("controller")
         if c and c not in settings.modules:
             return False
+
+        # mandatory flag overrides all further checks
+        if self.mandatory:
+            return True
 
         # Fall back to current.request
         if request is None:
@@ -320,6 +327,11 @@ class S3NavigationItem:
                     break
         else:
             authorized = True
+
+        # mandatory flag overrides all further checks
+        if self.mandatory:
+            return authorized
+
         if self.accessible_url() == False:
             authorized = False
         return authorized
@@ -776,7 +788,9 @@ class S3NavigationItem:
         """
 
         output = self.render()
-        if hasattr(output, "xml"):
+        if output is None:
+            return ""
+        elif hasattr(output, "xml"):
             return output.xml()
         else:
             return str(output)
@@ -799,7 +813,7 @@ class S3NavigationItem:
         parent = self.parent
         if parent is not None and parent !=p:
             while self in parent.components:
-                parent.remove(self)
+                parent.components.remove(self)
         if i is not None:
             p.component.insert(i, self)
         else:
@@ -1187,9 +1201,13 @@ def s3_rheader_resource(r):
     _vars = r.get_vars
 
     if "viewing" in _vars:
-        tablename, record_id = _vars.viewing.rsplit(".", 1)
-        db = current.db
-        record = db[tablename][record_id]
+        try:
+            tablename, record_id = _vars.viewing.rsplit(".", 1)
+            db = current.db
+            record = db[tablename][record_id]
+        except:
+            tablename = r.tablename
+            record = r.record
     else:
         tablename = r.tablename
         record = r.record
@@ -1460,5 +1478,128 @@ class S3SearchTab:
         self.title = title
         self.method = method
         self.vars = vars
+
+# =============================================================================
+class S3ResourceHeader:
+    """ Simple Generic Resource Header for tabbed component views """
+
+    def __init__(self, fields=None, tabs=None):
+        """
+            Constructor
+
+            @param fields: the fields to display as list of lists of
+                           fieldnames, Field instances or callables
+            @param tabs: the tabs
+
+            Fields are specified in order rows->cols, i.e. if written
+            like:
+
+            [
+                ["fieldA", "fieldF", "fieldX"],
+                ["fieldB", None, "fieldY"]
+            ]
+
+            then that's exactly the screen order. Row or column spans are
+            not supported - empty fields will be rendered as empty fields.
+            If you need to construct more complex rheaders, you should
+            implement a custom method.
+
+            Fields can be specified by field names, Field instances or
+            as callables. Where a field specifier is a callable, it will
+            be invoked with the record as parameter and is respected to
+            return the representation value.
+
+            Where a field specifier is a tuple of two items, the first
+            item is taken for the label (overriding the field label, if
+            any), like in:
+
+
+            [
+                [(T("Name"), s3_fullname)],
+                ...
+            ]
+
+            Where the second item is a callable, it maybe necessary to
+            specify a label.
+
+            If you don't want any fields, specify this explicitly as:
+
+                rheader = S3ResourceHeader(fields=[])
+
+            Where you don't specify any fields and the table contains a
+            "name" field, the rheader defaults to: [["name"]].
+        """
+
+        self.fields = fields
+        self.tabs = tabs
+
+    # -------------------------------------------------------------------------
+    def __call__(self, r, tabs=None):
+        """
+            Return the HTML representation of this rheader
+
+            @param r: the S3Request instance to render the header for
+            @param tabs: the tabs (overrides the original tabs definition)
+        """
+
+        table = r.table
+        record = r.record
+
+        if tabs is None:
+            tabs = self.tabs
+
+        if self.fields is None and "name" in table.fields:
+            fields = [["name"]]
+        else:
+            fields = self.fields
+
+        if record:
+
+            if tabs is not None:
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+            else:
+                rheader_tabs = ""
+
+            trs = []
+            for row in fields:
+                tr = TR()
+                for col in row:
+                    field = None
+                    label = ""
+                    value = ""
+                    if isinstance(col, (tuple, list)) and len(col) == 2:
+                        label, f = col
+                    else:
+                        f = col
+                    if callable(f):
+                        try:
+                            value = f(record)
+                        except:
+                            pass
+                    else:
+                        if isinstance(f, str):
+                            fn = f
+                            if "." in fn:
+                                tn, fn = col.split(".", 1)
+                                if fn not in table.fields or \
+                                   fn not in record:
+                                    continue
+                            field = table[fn]
+                            value = record[fn]
+                        elif isinstance(f, Field) and f.name in record:
+                            field = f
+                            value = record[f.name]
+                    if field is not None:
+                        if not label:
+                            label = field.label
+                        if field.represent is not None:
+                            value = field.represent(value)
+                    tr.append(TH("%s: " % unicode(label)))
+                    tr.append(TD(unicode(value)))
+                trs.append(tr)
+            rheader = DIV(TABLE(trs), rheader_tabs)
+            return rheader
+
+        return None
 
 # END =========================================================================

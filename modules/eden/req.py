@@ -80,7 +80,8 @@ class S3RequestModel(S3Model):
         settings = current.deployment_settings
 
         org_site_represent = self.org_site_represent
-        human_resource_id = self.hrm_human_resource_id
+#        human_resource_id = self.hrm_human_resource_id
+        human_resource_id = self.pr_person_id
         event_id = self.event_event_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
@@ -554,7 +555,7 @@ $(function() {
             current.auth.s3_has_permission("read", "req_req"):
             return [
                     (T("Requests"), "req"),
-                    (T("Match Requests"), "req_match/"),
+                    (T("Match Requests"), "match/"),
                     (T("Commit"), "commit")
                     ]
         else:
@@ -861,7 +862,8 @@ class S3RequestItemModel(S3Model):
             table.quantity_transit.writable = table.quantity_transit.readable= False
 
         # pack_quantity virtual field
-        table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        if item_pack_virtualfields:
+            table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
         # CRUD strings
         ADD_REQUEST_ITEM = T("Add New Item to Request")
@@ -1373,7 +1375,7 @@ class S3CommitModel(S3Model):
 
         vars = form.vars
 
-        # Update owned_by_role to the organisation's owned_by_role
+        # Update owned_by_group to the organisation's owned_by_group
         # @ToDo: Facility
         if vars.organisation_id:
             otable = s3db.org_organisation
@@ -1443,7 +1445,8 @@ class S3CommitItemModel(S3Model):
                                   *s3.meta_fields())
 
         # pack_quantity virtual field
-        table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        if item_pack_virtualfields:
+            table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
         # CRUD strings
         ADD_COMMIT_ITEM = T("Add Item to Commitment")

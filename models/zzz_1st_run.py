@@ -15,6 +15,10 @@ if len(pop_list) > 0:
 
     # Add core data as long as at least one populate setting is on
 
+    if deployment_settings.get_auth_opt_in_to_email():
+        table = db["pr_group"]
+        for team in deployment_settings.get_auth_opt_in_team_list():
+            table.insert(name = team, group_type = 5)
     # Scheduled Tasks
     if deployment_settings.has_module("msg"):
         # Send Messages from Outbox
@@ -116,7 +120,7 @@ if len(pop_list) > 0:
         query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
         map_admin = db(query).select(db.auth_group.id,
                                      limitby=(0, 1)).first().id
-        db(table.level == "L0").update(owned_by_role=map_admin)
+        db(table.level == "L0").update(owned_by_group=map_admin)
     # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
     field = "name"
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % \
@@ -128,7 +132,7 @@ if len(pop_list) > 0:
         table = db[tablename]
         if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
             table.insert(name = deployment_settings.get_supply_catalog_default() )
-    
+
     # Climate module
     if deployment_settings.has_module("climate"):
         climate_first_run()
@@ -189,7 +193,7 @@ if len(pop_list) > 0:
                                 "prepopulate",
                                 "default")
             bi.perform_tasks(path)
-    
+
         elif pop_setting == 2:
             # Populate data for the regression tests
             path = os.path.join(request.folder,
@@ -203,7 +207,7 @@ if len(pop_list) > 0:
             # Populate data for scalability testing
             # This is different from the repeatable imports that use csv files
             # This will generate millions of records of data for selected tables.
-    
+
             # Code needs to go here to generate a large volume of test data
             pass
 
@@ -301,6 +305,9 @@ if len(pop_list) > 0:
         print >> sys.stderr, errorLine
     # Restore table protection
     s3mgr.PROTECTED = protected
+
+    # Restore Auth
+    auth.override = False
 
     # Restore view
     response.view = "default/index.html"

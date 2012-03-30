@@ -6,6 +6,7 @@
 
 // Main jQuery function
 $(function() {
+
     if ( typeof(S3.gis.location_id) == 'undefined' ) {
         // This page doesn't include the Location Selector Widget
     } else {
@@ -26,13 +27,18 @@ $(function() {
         }
 
         // Load Google API for Geocoder
-        if (S3.gis.geocoder) {
-            s3_gis_loadGoogle();
-        }
+        try {
+            if (google && S3.gis.geocoder) {
+                // Google already loaded, so don't load again
+                s3_gis_initGeocoder();
+            } else if (S3.gis.geocoder) {
+                s3_gis_loadGoogle();
+            }
+        } catch(err) {};
 
         // Set initial Autocompletes
         s3_gis_autocompletes();
-        
+
         // Listen for Events & take appropriate Actions
 
         // Name
@@ -75,15 +81,15 @@ $(function() {
 
         // Buttons
         $('#gis_location_expand').click( function(evt) {
-            if ($('#gis_location_expand').hasClass('minus')) {
+            if ($('#gis_location_expand').hasClass('expand')) {
                 s3_gis_hide_selector();
-                $('#gis_location_expand').addClass('plus');
-                $('#gis_location_expand').removeClass('minus');
+                $('#gis_location_expand').addClass('expanded');
+                $('#gis_location_expand').removeClass('expand');
                 evt.preventDefault();
             } else {
                 s3_gis_show_tab('add');
-                $('#gis_location_expand').addClass('minus');
-                $('#gis_location_expand').removeClass('plus');
+                $('#gis_location_expand').addClass('expand');
+                $('#gis_location_expand').removeClass('expanded');
                 evt.preventDefault();
             }
         });
@@ -620,7 +626,7 @@ function s3_gis_search_tab() {
 
 function s3_gis_add_tab() {
     // 'Create New Location' tab has been selected
-    
+
     // Hide the Search rows
     s3_gis_hide_search_fields();
 
@@ -959,7 +965,7 @@ function s3_gis_hide_search_fields() {
 function s3_gis_loadGoogle() {
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = 'http://maps.google.com/maps/api/js?v=3.2&sensor=false&callback=s3_gis_initGeocoder';
+    script.src = 'http://maps.google.com/maps/api/js?v=3.6&sensor=false&callback=s3_gis_initGeocoder';
     document.body.appendChild(script);
 }
 function s3_gis_initGeocoder() {
@@ -1036,7 +1042,7 @@ function s3_gis_geocode() {
                 var lat = myLatLng.lat();
                 var lon = myLatLng.lng();
                 var newPoint = new OpenLayers.LonLat(lon, lat);
-                
+
                 var myLatLngBounds = results[0].geometry.viewport;
                 if (myLatLngBounds) {
                     // Zoom to the Viewport (Bounds)
@@ -1059,7 +1065,7 @@ function s3_gis_geocode() {
                 // @ToDo: Set the Marker to the center of this viewport?
                 // Better to let the user do this manually?
                 //var marker = new google.maps.Marker({
-                //    map: map, 
+                //    map: map,
                 //    position: results[0].geometry.location
                 //});
 

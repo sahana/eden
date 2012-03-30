@@ -551,6 +551,8 @@ class S3CRUD(S3Method):
                 response.view = self._view(r, "update.html")
             elif representation in ("popup", "iframe"):
                 response.view = self._view(r, "popup.html")
+            elif representation == "plain":
+                response.view = self._view(r, "plain.html")
 
             # Title and subtitle
             crud_string = self.crud_string
@@ -620,7 +622,11 @@ class S3CRUD(S3Method):
             last_update = self.last_update()
             if last_update:
                 output["modified_on"] = last_update["modified_on"]
-                output["modified_by"] = last_update["modified_by"]
+                try:
+                    output["modified_by"] = last_update["modified_by"]
+                except:
+                    # Field not in table - e.g. auth_user
+                    pass
 
             # Redirection
             update_next = _config("update_next")
@@ -633,9 +639,6 @@ class S3CRUD(S3Method):
                     self.next = update_next(self)
                 except TypeError:
                     self.next = update_next
-
-        #elif representation == "plain":
-            #pass
 
         elif representation == "url":
             return self.import_url(r)
@@ -838,7 +841,7 @@ class S3CRUD(S3Method):
                     vars.update(iSortingCols="1",
                                 iSortCol_0=scol,
                                 sSortDir_0="asc")
-                    orderby = self.ssp_orderby(table, list_fields, left=left)
+                    orderby = self.ssp_orderby(resource, list_fields, left=left)
                     del vars["iSortingCols"]
                     del vars["iSortCol_0"]
                     del vars["sSortDir_0"]
@@ -965,7 +968,7 @@ class S3CRUD(S3Method):
 
             # SSPag sorting
             if vars.iSortingCols:
-                orderby = self.ssp_orderby(table, list_fields, left=left)
+                orderby = self.ssp_orderby(resource, list_fields, left=left)
             if r.method == "search" and not orderby:
                 orderby = fields[0]
             if orderby is None:
@@ -2003,7 +2006,7 @@ class S3CRUD(S3Method):
         return searchq
 
     # -------------------------------------------------------------------------
-    def ssp_orderby(self, table, fields, left=[]):
+    def ssp_orderby(self, resource, fields, left=[]):
         """
             Convert the SSPag GET vars into a sorting query
 
@@ -2014,8 +2017,13 @@ class S3CRUD(S3Method):
         """
 
         vars = self.request.get_vars
-        resource = self.resource
+        table = resource.table
         tablename = table._tablename
+
+        if resource.linked is not None:
+            skip = [resource.linked.tablename]
+        else:
+            skip = []
 
         iSortingCols = int(vars["iSortingCols"])
 
@@ -2036,21 +2044,22 @@ class S3CRUD(S3Method):
             if fieldtype.startswith("reference") and \
                hasattr(c, "sortby") and c.sortby:
                 tn = fieldtype[10:]
-                try:
-                    join = [j for j in left if j.first._tablename == tn]
-                except:
-                    # Old DAL version?
-                    join = [j for j in left if j.table._tablename == tn]
-                if not join:
-                    left.append(current.db[tn].on(c == current.db[tn].id))
-                else:
+                if tn not in skip:
                     try:
-                        join[0].query = (join[0].second) | \
-                                        (c == current.db[tn].id)
+                        join = [j for j in left if j.first._tablename == tn]
                     except:
                         # Old DAL version?
-                        join[0].query = (join[0].query) | \
-                                        (c == current.db[tn].id)
+                        join = [j for j in left if j.table._tablename == tn]
+                    if not join:
+                        left.append(current.db[tn].on(c == current.db[tn].id))
+                    else:
+                        try:
+                            join[0].query = (join[0].second) | \
+                                            (c == current.db[tn].id)
+                        except:
+                            # Old DAL version?
+                            join[0].query = (join[0].query) | \
+                                            (c == current.db[tn].id)
                 if not isinstance(c.sortby, (list, tuple)):
                     orderby.append("%s.%s%s" % (tn, c.sortby, direction(i)))
                 else:

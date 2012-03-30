@@ -1,0 +1,17 @@
+{{extend "layout.html"}}
+{{=H2(title)}}
+<div id='rheader'>
+{{try:}}
+ {{=rheader}}
+ </div>
+ <div id='component'>
+{{except:}}
+<div>
+ {{pass}}
+ {{=content}}
+ {{if response.s3.rfooter:}}
+ <div id='rfooter'>
+  {{=XML(response.s3.rfooter)}}
+ </div>
+ {{pass}}
+</div>

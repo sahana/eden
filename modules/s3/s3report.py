@@ -108,6 +108,7 @@ class S3Cube(S3CRUD):
         cols = _vars.get("cols", None)
         fact = _vars.get("fact", None)
         aggregate = _vars.get("aggregate", None)
+        show_totals = _vars.get("totals", "on")
 
         if not rows:
             rows = None
@@ -117,6 +118,11 @@ class S3Cube(S3CRUD):
             self.method = "list"
         if not aggregate:
             aggregate = "list"
+        if show_totals is None or \
+           str(show_totals).lower() in ("false", "off"):
+            show_totals = False
+        else:
+            show_totals = True
         layers = []
         if not fact:
             if "name" in table:
@@ -176,6 +182,7 @@ class S3Cube(S3CRUD):
                 report_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
+                                               show_totals=show_totals,
                                                _id="list",
                                                _class="dataTable display")
                     report_data = items.report_data
@@ -259,6 +266,7 @@ class S3Cube(S3CRUD):
         """ Creates the report filter and options form """
 
         T = current.T
+        request = current.request
         resource = self.resource
 
         # Get list_fields
@@ -275,6 +283,16 @@ class S3Cube(S3CRUD):
         select_rows = _select_field(report_rows, _id="rows", _name="rows")
         select_cols = _select_field(report_cols, _id="cols", _name="cols")
         select_fact = _select_field(report_fact, _id="fact", _name="fact")
+
+        show_totals = True
+        if request.env.request_method == "GET" and \
+           "show_totals" in request.get_vars:
+            show_totals = request.get_vars["show_totals"]
+            if show_totals.lower() in ("false", "off"):
+                show_totals = False
+
+        show_totals = INPUT(_type="checkbox", _id="totals", _name="totals",
+                            value=show_totals)
 
         methods = _config("report_method")
         select_method = self._select_method(methods,
@@ -300,18 +318,24 @@ class S3Cube(S3CRUD):
                     ),
                     TR(
                         TD(LABEL("Value:"), _class="w2p_fl"),
-                        TD(LABEL("Function for Value:"), _class="w2p_fl")
+                        TD(LABEL("Function for Value:"), _class="w2p_fl"),
                     ),
                     TR(
                         TD(select_fact),
-                        TD(select_method)
+                        TD(select_method),
+                    ),
+                    TR(
+                        TD(LABEL("Show totals:"), _class="w2p_fl")
+                    ),
+                    TR(
+                        TD(show_totals)
                     ),
                     TR(
                         INPUT(_value=T("Submit"), _type="submit"),
                         # @todo: Reset-link to restore pre-defined parameters,
                         #        show only if URL vars present
                         #A(T("Reset"), _class="action-lnk"),
-                    _colspan=2), _id="report_options")
+                        _colspan=3), _id="report_options")
         form.append(report_options)
 
         return form
@@ -917,7 +941,7 @@ class S3Report:
 class S3ContingencyTable(TABLE):
     """ HTML Helper to generate a contingency table """
 
-    def __init__(self, report, **attributes):
+    def __init__(self, report, show_totals=True, **attributes):
         """
             Constructor
 
@@ -1004,7 +1028,7 @@ class S3ContingencyTable(TABLE):
             add_header(colhdr)
 
         # Row totals header
-        if cols is not None:
+        if show_totals and cols is not None:
             add_header(TH(TOTAL, _class="totals_header rtotal"))
 
         thead = THEAD(titles, headers)
@@ -1053,7 +1077,7 @@ class S3ContingencyTable(TABLE):
 
             # Row total
             totals = get_total(row, layers, append=add_row_total)
-            if cols is not None:
+            if show_totals and cols is not None:
                 add_cell(TD(DIV(totals)))
 
             add_row(tr)
@@ -1086,7 +1110,8 @@ class S3ContingencyTable(TABLE):
         append = components.append
         append(thead)
         append(tbody)
-        append(tfoot)
+        if show_totals:
+            append(tfoot)
 
         # Chart data ----------------------------------------------------------
         #

@@ -833,6 +833,19 @@ class S3Importer(S3CRUD):
         s3.filter = (self.table.job_id == job_id) & \
                     (self.table.tablename == self.controller_tablename)
 
+        # get a list of the records that have an error of None
+        query =  (self.table.job_id == job_id) & \
+                 (self.table.tablename == self.controller_tablename)
+        rows = current.db(query).select(self.table.id, self.table.error)
+        select_list = []
+        error_list = []
+        for row in rows:
+            if row.error:
+                error_list.append(str(row.id))
+            else:
+                select_list.append("%s" % row.id)
+        select_id = ",".join(select_list)
+
         output = self._dataTable(["id", "element", "error"],
                                  sort_by = [[1, "asc"]],
                                  represent=represent)
@@ -842,16 +855,19 @@ class S3Importer(S3CRUD):
         if self.request.representation == "aadata":
             return output
 
+        # Highlight rows in erro in red
+        s3.dataTableStyleWarning = error_list
+
         s3.dataTableSelectable = True
-        s3.dataTableSelectAll = True
         s3.dataTablePostMethod = True
         table = output["items"]
         job = INPUT(_type="hidden", _id="importUploadID", _name="job",
                     _value="%s" % upload_id)
         mode = INPUT(_type="hidden", _id="importMode", _name="mode",
-                     _value="Exclusive")
+                     _value="Inclusive")
+        # only select the rows with no errors
         selected = INPUT(_type="hidden", _id="importSelected",
-                         _name="selected", _value="")
+                         _name="selected", _value="[%s]" % select_id)
         form = FORM(table, job, mode, selected)
         output["items"] = form
         s3.dataTableSelectSubmitURL = "import?job=%s&" % upload_id
@@ -1258,7 +1274,7 @@ class S3Importer(S3CRUD):
                 start = None # use default
             # Using the sort variables sent from dataTables
             if vars.iSortingCols:
-                orderby = self.ssp_orderby(table, list_fields)
+                orderby = self.ssp_orderby(resource, list_fields)
 
             # Echo
             sEcho = int(vars.sEcho or 0)
@@ -1307,7 +1323,7 @@ class S3Importer(S3CRUD):
                 vars[colName] = colValue
                 vars[dirnName] = dirnValue
             # Now using these sort variables generate the order by statement
-            orderby = self.ssp_orderby(table, list_fields)
+            orderby = self.ssp_orderby(resource, list_fields)
 
             del vars["iSortingCols"]
             for col in sort_by:
@@ -2729,12 +2745,11 @@ class S3ImportJob():
                 pkey = component.pkey
                 if component.linktable:
                     ctable = component.linktable
-                    ctablename = ctable._tablename
                     fkey = component.lkey
                 else:
                     ctable = component.table
-                    ctablename = component.tablename
                     fkey = component.fkey
+                ctablename = ctable._tablename
 
                 celements = xml.select_resources(element, ctablename)
                 if celements:
@@ -2858,10 +2873,7 @@ class S3ImportJob():
                 tablename = ktablename
             # Super-entity references must use the super-key:
             if tablename != ktablename:
-                if field != ktable._id.name:
-                    continue
-                else:
-                    field = (field, field)
+                field = (ktable._id.name, field)
             # Ignore direct references to super-entities:
             if tablename == ktablename and ktable._id.name != "id":
                 continue
@@ -2906,7 +2918,7 @@ class S3ImportJob():
                     if directory is not None:
                         entry = directory.get((tablename, attr, uid), None)
                     if not entry:
-                        expr = './/%s[@%s="%s" and @%s="%s"]' % (
+                        expr = ".//%s[@%s='%s' and @%s='%s']" % (
                                     xml.TAG.resource,
                                     xml.ATTRIBUTE.name,
                                     tablename,

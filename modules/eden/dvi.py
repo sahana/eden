@@ -29,7 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DVIModel", "dvi_rheader"]
+__all__ = ["S3DVIModel"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -39,7 +39,11 @@ from ..s3 import *
 class S3DVIModel(S3Model):
 
     names = ["dvi_recreq",
-             "dvi_body"]
+             "dvi_body",
+             "dvi_morgue",
+             "dvi_checklist",
+             "dvi_effects",
+             "dvi_identification"]
 
     def model(self):
 
@@ -448,51 +452,5 @@ class S3DVIModel(S3Model):
             return row.name
         else:
             return "-"
-
-# =============================================================================
-def dvi_rheader(r, tabs=[]):
-    """ Resource component page header """
-
-    T = current.T
-    s3 = current.response.s3
-
-    pr_gender_opts = s3.pr_gender_opts
-    pr_age_group_opts = s3.pr_age_group_opts
-
-    if r.name == "morgue":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-        morgue = r.record
-        if morgue:
-            rheader = DIV(TABLE(
-
-                TR(TH("%s: " % T("Morgue")),
-                    "%(name)s" % morgue)
-
-                ), rheader_tabs
-            )
-            return rheader
-
-    elif r.name == "body":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-        body = r.record
-        if body:
-            rheader = DIV(TABLE(
-                TR(TH("%s: " % T("ID Tag Number")),
-                    "%(pe_label)s" % body,
-                    TH(""),
-                    ""),
-                TR(TH("%s: " % T("Gender")),
-                    "%s" % pr_gender_opts[body.gender],
-                    TH(""),
-                    ""),
-                TR(TH("%s: " % T("Age Group")),
-                    "%s" % pr_age_group_opts[body.age_group],
-                    TH(""),
-                    ""),
-                ), rheader_tabs
-            )
-            return rheader
-
-    return None
 
 # END =========================================================================

@@ -58,6 +58,7 @@ import time
 import re
 from datetime import datetime, timedelta
 from gluon import current, Field, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
+from gluon.languages import lazyT
 from gluon.validators import Validator
 from gluon.storage import Storage
 
@@ -619,8 +620,11 @@ class IS_LOCATION_SELECTOR(Validator):
         T = current.T
         self.error_message = error_message or T("Invalid Location!")
         self.no_parent = T("Need to have all levels filled out in mode strict!")
+        self.invalid_lat = T("Latitude is Invalid!")
+        self.invalid_lon = T("Longitude is Invalid!")
         auth = current.auth
         self.no_permission = auth.messages.access_denied
+        self.errors = Storage()
 
     def __call__(self, value):
         db = current.db
@@ -643,16 +647,24 @@ class IS_LOCATION_SELECTOR(Validator):
             if location:
                 # Update the record, in case changes have been made
                 location = self._process_values()
-                # onvalidation
-                form = Storage()
-                form.vars = location
-                gis.wkt_centroid(form)
+                if self.errors:
+                    errors = self.errors
+                    error = ""
+                    for e in errors:
+                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                    return (value, error)
                 db(table.id == value).update(name = location.name,
                                              lat = location.lat,
                                              lon = location.lon,
                                              addr_street = location.street,
                                              addr_postcode = location.postcode,
-                                             parent = location.parent)
+                                             parent = location.parent,
+                                             wkt = location.wkt,
+                                             lon_min = location.lon_min,
+                                             lon_max = location.lon_max,
+                                             lat_min = location.lat_min,
+                                             lat_max = location.lat_max
+                                             )
                 # onaccept
                 gis.update_location_tree(value, location.parent)
                 return (value, None)
@@ -661,26 +673,25 @@ class IS_LOCATION_SELECTOR(Validator):
             if not auth.s3_has_permission("create", table):
                 return (None, self.no_permission)
             location = self._process_values()
-            strict = gis.get_strict_hierarchy(location)
-            if strict and not location.parent:
-                return (value, self.no_parent)
+            if self.errors:
+                errors = self.errors
+                error = ""
+                for e in errors:
+                    error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                return (None, error)
             if location.name or location.lat or location.lon or \
                location.street or location.postcode or location.parent:
-                # onvalidation
-                form = Storage()
-                form.vars = location
-                gis.wkt_centroid(form)
                 value = table.insert(name = location.name,
                                      lat = location.lat,
                                      lon = location.lon,
                                      addr_street = location.street,
                                      addr_postcode = location.postcode,
                                      parent = location.parent,
-                                     wkt = form.vars.wkt,
-                                     lon_min = form.vars.lon_min,
-                                     lon_max = form.vars.lon_max,
-                                     lat_min = form.vars.lat_min,
-                                     lat_max = form.vars.lat_max
+                                     wkt = location.wkt,
+                                     lon_min = location.lon_min,
+                                     lon_max = location.lon_max,
+                                     lat_min = location.lat_min,
+                                     lat_max = location.lat_max
                                      )
                 # onaccept
                 gis.update_location_tree(value, location.parent)
@@ -709,9 +720,26 @@ class IS_LOCATION_SELECTOR(Validator):
         vars = current.request.vars
         L0 = vars.get("gis_location_L0", None)
 
+        # Check for valid Lat/Lon
+        lat = vars.get("gis_location_lat", None)
+        lon = vars.get("gis_location_lon", None)
+        if lat:
+            try:
+                lat = float(lat)
+            except ValueError:
+                self.errors["lat"] = self.invalid_lat
+        if lon:
+            try:
+                lon = float(lon)
+            except ValueError:
+                self.errors["lon"] = self.invalid_lon
+        if self.errors:
+            return None
+
         # Are we allowed to create Locations?
         if not auth.s3_has_permission("create", table):
-            return (None, self.no_permission)
+            self.errors["location_id"] = self.no_permission
+            return None
         # What level of hierarchy are we allowed to edit?
         if auth.s3_has_role(session.s3.system_roles.MAP_ADMIN):
             # 'MapAdmin' always has permission to edit hierarchy locations
@@ -738,12 +766,12 @@ class IS_LOCATION_SELECTOR(Validator):
                 L4_allowed = config.edit_L4
                 L5_allowed = config.edit_L5
             else:
-                # default is deployment_setting
-                L1_allowed = current.deployment_settings.get_gis_edit_lx()
-                L2_allowed = L1_allowed
-                L3_allowed = L1_allowed
-                L4_allowed = L1_allowed
-                L5_allowed = L1_allowed
+                # default is True
+                L1_allowed = True
+                L2_allowed = True
+                L3_allowed = True
+                L4_allowed = True
+                L5_allowed = True
 
         # We don't need to do onvalidation of the Location Hierarchy records
         # separately as we don't have anything extra to validate than we have
@@ -976,20 +1004,23 @@ class IS_LOCATION_SELECTOR(Validator):
 
         # Check if we have a specific location to create
         name = vars.get("gis_location_name", None)
-        lat = vars.get("gis_location_lat", None)
-        lon = vars.get("gis_location_lon", None)
         street = vars.get("gis_location_street", None)
         postcode = vars.get("gis_location_postcode", None)
         parent = L5 or L4 or L3 or L2 or L1 or L0 or None
 
         # Move vars into form.
         form = Storage()
+        form.errors = dict()
         form.vars = Storage()
         vars = form.vars
         vars.lat = lat
         vars.lon = lon
+        vars.parent = parent
         # onvalidation
-        gis.wkt_centroid(form)
+        s3db.gis_location_onvalidation(form)
+        if form.errors:
+            self.errors = form.errors
+            return None
         return Storage(
                         name=name,
                         lat=lat, lon=lon,
@@ -1027,6 +1058,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
         self.no_parent = T("Need to have all levels filled out in mode strict!")
         auth = current.auth
         self.no_permission = auth.messages.access_denied
+        self.errors = Storage()
         self.site_type = site_type
 
     def __call__(self, value):
@@ -1052,10 +1084,12 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
             if site and site.location_id:
                 # Update the location, in case changes have been made
                 location = self._process_values()
-                # Location onvalidation
-                form = Storage()
-                form.vars = location
-                gis.wkt_centroid(form)
+                if self.errors:
+                    errors = self.errors
+                    error = ""
+                    for e in errors:
+                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                    return (value, error)
                 # Location update
                 lquery = (table.id == site.location_id)
                 db(lquery).update(name = location.name,
@@ -1076,15 +1110,14 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
             if not auth.s3_has_permission("create", stable):
                 return (None, self.no_permission)
             location = self._process_values()
-            strict = gis.get_strict_hierarchy(location)
-            if strict and not location.parent:
-                return (value, self.no_parent)
+            if self.errors:
+                errors = self.errors
+                error = ""
+                for e in errors:
+                    error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                return (None, error)
             if location.name or location.lat or location.lon or \
                location.street or location.postcode or location.parent:
-                # Location onvalidation
-                form = Storage()
-                form.vars = location
-                gis.wkt_centroid(form)
                 # Location creation
                 location_id = table.insert(name = location.name,
                                            lat = location.lat,
@@ -1594,7 +1627,17 @@ class QUANTITY_INV_ITEM(object):
     def __call__(self, value):
 
         db = current.db
-
+        s3db = current.s3db
+        args = current.request.args
+        track_quantity = 0
+        if args[1] == "track_item" and len(args) > 2:
+            # look to see if we already have a quantity stored in the track item
+            id = args[2]
+            track_record = s3db.inv_track_item[id]
+            track_quantity = track_record.quantity
+            if track_quantity >= float(value):
+                # value reduced or unchanged
+                return (value, None)
         error = "Invalid Quantity" # @todo: better error catching
         query = (db.inv_inv_item.id == self.inv_item_id) & \
                 (db.inv_inv_item.item_pack_id == db.supply_item_pack.id)
@@ -1604,7 +1647,7 @@ class QUANTITY_INV_ITEM(object):
                                            limitby = (0, 1)).first() # @todo: this should be a virtual field
         if inv_item_record and value:
             query = (db.supply_item_pack.id == self.item_pack_id)
-            send_quantity = float(value) * db(query).select(db.supply_item_pack.quantity,
+            send_quantity = (float(value) - track_quantity) * db(query).select(db.supply_item_pack.quantity,
                                                             limitby=(0, 1)).first().quantity
             inv_quantity = inv_item_record.inv_inv_item.quantity * \
                              inv_item_record.supply_item_pack.quantity

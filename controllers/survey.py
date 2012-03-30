@@ -229,7 +229,7 @@ def templateSummary():
                 template_id = r.id
             form = s3.survey_build_template_summary(template_id)
             output["items"] = form
-            output["sortby"] = [[0,"asc"]]
+            output["sortby"] = [[0, "asc"]]
             output["title"] = crud_strings.title_analysis_summary
             output["subtitle"] = crud_strings.subtitle_analysis_summary
             return output
@@ -1269,6 +1269,14 @@ def complete():
                                                               workbook.datemode)
                                 dtValue = date(dtYear, dtMonth, dtDay)
                                 cellValue = dtValue.isoformat()
+                            except:
+                                pass
+                        elif type == "Time":
+                            try:
+                                time = cellValue
+                                hour = int(time*24)
+                                minute = int((time*24-hour)*60)
+                                cellValue = "%s:%s" % (hour, minute)
                             except:
                                 pass
                         answerList += "%s" % cellValue

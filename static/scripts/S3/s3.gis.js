@@ -86,7 +86,7 @@ Ext.onReady(function() {
     if (S3.gis.legendPanel) {
         items.push(S3.gis.legendPanel);
     }
-    
+
     for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
         S3.gis.plugins[i].addToMapWindow(items);
     }
@@ -112,7 +112,7 @@ Ext.onReady(function() {
             }
         }
     }
-    
+
     // Toolbar Tooltips
     Ext.QuickTips.init();
 });
@@ -171,7 +171,7 @@ function addMap() {
         });
         S3.gis.mapPanelContainer.items.items.push(S3.gis.googleEarthPanel);
     }
-                
+
     // Layer Tree
     addLayerTree();
 
@@ -234,7 +234,7 @@ function addMap() {
                 }]
         });
     }
-    
+
     for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
         S3.gis.plugins[i].setup(map);
     }
@@ -274,12 +274,13 @@ function addMapPanel(items) {
 function addMapWindow(items) {
     S3.gis.mapWin = new Ext.Window({
         id: 'gis-map-window',
-        collapsible: true,
+        collapsible: false,
         constrain: true,
+        closable: !S3.gis.windowNotClosable,
         closeAction: 'hide',
         autoScroll: true,
-        maximizable: true,
-        titleCollapse: true,
+        maximizable: S3.gis.maximizable,
+        titleCollapse: false,
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         layout: 'border',
@@ -306,9 +307,6 @@ function addMapWindow(items) {
 
     // Set Options
     if (!S3.gis.windowHide) {
-        if (S3.gis.windowNotClosable) {
-            mapWin.closable = false;
-        }
         // If the window is meant to be displayed immediately then display it now that it is ready
         mapWin.show();
         mapWin.maximize();
@@ -324,7 +322,7 @@ function addLayerTree() {
         nodeType: 'gx_baselayercontainer',
         layerStore: S3.gis.mapPanel.layers,
         loader: {
-            filter: function(record) {                
+            filter: function(record) {
                 var layer = record.getLayer();
                 return layer.displayInLayerSwitcher === true &&
                        layer.isBaseLayer === true &&
@@ -341,7 +339,7 @@ function addLayerTree() {
         nodeType: 'gx_overlaylayercontainer',
         layerStore: S3.gis.mapPanel.layers,
         loader: {
-            filter: function(record) {                
+            filter: function(record) {
                 var layer = record.getLayer();
                 return layer.displayInLayerSwitcher === true &&
                        layer.isBaseLayer === false &&
@@ -358,13 +356,13 @@ function addLayerTree() {
     var dirs = S3.gis.dirs;
     for (i = 0; i < dirs.length; i++) {
         var folder = dirs[i];
-        var child = {  
+        var child = {
             text: dirs[i],
             nodeType: 'gx_layercontainer',
             layerStore: S3.gis.mapPanel.layers,
             loader: {
                 filter: (function(folder) {
-                    return function(read) {                        
+                    return function(read) {
                         if (read.data.layer.dir !== 'undefined')
                             return read.data.layer.dir === folder;
                     }
@@ -386,7 +384,7 @@ function addLayerTree() {
     } else {
         var tbar = null;
     }
-    
+
     S3.gis.layerTree = new Ext.tree.TreePanel({
         id: 'treepanel',
         title: S3.i18n.gis_layers,
@@ -582,7 +580,7 @@ function addToolbar() {
     //});
 
     /* Add controls to Map & buttons to Toolbar */
-    
+
     toolbar.add(zoomfull);
 
     if (navigator.geolocation) {

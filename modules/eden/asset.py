@@ -417,6 +417,7 @@ class S3AssetModel(S3Model):
                              comments(),
                              *meta_fields())
 
+        table.site_id.label = T("Facility/Site")
         table.site_id.readable = True
         table.site_id.writable = True
         table.site_id.widget = None
@@ -458,8 +459,7 @@ $(document).ready(function() {
             msg_record_deleted = T("Asset Log Entry deleted"),
             msg_list_empty = T("Asset Log Empty"))
 
-        # ---------------------------------------------------------------------
-        # Update owned_by_role to the site's owned_by_role
+        # Resource configuration
         configure(tablename,
                   onvalidation = self.asset_log_onvalidation,
                   onaccept = self.asset_log_onaccept,
@@ -487,6 +487,16 @@ $(document).ready(function() {
                     asset_represent = self.asset_represent,
                     asset_log_prep = self.asset_log_prep,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Return safe defaults for names in case the model is disabled """
+
+        asset_id = S3ReusableField("asset_id", "integer",
+                                   writable=False,
+                                   readable=False)
+        return Storage(asset_asset_id=asset_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

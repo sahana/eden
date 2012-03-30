@@ -10,68 +10,11 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-roles = session.s3.roles or []
-if session.s3.hrm is None:
-    session.s3.hrm = Storage()
-session.s3.hrm.mode = request.vars.get("mode", None)
-
-# =============================================================================
-def org_filter():
-    """
-        Find the Organisation(s) this user is entitled to view
-        i.e. they have the organisation access role or a site access role
-    """
-
-    table = s3db.org_organisation
-    orgs = db(table.owned_by_organisation.belongs(roles)).select(table.id)
-    orgs = [org.id for org in orgs]
-
-    stable = s3db.org_site
-    siteorgs = db(stable.owned_by_facility.belongs(roles)).select(stable.organisation_id)
-    for org in siteorgs:
-        if org.organisation_id not in orgs:
-            orgs.append(org.organisation_id)
-
-    if orgs:
-        session.s3.hrm.orgs = orgs
-    else:
-        session.s3.hrm.orgs = None
-
-# =============================================================================
-@auth.requires_login()
-def s3_menu_prep():
-    # @todo: rewrite this for new framework
-    """ Application Menu """
-
-    # Module Name
-    try:
-        module_name = deployment_settings.modules[module].name_nice
-    except:
-        module_name = T("Human Resources Management")
-    response.title = module_name
-
-    # Automatically choose an organisation
-    if session.s3.hrm.orgs is None:
-        org_filter()
-
-    # Set mode
-    if session.s3.hrm.mode != "personal":
-        if (ADMIN in roles or session.s3.hrm.orgs) or \
-           deployment_settings.get_security_policy() in (1, 2):
-            session.s3.hrm.mode = None
-    else:
-        session.s3.hrm.mode = "personal"
-
-s3_menu_prep()
+s3db.hrm_vars(module)
 
 # =============================================================================
 def index():
     """ Dashboard """
-
-    if response.error:
-        return dict(r=None,
-                    ns=None,
-                    nv=None)
 
     mode = session.s3.hrm.mode
     if mode is not None:
@@ -80,6 +23,7 @@ def index():
     tablename = "hrm_human_resource"
     table = s3db.hrm_human_resource
 
+    roles = session.s3.roles or []
     if ADMIN not in roles:
         orgs = session.s3.hrm.orgs or [None]
         org_filter = (table.organisation_id.belongs(orgs))
@@ -130,7 +74,12 @@ def index():
         output["ns"] = ns
         output["nv"] = nv
 
-        module_name = deployment_settings.modules[module].name_nice
+        try:
+            module_name = deployment_settings.modules[module].name_nice
+        except:
+            module_name = T("Human Resources Management")
+        response.title = module_name
+
         output["title"] = module_name
 
     return output
@@ -145,24 +94,6 @@ def human_resource():
 
     tablename = "hrm_human_resource"
     table = s3db[tablename]
-    ptable = s3db.pr_person
-
-    # Configure CRUD strings
-    s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Staff Member"),
-        title_display = T("Staff Member Details"),
-        title_list = T("Staff & Volunteers"),
-        title_update = T("Edit Record"),
-        title_search = T("Search Staff & Volunteers"),
-        subtitle_create = T("Add New Staff Member"),
-        subtitle_list = T("Staff Members"),
-        label_list_button = T("List All Records"),
-        label_create_button = T("Add Staff Member"),
-        label_delete_button = T("Delete Record"),
-        msg_record_created = T("Staff member added"),
-        msg_record_modified = T("Record updated"),
-        msg_record_deleted = T("Record deleted"),
-        msg_list_empty = T("No staff or volunteers currently registered"))
 
     # NB Change these & change the list_fields.pop() later
     list_fields = ["id",
@@ -212,18 +143,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-        # Fix the breadcrumb
-        #breadcrumbs[2] = (T("Volunteers"), False,
-        #                  URL(c=request.controller,
-        #                      f=request.function,
-        #                      args=request.args,
-        #                      vars=request.vars))
-        #if "create" in request.args:
-        #    breadcrumbs[3] = (T("New Volunteer"), True,
-        #                      URL(c=request.controller,
-        #                          f=request.function,
-        #                          args=request.args,
-        #                          vars=request.vars))
 
     elif group == "staff":
         #s3mgr.configure(table._tablename, insertable=False)
@@ -256,12 +175,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-        # Fix the breadcrumb
-        #breadcrumbs[2] = (T("Staff"), False,
-        #                  URL(c=request.controller,
-        #                      f=request.function,
-        #                      args=request.args,
-        #                      vars=request.vars))
 
     s3mgr.configure(tablename,
                     list_fields = list_fields)
@@ -292,11 +205,11 @@ def human_resource():
                 # Don't redirect Map popups
                 pass
             elif r.id:
+                # Redirect to person controller
                 vars = {"human_resource.id": r.id}
                 if group:
                     vars.update(group=group)
                 redirect(URL(f="person",
-                             #args=["human_resource"],
                              vars=vars))
         return True
     response.s3.prep = prep
@@ -408,6 +321,22 @@ def person():
         @ToDo: Volunteers should be redirected to vol/person?
     """
 
+    # Custom Method for Contacts
+    s3mgr.model.set_method("pr", resourcename,
+                           method="contacts",
+                           action=s3db.pr_contacts)
+
+    if deployment_settings.has_module("asset"):
+        # Assets as component of people
+        s3mgr.model.add_component("asset_asset",
+                                  pr_person="assigned_to_id")
+        # Edits should always happen via the Asset Log
+        # @ToDo: Allow this method too, if we can do so safely
+        s3mgr.configure("asset_asset",
+                        insertable = False,
+                        editable = False,
+                        deletable = False)
+
     group = request.get_vars.get("group", "staff")
     hr_id = request.get_vars.get("human_resource.id", None)
     if not str(hr_id).isdigit():
@@ -436,17 +365,19 @@ def person():
                                     s3db.org_site_represent,
                                     filterby="organisation_id",
                                     filter_opts=[session.s3.hrm.org]))
-    table.type.readable = True
-    table.type.writable = True
-    if group == "staff" and hr_id:
-        table.site_id.writable = True
-        table.site_id.readable = True
-    elif group == "volunteer" and hr_id:
-        table.location_id.writable = True
+    if hr_id:
+        if group == "staff":
+            table.site_id.writable = True
+            table.site_id.readable = True
+        else:
+            # Volunteer
+            table.location_id.writable = True
+            table.location_id.readable = True
+            table.location_id.label = T("Home Address")
+    else:
         table.location_id.readable = True
-    elif not hr_id:
-        table.location_id.readable = True
         table.site_id.readable = True
+
     if session.s3.hrm.mode is not None:
         s3mgr.configure(tablename,
                         list_fields=["id",
@@ -485,8 +416,7 @@ def person():
         table.occupation.readable = False
         table.occupation.writable = False
         # Just have a Home Address
-        s3mgr.load("pr_address")
-        table = db.pr_address
+        table = s3db.pr_address
         table.type.default = 1
         table.type.readable = False
         table.type.writable = False
@@ -496,7 +426,6 @@ def person():
         s3mgr.model.add_component("pr_address",
                                   pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
                                                   multiple=False))
-        address_tab_name = T("Home Address")
         # Default type for HR
         table = s3db.hrm_human_resource
         table.type.default = 1
@@ -504,7 +433,6 @@ def person():
     else:
         s3.crud_strings[tablename].update(
             title_upload = T("Import Volunteers"))
-        address_tab_name = T("Addresses")
         # Default type for HR
         table = db.hrm_human_resource
         table.type.default = 2
@@ -545,18 +473,6 @@ def person():
                         insertable = False,
                         editable = False,
                         deletable = False)
-        tabs = [(T("Person Details"), None),
-                (address_tab_name, "address"),
-                (T("Contact Details"), "contact"),
-                (T("Skills"), "competency"),
-                #(T("Credentials"), "credential"),
-                (T("Certificates"), "certification"),
-                (T("Trainings"), "training"),
-                (T("Mission Record"), "experience"),
-                (T("Positions"), "human_resource"),
-                (T("Teams"), "group_membership")]
-        if deployment_settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
@@ -565,24 +481,10 @@ def person():
             s3.crud_strings[tablename].update(
                 title_display = T("Staff Member Details"),
                 title_update = T("Staff Member Details"))
-            hr_record = T("Staff Record")
         elif group == "volunteer":
             s3.crud_strings[tablename].update(
                 title_display = T("Volunteer Details"),
                 title_update = T("Volunteer Details"))
-            hr_record = T("Volunteer Record")
-        tabs = [(T("Person Details"), None),
-                (hr_record, "human_resource"),
-                (address_tab_name, "address"),
-                (T("Contact Data"), "contact"),
-                (T("Skills"), "competency"),
-                (T("Credentials"), "credential"),
-                (T("Trainings"), "training"),
-                (T("Mission Record"), "experience"),
-                (T("Teams"), "group_membership")]
-
-        if deployment_settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
 
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -691,69 +593,17 @@ def person():
 
     # REST Interface
     if session.s3.hrm.orgname and mode is None:
-        orgname=session.s3.hrm.orgname
+        orgname = session.s3.hrm.orgname
     else:
-        orgname=None
-    rheader = lambda r, tabs=tabs: hrm_rheader(r, tabs)
+        orgname = None
 
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
-                                rheader=rheader,
+                                rheader=s3db.hrm_rheader,
                                 orgname=orgname,
                                 template="person",
                                 replace_option=T("Remove existing data before import"))
     return output
-
-# -----------------------------------------------------------------------------
-def hrm_rheader(r, tabs=[]):
-    """ Resource headers for component views """
-
-    rheader = None
-
-    if r.representation == "html":
-
-        if r.name == "person":
-            # Tabs defined in controller
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            person = r.record
-            if person:
-                rheader = DIV(DIV(s3_avatar_represent(person.id,
-                                                      "pr_person",
-                                                      _class="fleft"),
-                                  _style="padding-bottom:10px;"),
-                              TABLE(
-                    TR(TH(s3_fullname(person))),
-                    ), rheader_tabs)
-
-        elif r.name == "training_event":
-            # Tabs
-            tabs = [(T("Training Event Details"), None),
-                    (T("Participants"), "participant")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            event = r.record
-            if event:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.course_id.label),
-                                       table.course_id.represent(event.course_id)),
-                                    TR(TH("%s: " % table.site_id.label),
-                                       table.site_id.represent(event.site_id)),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "human_resource":
-            hr = r.record
-            if hr:
-                pass
-
-        elif r.name == "organisation":
-            org = r.record
-            if org:
-                pass
-
-    return rheader
 
 # =============================================================================
 # Teams
@@ -768,15 +618,22 @@ def group():
     tablename = "pr_group"
     table = s3db[tablename]
 
-    table.group_type.label = T("Team Type")
+    _group_type = table.group_type
+    _group_type.label = T("Team Type")
     table.description.label = T("Team Description")
     table.name.label = T("Team Name")
-    s3db.pr_group_membership.group_id.label = T("Team ID")
-    s3db.pr_group_membership.group_head.label = T("Team Leader")
+    mtable = s3db.pr_group_membership
+    mtable.group_id.label = T("Team ID")
+    mtable.group_head.label = T("Team Leader")
 
     # Set Defaults
-    table.group_type.default = 3  # 'Relief Team'
-    table.group_type.readable = table.group_type.writable = False
+    _group_type.default = 3  # 'Relief Team'
+    _group_type.readable = _group_type.writable = False
+
+    # Only show Relief Teams
+    # Do not show system groups
+    response.s3.filter = (table.system == False) & \
+                         (_group_type == 3)
 
     # CRUD Strings
     ADD_TEAM = T("Add Team")
@@ -813,8 +670,6 @@ def group():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
-    response.s3.filter = (table.system == False) # do not show system groups
-
     s3mgr.configure(tablename, main="name", extra="description",
                     # Redirect to member list when a new group has been created
                     create_next = URL(f="group",
@@ -830,7 +685,8 @@ def group():
 
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=False)
+                update_url = URL(args=["[id]", "group_membership"])
+                s3_action_buttons(r, deletable=False, update_url=update_url)
                 if "msg" in deployment_settings.modules:
                     response.s3.actions.append({
                         "url": URL(f="compose",
@@ -846,10 +702,11 @@ def group():
             # Team should be contacted either via the Leader or
             # simply by sending a message to the group as a whole.
             #(T("Contact Data"), "contact"),
-            (T("Members"), "group_membership")]
+            (T("Members"), "group_membership")
+            ]
 
     output = s3_rest_controller("pr", resourcename,
-                                rheader=lambda r: s3db.pr_rheader(r, tabs = tabs))
+                                rheader=lambda r: s3db.pr_rheader(r, tabs=tabs))
 
     return output
 
@@ -949,7 +806,7 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -975,7 +832,7 @@ def certificate():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -999,14 +856,16 @@ def training():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    if ADMIN not in session.s3.roles and \
-       EDITOR not in session.s3.roles:
+    roles = session.s3.roles or []
+    if ADMIN not in roles and \
+       EDITOR not in roles:
         ttable = s3db.hrm_training
         hrtable = s3db.hrm_human_resource
         orgtable = s3db.org_organisation
+        orgs = session.s3.hrm.orgs
         query = (ttable.person_id == hrtable.person_id) & \
                 (hrtable.organisation_id == orgtable.id) & \
-                (orgtable.owned_by_organisation.belongs(session.s3.roles))
+                (orgtable.pe_id.belongs(orgs))
         response.s3.filter = query
 
     output = s3_rest_controller(interactive_report = True)
@@ -1045,7 +904,7 @@ def training_event():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # =============================================================================

@@ -45,7 +45,7 @@ from s3navigation import *
 
 # Model helpers
 from s3fields import *
-from s3model import S3Model
+from s3model import S3Model, S3MultiPath
 
 # Authentication, Authorization, Accounting
 from s3aaa import *

@@ -153,15 +153,21 @@
                 <xsl:when test="col[@field='Status']='Duplicate'">
                     <data field="status">8</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Completed'">
+                <xsl:when test="col[@field='Status']='Ready'">
                     <data field="status">9</data>
                 </xsl:when>
                 <xsl:when test="col[@field='Status']='Verified'">
                     <data field="status">10</data>
                 </xsl:when>
+                <xsl:when test="col[@field='Status']='Reopened'">
+                    <data field="status">11</data>
+                </xsl:when>
+                <xsl:when test="col[@field='Status']='Completed'">
+                    <data field="status">12</data>
+                </xsl:when>
                 <xsl:when test="col[@field='Status']='Closed'">
                     <!-- Completed -->
-                    <data field="status">9</data>
+                    <data field="status">12</data>
                 </xsl:when>
                 <xsl:otherwise>
                     <!-- Open -->
@@ -217,12 +223,14 @@
     <xsl:template name="Organisation">
         <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
 
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrganisationName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrganisationName"/></data>
-        </resource>
+        <xsl:if test="$OrganisationName!=''">
+            <resource name="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$OrganisationName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$OrganisationName"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -231,18 +239,20 @@
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
         <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
 
-        <resource name="project_project">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$ProjectName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$ProjectName"/></data>
-            <!-- Link to Organisation -->
-            <reference field="organisation_id" resource="org_organisation">
+        <xsl:if test="$ProjectName!=''">
+            <resource name="project_project">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrganisationName"/>
+                    <xsl:value-of select="$ProjectName"/>
                 </xsl:attribute>
-            </reference>
-        </resource>
+                <data field="name"><xsl:value-of select="$ProjectName"/></data>
+                <!-- Link to Organisation -->
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrganisationName"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -313,12 +323,14 @@
     <xsl:template name="Person">
         <xsl:variable name="Assignee" select="col[@field='Assigned']/text()"/>
 
-        <resource name="pr_person">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Assignee"/>
-            </xsl:attribute>
-            <data field="initials"><xsl:value-of select="$Assignee"/></data>
-        </resource>
+        <xsl:if test="$Assignee!=''">
+            <resource name="pr_person">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Assignee"/>
+                </xsl:attribute>
+                <data field="initials"><xsl:value-of select="$Assignee"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

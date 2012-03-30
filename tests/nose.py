@@ -18,14 +18,13 @@ application_name = normpath(abspath(getcwd())).split(sep)[-2]
 command = " ".join(
     [
         sys.executable, # i.e. whatever python executable this is
-        join(pardir,pardir,pardir,"web2py.py"),
+        join(pardir, pardir, pardir, "web2py.py"),
         "--shell=" + application_name,
         "--import_models",
-        
-        "--run "+join(
+        "--run " + join(
             # the code that makes all the test folders relative to
             # tests/unit_tests is in modules/test_utils/run.py
-            "applications",application_name,"modules","test_utils","run.py"
+            "applications", application_name, "modules", "test_utils", "run.py"
         ),
         "--args"
     ] + sys.argv[1:] # nose arguments

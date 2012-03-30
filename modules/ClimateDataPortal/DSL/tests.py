@@ -228,7 +228,76 @@ def test_parsing_expressions_5():
         
 def test_compare_months_for_two_different_years():
     raise NotImplementedError
+
+def check_data(
+    expression_string,
     
+):
+    expression = Climate_DSL.parse("""
+        Sum(
+            "Observed Temp Max",
+            From(1957),
+            To(1957),
+            Months(PreviousDecember)
+        )
+    """)
+    import rpy2
+    import rpy2.robjects as robjects
+    R = robjects.r
+    Climate_DSL.init_R_interpreter(R, deployment_settings.database)
+    code = Climate_DSL.R_Code_for_values(
+        expression, 
+        "time_period",
+        "place_id IN (1)"
+    )
+    values_by_time_period_data_frame = R(code)()
+    if isinstance(
+        values_by_time_period_data_frame,
+        map_plugin.robjects.vectors.StrVector
+    ):
+        raise Exception(str(values_by_time_period_data_frame))
+    assert values_by_time_period_data_frame.ncol == 1, "No data"
+    keys = values_by_time_period_data_frame.rx2("key")
+    values = values_by_time_period_data_frame.rx2("value")
+    assert ClimateDataPortal.month_number_to_year_month(keys[0]) == (1956, 12)
+    # December 1956 values for station 101, (place #1)
+    assert values[0] == (2.5 + 15.2 + 3.8)
+
+def test_december_data():
+    def check(keys, values):
+        
+    check_data(
+        
+    )
+    expression = Climate_DSL.parse("""
+        Sum(
+            "Observed Temp Max",
+            From(1957),
+            To(1957),
+            Months(PreviousDecember)
+        )
+    """)
+    import rpy2
+    import rpy2.robjects as robjects
+    R = robjects.r
+    Climate_DSL.init_R_interpreter(R, deployment_settings.database)
+    code = Climate_DSL.R_Code_for_values(
+        expression, 
+        "time_period",
+        "place_id IN (1)"
+    )
+    values_by_time_period_data_frame = R(code)()
+    if isinstance(
+        values_by_time_period_data_frame,
+        map_plugin.robjects.vectors.StrVector
+    ):
+        raise Exception(str(values_by_time_period_data_frame))
+    assert values_by_time_period_data_frame.ncol == 1, "No data"
+    keys = values_by_time_period_data_frame.rx2("key")
+    values = values_by_time_period_data_frame.rx2("value")
+    assert ClimateDataPortal.month_number_to_year_month(keys[0]) == (1956, 12)
+    # December 1956 values for station 101, (place #1)
+    assert values[0] == (2.5 + 15.2 + 3.8)
 
 """Maximum("Observed Temp Max", From(1950), To(2100 ))"""
 

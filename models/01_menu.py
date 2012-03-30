@@ -16,7 +16,8 @@ if auth.permission.format in ("html"):
         # Standard modules-menu
         S3MainMenu.menu_modules(),
 
-        # Custom menu (example)
+        # Custom menu (examples)
+        #S3MainMenu.menu_climate(),
         #homepage(),
         #homepage("gis"),
         #homepage("pr", restrict=[ADMIN])(

@@ -411,8 +411,6 @@ def task():
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
         s3mgr.configure(tablename,
-                        # Block Add until we get the injectable component lookups
-                        insertable=False,
                         report_filter=[
                             s3base.S3SearchOptionsWidget(field=["project"],
                                                          name="project",
@@ -427,6 +425,10 @@ def task():
     # Pre-process
     def prep(r):
         if r.interactive:
+            if r.record:
+                # Put the Comments in the RFooter
+                ckeditor()
+                response.s3.rfooter = LOAD("project", "comments.load", args=["task", r.id], ajax=True)
             if r.component:
                 if r.component_name == "req":
                     if deployment_settings.has_module("hrm"):
@@ -436,7 +438,24 @@ def task():
                         s3db.req_create_form_mods()
                 elif r.component_name == "human_resource":
                     r.component.table.type.default = 2
-
+            else:
+                if not auth.s3_has_role("STAFF"):
+                    # Hide fields to avoid confusion (both of inputters & recipients)
+                    table = r.table
+                    field = table.source
+                    field.readable = field.writable = False
+                    field = table.pe_id
+                    field.readable = field.writable = False
+                    field = table.date_due
+                    field.readable = field.writable = False
+                    field = table.milestone_id
+                    field.readable = field.writable = False
+                    field = table.time_estimated
+                    field.readable = field.writable = False
+                    field = table.time_actual
+                    field.readable = field.writable = False
+                    field = table.status
+                    field.readable = field.writable = False
         return True
     response.s3.prep = prep
 
@@ -447,10 +466,108 @@ def task():
                 update_url = URL(args=["[id]"], vars=request.get_vars)
                 s3mgr.crud.action_buttons(r,
                                           update_url=update_url)
+                if not r.component and \
+                   r.method != "search" and \
+                   "form" in output:
+                    # Insert fields to control the Project & Activity
+                    sep = ": "
+                    if auth.s3_has_role("STAFF"):
+                        # Activity not easy for non-Staff to know about, so don't add
+                        table = s3db.project_task_activity
+                        field = table.activity_id
+                        if r.record:
+                            query = (table.task_id == r.record.id)
+                            default = db(query).select(table.activity_id,
+                                                       limitby=(0, 1)).first()
+                            if default:
+                                default = default.activity_id
+                        else:
+                            default = field.default
+                        widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                        field_id = '%s_%s' % (table._tablename, field.name)
+                        label = field.label
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                        activity = s3.crud.formstyle(row_id, label, widget, field.comment)
+                        try:
+                            output["form"][0].insert(0, activity[1])
+                        except:
+                            # A non-standard formstyle with just a single row
+                            pass
+                        try:
+                            output["form"][0].insert(0, activity[0])
+                        except:
+                            pass
+                        s3.scripts.append("%s/s3.project.js" % s3_script_dir)
+                    if "project" in request.get_vars:
+                        widget = INPUT(value=request.get_vars.project, _name="project_id")
+                        project = s3.crud.formstyle("project_task_project__row", "", widget, "")
+                    else:
+                        table = s3db.project_task_project
+                        field = table.project_id
+                        if r.record:
+                            query = (table.task_id == r.record.id)
+                            default = db(query).select(table.project_id,
+                                                       limitby=(0, 1)).first()
+                            if default:
+                                default = default.project_id
+                        else:
+                            default = field.default
+                        widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                        field_id = '%s_%s' % (table._tablename, field.name)
+                        label = field.label
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        comment = field.comment if auth.s3_has_role("STAFF") else ""
+                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                        project = s3.crud.formstyle(row_id, label, widget, comment)
+                    try:
+                        output["form"][0].insert(0, project[1])
+                    except:
+                        # A non-standard formstyle with just a single row
+                        pass
+                    try:
+                        output["form"][0].insert(0, project[0])
+                    except:
+                        pass
+                    
         return output
     response.s3.postp = postp
 
     return s3_rest_controller(rheader=s3db.project_rheader)
+
+# =============================================================================
+def task_project():
+    """ RESTful CRUD controller """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    response.s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+def task_activity():
+    """ RESTful CRUD controller """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    response.s3.prep = prep
+
+    return s3_rest_controller()
 
 # =============================================================================
 def milestone():
@@ -492,18 +609,8 @@ def time():
 # =============================================================================
 # Comments
 # =============================================================================
-def discuss(r, **attr):
-    """ Custom Method to manage the discussion of a Task """
-
-    #if r.component:
-    #    resourcename = "activity"
-    #    id = r.component_id
-    #else:
-    resourcename = "task"
-    id = r.id
-
-    # Add the RHeader to maintain consistency with the other pages
-    rheader = s3db.project_rheader(r)
+def ckeditor():
+    """ Load the Project Comments JS """
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
     response.s3.scripts.append(ckeditor)
@@ -526,13 +633,26 @@ function comment_reply(id) {
     $('#comment-form').insertAfter($('#comment-' + id));
     $('#project_comment_parent').val(id);
     var task_id = $('#comment-' + id).attr('task_id');
-    if (undefined == solution_id) {
-    } else {
-        $('#project_comment_task_id').val(task_id);
-    }
+    $('#project_comment_task_id').val(task_id);
 }"""))
 
     response.s3.js_global.append(js)
+
+def discuss(r, **attr):
+    """ Custom Method to manage the discussion of a Task """
+
+    #if r.component:
+    #    resourcename = "activity"
+    #    id = r.component_id
+    #else:
+    resourcename = "task"
+    id = r.id
+
+    # Add the RHeader to maintain consistency with the other pages
+    rheader = s3db.project_rheader(r)
+
+    # Load the Project Comments JS
+    ckeditor()
 
     response.view = "project/discuss.html"
     return dict(rheader=rheader,
@@ -567,6 +687,7 @@ def comment_parse(comment, comments, task_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
+            import md5
             hash = md5.new(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
@@ -620,9 +741,6 @@ def comments():
     except:
         raise HTTP(400)
 
-    #if resourcename == "problem":
-    #    problem_id = id
-    #    solution_id = None
     if resourcename == "task":
         task_id = id
     else:
@@ -636,9 +754,7 @@ def comments():
         table.task_id.label = T("Related to Task (optional)")
         table.task_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                        "project_task.id",
-                                                       "%(name)s",
-                                                       filterby="project_id",
-                                                       filter_opts=[project_id]
+                                                       "%(name)s"
                                                       ))
 
     # Form to add a new Comment
@@ -652,12 +768,7 @@ def comments():
                                                        table.created_by,
                                                        table.created_on)
     else:
-        comments = db(table.project_id == project_id).select(table.id,
-                                                             table.parent,
-                                                             table.solution_id,
-                                                             table.body,
-                                                             table.created_by,
-                                                             table.created_on)
+        comments = ""
 
     output = UL(_id="comments")
     for comment in comments:
@@ -687,310 +798,5 @@ $('#submit_record__row input').click(function(){$('#comment-form').hide();$('#pr
                  SCRIPT(script))
 
     return XML(output)
-
-
-# =============================================================================
-# Deprecated
-# =============================================================================
-def site_rheader(r):
-    """ Project Site page headers """
-
-    if r.representation == "html":
-
-        tablename, record = s3_rheader_resource(r)
-        if tablename == "project_site" and record:
-            site = record
-            tabs = [(T("Details"), None),
-                    #(T("Activities"), "activity"),
-                    (T("Beneficiaries"), "beneficiary"),
-                    #(T("Attachments"), "document"),
-                    #(T("Photos"), "image"),
-                    #(T("Shipments To"), "rms_req"),
-                   ]
-
-            rheader = DIV( TABLE( TR( TH("%s: " % T("Name") ),
-                                      site.name
-                                      ),
-                                  TR( TH("%s: " % T("Project") ),
-                                      s3.project_represent(site.project_id)
-                                      )
-                                 ),
-                           s3_rheader_tabs(r, tabs)
-                           )
-            return rheader
-    return None
-
-# -----------------------------------------------------------------------------
-def site():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller(rheader = site_rheader)
-
-# =============================================================================
-def need():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def need_type():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# =============================================================================
-def gap_report():
-    """
-        Provide a Report on Gaps between Activities & Needs Assessments
-        @deprecated
-    """
-
-    # Get all assess_summary
-    assess_need_rows = db((db.project_need.id > 0) &\
-                          (db.project_need.assess_id == db.assess_assess.id) &\
-                          (db.assess_assess.location_id > 0) &\
-                          (db.assess_assess.deleted != True)
-                          ).select(db.assess_assess.id,
-                                   db.assess_assess.location_id,
-                                   db.assess_assess.datetime,
-                                   db.project_need.need_type_id,
-                                   db.project_need.value
-                                   )
-
-    patable = db.project_activity
-    query = (patable.id > 0) & \
-            (patable.location_id > 0) & \
-            (patable.deleted != True)
-    activity_rows = db(query).select(patable.id,
-                                     patable.location_id,
-                                     patable.need_type_id,
-                                     patable.organisation_id,
-                                     patable.total_bnf,
-                                     patable.start_date,
-                                     patable.end_date
-                                    )
-
-    def map_assess_to_gap(row):
-        return Storage( assess_id = row.assess_assess.id,
-                        location_id = row.assess_assess.location_id,
-                        datetime = row.assess_assess.datetime,
-                        need_type_id = row.project_need.need_type_id,
-                        value = row.project_need.value,
-                        activity_id = None,
-                        organisation_id = None,
-                        start_date = NONE,
-                        end_date = NONE,
-                        total_bnf = NONE,
-                        )
-
-    gap_rows = map(map_assess_to_gap, assess_need_rows)
-
-    for activity_row in activity_rows:
-        add_new_gap_row = True
-        # Check if there is an Assessment of this location & subsector_id
-        for gap_row in gap_rows:
-            if activity_row.location_id == gap_row.location_id and \
-               activity_row.need_type_id == gap_row.need_type_id:
-
-                add_new_gap_row = False
-
-                gap_row.activity_id = activity_row.id,
-                gap_row.organisation_id = activity_row.organisation_id
-                gap_row.start_date = activity_row.start_date
-                gap_row.end_date = activity_row.end_date
-                gap_row.total_bnf = activity_row.total_bnf
-                break
-
-        if add_new_gap_row:
-            gap_rows.append(Storage(location_id = activity_row.location_id,
-                                    need_type_id = activity_row.need_type_id,
-                                    activity_id = activity_row.id,
-                                    organisation_id = activity_row.organisation_id,
-                                    start_date = activity_row.start_date,
-                                    end_date = activity_row.end_date,
-                                    total_bnf = activity_row.total_bnf,
-                                    )
-                            )
-
-    headings = ("Location",
-                "Needs",
-                "Assessment",
-                "Date",
-                "Activity",
-                "Start Date",
-                "End Date",
-                "Total Beneficiaries",
-                "Organization",
-                "Gap (% Needs Met)",
-                )
-    gap_table = TABLE(THEAD(TR(*[TH(header) for header in headings])),
-                      _id = "list",
-                      _class = "dataTable display"
-                      )
-
-    for gap_row in gap_rows:
-        if gap_row.assess_id:
-            assess_action_btn = A(T("Open"),
-                                  _href = URL(c="assess", f="assess",
-                                              args = (gap_row.assess_id, "need")
-                                              ),
-                                  _target = "blank",
-                                  _id = "show-add-btn",
-                                  _class="action-btn"
-                                  )
-        else:
-            assess_action_btn = NONE
-
-        if gap_row.activity_id:
-            activity_action_btn =A(T("Open"),
-                                   _href = URL(c="project", f="activity",
-                                               args = (gap_row.activity_id)
-                                               ),
-                                   _target = "blank",
-                                   _id = "show-add-btn",
-                                   _class="action-btn"
-                                   ),
-        else:
-            activity_action_btn = A(T("Add"),
-                                   _href = URL(c="project", f="activity",
-                                               args = ("create"),
-                                               vars = {"location_id":gap_row.location_id,
-                                                       "need_type_id":gap_row.need_type_id,
-                                                       }
-                                               ),
-                                   _id = "show-add-btn",
-                                   _class="action-btn"
-                                   ),
-
-        need_str = response.s3.need_type_represent(gap_row.need_type_id)
-        if gap_row.value:
-            need_str = "%d %s" % (gap_row.value, need_str)
-
-        #Calculate the Gap
-        if not gap_row.value:
-            gap_str = NONE
-        elif gap_row.total_bnf and gap_row.total_bnf != NONE:
-            gap_str = "%d%%" % min((gap_row.total_bnf / gap_row.value) * 100, 100)
-        else:
-            gap_str = "0%"
-
-        organisation_represent = s3db.org_organisation_represent
-
-        gap_table.append(TR( gis_location_represent(gap_row.location_id),
-                             need_str,
-                             assess_action_btn,
-                             gap_row.datetime or NONE,
-                             activity_action_btn,
-                             gap_row.start_date or NONE,
-                             gap_row.end_date or NONE,
-                             gap_row.total_bnf or NONE,
-                             organisation_represent(gap_row.organisation_id),
-                             gap_str
-                            )
-                        )
-
-    return dict(title = T("Gap Analysis Report"),
-                subtitle = T("Assessments Needs vs. Activities"),
-                gap_table = gap_table,
-                # Stop dataTables crashing
-                r = None
-                )
-
-# -----------------------------------------------------------------------------
-def gap_map():
-    """
-       Provide a Map Report on Gaps between Activities & Needs Assessments
-
-       For every Need Type, there is a Layer showing the Assessments (Inactive)
-       & the Activities (Inactive, Blue)
-
-       @ToDo: popup_url
-       @ToDo: Colour code the Assessments based on quantity of need
-
-       @deprecated
-    """
-
-    # NB Currently the colour-coding isn't used (all needs are red)
-    assess_summary_colour_code = {0:"#008000", # green
-                                  1:"#FFFF00", # yellow
-                                  2:"#FFA500", # orange
-                                  3:"#FF0000", # red
-                                  }
-
-    atable = s3db.project_activity
-    ntable = s3db.project_need
-    ltable = s3db.gis_location
-    astable = db.assess_assess
-    feature_queries = []
-
-    need_type_rows = db(db.project_need_type.id > 0).select()
-    need_type_represent = response.s3.need_type_represent
-
-    for need_type in need_type_rows:
-
-        need_type_id = need_type.id
-        need_type = need_type_represent(need_type_id)
-
-        # Add Activities layer
-        query = (atable.id > 0) & \
-                (atable.need_type_id == need_type_id) & \
-                (atable.location_id > 0) & \
-                (atable.deleted != True) & \
-                (atable.location_id == ltable.id)
-        activity_rows = db(query).select(atable.id,
-                                         atable.location_id,
-                                         #atable.need_type_id,
-                                         ltable.uuid,
-                                         ltable.id,
-                                         ltable.name,
-                                         ltable.code,
-                                         ltable.lat,
-                                         ltable.lon)
-        if len(activity_rows):
-            for i in range( 0 , len( activity_rows) ):
-                # Insert how we want this to appear on the map
-                activity_rows[i].gis_location.shape = "circle"
-                activity_rows[i].gis_location.size = 6
-                activity_rows[i].gis_location.colour = "#0000FF" # blue
-            feature_queries.append({ "name": "%s: Activities" % need_type,
-                                     "query": activity_rows,
-                                     "active": False })
-
-        # Add Assessments layer
-        query = (ntable.id > 0) & \
-                (ntable.need_type_id == need_type_id) & \
-                (ntable.assess_id == astable.id) & \
-                (astable.location_id > 0) & \
-                (astable.deleted != True) & \
-                (astable.location_id == ltable.id)
-        assess_need_rows = db(query).select(astable.id,
-                                            astable.location_id,
-                                            astable.datetime,
-                                            #ntable.need_type_id,
-                                            #ntable.value,
-                                            ltable.uuid,
-                                            ltable.id,
-                                            ltable.name,
-                                            ltable.code,
-                                            ltable.lat,
-                                            ltable.lon)
-
-        if len(assess_need_rows):
-            for i in range( 0 , len( assess_need_rows) ):
-                # Insert how we want this to appear on the map
-                assess_need_rows[i].gis_location.shape = "circle"
-                assess_need_rows[i].gis_location.size = 4
-                #assess_need_rows[i].gis_location.colour = assess_summary_colour_code[assess_need_rows[i].assess_summary.value]
-                assess_need_rows[i].gis_location.colour = assess_summary_colour_code[3] # red
-
-            feature_queries.append({ "name": "%s: Assessments" % need_type,
-                                     "query": assess_need_rows,
-                                     "active": False })
-
-    map = gis.show_map(feature_queries = feature_queries)
-
-    return dict(map = map,
-                title = T("Gap Analysis Map"),
-                subtitle = T("Assessments and Activities") )
 
 # END =========================================================================

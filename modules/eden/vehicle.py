@@ -187,6 +187,18 @@ class S3VehicleModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def defaults():
+        """ Return safe defaults for names in case the model is disabled """
+
+        vehicle_id = S3ReusableField("vehicle_id", "integer",
+                                     writable=False,
+                                     readable=False)
+        return Storage(
+                    vehicle_vehicle_id = vehicle_id,
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def vehicle_gps_onaccept(form):
         """
             Set the current location from the latest GPS record

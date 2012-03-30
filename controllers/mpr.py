@@ -198,7 +198,7 @@ def person():
 
     mpr_tabs = [(T("Person Details"), None),
                 (T("Physical Description"), "physical_description"),
-                (T("Images"), "pimage"),
+                (T("Images"), "image"),
                 (T("Identity"), "identity"),
                 (T("Address"), "address"),
                 (T("Contact Data"), "contact"),
