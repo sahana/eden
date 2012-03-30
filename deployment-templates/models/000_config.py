@@ -135,6 +135,7 @@ deployment_settings.frontpage.rss = [
     },
     {"title": "Twitter",
      # @SahanaFOSS
+     # Find ID via http://api.twitter.com/users/show/username.json
      "url": "http://twitter.com/statuses/user_timeline/96591754.rss"
      # Hashtag
      #url: "http://search.twitter.com/search.atom?q=%23eqnz"

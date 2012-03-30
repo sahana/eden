@@ -4030,9 +4030,13 @@ class S3Resource(object):
         table = self.table
         tablename = self.tablename
 
-        if tablename == "gis_location" and "wkt" not in skip:
-            # Skip Bulky WKT fields
-            skip.append("wkt")
+        if tablename == "gis_location":
+            if "wkt" not in skip:
+                # Skip Bulky WKT fields
+                skip.append("wkt")
+            if current.deployment_settings.get_gis_spatialdb() and \
+               "the_geom" not in skip:
+                skip.append("the_geom")
 
         rfields = self.rfields
         dfields = self.dfields
