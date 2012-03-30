@@ -2286,7 +2286,7 @@ def hrm_vars(module):
         sr = session.s3.system_roles
         if sr.ADMIN in session.s3.roles or \
            hrm_vars.orgs or \
-           deployment_settings.get_security_policy() in (1, 2):
+           current.deployment_settings.get_security_policy() in (1, 2):
             hrm_vars.mode = None
     else:
         hrm_vars.mode = "personal"
