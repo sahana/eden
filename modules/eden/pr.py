@@ -1830,8 +1830,6 @@ class S3SavedSearch(S3Model):
         search_vars = search_vars.replace("&apos;", "'")
         try:
             search_vars = cPickle.loads(str(search_vars))
-        except:
-            raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
             s = "<p>"
             pat = '_'
             for var in search_vars.iterkeys():
@@ -1859,8 +1857,11 @@ class S3SavedSearch(S3Model):
                     elif var == "prefix":
                         v1 = "Module"
                     s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
-            s = s + "</p>"
-            return XML(s)
+                s = s + "</p>"
+        except:
+            raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
+            
+        return XML(s)
 
 # =============================================================================
 class S3PersonPresence(S3Model):
