@@ -105,7 +105,8 @@ class S3MembersModel(S3Model):
                                         ),
                                   Field("membership_paid", "list:integer",
                                         label = T("Membership Paid"),
-                                        requires = IS_NULL_OR(IS_IN_SET(year_opts, multiple=True))
+                                        # @ToDo: IS_NULL_OR()
+                                        requires = IS_LIST_OF(IS_IN_SET(year_opts)),
                                         ),
                                   # Location (from pr_address component)
                                   location_id(readable=False,
@@ -135,6 +136,7 @@ class S3MembersModel(S3Model):
                                 "type",
                                 "start_date",
                                 "end_date",
+                                #@ToDo: virtual field to show if they are paid-up or not? (or rely on report?)
                             ])
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
