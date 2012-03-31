@@ -20,6 +20,7 @@
 
 import datetime
 
+from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
@@ -73,8 +74,16 @@ class UserProfile(BaseProfile):
                                       blank=True)
     
     phone = models.CharField(_('Phone 1'), max_length=9, null=True,
+                             validators=[RegexValidator(
+                                        regex='^[0-9]*$',
+                                        message='Invalid characters in the phone number.'
+                                       )],
                              blank=True, help_text=_('9 digits maximum'))
     phone_alt = models.CharField(_('Phone 2'), max_length=9, null=True,
+                             validators=[RegexValidator(
+                                        regex='^[0-9]*$',
+                                        message='Invalid characters in the phone number.'
+                                       )],
                              blank=True, help_text=_('9 digits maximum'))
 
     nid = models.CharField(_('Identification document'), max_length=200,
