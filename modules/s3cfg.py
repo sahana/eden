@@ -87,10 +87,33 @@ class S3Config(Storage):
     # Auth settings
     def get_auth_hmac_key(self):
         return self.auth.get("hmac_key", "akeytochange")
+    def get_auth_facebook(self):
+        """
+            Read the FaceBook OAuth settings
+            - if configured, then it is assumed that FaceBook Authentication is enabled
+        """
+        id = self.auth.get("facebook_id", False)
+        secret = self.auth.get("facebook_secret", False)
+        if id and secret:
+            return dict(id=id, secret=secret)
+        else:
+            return False
+    def get_auth_gmail_domains(self):
+        """ List of domains which can use GMail SMTP for Authentication """
+        return self.auth.get("gmail_domains", [])
+    def get_auth_google(self):
+        """
+            Read the Google OAuth settings
+            - if configured, then it is assumed that Google Authentication is enabled
+        """
+        id = self.auth.get("google_id", False)
+        secret = self.auth.get("google_secret", False)
+        if id and secret:
+            return dict(id=id, secret=secret)
+        else:
+            return False
     def get_auth_openid(self):
         return self.auth.get("openid", False)
-    def get_auth_gmail_domains(self):
-        return self.auth.get("gmail_domains", [])
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
