@@ -57,10 +57,16 @@ deployment_settings.auth.registration_requires_approval = False
 # NB This requires Verification/Approval to be Off
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #deployment_settings.auth.registration_volunteer = True
-# Uncomment this to allow users to Login using OpenID
-#deployment_settings.auth.openid = True
 # Uncomment this to allow users to Login using Gmail's SMTP
 #deployment_settings.auth.gmail_domains = ["gmail.com"]
+# Fill these to allow users to Login using Facebook
+#deployment_settings.auth.facebook_id = ""
+#deployment_settings.auth.facebook_secret = ""
+# Fill these to allow users to Login using Google
+#deployment_settings.auth.google_id = ""
+#deployment_settings.auth.google_secret = ""
+# Uncomment this to allow users to Login using OpenID
+#deployment_settings.auth.openid = True
 
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 deployment_settings.auth.always_notify_approver = True
@@ -135,6 +141,7 @@ deployment_settings.frontpage.rss = [
     },
     {"title": "Twitter",
      # @SahanaFOSS
+     # Find ID via http://api.twitter.com/users/show/username.json
      "url": "http://twitter.com/statuses/user_timeline/96591754.rss"
      # Hashtag
      #url: "http://search.twitter.com/search.atom?q=%23eqnz"

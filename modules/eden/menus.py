@@ -797,9 +797,8 @@ class S3OptionsMenu:
                                        aggregate="count")),
                         M("Report Expiring Contracts",
                           vars=dict(group="staff", expiring=1)),
-                        M("Import", m="import",
+                        M("Import", f="person", m="import",
                           vars=staff, p="create"),
-                        #M("Dashboard", f="index"),
                     ),
                     M("Volunteers", f="human_resource",
                       check=[manager_mode, show_vols], vars=volunteers)(
@@ -815,7 +814,7 @@ class S3OptionsMenu:
                                        cols="L1",
                                        fact="person_id",
                                        aggregate="count")),
-                        M("Import", m="import",
+                        M("Import", f="person", m="import",
                           vars=volunteers, p="create"),
                     ),
                     M("Teams", f="group",
@@ -1023,6 +1022,7 @@ class S3OptionsMenu:
                         M("New", m="create"),
                         M("List All"),
                         #M("Search", m="search"),
+                        M("Import", f="person", m="import"),
                     ),
                 )
 

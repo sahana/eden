@@ -266,17 +266,20 @@ mail.settings.sender = deployment_settings.get_mail_sender()
 ######
 # Auth
 ######
+_messages = auth.messages
+_settings = auth.settings
+_settings.lock_keys = False
 
-auth.settings.password_min_length = 4
-auth.settings.expiration = 28800  # seconds
+_settings.password_min_length = 4
+_settings.expiration = 28800  # seconds
 
 #auth.settings.username_field = True
-auth.settings.hmac_key = deployment_settings.get_auth_hmac_key()
+_settings.hmac_key = deployment_settings.get_auth_hmac_key()
 auth.define_tables(migrate=migrate,
                    fake_migrate=fake_migrate)
 
-# Default Language for authenticated users
-db.auth_user.language.default = deployment_settings.get_L10n_default_language()
+_settings.facebook = deployment_settings.get_auth_facebook()
+_settings.google = deployment_settings.get_auth_google()
 
 if deployment_settings.get_auth_openid():
     # Requires http://pypi.python.org/pypi/python-openid/
@@ -293,35 +296,37 @@ if deployment_settings.get_auth_openid():
 # Require captcha verification for registration
 #auth.settings.captcha = RECAPTCHA(request, public_key="PUBLIC_KEY", private_key="PRIVATE_KEY")
 # Require Email Verification
-auth.settings.registration_requires_verification = deployment_settings.get_auth_registration_requires_verification()
+_settings.registration_requires_verification = deployment_settings.get_auth_registration_requires_verification()
 # Email settings for registration verification
-auth.settings.mailer = mail
-auth.messages.verify_email = "%s %s/default/user/verify_email/%s %s" % (T("Click on the link"),
-                                                                           s3.base_url,
-                                                                           "%(key)s",
-                                                                           T("to verify your email"))
-auth.settings.on_failed_authorization = URL(c="default", f="user",
-                                            args="not_authorized")
+_settings.mailer = mail
+_messages.verify_email = "Click on the link %(url)s%(key)s to verify your email" % \
+    dict(url="%s/default/user/verify_email/" % s3.base_url,
+         key="%(key)s")
+_settings.on_failed_authorization = URL(c="default", f="user",
+                                        args="not_authorized")
 
-auth.messages.verify_email_subject = T("%(system_name)s - Verify Email") % \
+_messages.verify_email_subject = "%(system_name)s - Verify Email" % \
     {"system_name" : deployment_settings.get_system_name()}
 
-auth.settings.reset_password_requires_verification = True
-auth.messages.reset_password = "%s %s/default/user/reset_password/%s %s" % (T("Click on the link"),
-                                                                               s3.base_url,
-                                                                               "%(key)s",
-                                                                               T("to reset your password"))
-auth.messages.help_mobile_phone = T("Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages.")
+_settings.reset_password_requires_verification = True
+_messages.reset_password = "%s %s/default/user/reset_password/%s %s" % \
+    (T("Click on the link"),
+     s3.base_url,
+     "%(key)s",
+     T("to reset your password"))
+_messages.help_mobile_phone = T("Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages.")
 # Require Admin approval for self-registered users
-auth.settings.registration_requires_approval = deployment_settings.get_auth_registration_requires_approval()
-auth.messages.registration_pending = T("Registration is still pending approval from Approver (%s) - please wait until confirmation received.") % deployment_settings.get_mail_approver()
-auth.messages.registration_pending_approval = T("Thank you for validating your email. Your user account is still pending for approval by the system administator (%s).You will get a notification by email when your account is activated.") % deployment_settings.get_mail_approver()
-auth.settings.verify_email_next = URL(c="default", f="index")
+_settings.registration_requires_approval = deployment_settings.get_auth_registration_requires_approval()
+_messages.registration_pending = "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
+    deployment_settings.get_mail_approver()
+_messages.registration_pending_approval = "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s).You will get a notification by email when your account is activated." % \
+    deployment_settings.get_mail_approver()
+_settings.verify_email_next = URL(c="default", f="index")
 
 # Notify Approver of new pending user registration. Action may be required.
-auth.settings.verify_email_onaccept = auth.s3_verify_email_onaccept
+_settings.verify_email_onaccept = auth.s3_verify_email_onaccept
 
-auth.messages["approve_user"] = \
+_messages["approve_user"] = \
 """Your action is required to approve a New User for %(system_name)s:
 %(name_format)s
 Please go to %(base_url)s/admin/user to approve this user.""" \
@@ -331,7 +336,7 @@ Please go to %(base_url)s/admin/user to approve this user.""" \
 %(email)s""",
        base_url = s3.base_url)
 
-auth.messages["new_user"] = \
+_messages["new_user"] = \
 """A New User has registered for %(system_name)s:
 %(name_format)s
 No action is required.""" \
@@ -342,43 +347,46 @@ No action is required.""" \
 
 # Allow use of LDAP accounts for login
 # NB Currently this means that change password should be disabled:
-#auth.settings.actions_disabled.append("change_password")
+#_settings.actions_disabled.append("change_password")
 # (NB These are not automatically added to PR or to Authenticated role since they enter via the login() method not register())
 #from gluon.contrib.login_methods.ldap_auth import ldap_auth
 # Require even alternate login methods to register users 1st
-#auth.settings.alternate_requires_registration = True
+#_settings.alternate_requires_registration = True
 # Active Directory
-#auth.settings.login_methods.append(ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org"))
+#_settings.login_methods.append(ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org"))
 # or if not wanting local users at all (no passwords saved within DB):
-#auth.settings.login_methods = [ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org")]
+#_settings.login_methods = [ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org")]
 # Domino
-#auth.settings.login_methods.append(ldap_auth(mode="domino", server="domino.domain.org"))
+#_settings.login_methods.append(ldap_auth(mode="domino", server="domino.domain.org"))
 # OpenLDAP
-#auth.settings.login_methods.append(ldap_auth(server="directory.sahanafoundation.org", base_dn="ou=users,dc=sahanafoundation,dc=org"))
+#_settings.login_methods.append(ldap_auth(server="directory.sahanafoundation.org", base_dn="ou=users,dc=sahanafoundation,dc=org"))
 # Allow use of Email accounts for login
-#auth.settings.login_methods.append(email_auth("smtp.gmail.com:587", "@gmail.com"))
+#_settings.login_methods.append(email_auth("smtp.gmail.com:587", "@gmail.com"))
 # We don't wish to clutter the groups list with 1 per user.
-auth.settings.create_user_groups = False
+_settings.create_user_groups = False
 # We need to allow basic logins for Webservices
-auth.settings.allow_basic_login = True
+_settings.allow_basic_login = True
 
-auth.settings.lock_keys = False
-auth.settings.logout_onlogout = s3_auth_on_logout
-auth.settings.login_onaccept = s3_auth_on_login
+_settings.logout_onlogout = s3_auth_on_logout
+_settings.login_onaccept = s3_auth_on_login
 if deployment_settings.get_auth_registration_volunteer() and \
    deployment_settings.has_module("vol"):
-    auth.settings.register_next = URL(c="vol", f="person")
+    _settings.register_next = URL(c="vol", f="person")
 
-auth.settings.lock_keys = True
+# Default Language for authenticated users
+_settings.table_user.language.default = deployment_settings.get_L10n_default_language()
 
 # Languages available in User Profiles
+field = _settings.table_user.language
 if len(s3.l10n_languages) > 1:
-    auth.settings.table_user.language.requires = IS_IN_SET(s3.l10n_languages,
-                                                           zero=None)
+    field.requires = IS_IN_SET(s3.l10n_languages,
+                               zero=None)
 else:
-    auth.settings.table_user.language.default = s3.l10n_languages.keys()[0]
-    auth.settings.table_user.language.readable = False
-    auth.settings.table_user.language.writable = False
+    field.default = s3.l10n_languages.keys()[0]
+    field.readable = False
+    field.writable = False
+
+_settings.lock_keys = True
 
 #########
 # Session

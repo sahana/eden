@@ -525,7 +525,7 @@ def person():
                         except:
                             pass
                     if org_name:
-                        htable = db.hrm_human_resource
+                        htable = s3db.hrm_human_resource
                         otable = s3db.org_organisation
                         query = (otable.name == org_name) & \
                                 (htable.organisation_id == otable.id) & \
@@ -601,7 +601,6 @@ def person():
                                 native=False,
                                 rheader=s3db.hrm_rheader,
                                 orgname=orgname,
-                                template="person",
                                 replace_option=T("Remove existing data before import"))
     return output
 
