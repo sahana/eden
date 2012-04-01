@@ -46,6 +46,7 @@ class S3Config(Storage):
 
     def __init__(self):
         self.auth = Storage()
+        self.auth.email_domains=[]
         self.base = Storage()
         self.database = Storage()
         self.frontpage = Storage()
@@ -86,12 +87,43 @@ class S3Config(Storage):
     # Auth settings
     def get_auth_hmac_key(self):
         return self.auth.get("hmac_key", "akeytochange")
+    def get_auth_facebook(self):
+        """
+            Read the FaceBook OAuth settings
+            - if configured, then it is assumed that FaceBook Authentication is enabled
+        """
+        id = self.auth.get("facebook_id", False)
+        secret = self.auth.get("facebook_secret", False)
+        if id and secret:
+            return dict(id=id, secret=secret)
+        else:
+            return False
+    def get_auth_gmail_domains(self):
+        """ List of domains which can use GMail SMTP for Authentication """
+        return self.auth.get("gmail_domains", [])
+    def get_auth_google(self):
+        """
+            Read the Google OAuth settings
+            - if configured, then it is assumed that Google Authentication is enabled
+        """
+        id = self.auth.get("google_id", False)
+        secret = self.auth.get("google_secret", False)
+        if id and secret:
+            return dict(id=id, secret=secret)
+        else:
+            return False
     def get_auth_openid(self):
         return self.auth.get("openid", False)
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
+    def get_auth_opt_in_team_list(self):
+        return self.auth.get("opt_in_team_list", [])
+    def get_auth_opt_in_to_email(self):
+        return self.get_auth_opt_in_team_list() != []
+    def get_auth_opt_in_default(self):
+        return self.auth.get("opt_in_default", False)
     def get_auth_registration_requests_mobile_phone(self):
         return self.auth.get("registration_requests_mobile_phone", False)
     def get_auth_registration_mobile_phone_mandatory(self):
@@ -109,15 +141,31 @@ class S3Config(Storage):
     def get_auth_registration_organisation_default(self):
         " Default the Organisation during registration "
         return self.auth.get("registration_organisation_default", None)
+    def get_auth_registration_organisation_id_default(self):
+        " Default the Organisation during registration - will return the organisation_id"
+        name = self.auth.get("registration_organisation_default", None)
+        if name:
+            otable = current.s3db.org_organisation
+            orow = current.db(otable.name == name).select(otable.id).first()
+            if orow:
+                organisation_id = orow.id
+            else:
+                organisation_id = otable.insert(name = name)
+        else:
+            organisation_id = None
+        return organisation_id
     def get_auth_registration_requests_image(self):
         " Have the registration form request an Image "
         return self.auth.get("registration_requests_image", False)
+    def get_auth_registration_roles(self):
+        " The list of role UUIDs to assign to newly-registered users "
+        return self.auth.get("registration_roles", [])
     def get_auth_registration_volunteer(self):
         " Redirect the newly-registered user to their volunteer details page "
         return self.auth.get("registration_volunteer", False)
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", False)
-
+        
     # @ToDo: Deprecate
     def get_aaa_default_uacl(self):
         return self.aaa.get("default_uacl", self.aaa.acl.READ)
@@ -501,7 +549,8 @@ class S3Config(Storage):
         return self.project.get("drr", False)
     def get_project_community_activity(self):
         return self.project.get("community_activity", False)
-
+    def get_project_milestones(self):
+        return self.project.get("milestones", False)
     # Save Search and Subscription
     def get_save_search_widget(self):
         return self.save_search.get("widget", True)

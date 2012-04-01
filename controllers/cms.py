@@ -9,29 +9,47 @@
 module = request.controller
 resourcename = request.function
 
-if not (deployment_settings.has_module("inv") or deployment_settings.has_module("asset")):
+if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
 def index():
-    """
-        Application Home page
-    """
+    """ Dashboard """
 
     module_name = deployment_settings.modules[module].name_nice
     response.title = module_name
 
-    table = s3db.cms_post
-    item = db(table.module == module).select(table.body,
-                                             limitby=(0, 1)).first()
-    if item:
-        item = item.body
-    else:
+    item = None
+    if deployment_settings.has_module("cms"):
+        table = s3db.cms_post
+        _item = db(table.module == module).select(table.id,
+                                                  table.body,
+                                                  limitby=(0, 1)).first()
+        if _item:
+            if s3_has_role(ADMIN):
+                item = DIV(XML(_item.body),
+                           BR(),
+                           A(T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[_item.id, "update"],
+                                       vars={"module":module}),
+                             _class="action-btn"))
+            else:
+                item = _item.body
+        elif s3_has_role(ADMIN):
+            item = DIV(H2(module_name),
+                       A(T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module":module}),
+                         _class="action-btn"))
+
+    if not item:
         item = H2(module_name)
 
     # tbc
     report = ""
 
+    response.view = "index.html"
     return dict(item=item, report=report)
 
 # -----------------------------------------------------------------------------
@@ -93,6 +111,17 @@ def post():
 
     # Filter out those posts which are parts of a series
     response.s3.filter = (table.series_id == None)
+
+    _module = request.get_vars.get("module", None)
+    if _module:
+        table.module.default = _module
+        table.module.readable = table.module.writable = False
+        table.name.default = "%s Home Page" % _module
+        table.name.readable = table.name.writable = False
+        url = URL(c=_module, f="index")
+        s3mgr.configure(tablename,
+                        create_next = url,
+                        update_next = url)
 
     # Custom Method to add Comments
     s3mgr.model.set_method(module, resourcename,

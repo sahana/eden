@@ -164,6 +164,7 @@ class S3MainMenu:
                 login_next = request.get_vars["_next"]
 
             menu_auth = MM("Login", c="default", f="user", m="login",
+                           _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
                             MM("Login", m="login",
                                vars=dict(_next=login_next),
@@ -175,8 +176,9 @@ class S3MainMenu:
                         )
         else:
             menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False, link=False, **attr)(
-                            MM("Logout", m="logout"),
+                           translate=False, link=False, _id="auth_menu_email",
+                           **attr)(
+                            MM("Logout", m="logout", _id="auth_menu_logout"),
                             MM("User Profile", m="profile"),
                             MM("Personal Data", c="pr", f="person", m="update",
                                 vars={"person.pe_id" : auth.user.pe_id}),
@@ -795,9 +797,8 @@ class S3OptionsMenu:
                                        aggregate="count")),
                         M("Report Expiring Contracts",
                           vars=dict(group="staff", expiring=1)),
-                        M("Import", m="import",
+                        M("Import", f="person", m="import",
                           vars=staff, p="create"),
-                        #M("Dashboard", f="index"),
                     ),
                     M("Volunteers", f="human_resource",
                       check=[manager_mode, show_vols], vars=volunteers)(
@@ -813,7 +814,7 @@ class S3OptionsMenu:
                                        cols="L1",
                                        fact="person_id",
                                        aggregate="count")),
-                        M("Import", m="import",
+                        M("Import", f="person", m="import",
                           vars=volunteers, p="create"),
                     ),
                     M("Teams", f="group",
@@ -1009,6 +1010,19 @@ class S3OptionsMenu:
                           m="import", p="create"),
                         M("Import Completed Assessment Forms", f="complete",
                           m="import", p="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    def member(self):
+        """ Membership Management """
+
+        return M(c="member")(
+                    M("Members", f="membership")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                        M("Import", f="person", m="import"),
                     ),
                 )
 
@@ -1212,8 +1226,8 @@ class S3OptionsMenu:
                     ),
                     M("Tasks", f="task")(
                         M("Add New Task", m="create"),
-                        M("List All Tasks"),
-                        M("Search", m="search"),
+                        #M("List All Tasks"),
+                        M("Search All Tasks", m="search"),
                     ),
                     M("Daily Work", f="time")(
                         M("My Logged Hours", vars={"mine":1}),
@@ -1255,7 +1269,7 @@ class S3OptionsMenu:
                         M("List All Tasks"),
                         M("Search", m="search"),
                     ),
-                    
+
                 )
 
         return project_menu

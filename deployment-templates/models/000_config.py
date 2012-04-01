@@ -33,8 +33,12 @@ deployment_settings.security.self_registration = True
 deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
 
+# The name of the teams that users are added to when they opt-in to receive alerts
+#deployment_settings.auth.opt_in_team_list = ["Updates"]
+# Uncomment this to set the opt in default to True
+#deployment_settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers
-deployment_settings.auth.registration_requests_mobile_phone = True
+#deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Mobile Phone selection during registration be mandatory
 #deployment_settings.auth.registration_mobile_phone_mandatory = True
 # Uncomment this to request the Organisation when a user registers
@@ -44,15 +48,25 @@ deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #deployment_settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
-#deployment_settings.auth.registration_organisation_default = 1
+#deployment_settings.auth.registration_organisation_default = "My Organisation"
+# Uncomment & populate these to set the default roelsd assigned to newly-registered users
+#deployment_settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to request an image when users register
 #deployment_settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
 # NB This requires Verification/Approval to be Off
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #deployment_settings.auth.registration_volunteer = True
+# Uncomment this to allow users to Login using Gmail's SMTP
+#deployment_settings.auth.gmail_domains = ["gmail.com"]
+# Fill these to allow users to Login using Facebook
+#deployment_settings.auth.facebook_id = ""
+#deployment_settings.auth.facebook_secret = ""
+# Fill these to allow users to Login using Google
+#deployment_settings.auth.google_id = ""
+#deployment_settings.auth.google_secret = ""
 # Uncomment this to allow users to Login using OpenID
-deployment_settings.auth.openid = False
+#deployment_settings.auth.openid = True
 
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 deployment_settings.auth.always_notify_approver = True
@@ -127,6 +141,7 @@ deployment_settings.frontpage.rss = [
     },
     {"title": "Twitter",
      # @SahanaFOSS
+     # Find ID via http://api.twitter.com/users/show/username.json
      "url": "http://twitter.com/statuses/user_timeline/96591754.rss"
      # Hashtag
      #url: "http://search.twitter.com/search.atom?q=%23eqnz"
@@ -173,7 +188,7 @@ deployment_settings.L10n.religions = {
     "none":T("none"),
     "christian":T("Christian"),
     "muslim":T("Muslim"),
-    "jew":T("Jew"),
+	"jewish":T("Jewish"),
     "buddhist":T("Buddhist"),
     "hindu":T("Hindu"),
     "bahai":T("Bahai"),
@@ -274,7 +289,6 @@ deployment_settings.security.archive_not_delete = True
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
 # 6: Apply Controller, Function, Table & Organisation ACLs
-# 7: Apply Controller, Function, Table, Organisation & Facility ACLs
 #
 #deployment_settings.security.policy = 6 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl
@@ -396,6 +410,8 @@ deployment_settings.security.archive_not_delete = True
 # Project Tracking
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #deployment_settings.project.drr = True
+# Uncomment this to use Milestones in project/task.
+#deployment_settings.project.milestones = True
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False
@@ -618,12 +634,18 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
-    #("cms", Storage(
-    #       name_nice = T("Content Management"),
-    #       description = T("Content Management System"),
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
+    ("cms", Storage(
+          name_nice = T("Content Management"),
+          description = T("Content Management System"),
+          restricted = True,
+          module_type = 10,
+      )),
+    ("member", Storage(
+           name_nice = T("Members"),
+           description = T("Membership Management System"),
+           restricted = True,
+           module_type = 10,
+       )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),
     #       description = T("Fire Station Management"),

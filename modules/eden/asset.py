@@ -419,6 +419,7 @@ class S3AssetModel(S3Model):
                              comments(),
                              *meta_fields())
 
+        table.site_id.label = T("Facility/Site")
         table.site_id.readable = True
         table.site_id.writable = True
         table.site_id.widget = None
@@ -460,8 +461,7 @@ $(document).ready(function() {
             msg_record_deleted = T("Asset Log Entry deleted"),
             msg_list_empty = T("Asset Log Empty"))
 
-        # ---------------------------------------------------------------------
-        # Update owned_by_role to the site's owned_by_role
+        # Resource configuration
         configure(tablename,
                   onvalidation = self.asset_log_onvalidation,
                   onaccept = self.asset_log_onaccept,

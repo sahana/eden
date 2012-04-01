@@ -1020,7 +1020,7 @@ function addWFSLayer(layer) {
         // Needed for WFS-T
         schema: schema
     })
-    
+
     var cluster_options = {
         context: {
             radius: function(feature) {
@@ -1061,7 +1061,7 @@ function addWFSLayer(layer) {
             }
         }
     }
-    
+
     if (styleField && styleValues) {
         // Use the Custom Styling
         // Old: Make a Deep Copy of the Global Styling
@@ -1103,7 +1103,7 @@ function addWFSLayer(layer) {
             return color;
         };
     }
-    
+
     // Needs to be uniquely instantiated
     var style_cluster = new OpenLayers.Style (
         {
@@ -1351,7 +1351,7 @@ function onGeojsonFeatureSelect(event) {
         for (var i = 0; i < feature.cluster.length; i++) {
             if (undefined != feature.cluster[i].attributes.popup) {
                 // Only display the 1st line of the hover popup
-                name = feature.cluster[i].attributes.popup.split('<br />', 1)[0]; 
+                name = feature.cluster[i].attributes.popup.split('<br />', 1)[0];
             } else {
                 name = feature.cluster[i].attributes.name;
             }

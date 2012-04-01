@@ -1,5 +1,10 @@
 Selenium provides the ability to test Sahana Eden through a web browser.
 
+We are building our framework around the new WebDriver, despite having some legacy code in the older format:
+http://seleniumhq.org/docs/appendix_migrating_from_rc_to_webdriver.html#why-migrate-to-webdriver
+
+These tests are stored in eden/modules/tests
+
 # ============
 # Installation
 # ============
@@ -7,13 +12,13 @@ Selenium provides the ability to test Sahana Eden through a web browser.
 http://selenium.googlecode.com/svn/trunk/docs/api/py/index.html
 pip install -U selenium
 or
-wget http://pypi.python.org/packages/source/s/selenium/selenium-2.19.1.tar.gz
-tar zxvf selenium-2.19.1.tar.gz
-cd selenium-2.19.1
+wget http://pypi.python.org/packages/source/s/selenium/selenium-2.20.tar.gz
+tar zxvf selenium-2.20.tar.gz
+cd selenium-2.20
 python setup.py install
 
-2) Selenium Server should be downloaded & put somewhere where your control script can find it:
-wget http://selenium.googlecode.com/files/selenium-server-standalone-2.19.0.jar
+2) For legacy tests, Selenium Server should be downloaded & put somewhere where your control script can find it:
+wget http://selenium.googlecode.com/files/selenium-server-standalone-2.20.0.jar
 
 3) Configure management scripts
 e.g. Win32 ones provided:
@@ -33,7 +38,7 @@ Run the whole test suite for the 'eden' application:
 test
 Run the whole test suite for the 'myapp' application:
 test myapp
-Run a single test for the 'eden'application:
+Run a single test for the 'eden' application:
 test eden myscript
 
 # =============
@@ -54,7 +59,10 @@ There are a number of possible selectors to use to find your elements.
 The 'ID' may be the most stable:
 http://selenium.googlecode.com/svn/trunk/docs/api/py/selenium/selenium.selenium.html
 
-An example has been created: skeleton.py
+An example has been created: hrm/staff.py
 
 Style suggestion:
 http://code.google.com/p/selenium/wiki/PageObjects
+
+Nose Integration:
+http://blog.shiningpanda.com/2011/12/introducing-selenose.html

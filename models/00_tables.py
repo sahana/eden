@@ -26,6 +26,7 @@ import eden.hms
 import eden.hrm
 import eden.inv
 import eden.irs
+import eden.member
 import eden.msg
 import eden.ocr
 import eden.org
@@ -95,12 +96,12 @@ s3_meta_owned_by_user = S3ReusableField("owned_by_user", db.auth_user,
                                         ondelete="RESTRICT")
 
 # Role of users who collectively own the record
-s3_meta_owned_by_role = S3ReusableField("owned_by_role", "integer",
-                                        readable=False,
-                                        writable=False,
-                                        requires=None,
-                                        default=None,
-                                        represent=s3_role_represent)
+s3_meta_owned_by_group = S3ReusableField("owned_by_group", "integer",
+                                         readable=False,
+                                         writable=False,
+                                         requires=None,
+                                         default=None,
+                                         represent=s3_auth_group_represent)
 
 # Role of the Organisation the record belongs to
 s3_meta_owned_by_organisation = S3ReusableField("owned_by_organisation", "integer",
@@ -108,21 +109,24 @@ s3_meta_owned_by_organisation = S3ReusableField("owned_by_organisation", "intege
                                                 writable=False,
                                                 requires=None,
                                                 default=None,
-                                                represent=s3_role_represent)
+                                                represent=s3_auth_group_represent)
 
-# Role of the Facility the record belongs to
-s3_meta_owned_by_facility = S3ReusableField("owned_by_facility", "integer",
-                                            readable=False,
-                                            writable=False,
-                                            requires=None,
-                                            default=None,
-                                            represent=s3_role_represent)
+# Person Entity owning the record
+s3_meta_owned_by_entity = S3ReusableField("owned_by_entity", "integer",
+                                          readable=False,
+                                          writable=False,
+                                          requires=None,
+                                          default=None,
+                                          # use a lambda here as we don't
+                                          # want the model to be loaded yet
+                                          represent=lambda val: \
+                                                    s3db.pr_pentity_represent(val))
 
 def s3_ownerstamp():
     return (s3_meta_owned_by_user(),
-            s3_meta_owned_by_role(),
+            s3_meta_owned_by_group(),
             s3_meta_owned_by_organisation(),
-            s3_meta_owned_by_facility())
+            s3_meta_owned_by_entity())
 
 # Make available for S3Models
 s3.ownerstamp = s3_ownerstamp
@@ -151,9 +155,9 @@ def s3_meta_fields():
               s3_meta_created_by(),
               s3_meta_modified_by(),
               s3_meta_owned_by_user(),
-              s3_meta_owned_by_role(),
+              s3_meta_owned_by_group(),
               s3_meta_owned_by_organisation(),
-              s3_meta_owned_by_facility())
+              s3_meta_owned_by_entity())
 
     return fields
 
@@ -171,9 +175,9 @@ response.s3.all_meta_field_names = [field.name for field in
      s3_meta_created_by(),
      s3_meta_modified_by(),
      s3_meta_owned_by_user(),
-     s3_meta_owned_by_role(),
+     s3_meta_owned_by_group(),
      s3_meta_owned_by_organisation(),
-     s3_meta_owned_by_facility()
+     s3_meta_owned_by_entity(),
     ]]
 
 # =============================================================================
@@ -197,7 +201,7 @@ role_required = S3ReusableField("role_required", db.auth_group,
                                                               "auth",
                                                               "group",
                                                               fieldname="role"),
-                                represent = s3_role_represent,
+                                represent = s3_auth_group_represent,
                                 label = T("Role Required"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Role Required"),
@@ -214,7 +218,7 @@ roles_permitted = S3ReusableField("roles_permitted", 'list:reference auth_group'
                                   #widget = S3CheckboxesWidget(lookup_table_name = "auth_group",
                                   #                            lookup_field_name = "role",
                                   #                            multiple = True),
-                                  represent = s3_role_represent,
+                                  represent = s3_auth_group_represent,
                                   label = T("Roles Permitted"),
                                   comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Roles Permitted"),
@@ -577,6 +581,8 @@ s3.crud_strings = Storage(
     msg_record_deleted = T("Record deleted"),
     msg_list_empty = T("No Records currently available"),
     msg_match = T("Matching Records"),
-    msg_no_match = T("No Matching Records"))
+    msg_no_match = T("No Matching Records"),
+    name_nice = T("Record"),
+    name_nice_plural = T("Records"))
 
 # END =========================================================================

@@ -33,18 +33,29 @@
 __all__ = ["AuthS3",
            "S3Permission",
            "S3Audit",
-           "S3RoleManager"]
+           "S3RoleManager",
+           "FaceBookAccount",
+           "GooglePlusAccount",
+          ]
 
 import datetime
 import re
+import time
+import urllib
+from urllib import urlencode
+import urllib2
 
 from gluon import *
 from gluon.storage import Storage, Messages
 
 from gluon.dal import Field, Row, Query, Set, Table, Expression
 from gluon.sqlhtml import CheckboxesWidget, StringWidget
-from gluon.tools import Auth, callback
+from gluon.tools import Auth, callback, addrow
+from gluon.utils import web2py_uuid
+from gluon.validators import IS_SLUG
+from gluon.contrib import simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from gluon.contrib.login_methods.oauth20_account import OAuthAccount
 
 from s3method import S3Method
 from s3validators import IS_ACL
@@ -66,7 +77,6 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-
 class AuthS3(Auth):
 
     """
@@ -113,6 +123,9 @@ class AuthS3(Auth):
 
         Auth.__init__(self, current.db)
 
+        deployment_settings = current.deployment_settings
+        system_name = deployment_settings.get_system_name()
+
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
@@ -122,17 +135,23 @@ class AuthS3(Auth):
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
         self.messages.email_verified = "Email verified - you can now login"
+        self.messages.welcome_email = "Welcome to %(system_name)s" % \
+            dict(system_name=system_name)
+        self.messages.welcome_email_subject = \
+            "Welcome to %(system_name)s - click on the link %(url)s to complete your profile" % \
+                dict(system_name = system_name,
+                     url = deployment_settings.get_base_public_url() + URL("default", "user", args=["profile"]))
         self.messages.duplicate_email = "This email address is already in use"
         self.messages.registration_disabled = "Registration Disabled!"
         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
         self.messages.label_organisation_id = "Organization"
         self.messages.label_site_id = "Facility"
         self.messages.label_utc_offset = "UTC Offset"
-        self.messages.label_view_image = "View Image"
-        self.messages.label_no_image = "No Image"
+        self.messages.label_image = "Profile Image"
         self.messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
         self.messages.help_mobile_phone = "Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages."
         self.messages.help_organisation = "Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions."
+        self.messages.help_image = "You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50."
         #self.messages.logged_in = "Signed In"
         #self.messages.submit_button = "Signed In"
         #self.messages.logged_out = "Signed Out"
@@ -146,7 +165,7 @@ class AuthS3(Auth):
 
         # Site types (for OrgAuth)
         T = current.T
-        if current.deployment_settings.get_ui_camp():
+        if deployment_settings.get_ui_camp():
             shelter = T("Camp")
         else:
             shelter = T("Shelter")
@@ -211,13 +230,6 @@ class AuthS3(Auth):
                     Field("site_id", "integer",
                           writable=False,
                           label=messages.label_site_id),
-                    Field("image", "upload", autodelete=True,
-                          represent = lambda image: image and \
-                                        DIV(A(IMG(_src=URL(c="default", f="download",
-                                                           args=image),
-                                                  _height=60, _alt=self.messages.label_view_image),
-                                                  _href=URL(c="default", f="download",
-                                                            args=image))) or self.messages.label_no_image),
                     Field("registration_key", length=512,
                           writable=False, readable=False, default="",
                           label=messages.label_registration_key),
@@ -255,13 +267,6 @@ class AuthS3(Auth):
                     Field("site_id", "integer",
                           writable=False,
                           label=messages.label_site_id),
-                    Field("image", "upload", autodelete=True,
-                          represent = lambda image: image and \
-                                        DIV(A(IMG(_src=URL(c="default", f="download",
-                                                           args=image),
-                                                  _height=60, _alt=self.messages.label_view_image),
-                                                  _href=URL(c="default", f="download",
-                                                            args=image))) or self.messages.label_no_image),
                     Field("registration_key", length=512,
                           writable=False, readable=False, default="",
                           label=messages.label_registration_key),
@@ -376,7 +381,7 @@ class AuthS3(Auth):
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
 
-        if security_policy not in (1, 2, 3, 4, 5, 6, 7) and \
+        if security_policy not in (1, 2, 3, 4, 5, 6) and \
            not settings.table_permission:
             # Permissions table (group<->permission)
             # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
@@ -520,7 +525,9 @@ class AuthS3(Auth):
 
         db = current.db
         table_user = self.settings.table_user
-        if "username" in table_user.fields:
+        if self.settings.login_userfield:
+            username = self.settings.login_userfield
+        elif "username" in table_user.fields:
             username = "username"
         else:
             username = "email"
@@ -534,18 +541,18 @@ class AuthS3(Auth):
             table_user[passfield].requires[-1].min_length = 0
         except:
             pass
-        if next == DEFAULT:
+        if next is DEFAULT:
             next = request.vars._next or self.settings.login_next
-        if onvalidation == DEFAULT:
+        if onvalidation is DEFAULT:
             onvalidation = self.settings.login_onvalidation
-        if onaccept == DEFAULT:
+        if onaccept is DEFAULT:
             onaccept = self.settings.login_onaccept
-        if log == DEFAULT:
+        if log is DEFAULT:
             log = self.messages.login_log
 
         user = None # default
 
-        # do we use our own login form, or from a central source?
+        # Do we use our own login form, or from a central source?
         if self.settings.login_form == self:
             form = SQLFORM(
                 table_user,
@@ -554,29 +561,67 @@ class AuthS3(Auth):
                 showid=self.settings.showid,
                 submit_button=self.messages.submit_button,
                 delete_label=self.messages.delete_label,
+                formstyle=self.settings.formstyle,
+                separator=self.settings.label_separator
                 )
+            if self.settings.remember_me_form:
+                # Add a new input checkbox "remember me for longer"
+                addrow(form,XML("&nbsp;"),
+                       DIV(XML("&nbsp;"),
+                           INPUT(_type='checkbox',
+                                 _class='checkbox',
+                                 _id="auth_user_remember",
+                                 _name="remember",
+                                 ),
+                           XML("&nbsp;&nbsp;"),
+                           LABEL(
+                            self.messages.label_remember_me,
+                            _for="auth_user_remember",
+                            )),"",
+                       self.settings.formstyle,
+                       'auth_user_remember__row')
+
+            captcha = self.settings.login_captcha or \
+                (self.settings.login_captcha!=False and self.settings.captcha)
+            if captcha:
+                addrow(form, captcha.label, captcha, captcha.comment,
+                       self.settings.formstyle,'captcha__row')
+
             accepted_form = False
             if form.accepts(request.vars, session,
                             formname="login", dbio=False,
                             onvalidation=onvalidation):
                 accepted_form = True
-                # check for username in db
+                if username == "email":
+                    # Check for Domains which can use Google's SMTP server for passwords
+                    # @ToDo: an equivalent email_domains for other email providers
+                    gmail_domains = current.deployment_settings.get_auth_gmail_domains()
+                    if gmail_domains:
+                        from gluon.contrib.login_methods.email_auth import email_auth
+                        domain = form.vars[username].split("@")[1]
+                        if domain in gmail_domains:
+                            self.settings.login_methods.append(
+                                email_auth("smtp.gmail.com:587", "@%s" % domain))
+                # Check for username in db
                 query = (table_user[username] == form.vars[username])
-                users = db(query).select()
-                if users:
+                user = db(query).select().first()
+                if user:
                     # user in db, check if registration pending or disabled
-                    temp_user = users[0]
+                    temp_user = user
                     if temp_user.registration_key == "pending":
                         response.warning = self.messages.registration_pending
                         return form
-                    elif temp_user.registration_key == "disabled":
+                    elif temp_user.registration_key in ("disabled", "blocked"):
                         response.error = self.messages.login_disabled
                         return form
-                    elif temp_user.registration_key:
+                    elif not temp_user.registration_key is None and \
+                             temp_user.registration_key.strip():
                         response.warning = \
                             self.messages.registration_verifying
                         return form
-                    # try alternate logins 1st as these have the current version of the password
+                    # Try alternate logins 1st as these have the
+                    # current version of the password
+                    user = None
                     for login_method in self.settings.login_methods:
                         if login_method != self and \
                                 login_method(request.vars[username],
@@ -587,37 +632,42 @@ class AuthS3(Auth):
                             user = self.get_or_create_user(form.vars)
                             break
                     if not user:
-                        # alternates have failed, maybe because service inaccessible
+                        # Alternates have failed, maybe because service inaccessible
                         if self.settings.login_methods[0] == self:
-                            # try logging in locally using cached credentials
+                            # Try logging in locally using cached credentials
                             if temp_user[passfield] == form.vars.get(passfield, ""):
-                                # success
+                                # Success
                                 user = temp_user
                 else:
-                    # user not in db
+                    # User not in db
                     if not self.settings.alternate_requires_registration:
-                        # we're allowed to auto-register users from external systems
+                        # We're allowed to auto-register users from external systems
                         for login_method in self.settings.login_methods:
                             if login_method != self and \
                                     login_method(request.vars[username],
                                                  request.vars[passfield]):
                                 if not self in self.settings.login_methods:
-                                    # do not store password in db
+                                    # Do not store password in db
                                     form.vars[passfield] = None
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
-                    # invalid login
+                    self.log_event(self.settings.login_failed_log,
+                                   request.post_vars)
+                    # Invalid login
                     session.error = self.messages.invalid_login
                     redirect(self.url(args=request.args,
                                       vars=request.get_vars))
         else:
-            # use a central authentication server
+            # Use a central authentication server
             cas = self.settings.login_form
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
-                user = self.get_or_create_user(cas_user)
+                user = self.get_or_create_user(table_user._filter_fields(cas_user))
+                form = Storage()
+                form.vars = user
+                self.s3_register(form)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
@@ -625,15 +675,21 @@ class AuthS3(Auth):
                 next = "%s?_next=%s" % (URL(r=request), next)
                 redirect(cas.login_url(next))
 
-        # process authenticated users
+        # Process authenticated users
         if user:
             user = Storage(table_user._filter_fields(user, id=True))
             # If the user hasn't set a personal UTC offset,
             # then read the UTC offset from the form:
             if not user.utc_offset:
                 user.utc_offset = session.s3.utc_offset
-            session.auth = Storage(user=user, last_visit=request.now,
-                                   expiration=self.settings.expiration)
+            session.auth = Storage(
+                user=user,
+                last_visit=request.now,
+                expiration = request.vars.get("remember", False) and \
+                    self.settings.long_expiration or self.settings.expiration,
+                remember = request.vars.has_key("remember"),
+                hmac_key = web2py_uuid()
+                )
             self.user = user
             self.set_roles()
             # Read their language from the Profile
@@ -648,7 +704,7 @@ class AuthS3(Auth):
         if log and self.user:
             self.log_event(log % self.user)
 
-        # how to continue
+        # How to continue
         if self.settings.login_form == self:
             if accepted_form:
                 if onaccept:
@@ -728,7 +784,7 @@ class AuthS3(Auth):
         else:
             user.organisation_id.readable = False
             user.organisation_id.writable = False
-        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_default()
+        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
         # @ToDo: Option to request Facility during Registration
         user.site_id.readable = False
         labels, required = s3_mark_required(user)
@@ -760,6 +816,23 @@ class AuthS3(Auth):
                         SPAN("*", _class="req"),
                 "", _id=field_id + SQLFORM.ID_ROW_SUFFIX))
                 #form[0].insert(i + 1, row)
+        # add an opt in clause to receive emails depending on the deployment settings
+        if deployment_settings.get_auth_opt_in_to_email():
+            field_id = "%s_opt_in" % user._tablename
+            comment = DIV(DIV(_class="tooltip",
+                            _title="%s|%s" % ("Mailing list",
+                                              "By selecting this you agree that we may contact you.")))
+            checked = deployment_settings.get_auth_opt_in_default() and "selected"
+            form[0].insert(-1,
+                           TR(TD(LABEL("%s:" % "Receive updates",
+                                       _for="opt_in",
+                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                 _class="w2p_fl"),
+                                 INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
+                              TD(comment,
+                                 _class="w2p_fc"),
+                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
             field_id = "%s_mobile" % user._tablename
@@ -775,6 +848,27 @@ class AuthS3(Auth):
                                        _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
                                  _class="w2p_fl"),
                                  INPUT(_name="mobile", _id=field_id),
+                              TD(comment,
+                                 _class="w2p_fc"),
+                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+
+        # S3: Insert Photo widget into form
+        if deployment_settings.get_auth_registration_requests_image():
+            label = self.messages.label_image
+            comment = DIV(_class="stickytip",
+                          _title="%s|%s" % (label,
+                                            self.messages.help_image % \
+                                                dict(gravatar = A("Gravatar",
+                                                                  _target="top",
+                                                                  _href="http://gravatar.com"))))
+            field_id = "%s_image" % user._tablename
+            widget = SQLFORM.widgets["upload"].widget(current.s3db.pr_image.image, None)
+            form[0].insert(-1,
+                           TR(TD(LABEL("%s:" % label,
+                                       _for="image",
+                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                 _class="w2p_fl"),
+                                 widget,
                               TD(comment,
                                  _class="w2p_fc"),
                            _id=field_id + SQLFORM.ID_ROW_SUFFIX))
@@ -988,30 +1082,6 @@ class AuthS3(Auth):
         return None
 
     # -------------------------------------------------------------------------
-    def s3_lookup_site_role(self, site_id):
-        """
-            Lookup the Facility Access Role from the ID of the Facility
-        """
-
-        if not site_id:
-            return None
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.org_site
-        query = (table.id == site_id)
-        site = db(query).select(table.instance_type).first()
-        if site:
-            instance_type = site.instance_type
-            itable = db[instance_type]
-            query = (itable.site_id == site_id)
-            _site = db(query).select(itable.owned_by_facility).first()
-            if _site:
-                return _site.owned_by_facility
-
-        return None
-
-    # -------------------------------------------------------------------------
     def s3_impersonate(self, user_id):
         """
             S3 framework function
@@ -1068,6 +1138,7 @@ class AuthS3(Auth):
             Whenever someone registers, it:
                 - adds them to the 'Authenticated' role
                 - adds their name to the Person Registry
+                - creates their profile picture
                 - creates an HRM record
                 - adds them to the Org_x Access role
         """
@@ -1076,7 +1147,8 @@ class AuthS3(Auth):
         manager = current.manager
         s3db = current.s3db
 
-        user_id = form.vars.id
+        vars = form.vars
+        user_id = vars.id
         if not user_id:
             return None
 
@@ -1085,23 +1157,38 @@ class AuthS3(Auth):
         self.add_membership(authenticated, user_id)
 
         # Link to organisation, lookup org role
-        organisation_id = self.s3_link_to_organisation(form.vars)
+        organisation_id = self.s3_link_to_organisation(vars)
         if organisation_id:
             owned_by_organisation = self.s3_lookup_org_role(organisation_id)
         else:
             owned_by_organisation = None
 
-        # For admin/user/create, lookup facility role
-        site_id = form.vars.get("site_id", None)
-        if site_id:
-            owned_by_facility = self.s3_lookup_site_role(site_id)
-        else:
-            owned_by_facility = None
-
         # Add to Person Registry and Email/Mobile to pr_contact
-        person_id = self.s3_link_to_person(form.vars, # user
-                                           owned_by_organisation,
-                                           owned_by_facility)
+        person_id = self.s3_link_to_person(vars, # user
+                                           owned_by_organisation)
+
+        if "image" in vars:
+            if hasattr(vars.image, "file"):
+                source_file = vars.image.file
+                original_filename = vars.image.filename
+                ptable = s3db.pr_person
+                query = (ptable.id == person_id)
+                pe_id = db(query).select(ptable.pe_id,
+                                         limitby=(0, 1)).first()
+                if pe_id:
+                    pe_id = pe_id.pe_id
+                    itable = s3db.pr_image
+                    field = itable.image
+                    newfilename = field.store(source_file, original_filename, field.uploadfolder)
+                    url = URL(c="default", f="download", args=newfilename)
+                    fields = dict(pe_id=pe_id,
+                                  profile=True,
+                                  image=newfilename,
+                                  url = url,
+                                  title=current.T("Profile Picture"))
+                    if isinstance(field.uploadfield, str):
+                        fields[field.uploadfield] = source_file.read()
+                    itable.insert(**fields)
 
         htable = s3db.table("hrm_human_resource")
         if htable and organisation_id:
@@ -1120,8 +1207,7 @@ class AuthS3(Auth):
                                    organisation_id=organisation_id,
                                    type=type,
                                    owned_by_user=user_id,
-                                   owned_by_organisation=owned_by_organisation,
-                                   owned_by_facility=owned_by_facility)
+                                   owned_by_organisation=owned_by_organisation)
                 record = Storage(id=id)
                 manager.model.update_super(htable, record)
 
@@ -1135,17 +1221,6 @@ class AuthS3(Auth):
                                         limitby=(0, 1)).first():
                     table.insert(user_id=user_id,
                                  group_id=owned_by_organisation)
-
-            if owned_by_facility:
-                # Add user to the Site Access Role
-                table = self.settings.table_membership
-                query = (table.deleted != True) & \
-                        (table.user_id == user_id) & \
-                        (table.group_id == owned_by_facility)
-                if not db(query).select(table.id,
-                                        limitby=(0, 1)).first():
-                    table.insert(user_id=user_id,
-                                 group_id=owned_by_facility)
 
         # Return person_id for init scripts
         return person_id
@@ -1198,14 +1273,12 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_link_to_person(self,
                           user=None,
-                          owned_by_organisation=None,
-                          owned_by_facility=None):
+                          owned_by_organisation=None):
         """
             Links user accounts to person registry entries
 
             @param user: the user record
             @param owned_by_organisation: the role of the owner organisation
-            @param owned_by_facility: the role of the owner facility
 
             Policy for linking to pre-existing person records:
 
@@ -1262,8 +1335,7 @@ class AuthS3(Auth):
             user = u[utn]
 
             owner = Storage(owned_by_user=user.id,
-                            owned_by_organisation=owned_by_organisation,
-                            owned_by_facility=owned_by_facility)
+                            owned_by_organisation=owned_by_organisation)
 
             if "email" in user:
 
@@ -1277,7 +1349,8 @@ class AuthS3(Auth):
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.value.lower() == email)
                 person = db(query).select(ptable.id,
-                                          ptable.pe_id).first()
+                                          ptable.pe_id,
+                                          limitby=(0, 1)).first()
 
                 if person and \
                    not db(ltable.pe_id == person.pe_id).count():
@@ -1320,10 +1393,15 @@ class AuthS3(Auth):
                 if pe_id:
 
                     # Create a new person record
+                    if current.request.vars.get("opt_in", None):
+                        opt_in = current.deployment_settings.get_auth_opt_in_team_list()
+                    else:
+                        opt_in = ""
                     new_id = ptable.insert(pe_id = pe_id,
                                            track_id = track_id,
                                            first_name = first_name,
                                            last_name = last_name,
+                                           opt_in = opt_in,
                                            modified_by = user.id,
                                            **owner)
 
@@ -1354,6 +1432,20 @@ class AuthS3(Auth):
                                     value = mobile,
                                     **owner)
                         person_ids.append(new_id)
+
+                        # Add the user to each team if they have chosen to opt-in
+                        g_table = s3db["pr_group"]
+                        gm_table = s3db["pr_group_membership"]
+                        for team in opt_in:
+                            query = (g_table.name == team)
+                            team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                            # if the team doesn't exist then add it
+                            if team_rec == None:
+                                team_id = g_table.insert(name = team, group_type = 5)
+                            else:
+                                team_id = team_rec.id
+                            gm_table.insert(group_id = team_id,
+                                            person_id = new_id)
 
                     # Set pe_id if this is the current user
                     if self.user and self.user.id == user.id:
@@ -1511,10 +1603,8 @@ class AuthS3(Auth):
 
         query &= ((htable.status == 1) &
                   (htable.deleted != True))
-        rows = db(query).select(htable.owned_by_organisation,
-                                htable.owned_by_facility)
+        rows = db(query).select(htable.owned_by_organisation)
         org_roles = []
-        fac_roles = []
         for row in rows:
             org_role = row.owned_by_organisation
             if org_role and org_role not in org_roles:
@@ -1524,18 +1614,8 @@ class AuthS3(Auth):
                 if not db(query).select(limitby=(0, 1)).first():
                     org_roles.append(dict(user_id=user_id,
                                           group_id=org_role))
-            fac_role = row.owned_by_facility
-            if fac_role and fac_role not in fac_roles:
-                query = (mtable.deleted != True) & \
-                        (mtable.user_id == user_id) & \
-                        (mtable.group_id == fac_role)
-                if not db(query).select(limitby=(0, 1)).first():
-                    fac_roles.append(dict(user_id=user_id,
-                                          group_id=fac_role))
         if org_roles:
             mtable.bulk_insert(org_roles)
-        if fac_roles:
-            mtable.bulk_insert(fac_roles)
 
     # -------------------------------------------------------------------------
     def s3_logged_in(self):
@@ -1688,6 +1768,8 @@ class AuthS3(Auth):
 
             @param roles: list of role IDs or UIDs (or mixed)
         """
+
+        db = current.db
 
         if not isinstance(roles, (list, tuple)):
             roles = [roles]
@@ -1844,7 +1926,7 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_update_acl(self, role,
                       c=None, f=None, t=None, oacl=None, uacl=None,
-                      organisation=None, facility=None):
+                      organisation=None):
         """
             Back-end method to update an ACL
         """
@@ -1854,10 +1936,6 @@ class AuthS3(Auth):
         all_organisations = organisation == ALL
         if all_organisations:
             organisation = None
-
-        all_facilities = facility == ALL
-        if all_facilities:
-            facility = None
 
         table = self.permission.table
         if not table:
@@ -1889,9 +1967,7 @@ class AuthS3(Auth):
                        oacl=oacl,
                        uacl=uacl,
                        all_organisations=all_organisations,
-                       organisation=organisation,
-                       all_facilities=all_facilities,
-                       facility=facility)
+                       organisation=organisation)
             if record:
                 success = record.update_record(**acl)
             else:
@@ -2103,7 +2179,7 @@ class AuthS3(Auth):
         elif policy == 2:
             # "editor" security policy: show all records
             return table.id > 0
-        elif policy in (3, 4, 5, 6, 7):
+        elif policy in (3, 4, 5, 6):
             # ACLs: use S3Permission method
             query = self.permission.accessible_query(table, method)
             return query
@@ -2253,7 +2329,7 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_set_record_owner(self, table, record):
         """
-            Set the owner organisation and facility for a record
+            Set the owner organisation for a record
 
             @param table: the table or table name
             @param record: the record (as row) or record ID
@@ -2266,17 +2342,12 @@ class AuthS3(Auth):
         site_types = self.org_site_types
 
         OWNED_BY_ORG = "owned_by_organisation"
-        OWNED_BY_FAC = "owned_by_facility"
         ORG_ID = "organisation_id"
-        FAC_ID = "site_id"
         ORG_PREFIX = "Org_%s"
-        FAC_PREFIX = "Fac_%s"
         ORG_TABLENAME = "org_organisation"
-        FAC_TABLENAME = "org_site"
         NAME = "name"
 
         org_table = s3db[ORG_TABLENAME]
-        fac_table = s3db[FAC_TABLENAME]
         grp_table = self.settings.table_group
 
         # Get the table
@@ -2289,9 +2360,7 @@ class AuthS3(Auth):
         fields = [table._id.name,
                   NAME,
                   ORG_ID,
-                  FAC_ID,
-                  OWNED_BY_ORG,
-                  OWNED_BY_FAC]
+                  OWNED_BY_ORG]
         fields = [table[f] for f in fields if f in table.fields]
 
         # Get the record
@@ -2355,66 +2424,37 @@ class AuthS3(Auth):
                 if organisation:
                     org_role = organisation[OWNED_BY_ORG]
 
-        # Get the facility ID
-        fac_role = None
-        if tablename in site_types:
-            site_id = record[FAC_ID]
-            if OWNED_BY_FAC in record:
-                fac_role = record[OWNED_BY_FAC]
-            if not fac_role:
-                # Create a new fac_role
-                uuid = FAC_PREFIX % site_id
-                if NAME in table:
-                    name = record[NAME]
-                else:
-                    name = uuid
-                role = Storage(uuid=uuid,
-                               deleted=False,
-                               hidden=False,
-                               system=True,
-                               protected=True,
-                               role="%s (Facility)" % name,
-                               description="All Staff of Facility %s" % name)
-                query = (grp_table.uuid == role.uuid) | \
-                        (grp_table.role == role.role)
-                record =  db(query).select(grp_table.id,
-                                           limitby=(0, 1)).first()
-                if not record:
-                    fac_role = grp_table.insert(**role)
-                else:
-                    record.update_record(**role)
-                    fac_role = record.id
-        elif FAC_ID in table:
-            # Get the fac_role from the site
-            site_id = record[FAC_ID]
-            if site_id:
-                query = fac_table[FAC_ID] == site_id
-                site = db(query).select(fac_table.instance_type,
-                                        fac_table.uuid,
-                                        limitby=(0, 1)).first()
-                if site:
-                    inst_table = s3db[site.instance_type]
-                    query = inst_table.uuid == site.uuid
-                    facility = db(query).select(inst_table[OWNED_BY_FAC],
-                                                limitby=(0, 1)).first()
-                    if facility:
-                        fac_role = facility[OWNED_BY_FAC]
-
         # Update the record as necessary
         data = Storage()
         if org_role and OWNED_BY_ORG in table:
             data[OWNED_BY_ORG] = org_role
-        if fac_role and OWNED_BY_FAC in table:
-            data[OWNED_BY_FAC] = fac_role
         if data and hasattr(record, "update_record"):
             record.update_record(**data)
         elif data and record_id:
             db(table._id == record_id).update(**data)
 
         return
+        
+    # -------------------------------------------------------------------------
+    def s3_send_welcome_email(self, user):
+        """
+            Send a welcome mail to newly-registered users
+            - especially suitable for users from Facebook/Google who don't
+              verify their emails
+        """
+
+        if "name" in user:
+            user["first_name"] = user["name"]
+        if "family_name" in user:
+            # Facebook
+            user["last_name"] = user["family_name"]
+
+        subject = self.messages.welcome_email_subject
+        message = self.messages.welcome_email
+
+        self.settings.mailer.send(user["email"], subject=subject, message=message)
 
 # =============================================================================
-
 class S3Permission(object):
     """
         S3 Class to handle permissions
@@ -2479,29 +2519,23 @@ class S3Permission(object):
         self.policy = settings.get_security_policy()
 
         # Which level of granularity do we want?
-        self.use_cacls = self.policy in (3, 4, 5, 6, 7) # Controller ACLs
-        self.use_facls = self.policy in (4, 5, 6, 7)    # Function ACLs
-        self.use_tacls = self.policy in (5, 6, 7)       # Table ACLs
-        self.org_roles = self.policy in (6, 7)          # OrgAuth
+        self.use_cacls = self.policy in (3, 4, 5, 6) # Controller ACLs
+        self.use_facls = self.policy in (4, 5, 6)    # Function ACLs
+        self.use_tacls = self.policy in (5, 6)       # Table ACLs
+        self.org_roles = self.policy == 6            # OrgAuth
         self.modules = settings.modules
 
         # If a large number of roles in the system turnes into a bottleneck
-        # in policies 6 and 7, then we could reduce the number of roles in
+        # in policy 6, then we could reduce the number of roles in
         # subsequent queries; this would though add another query (or even two
         # more queries) to the request, so the hypothetic performance gain
         # should first be confirmed by tests:
-        #if self.policy in (6, 7):
+        #if self.policy == 6:
             #gtable = auth.settings.table_group
             #org_roles = current.db(gtable.uid.like("Org_%")).select(gtable.id)
             #self.org_roles = [r.id for r in org_roles]
         #else:
             #self.org_roles = []
-        #if self.policy == 7:
-            #gtable = auth.settings.table_group
-            #fac_roles = current.db(gtable.uid.like("Fac_%")).select(gtable.id)
-            #self.fac_roles = [r.id for r in fac_roles]
-        #else:
-            #self.fac_roles = []
 
         # Permissions table
         self.tablename = tablename or self.TABLENAME
@@ -2579,14 +2613,6 @@ class S3Permission(object):
                                   table_group,
                                   requires = IS_NULL_OR(IS_IN_DB(
                                                 db, table_group.id))),
-                            # Only apply to records owned by this
-                            # facility role (policy 7 only):
-                            Field("all_facilities", "boolean",
-                                  default=False),
-                            Field("facility",
-                                  table_group,
-                                  requires = IS_NULL_OR(IS_IN_DB(
-                                                db, table_group.id))),
                             migrate=migrate,
                             fake_migrate=fake_migrate,
                             *(s3_uid()+s3_timestamp()+s3_deletion_status()))
@@ -2607,7 +2633,7 @@ class S3Permission(object):
             @param record: the record ID (or the Row if already loaded)
 
             @note: if passing a Row, it must contain all available ownership
-                   fields (id, owned_by_user, owned_by_role), otherwise the
+                   fields (id, owned_by_user, owned_by_group), otherwise the
                    record will be re-loaded by this function
         """
 
@@ -2647,26 +2673,20 @@ class S3Permission(object):
 
         # Do we need to check the owner role (i.e. table+record given)?
         is_owner = False
-        require_org = require_fac = None
+        require_org = None
         if table is not None and record is not None:
-            owner_role, owner_user, owner_org, owner_fac = \
+            owner_role, owner_user, owner_org = \
                 self.get_owners(table, record)
             is_owner = self.is_owner(table, None,
                                      owner_role=owner_role,
                                      owner_user=owner_user,
-                                     owner_org=owner_org,
-                                     owner_fac=owner_fac)
+                                     owner_org=owner_org)
             if self.policy == 6:
                 require_org = owner_org
-                require_fac = None
-            elif self.policy == 7:
-                require_org = owner_org
-                require_fac = owner_fac
 
         # Get the applicable ACLs
         page_acl = self.page_acl(c=c, f=f,
-                                 require_org=require_org,
-                                 require_fac=require_fac)
+                                 require_org=require_org)
         if table is None or not self.use_tacls:
             acl = page_acl
         else:
@@ -2676,8 +2696,7 @@ class S3Permission(object):
                 table_acl = self.table_acl(table=table,
                                            c=c,
                                            default=page_acl,
-                                           require_org=require_org,
-                                           require_fac=require_fac)
+                                           require_org=require_org)
             acl = self.most_restrictive((page_acl, table_acl))
 
         # Decide which ACL to use for this case
@@ -2695,9 +2714,7 @@ class S3Permission(object):
         return acl
 
     # -------------------------------------------------------------------------
-    def page_acl(self, c=None, f=None,
-                 require_org=None,
-                 require_fac=None):
+    def page_acl(self, c=None, f=None, require_org=None):
         """
             Get the ACL for a page
 
@@ -2736,9 +2753,7 @@ class S3Permission(object):
                 page_acl = (self.READ, self.READ)
         else:
             # Lookup cached result
-            page_acl = self.page_acls.get((page,
-                                           require_org,
-                                           require_fac), None)
+            page_acl = self.page_acls.get((page, require_org), None)
 
         if page_acl is None:
             page_acl = (self.NONE, self.NONE) # default
@@ -2750,14 +2765,10 @@ class S3Permission(object):
             else:
                 query = (t.group_id == None) & q
             # Additional restrictions in OrgAuth
-            if policy in (6, 7) and require_org:
+            if policy == 6 and require_org:
                 field = t.organisation
                 query &= ((t.all_organisations == True) | \
                           (field == require_org) | (field == None))
-            if policy == 7 and require_fac:
-                field = t.facility
-                query &= ((t.all_facilities == True) | \
-                          (field == require_fac) | (field == None))
             rows = current.db(query).select()
             if rows:
                 # ACLs found, check for function-specific
@@ -2775,16 +2786,13 @@ class S3Permission(object):
                     page_acl = most_permissive(controller_acl)
 
             # Remember this result
-            self.page_acls.update({(page,
-                                    require_org,
-                                    require_fac): page_acl})
+            self.page_acls.update({(page, require_org): page_acl})
 
         return page_acl
 
     # -------------------------------------------------------------------------
     def table_acl(self, table=None, c=None, default=None,
-                  require_org=None,
-                  require_fac=None):
+                  require_org=None):
         """
             Get the ACL for a table
 
@@ -2820,9 +2828,7 @@ class S3Permission(object):
             tablename = table._tablename
         else:
             tablename = table
-        table_acl = self.table_acls.get((tablename,
-                                         require_org,
-                                         require_fac), None)
+        table_acl = self.table_acls.get((tablename, require_org), None)
 
         if table_acl is None:
             q = ((t.deleted != True) & \
@@ -2833,14 +2839,10 @@ class S3Permission(object):
             else:
                 query = (t.group_id == None) & q
             # Additional restrictions in OrgAuth
-            if policy in (6, 7) and require_org:
+            if policy == 6 and require_org:
                 field = t.organisation
                 query &= ((t.all_organisations == True) | \
                           (field == require_org) | (field == None))
-            if policy == 7 and require_fac:
-                field = t.facility
-                query &= ((t.all_facilities == True) | \
-                          (field == require_fac) | (field == None))
             rows = current.db(query).select()
             table_acl = [(r.oacl, r.uacl) for r in rows]
             if table_acl:
@@ -2851,22 +2853,19 @@ class S3Permission(object):
                 table_acl = default
 
             # Remember this result
-            self.table_acls.update({(tablename,
-                                     require_org,
-                                     require_fac): table_acl})
+            self.table_acls.update({(tablename, require_org): table_acl})
         return table_acl
 
     # -------------------------------------------------------------------------
     def get_owners(self, table, record):
         """
-            Get the organisation/facility/group/user owning a record
+            Get the organisation/group/user owning a record
 
             @param table: the table
             @param record: the record ID (or the Row, if already loaded)
         """
 
         owner_org = None
-        owner_fac = None
         owner_role = None
         owner_user = None
 
@@ -2874,9 +2873,8 @@ class S3Permission(object):
 
         # Check which ownership fields the table defines
         ownership_fields = ("owned_by_user",
-                            "owned_by_role",
-                            "owned_by_organisation",
-                            "owned_by_facility")
+                            "owned_by_group",
+                            "owned_by_organisation")
         fields = [f for f in ownership_fields if f in table.fields]
         if not fields:
             # Ownership is not defined for this table
@@ -2904,22 +2902,19 @@ class S3Permission(object):
             # Record does not exist
             return (None, None, None, None)
 
-        if "owned_by_role" in record:
-            owner_role = record["owned_by_role"]
+        if "owned_by_group" in record:
+            owner_role = record["owned_by_group"]
         if "owned_by_user" in record:
             owner_user = record["owned_by_user"]
         if "owned_by_organisation" in record:
             owner_org = record["owned_by_organisation"]
-        if "owned_by_facility" in record:
-            owner_fac = record["owned_by_facility"]
-        return (owner_role, owner_user, owner_org, owner_fac)
+        return (owner_role, owner_user, owner_org)
 
     # -------------------------------------------------------------------------
     def is_owner(self, table, record,
                  owner_role=None,
                  owner_user=None,
-                 owner_org=None,
-                 owner_fac=None):
+                 owner_org=None):
         """
             Establish the ownership of a record
 
@@ -2928,10 +2923,9 @@ class S3Permission(object):
             @param owner_role: owner_role of the record (if already known)
             @param owner_user: owner_user of the record (if already known)
             @param owner_org: owner_org of the record (if already known)
-            @param owner_fac: owner_fac of the record (if already known)
 
             @note: if passing a Row, it must contain all available ownership
-                   fields (id, owned_by_user, owned_by_role), otherwise the
+                   fields (id, owned_by_user, owned_by_group), otherwise the
                    record will be re-loaded by this function
         """
 
@@ -2950,7 +2944,7 @@ class S3Permission(object):
             # Admin owns all records
             return True
         elif record:
-            owner_role, owner_user, owner_org, owner_fac = \
+            owner_role, owner_user, owner_org = \
                 self.get_owners(table, record)
 
         try:
@@ -2974,13 +2968,6 @@ class S3Permission(object):
         if self.policy == 6 and owner_org:
             # Must have the organisation's staff role
             if owner_org not in roles:
-                return False
-        elif self.policy == 7:
-            # Must have both, the organisation's and the
-            # facilities staff role
-            if owner_org and owner_org not in roles:
-                return False
-            if owner_fac and owner_fac not in roles:
                 return False
 
         # Owner?
@@ -3157,10 +3144,9 @@ class S3Permission(object):
             if f and self.use_facls:
                 query = (query | (table.function == f))
             query &= (table.controller == c)
-            # Do not use delegated ACLs except for policy 6 and 7
-            if self.policy not in (6, 7):
-                query &= ((table.organisation == None) & \
-                          (table.facility == None))
+            # Do not use delegated ACLs except for policy 6
+            if self.policy != 6:
+                query &= (table.organisation == None)
             # Restrict to available roles
             if roles:
                 query &= (table.group_id.belongs(roles))
@@ -3190,10 +3176,9 @@ class S3Permission(object):
                      (table.tablename == t))
             # Is the table restricted at all?
             restricted = db(query).select(limitby=(0, 1)).first() is not None
-            # Do not use delegated ACLs except for policy 6 and 7
-            if self.policy not in (6, 7):
-                query &= ((table.organisation == None) & \
-                          (table.facility == None))
+            # Do not use delegated ACLs except for policy 6
+            if self.policy != 6:
+                query &= (table.organisation == None)
             # Restrict to available roles
             if roles:
                 query = (table.group_id.belongs(roles)) & query
@@ -3252,11 +3237,9 @@ class S3Permission(object):
         sr = self.auth.get_system_roles()
 
         OWNED_BY_ORG = "owned_by_organisation"
-        OWNED_BY_FAC = "owned_by_facility"
         OWNED_BY_USER = "owned_by_user"
-        OWNED_BY_ROLE = "owned_by_role"
+        OWNED_BY_GROUP = "owned_by_group"
         ALL_ORGS = "all_organisations"
-        ALL_FACS = "all_facilities"
 
         # Default queries
         query = (table._id != None)
@@ -3282,14 +3265,11 @@ class S3Permission(object):
             _debug("Admin/Editor in Roles, query=%s" % query)
             return query
 
-        # Org/Fac roles the user has
+        # Org roles the user has
         org_roles = []
-        fac_roles = []
-        all_orgs = all_facs = False
-        if policy in (6, 7):
+        all_orgs = False
+        if policy == 6:
             org_roles = list(roles)
-        if policy == 7:
-            fac_roles = list(roles)
 
         # Applicable ACLs
         acls = self.applicable_acls(roles, racl, t=table)
@@ -3307,18 +3287,12 @@ class S3Permission(object):
                 if acl.uacl & racl == racl:
                     ownership_required = False
                     _debug("uACL found - no ownership required")
-                if policy in (6, 7):
+                if policy == 6:
                     org_role = acl.organisation
                     if acl[ALL_ORGS]:
                         all_orgs = True
                     elif org_role and org_role not in org_roles:
                         org_roles.append(org_role)
-                if policy == 7:
-                    fac_role = acl.facility
-                    if acl[ALL_FACS]:
-                        all_facs = True
-                    elif fac_role and fac_role not in fac_roles:
-                        fac_roles.append(fac_role)
 
         if not permitted:
             _debug("No access")
@@ -3330,9 +3304,6 @@ class S3Permission(object):
         if OWNED_BY_ORG in table:
             has_org_role = ((table[OWNED_BY_ORG] == None) | \
                             (table[OWNED_BY_ORG].belongs(org_roles)))
-        if OWNED_BY_FAC in table:
-            has_fac_role = ((table[OWNED_BY_FAC] == None) | \
-                            (table[OWNED_BY_FAC].belongs(fac_roles)))
         if OWNED_BY_USER in table:
             user_owns_record = (table[OWNED_BY_USER] == user_id)
 
@@ -3341,16 +3312,6 @@ class S3Permission(object):
         if policy == 6 and OWNED_BY_ORG in table and not all_orgs:
             q = has_org_role
             if user_id and OWNED_BY_USER in table:
-                q |= user_owns_record
-        elif policy == 7:
-            if OWNED_BY_ORG in table and not all_orgs:
-                q = has_org_role
-            if OWNED_BY_FAC in table and not all_facs:
-                if q is not None:
-                    q &= has_fac_role
-                else:
-                    q = has_fac_role
-            if q is not None and user_id and OWNED_BY_USER in table:
                 q |= user_owns_record
         if q is not None:
             query = q
@@ -3369,8 +3330,8 @@ class S3Permission(object):
                             query = (table._id.belongs(records))
             else:
                 qowner = qrole = quser = None
-                if OWNED_BY_ROLE in table:
-                    qrole = (table.owned_by_role.belongs(roles))
+                if OWNED_BY_GROUP in table:
+                    qrole = (table.owned_by_group.belongs(roles))
                 if OWNED_BY_USER in table and user_id:
                     quser = (table.owned_by_user == user_id)
 
@@ -3438,7 +3399,7 @@ class S3Permission(object):
         if not permitted:
             pkey = table.fields[0]
             query = (table[pkey] == None)
-        elif "owned_by_role" in table or "owned_by_user" in table:
+        elif "owned_by_group" in table or "owned_by_user" in table:
             ownership_required = permitted and acl[1] & racl != racl
 
         return ownership_required
@@ -3454,7 +3415,7 @@ class S3Permission(object):
                            any of "create", "read", "update", "delete"
 
             @note: when submitting a record, the record ID and the ownership
-                   fields (="owned_by_user", "owned_by_role") must be contained
+                   fields (="owned_by_user", "owned_by_group") must be contained
                    if available, otherwise the record will be re-loaded
         """
 
@@ -3611,7 +3572,6 @@ class S3Permission(object):
                 raise HTTP(401, body=self.AUTHENTICATION_REQUIRED)
 
 # =============================================================================
-
 class S3Audit(object):
 
     """
@@ -3754,7 +3714,6 @@ class S3Audit(object):
         return True
 
 # =============================================================================
-
 class S3RoleManager(S3Method):
     """
         REST Method to manage ACLs (Role Manager UI for administrators)
@@ -4697,4 +4656,315 @@ class S3RoleManager(S3Method):
         return output
 
 # =============================================================================
+class FaceBookAccount(OAuthAccount):
+    """ OAuth implementation for FaceBook """
 
+    AUTH_URL = "https://graph.facebook.com/oauth/authorize"
+    TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+    
+        from facebook import GraphAPI, GraphAPIError
+
+        self.GraphAPI = GraphAPI
+        self.GraphAPIError = GraphAPIError
+        g = dict(GraphAPI=GraphAPI,
+                 GraphAPIError=GraphAPIError,
+                 request=current.request,
+                 response=current.response,
+                 session=current.session,
+                 HTTP=HTTP)
+        client = current.auth.settings.facebook
+        OAuthAccount.__init__(self, g, client["id"], client["secret"],
+                              self.AUTH_URL, self.TOKEN_URL,
+                              scope="email,user_about_me,user_location,user_photos,user_relationships,user_birthday,user_website,create_event,user_events,publish_stream")
+        self.graph = None
+
+    # -------------------------------------------------------------------------
+    def login_url(self, next="/"):
+        """ Overriding to produce a different redirect_uri """
+
+        request = current.request
+        session = current.session
+        if not self.accessToken():
+            if not request.vars.code:
+                session.redirect_uri = "%s/%s/default/facebook/login" % \
+                    (current.deployment_settings.get_base_public_url(),
+                     request.application)
+                data = dict(redirect_uri=session.redirect_uri,
+                            response_type="code",
+                            client_id=self.client_id)
+                if self.args:
+                    data.update(self.args)
+                auth_request_url = self.auth_url + "?" + urlencode(data)
+                raise HTTP(307,
+                           "You are not authenticated: you are being redirected to the <a href='" + auth_request_url + "'> authentication server</a>",
+                           Location=auth_request_url)
+            else:
+                session.code = request.vars.code
+                self.accessToken()
+                #return session.code
+        return next
+
+    # -------------------------------------------------------------------------
+    def get_user(self):
+        """ Returns the user using the Graph API. """
+
+        db = current.db
+        auth = current.auth
+        session = current.session
+
+        if not self.accessToken():
+            return None
+
+        if not self.graph:
+            self.graph = self.GraphAPI((self.accessToken()))
+
+        user = None
+        try:
+            user = self.graph.get_object_c("me")
+        except self.GraphAPIError:
+            self.session.token = None
+            self.graph = None
+
+        if user:
+            # Check if a user with this email has already registered
+            #session.facebooklogin = True
+            table = auth.settings.table_user
+            query = (table.email == user["email"])
+            existent = db(query).select(table.id,
+                                        table.password,
+                                        limitby=(0, 1)).first()
+            if existent:
+                #session["%s_setpassword" % existent.id] = existent.password
+                _user = dict(first_name = user.get("first_name", ""),
+                             last_name = user.get("last_name", ""),
+                             facebookid = user["id"],
+                             facebook = user.get("username", user["id"]),
+                             email = user["email"],
+                             password = existent.password
+                            )
+                return _user
+            else:
+                # b = user["birthday"]
+                # birthday = "%s-%s-%s" % (b[-4:], b[0:2], b[-7:-5])
+                # if 'location' in user:
+                #     session.flocation = user['location']
+                #session["is_new_from"] = "facebook"
+                auth.s3_send_welcome_email(user)
+                # auth.initial_user_permission(user)  # Called on profile page
+                _user = dict(first_name = user.get("first_name", ""),
+                             last_name = user.get("last_name", ""),
+                             facebookid = user["id"],
+                             facebook = user.get("username", user["id"]),
+                             nickname = IS_SLUG()(user.get("username", "%(first_name)s-%(last_name)s" % user) + "-" + user['id'][:5])[0],
+                             email = user["email"],
+                             # birthdate = birthday,
+                             about = user.get("bio", ""),
+                             website = user.get("website", ""),
+                             # gender = user.get("gender", "Not specified").title(),
+                             photo_source = 3,
+                             tagline = user.get("link", ""),
+                             registration_type = 2,
+                            )
+                return _user
+
+# =============================================================================
+class GooglePlusAccount(OAuthAccount):
+    """
+        OAuth implementation for Google
+        https://code.google.com/apis/console/
+    """
+
+    AUTH_URL = "https://accounts.google.com/o/oauth2/auth"
+    TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
+    API_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+
+        request = current.request
+        settings = current.deployment_settings
+
+        g = dict(request=request,
+                 response=current.response,
+                 session=current.session,
+                 HTTP=HTTP)
+
+        client = current.auth.settings.google
+
+        self.globals = g
+        self.client = client
+        self.client_id = client["id"]
+        self.client_secret = client["secret"]
+        self.auth_url = self.AUTH_URL
+        self.args = dict(
+                scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
+                user_agent = "google-api-client-python-plus-cmdline/1.0",
+                xoauth_displayname = settings.get_system_name(),
+                response_type = "code",
+                redirect_uri = "%s/%s/default/google/login" % \
+                    (settings.get_base_public_url(),
+                     request.application),
+                approval_prompt = "force",
+                state = "google"
+            )
+        self.graph = None
+
+    # -------------------------------------------------------------------------
+    def __build_url_opener(self, uri):
+        """
+            Build the url opener for managing HTTP Basic Athentication
+        """
+        # Create an OpenerDirector with support 
+        # for Basic HTTP Authentication...
+
+        auth_handler = urllib2.HTTPBasicAuthHandler()
+        auth_handler.add_password(None,
+                                  uri,
+                                  self.client_id,
+                                  self.client_secret)
+        opener = urllib2.build_opener(auth_handler)
+        return opener
+
+    # -------------------------------------------------------------------------
+    def accessToken(self):
+        """
+            Return the access token generated by the authenticating server.
+
+            If token is already in the session that one will be used.
+            Otherwise the token is fetched from the auth server.
+        """
+
+        session = current.session
+
+        if session.token and session.token.has_key("expires"):
+            expires = session.token["expires"]
+            # reuse token until expiration
+            if expires == 0 or expires > time.time():
+                return session.token["access_token"]
+        if session.code:
+            data = dict(client_id = self.client_id,
+                        client_secret = self.client_secret,
+                        redirect_uri = self.args["redirect_uri"],
+                        code = session.code,
+                        grant_type = "authorization_code",
+                        scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile")
+
+            # if self.args:
+            #     data.update(self.args)
+            open_url = None
+            opener = self.__build_url_opener(self.TOKEN_URL)
+            try:
+                open_url = opener.open(self.TOKEN_URL, urlencode(data))
+            except urllib2.HTTPError, e:
+                raise Exception(e.read())
+            finally:
+                del session.code # throw it away
+
+            if open_url:
+                try:
+                    session.token = json.loads(open_url.read())
+                    session.token["expires"] = int(session.token["expires_in"]) + \
+                        time.time()
+                finally:
+                    opener.close()
+                return session.token["access_token"]
+
+        session.token = None
+        return None
+
+    # -------------------------------------------------------------------------
+    def login_url(self, next="/"):
+        """ Overriding to produce a different redirect_uri """
+
+        request = current.request
+        session = current.session
+        if not self.accessToken():
+            if not request.vars.code:
+                session.redirect_uri = self.args["redirect_uri"]
+                data = dict(redirect_uri=session.redirect_uri,
+                            response_type="code",
+                            client_id=self.client_id)
+                if self.args:
+                    data.update(self.args)
+                auth_request_url = self.auth_url + "?" + urlencode(data)
+                raise HTTP(307,
+                           "You are not authenticated: you are being redirected to the <a href='" + auth_request_url + "'> authentication server</a>",
+                           Location=auth_request_url)
+            else:
+                session.code = request.vars.code
+                self.accessToken()
+                #return session.code
+        return next
+
+    # -------------------------------------------------------------------------
+    def get_user(self):
+        """ Returns the user using the Graph API. """
+
+        db = current.db
+        auth = current.auth
+        session = current.session
+
+        if not self.accessToken():
+            return None
+
+        user = None
+        try:
+            user = self.call_api()
+        except Exception, e:
+            print str(e)
+            session.token = None
+
+        if user:
+            # Check if a user with this email has already registered
+            #session.googlelogin = True
+            table = auth.settings.table_user
+            query = (table.email == user["email"])
+            existent = db(query).select(table.id,
+                                        table.password,
+                                        limitby=(0, 1)).first()
+            if existent:
+                #session["%s_setpassword" % existent.id] = existent.password
+                _user = dict(
+                            #first_name = user.get("given_name", user["name"]),
+                            #last_name = user.get("family_name", user["name"]),
+                            googleid = user["id"],
+                            email = user["email"],
+                            password = existent.password
+                            )
+                return _user
+            else:
+                # b = user["birthday"]
+                # birthday = "%s-%s-%s" % (b[-4:], b[0:2], b[-7:-5])
+                # if "location" in user:
+                #     session.flocation = user["location"]
+                #session["is_new_from"] = "google"
+                auth.s3_send_welcome_email(user)
+                _user = dict(
+                            first_name = user.get("given_name", user["name"].split()[0]),
+                            last_name = user.get("family_name", user["name"].split()[-1]),
+                            googleid = user["id"],
+                            nickname = "%(first_name)s-%(last_name)s-%(id)s" % dict(first_name=user["name"].split()[0].lower(), last_name=user["name"].split()[-1].lower(), id=user['id'][:5]),
+                            email = user["email"],
+                            # birthdate = birthday,
+                            website = user.get("link", ""),
+                            # gender = user.get("gender", "Not specified").title(),
+                            photo_source = 6 if user.get("picture", None) else 2,
+                            googlepicture = user.get("picture", ""),
+                            registration_type = 3,
+                            )
+                return _user
+
+    # -------------------------------------------------------------------------
+    def call_api(self):
+        api_return = urllib.urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s" % self.accessToken())
+        user = json.loads(api_return.read())
+        if user:
+            return user
+        else:
+            self.session.token = None
+            return None
+
+# END =========================================================================

@@ -207,7 +207,7 @@ class S3LocationModel(S3Model):
         # privileges from generic Authenticated users for particular locations (like
         # hierarchy or region locations) by changing the owner on those locations, e.g.
         # to MapAdmin.
-        table.owned_by_role.default = AUTHENTICATED
+        table.owned_by_group.default = AUTHENTICATED
 
         # Although the filter_opts here includes all allowed Ln keys, not just the
         # ones that are within the current hierarchy depth limit, this should not
@@ -1532,7 +1532,7 @@ class S3GISConfigModel(S3Model):
             MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
             table = current.s3db.gis_location
             query = (table.id == vars.region_location_id)
-            current.db(query).update(owned_by_role = MAP_ADMIN)
+            current.db(query).update(owned_by_group = MAP_ADMIN)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1920,7 +1920,11 @@ class S3LayerEntityModel(S3Model):
 
         vars = form.vars
         base = vars.base
+        if base == 'False':
+            base = False
         enabled = vars.enabled
+        if enabled == 'False':
+            enabled = False
 
         if base and enabled:
             db = current.db
@@ -2980,13 +2984,13 @@ class S3GISThemeModel(S3Model):
         crud_strings = s3.crud_strings
         define_table = self.define_table
         meta_fields = s3.meta_fields
-        
+
         # =====================================================================
         # Theme Layer
         #
 
         gis_theme_type_opts = {
-            # This should be stored 
+            # This should be stored
             #"population":T("Population"),
             }
 

@@ -9,12 +9,15 @@
 
          Organisation...................required.....organisation name
          Acronym........................optional.....organisation acronym
+         Type...........................optional.....HR type (staff|volunteer)
          Office.........................optional.....office name (required for staff)
          Office Lat.....................optional.....office latitude
          Office Lon.....................optional.....office longitude
          Office Street address..........optional.....office street address
          Office City....................optional.....office city
          Office Postcode................optional.....office postcode
+         Job Title......................optional.....human_resource job title
+         Start Date.....................optional.....human_resource start date
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
          Last Name......................optional.....person last name (required in some deployments)
@@ -25,6 +28,7 @@
          Mobile Phone...................optional.....person mobile phone number
          Office Phone...................optional.....office phone number
          Skype..........................optional.....person skype ID
+         Callsign.......................optional.....person Radio Callsign
          Home Address...................optional.....person home address
          Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
@@ -32,10 +36,9 @@
          Home L1........................optional.....person home address L1
          Home L2........................optional.....person home address L2
          Home L3........................optional.....person home address L3
-         Job Title......................optional.....job title
-         Type...........................optional.....HR type (staff|volunteer)
-         Callsign.......................optional.....Radio Callsign
+         Home L4........................optional.....person home address L4
          Teams..........................optional.....comma-separated list of Groups
+         Projects.......................optional.....comma-separated list of Projects (not yet implemented)
 
          Column headers looked up in labels.xml:
 
@@ -236,11 +239,13 @@
 
             <!-- Trainings
             <xsl:call-template name="Trainings"/> -->
-            
+
+            <!-- Teams -->
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="$Teams"/></xsl:with-param>
                 <xsl:with-param name="arg">team</xsl:with-param>
             </xsl:call-template>
+
         </resource>
 
         <!-- Locations -->
@@ -252,6 +257,7 @@
 
         <xsl:param name="OrgName"/>
         <xsl:param name="OfficeName"/>
+        <xsl:variable name="Projects" select="col[@field='Projects']"/>
 
         <xsl:variable name="type">
             <xsl:choose>
@@ -269,6 +275,7 @@
 
             <!-- HR data -->
             <data field="job_title"><xsl:value-of select="col[@field='Job Title']"/></data>
+            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             <xsl:if test="$type!=0">
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>
@@ -288,6 +295,12 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+
+            <!-- Projects -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="$Projects"/></xsl:with-param>
+                <xsl:with-param name="arg">project</xsl:with-param>
+            </xsl:call-template>
 
         </resource>
 
@@ -364,6 +377,9 @@
                 <data field="L3">
                     <xsl:value-of select="col[@field='Home L3']"/>
                 </data>
+                <data field="L4">
+                    <xsl:value-of select="col[@field='Home L4']"/>
+                </data>
             </resource>
         </xsl:if>
 
@@ -378,21 +394,29 @@
         <xsl:variable name="l1" select="col[@field='Home L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='Home L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='Home L3']/text()"/>
+        <xsl:variable name="l4" select="col[@field='Home L4']/text()"/>
 
         <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
         <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('Location L4: ', $Address)"/>
+        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
+        <xsl:variable name="l5id" select="concat('Location: ', $Address)"/>
 
         <xsl:choose>
             <xsl:when test="$Address!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$l5id"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:when>
+            <xsl:when test="$l4!=''">
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l4id"/>
                     </xsl:attribute>
                 </reference>
             </xsl:when>
-
             <xsl:when test="$l3!=''">
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
@@ -449,11 +473,13 @@
         <xsl:variable name="l1" select="col[@field='Home L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='Home L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='Home L3']/text()"/>
+        <xsl:variable name="l4" select="col[@field='Home L4']/text()"/>
 
         <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
         <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('Location L4: ', $Address)"/>
+        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
+        <xsl:variable name="l5id" select="concat('Location: ', $Address)"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -550,13 +576,61 @@
             </resource>
         </xsl:if>
 
-        <!-- Address Location -->
-        <xsl:if test="$Address!=''">
+        <!-- L4 Location -->
+        <xsl:if test="$l4!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$l4id"/>
                 </xsl:attribute>
                 <xsl:choose>
+                    <xsl:when test="$l3!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l3id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$l2!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l2id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$l1!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l1id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <data field="name"><xsl:value-of select="$l4"/></data>
+                <data field="level"><xsl:text>L4</xsl:text></data>
+            </resource>
+        </xsl:if>
+
+        <!-- Address Location -->
+        <xsl:if test="$Address!=''">
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$l5id"/>
+                </xsl:attribute>
+                <xsl:choose>
+                    <xsl:when test="$l4!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l4id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
                     <xsl:when test="$l3!=''">
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -611,6 +685,8 @@
                                 <xsl:value-of select="concat($TeamPrefix, $item)"/>
                             </xsl:attribute>
                             <data field="name"><xsl:value-of select="$item"/></data>
+                            <!-- Relief Team -->
+                            <data field="type">3</data>
                         </resource>
                     </reference>
                 </resource>

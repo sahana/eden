@@ -551,6 +551,8 @@ class S3CRUD(S3Method):
                 response.view = self._view(r, "update.html")
             elif representation in ("popup", "iframe"):
                 response.view = self._view(r, "popup.html")
+            elif representation == "plain":
+                response.view = self._view(r, "plain.html")
 
             # Title and subtitle
             crud_string = self.crud_string
@@ -637,9 +639,6 @@ class S3CRUD(S3Method):
                     self.next = update_next(self)
                 except TypeError:
                     self.next = update_next
-
-        #elif representation == "plain":
-            #pass
 
         elif representation == "url":
             return self.import_url(r)
@@ -1217,7 +1216,7 @@ class S3CRUD(S3Method):
                             hideerror=False):
 
                 # Message
-                response.flash = message
+                response.confirmation = message
 
                 # Audit
                 if record_id is None:
@@ -1252,6 +1251,17 @@ class S3CRUD(S3Method):
 
                 # Execute onaccept
                 callback(onaccept, form, tablename=tablename)
+
+            elif form.errors:
+                table = self.table
+                if not response.error:
+                    response.error = ""
+                for fieldname in form.errors:
+                    if fieldname in table and \
+                       isinstance(table[fieldname].requires, IS_LIST_OF):
+                        # IS_LIST_OF validation errors need special handling
+                        response.error = "%s\n%s: %s" % \
+                            (response.error, fieldname, form.errors[fieldname])
 
         if not logged and not form.errors:
             audit("read", prefix, name,

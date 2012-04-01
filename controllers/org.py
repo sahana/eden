@@ -117,13 +117,53 @@ def room():
     return s3_rest_controller()
 
 # =============================================================================
+def mailing_list():
+    """ RESTful CRUD controller """
+
+    tablename = "pr_group"
+    table = s3db[tablename]
+
+    # Only groups with a group_type of 5
+    response.s3.filter = (table.group_type == 5)
+    table.group_type.writable = False
+    table.group_type.readable = False
+    table.name.label = T("Mailing List Name")
+    s3.crud_strings[tablename] = s3.pr_mailing_list_crud_strings
+
+    # define the list_fields
+    list_fields = s3mgr.model.configure(tablename,
+                                        list_fields = ["id",
+                                                       "name",
+                                                       "description",
+                                                      ])
+    # Components
+    _rheader = s3db.pr_rheader
+    _tabs = [(T("Organisation"), "organisation/"),
+            (T("Mailing List Details"), None),
+           ]
+    if len(request.args) > 0:
+        _tabs.append((T("Members"), "group_membership"))
+    if "viewing" in request.vars:
+        tablename, record_id = request.vars.viewing.rsplit(".", 1)
+        if tablename == "org_organisation":
+            table = s3db[tablename]
+            _rheader = s3db.org_rheader
+            _tabs = []
+    s3mgr.model.add_component("pr_group_membership", pr_group="group_id")
+
+    rheader = lambda r: _rheader(r, tabs = _tabs)
+    return s3_rest_controller("pr",
+                              "group",
+                              rheader=rheader)
+
+# =============================================================================
 def incoming():
     """ Incoming Shipments """
 
     return inv_incoming()
 
 # =============================================================================
-def req_match():
+def match():
     """ Match Requests """
 
     return s3db.req_match()

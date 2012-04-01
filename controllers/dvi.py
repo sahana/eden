@@ -142,7 +142,7 @@ def body():
 
     dvi_tabs = [(T("Recovery"), ""),
                 (T("Checklist"), "checklist"),
-                (T("Images"), "pimage"),
+                (T("Images"), "image"),
                 (T("Physical Description"), "physical_description"),
                 (T("Effects Inventory"), "effects"),
                 (T("Journal"), "note"),
@@ -217,7 +217,7 @@ def person():
                 (T("Missing Report"), "missing_report"),
                 (T("Person Details"), None),
                 (T("Physical Description"), "physical_description"),
-                (T("Images"), "pimage"),
+                (T("Images"), "image"),
                 (T("Identity"), "identity"),
                 (T("Address"), "address"),
                 (T("Contact Data"), "contact"),

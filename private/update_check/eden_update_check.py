@@ -96,6 +96,15 @@ def update_check(environment):
             web2py_minimum_version)
 
     # -------------------------------------------------------------------------
+    # Add required directories if needed
+    databases_dir = os.path.join(app_path, "databases")
+    try:
+        os.stat(databases_dir)
+    except OSError:
+        # not found, create it
+        os.mkdir(databases_dir)
+
+    # -------------------------------------------------------------------------
     # Copy in Templates
     template_src = os.path.join(app_path, "deployment-templates")
     template_dst = app_path

@@ -555,7 +555,7 @@ $(function() {
             current.auth.s3_has_permission("read", "req_req"):
             return [
                     (T("Requests"), "req"),
-                    (T("Match Requests"), "req_match/"),
+                    (T("Match Requests"), "match/"),
                     (T("Commit"), "commit")
                     ]
         else:
@@ -1376,7 +1376,7 @@ class S3CommitModel(S3Model):
 
         vars = form.vars
 
-        # Update owned_by_role to the organisation's owned_by_role
+        # Update owned_by_group to the organisation's owned_by_group
         # @ToDo: Facility
         if vars.organisation_id:
             otable = s3db.org_organisation
