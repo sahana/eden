@@ -183,6 +183,9 @@ body {
     font-size: 0.8em;
     color: #000;
     background: #fff;
+    /* To have a centered pane with a side colour
+    background: none repeat scroll 0 0 #63594D;
+    */
     /*min-width: 1024px;*/
     /*overflow:auto;  /* annoying always visible scrollbar in chrome */
 }
@@ -256,17 +259,25 @@ table {
 
 /* Now to layout elements... */
 /* Unused in default Sahana THeme
-#header {
-    border-bottom: #069 1px solid;
-    padding: 0 1em;
-    height: 70px;
-    position: relative;
-    background: url(../../YOURLOGOHERE) #336699 no-repeat left top;
+#container {
+    background: none repeat scroll 0 0 #FFFFFF;
+    margin: 0 auto;
+    width: 1280px;
+}
+#banner {
+    background: url(../../img/BANNER.jpg) 0 0 no-repeat;
+    padding: none;
+    width: 1280px;
+    height: 255px;
+    display: block;
+    position: absolute;
+    top: 0px;
 }
 */
 /* response.menu_modules */
 #menu_modules {
-    position: fixed;
+    position: absolute;
+    /* top: 255px; */
     height: 36px;
     background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
     border-top: 1px solid #2a323f;
@@ -290,6 +301,7 @@ table {
     z-index: 25;
     min-width: 800px;
     width: 100%;
+    /* width: 1280px; */
 }
 #modulenav {
     position: relative;
@@ -378,6 +390,7 @@ table {
     display: none;
     position: absolute;
     top: 100%;
+    /* top: 255; */
     left: 0;
     font-weight: normal;
     text-align: left;

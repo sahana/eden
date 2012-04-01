@@ -1216,7 +1216,7 @@ class S3CRUD(S3Method):
                             hideerror=False):
 
                 # Message
-                response.flash = message
+                response.confirmation = message
 
                 # Audit
                 if record_id is None:
@@ -1251,6 +1251,17 @@ class S3CRUD(S3Method):
 
                 # Execute onaccept
                 callback(onaccept, form, tablename=tablename)
+
+            elif form.errors:
+                table = self.table
+                if not response.error:
+                    response.error = ""
+                for fieldname in form.errors:
+                    if fieldname in table and \
+                       isinstance(table[fieldname].requires, IS_LIST_OF):
+                        # IS_LIST_OF validation errors need special handling
+                        response.error = "%s\n%s: %s" % \
+                            (response.error, fieldname, form.errors[fieldname])
 
         if not logged and not form.errors:
             audit("read", prefix, name,

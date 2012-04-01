@@ -611,6 +611,30 @@ def user():
                 self_registration=self_registration)
 
 # -----------------------------------------------------------------------------
+def facebook():
+    """ Login using Facebook """
+
+    if not auth.settings.facebook:
+        redirect(URL(f="user", args=request.args, vars=request.vars))
+
+    auth.settings.login_form = s3base.FaceBookAccount()
+    form = auth()
+
+    return dict(form=form)
+
+# -----------------------------------------------------------------------------
+def google():
+    """ Login using Google """
+
+    if not auth.settings.google:
+        redirect(URL(f="user", args=request.args, vars=request.vars))
+
+    auth.settings.login_form = s3base.GooglePlusAccount()
+    form = auth()
+
+    return dict(form=form)
+
+# -----------------------------------------------------------------------------
 def source():
     """ RESTful CRUD controller """
     return s3_rest_controller("s3", "source")

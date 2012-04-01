@@ -4,4 +4,13 @@
 {{login_form[0][-1][1].append(A(T("Lost Password"), _href=URL(f="user", args="retrieve_password"), _class="action-lnk"))}}
 <div class='form-container'>
 {{=login_form}}
+{{if auth.settings.facebook:}}
+<a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='Login using Facebook account'>
+<span>{{=T("Login with Facebook")}}</span>
+</a>{{pass}}
+{{if auth.settings.google:}}
+<a class='zocial google' href='{{=URL(f="google", args="login")}}' title="Login using Google account">
+<span>{{=T("Login with Google")}}</span>
+</a>{{pass}}
 </div>
+

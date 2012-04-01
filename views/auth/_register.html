@@ -6,6 +6,14 @@
 {{include "key.html"}}
 <div class='form-container'>
 {{=register_form}}
+{{if auth.settings.facebook:}}
+<a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='Login using Facebook account'>
+<span>{{=T("Login with Facebook")}}</span>
+</a>{{pass}}
+{{if auth.settings.google:}}
+<a class='zocial google' href='{{=URL(f="google", args="login")}}' title="Login using Google account">
+<span>{{=T("Login with Google")}}</span>
+</a>{{pass}}
 </div>
 {{if session.s3.debug:}}
     {{response.s3.scripts.append( "%s/jquery.pstrength.1.3.js" % s3_script_dir )}}
