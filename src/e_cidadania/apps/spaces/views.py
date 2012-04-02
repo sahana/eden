@@ -106,9 +106,10 @@ class SpaceFeed(Feed):
 @login_required
 def add_intent(request, space_name):
      """
-     Returns a page where the logged in user can click on a "I want to participate" button, 
-     which after sends an email to the administrator of the space with a link to approve the 
-     user to use the space.
+     Returns a page where the logged in user can click on a "I want to
+     participate" button, which after sends an email to the administrator of
+     the space with a link to approve the user to use the space.
+     
      :attributes:  space, intent, token
      :rtype: Multiple entity objects.
      :context: space_name, heading
@@ -119,15 +120,19 @@ def add_intent(request, space_name):
          intent = Intent.objects.get(user=request.user, space=space)
          heading = _("Access has been already authorized")
      except Intent.DoesNotExist:
-         token = hashlib.md5("%s%s%s" % (request.user, space, datetime.datetime.now())).hexdigest()
+         token = hashlib.md5("%s%s%s" % (request.user, space,
+                             datetime.datetime.now())).hexdigest()
          intent = Intent(user=request.user, space=space, token=token)
          intent.save()
          subject = _("New participation request")
          body = _("User %s wants to participate in space %s.\n \
                   Plese click on the link below to approve.\n %s" \
-                  % (request.user.username, space.name, intent.get_approve_url()))
+                  % (request.user.username, space.name,
+                     intent.get_approve_url()))
          heading = _("Your request is being processed.")
-         send_mail(subject=subject, message=body, from_email=None, recipient_list=[space.author.email])
+         send_mail(subject=subject, message=body,
+                   from_email="noreply@ecidadania.org",
+                   recipient_list=[space.author.email])
 
 
      return render_to_response('space_intent.html', \
