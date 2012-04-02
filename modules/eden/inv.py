@@ -1353,12 +1353,13 @@ def inv_warehouse_rheader(r):
     if tablename == "org_organisation" or tablename == "org_office":
         rheader = s3.org_rheader(r)
     rfooter = TAG[""]()
-    if record and "id" in record:
+    if record and "site_id" in record:
         if r.component and r.component.name == "inv_item":
             as_btn = A( T("Adjust Stock"),
                           _href = URL(c = "inv",
                                       f = "adj",
-                                      args = [record.id, "create"]
+                                      args = ["create"],
+                                      vars = {"site":record.site_id},
                                       ),
                           _class = "action-btn"
                           )
@@ -1810,6 +1811,25 @@ class S3AdjustModel(S3Model):
                          4 : T("Expired"),
                          5 : T("Found"),
                         }
+
+        # CRUD strings
+        ADJUST_STOCK = T("Adjust Stock Levels")
+        LIST_ADJUSTMENTS = T("List Adjustments to Stock")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADJUST_STOCK,
+            title_display = T("Stock Adjustment Details"),
+            title_list = LIST_ADJUSTMENTS,
+            title_update = T("Edit Adjustment"),
+            title_search = T("Search Adjustments to Stock Levels"),
+            subtitle_create = T("Add New Adjustment"),
+            subtitle_list = T("Adjustment Items"),
+            label_list_button = LIST_ADJUSTMENTS,
+            label_create_button = ADJUST_STOCK,
+            label_delete_button = T("Delete Adjustment"),
+            msg_record_created = T("Adjustment created"),
+            msg_record_modified = T("Adjustment modified"),
+            msg_record_deleted = T("Adjustment deleted"),
+            msg_list_empty = T("No adjustments to the stock levels exist"))
 
         # @todo add the optional adj_id
         tablename = "inv_adj_item"

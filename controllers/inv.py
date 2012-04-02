@@ -179,6 +179,13 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % csv_template
 
 
+    # remove CRUD generated buttons in the tabs
+    s3mgr.configure("inv_inv_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
 
 
     output = s3_rest_controller(module, resourcename,
@@ -190,6 +197,8 @@ def warehouse():
                                     dict(label="Organisation",
                                          field=s3db.org_organisation_id(comment=None))
                                 ])
+    if "add_btn" in output:
+        del output["add_btn"]
     return output
 
 # =============================================================================
@@ -1018,6 +1027,10 @@ def adj():
                     table.adjuster_id.writable = False
                     table.site_id.writable = False
                     table.comments.writable = False
+                else:
+                    if "site" in request.vars:
+                        table.site_id.writable = False
+                        table.site_id.default = request.vars.site
         return True
 
     response.s3.prep = prep
