@@ -2258,7 +2258,7 @@ def hrm_vars(module):
 
     s3db = current.s3db
     session = current.session
-    
+
     if session.s3.hrm is None:
         session.s3.hrm = Storage()
     hrm_vars = session.s3.hrm
@@ -2286,10 +2286,11 @@ def hrm_vars(module):
         sr = session.s3.system_roles
         if sr.ADMIN in session.s3.roles or \
            hrm_vars.orgs or \
-           deployment_settings.get_security_policy() in (1, 2):
+           current.deployment_settings.get_security_policy() in (1, 2):
             hrm_vars.mode = None
     else:
         hrm_vars.mode = "personal"
+    return
 
 # =============================================================================
 def hrm_hr_represent(id):
