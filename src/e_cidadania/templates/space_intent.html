@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Participate" %}{% endblock %}
+    
+{% block content %}
+
+    <div class="row">
+        <div class="span12">
+            <h4>{{ heading }}</h4>
+            <p>{% trans "If the administrator approves your request, you will be notified by email" %}</p>
+            <p>{% trans "You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your profile</a>" %}</p>
+        </div>
+    </div>
+{% endblock %}

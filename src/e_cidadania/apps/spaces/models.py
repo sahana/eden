@@ -94,7 +94,7 @@ class Space(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('space-index', (), {
-            'space_name': self.url})
+           'space_name': self.url})
 
 
 class Entity(models.Model):
@@ -192,3 +192,15 @@ class Event(models.Model):
         return ('view-event', (), {
             'space_name': self.space.url,
             'event_id': str(self.id)})
+
+class Intent(models.Model):
+    user = models.ForeignKey(User)
+    space = models.ForeignKey(Space)
+    token = models.CharField(max_length=32)
+    reqested_on = models.DateTimeField(auto_now_add=True)
+
+    def get_approve_url(self):
+        from django.contrib.sites.models import Site
+        site = Site.objects.all()[0]
+        return "http://%s%sintent/approve/%s" % (site.domain, self.space.get_absolute_url(), self.token)
+

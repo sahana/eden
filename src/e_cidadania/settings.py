@@ -5,13 +5,7 @@ Main configuration file for e-cidadania. Please refer to the documentation on
 http://docs.ecidadania.org before you modift anything.
 """
 
-__author__ = "Oscar Carballal Prego"
-__copyright__ = "Cidadania Sociedade Cooperativa Galega"
-__credits__ = ["Oscar Carballal Prego"]
-__license__ = "GPLv3"
 __version__ = "0.1.5"
-__maintainer__ = "Oscar Carballal Prego"
-__email__ = "oscar.carballal@cidadania.coop"
 __status__ = "beta"
 
 # Get the current directory
