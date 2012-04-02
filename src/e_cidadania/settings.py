@@ -2,7 +2,7 @@
 
 """
 Main configuration file for e-cidadania. Please refer to the documentation on
-http://docs.ecidadania.org before you modift anything.
+http://docs.ecidadania.org before you modify anything.
 """
 
 __version__ = "0.1.5"
