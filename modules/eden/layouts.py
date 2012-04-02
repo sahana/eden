@@ -35,7 +35,8 @@ __all__ = ["S3MainMenuLayout", "MM",
            "S3OptionsMenuLayout", "M",
            "S3MenuSeparatorLayout", "SEP",
            "S3BreadcrumbsLayout",
-           "homepage"]
+           "homepage",
+           "ForeignRecordFormPopup",]
 
 from gluon import *
 from gluon.storage import Storage
@@ -261,5 +262,31 @@ def homepage(module=None, *match, **attr):
         m = all_modules[module]
         module = m.name_nice
     return layout(module, c=c, f="index", **attr)
+
+
+class ForeignRecordFormPopup(S3NavigationItem):
+    """
+        Add a link to show a form for adding a new foreign key record.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ForeignRecordFormPopup, self).__init__(*args, **kwargs)
+        self.vars['format'] = "popup"
+        self.args.append("create")
+
+    def check_active(self, request=None):
+        return True
+
+    @staticmethod
+    def layout(item):
+        if not item.authorized:
+            return None
+
+        link = A(item.label,
+                 _href=item.url(),
+                 _class="colorbox")
+        tooltip = DIV(_class="tooltip",
+                      _title="%s|%s" % (item.label, item.opts.tooltip))
+        return DIV(link, tooltip)
 
 # END =========================================================================

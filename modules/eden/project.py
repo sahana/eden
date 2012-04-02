@@ -42,6 +42,7 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from ..s3 import *
+from eden.layouts import ForeignRecordFormPopup 
 
 try:
     from lxml import etree, html
@@ -423,10 +424,10 @@ class S3ProjectModel(S3Model):
                                      requires = IS_NULL_OR(IS_ONE_OF(db, "project_project.id",
                                                                      "%(name)s")),
                                      represent = self.project_represent,
-                                     comment = s3_popup_comment(c="project",
-                                                                f="project",
-                                                                title=ADD_PROJECT,
-                                                                tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
+                                     comment = ForeignRecordFormPopup(label=ADD_PROJECT,
+                                                                      c='project',
+                                                                      f='project',
+                                                                      tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
                                      label = T("Project"),
                                      ondelete = "CASCADE")
 
@@ -510,9 +511,9 @@ class S3ProjectModel(S3Model):
                                                                              fieldname = "name",
                                                                              look_up_value = id),
                                            label = T("Activity Type"),
-                                           comment = s3_popup_comment(c="project",
+                                           comment = s3_popup_comment(title=ADD_ACTIVITY_TYPE,
+                                                                      c="project",
                                                                       f="activity_type",
-                                                                      title=ADD_ACTIVITY_TYPE,
                                                                       tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Activity Type'.")),
                                            ondelete = "RESTRICT")
 
@@ -691,9 +692,9 @@ class S3ProjectModel(S3Model):
                                                                         fieldname = "name",
                                                                         look_up_value = id),
                                       label = ACTIVITY,
-                                      comment = s3_popup_comment(c="project",
+                                      comment = ForeignRecordFormPopup(label="derp" + ADD_ACTIVITY,
+                                                                 c="project",
                                                                  f="activity",
-                                                                 title=ADD_ACTIVITY,
                                                                  tooltip=ACTIVITY_TOOLTIP),
                                       ondelete = "CASCADE")
 

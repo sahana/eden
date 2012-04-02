@@ -50,7 +50,7 @@ from gluon.storage import Storage
 
 # =============================================================================
 
-class S3NavigationItem:
+class S3NavigationItem(object):
     """
         Base class and API for navigation items.
 
