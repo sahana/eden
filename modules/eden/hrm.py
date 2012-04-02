@@ -2590,6 +2590,8 @@ def hrm_rheader(r, tabs=[]):
 class HRMVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
+    extra_fields = ["person_id"]
+
     def course(self):
         """ Which Training Courses the person has attended """
         try:
