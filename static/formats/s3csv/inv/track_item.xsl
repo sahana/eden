@@ -50,8 +50,9 @@
     <inv:trackstatus code="0">Unknown</inv:trackstatus>
     <inv:trackstatus code="1">Preparing</inv:trackstatus>
     <inv:trackstatus code="2">In transit</inv:trackstatus>
-    <inv:trackstatus code="3">Arrived</inv:trackstatus>
-    <inv:trackstatus code="4">Canceled</inv:trackstatus>
+    <inv:trackstatus code="3">Unloading</inv:trackstatus>
+    <inv:trackstatus code="4">Arrived</inv:trackstatus>
+    <inv:trackstatus code="5">Canceled</inv:trackstatus>
 
     <!-- receiving type, see modules/eden/inv.py -->
     <inv:recvtype code="0">Other Warehouse</inv:recvtype>
@@ -225,7 +226,8 @@
         <xsl:variable name="s_quantity" select="col[@field='Quantity Sent']/text()"/>
         <xsl:variable name="r_quantity" select="col[@field='Quantity Received']/text()"/>
 
-        <xsl:variable name="item_tuid" select="concat($item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
         <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $warehouse, '/', $s_bin)"/>
         <xsl:variable name="r_tuid" select="concat($item_tuid, '/', $destination, '/', $r_bin)"/>
 
@@ -284,7 +286,7 @@
             <!-- Link to supply_item_pack -->
             <reference field="item_pack_id" resource="supply_item_pack">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item_tuid"/>
+                    <xsl:value-of select="$pack_tuid"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to inv_send -->
@@ -368,12 +370,12 @@
         <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
         <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
         <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
-        <xsl:variable name="tuid" select="concat($item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
 
         <!-- Create the supply item record -->
         <resource name="supply_item">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$tuid"/>
+                <xsl:value-of select="$item_tuid"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$item"/></data>
             <data field="um"><xsl:value-of select="$pack"/></data>
@@ -386,12 +388,13 @@
         <xsl:variable name="item" select="col[@field='Supply Item']/text()"/>
         <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
         <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
-        <xsl:variable name="item_tuid" select="concat($item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
 
         <!-- Create the supply item pack record -->
         <resource name="supply_item_pack">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$item_tuid"/>
+                <xsl:value-of select="$pack_tuid"/>
             </xsl:attribute>
             <!-- Link to item -->
             <reference field="item_id" resource="supply_item">
@@ -526,7 +529,8 @@
         <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
         <xsl:variable name="donorName" select="col[@field='Supplier/Donor']/text()"/>
         <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
-        <xsl:variable name="item_tuid" select="concat($item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
         <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $site, '/', $bin)"/>
 
         <resource name="inv_inv_item">
@@ -555,7 +559,7 @@
             <!-- Link to supply_item_pack -->
             <reference field="item_pack_id" resource="supply_item_pack">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item_tuid"/>
+                    <xsl:value-of select="$pack_tuid"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to the supply org -->
