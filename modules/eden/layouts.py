@@ -253,13 +253,13 @@ def homepage(module=None, *match, **attr):
     all_modules = settings.modules
 
     layout = S3MainMenuLayout
+    c = [module] + list(match)
 
     if module is None:
         module = "default"
     if module in all_modules:
         m = all_modules[module]
-        c = [module] + list(match)
-        return layout(m.name_nice, c=c, f="index", **attr)
-    return None
+        module = m.name_nice
+    return layout(module, c=c, f="index", **attr)
 
 # END =========================================================================
