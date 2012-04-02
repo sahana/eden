@@ -41,7 +41,6 @@
          Tracking number........Tracking Number
          Comments...............comments
          Supplier/Donor.........supply_org_id
-         Unit...................supply_item.um
          Currency...............currency
          Bin....................bin
          Unit Value.............pack_value
@@ -100,6 +99,7 @@
             <!-- Items -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('supply_item', concat(col[@field='Item Name'],col[@field='Item Code']))[1])]">
                 <xsl:call-template name="SupplyItem"/>
+                <xsl:call-template name="SupplyItemPack"/>
             </xsl:for-each>
 
             <!-- Inventory Items -->
@@ -115,18 +115,22 @@
         <xsl:variable name="warehouse" select="col[@field='Warehouse']/text()"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
+        <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
+        <xsl:variable name="model" select="col[@field='Model']/text()"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
 
         <resource name="inv_inv_item">
             <!-- Link to Supply Item -->
             <reference field="item_id" resource="supply_item">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item"/>
+                    <xsl:value-of select="$item_tuid"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Supply Item Pack-->
             <reference field="item_pack_id" resource="supply_item_pack">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item"/>
+                    <xsl:value-of select="$pack_tuid"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Warehouse -->
@@ -233,15 +237,18 @@
     <!-- ****************************************************************** -->
     <xsl:template name="SupplyItem">
         <xsl:variable name="item" select="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
+        <xsl:variable name="pack" select="col[@field='Pack']"/>
+        <xsl:variable name="model" select="col[@field='Model']/text()"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="um" select="col[@field='Unit of Measure']"/>
-        <xsl:variable name="pack" select="col[@field='Pack']"/>
         <xsl:variable name="pack_quantity" select="col[@field='Pack Quantity']"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $um, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $um, '/', $model)"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$item"/>
+                <xsl:value-of select="$item_tuid"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="col[@field='Item Name']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Item Code']"/></data>
@@ -269,7 +276,7 @@
             <!-- Nest to Supply Item Pack-->
             <resource resource="supply_item_pack">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$item"/>
+                    <xsl:value-of select="$pack_tuid"/>
                 </xsl:attribute>
             </resource>
             <!-- Nest to Supply Catalog -->
@@ -304,7 +311,29 @@
         </resource>
 
     </xsl:template>
+    <!-- ****************************************************************** -->
 
+    <xsl:template name="SupplyItemPack">
+        <xsl:variable name="item" select="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
+        <xsl:variable name="pack" select="col[@field='Unit of Measure']/text()"/>
+        <xsl:variable name="model" select="col[@field='Model']/text()"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
+
+        <!-- Create the supply item pack record -->
+        <resource name="supply_item_pack">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$pack_tuid"/>
+            </xsl:attribute>
+            <!-- Link to item -->
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$item_tuid"/>
+                </xsl:attribute>
+            </reference>
+            <data field="name"><xsl:value-of select="$pack"/></data>
+        </resource>
+    </xsl:template>
     <!-- ****************************************************************** -->
 
 </xsl:stylesheet>
