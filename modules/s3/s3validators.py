@@ -622,8 +622,7 @@ class IS_LOCATION_SELECTOR(Validator):
         self.no_parent = T("Need to have all levels filled out in mode strict!")
         self.invalid_lat = T("Latitude is Invalid!")
         self.invalid_lon = T("Longitude is Invalid!")
-        auth = current.auth
-        self.no_permission = auth.messages.access_denied
+        self.no_permission = current.auth.messages.access_denied
         self.errors = Storage()
 
     def __call__(self, value):
@@ -653,18 +652,24 @@ class IS_LOCATION_SELECTOR(Validator):
                     for e in errors:
                         error = "%s\n%s" % (error, errors[e]) if error else errors[e]
                     return (value, error)
-                db(table.id == value).update(name = location.name,
-                                             lat = location.lat,
-                                             lon = location.lon,
-                                             addr_street = location.street,
-                                             addr_postcode = location.postcode,
-                                             parent = location.parent,
-                                             wkt = location.wkt,
-                                             lon_min = location.lon_min,
-                                             lon_max = location.lon_max,
-                                             lat_min = location.lat_min,
-                                             lat_max = location.lat_max
-                                             )
+                vars = dict(name = location.name,
+                            lat = location.lat,
+                            lon = location.lon,
+                            addr_street = location.street,
+                            addr_postcode = location.postcode,
+                            parent = location.parent,
+                            wkt = location.wkt,
+                            lon_min = location.lon_min,
+                            lon_max = location.lon_max,
+                            lat_min = location.lat_min,
+                            lat_max = location.lat_max
+                            )
+
+                if current.deployment_settings.get_gis_spatialdb():
+                    # Also populate the spatial field
+                    vars["the_geom"] = vars["wkt"]
+
+                db(table.id == value).update(**vars)
                 # onaccept
                 gis.update_location_tree(value, location.parent)
                 return (value, None)
@@ -681,18 +686,24 @@ class IS_LOCATION_SELECTOR(Validator):
                 return (None, error)
             if location.name or location.lat or location.lon or \
                location.street or location.postcode or location.parent:
-                value = table.insert(name = location.name,
-                                     lat = location.lat,
-                                     lon = location.lon,
-                                     addr_street = location.street,
-                                     addr_postcode = location.postcode,
-                                     parent = location.parent,
-                                     wkt = location.wkt,
-                                     lon_min = location.lon_min,
-                                     lon_max = location.lon_max,
-                                     lat_min = location.lat_min,
-                                     lat_max = location.lat_max
-                                     )
+                vars = dict(name = location.name,
+                            lat = location.lat,
+                            lon = location.lon,
+                            addr_street = location.street,
+                            addr_postcode = location.postcode,
+                            parent = location.parent,
+                            wkt = location.wkt,
+                            lon_min = location.lon_min,
+                            lon_max = location.lon_max,
+                            lat_min = location.lat_min,
+                            lat_max = location.lat_max
+                            )
+                
+                if current.deployment_settings.get_gis_spatialdb():
+                    # Also populate the spatial field
+                    vars["the_geom"] = vars["wkt"]
+
+                value = table.insert(**vars)
                 # onaccept
                 gis.update_location_tree(value, location.parent)
                 return (value, None)
@@ -711,7 +722,6 @@ class IS_LOCATION_SELECTOR(Validator):
         db = current.db
         s3db = current.s3db
         auth = current.auth
-        gis = current.gis
         response = current.response
         session = current.session
 
@@ -778,7 +788,7 @@ class IS_LOCATION_SELECTOR(Validator):
         # done already
 
         # We don't use the full onaccept as we don't need to
-        onaccept = gis.update_location_tree
+        onaccept = current.gis.update_location_tree
 
         L1 = vars.get("gis_location_L1", None)
         L2 = vars.get("gis_location_L2", None)
@@ -1021,7 +1031,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if form.errors:
             self.errors = form.errors
             return None
-        return Storage(
+        location = Storage(
                         name=name,
                         lat=lat, lon=lon,
                         street=street,
@@ -1033,6 +1043,8 @@ class IS_LOCATION_SELECTOR(Validator):
                         lat_min = vars.lat_min,
                         lat_max = vars.lat_max
                       )
+
+        return location
 
 # -----------------------------------------------------------------------------
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):

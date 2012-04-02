@@ -33,19 +33,29 @@
 __all__ = ["AuthS3",
            "S3Permission",
            "S3Audit",
-           "S3RoleManager"]
+           "S3RoleManager",
+           "FaceBookAccount",
+           "GooglePlusAccount",
+          ]
 
 import datetime
 import re
+import time
+import urllib
+from urllib import urlencode
+import urllib2
 
 from gluon import *
 from gluon.storage import Storage, Messages
 
 from gluon.dal import Field, Row, Query, Set, Table, Expression
 from gluon.sqlhtml import CheckboxesWidget, StringWidget
-from gluon.tools import Auth, callback
+from gluon.tools import Auth, callback, addrow
+from gluon.utils import web2py_uuid
+from gluon.validators import IS_SLUG
+from gluon.contrib import simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from gluon.contrib.login_methods.email_auth import email_auth
+from gluon.contrib.login_methods.oauth20_account import OAuthAccount
 
 from s3method import S3Method
 from s3validators import IS_ACL
@@ -67,7 +77,6 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-
 class AuthS3(Auth):
 
     """
@@ -114,6 +123,9 @@ class AuthS3(Auth):
 
         Auth.__init__(self, current.db)
 
+        deployment_settings = current.deployment_settings
+        system_name = deployment_settings.get_system_name()
+
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
@@ -123,6 +135,12 @@ class AuthS3(Auth):
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
         self.messages.email_verified = "Email verified - you can now login"
+        self.messages.welcome_email = "Welcome to %(system_name)s" % \
+            dict(system_name=system_name)
+        self.messages.welcome_email_subject = \
+            "Welcome to %(system_name)s - click on the link %(url)s to complete your profile" % \
+                dict(system_name = system_name,
+                     url = deployment_settings.get_base_public_url() + URL("default", "user", args=["profile"]))
         self.messages.duplicate_email = "This email address is already in use"
         self.messages.registration_disabled = "Registration Disabled!"
         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
@@ -147,7 +165,7 @@ class AuthS3(Auth):
 
         # Site types (for OrgAuth)
         T = current.T
-        if current.deployment_settings.get_ui_camp():
+        if deployment_settings.get_ui_camp():
             shelter = T("Camp")
         else:
             shelter = T("Shelter")
@@ -507,7 +525,9 @@ class AuthS3(Auth):
 
         db = current.db
         table_user = self.settings.table_user
-        if "username" in table_user.fields:
+        if self.settings.login_userfield:
+            username = self.settings.login_userfield
+        elif "username" in table_user.fields:
             username = "username"
         else:
             username = "email"
@@ -521,18 +541,18 @@ class AuthS3(Auth):
             table_user[passfield].requires[-1].min_length = 0
         except:
             pass
-        if next == DEFAULT:
+        if next is DEFAULT:
             next = request.vars._next or self.settings.login_next
-        if onvalidation == DEFAULT:
+        if onvalidation is DEFAULT:
             onvalidation = self.settings.login_onvalidation
-        if onaccept == DEFAULT:
+        if onaccept is DEFAULT:
             onaccept = self.settings.login_onaccept
-        if log == DEFAULT:
+        if log is DEFAULT:
             log = self.messages.login_log
 
         user = None # default
 
-        # do we use our own login form, or from a central source?
+        # Do we use our own login form, or from a central source?
         if self.settings.login_form == self:
             form = SQLFORM(
                 table_user,
@@ -541,36 +561,67 @@ class AuthS3(Auth):
                 showid=self.settings.showid,
                 submit_button=self.messages.submit_button,
                 delete_label=self.messages.delete_label,
+                formstyle=self.settings.formstyle,
+                separator=self.settings.label_separator
                 )
+            if self.settings.remember_me_form:
+                # Add a new input checkbox "remember me for longer"
+                addrow(form,XML("&nbsp;"),
+                       DIV(XML("&nbsp;"),
+                           INPUT(_type='checkbox',
+                                 _class='checkbox',
+                                 _id="auth_user_remember",
+                                 _name="remember",
+                                 ),
+                           XML("&nbsp;&nbsp;"),
+                           LABEL(
+                            self.messages.label_remember_me,
+                            _for="auth_user_remember",
+                            )),"",
+                       self.settings.formstyle,
+                       'auth_user_remember__row')
+
+            captcha = self.settings.login_captcha or \
+                (self.settings.login_captcha!=False and self.settings.captcha)
+            if captcha:
+                addrow(form, captcha.label, captcha, captcha.comment,
+                       self.settings.formstyle,'captcha__row')
+
             accepted_form = False
             if form.accepts(request.vars, session,
                             formname="login", dbio=False,
                             onvalidation=onvalidation):
                 accepted_form = True
                 if username == "email":
+                    # Check for Domains which can use Google's SMTP server for passwords
+                    # @ToDo: an equivalent email_domains for other email providers
                     gmail_domains = current.deployment_settings.get_auth_gmail_domains()
                     if gmail_domains:
+                        from gluon.contrib.login_methods.email_auth import email_auth
                         domain = form.vars[username].split("@")[1]
                         if domain in gmail_domains:
                             self.settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
-                # check for username in db
+                # Check for username in db
                 query = (table_user[username] == form.vars[username])
-                users = db(query).select()
-                if users:
+                user = db(query).select().first()
+                if user:
                     # user in db, check if registration pending or disabled
-                    temp_user = users[0]
+                    temp_user = user
                     if temp_user.registration_key == "pending":
                         response.warning = self.messages.registration_pending
                         return form
-                    elif temp_user.registration_key == "disabled":
+                    elif temp_user.registration_key in ("disabled", "blocked"):
                         response.error = self.messages.login_disabled
                         return form
-                    elif temp_user.registration_key:
+                    elif not temp_user.registration_key is None and \
+                             temp_user.registration_key.strip():
                         response.warning = \
                             self.messages.registration_verifying
                         return form
-                    # try alternate logins 1st as these have the current version of the password
+                    # Try alternate logins 1st as these have the
+                    # current version of the password
+                    user = None
                     for login_method in self.settings.login_methods:
                         if login_method != self and \
                                 login_method(request.vars[username],
@@ -581,37 +632,42 @@ class AuthS3(Auth):
                             user = self.get_or_create_user(form.vars)
                             break
                     if not user:
-                        # alternates have failed, maybe because service inaccessible
+                        # Alternates have failed, maybe because service inaccessible
                         if self.settings.login_methods[0] == self:
-                            # try logging in locally using cached credentials
+                            # Try logging in locally using cached credentials
                             if temp_user[passfield] == form.vars.get(passfield, ""):
-                                # success
+                                # Success
                                 user = temp_user
                 else:
-                    # user not in db
+                    # User not in db
                     if not self.settings.alternate_requires_registration:
-                        # we're allowed to auto-register users from external systems
+                        # We're allowed to auto-register users from external systems
                         for login_method in self.settings.login_methods:
                             if login_method != self and \
                                     login_method(request.vars[username],
                                                  request.vars[passfield]):
                                 if not self in self.settings.login_methods:
-                                    # do not store password in db
+                                    # Do not store password in db
                                     form.vars[passfield] = None
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
-                    # invalid login
+                    self.log_event(self.settings.login_failed_log,
+                                   request.post_vars)
+                    # Invalid login
                     session.error = self.messages.invalid_login
                     redirect(self.url(args=request.args,
                                       vars=request.get_vars))
         else:
-            # use a central authentication server
+            # Use a central authentication server
             cas = self.settings.login_form
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
-                user = self.get_or_create_user(cas_user)
+                user = self.get_or_create_user(table_user._filter_fields(cas_user))
+                form = Storage()
+                form.vars = user
+                self.s3_register(form)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
@@ -626,8 +682,14 @@ class AuthS3(Auth):
             # then read the UTC offset from the form:
             if not user.utc_offset:
                 user.utc_offset = session.s3.utc_offset
-            session.auth = Storage(user=user, last_visit=request.now,
-                                   expiration=self.settings.expiration)
+            session.auth = Storage(
+                user=user,
+                last_visit=request.now,
+                expiration = request.vars.get("remember", False) and \
+                    self.settings.long_expiration or self.settings.expiration,
+                remember = request.vars.has_key("remember"),
+                hmac_key = web2py_uuid()
+                )
             self.user = user
             self.set_roles()
             # Read their language from the Profile
@@ -2372,9 +2434,27 @@ class AuthS3(Auth):
             db(table._id == record_id).update(**data)
 
         return
+        
+    # -------------------------------------------------------------------------
+    def s3_send_welcome_email(self, user):
+        """
+            Send a welcome mail to newly-registered users
+            - especially suitable for users from Facebook/Google who don't
+              verify their emails
+        """
+
+        if "name" in user:
+            user["first_name"] = user["name"]
+        if "family_name" in user:
+            # Facebook
+            user["last_name"] = user["family_name"]
+
+        subject = self.messages.welcome_email_subject
+        message = self.messages.welcome_email
+
+        self.settings.mailer.send(user["email"], subject=subject, message=message)
 
 # =============================================================================
-
 class S3Permission(object):
     """
         S3 Class to handle permissions
@@ -3492,7 +3572,6 @@ class S3Permission(object):
                 raise HTTP(401, body=self.AUTHENTICATION_REQUIRED)
 
 # =============================================================================
-
 class S3Audit(object):
 
     """
@@ -3635,7 +3714,6 @@ class S3Audit(object):
         return True
 
 # =============================================================================
-
 class S3RoleManager(S3Method):
     """
         REST Method to manage ACLs (Role Manager UI for administrators)
@@ -4578,4 +4656,315 @@ class S3RoleManager(S3Method):
         return output
 
 # =============================================================================
+class FaceBookAccount(OAuthAccount):
+    """ OAuth implementation for FaceBook """
 
+    AUTH_URL = "https://graph.facebook.com/oauth/authorize"
+    TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+    
+        from facebook import GraphAPI, GraphAPIError
+
+        self.GraphAPI = GraphAPI
+        self.GraphAPIError = GraphAPIError
+        g = dict(GraphAPI=GraphAPI,
+                 GraphAPIError=GraphAPIError,
+                 request=current.request,
+                 response=current.response,
+                 session=current.session,
+                 HTTP=HTTP)
+        client = current.auth.settings.facebook
+        OAuthAccount.__init__(self, g, client["id"], client["secret"],
+                              self.AUTH_URL, self.TOKEN_URL,
+                              scope="email,user_about_me,user_location,user_photos,user_relationships,user_birthday,user_website,create_event,user_events,publish_stream")
+        self.graph = None
+
+    # -------------------------------------------------------------------------
+    def login_url(self, next="/"):
+        """ Overriding to produce a different redirect_uri """
+
+        request = current.request
+        session = current.session
+        if not self.accessToken():
+            if not request.vars.code:
+                session.redirect_uri = "%s/%s/default/facebook/login" % \
+                    (current.deployment_settings.get_base_public_url(),
+                     request.application)
+                data = dict(redirect_uri=session.redirect_uri,
+                            response_type="code",
+                            client_id=self.client_id)
+                if self.args:
+                    data.update(self.args)
+                auth_request_url = self.auth_url + "?" + urlencode(data)
+                raise HTTP(307,
+                           "You are not authenticated: you are being redirected to the <a href='" + auth_request_url + "'> authentication server</a>",
+                           Location=auth_request_url)
+            else:
+                session.code = request.vars.code
+                self.accessToken()
+                #return session.code
+        return next
+
+    # -------------------------------------------------------------------------
+    def get_user(self):
+        """ Returns the user using the Graph API. """
+
+        db = current.db
+        auth = current.auth
+        session = current.session
+
+        if not self.accessToken():
+            return None
+
+        if not self.graph:
+            self.graph = self.GraphAPI((self.accessToken()))
+
+        user = None
+        try:
+            user = self.graph.get_object_c("me")
+        except self.GraphAPIError:
+            self.session.token = None
+            self.graph = None
+
+        if user:
+            # Check if a user with this email has already registered
+            #session.facebooklogin = True
+            table = auth.settings.table_user
+            query = (table.email == user["email"])
+            existent = db(query).select(table.id,
+                                        table.password,
+                                        limitby=(0, 1)).first()
+            if existent:
+                #session["%s_setpassword" % existent.id] = existent.password
+                _user = dict(first_name = user.get("first_name", ""),
+                             last_name = user.get("last_name", ""),
+                             facebookid = user["id"],
+                             facebook = user.get("username", user["id"]),
+                             email = user["email"],
+                             password = existent.password
+                            )
+                return _user
+            else:
+                # b = user["birthday"]
+                # birthday = "%s-%s-%s" % (b[-4:], b[0:2], b[-7:-5])
+                # if 'location' in user:
+                #     session.flocation = user['location']
+                #session["is_new_from"] = "facebook"
+                auth.s3_send_welcome_email(user)
+                # auth.initial_user_permission(user)  # Called on profile page
+                _user = dict(first_name = user.get("first_name", ""),
+                             last_name = user.get("last_name", ""),
+                             facebookid = user["id"],
+                             facebook = user.get("username", user["id"]),
+                             nickname = IS_SLUG()(user.get("username", "%(first_name)s-%(last_name)s" % user) + "-" + user['id'][:5])[0],
+                             email = user["email"],
+                             # birthdate = birthday,
+                             about = user.get("bio", ""),
+                             website = user.get("website", ""),
+                             # gender = user.get("gender", "Not specified").title(),
+                             photo_source = 3,
+                             tagline = user.get("link", ""),
+                             registration_type = 2,
+                            )
+                return _user
+
+# =============================================================================
+class GooglePlusAccount(OAuthAccount):
+    """
+        OAuth implementation for Google
+        https://code.google.com/apis/console/
+    """
+
+    AUTH_URL = "https://accounts.google.com/o/oauth2/auth"
+    TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
+    API_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+
+        request = current.request
+        settings = current.deployment_settings
+
+        g = dict(request=request,
+                 response=current.response,
+                 session=current.session,
+                 HTTP=HTTP)
+
+        client = current.auth.settings.google
+
+        self.globals = g
+        self.client = client
+        self.client_id = client["id"]
+        self.client_secret = client["secret"]
+        self.auth_url = self.AUTH_URL
+        self.args = dict(
+                scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
+                user_agent = "google-api-client-python-plus-cmdline/1.0",
+                xoauth_displayname = settings.get_system_name(),
+                response_type = "code",
+                redirect_uri = "%s/%s/default/google/login" % \
+                    (settings.get_base_public_url(),
+                     request.application),
+                approval_prompt = "force",
+                state = "google"
+            )
+        self.graph = None
+
+    # -------------------------------------------------------------------------
+    def __build_url_opener(self, uri):
+        """
+            Build the url opener for managing HTTP Basic Athentication
+        """
+        # Create an OpenerDirector with support 
+        # for Basic HTTP Authentication...
+
+        auth_handler = urllib2.HTTPBasicAuthHandler()
+        auth_handler.add_password(None,
+                                  uri,
+                                  self.client_id,
+                                  self.client_secret)
+        opener = urllib2.build_opener(auth_handler)
+        return opener
+
+    # -------------------------------------------------------------------------
+    def accessToken(self):
+        """
+            Return the access token generated by the authenticating server.
+
+            If token is already in the session that one will be used.
+            Otherwise the token is fetched from the auth server.
+        """
+
+        session = current.session
+
+        if session.token and session.token.has_key("expires"):
+            expires = session.token["expires"]
+            # reuse token until expiration
+            if expires == 0 or expires > time.time():
+                return session.token["access_token"]
+        if session.code:
+            data = dict(client_id = self.client_id,
+                        client_secret = self.client_secret,
+                        redirect_uri = self.args["redirect_uri"],
+                        code = session.code,
+                        grant_type = "authorization_code",
+                        scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile")
+
+            # if self.args:
+            #     data.update(self.args)
+            open_url = None
+            opener = self.__build_url_opener(self.TOKEN_URL)
+            try:
+                open_url = opener.open(self.TOKEN_URL, urlencode(data))
+            except urllib2.HTTPError, e:
+                raise Exception(e.read())
+            finally:
+                del session.code # throw it away
+
+            if open_url:
+                try:
+                    session.token = json.loads(open_url.read())
+                    session.token["expires"] = int(session.token["expires_in"]) + \
+                        time.time()
+                finally:
+                    opener.close()
+                return session.token["access_token"]
+
+        session.token = None
+        return None
+
+    # -------------------------------------------------------------------------
+    def login_url(self, next="/"):
+        """ Overriding to produce a different redirect_uri """
+
+        request = current.request
+        session = current.session
+        if not self.accessToken():
+            if not request.vars.code:
+                session.redirect_uri = self.args["redirect_uri"]
+                data = dict(redirect_uri=session.redirect_uri,
+                            response_type="code",
+                            client_id=self.client_id)
+                if self.args:
+                    data.update(self.args)
+                auth_request_url = self.auth_url + "?" + urlencode(data)
+                raise HTTP(307,
+                           "You are not authenticated: you are being redirected to the <a href='" + auth_request_url + "'> authentication server</a>",
+                           Location=auth_request_url)
+            else:
+                session.code = request.vars.code
+                self.accessToken()
+                #return session.code
+        return next
+
+    # -------------------------------------------------------------------------
+    def get_user(self):
+        """ Returns the user using the Graph API. """
+
+        db = current.db
+        auth = current.auth
+        session = current.session
+
+        if not self.accessToken():
+            return None
+
+        user = None
+        try:
+            user = self.call_api()
+        except Exception, e:
+            print str(e)
+            session.token = None
+
+        if user:
+            # Check if a user with this email has already registered
+            #session.googlelogin = True
+            table = auth.settings.table_user
+            query = (table.email == user["email"])
+            existent = db(query).select(table.id,
+                                        table.password,
+                                        limitby=(0, 1)).first()
+            if existent:
+                #session["%s_setpassword" % existent.id] = existent.password
+                _user = dict(
+                            #first_name = user.get("given_name", user["name"]),
+                            #last_name = user.get("family_name", user["name"]),
+                            googleid = user["id"],
+                            email = user["email"],
+                            password = existent.password
+                            )
+                return _user
+            else:
+                # b = user["birthday"]
+                # birthday = "%s-%s-%s" % (b[-4:], b[0:2], b[-7:-5])
+                # if "location" in user:
+                #     session.flocation = user["location"]
+                #session["is_new_from"] = "google"
+                auth.s3_send_welcome_email(user)
+                _user = dict(
+                            first_name = user.get("given_name", user["name"].split()[0]),
+                            last_name = user.get("family_name", user["name"].split()[-1]),
+                            googleid = user["id"],
+                            nickname = "%(first_name)s-%(last_name)s-%(id)s" % dict(first_name=user["name"].split()[0].lower(), last_name=user["name"].split()[-1].lower(), id=user['id'][:5]),
+                            email = user["email"],
+                            # birthdate = birthday,
+                            website = user.get("link", ""),
+                            # gender = user.get("gender", "Not specified").title(),
+                            photo_source = 6 if user.get("picture", None) else 2,
+                            googlepicture = user.get("picture", ""),
+                            registration_type = 3,
+                            )
+                return _user
+
+    # -------------------------------------------------------------------------
+    def call_api(self):
+        api_return = urllib.urlopen("https://www.googleapis.com/oauth2/v1/userinfo?access_token=%s" % self.accessToken())
+        user = json.loads(api_return.read())
+        if user:
+            return user
+        else:
+            self.session.token = None
+            return None
+
+# END =========================================================================
