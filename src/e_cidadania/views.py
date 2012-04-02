@@ -205,9 +205,15 @@ def invite(request):
         email = EmailMessage('Invitation to join e-cidadania', mail_msg, 
                 'noreply@ecidadania.org', [], addr_list)
         email.send(fail_silently=False)
+<<<<<<< HEAD
         return render_to_response('invite_done.html',
                                   context_instance=RequestContext(request))
         
     return render_to_response('invite.html',
                               context_instance=RequestContext(request))
+=======
+        return render_to_response('invite_done.html', context_instance=RequestContext(request))
+    uri = request.build_absolute_uri("/")    
+    return render_to_response('invite.html', {"uri":uri}, context_instance=RequestContext(request))
+>>>>>>> 0f86696ac3aaa18dfd871f3d9ba8682872769469
     
