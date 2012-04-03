@@ -347,22 +347,27 @@ class S3SupplyModel(S3Model):
                              Field("weight",
                                    "double",
                                    label = T("Weight (kg)"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("length",
                                    "double",
                                    label = T("Length (m)"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("width",
                                    "double",
                                    label = T("Width (m)"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("height",
                                    "double",
                                    label = T("Height (m)"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("volume",
                                    "double",
                                    label = T("Volume (m3)"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              comments(),
@@ -622,6 +627,7 @@ $(document).ready(function() {
                              Field("quantity", "double",
                                    notnull=True,
                                    label = T("Quantity"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              comments(),
                              *meta_fields())
@@ -723,7 +729,8 @@ S3FilterFieldChange({
                                                        )
                                                ),
                                    default = 1,
-                                   notnull=True),
+                                   notnull=True,
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              supply_item_id("alt_item_id",
                                             notnull=True),
                              comments(),

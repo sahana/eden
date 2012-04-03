@@ -184,8 +184,8 @@ body {
     color: #000;
     background: #fff;
     /* To have a centered pane with a side colour
-    background: none repeat scroll 0 0 #63594D;
-    */
+ 		background: none repeat scroll 0 0 #63594D;
+ 	*/
     /*min-width: 1024px;*/
     /*overflow:auto;  /* annoying always visible scrollbar in chrome */
 }
@@ -1110,55 +1110,52 @@ tr.box_bottom {
 }
 
 div.tabs {
-    width: 100%;
-    padding: 10px 0 2px 0;
-    margin: 5px 0px 0px 0px;
-    /* margin-bottom: 5px; */
+	height: 1.5em;
+    padding: 0 0 8px;
+    margin: 10px 0 2px;
     text-align: left;
     border-bottom:1px solid #3286e2;
+    clear: left;
 }
 div.tabs span {
-    padding: 1px 3px 3px 3px;
+	display: block;
+	float: left;
    -moz-border-radius: 3px 3px 0 0;
-   -webkit-border-radius: 3px 3px 0px 0px;
+   -webkit-border-radius: 3px 3px 0 0;
+    border-width: 2px 1px 0 3px;
+    border-style: solid;
+    border-color: #3286e2;
+    margin-right: 3px;
+}
+div.tabs span a {
+	text-decoration: none;
+	line-height: 1.5em;
+	display: block;
+	padding: 1px 3px 2px;
+    color: #ffffff;
+   -moz-border-radius: 3px 3px 0 0;
+   -webkit-border-radius: 3px 3px 0 0;
 }
 span.tab_last,
 span.tab_other {
-    border-width: 2px 1px 0px 3px;
-    border-style: solid;
-    border-color: #3286e2;
-    padding-right: 3px;
-    margin-right: 3px;
+    margin-top: 4px;
     background:#3286e2;
-    /* border-bottom: 1px solid #bbb; */
 }
-/* span.tab_last {
-    border-right: 1px solid #bbb;
-} */
-
 /* To overlap component border */
 div.tabs span.tab_here {
-	display: inline;
-    position: relative;
-    bottom: 0px;
     background: #f0f3f4;
-    border-width: 2px 1px 0 3px;
-    border-style: solid;
     border-color: #6699cc;
-    padding: 3px 6px 2px 5px;
-    margin-right: 5px;
     font-weight: bold;
-    border-bottom:2px solid #f0f3f4;
+    margin-bottom: -1px;
 }
 form div.tabs span.tab_here{
-    border-bottom:2px solid #ffffff;
     background:#ffffff;
 }
-span.tab_last a,
-span.tab_other a {
-    color: #ffffff;
-    text-decoration: None;
+div.tabs span.tab_here a {
+    color: #006699;
+    padding: 4px 6px 3px 5px;
 }
+
 span.tab_other a:hover, span.tab_last a:hover {
     color: #ffffff;
     background:transparent;
@@ -1166,10 +1163,6 @@ span.tab_other a:hover, span.tab_last a:hover {
 span.tab_other:hover, span.tab_last:hover {
     background:#164b8b;
     border-color:#164b8b;
-}
-span.tab_here a {
-    color: #006699;
-    text-decoration: None;
 }
 span.tab_prev_active {
     border: 1px solid #6699cc;

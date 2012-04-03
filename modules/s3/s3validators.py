@@ -167,15 +167,43 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         return IS_INT_IN_RANGE.__call__(self, value)
 
     @staticmethod
-    def represent(value):
-        if value is None:
+    def represent(number):
+        """ Change the format of the number depending on the language
+    
+            Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
+        """
+
+        if number is None:
             return ""
-        ts = current.deployment_settings.get_L10n_thousands_separator()
-        if not ts:
-            thousands_separator = ""
+
+        THOUSAND_SEPARATOR = current.T("THOUSAND_SEPARATOR")
+        if THOUSAND_SEPARATOR == "THOUSAND_SEPARATOR":
+            THOUSAND_SEPARATOR = current.deployment_settings.L10n.get("thousands_separator", u"\u00A0")
+        
+        NUMBER_GROUPING = current.T("NUMBER_GROUPING")
+        if NUMBER_GROUPING == "NUMBER_GROUPING":
+            NUMBER_GROUPING = current.deployment_settings.L10n.get("thousands_grouping", 3)
+
+        # the negative/positive sign for the number
+        if float(number) < 0:
+            sign = "-"
         else:
-            thousands_separator = ","
-        return format(int(value), "%sd" % thousands_separator)
+            sign = ""
+            
+        str_number = unicode(number)
+        
+        if str_number[0] == "-":
+            str_number = str_number[1:]
+
+        # walk backwards over the integer part, inserting the separator as we go
+        int_part_gd = ""
+        for cnt, digit in enumerate(str_number[::-1]):
+            if cnt and not cnt % NUMBER_GROUPING: # this "3" should be a variable but it's not needed yet
+                int_part_gd += THOUSAND_SEPARATOR
+            int_part_gd += digit
+        int_part = int_part_gd[::-1]
+
+        return int_part
 
     @staticmethod
     def widget(f, v, **attributes):
@@ -213,21 +241,37 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
         return IS_FLOAT_IN_RANGE.__call__(self, value)
 
     @staticmethod
-    def represent(value, precision=None):
-        if value is None:
+    def represent(number, precision=None):
+        """ Change the format of the number depending on the language
+    
+            Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
+        """
+
+        if number is None:
             return ""
-        ts = current.deployment_settings.get_L10n_thousands_separator()
-        if not ts:
-            thousands_separator = ""
+
+        # We need to check that we actually get the separators
+        # otherwise we use the English defaults
+        DECIMAL_SEPARATOR = current.T("DECIMAL_SEPARATOR")
+        if DECIMAL_SEPARATOR == "DECIMAL_SEPARATOR":
+            DECIMAL_SEPARATOR = current.deployment_settings.L10n.get("decimal_separator", ",")
+
+        str_number = unicode(number)
+
+        if '.' in str_number:
+            int_part, dec_part = str_number.split('.')
+            if precision is not None:
+                dec_part = dec_part[:precision]
         else:
-            thousands_separator = ","
+            int_part, dec_part = str_number, ''
         if precision is not None:
-            fl = format(float(value), "%s.%df" % (thousands_separator, precision))
-        else:
-            fl = format(float(value), "%sf" % thousands_separator).rstrip("0")
-            if fl[-1] == ".":
-                fl += "0"
-        return fl
+            dec_part = dec_part + ('0' * (precision - len(dec_part)))
+        if dec_part:
+            dec_part = DECIMAL_SEPARATOR + dec_part
+
+        int_part = IS_INT_AMOUNT.represent(int(int_part))
+        
+        return int_part + dec_part
 
     @staticmethod
     def widget(f, v, **attributes):

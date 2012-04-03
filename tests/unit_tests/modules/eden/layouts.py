@@ -30,6 +30,39 @@ class LayoutTests(unittest.TestCase):
         rendered_hp = hp.xml()
         self.assertEqual(rendered_hp, "")
 
+    def testAddResourceLink(self):
+
+        comment = S3AddResourceLink(c="pr", f="person")
+
+        # If the module is active, the comment should always be active
+        self.assertEqual(comment.check_active(),
+                         deployment_settings.has_module("pr"))
+        self.assertEqual(comment.method, "create")
+
+        # Label should fall back to CRUD string
+        crud_string = s3base.S3CRUD.crud_string("pr_person", "label_create_button")
+        self.assertEqual(comment.label, crud_string)
+
+        if "dvi" in deployment_settings.modules:
+            comment = S3AddResourceLink(c="dvi", f="body")
+            # Deactivate module
+            dvi = deployment_settings.modules["dvi"]
+            del deployment_settings.modules["dvi"]
+            # Comment should auto-deactivate
+            self.assertFalse(comment.check_active())
+            # Restore module
+            deployment_settings.modules["dvi"] = dvi
+            # Comment should auto-reactivate
+            self.assertTrue(comment.check_active())
+
+        self.assertFalse(comment.check_permission())
+        self.assertEqual(comment.xml(), "")
+        auth.s3_impersonate(1)
+        self.assertTrue(comment.check_permission())
+        output = comment.xml()
+        self.assertTrue(type(output) is str)
+        self.assertNotEqual(output, "")
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """

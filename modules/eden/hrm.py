@@ -233,11 +233,11 @@ class S3HRModel(S3Model):
                         label=T("Facility"),
                         field=["site_id"]
                       ),
-                      S3SearchSkillsWidget(
-                        name="human_resource_search_skills",
-                        label=T("Skills"),
-                        field=["skill_id"]
-                      ),
+                      # S3SearchSkillsWidget(
+                        # name="human_resource_search_skills",
+                        # label=T("Skills"),
+                        # field=["skill_id"]
+                      # ),
                       # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
                       #S3SearchMinMaxWidget(
                       #  name="human_resource_search_date",
@@ -245,7 +245,8 @@ class S3HRModel(S3Model):
                       #  label=T("Contract Expiry Date"),
                       #  field=["end_date"]
                       #),
-            ))
+            )
+        )
 
         table.virtualfields.append(HRMVirtualFields())
 
