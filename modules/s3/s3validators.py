@@ -169,7 +169,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
     @staticmethod
     def represent(number):
         """ Change the format of the number depending on the language
-    
+
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
         """
 
@@ -179,7 +179,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         THOUSAND_SEPARATOR = current.T("THOUSAND_SEPARATOR")
         if THOUSAND_SEPARATOR == "THOUSAND_SEPARATOR":
             THOUSAND_SEPARATOR = current.deployment_settings.L10n.get("thousands_separator", u"\u00A0")
-        
+
         NUMBER_GROUPING = current.T("NUMBER_GROUPING")
         if NUMBER_GROUPING == "NUMBER_GROUPING":
             NUMBER_GROUPING = current.deployment_settings.L10n.get("thousands_grouping", 3)
@@ -189,9 +189,9 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
             sign = "-"
         else:
             sign = ""
-            
+
         str_number = unicode(number)
-        
+
         if str_number[0] == "-":
             str_number = str_number[1:]
 
@@ -243,7 +243,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
     @staticmethod
     def represent(number, precision=None):
         """ Change the format of the number depending on the language
-    
+
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
         """
 
@@ -270,7 +270,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
             dec_part = DECIMAL_SEPARATOR + dec_part
 
         int_part = IS_INT_AMOUNT.represent(int(int_part))
-        
+
         return int_part + dec_part
 
     @staticmethod
@@ -742,7 +742,7 @@ class IS_LOCATION_SELECTOR(Validator):
                             lat_min = location.lat_min,
                             lat_max = location.lat_max
                             )
-                
+
                 if current.deployment_settings.get_gis_spatialdb():
                     # Also populate the spatial field
                     vars["the_geom"] = vars["wkt"]
