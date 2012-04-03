@@ -60,7 +60,7 @@ from gluon import *
 from gluon.tools import callback
 import gluon.contrib.simplejson as json
 
-from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
+from s3validators import IS_ONE_OF
 from s3tools import SQLTABLES3
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
@@ -2105,6 +2105,7 @@ class S3Resource(object):
         if self.rfilter is None:
             self.rfilter = S3ResourceFilter(self)
         self.rfilter.add_filter(f, component=c)
+        self._length = None
 
     # -------------------------------------------------------------------------
     def add_component_filter(self, alias, f=None):
