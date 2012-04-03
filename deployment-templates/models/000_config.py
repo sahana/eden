@@ -197,8 +197,11 @@ deployment_settings.L10n.religions = {
 # Make last name in person/user records mandatory
 #deployment_settings.L10n.mandatory_lastname = True
 
-# Add thousands separator to numbers, eg. 1,000,000
-#deployment_settings.L10n.thousands_separator = True
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+deployment_settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+#deployment_settings.L10n.thousands_separator = ","
 
 # Finance settings
 #deployment_settings.fin.currencies = {

@@ -38,7 +38,7 @@
 	 *  @class
 	 *  @param {object} [oInit={}] Configuration object for DataTables. Options
 	 *    are defined by {@link DataTable.defaults}
-	 *  @requires jQuery 1.3+
+	 *  requires jQuery 1.3+
 	 * 
 	 *  @example
 	 *    // Basic initialisation

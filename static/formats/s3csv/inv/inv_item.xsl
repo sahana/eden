@@ -31,21 +31,22 @@
          Brand..................supply_brand.name
          Model..................supply_item.model
          Year...................supply_item.year
-         Pack............................supply_item_pack.name
-         Pack Quantity...................supply_item_pack.quantity
+         Pack...................supply_item_pack.name
+         Pack Quantity .........supply_item_pack.quantity
          Weight.................supply_item.weight
          Length.................supply_item.length
          Width..................supply_item.width
          Height.................supply_item.height
          Volume.................supply_item.volume
          Tracking number........Tracking Number
-         Comments...............comments
-         Supplier/Donor.........supply_org_id
-         Currency...............currency
          Bin....................bin
-         Unit Value.............pack_value
          Expiry Date............expiry_date
+         Supplier/Donor.........supply_org_id
+         Organisation/Department. organisation_id
          Quantity...............inv_inv_item.quantity
+         Unit Value.............pack_value
+         Currency...............currency
+         Comments...............comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

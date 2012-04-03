@@ -168,7 +168,8 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
 
     @staticmethod
     def represent(number):
-        """ Change the format of the number depending on the language
+        """
+            Change the format of the number depending on the language
 
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
         """
@@ -176,15 +177,18 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         if number is None:
             return ""
 
-        THOUSAND_SEPARATOR = current.T("THOUSAND_SEPARATOR")
+        T = current.T
+        settings = current.deployment_settings
+
+        THOUSAND_SEPARATOR = T("THOUSAND_SEPARATOR")
         if THOUSAND_SEPARATOR == "THOUSAND_SEPARATOR":
-            THOUSAND_SEPARATOR = current.deployment_settings.L10n.get("thousands_separator", u"\u00A0")
+            THOUSAND_SEPARATOR = settings.L10n.get("thousands_separator", u"\u00A0")
 
-        NUMBER_GROUPING = current.T("NUMBER_GROUPING")
+        NUMBER_GROUPING = T("NUMBER_GROUPING")
         if NUMBER_GROUPING == "NUMBER_GROUPING":
-            NUMBER_GROUPING = current.deployment_settings.L10n.get("thousands_grouping", 3)
+            NUMBER_GROUPING = settings.L10n.get("thousands_grouping", 3)
 
-        # the negative/positive sign for the number
+        # The negative/positive sign for the number
         if float(number) < 0:
             sign = "-"
         else:
@@ -195,7 +199,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         if str_number[0] == "-":
             str_number = str_number[1:]
 
-        # walk backwards over the integer part, inserting the separator as we go
+        # Walk backwards over the integer part, inserting the separator as we go
         int_part_gd = ""
         for cnt, digit in enumerate(str_number[::-1]):
             if cnt and not cnt % NUMBER_GROUPING: # this "3" should be a variable but it's not needed yet
@@ -226,7 +230,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
                  minimum=None,
                  maximum=None,
                  error_message=None,
-                 dot='.'):
+                 dot="."):
 
         IS_FLOAT_IN_RANGE.__init__(self,
                                    minimum=minimum,
@@ -242,7 +246,8 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
     @staticmethod
     def represent(number, precision=None):
-        """ Change the format of the number depending on the language
+        """
+            Change the format of the number depending on the language
 
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
         """
@@ -258,14 +263,14 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
         str_number = unicode(number)
 
-        if '.' in str_number:
-            int_part, dec_part = str_number.split('.')
+        if "." in str_number:
+            int_part, dec_part = str_number.split(".")
             if precision is not None:
                 dec_part = dec_part[:precision]
         else:
-            int_part, dec_part = str_number, ''
+            int_part, dec_part = str_number, ""
         if precision is not None:
-            dec_part = dec_part + ('0' * (precision - len(dec_part)))
+            dec_part = dec_part + ("0" * (precision - len(dec_part)))
         if dec_part:
             dec_part = DECIMAL_SEPARATOR + dec_part
 
