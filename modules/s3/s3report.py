@@ -46,6 +46,8 @@ from gluon.html import *
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate
+from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT
+
 
 # =============================================================================
 
@@ -1051,7 +1053,7 @@ class S3ContingencyTable(TABLE):
             row = rvals[i]
             v = represent(rows, row.value)
             add_row_title(s3_truncate(unicode(v)))
-            rowhdr = TD(DIV(v))
+            rowhdr = TD(v)
             add_cell(rowhdr)
 
             # Result cells
@@ -1068,17 +1070,27 @@ class S3ContingencyTable(TABLE):
                         elif value is None:
                             l = "-"
                         else:
-                            l = unicode(value)
+                            if type(value) is int:
+                                l = IS_INT_AMOUNT.represent(value)
+                            elif type(value) is float:
+                                l = IS_FLOAT_AMOUNT.represent(value, precision=2)
+                            else:
+                                l = unicode(value)
                         add_value(", ".join(l))
                     else:
-                        add_value(unicode(value))
+                        if type(value) is int:
+                            add_value(IS_INT_AMOUNT.represent(value))
+                        elif type(value) is float:
+                            add_value(IS_FLOAT_AMOUNT.represent(value, precision=2))
+                        else:
+                            add_value(unicode(value))
                 vals = " / ".join(vals)
-                add_cell(TD(DIV(vals)))
+                add_cell(TD(vals))
 
             # Row total
             totals = get_total(row, layers, append=add_row_total)
             if show_totals and cols is not None:
-                add_cell(TD(DIV(totals)))
+                add_cell(TD(totals))
 
             add_row(tr)
 
@@ -1096,12 +1108,12 @@ class S3ContingencyTable(TABLE):
         for j in xrange(numcols):
             col = report.col[j]
             totals = get_total(col, layers, append=add_col_total)
-            add_total(TD(DIV(totals)))
+            add_total(TD(totals))
 
         # Grand total
         if cols is not None:
             grand_totals = get_total(report.totals, layers)
-            add_total(TD(DIV(grand_totals)))
+            add_total(TD(grand_totals))
 
         tfoot = TFOOT(col_total)
 
@@ -1179,6 +1191,12 @@ class S3ContingencyTable(TABLE):
         for layer in layers:
             f, m = layer
             value = values[layer]
+
+            if type(value) is int:
+                value = IS_INT_AMOUNT.represent(value)
+            elif type(value) is float:
+                value = IS_FLOAT_AMOUNT.represent(value, precision=2)
+
             if m == "list":
                 value = value and len(value) or 0
             if not len(totals) and append is not None:

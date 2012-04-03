@@ -35,6 +35,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from ..s3 import *
+from layouts import *
 
 # =============================================================================
 class S3ContentModel(S3Model):
@@ -191,10 +192,10 @@ class S3ContentModel(S3Model):
                                   requires = IS_NULL_OR(IS_ONE_OF(db, "cms_post.id", "%(name)s")),
                                   represent = lambda id, row=None: \
                                                 (id and [db.cms_post[id].name] or [NONE])[0],
-                                  comment = s3_popup_comment(c="cms",
-                                                             f="post",
-                                                             title=ADD_POST,
-                                                             tooltip=T("A block of rich text which could be embedded into a page, viewed as a complete page or viewed as a list of news items.")),
+                                  comment = S3AddResourceLink(c="cms",
+                                                              f="post",
+                                                              title=ADD_POST,
+                                                              tooltip=T("A block of rich text which could be embedded into a page, viewed as a complete page or viewed as a list of news items.")),
                                   ondelete = "CASCADE")
 
         # Resource Configuration
@@ -257,7 +258,7 @@ class S3ContentModel(S3Model):
                                  )
 
         return
-    
+
     # -------------------------------------------------------------------------
     @staticmethod
     def post_onaccept(form):
@@ -265,7 +266,7 @@ class S3ContentModel(S3Model):
         """
 
         vars = form.vars
-        
+
         module = vars.get("module", None)
         if module:
             # Ensure that no other record is set as the one for this module
@@ -275,7 +276,7 @@ class S3ContentModel(S3Model):
             current.db(query).update(module=None)
 
         return
-    
+
 # =============================================================================
 def cms_rheader(r, tabs=[]):
     """ CMS Resource Headers """

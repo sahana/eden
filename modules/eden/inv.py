@@ -132,11 +132,15 @@ class S3InventoryModel(S3Model):
                                         "double",
                                         label = T("Quantity"),
                                         notnull = True,
+                                        represent=lambda v, row=None: \
+                                            IS_FLOAT_AMOUNT.represent(v, precision=2),
                                         requires = IS_FLOAT_IN_RANGE(0,None),
                                         writable = False),
                                   Field("pack_value",
                                         "double",
-                                        label = T("Value per Pack")),
+                                        label = T("Value per Pack"),
+                                        represent=lambda v, row=None: \
+                                            IS_FLOAT_AMOUNT.represent(v, precision=2)),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
                                   currency_type("currency"),
                                   #Field("pack_quantity",

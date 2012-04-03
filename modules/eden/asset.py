@@ -178,7 +178,9 @@ class S3AssetModel(S3Model):
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()),
-                             Field("purchase_price", "double", default=0.00),
+                             Field("purchase_price", "double",
+                                   default=0.00,
+                                   represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              currency_type("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
                              location_id(readable=False,

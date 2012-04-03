@@ -76,6 +76,7 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 from ..s3 import *
+from layouts import *
 
 OU = 1 # role type which indicates hierarchy, see role_types
 OTHER_ROLE = 9
@@ -2712,10 +2713,10 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
         comment = T("Type the first few characters of one of the Person's names.")
     if child is None:
         child = "person_id"
-    return s3_popup_comment(c="pr", f="person",
-                            vars=dict(caller=caller, child=child),
-                            title=current.messages.ADD_PERSON,
-                            tooltip="%s|%s" % (title, comment))
+    return S3AddResourceLink(c="pr", f="person",
+                             vars=dict(caller=caller, child=child),
+                             title=current.messages.ADD_PERSON,
+                             tooltip="%s|%s" % (title, comment))
 
 # =============================================================================
 def pr_rheader(r, tabs=[]):

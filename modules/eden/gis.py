@@ -194,7 +194,7 @@ class S3LocationModel(S3Model):
                              #Field("ce", "integer", writable=False, readable=False), # Circular 'Error' around Lat/Lon (in m). Needed for CoT.
                              #Field("le", "integer", writable=False, readable=False), # Linear 'Error' for the Elevation (in m). Needed for CoT.
                              Field("area", "double", writable=False, readable=False), # Area of the Polygon (in km2).
-                             Field("population", "integer", writable=False, readable=False), # Population of the Location
+                             Field("population", "integer", writable=False, readable=False, represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),), # Population of the Location
                              Field("source", length=32,
                                     requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                              s3.comments(),
