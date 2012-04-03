@@ -2076,7 +2076,10 @@ class InvItemVirtualFields:
     def total_value(self):
         """ Year/Month of the start date of the training event """
         try:
-            return self.inv_inv_item.quantity * self.inv_inv_item.pack_value
+            v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
+            # Need real numbers to use for Report calculations
+            #return IS_FLOAT_AMOUNT.represent(v, precision=2)
+            return v
         except:
             # not available
             return current.messages.NONE
