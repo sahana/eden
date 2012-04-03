@@ -555,7 +555,7 @@ $(function() {
             current.auth.s3_has_permission("read", "req_req"):
             return [
                     (T("Requests"), "req"),
-                    (T("Match Requests"), "match/"),
+                    (T("Match Requests"), "req_match/"),
                     (T("Commit"), "commit")
                     ]
         else:
