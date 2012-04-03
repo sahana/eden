@@ -28,7 +28,8 @@ from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,
                                           DeleteSpace, ListDocs, DeleteDocument, \
                                           ListEvents, DeleteEvent, ViewEvent, \
                                           ListPosts, SpaceFeed, AddDocument, \
-                                          EditDocument, AddEvent, EditEvent
+                                          EditDocument, AddEvent, EditEvent, \
+                                          ValidateIntent
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -83,7 +84,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
     url(r'^(?P<space_name>\w+)/intent/$', 'add_intent', name='add-intent'),
-    url(r'^(?P<space_name>\w+)/intent/approve/(?P<token>\w+)/$', 'validate_intent', name='validate-intent'),
+    url(r'^(?P<space_name>\w+)/intent/approve/(?P<token>\w+)/$', ValidateIntent.as_view(), name='validate-intent'),
 
 )
 
