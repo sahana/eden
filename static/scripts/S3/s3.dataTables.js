@@ -189,6 +189,9 @@ $(document).ready(function() {
 
     if (S3.dataTables.Selectable) {
         var selected = jQuery.parseJSON($('#importSelected').val())
+        if (selected == null) {
+        	selected = []
+        }
         var selectionMode = 'Inclusive';
         if (S3.dataTables.SelectAll) {
         	var selectionMode = 'Exclusive';
@@ -343,7 +346,7 @@ $(document).ready(function() {
 		            setSelectionClass(nRow, posn_in_List(id, selected));
                 });
                 // Set the row_selected based on selected and selectionMode
-	            setSelectionClass(nRow, posn_in_List(id, selected));
+                setSelectionClass(nRow, posn_in_List(id, selected));
             }
             // Set the action buttons in the id (first) column for each row
             if (S3.dataTables.Actions) {

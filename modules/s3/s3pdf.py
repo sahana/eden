@@ -57,6 +57,7 @@ from htmlentitydefs import name2codepoint
 from gluon import *
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
+from gluon.languages import lazyT
 
 try:
     from lxml import etree
@@ -3618,17 +3619,17 @@ class S3html2pdf():
     def select_tag(self, html, title=False):
         if self.exclude_tag(html):
             return None
-        if isinstance(html,TABLE):
+        if isinstance(html, TABLE):
             return self.parse_table(html)
-        elif isinstance(html,A):
+        elif isinstance(html, A):
             return self.parse_a(html)
-        elif isinstance(html,P):
+        elif isinstance(html, P):
             return self.parse_p(html)
-        elif isinstance(html,IMG):
+        elif isinstance(html, IMG):
             return self.parse_img(html)
-        elif isinstance(html,DIV):
+        elif isinstance(html, DIV):
             return self.parse_div(html)
-        elif (isinstance(html,str) or current.T(html) == html):
+        elif (isinstance(html, str) or isinstance(html, lazyT)):
             if title:
                 return [Paragraph(html, self.titlestyle)]
             else:
