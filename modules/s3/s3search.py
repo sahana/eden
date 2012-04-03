@@ -1797,7 +1797,7 @@ class S3Search(S3CRUD):
 
             if filter == "~":
                 if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                   output = json([dict(id="",
+                    output = json([dict(id="",
                                        name="Search results are over %d. Please input more characters." \
                                        % MAX_SEARCH_RESULTS)])
 
@@ -2264,12 +2264,12 @@ class S3LocationSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-               output = json([dict(id="",
+                output = json([dict(id="",
                                    name="Search results are over %d. Please input more characters." \
                                    % MAX_SEARCH_RESULTS)])
         elif not parent:
-           if (not limit or limit > MAX_RESULTS) and resource.count() > MAX_RESULTS:
-               output = json([])
+            if (not limit or limit > MAX_RESULTS) and resource.count() > MAX_RESULTS:
+                output = json([])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2344,7 +2344,7 @@ class S3OrganisationSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-               output = json([dict(id="",
+                output = json([dict(id="",
                                    name="Search results are over %d. Please input more characters." \
                                    % MAX_SEARCH_RESULTS)])
 
@@ -2431,7 +2431,7 @@ class S3PersonSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-               output = json([dict(id="",
+                output = json([dict(id="",
                                    name="Search results are over %d. Please input more characters." \
                                    % MAX_SEARCH_RESULTS)])
 
