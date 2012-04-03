@@ -1,4 +1,4 @@
-"Name","Description","Module","Resource","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible"
+"Name","Description","Module","Resource","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
 "Incident Reports",,"irs","ireport","US","incident","Danger Area","Incident","name/category",,,,,,
 "Hospitals",,"hms","hospital","US","hospital","Medical Facility","Hospital",,,,,,,
 "Shelters",,"cr","shelter","US","shelter","Campground","Shelter","name/organisation_id/capacity",,,,,,
@@ -9,3 +9,4 @@
 "Warehouses","All Active Warehouses","org","office","US","office","Building","Warehouse","name/organisation_id","office.type=5&office.obsolete=False","type",5,,,
 "Assets",,"asset","asset","US","asset",,"Asset","item_id/number","asset.type=4","type",4,True,,
 "Vehicles",,"asset","asset","US","vehicle","Car","Vehicle","item_id/number","asset.type=1","type",1,True,,
+"Stock Items","Used for Search Results","inv","inv_item","US","",,"Stock Item","item_id/site_id/quantity/item_pack_id/expiry_date",,,,,,"False","False"

@@ -892,7 +892,11 @@ class S3OptionsMenu:
                     M("Warehouse Stock", c="inv", f="warehouse")(
                         M("Search Warehouse Stock", f="inv_item", m="search"),
                         M("Adjust Stock Levels", f="adj"),
-                        M("Report", f="inv_item", m="report"),
+                        M("Report", f="inv_item", m="report",
+                          vars=Storage(rows="item_id",
+                                       cols="site_id",
+                                       fact="quantity",
+                                       aggregate="sum")),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(

@@ -305,9 +305,9 @@ def track_movement():
         if r.interactive:
             if "viewing" in request.vars:
                 dummy, item_id = request.vars.viewing.split(".")
-            filter = (table.item_id == item_id ) | \
-                     (table.send_stock_id == item_id)
-            response.s3.filter = filter
+                filter = (table.item_id == item_id ) | \
+                         (table.send_stock_id == item_id)
+                response.s3.filter = filter
         return True
 
     s3mgr.configure("inv_track_item",
@@ -991,17 +991,7 @@ def recv_cancel():
                  f = "recv",
                  args = [recv_id]))
 
-
-
-
-
 # -----------------------------------------------------------------------------
-
-
-
-
-
-
 def recv_sent():
     """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
         @ToDo: Consider making obsolete
@@ -1036,17 +1026,10 @@ def track_item():
                                 rheader=response.s3.inv_warehouse_rheader,
                                )
     return output
-# =============================================================================
 
+# =============================================================================
 def adj():
     """ RESTful CRUD controller """
-    s3mgr.load("inv_adj")
-    s3db = current.s3db
-    db = current.db
-    auth = current.auth
-    request = current.request
-    response = current.response
-    s3 = response.s3
 
     tablename = "inv_adj"
     table = s3db.inv_adj
@@ -1080,8 +1063,13 @@ def adj():
                         table.site_id.writable = False
                         table.site_id.default = request.vars.site
         return True
-
     response.s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            s3_action_buttons(r, deletable=False)
+        return output
+    response.s3.postp = postp
 
     if len(request.args) > 1 and request.args[1] == "adj_item" and table[request.args[0]].status:
         # remove CRUD generated buttons in the tabs
@@ -1098,15 +1086,10 @@ def adj():
                                )
     return output
 
+# -----------------------------------------------------------------------------
 def adj_close():
     """ RESTful CRUD controller """
-    s3mgr.load("inv_adj")
-    s3db = current.s3db
-    db = current.db
-    auth = current.auth
-    request = current.request
-    response = current.response
-    s3 = response.s3
+
     atable = s3db.inv_adj
     aitable = s3db.inv_adj_item
     stocktable = s3db.inv_inv_item

@@ -1,4 +1,4 @@
-"Name","Description","Module","Resource","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible"
+"Name","Description","Module","Resource","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
 "Events",,"irs","ireport","IFRC","incident","Danger Area","Incident Report","name/category",,,,,,"False"
 "Offices","All Active Offices","org","office","IFRC","office","Building","Office","name/organisation_id","office.type=NONE,1,2,3,4&office.obsolete=False",,,,,"False"
 "Project Communities",,"project","activity","IFRC","activity",,"Project Community","name/location_id/multi_activity_type_id",,,,,,"False"
@@ -6,3 +6,4 @@
 "Volunteers","All Active Volunteers","hrm","human_resource","IFRC","volunteer","Contact, Dreadlocks","Volunteer","person_id/job_title/organisation_id","human_resource.type=2&human_resource.status=1","type",2,True,,"False"
 "Warehouses","All Active Warehouses","org","office","IFRC","warehouse","Building","Warehouse","name/organisation_id","office.type=5&office.obsolete=False","type",5,,,"False"
 "Assets",,"asset","asset","IFRC","asset",,"Asset","item_id/number",,,,True,,"False"
+"Stock Items","Used for Search Results","inv","inv_item","IFRC","",,"Stock Item","item_id/site_id/quantity/item_pack_id/expiry_date",,,,,,"False","False"
