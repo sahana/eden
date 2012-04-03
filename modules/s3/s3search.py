@@ -248,7 +248,7 @@ class S3SearchSimpleWidget(S3SearchWidget):
 
     def widget(self,
                resource,
-               vars,
+               vars=None,
                name=None,
                value=None,
                autocomplete=None):
@@ -288,17 +288,6 @@ class S3SearchSimpleWidget(S3SearchWidget):
             @param value: the value returned from the widget
         """
 
-        # This is a query that will always result in no records being found
-        DEFAULT = (resource.table._id == None)
-
-        # No search fields?
-        if not self.field:
-            return DEFAULT
-
-        # Default search (wildcard)
-        if not value:
-            return None
-
         # Build the query
         if value and isinstance(value, str):
             values = value.split()
@@ -328,7 +317,7 @@ class S3SearchSimpleWidget(S3SearchWidget):
 
             return final_query
         else:
-            return DEFAULT
+            return None
 
 
 # =============================================================================
