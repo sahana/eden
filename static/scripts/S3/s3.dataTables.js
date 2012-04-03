@@ -346,7 +346,7 @@ $(document).ready(function() {
 		            setSelectionClass(nRow, posn_in_List(id, selected));
                 });
                 // Set the row_selected based on selected and selectionMode
-	            setSelectionClass(nRow, posn_in_List(id, selected));
+                setSelectionClass(nRow, posn_in_List(id, selected));
             }
             // Set the action buttons in the id (first) column for each row
             if (S3.dataTables.Actions) {
