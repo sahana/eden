@@ -42,7 +42,7 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from ..s3 import *
-from eden.layouts import ForeignRecordFormPopup 
+from layouts import *
 
 try:
     from lxml import etree, html
@@ -424,10 +424,8 @@ class S3ProjectModel(S3Model):
                                      requires = IS_NULL_OR(IS_ONE_OF(db, "project_project.id",
                                                                      "%(name)s")),
                                      represent = self.project_represent,
-                                     comment = ForeignRecordFormPopup(label=ADD_PROJECT,
-                                                                      c='project',
-                                                                      f='project',
-                                                                      tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
+                                     comment = S3AddResourceLink(c="project", f="project",
+                                                                 tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
                                      label = T("Project"),
                                      ondelete = "CASCADE")
 
@@ -511,10 +509,10 @@ class S3ProjectModel(S3Model):
                                                                              fieldname = "name",
                                                                              look_up_value = id),
                                            label = T("Activity Type"),
-                                           comment = s3_popup_comment(title=ADD_ACTIVITY_TYPE,
-                                                                      c="project",
-                                                                      f="activity_type",
-                                                                      tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Activity Type'.")),
+                                           comment = S3AddResourceLink(title=ADD_ACTIVITY_TYPE,
+                                                                       c="project",
+                                                                       f="activity_type",
+                                                                       tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Activity Type'.")),
                                            ondelete = "RESTRICT")
 
         multi_activity_type_id = S3ReusableField("multi_activity_type_id",
@@ -692,10 +690,9 @@ class S3ProjectModel(S3Model):
                                                                         fieldname = "name",
                                                                         look_up_value = id),
                                       label = ACTIVITY,
-                                      comment = ForeignRecordFormPopup(label="derp" + ADD_ACTIVITY,
-                                                                 c="project",
-                                                                 f="activity",
-                                                                 tooltip=ACTIVITY_TOOLTIP),
+                                      comment = S3AddResourceLink(ADD_ACTIVITY,
+                                                                  c="project", f="activity",
+                                                                  tooltip=ACTIVITY_TOOLTIP),
                                       ondelete = "CASCADE")
 
         # Components
@@ -1235,10 +1232,10 @@ class S3ProjectDRRModel(S3Model):
                                                       # (id and [db(db.project_site.id == id).select(db.project_site.name,
                                                                                                    # limitby=(0, 1)).first().name] or [NONE])[0],
                                           # label = T("Project Site"),
-                                          # comment = s3_popup_comment(c="project",
-                                                                     # f="site",
-                                                                     # title=ADD_PROJECT_SITE,
-                                                                     # tooltip=T("If you don't see the site in the list, you can add a new one by clicking link 'Add Project Site'.")),,
+                                          # comment = S3AddResourceLink(c="project",
+                                                                      # f="site",
+                                                                      # title=ADD_PROJECT_SITE,
+                                                                      # tooltip=T("If you don't see the site in the list, you can add a new one by clicking link 'Add Project Site'.")),,
                                           # ondelete = "CASCADE")
 
         # self.configure(tablename,
@@ -1289,10 +1286,10 @@ class S3ProjectDRRModel(S3Model):
                                                                    self.beneficiary_type_represent)),
                                    represent = self.beneficiary_type_represent,
                                    label = T("Beneficiary Type"),
-                                   comment = s3_popup_comment(c="project",
-                                                              f="beneficiary_type",
-                                                              title=ADD_BNF_TYPE,
-                                                              tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
+                                   comment = S3AddResourceLink(c="project",
+                                                               f="beneficiary_type",
+                                                               title=ADD_BNF_TYPE,
+                                                               tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
                                    ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
@@ -1390,10 +1387,10 @@ class S3ProjectDRRModel(S3Model):
                                                                            fieldname = "type",
                                                                            look_up_value = id),
                                          label = T("Beneficiaries"),
-                                         comment = s3_popup_comment(c="project",
-                                                                    f="beneficiary",
-                                                                    title=ADD_BNF,
-                                                                    tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+                                         comment = S3AddResourceLink(c="project",
+                                                                     f="beneficiary",
+                                                                     title=ADD_BNF,
+                                                                     tooltip=T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
                                          ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
@@ -1632,10 +1629,10 @@ class S3ProjectTaskModel(S3Model):
                                        requires = IS_NULL_OR(IS_ONE_OF(db, "project_milestone.id",
                                                                        "%(name)s")),
                                        represent = self.milestone_represent,
-                                       comment = s3_popup_comment(c="project",
-                                                                  f="milestone",
-                                                                  title=ADD_MILESTONE,
-                                                                  tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
+                                       comment = S3AddResourceLink(c="project",
+                                                                   f="milestone",
+                                                                   title=ADD_MILESTONE,
+                                                                   tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
                                        label = T("Milestone"),
                                        ondelete = "RESTRICT")
 
@@ -1677,7 +1674,7 @@ class S3ProjectTaskModel(S3Model):
         #staff = auth.s3_has_role("STAFF")
         staff = True
         milestones = settings.get_project_milestones()
-        
+
         tablename = "project_task"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -1875,10 +1872,10 @@ class S3ProjectTaskModel(S3Model):
                      "status",
                      #"site_id"
                     ]
-               
+
         if settings.get_project_milestones():
             list_fields.insert(5, "milestone_id")
-            
+
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
@@ -1899,10 +1896,10 @@ class S3ProjectTaskModel(S3Model):
                                   requires = IS_NULL_OR(IS_ONE_OF(db, "project_task.id", "%(name)s")),
                                   represent = lambda id, row=None: \
                                                 (id and [db.project_task[id].name] or [NONE])[0],
-                                  comment = s3_popup_comment(c="project",
-                                                             f="task",
-                                                             title=ADD_TASK,
-                                                             tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
+                                  comment = S3AddResourceLink(c="project",
+                                                              f="task",
+                                                              title=ADD_TASK,
+                                                              tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
                                   ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------

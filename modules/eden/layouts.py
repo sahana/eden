@@ -35,8 +35,8 @@ __all__ = ["S3MainMenuLayout", "MM",
            "S3OptionsMenuLayout", "M",
            "S3MenuSeparatorLayout", "SEP",
            "S3BreadcrumbsLayout",
-           "homepage",
-           "ForeignRecordFormPopup",]
+           "S3AddResourceLink",
+           "homepage"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -240,6 +240,90 @@ class S3BreadcrumbsLayout(S3NavigationItem):
             return LI(A(item.label, _href=item.url(), _class=_class))
 
 # =============================================================================
+class S3AddResourceLink(S3NavigationItem):
+    """
+        Links in form fields comments to show a form for adding
+        a new foreign key record.
+    """
+
+    def __init__(self,
+                 label=None,
+                 c=None,
+                 f=None,
+                 t=None,
+                 vars=None,
+                 info=None,
+                 title=None,
+                 tooltip=None):
+        """
+            Constructor
+
+            @param c: the target controller
+            @param f: the target function
+            @param t: the target table (defaults to c_f)
+            @param vars: the request vars (format="popup" will be added automatically)
+            @param label: the link label (falls back to label_create_button)
+            @param info: hover-title for the label
+            @param title: the tooltip title
+            @param tooltip: the tooltip text
+        """
+
+        if label is None:
+            label = title
+        if info is None:
+            info = title
+
+        # Fall back to label_create_button
+        if label is None:
+            if t is None:
+                t = "%s_%s" % (c, f)
+            label = S3CRUD.crud_string(t, "label_create_button")
+
+        # Always have format=popup in the URL
+        if vars is None:
+            vars = Storage()
+        vars["format"] = "popup"
+
+        super(S3AddResourceLink, self).__init__(label, c=c, f=f, t=t,
+                                                m="create",
+                                                vars=vars,
+                                                info=info,
+                                                title=title,
+                                                tooltip=tooltip)
+
+    # -------------------------------------------------------------------------
+    def check_active(self, request=None):
+        """ Deactivate the link if the target controller is deactivated """
+
+        c = self.get("controller")
+        if c:
+            return current.deployment_settings.has_module(c)
+        return True
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def layout(item):
+        """ Layout for popup link """
+
+        if not item.authorized:
+            return None
+
+        popup = A(item.label,
+                  _href=item.url(),
+                  _class="colorbox",
+                  _target="top",
+                  _title=item.opts.info)
+
+        tooltip = item.opts.tooltip
+        if tooltip is not None:
+            ttip = DIV(_class="tooltip",
+                       _title="%s|%s" % (item.label, tooltip))
+        else:
+            ttip = ""
+
+        return DIV(popup, ttip)
+
+# =============================================================================
 def homepage(module=None, *match, **attr):
     """
         Shortcut for module homepage menu items using the MM layout,
@@ -262,31 +346,5 @@ def homepage(module=None, *match, **attr):
         m = all_modules[module]
         module = m.name_nice
     return layout(module, c=c, f="index", **attr)
-
-
-class ForeignRecordFormPopup(S3NavigationItem):
-    """
-        Add a link to show a form for adding a new foreign key record.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(ForeignRecordFormPopup, self).__init__(*args, **kwargs)
-        self.vars['format'] = "popup"
-        self.args.append("create")
-
-    def check_active(self, request=None):
-        return True
-
-    @staticmethod
-    def layout(item):
-        if not item.authorized:
-            return None
-
-        link = A(item.label,
-                 _href=item.url(),
-                 _class="colorbox")
-        tooltip = DIV(_class="tooltip",
-                      _title="%s|%s" % (item.label, item.opts.tooltip))
-        return DIV(link, tooltip)
 
 # END =========================================================================

@@ -1192,11 +1192,6 @@ class S3ContingencyTable(TABLE):
             f, m = layer
             value = values[layer]
 
-            if type(value) is int:
-                value = IS_INT_AMOUNT.represent(value)
-            elif type(value) is float:
-                value = IS_FLOAT_AMOUNT.represent(value, precision=2)
-
             if m == "list":
                 value = value and len(value) or 0
             if not len(totals) and append is not None:

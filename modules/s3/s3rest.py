@@ -2105,6 +2105,7 @@ class S3Resource(object):
         if self.rfilter is None:
             self.rfilter = S3ResourceFilter(self)
         self.rfilter.add_filter(f, component=c)
+        self._length = None
 
     # -------------------------------------------------------------------------
     def add_component_filter(self, alias, f=None):
