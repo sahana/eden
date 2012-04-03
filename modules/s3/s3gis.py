@@ -1908,9 +1908,12 @@ class GIS(object):
             (module, resourcename) = tablename.split("_", 1)
             query = (table.module == module) & \
                     (table.resource == resourcename) & \
-                    (table.layer_id == ltable.layer_id) & \
-                    (ltable.marker_id == mtable.id) & \
-                    (ltable.symbology_id == symbology_id)
+                    (table.layer_id == ltable.layer_id)
+
+            left = [
+                    mtable.on((ltable.marker_id == mtable.id) & \
+                              (ltable.symbology_id == symbology_id))
+                    ]
 
             layers = db(query).select(mtable.image,
                                       mtable.height,
@@ -1920,6 +1923,7 @@ class GIS(object):
                                       table.filter_value,
                                       table.popup_label,
                                       table.popup_fields,
+                                      left=left,
                                       cache=s3db.cache)
             if not record and len(layers) > 1:
                 # We can't provide details for the whole table, but need to do a per-record check
@@ -1928,14 +1932,22 @@ class GIS(object):
                 frow = row.gis_layer_feature
                 if not record or not frow.filter_field:
                     # We only have 1 row
-                    return dict(marker = row.gis_marker,
+                    marker = row.gis_marker
+                    if not marker.image:
+                        # Use Default Marker
+                        marker = Marker().as_dict()
+                    return dict(marker = marker,
                                 #gps_marker = row.gis_layer_symbology.gps_marker,
                                 popup_label = frow.popup_label,
                                 popup_fields = frow.popup_fields,
                                 )
                 # Check if the record matches the filter
                 if str(record[frow.filter_field]) == frow.filter_value:
-                    return dict(marker = row.gis_marker,
+                    marker = row.gis_marker
+                    if not marker.image:
+                        # Use Default Marker
+                        marker = Marker().as_dict()
+                    return dict(marker = marker,
                                 #gps_marker = row.gis_layer_symbology.gps_marker,
                                 popup_label = frow.popup_label,
                                 popup_fields = frow.popup_fields,
@@ -1943,9 +1955,10 @@ class GIS(object):
             # No Feature Layer defined or
             # Row doesn't match any of the filters
             # Default Marker
-            return dict(marker = Marker().as_dict(),
+            marker = Marker().as_dict()
+            return dict(marker = marker,
                         #gps_marker = row.gis_layer_symbology.gps_marker,
-                        popup_label = "",
+                        popup_label = tablename or "",
                         popup_fields = None,
                         )
 

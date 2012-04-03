@@ -232,13 +232,22 @@ $(document).ready(function() {
                                     ]
                              ),
                           S3SearchOptionsWidget(
-                              name="recv_search_site",
+                              name="inv_item_search_site",
                               label=T("Facility"),
                               field=["site_id"],
                               represent ="%(name)s",
                               comment=T("If none are selected, then all are searched."),
                               cols = 2
                               ),
+                          # NotImplemented yet
+                          # S3SearchOptionsWidget(
+                              # name="inv_item_search_category",
+                              # label=T("Category"),
+                              # field=["item_category"],
+                              ##represent ="%(name)s",
+                              # comment=T("If none are selected, then all are searched."),
+                              # cols = 2
+                              # ),
                           S3SearchMinMaxWidget(
                               name="inv_item_search_expiry_date",
                               method="range",
@@ -267,9 +276,15 @@ $(document).ready(function() {
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
                        report_filter = report_filter,
-                       report_rows = ["item_id","currency"],
-                       report_cols = ["site_id","currency"],
-                       report_fact = ["quantity", (T("Total Value"), "total_value")],
+                       #report_rows = ["item_id", "currency"],
+                       report_rows = ["item_id",
+                                      (T("Category"), "item_category"),
+                                      ],
+                       #report_cols = ["site_id", "currency"],
+                       report_cols = ["site_id"],
+                       report_fact = ["quantity",
+                                      (T("Total Value"), "total_value"),
+                                      ],
                        report_method=["sum"],
                        report_groupby = self.inv_inv_item.site_id,
                        report_hide_comments = True,
@@ -278,7 +293,7 @@ $(document).ready(function() {
 
         # Component
         self.add_component("inv_track_item",
-                           inv_inv_item="inv_item_id")
+                           inv_inv_item="send_stock_id")
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
