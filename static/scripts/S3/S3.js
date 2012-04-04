@@ -214,7 +214,7 @@ $(document).ready(function() {
     } );
     now = new Date();
     $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
-	
+
 	// Social Media 'share' buttons
     if ($('#socialmedia_share').length > 0) {
         // DIV exists (deployment_setting on)
@@ -508,6 +508,20 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
 
     $('#map').html(iframe);
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
+}
+function s3_showMap(feature_id) {
+    // Display a Feature on a BaseMap within an iframe
+    var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
+    var iframe = "<iframe width='650' height='490' src='" + url + "' style=\"border-width:0\"></iframe>";
+
+    $('#map').html(iframe)
+
+	$('#map').dialog({
+		width: "auto",
+		height: "auto",
+		draggable: false,
+		modal: true
+	});
 }
 
 // ============================================================================

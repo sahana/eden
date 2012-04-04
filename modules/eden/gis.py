@@ -3265,13 +3265,13 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
                 else:
                     represent_text = parent_represent(location)
             if not represent_text:
-                  represent_text = location.name or location.id
+                represent_text = location.name or location.id
 
     if showlink:
         # ToDo: Convert to popup? (HTML again!)
         represent = A(represent_text,
                       _style="cursor:pointer; cursor:hand",
-                      _onclick="s3_viewMap(%i);return false" % location.id)
+                      _onclick="s3_showMap(%i);return false" % location.id)
     else:
         represent = represent_text
 
