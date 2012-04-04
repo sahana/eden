@@ -44,7 +44,7 @@ urlpatterns = i18n_patterns('',
     (r'^grappelli/', include('grappelli.urls')),
     
     # Django administration
-    (r'^admin/', include(admin.site.urls)),
+    (r'^admin/?', include(admin.site.urls)),
 
     # Index
     url(r'^$', 'e_cidadania.views.index_view', name='site-index'),
