@@ -422,9 +422,11 @@ class S3RequestManager(object):
             except (UnicodeEncodeError, UnicodeDecodeError):
                 text = field.represent(val)
             else:
-                text = unicode(cache.ram(key,
-                                         lambda: field.represent(val),
-                                         time_expire=60))
+                text = cache.ram(key,
+                                 lambda: field.represent(val),
+                                 time_expire=60)
+                if not isinstance(text, basestring):
+                    text = unicode(text)
         else:
             if val is None:
                 text = NONE
