@@ -26,6 +26,7 @@ from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.conf.urls.i18n import i18n_patterns
 
 from e_cidadania.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
                               DeletePost, ViewPost
@@ -38,7 +39,7 @@ js_info_dict = {
     'packages': ('e_cidadania.apps.debate',),
 }
 
-urlpatterns = patterns('',
+urlpatterns = i18n_patterns('',
 
     (r'^grappelli/', include('grappelli.urls')),
     
