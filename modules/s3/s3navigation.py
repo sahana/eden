@@ -41,7 +41,6 @@
 
 __all__ = ["S3NavigationItem",
            "S3ResourceHeader",
-           "s3_popup_comment",
            "s3_rheader_tabs",
            "s3_rheader_resource"]
 
@@ -50,7 +49,7 @@ from gluon.storage import Storage
 
 # =============================================================================
 
-class S3NavigationItem:
+class S3NavigationItem(object):
     """
         Base class and API for navigation items.
 
@@ -1127,67 +1126,6 @@ class S3NavigationItem:
                all([getattr(item, f) == flags[f] for f in flags]):
                 return item
         return None
-
-# =============================================================================
-def s3_popup_comment(c=None,
-                     f=None,
-                     t=None,
-                     vars=None,
-                     label=None,
-                     info=None,
-                     title=None,
-                     tooltip=None):
-
-    """
-        Generate a ADD-popup comment, return an empty DIV if the user
-        is not permitted to add records to the referenced table
-
-        @param c: the target controller
-        @param f: the target function
-        @param t: the target table (defaults to c_f)
-        @param vars: the request vars (format="popup" will be added automatically)
-        @param label: the link label
-        @param info: hover-title for the label
-        @param title: the tooltip title
-        @param tooltip: the tooltip text
-
-        @todo: replace by S3NavigationItem
-    """
-
-    auth = current.auth
-
-    if title is None:
-        return None
-
-    if label is None:
-        label = title
-    if info is None:
-        info = title
-
-    if vars is not None:
-        _vars = Storage(vars)
-    else:
-        _vars = Storage()
-    _vars.update(format="popup")
-
-    popup = ""
-    ttip = ""
-    if c and f and auth is not None:
-        _href = auth.permission.accessible_url(c=c, f=f, t=t,
-                                               p="create",
-                                               args="create", vars=_vars)
-        if _href is not False:
-            popup = A(label,
-                      _class="colorbox",
-                      _href=_href,
-                      _target="top",
-                      _title=info)
-            if tooltip is not None:
-                ttip = DIV(_class="tooltip",
-                           _title="%s|%s" % (title, tooltip))
-
-    comment = DIV(popup, ttip)
-    return comment
 
 # =============================================================================
 def s3_rheader_resource(r):
