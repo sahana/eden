@@ -261,26 +261,26 @@ class S3NavigationItem(object):
         """
 
         # Deactivate the item if its target controller is deactivated
-        settings = current.deployment_settings
         c = self.get("controller")
-        if c and c not in settings.modules:
-            return False
-
-        # mandatory flag overrides all further checks
-        if self.mandatory:
-            return True
+        if c:
+            return current.deployment_settings.has_module(c)
+        return True
 
         # Fall back to current.request
         if request is None:
             request = current.request
 
-        # If this is a component item, check the parent
         parent = self.parent
         if parent is not None:
+            # For component items, the parent's status applies
             return parent.check_active(request)
 
-        # Otherwise, check whether this item matches the request
+        elif self.mandatory:
+            # mandatory flag overrides request match
+            return True
+
         elif self.match(request):
+            # item is active if it matches the request
             return True
 
         return False
@@ -326,10 +326,6 @@ class S3NavigationItem(object):
                     break
         else:
             authorized = True
-
-        # mandatory flag overrides all further checks
-        if self.mandatory:
-            return authorized
 
         if self.accessible_url() == False:
             authorized = False
