@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load wysiwyg %}
+{% block title %}{% trans "Change email" %}{% endblock %}
+{% block head %}Change Email{% endblock %}
+{% block content %}
+{% if form.errors %}
+<div class="error">
+    {% for field in form %}
+    <p>{{ field.errors|striptags }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+<p> Current Email: {{ email }} </p>
+<form method="post" action="">{% csrf_token %}
+    {{ form.as_p }}
+    <input class="btn" type="submit" value="Change Email" />
+</form>
+{% endblock %}
+
