@@ -217,7 +217,9 @@ def req_match():
 # =============================================================================
 def inv_item():
     """ REST Controller """
+
     table = s3db.inv_inv_item
+    s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
 
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))

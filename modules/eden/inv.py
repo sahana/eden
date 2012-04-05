@@ -185,6 +185,7 @@ class S3InventoryModel(S3Model):
             title_list = LIST_INV_ITEMS,
             title_update = T("Edit Warehouse Stock"),
             title_search = T("Search Warehouse Stock"),
+            title_report = T("Warehouse Stock Report"),
             title_upload = T("Import Warehouse Stock"),
             subtitle_create = ADD_INV_ITEM,
             subtitle_list = T("Warehouse Stock"),
