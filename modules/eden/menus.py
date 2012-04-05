@@ -1347,7 +1347,7 @@ class S3OptionsMenu:
         """
 
         return [
-            M("Email Settings", c="msg", f="email_settings",
+            M("Email Settings", c="msg", f="inbound_email_settings",
                 args=[1], m="update"),
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),
