@@ -23,7 +23,6 @@ class Get_Test(TestCase):
         self.assertEqual(space_4.url, 'sk')
     
     def test_3(self):    
-        
         response = self.client.get('/spaces/sks/')
         self.assertEqual(response.status_code, 404)
         
@@ -43,7 +42,6 @@ class Get_Test(TestCase):
         self.assertFalse(response.context['publication'], 'something')
 
     def test_4(self):
-    
         response = self.client.get('/spaces/sk/news')
         self.assertEqual(response.status_code, 301)
         print response.context
