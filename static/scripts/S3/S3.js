@@ -512,16 +512,21 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
 function s3_showMap(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
-    var iframe = "<iframe width='650' height='490' src='" + url + "' style=\"border-width:0\"></iframe>";
-
-    $('#map').html(iframe)
-
-	$('#map').dialog({
-		width: "auto",
-		height: "auto",
+	new Ext.Window({
+		autoWidth: true,
+		floating: true,
+		modal: true,
 		draggable: false,
-		modal: true
-	});
+		items: [{
+			xtype: "component",
+			autoEl: {
+				tag: "iframe",
+				width: 650,
+				height: 490,
+				src: url
+			}
+		}]
+	}).show();
 }
 
 // ============================================================================
