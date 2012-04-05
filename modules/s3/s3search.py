@@ -2443,7 +2443,7 @@ class S3PentitySearch(S3Search):
 
     def search_json(self, r, **attr):
         """
-            Legacy JSON search method (for autocomplete-widgets)
+            Legacy JSON search method (for autocomplete widgets)
 
             @param r: the S3Request
             @param attr: request attributes
@@ -2475,9 +2475,8 @@ class S3PentitySearch(S3Search):
         filter = _vars.filter
         limit = int(_vars.limit or 0)
 
-        # Fields to return
+        # Persons
         if filter and value:
-
             ptable = s3db.pr_person
             field = ptable.first_name
             field2 = ptable.middle_name
@@ -2496,20 +2495,20 @@ class S3PentitySearch(S3Search):
                     query = ((field.lower().like(value + "%")) | \
                             (field2.lower().like(value + "%")) | \
                             (field3.lower().like(value + "%")))
+                resource.add_filter(query)
             else:
                 output = xml.json_message(False,
                                           400,
                                           "Unsupported filter! Supported filters: ~")
                 raise HTTP(400, body=output)
 
-        resource.add_filter(query)
         resource.add_filter(ptable.pe_id == table.pe_id)
 
         output = resource.exporter.json(resource, start=0, limit=limit,
                                         fields=[table.pe_id], orderby=field)
         items = jsonlib.loads(output)
 
-        # AT: group
+        # Add Groups
         if filter and value:
             gtable = s3db.pr_group
             field = gtable.name
@@ -2524,12 +2523,26 @@ class S3PentitySearch(S3Search):
                                             orderby=field)
             items += jsonlib.loads(output)
 
+        # Add Organisations
+        if filter and value:
+            otable = s3db.org_organisation
+            field = otable.name
+            query = field.lower().like("%" + value + "%")
+            resource.clear_query()
+            resource.add_filter(query)
+            resource.add_filter(otable.pe_id == table.pe_id)
+            output = resource.exporter.json(resource,
+                                            start=0,
+                                            limit=limit,
+                                            fields=[table.pe_id],
+                                            orderby=field)
+            items += jsonlib.loads(output)
+
         items = [ { "id" : item[u'pe_id'],
                     "name" : s3db.pr_pentity_represent(item[u'pe_id'],
                                                        show_label=False) }
                   for item in items ]
         output = jsonlib.dumps(items)
-
         response.headers["Content-Type"] = "application/json"
         return output
 
