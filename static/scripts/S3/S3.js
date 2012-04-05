@@ -651,7 +651,7 @@ function S3FilterFieldChange (setting) {
 	                for (var i = 0; i < data.length; i++) {
 	                	if (i == 0) {first_value = data[i][FieldID]};
 	                    options += '<option value="' +  data[i][FieldID] + '">';
-	                    options += this.fncRepresent( data[i], this.PrepResult);
+	                    options += this.fncRepresent( data[i], PrepResult);
 	                    options += '</option>';
 	                }
 	            }
