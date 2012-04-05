@@ -21,7 +21,7 @@
         Currency......................currency
         Unit Value....................pack_value
         Expiry Date...................expiry_date
-        Quantity Sent.................quantity
+        Sent Quantity.................quantity
         Name of Sender................inv_send.sender_id, inv_recv.sender_id
         Date Sent.....................date
         Sent Status...................inv_send.status
@@ -31,7 +31,7 @@
         Date Received.................inv_recv.date
         Receiving Type................inv_recv.type
         Receiving Status..............inv_recv.status
-        Quantity Received.............recv_quantity
+        Received Quantity.............recv_quantity
         Receiving Bin.................recv_bin
         Comments......................comments
         Send Comments.................inv_send.comments
@@ -223,8 +223,8 @@
         <xsl:variable name="eta" select="col[@field='Estimated Date of Arrival']/text()"/>
         <xsl:variable name="comments" select="col[@field='Comments']/text()"/>
         <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
-        <xsl:variable name="s_quantity" select="col[@field='Quantity Sent']/text()"/>
-        <xsl:variable name="r_quantity" select="col[@field='Quantity Received']/text()"/>
+        <xsl:variable name="sent_quantity" select="col[@field='Sent Quantity']/text()"/>
+        <xsl:variable name="recv_quantity" select="col[@field='Received Quantity']/text()"/>
 
         <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
         <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
@@ -256,8 +256,8 @@
             </xsl:attribute>
             <data field="item_source_no"><xsl:value-of select="$tracking_no"/></data>
             <data field="status"><xsl:value-of select="$status"/></data>
-            <data field="quantity"><xsl:value-of select="$s_quantity"/></data>
-            <data field="recv_quantity"><xsl:value-of select="$r_quantity"/></data>
+            <data field="quantity"><xsl:value-of select="$sent_quantity"/></data>
+            <data field="recv_quantity"><xsl:value-of select="$recv_quantity"/></data>
             <data field="currency"><xsl:value-of select="$currency"/></data>
             <data field="pack_value"><xsl:value-of select="$unit_value"/></data>
             <data field="expiry_date"><xsl:value-of select="$expiry_date"/></data>
@@ -296,7 +296,7 @@
                 </xsl:attribute>
             </reference>
             <!-- Link to the sent inventory -->
-            <reference field="send_stock_id" resource="inv_inv_item">
+            <reference field="send_inv_item_id" resource="inv_inv_item">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$s_tuid"/>
                 </xsl:attribute>
@@ -310,7 +310,7 @@
                     </xsl:attribute>
                 </reference>
                 <!-- Link to the received inventory -->
-                <reference field="recv_stock_id" resource="inv_inv_item">
+                <reference field="recv_inv_item_id" resource="inv_inv_item">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$r_tuid"/>
                     </xsl:attribute>
