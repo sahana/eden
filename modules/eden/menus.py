@@ -236,6 +236,7 @@ class S3MainMenu:
         s3db = current.s3db
         request = current.request
         session = current.session
+        s3 = current.response.s3
 
         # See if we need to switch config before we decide which
         # config item to mark as active:
@@ -247,7 +248,9 @@ class S3MainMenu:
                 # Manually-crafted URL?
                 pass
             else:
-                if config != session.s3.gis_config_id:
+                if s3.gis.config and s3.gis.config.id != config:
+                    # Set this as the current config
+                    # @ToDo: restore some awareness of this in session
                     config = gis.set_config(config)
                     if settings.has_module("event"):
                         # See if this config is associated with an Event
@@ -283,7 +286,7 @@ class S3MainMenu:
                         "id": "gis_menu_id_0",
                         # @ToDo: Show when default item is selected without having
                         # to do a DB query to read the value
-                        #"value": session.s3.gis_config_id == 0,
+                        #"value": s3.gis.config and s3.gis.config.id is 0,
                         "request_type": "load"
                        }, args=request.args, vars={"_config": 0}
                     )
@@ -292,8 +295,7 @@ class S3MainMenu:
                 gis_menu(
                     MM({"name": T(config.name),
                         "id": "gis_menu_id_%s" % config.id,
-                        # Currently not working on 1st request afterwards as being set after this (in zz_last.py)
-                        "value": session.s3.gis_config_id == config.id,
+                        "value": s3.gis.config and s3.gis.config.id == config.id,
                         "request_type": "load"
                        }, args=request.args, vars={"_config": config.id}
                     )
@@ -720,8 +722,6 @@ class S3OptionsMenu:
 
         return M(c="gis")(
                     M("Fullscreen Map", f="map_viewing_client"),
-                    M("Configuration", f="config", args=config_args(),
-                      check=config_menu),
                     # Currently not got geocoding support
                     #M("Bulk Uploader", c="doc", f="bulk_upload"),
                     M("Locations", f="location",
@@ -733,6 +733,8 @@ class S3OptionsMenu:
                         M("Import", m="import"),
                         #M("Geocode", f="geocode_manual"),
                     ),
+                    M("Configuration", f="config", args=config_args(),
+                      check=config_menu),
                     M("Admin", restrict=[MAP_ADMIN])(
                         M("Hierarchy", f="hierarchy"),
                         M("Markers", f="marker"),
@@ -889,7 +891,7 @@ class S3OptionsMenu:
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Warehouse Stock", c="inv", f="warehouse")(
+                    M("Warehouse Stock", c="inv", f="inv_item")(
                         M("Search Warehouse Stock", f="inv_item", m="search"),
                         M("Adjust Stock Levels", f="adj"),
                         M("Report", f="inv_item", m="report",
@@ -1345,7 +1347,7 @@ class S3OptionsMenu:
         """
 
         return [
-            M("Email Settings", c="msg", f="email_settings",
+            M("Email Settings", c="msg", f="inbound_email_settings",
                 args=[1], m="update"),
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),

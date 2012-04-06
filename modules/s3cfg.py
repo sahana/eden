@@ -412,8 +412,6 @@ class S3Config(Storage):
     # Options
     def get_terms_of_service(self):
         return self.options.get("terms_of_service", False)
-    def get_options_support_requests(self):
-        return self.options.get("support_requests", False)
 
     # -------------------------------------------------------------------------
     # UI/Workflow Settings

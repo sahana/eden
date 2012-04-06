@@ -222,7 +222,7 @@ class S3AssetModel(S3Model):
                                                                    sort=True)),
                                    represent = self.asset_represent,
                                    label = T("Asset"),
-                                   ondelete = "RESTRICT")
+                                   ondelete = "CASCADE")
 
         table.virtualfields.append(AssetVirtualFields())
 

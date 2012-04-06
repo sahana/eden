@@ -910,6 +910,10 @@ div.dataTables_paginate {
 div.paging_full_numbers {
 	width: auto;
 }
+a.paginate_button,
+a.paginate_active {
+    text-decoration: none;
+}
 
 span.dataTable-btn {
 	background-color: #ddd;

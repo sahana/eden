@@ -251,13 +251,13 @@ deployment_settings.gis.display_L0 = False
 # Points only for now
 # lon<0 have a duplicate at lon+360
 # lon>0 have a duplicate at lon-360
-deployment_settings.gis.duplicate_features = False
+#deployment_settings.gis.duplicate_features = True
 # Mouse Position: 'normal', 'mgrs' or 'off'
-deployment_settings.gis.mouse_position = "normal"
+#deployment_settings.gis.mouse_position = "mgrs"
 # Print Service URL: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting
 #deployment_settings.gis.print_service = "/geoserver/pdf/"
-# Do we have a spatial DB available? (currently unused. Will support PostGIS & Spatialite.)
-deployment_settings.gis.spatialdb = False
+# Do we have a spatial DB available? (currently supports PostGIS. Spatialite to come.)
+#deployment_settings.gis.spatialdb = True
 # Bing API Key (for Map layers)
 #deployment_settings.gis.api_bing = ""
 # Google API Key (for Earth & MapMaker Layers)
@@ -275,12 +275,11 @@ deployment_settings.gis.spatialdb = False
 # Register an app at http://twitter.com/apps
 # (select Aplication Type: Client)
 # You'll get your consumer_key and consumer_secret from Twitter
-# You can keep these empty if you don't need Twitter integration
-deployment_settings.twitter.oauth_consumer_key = ""
-deployment_settings.twitter.oauth_consumer_secret = ""
+#deployment_settings.twitter.oauth_consumer_key = ""
+#deployment_settings.twitter.oauth_consumer_secret = ""
 
 # Use 'soft' deletes
-deployment_settings.security.archive_not_delete = True
+#deployment_settings.security.archive_not_delete = False
 
 # AAA Settings
 
@@ -425,8 +424,6 @@ deployment_settings.security.archive_not_delete = True
 
 # Terms of Service to be able to Register on the system
 #deployment_settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
-# Should we use internal Support Requests?
-#deployment_settings.options.support_requests = True
 
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: have the system automatically enable migrate if a module is enabled
@@ -465,7 +462,14 @@ deployment_settings.modules = OrderedDict([
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-    ("gis", Storage(
+     # Uncomment to enable internal support requests
+     #("support", Storage(
+     #        name_nice = T("Support"),
+     #        description = T("Support Requests"),
+     #        restricted = True,
+     #        module_type = None  # This item is handled separately for the menu
+     #    )),
+     ("gis", Storage(
             name_nice = T("Map"),
             description = T("Situation Awareness & Geospatial Analysis"),
             restricted = True,

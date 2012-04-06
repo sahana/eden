@@ -9,6 +9,8 @@
 
          UID..................string..........gis_config.uuid (needed for SITE_DEFAULT)
          Name.................string..........gis_config.name
+         OU...................string..........gis_config.pe_id
+         OU Type..............string..........gis_config.pe_type (currently only Orgs supported, but easy to extend)
          Region...............string..........gis_config.region_location_id.name
          Default..............string..........gis_config.default_location_id.name
          Zoom.................integer.........gis_config.zoom
@@ -31,6 +33,9 @@
     <!-- Indexes for faster processing -->
     <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
+    <xsl:key name="ous"
+             match="row"
+             use="concat(col[@field='OU Type'], '/', col[@field='OU'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -47,6 +52,14 @@
                 <xsl:call-template name="Symbology"/>
             </xsl:for-each>
 
+            <!-- OUs -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('ous',
+                                                        concat(col[@field='OU Type'], '/',
+                                                               col[@field='OU']))[1])]">
+                <xsl:call-template name="OU"/>
+            </xsl:for-each>
+
             <!-- Configs -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
@@ -58,6 +71,8 @@
 
         <xsl:variable name="region" select="col[@field='Region']/text()"/>
         <xsl:variable name="default" select="col[@field='Default']/text()"/>
+        <xsl:variable name="ou" select="col[@field='OU']/text()"/>
+        <xsl:variable name="ou_type" select="col[@field='OU Type']/text()"/>
         <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
     
@@ -125,6 +140,18 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+            <xsl:if test="$ou!=''">
+                <xsl:choose>
+                    <xsl:when test="$ou_type='organisation' or 
+                                    $ou_type='organization'">
+                        <reference field="pe_id" resource="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($ou_type, $ou)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                </xsl:choose>
+            </xsl:if>
         </resource>
     </xsl:template>
 
@@ -154,6 +181,27 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Symbology"/></data>
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="OU">
+
+        <xsl:variable name="ou" select="col[@field='OU']/text()"/>
+        <xsl:variable name="ou_type" select="col[@field='OU Type']/text()"/>
+    
+        <xsl:choose>
+            <xsl:when test="$ou_type='organisation' or 
+                            $ou_type='organization'">
+                <resource name="org_organisation">
+                    <xsl:attribute name="tuid">
+                         <xsl:value-of select="concat($ou_type, $ou)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$ou"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
+            
     </xsl:template>
 
     <!-- ****************************************************************** -->
