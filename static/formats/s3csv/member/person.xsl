@@ -27,7 +27,8 @@
          Home L3........................optional.....person home address L3
          Home L4........................optional.....person home address L4
          Lists..........................optional.....comma-separated list of Groups
-         Membership Fee.................optional.....Membership fee
+         Start Date.....................optional.....Start Date
+         Membership Fee.................optional.....Membership Fee
          Years Paid.....................optional.....comma-separated list of Years that membership has been paid
 
          Column headers looked up in labels.xml:
@@ -192,6 +193,9 @@
                     <xsl:value-of select="col[@field='Years Paid']"/>
                     <xsl:text>]</xsl:text>
                 </xsl:attribute>
+                <!-- Don't need this if specifying value
+                <xsl:value-of select="col[@field='Years Paid']"/>
+                -->
             </data>
 
         </resource>
