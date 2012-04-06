@@ -27,6 +27,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.i18n import i18n_patterns
+from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
                               DeletePost, ViewPost
@@ -54,26 +55,26 @@ urlpatterns += i18n_patterns('',
     url(r'^$', 'e_cidadania.views.index_view', name='site-index'),
 
     # User accounts
-    (r'^accounts/', include('e_cidadania.apps.userprofile.urls')),
+    url(_(r'^accounts/'), include('e_cidadania.apps.userprofile.urls')),
 
     # Spaces
-    (r'^spaces/', include('e_cidadania.apps.spaces.urls')),
+    url(_(r'^spaces/'), include('e_cidadania.apps.spaces.urls')),
     
     # Invitations
-    url(r'^invite/', 'e_cidadania.views.invite', name='invite'),
+    url(_(r'^invite/'), 'e_cidadania.views.invite', name='invite'),
     
     # News (this view of news is only for the index)
-    url(r'^news/$', ListNews.as_view(), name='list-site-news'),
+    url(_(r'^news/$'), ListNews.as_view(), name='list-site-news'),
     
-    url(r'^news/add/$', AddPost.as_view(), name='add-site-post'),
+    url(_(r'^news/add/$'), AddPost.as_view(), name='add-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/delete/$', DeletePost.as_view(),
+    url(_(r'^news/(?P<post_id>\w+)/delete/$'), DeletePost.as_view(),
                                             name='delete-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/edit/$', EditPost.as_view(),
+    url(_(r'^news/(?P<post_id>\w+)/edit/$'), EditPost.as_view(),
                                           name='edit-site-post'),
 
-    url(r'^news/(?P<post_id>\w+)/$', ViewPost.as_view(),
+    url(_(r'^news/(?P<post_id>\w+)/$'), ViewPost.as_view(),
                                      name='view-site-post'),
     
     # RSS Feed for the index news ONLY
@@ -82,21 +83,21 @@ urlpatterns += i18n_patterns('',
     #(r'^api/', include('e_cidadania.apps.api.urls')),
 
     # Static content #### FOR DEVELOPMENT!! ####
-    (r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
+    url(r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'uploads'}),
     
     # Static content #### FOR DEVELOPMENT!! ####
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+    url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
 
     # This urls is for the django comments system
-    (r'^comments/', include('django.contrib.comments.urls')),
+    url(_(r'^comments/'), include('django.contrib.comments.urls')),
 
     (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
 
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
-    (r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
+    url(r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
 )
 
 if settings.DEBUG:
