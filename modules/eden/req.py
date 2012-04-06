@@ -57,6 +57,8 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
+rn_label = T("Requisition Number")
+
 # =============================================================================
 class S3RequestModel(S3Model):
     """
@@ -64,6 +66,7 @@ class S3RequestModel(S3Model):
 
     names = ["req_req",
              "req_req_id",
+             "req_req_ref",
              "req_hide_quantities",
              "req_create_form_mods",
              "req_prep",
@@ -102,6 +105,11 @@ class S3RequestModel(S3Model):
                                      default = REQ_STATUS_NONE,
                                      writable = settings.get_req_status_writable(),
                                     )
+
+        req_ref = S3ReusableField( "req_ref",
+                                   "string",
+                                   label = rn_label,
+                                   writable = False)
 
         req_priority_opts = {
             3:T("High"),
@@ -142,6 +150,7 @@ class S3RequestModel(S3Model):
                                   Field("request_number",
                                         unique = True,
                                         label = T("Request Number")),
+                                  req_ref(),
                                   Field("date", # DO NOT CHANGE THIS
                                         "datetime",
                                         label = T("Date Requested"),
@@ -438,6 +447,7 @@ $(function() {
         #
         return Storage(
                 req_req_id = req_id,
+                req_req_ref = req_ref,
                 req_create_form_mods = self.req_create_form_mods,
                 req_prep = self.req_prep,
                 req_helptext_script = req_helptext_script,
@@ -699,7 +709,13 @@ $(function() {
         s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
+        rrtable = s3db.req_req
 
+        # If the req_ref is None then set it up
+        id = form.vars.id
+        if not rrtable[id].req_ref:
+            code = S3TrackingModel.getShippingCode("REQ", rrtable[id].site_id, id)
+            db(rrtable.id == id).update(req_ref = code)
         # Configure the next page to go to based on the request type
         tablename = "req_req"
         if "default_type" in request.get_vars:

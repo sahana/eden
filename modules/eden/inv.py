@@ -69,7 +69,9 @@ SHIP_DOC_COMPLETE = 1
 itn_label = T("Item Source Tracking Number")
 # Overwrite the label until we have a better way to do this
 itn_label = T("CTN")
-tn_label = T("Tracking Number")
+wn_label = T("Waybill Number")
+grn_label = T("Goods Received Note Number")
+po_label = T("Purchase Order Number")
 # =============================================================================
 class S3InventoryModel(S3Model):
     """
@@ -456,6 +458,7 @@ class S3TrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         currency_type = s3.currency_type
         req_item_id = self.req_item_id
+        req_ref = self.req_req_ref
         adj_item_id = self.adj_item_id
 
         item_pack_virtualfields = self.supply_item_pack_virtualfields
@@ -469,16 +472,25 @@ class S3TrackingModel(S3Model):
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
+        send_ref = S3ReusableField( "send_ref",
+                                    "string",
+                                    label = wn_label,
+                                    writable = False)
+        recv_ref = S3ReusableField( "recv_ref",
+                                    "string",
+                                    label = grn_label,
+                                    writable = False)
+        purchase_ref = S3ReusableField( "purchase_ref",
+                                        "string",
+                                        label = po_label)
+
         # =====================================================================
         # Send (Outgoing / Dispatch / etc)
         #
         tablename = "inv_send"
         table = self.define_table("inv_send",
-                                  Field("tracking_no",
-                                        "string",
-                                        label = tn_label,
-                                        writable = False
-                                        ),
+                                  send_ref(),
+                                  req_ref(),
                                   person_id(name = "sender_id",
                                             label = T("Sent By"),
                                             default = auth.s3_logged_in_person(),
@@ -531,9 +543,9 @@ class S3TrackingModel(S3Model):
                                         label = T("Status"),
                                         writable = False,
                                         ),
-                                  Field("vehicle_type",
+                                  Field("transport_type",
                                         "string",
-                                        label = T("Type of Vehicle"),
+                                        label = T("Type of Transport"),
                                         ),
                                   Field("vehicle_plate_no",
                                         "string",
@@ -624,11 +636,9 @@ class S3TrackingModel(S3Model):
 
         tablename = "inv_recv"
         table = self.define_table("inv_recv",
-                                  Field("tracking_no",
-                                        "string",
-                                        label = tn_label,
-                                        writable = False
-                                        ),
+                                  send_ref(),
+                                  recv_ref(),
+                                  purchase_ref(),
                                   person_id(name = "sender_id",
                                             label = T("Sent By Person"),
                                             ondelete = "SET NULL",
@@ -686,6 +696,7 @@ class S3TrackingModel(S3Model):
                                         label = T("Status"),
                                         writable = False,
                                         ),
+                                  req_ref(),
                                   Field("grn_status",
                                         "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(ship_doc_status)),
@@ -810,6 +821,7 @@ class S3TrackingModel(S3Model):
                        )
 
         self.configure(tablename,
+                       onaccept = self.inv_recv_onaccept,
                        search_method = recv_search,
                        create_next = recv_item_url,
                        update_next = recv_item_url)
@@ -960,6 +972,7 @@ $(document).ready(function() {
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(inv_track_item_deleting = self.inv_track_item_deleting,
+                       inv_getShippingCode = self.getShippingCode,
                        inv_track_item_onaccept = self.inv_track_item_onaccept,
                       )
 
@@ -988,16 +1001,16 @@ $(document).ready(function() {
     @staticmethod
     def inv_send_onaccept(form):
         """
-           When a inv send record is created then create the tracking number.
+           When a inv send record is created then create the send_ref.
         """
         s3db = current.s3db
         db = current.db
         stable = s3db.inv_send
-        oldTotal = 0
-        # If the tracking number is blank then set it up
-        if not form.record:
-            id = form.vars.id
-            db(stable.id == id).update(tracking_no = "TN-%07d" % (10000+id))
+        # If the send_ref is None then set it up
+        id = form.vars.id
+        if not stable[id].send_ref:
+            code = S3TrackingModel.getShippingCode("WB", stable[id].site_id, id)
+            db(stable.id == id).update(send_ref = code)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1053,6 +1066,21 @@ $(document).ready(function() {
                         )
         else:
             return current.messages.NONE
+
+    @staticmethod
+    def inv_recv_onaccept(form):
+        """
+           When a inv send record is created then create the recv_ref.
+        """
+        s3db = current.s3db
+        db = current.db
+        rtable = s3db.inv_recv
+        # If the send_ref is None then set it up
+        id = form.vars.id
+        if not rtable[id].recv_ref:
+            code = S3TrackingModel.getShippingCode("GRN", rtable[id].site_id, id)
+            db(rtable.id == id).update(recv_ref = code)
+
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1179,6 +1207,16 @@ $(document).ready(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def getShippingCode(type, site_id, id):
+        s3db = current.s3db
+        if site_id:
+            ostable = s3db.org_site
+            scode = ostable[site_id].code
+            return "%s-%s-%06d" % (type, scode, id)
+        else:
+            return "%s-###-%06d" % (type, id)
+    # -------------------------------------------------------------------------
+    @staticmethod
     def inv_track_item_onaccept(form):
         """
            When a track item record is created and it is linked to an inv_item
@@ -1190,6 +1228,8 @@ $(document).ready(function() {
         inv_item_table = s3db.inv_inv_item
         stable = s3db.inv_send
         rtable = s3db.inv_recv
+        ritable = s3db.req_req_item
+        rrtable = s3db.req_req
         oldTotal = 0
         # only modify the original inv. item total if we have a quantity on the form
         # Their'll not be one if it is being received since by then it is read only
@@ -1202,14 +1242,21 @@ $(document).ready(function() {
             newTotal = form.vars.quantity
             db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = inv_item_table.quantity - newTotal)
         if form.vars.send_id and form.vars.recv_id:
-            db(rtable.id == form.vars.recv_id).update(tracking_no = stable[form.vars.send_id].tracking_no)
+            db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
+        # if this is linked to a request then copy the req_ref to the send item
+        id = form.vars.id
+        record = tracktable[id]
+        if record.req_item_id:
+            req_id = ritable[req_item_id].req_id
+            req_ref = rrtable[req_id].ref_ref
+            db(stable.id == form.vars.send_id).update(req_ref = ref_ref)
+            if form.vars.recv_id:
+                db(rtable.id == form.vars.recv_id).update(req_ref = ref_ref)
 
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
-        id = form.vars.id
         if tracktable[id].status == 3:
-            record = tracktable[id]
             query = (inv_item_table.item_id == record.item_id) & \
                     (inv_item_table.item_pack_id == record.item_pack_id) & \
                     (inv_item_table.currency == record.currency) & \
@@ -1402,6 +1449,14 @@ def inv_warehouse_rheader(r):
                           _class = "action-btn"
                           )
             rfooter.append(as_btn)
+            ts_btn = A( T("Track Shipment"),
+                          _href = URL(c = "inv",
+                                      f = "track_movement",
+                                      vars = {"viewing":"inv_item.%s" % r.component_id},
+                                      ),
+                          _class = "action-btn"
+                          )
+            rfooter.append(ts_btn)
     # else:
         # ns_btn = A( T("Receive New Stock"),
                       # _href = URL(c = "inv",
@@ -1762,7 +1817,6 @@ class S3AdjustModel(S3Model):
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
         currency_type = s3.currency_type
-        req_item_id = self.req_item_id
 
         org_site_represent = self.org_site_represent
 

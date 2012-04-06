@@ -63,6 +63,7 @@ class S3Config(Storage):
         self.ui = Storage()
         self.req = Storage()
         self.inv = Storage()
+        self.org = Storage()
         self.supply = Storage()
         self.hrm = Storage()
         self.project = Storage()
@@ -511,6 +512,11 @@ class S3Config(Storage):
     # Supply
     def get_supply_catalog_default(self):
         return self.inv.get("catalog_default", "Other Items")
+
+    # -------------------------------------------------------------------------
+    # Organsiation
+    def get_org_site_code_len(self):
+        return self.org.get("site_code_len", 10)
 
     # -------------------------------------------------------------------------
     # Human Resource Management

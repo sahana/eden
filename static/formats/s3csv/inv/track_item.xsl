@@ -21,7 +21,7 @@
         Currency......................currency
         Unit Value....................pack_value
         Expiry Date...................expiry_date
-        Sent Quantity.................quantity
+        Quantity Sent.................quantity
         Name of Sender................inv_send.sender_id, inv_recv.sender_id
         Date Sent.....................date
         Sent Status...................inv_send.status
@@ -31,7 +31,7 @@
         Date Received.................inv_recv.date
         Receiving Type................inv_recv.type
         Receiving Status..............inv_recv.status
-        Received Quantity.............recv_quantity
+        Quantity Received.............recv_quantity
         Receiving Bin.................recv_bin
         Comments......................comments
         Send Comments.................inv_send.comments
@@ -223,13 +223,13 @@
         <xsl:variable name="eta" select="col[@field='Estimated Date of Arrival']/text()"/>
         <xsl:variable name="comments" select="col[@field='Comments']/text()"/>
         <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
-        <xsl:variable name="sent_quantity" select="col[@field='Sent Quantity']/text()"/>
-        <xsl:variable name="recv_quantity" select="col[@field='Received Quantity']/text()"/>
+        <xsl:variable name="sent_quantity" select="col[@field='Quantity Sent']/text()"/>
+        <xsl:variable name="recv_quantity" select="col[@field='Quantity Received']/text()"/>
 
         <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
         <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
-        <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $warehouse, '/', $s_bin)"/>
-        <xsl:variable name="r_tuid" select="concat($item_tuid, '/', $destination, '/', $r_bin)"/>
+        <xsl:variable name="s_tuid" select="concat('inv_item/',$item, '/', $pack, '/', $model, '/', $warehouse, '/', $s_bin)"/>
+        <xsl:variable name="r_tuid" select="concat('inv_item/',$item, '/', $pack, '/', $model, '/', $destination, '/', $r_bin)"/>
 
         <xsl:variable name="send_tuid" select="concat('inv_send/', $sender, '/', $recipient, '/', $warehouse, '/', $destination, '/', $date)"/>
         <xsl:variable name="recv_tuid" select="concat('inv_recv/', $sender, '/', $recipient, '/', $warehouse, '/', $destination, '/', $date)"/>
@@ -527,11 +527,12 @@
         <xsl:variable name="currency" select="col[@field='Currency']/text()"/>
         <xsl:variable name="unit_value" select="col[@field='Unit Value']/text()"/>
         <xsl:variable name="model" select="col[@field='Item Model']/text()"/>
+        <xsl:variable name="ownerName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="donorName" select="col[@field='Supplier/Donor']/text()"/>
         <xsl:variable name="tracking_no" select="col[@field='Tracking Number']/text()"/>
         <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack, '/', $model)"/>
         <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack, '/', $model)"/>
-        <xsl:variable name="s_tuid" select="concat($item_tuid, '/', $site, '/', $bin)"/>
+        <xsl:variable name="s_tuid" select="concat('inv_item/',$item, '/', $pack, '/', $model, '/', $site, '/', $bin)"/>
 
         <resource name="inv_inv_item">
             <xsl:attribute name="tuid">
@@ -560,6 +561,12 @@
             <reference field="item_pack_id" resource="supply_item_pack">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$pack_tuid"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to the owning org -->
+            <reference field="owner_org_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('org_org/',$ownerName)"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to the supply org -->
