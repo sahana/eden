@@ -1211,7 +1211,7 @@ $(document).ready(function() {
         s3db = current.s3db
         if site_id:
             ostable = s3db.org_site
-            scode = ostable[site_id]
+            scode = ostable[site_id].code
             return "%s-%s-%06d" % (type, scode, id)
         else:
             return "%s-###-%06d" % (type, id)
