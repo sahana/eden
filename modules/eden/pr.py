@@ -1427,6 +1427,7 @@ class S3PersonAddressModel(S3Model):
         db = current.db
         s3db = current.s3db
         request = current.request
+        settings = current.deployment_settings
         lx_update = current.response.s3.lx_update
 
         vars = form.vars
@@ -1457,16 +1458,27 @@ class S3PersonAddressModel(S3Model):
                     lx_update(table, person.id)
 
             if person and str(vars.type) == "1": # Home Address
-                # Also check for any Volunteer HRM record(s)
-                htable = s3db.hrm_human_resource
-                query = (htable.person_id == person.id) & \
-                        (htable.type == 2) & \
-                        (htable.deleted != True)
-                hrs = db(query).select(htable.id)
-                for hr in hrs:
-                    db(htable.id == hr.id).update(location_id=location_id)
-                    # Update the Lx fields
-                    lx_update(htable, hr.id)
+                if settings.has_module("hrm"):
+                    # Also check for any Volunteer HRM record(s)
+                    htable = s3db.hrm_human_resource
+                    query = (htable.person_id == person.id) & \
+                            (htable.type == 2) & \
+                            (htable.deleted != True)
+                    hrs = db(query).select(htable.id)
+                    for hr in hrs:
+                        db(htable.id == hr.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        lx_update(htable, hr.id)
+                if settings.has_module("member"):
+                    # Also check for any Member record(s)
+                    mtable = s3db.member_membership
+                    query = (mtable.person_id == person.id) & \
+                            (mtable.deleted != True)
+                    members = db(query).select(mtable.id)
+                    for member in members:
+                        db(mtable.id == member.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
