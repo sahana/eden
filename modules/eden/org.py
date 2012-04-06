@@ -892,8 +892,8 @@ class S3SiteModel(S3Model):
             code = temp_code
             temp_code = None
             wildcard_bit = 1
-            max_wc_bit = pow(2,length)
             length = len(code)
+            max_wc_bit = pow(2,length)
             while not temp_code and wildcard_bit < max_wc_bit:
                 wildcard_posn = []
                 for w in range(length):
@@ -903,10 +903,13 @@ class S3SiteModel(S3Model):
                 code_list = S3SiteModel.getCodeList(code, wildcard_posn)
                 temp_code = S3SiteModel.returnUniqueCode(code, wildcard_posn, code_list)
         if temp_code:
-            db(site_table.id == form.vars.id).update(site_table.code == temp_code)
+            db(site_table.id == form.vars.id).update(code = temp_code)
 
     @staticmethod
     def getCodeList(code, wildcard_posn=[]):
+        s3db = current.s3db
+        db = current.db
+        site_table = s3db.org_site
         temp_code = ""
         # inject the wildcard charater in the right positions
         for posn in range(len(code)):

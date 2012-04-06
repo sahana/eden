@@ -66,6 +66,7 @@ class S3RequestModel(S3Model):
 
     names = ["req_req",
              "req_req_id",
+             "req_req_ref",
              "req_hide_quantities",
              "req_create_form_mods",
              "req_prep",
@@ -713,7 +714,7 @@ $(function() {
         # If the req_ref is None then set it up
         id = form.vars.id
         if not rrtable[id].req_ref:
-            code = inv_getShippingCode("REQ", rrtable[id].site_id, id)
+            code = S3TrackingModel.getShippingCode("REQ", rrtable[id].site_id, id)
             db(rrtable.id == id).update(req_ref = code)
         # Configure the next page to go to based on the request type
         tablename = "req_req"

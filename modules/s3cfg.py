@@ -63,6 +63,7 @@ class S3Config(Storage):
         self.ui = Storage()
         self.req = Storage()
         self.inv = Storage()
+        self.org = Storage()
         self.supply = Storage()
         self.hrm = Storage()
         self.project = Storage()

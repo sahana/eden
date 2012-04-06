@@ -458,6 +458,7 @@ class S3TrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         currency_type = s3.currency_type
         req_item_id = self.req_item_id
+        req_ref = self.req_req_ref
         adj_item_id = self.adj_item_id
 
         item_pack_virtualfields = self.supply_item_pack_virtualfields
@@ -637,7 +638,7 @@ class S3TrackingModel(S3Model):
         table = self.define_table("inv_recv",
                                   send_ref(),
                                   recv_ref(),
-                                  po_ref(),
+                                  purchase_ref(),
                                   person_id(name = "sender_id",
                                             label = T("Sent By Person"),
                                             ondelete = "SET NULL",
@@ -1008,7 +1009,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not stable[id].send_ref:
-            code = inv_getShippingCode("WB", stable[id].site_id, id)
+            code = S3TrackingModel.getShippingCode("WB", stable[id].site_id, id)
             db(stable.id == id).update(send_ref = code)
 
     # ---------------------------------------------------------------------
@@ -1077,7 +1078,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not rtable[id].recv_ref:
-            code = inv_getShippingCode("GRN", rtable[id].site_id, id)
+            code = S3TrackingModel.getShippingCode("GRN", rtable[id].site_id, id)
             db(rtable.id == id).update(recv_ref = code)
 
 
@@ -1816,7 +1817,6 @@ class S3AdjustModel(S3Model):
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
         currency_type = s3.currency_type
-        req_item_id = self.req_item_id
 
         org_site_represent = self.org_site_represent
 
