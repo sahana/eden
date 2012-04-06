@@ -1244,6 +1244,8 @@ $(document).ready(function() {
         if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
+        id = form.vars.id
+        record = tracktable[id]
         if record.req_item_id:
             req_id = ritable[req_item_id].req_id
             req_ref = rrtable[req_id].ref_ref
@@ -1254,9 +1256,7 @@ $(document).ready(function() {
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
-        id = form.vars.id
         if tracktable[id].status == 3:
-            record = tracktable[id]
             query = (inv_item_table.item_id == record.item_id) & \
                     (inv_item_table.item_pack_id == record.item_pack_id) & \
                     (inv_item_table.currency == record.currency) & \
