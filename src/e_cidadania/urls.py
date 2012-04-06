@@ -38,8 +38,12 @@ admin.autodiscover()
 js_info_dict = {
     'packages': ('e_cidadania.apps.debate',),
 }
+urlpatterns = patterns('',
+    # i18n switcher
+    (r'^i18n/', include('django.conf.urls.i18n')),
+)
 
-urlpatterns = i18n_patterns('',
+urlpatterns += i18n_patterns('',
 
     (r'^grappelli/', include('grappelli.urls')),
     
@@ -74,9 +78,6 @@ urlpatterns = i18n_patterns('',
     
     # RSS Feed for the index news ONLY
     url(r'^rss/$', IndexEntriesFeed(), name='site-feed'),
-
-    # i18n switcher
-    (r'^i18n/', include('django.conf.urls.i18n')),
     
     #(r'^api/', include('e_cidadania.apps.api.urls')),
 
