@@ -1060,7 +1060,7 @@ def adj():
                     table.comments.writable = False
                 else:
                     if "site" in request.vars:
-                        table.site_id.writable = False
+                        table.site_id.writable = True
                         table.site_id.default = request.vars.site
         return True
     response.s3.prep = prep

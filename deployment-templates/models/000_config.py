@@ -400,6 +400,10 @@ deployment_settings.security.archive_not_delete = True
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 
+# Organsiation Management
+# Set the length of the auto-generated org/site code the default is 10
+#deployment_settings.org.site_code_len = 3
+
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 #deployment_settings.hrm.email_required = False

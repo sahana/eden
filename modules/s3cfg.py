@@ -515,6 +515,11 @@ class S3Config(Storage):
         return self.inv.get("catalog_default", "Other Items")
 
     # -------------------------------------------------------------------------
+    # Organsiation
+    def get_org_site_code_len(self):
+        return self.org.get("site_code_len", 10)
+
+    # -------------------------------------------------------------------------
     # Human Resource Management
     def get_hrm_email_required(self):
         """
