@@ -15,8 +15,9 @@
          Folder...............string..........Layer Folder
          Title................string..........Layer Title
          Body.................string..........Layer Body
-         Enabled..............boolean.........Layer Enabled in SITE_DEFAULT config?
-         Visible..............boolean.........Layer Visible in SITE_DEFAULT config?
+         Config...............string..........Configuration Name
+         Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
+         Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
 
          Needs Importing twice:
             layer_config
@@ -27,6 +28,7 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
+    <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
     <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
@@ -34,6 +36,12 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+            <!-- Configs -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('configs',
+                                                                   col[@field='Config'])[1])]">
+                <xsl:call-template name="Config"/>
+            </xsl:for-each>
+
             <!-- KML Layers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
                                                                    col[@field='Name'])[1])]">
@@ -84,9 +92,24 @@
 
     <!-- ****************************************************************** -->
 
+    <xsl:template name="Config">
+
+        <xsl:variable name="Config" select="col[@field='Config']/text()"/>
+    
+        <resource name="gis_config">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Config"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Config"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
     <xsl:template name="Layer">
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
+        <xsl:variable name="Config" select="col[@field='Config']/text()"/>
 
         <resource name="gis_layer_kml">
             <xsl:attribute name="tuid">
@@ -111,9 +134,18 @@
                 </xsl:attribute>
             </reference>
             <reference field="config_id" resource="gis_config">
-                <xsl:attribute name="uuid">
-                    <xsl:value-of select="'SITE_DEFAULT'"/>
-                </xsl:attribute>
+                <xsl:choose>
+                    <xsl:when test="$Config!=''">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Config"/>
+                        </xsl:attribute>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:attribute name="uuid">
+                            <xsl:value-of select="'SITE_DEFAULT'"/>
+                        </xsl:attribute>
+                    </xsl:otherwise>
+                </xsl:choose>
             </reference>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>

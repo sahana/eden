@@ -109,7 +109,7 @@ class S3InventoryModel(S3Model):
         # Inventory Item
         #
         tablename = "inv_inv_item"
-        # ondelete references have been set to RESTRICT because the stock items
+        # ondelete references have been set to RESTRICT because the inv. items
         # should never be automatically deleted
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site",
@@ -125,7 +125,7 @@ class S3InventoryModel(S3Model):
                                                   #              _title="%s|%s" % (T("Inventory"),
                                                   #                                T("Enter some characters to bring up a list of possible matches"))),
                                                   represent=org_site_represent),
-                                  item_id,
+                                  item_id, #Item Entity
                                   supply_item_id(ondelete = "RESTRICT"),
                                   item_pack_id(ondelete = "RESTRICT"),
                                   Field("quantity",
@@ -162,10 +162,10 @@ class S3InventoryModel(S3Model):
                                         label = itn_label,
                                         ),
                                   org_id(name = "owner_org_id",
-                                         label = "Owning Organization",
+                                         label = "Organization/Department",
                                          ondelete = "SET NULL"), # which org owns this item
                                   org_id(name = "supply_org_id",
-                                         label = "Supplying Organization",
+                                         label = "Supplier/Donor",
                                          ondelete = "SET NULL"), # original donating org
                                   # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                                   #Field("status"),
@@ -185,6 +185,7 @@ class S3InventoryModel(S3Model):
             title_list = LIST_INV_ITEMS,
             title_update = T("Edit Warehouse Stock"),
             title_search = T("Search Warehouse Stock"),
+            title_report = T("Warehouse Stock Report"),
             title_upload = T("Import Warehouse Stock"),
             subtitle_create = ADD_INV_ITEM,
             subtitle_list = T("Warehouse Stock"),
@@ -265,15 +266,17 @@ $(document).ready(function() {
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        list_fields = ["id",
-                                      "item_id",
-                                      (T("Code"), "item_code"),
-                                      "supply_org_id",
-                                      (T("Category"), "item_category"),
                                       "site_id",
+                                      "item_id",
+                                      (T("Item Code"), "item_code"),
+                                      (T("Category"), "item_category"),
                                       "quantity",
                                       "pack_value",
                                       (T("Total Value"), "total_value"),
-                                      "currency"
+                                      "currency",
+                                      "bin",
+                                      "owner_org_id",
+                                      "supply_org_id",
                                       ],
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
@@ -399,15 +402,22 @@ $(document).ready(function() {
         """
         if job.tablename == "inv_inv_item":
             table = job.table
+            # @ToDo: Do this in a loop with a list of fields
             site_id = "site_id" in job.data and job.data.site_id
             item_id = "item_id" in job.data and job.data.item_id
             pack_id = "item_pack_id" in job.data and job.data.item_pack_id
-            donor_id = "supply_org_id" in job.data and job.data.supply_org_id
+            owner_org_id = "owner_org_id" in job.data and job.data.owner_org_id
+            supply_org_id = "supply_org_id" in job.data and job.data.supply_org_id
+            pack_value = "pack_value" in job.data and job.data.pack_value
+            currency = "currency" in job.data and job.data.currency
             bin = "bin" in job.data and job.data.bin
             query = (table.site_id == site_id) & \
                     (table.item_id == item_id) & \
                     (table.item_pack_id == pack_id) & \
-                    (table.supply_org_id == donor_id) & \
+                    (table.owner_org_id == owner_org_id) & \
+                    (table.supply_org_id == supply_org_id) & \
+                    (table.pack_value == pack_value) & \
+                    (table.currency == currency) & \
                     (table.bin == bin)
             id = duplicator(job, query)
             if id:
@@ -427,6 +437,7 @@ class S3TrackingModel(S3Model):
              "inv_recv",
              "inv_recv_represent",
              "inv_track_item",
+             "inv_track_item_onaccept"
              ]
 
     def model(self):
@@ -847,12 +858,12 @@ class S3TrackingModel(S3Model):
                                         default = 1,
                                         represent = lambda opt: tracking_status[opt],
                                         writable = False),
-                                  inv_item_id(name="send_stock_id",
+                                  inv_item_id(name="send_inv_item_id",
                                               ondelete = "RESTRICT",
                                               script = SCRIPT("""
 $(document).ready(function() {
     S3FilterFieldChange({
-        'FilterField':    'send_stock_id',
+        'FilterField':    'send_inv_item_id',
         'Field':          'item_pack_id',
         'FieldResource':  'item_pack',
         'FieldPrefix':    'supply',
@@ -891,7 +902,7 @@ $(document).ready(function() {
                                         ),
                                   send_id(), # send record
                                   recv_id(), # receive record
-                                  inv_item_id(name="recv_stock_id",
+                                  inv_item_id(name="recv_inv_item_id",
                                               label = "Receiving Inventory",
                                               required = False,
                                               readable = False,
@@ -904,8 +915,11 @@ $(document).ready(function() {
                                         writable = False,
                                         widget = S3InvBinWidget("inv_track_item")
                                         ),
+                                  org_id(name = "owner_org_id",
+                                         label = "Organization/Department",
+                                         ondelete = "SET NULL"), # which org owns this item
                                   org_id(name = "supply_org_id",
-                                         label = "Supplying Organization",
+                                         label = "Supplier/Donor",
                                          ondelete = "SET NULL"), # original donating org
                                   adj_item_id(ondelete = "RESTRICT"), # any adjustment record
                                   s3.comments(),
@@ -946,6 +960,7 @@ $(document).ready(function() {
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(inv_track_item_deleting = self.inv_track_item_deleting,
+                       inv_track_item_onaccept = self.inv_track_item_onaccept,
                       )
 
     # ---------------------------------------------------------------------
@@ -1001,8 +1016,8 @@ $(document).ready(function() {
         site_id = record.site_id
         site = table.site_id.represent(site_id,False)
         # hide the inv_item field
-        tracktable.send_stock_id.readable = False
-        tracktable.recv_stock_id.readable = False
+        tracktable.send_inv_item_id.readable = False
+        tracktable.recv_inv_item_id.readable = False
 
         exporter = S3PDF()
         return exporter(r,
@@ -1114,10 +1129,10 @@ $(document).ready(function() {
             When a track item record is being created with a tracking number
             then the tracking number needs to be unique within the organisation.
 
-            If the stock is coming out of a warehouse then the stock details
+            If the inv. item is coming out of a warehouse then the inv. item details
             need to be copied across (org, expiry etc)
 
-            If the stock is being received then their might be a selected bin
+            If the inv. item is being received then their might be a selected bin
             ensure that the correct bin is selected and save those details.
         """
         s3db = current.s3db
@@ -1127,27 +1142,26 @@ $(document).ready(function() {
         stable = s3db.org_site
 
         # save the organisation from where this tracking originates
-        if form.vars.send_stock_id:
-            query = (itable.id == form.vars.send_stock_id) & \
+        if form.vars.send_inv_item_id:
+            query = (itable.id == form.vars.send_inv_item_id) & \
                     (itable.site_id == stable.id)
             record = db(query).select(stable.organisation_id,
                                       limitby=(0, 1)).first()
 
             form.vars.track_org_id = record.organisation_id
 
-        # copy the data from the donated stock
-        if form.vars.send_stock_id:
-            query = (itable.id == form.vars.send_stock_id)
+        # copy the data from the donated inv. item
+        if form.vars.send_inv_item_id:
+            query = (itable.id == form.vars.send_inv_item_id)
             record = db(query).select(limitby=(0, 1)).first()
             form.vars.item_id = record.item_id
             form.vars.item_source_no = record.item_source_no
             form.vars.expiry_date = record.expiry_date
             form.vars.bin = record.bin
+            form.vars.owner_org_id = record.owner_org_id
             form.vars.supply_org_id = record.supply_org_id
-            # If no pack value was entered then copy the value from the inv item
-            if not form.vars.pack_value:
-                # @todo: move this into the javascript ajax call on the item selected
-                form.vars.pack_value = record.pack_value
+            form.vars.pack_value = record.pack_value
+            form.vars.currency = record.currency
 
         # if we have no send id then copy the quantity sent directly into the received field
         if not form.vars.send_id:
@@ -1173,20 +1187,20 @@ $(document).ready(function() {
         s3db = current.s3db
         db = current.db
         tracktable = s3db.inv_track_item
-        stocktable = s3db.inv_inv_item
+        inv_item_table = s3db.inv_inv_item
         stable = s3db.inv_send
         rtable = s3db.inv_recv
         oldTotal = 0
-        # only modify the original stock total if we have a quantity on the form
+        # only modify the original inv. item total if we have a quantity on the form
         # Their'll not be one if it is being received since by then it is read only
         # It will be there on an import and so the value will be deducted correctly
         if form.vars.quantity:
             if form.record:
-                if form.record.send_stock_id != None:
+                if form.record.send_inv_item_id != None:
                     oldTotal = form.record.quantity
-                    db(stocktable.id == form.record.send_stock_id).update(quantity = stocktable.quantity + oldTotal)
+                    db(inv_item_table.id == form.record.send_inv_item_id).update(quantity = inv_item_table.quantity + oldTotal)
             newTotal = form.vars.quantity
-            db(stocktable.id == form.vars.send_stock_id).update(quantity = stocktable.quantity - newTotal)
+            db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = inv_item_table.quantity - newTotal)
         if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(tracking_no = stable[form.vars.send_id].tracking_no)
 
@@ -1196,26 +1210,28 @@ $(document).ready(function() {
         id = form.vars.id
         if tracktable[id].status == 3:
             record = tracktable[id]
-            query = (stocktable.item_id == record.item_id) & \
-                    (stocktable.item_pack_id == record.item_pack_id) & \
-                    (stocktable.currency == record.currency) & \
-                    (stocktable.pack_value == record.pack_value) & \
-                    (stocktable.expiry_date == record.expiry_date) & \
-                    (stocktable.bin == record.recv_bin) & \
-                    (stocktable.supply_org_id == record.supply_org_id)
-            inv_item_row = db(query).select(stocktable.id,
+            query = (inv_item_table.item_id == record.item_id) & \
+                    (inv_item_table.item_pack_id == record.item_pack_id) & \
+                    (inv_item_table.currency == record.currency) & \
+                    (inv_item_table.pack_value == record.pack_value) & \
+                    (inv_item_table.expiry_date == record.expiry_date) & \
+                    (inv_item_table.bin == record.recv_bin) & \
+                    (inv_item_table.owner_org_id == record.owner_org_id) & \
+                    (inv_item_table.supply_org_id == record.supply_org_id)
+            inv_item_row = db(query).select(inv_item_table.id,
                                             limitby=(0, 1)).first()
             if inv_item_row:
-                stock_id = inv_item_row.id
-                db(stocktable.id == stock_id).update(quantity = stocktable.quantity + record.recv_quantity)
+                inv_item_id = inv_item_row.id
+                db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity + record.recv_quantity)
             else:
-                stock_id = stocktable.insert(site_id = rtable[record.recv_id].site_id,
+                inv_item_id = inv_item_table.insert(site_id = rtable[record.recv_id].site_id,
                                              item_id = record.item_id,
                                              item_pack_id = record.item_pack_id,
                                              currency = record.currency,
                                              pack_value = record.pack_value,
                                              expiry_date = record.expiry_date,
                                              bin = record.recv_bin,
+                                             owner_org_id = record.owner_org_id,
                                              supply_org_id = record.supply_org_id,
                                              quantity = record.recv_quantity,
                                              item_source_no = record.item_source_no,
@@ -1228,7 +1244,7 @@ $(document).ready(function() {
                                 + record.quantity
                                 )
 
-            db(tracktable.id == id).update(recv_stock_id = stock_id,
+            db(tracktable.id == id).update(recv_inv_item_id = inv_item_id,
                                            status = 4)
             # If the receive quantity doesn't equal the sent quantity
             # then an adjustment needs to be set up
@@ -1255,7 +1271,7 @@ $(document).ready(function() {
                 adjitemtable = s3db.inv_adj_item
                 adj_item_id = adjitemtable.insert(reason = 0,
                                                   adj_id = adj_id,
-                                                  inv_item_id = record.send_stock_id, # original source inv_item
+                                                  inv_item_id = record.send_inv_item_id, # original source inv_item
                                                   item_id = record.item_id, # the supply item
                                                   item_pack_id = record.item_pack_id,
                                                   old_quantity = record.quantity,
@@ -1280,7 +1296,7 @@ $(document).ready(function() {
         s3db = current.s3db
         db = current.db
         tracktable = s3db.inv_track_item
-        stocktable = s3db.inv_inv_item
+        inv_item_table = s3db.inv_inv_item
         ritable = s3db.req_req_item
         record = tracktable[id]
         if record.status != 1:
@@ -1290,12 +1306,12 @@ $(document).ready(function() {
         if record.req_item_id:
             db(ritable.id == record.req_item_id).update(quantity_transit = ritable.quantity_transit - record.quantity)
         # Check that we have a link to a warehouse
-        if record.send_stock_id:
+        if record.send_inv_item_id:
             trackTotal = record.quantity
             # Remove the total from this record and place it back in the warehouse
-            db(stocktable.id == record.send_stock_id).update(quantity = stocktable.quantity + trackTotal)
+            db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + trackTotal)
             db(tracktable.id == id).update(quantity = 0,
-                                           comments = "%sQuantity was: %s" % (stocktable.comments, trackTotal))
+                                           comments = "%sQuantity was: %s" % (inv_item_table.comments, trackTotal))
         return True
 
 
@@ -1359,7 +1375,7 @@ def inv_tabs(r):
 
 # =============================================================================
 def inv_warehouse_rheader(r):
-    """ Resource Header for warehouse stock """
+    """ Resource Header for warehouse inv. item """
     if r.representation != "html" or r.method == "import":
         # RHeaders only used in interactive views
         return None
@@ -1496,7 +1512,7 @@ def inv_send_rheader(r):
 
                     tracktable = current.s3db.inv_track_item
                     query = (tracktable.send_id == record.id) & \
-                            (tracktable.send_stock_id == None) & \
+                            (tracktable.send_inv_item_id == None) & \
                             (tracktable.deleted == False)
                     row = current.db(query).select(tracktable.id,
                                         limitby=(0, 1)).first()
@@ -1957,16 +1973,16 @@ class S3AdjustModel(S3Model):
         """
         s3db = current.s3db
         db = current.db
-        stocktable = s3db.inv_inv_item
+        inv_item_table = s3db.inv_inv_item
         adjitemtable = s3db.inv_adj_item
         adjtable = s3db.inv_adj
         adj_rec = adjtable[form.vars.id]
         if adj_rec.category == 1:
             site_id = form.vars.site_id
-            # Only get stock items with a positive quantity
-            query = (stocktable.site_id == site_id) & \
-                    (stocktable.quantity > 0) & \
-                    (stocktable.deleted == False)
+            # Only get inv. item with a positive quantity
+            query = (inv_item_table.site_id == site_id) & \
+                    (inv_item_table.quantity > 0) & \
+                    (inv_item_table.deleted == False)
             inv_item_row = db(query).select()
             for inv_item in inv_item_row:
                 # add an adjustment item record

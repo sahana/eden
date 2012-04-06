@@ -1166,9 +1166,16 @@ class S3GISConfigModel(S3Model):
         # @ToDo: Settings that apply will be the Site Settings modified
         #        according to any active Event or Region config and any OU or
         #        Personal config found
-        #
-        # @ToDo: Link table to control Layers: Enabled/Visible
-
+        
+        pe_types = {
+                    1: "person",
+                    2: "group",
+                    4: "facility",
+                    6: "branch",
+                    7: "organisation",
+                    9: "SITE_DEFAULT",
+                }
+        
         tablename = "gis_config"
         table = define_table(tablename,
                              # Name displayed in the GIS config menu.
@@ -1176,6 +1183,19 @@ class S3GISConfigModel(S3Model):
 
                              # pe_id for Personal/OU configs
                              super_link("pe_id", "pr_pentity"),
+                             # Gets populated onvalidation
+                             Field("pe_type", "integer",
+                                   requires = IS_NULL_OR(IS_IN_SET(pe_types)),
+                                   readable=False,
+                                   writable=False,
+                                   ),
+                             # @ToDo: Allows selection of which OU a person's config should inherit from for disambiguation
+                             # - needs implementing in gis.set_config()
+                             # - needs a method in gis_config_form_setup() to populate the dropdown from the OUs (in this person's Path for this person's,  would have to be a dynamic lookup for Admins)
+                             Field("pe_path", "integer",
+                                   readable=False,
+                                   writable=False,
+                                   ),
 
                              # Region field
                              location_id("region_location_id",
@@ -1223,7 +1243,7 @@ class S3GISConfigModel(S3Model):
                              Field("lon", "double",
                                    requires = IS_NULL_OR(IS_LON())),
                              projection_id(
-                                   empty=False,
+                                   #empty=False,
                                    # Nice if we could get this set to epsg field
                                    #default=900913
                                    ),
@@ -1289,6 +1309,7 @@ class S3GISConfigModel(S3Model):
                                     autodelete=False))
 
         configure(tablename,
+                  deduplicate=self.gis_config_deduplicate,
                   onvalidation=self.gis_config_onvalidation,
                   onaccept=self.gis_config_onaccept,
                   create_next=URL(args=["[id]", "layer_entity"]),
@@ -1384,6 +1405,7 @@ class S3GISConfigModel(S3Model):
         field.label = T("Person or OU")
         field.readable = True
         field.writable = True
+        field.represent = lambda id: s3db.pr_pentity_represent(id, show_label=False)
         field.widget = S3AutocompleteWidget("pr", "pentity")
         table.region_location_id.label = T("Region")
         table.default_location_id.label = T("Default Location")
@@ -1483,6 +1505,37 @@ class S3GISConfigModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def gis_config_deduplicate(item):
+        """
+          This callback will be called when importing Marker records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+
+        """
+
+        db = current.db
+
+        if item.id:
+            return
+        if item.tablename == "gis_config" and \
+            "name" in item.data:
+            # Match by name (all-lowercase)
+            table = item.table
+            name = item.data.name
+            query = (table.name.lower() == name.lower())
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def gis_config_represent(id):
         """
             Represent a Configuration
@@ -1514,34 +1567,59 @@ class S3GISConfigModel(S3Model):
             the region) but making it only editable by a MapAdmin.
         """
 
+        s3db = current.s3db
+        db = current.db
+
         vars = form.vars
 
-        try:
-            # Automate name for personal configs.
-            # @ToDo: Handle OUs
-            if "pe_id" in form.request_vars:
-                vars.name = "Personal"
-        except:
-            # AJAX Save of Viewport from Map
-            pass
+        if vars.uuid == "SITE_DEFAULT":
+            vars.pe_type = 9
+        elif "pe_id" in vars:
+            pe_id = vars.pe_id
+            if pe_id:
+                # Populate the pe_type
+                table = s3db.pr_pentity
+                query = (table.pe_id == pe_id)
+                pe = db(query).select(table.instance_type,
+                                      limitby=(0, 1)).first()
+                if pe:
+                    pe_type = pe.instance_type
+                    if pe_type == "pr_person":
+                        vars.pe_type = 1
+                    elif pe_type == "pr_group":
+                        vars.pe_type = 2
+                    elif pe_type == "org_office":
+                        vars.pe_type = 4
+                    elif pe_type == "org_organisation":
+                        # Check if we're a branch
+                        otable = s3db.org_organisation
+                        btable = s3db.org_organisation_branch
+                        query = (otable.pe_id == pe_id) & \
+                                (btable.branch_id == otable.id)
+                        branch = db(query).select(btable.id,
+                                                  limitby=(0, 1)).first()
+                        if branch:
+                            vars.pe_type = 6
+                        else:
+                            vars.pe_type = 7
 
         # If there's a region location, set its owned by role to MapAdmin.
         # That makes Authenticated no longer an owner, so they only get whatever
         # is permitted by uacl (currently that is set to READ).
         if "region_location_id" in vars and vars.region_location_id:
             MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
-            table = current.s3db.gis_location
+            table = s3db.gis_location
             query = (table.id == vars.region_location_id)
-            current.db(query).update(owned_by_group = MAP_ADMIN)
+            db(query).update(owned_by_group = MAP_ADMIN)
 
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_config_onaccept(form):
         """
-            If this is the cached config, update it.
+            If this is the cached config, clear the cache.
 
-            If this is a personal/OU config, set it as the current config &
-            add to GIS menu.
+            If this is this user's personal config, clear the config
+            If this is an OU config, then add to GIS menu
         """
 
         try:
@@ -1549,17 +1627,18 @@ class S3GISConfigModel(S3Model):
             id = form.vars.id
             pe_id = form.request_vars.pe_id
             if pe_id:
-                # Set as the current config
-                update = True
+                if pe_id == current.auth.user.pe_id:
+                    # Clear the current config
+                    current.response.s3.gis.config = None
                 # Add to GIS Menu
                 table = current.s3db.gis_menu
                 table.update_or_insert(config_id=id,
                                        pe_id=pe_id)
             else:
-                if id == current.session.s3.gis_config_id:
-                    update = True
-            if update:
-                current.gis.set_config(id, force_update_cache=True)
+                config = current.response.s3.gis.config
+                if config and config.id == id:
+                    # This is the currently active config, so clear our cache
+                    config = None
         except:
             # AJAX Save of Viewport from Map
             pass
@@ -1568,17 +1647,17 @@ class S3GISConfigModel(S3Model):
     @staticmethod
     def gis_config_ondelete(form):
         """
-            If the selected config was deleted, revert to the SITE_DEFAULT.
+            If the currently-active config was deleted, clear the cache
         """
 
         gis = current.gis
-        session = current.session
+        s3 = current.response.s3
 
         record_id = form.record_id
-        gis_config_id = session.s3.gis_config_id
-        if record_id and gis_config_id and \
-           record_id == gis_config_id:
-            current.gis.set_config(0)
+        if s3.gis.config:
+            gis_config_id = s3.gis.config.id
+            if record_id == gis_config_id:
+                s3.gis.config = None
 
     # -------------------------------------------------------------------------
     @staticmethod
