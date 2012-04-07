@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 from django.views.generic.simple import direct_to_template
-from e_cidadania.apps.userprofile.views import *
+from e_cidadania.apps.userprofile.views import * 
 
 urlpatterns = patterns('',
     # Private profile
@@ -102,6 +102,8 @@ urlpatterns = patterns('',
     url(r'^logout/$', 'django.contrib.auth.views.logout',
         {'template_name': 'userprofile/account/logout.html'},
         name='logout'),
+
+    url(r'^email/change$', email_change, name='email_change'),
 
     # Registration
     url(r'^register/$', register, name='signup'),

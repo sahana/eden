@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load wysiwyg %}
+{% block title %}{% trans "Email changed" %}{% endblock %}
+{% block head %}Email changed{% endblock %}
+{% block content %}
+<p> Current Email: {{ email }} </p>
+    {% endblock %}
+

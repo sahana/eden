@@ -45,7 +45,7 @@ from django.conf import settings
 from e_cidadania.apps.proposals.models import Proposal
 from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, \
                           EmailValidationForm, ProfileForm, RegistrationForm, \
-                          LocationForm, PublicFieldsForm
+                          LocationForm, PublicFieldsForm, ChangeEmail
 from e_cidadania.apps.userprofile.models import EmailValidation, Avatar
 
 
@@ -363,3 +363,26 @@ def email_validation_reset(request):
 
     return HttpResponseRedirect(reverse("email_validation_reset_response", 
             args=[response]))
+
+@login_required
+def email_change(request):
+    form1 = ChangeEmail(request.POST or None)
+    user1 = request.user
+    if form1.is_valid():
+        if form1.cleaned_data['email'] == form1.cleaned_data['email2']:
+            user1.email = form1.cleaned_data['email']
+            user1.save()
+            email = request.user.email
+            variables = RequestContext(request, {
+            'email': email
+        })
+        return render_to_response('userprofile/email/email_change_done.html', variables)
+    else:
+        user = request.user
+        email = user.email
+        variables = RequestContext(request, {
+        'form': form1,
+        'email': email
+    })
+    return render_to_response('userprofile/email/email_change.html', variables)
+
