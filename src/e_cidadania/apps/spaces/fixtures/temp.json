@@ -1,0 +1,40 @@
+[
+    {
+        "pk": 1, 
+        "model": "spaces.space", 
+        "fields": {
+            "name": "corrupt", 
+            "author": 1, 
+            "url": "http://127.0.0.1:8000/spaces/corrupt", 
+            "mod_proposals": true, 
+            "mod_debate": true, 
+            "mod_docs": true, 
+            "mod_news": true, 
+            "date": "2012-03-30 07:02:34", 
+            "logo": "spaces/logos/logo_1.jpeg", 
+            "banner": "spaces/banners/banner_1.jpeg", 
+            "public": true, 
+            "mod_cal": true, 
+            "description": "<p>\r\n\tHello&nbsp;</p>\r\n"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "spaces.space", 
+        "fields": {
+            "name": "corrupts", 
+            "author": 1, 
+            "url": "/corrupts", 
+            "mod_proposals": true, 
+            "mod_debate": true, 
+            "mod_docs": true, 
+            "mod_news": true, 
+            "date": "2012-03-30 07:04:16", 
+            "logo": "spaces/logos/logo_2.jpeg", 
+            "banner": "spaces/banners/banner_2.jpeg", 
+            "public": true, 
+            "mod_cal": true, 
+            "description": "<p>\r\n\tHello&nbsp;</p>\r\n"
+        }
+    }
+]
