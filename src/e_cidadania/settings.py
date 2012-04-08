@@ -46,9 +46,9 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test1',
-        'USER': 'root',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'db/database',
+        'USER': '',
         'PASSWORD': '',
         'HOST': '',
         'PORT': '',
@@ -155,7 +155,6 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 THIRDPARTY_APPS = (
     # This list is from the third party software included in e-cidadania or
     # system-wide dependencies.
-    'django_wysiwyg',
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
     #'django_extensions',
