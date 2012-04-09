@@ -5205,51 +5205,36 @@ class S3ResourceFilter:
         """ String representation of the instance """
 
         resource = self.resource
-        r = self.cquery
-        v = self.cvfltr
-        j = self.joins
 
-        rq = ["..%s: %s" % (key, r[key]) for key in r]
-        vq = ["..%s: %s" % (key, v[key].represent(resource)) for key in v]
-
-        jq = ["..%s:\n%s" % (alias,
-                "\n".join(["....%s:\n%s" % (tn,
-                  "\n".join(["......%s" % q
-                    for q in j[alias][tn]])
-                ) for tn in j[alias]])
-              ) for alias in j]
-
-        rqueries = "\n".join(rq)
-        vqueries = "\n".join(vq)
-        jqueries = "\n".join(jq)
-
-        if self.vfltr:
-            vf = self.vfltr.represent(resource)
+        left_joins = self.get_left_joins()
+        if left_joins:
+            try:
+                left_joins.sort(self.__sortleft)
+            except:
+                pass
+            left = left_joins
+            joins = ", ".join([str(j) for j in left_joins])
         else:
-            vf = ""
+            left = None
+            joins = None
 
-        if self.mvfltr:
-            mvf = self.mvfltr.represent(resource)
+        vfltr = self.get_filter()
+        if vfltr:
+            vfltr = vfltr.represent(resource)
         else:
-            mvf = ""
+            vfltr = None
 
-        represent = "\nS3ResourceFilter %s%s" \
-                    "\nMaster query: %s" \
-                    "\nMaster virtual filter: %s" \
-                    "\nComponent queries:\n%s" \
-                    "\nComponent virtual filters:\n%s" \
-                    "\nJoins:\n%s" \
-                    "\nEffective query: %s" \
-                    "\nEffective virtual filter: %s" % (
-                    resource.tablename,
-                    self.distinct and " (distinct)" or "",
-                    self.mquery,
-                    mvf,
-                    rqueries,
-                    vqueries,
-                    jqueries,
-                    self.query,
-                    vf)
+        represent = "<S3ResourceFilter %s, " \
+                    "query=%s, " \
+                    "left=[%s], " \
+                    "distinct=%s, " \
+                    "filter=%s>" % (
+                        resource.tablename,
+                        self.get_query(),
+                        joins,
+                        self.distinct,
+                        vfltr
+                    )
 
         return represent
 
