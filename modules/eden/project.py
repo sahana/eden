@@ -561,7 +561,7 @@ class S3ProjectModel(S3Model):
                                                         T("hours"))),
                              comments(),
                              format="%(name)s",
-                             *meta_fields())
+                             *(s3.lx_fields() + s3.meta_fields()))
 
         # Field configuration
         if pca:
@@ -624,7 +624,29 @@ class S3ProjectModel(S3Model):
 
         # Search Method
         if pca:
-            project_activity_search = S3Search(field="location_id$name")
+            project_activity_search = S3Search(
+                    simple=(
+                        S3SearchSimpleWidget(
+                            name = "project_activity_search_text",
+                            label = T("Name"),
+                            comment = T("Search for a Community by name."),
+                            field = "location_id$name"
+                        ),
+                    ),
+                    advanced = (
+                        S3SearchSimpleWidget(
+                            name = "project_activity_search_text_advanced",
+                            label = T("Name"),
+                            comment = T("Search for a Community by name."),
+                            field = "location_id$name"
+                        ),
+                        S3SearchLocationHierarchyWidget(
+                            name="project_activity_search_L1",
+                            field="L1",
+                            cols = 3,
+                      ),
+                    )
+                )
         else:
             project_activity_search = S3Search(field="name")
 
@@ -656,7 +678,6 @@ class S3ProjectModel(S3Model):
             append((T("Time Actual"), "time_actual"))
             list_fields = ["name",
                            "project_id",
-                           "location_id",
                            "multi_activity_type_id",
                            "comments"
                         ]
@@ -671,6 +692,7 @@ class S3ProjectModel(S3Model):
                                   args=["[id]", next]),
                   search_method=project_activity_search,
                   onvalidation=self.project_activity_onvalidation,
+                  onaccept=self.project_activity_onaccept,
                   deduplicate=self.project_activity_deduplicate,
                   report_rows=report_fields,
                   report_cols=report_fields,
@@ -1010,7 +1032,8 @@ class S3ProjectModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def project_activity_onvalidation(form):
-        """ """
+        """
+        """
 
         pca = current.deployment_settings.get_project_community_activity()
 
@@ -1029,6 +1052,23 @@ class S3ProjectModel(S3Model):
                                               limitby=(0, 1)).first()
                     if parent:
                         form.vars.name = parent.name
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_activity_onaccept(form):
+        """
+        """
+
+        pca = current.deployment_settings.get_project_community_activity()
+
+        if pca:
+            vars = form.vars
+            location_id = vars.location_id
+            if location_id:
+                # Populate the Lx fields
+                atable = current.s3db.project_activity
+                current.response.s3.lx_update(atable, vars.id)
         return
 
     # ---------------------------------------------------------------------
