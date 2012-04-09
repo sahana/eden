@@ -2338,9 +2338,11 @@ def display_feature():
         lon = lon,
         #zoom = zoom,
         bbox = bounds,
-        window = True,
+        window = False,
         closable = False,
         collapsed = True,
+        width=640,
+        height=480,
     )
 
     return dict(map=map)

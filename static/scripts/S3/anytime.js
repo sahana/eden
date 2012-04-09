@@ -1,9 +1,9 @@
 /*****************************************************************************
  *  FILE:  anytime.js - The Any+Time(TM) JavaScript Library (source)
  *
- *  VERSION: 4.1112K
+ *  VERSION: 4.1112L
  *
- *  Copyright 2008-2011 Andrew M. Andrews III (www.AMA3.com). Some Rights 
+ *  Copyright 2008-2012 Andrew M. Andrews III (www.AMA3.com). Some Rights 
  *  Reserved. This work licensed under the Creative Commons Attribution-
  *  Noncommercial-Share Alike 3.0 Unported License except in jurisdicitons
  *  for which the license has been ported by Creative Commons International,
@@ -865,10 +865,10 @@ AnyTime.Converter = function(options)
 	            time.setSeconds(Number(str.substr(s+6,2)));
               if ( time.getHours() == 12 )
               {
-	              if ( str.charAt(s) == 'A' )
+	              if ( str.charAt(s+8) == 'A' )
 	                time.setHours(0);
               }
-              else if ( str.charAt(s) == 'P' )
+              else if ( str.charAt(s+8) == 'P' )
 	              time.setHours( time.getHours() + 12 );
 	            s += 10;
 	            break;
@@ -3714,9 +3714,3 @@ AnyTime.setLatest = function( id, newTime )
 
 
 })(jQuery); // function($)...
-
-
-//
-//  END OF FILE
-//
-

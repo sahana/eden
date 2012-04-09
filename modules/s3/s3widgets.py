@@ -225,17 +225,23 @@ class S3DateTimeWidget(FormWidget):
             response.s3.scripts.append( "%s/anytimec.js" % s3_script_dir )
             response.s3.stylesheets.append( "S3/anytimec.css" )
 
-        response.s3.jquery_ready.append("""
-$( '#%s' ).AnyTime_picker({
+        response.s3.jquery_ready.append('''
+$('#{0}').AnyTime_picker({{
     askSecond: false,
     firstDOW: 1,
-    earliest: '%s',
-    latest: '%s',
-    format: '%s'
-});""" % (selector,
-          earliest,
-          latest,
-          format.replace("%M", "%i")))
+    earliest: "{1}",
+    latest: "{2}",
+    format: "{3}",
+}});
+
+clear_button = $('<input type="button" value="clear"/>').click(function(e){{
+    $("#{0}").val("");
+}});
+
+$('#{0}').after(clear_button);'''.format(selector,
+                                         earliest,
+                                         latest,
+                                         format.replace("%M", "%i")))
 
         return TAG[""](
                         INPUT(**attr),
