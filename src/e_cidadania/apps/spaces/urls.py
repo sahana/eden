@@ -84,11 +84,8 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 # Intent URLs
 urlpatterns += patterns('e_cidadania.apps.spaces.views',
 
-<<<<<<< HEAD
-=======
     url(_(r'^(?P<space_name>\w+)/intent/$'), 'add_intent', name='add-intent'),
     url(_(r'^(?P<space_name>\w+)/intent/approve/(?P<token>\w+)/$'), ValidateIntent.as_view(), name='validate-intent'),
->>>>>>> master
 
 )
 
