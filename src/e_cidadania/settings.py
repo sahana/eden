@@ -127,7 +127,7 @@ TEMPLATE_DIRS = (
     (cwd + '/templates'),
 )
 
-GRAPPELLI_ADMIN_TITLE = 'e-cidadania 0.1 / Administracion'
+GRAPPELLI_ADMIN_TITLE = '<li><a href="/">Back to site</a></li>'
 GRAPPELLI_ADMIN_URL = '/admin'
 GRAPPELLI_INDEX_DASHBOARD = 'e_cidadania.dashboard.CustomIndexDashboard'
 
