@@ -510,6 +510,18 @@ class S3ResourceFilterTests(unittest.TestCase):
                                      "(project_project.organisation_id = org_organisation.id)) AND "
                                      "(NOT (LOWER(project_task.description) LIKE '%test%')))")
 
+    def testParseValue(self):
+
+        parse_value = s3base.S3ResourceFilter._parse_value
+
+        self.assertEqual(parse_value("NONE"), None)
+        self.assertEqual(parse_value('"NONE"'), "NONE")
+        self.assertEqual(parse_value("None"), None)
+        self.assertEqual(parse_value('"None"'), "None")
+        self.assertEqual(parse_value("NONE,1"), [None, "1"])
+        self.assertEqual(parse_value('"NONE",1'), ["NONE", "1"])
+        self.assertEqual(parse_value('"NONE,1"'), "NONE,1")
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """

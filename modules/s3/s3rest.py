@@ -5075,7 +5075,7 @@ class S3ResourceFilter:
                 w += c
                 quote = not quote
             elif c == "," and not quote:
-                if w == "NONE":
+                if w in ("NONE", "None"):
                     w = None
                 else:
                     w = w.strip('"')
@@ -5083,7 +5083,7 @@ class S3ResourceFilter:
                 w = ""
             else:
                 w += c
-        if w == "NONE":
+        if w in ("NONE", "None"):
             w = None
         else:
             w = w.strip('"')
