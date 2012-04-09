@@ -115,10 +115,19 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
+        #if current.deployment_settings.get_ui_camp():
+        #    shelter = T("Camp")
+        #else:
+        #    shelter = T("Shelter")
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
                            org_organisation = T("Organization"),
                            org_office = T("Office"),
+                           # If we want these, then pe_id needs adding to their
+                           # tables & configuring as a super-entity
+                           #cr_shelter = shelter,
+                           #fire_station = T("Fire Station"),
+                           #hms_hospital = T("Hospital"),
                            dvi_body = T("Body"))
 
         tablename = "pr_pentity"
@@ -1418,6 +1427,7 @@ class S3PersonAddressModel(S3Model):
         db = current.db
         s3db = current.s3db
         request = current.request
+        settings = current.deployment_settings
         lx_update = current.response.s3.lx_update
 
         vars = form.vars
@@ -1448,16 +1458,27 @@ class S3PersonAddressModel(S3Model):
                     lx_update(table, person.id)
 
             if person and str(vars.type) == "1": # Home Address
-                # Also check for any Volunteer HRM record(s)
-                htable = s3db.hrm_human_resource
-                query = (htable.person_id == person.id) & \
-                        (htable.type == 2) & \
-                        (htable.deleted != True)
-                hrs = db(query).select(htable.id)
-                for hr in hrs:
-                    db(htable.id == hr.id).update(location_id=location_id)
-                    # Update the Lx fields
-                    lx_update(htable, hr.id)
+                if settings.has_module("hrm"):
+                    # Also check for any Volunteer HRM record(s)
+                    htable = s3db.hrm_human_resource
+                    query = (htable.person_id == person.id) & \
+                            (htable.type == 2) & \
+                            (htable.deleted != True)
+                    hrs = db(query).select(htable.id)
+                    for hr in hrs:
+                        db(htable.id == hr.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        lx_update(htable, hr.id)
+                if settings.has_module("member"):
+                    # Also check for any Member record(s)
+                    mtable = s3db.member_membership
+                    query = (mtable.person_id == person.id) & \
+                            (mtable.deleted != True)
+                    members = db(query).select(mtable.id)
+                    for member in members:
+                        db(mtable.id == member.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
@@ -2953,6 +2974,7 @@ def pr_contacts(r, **attr):
 def pr_profile(r, **attr):
     """
         Custom Method to provide the auth_user profile as a Tab of the Person
+        @ToDo: Complete this (currently unfinished)
     """
 
     if r.http != "GET":
@@ -2968,6 +2990,8 @@ def pr_profile(r, **attr):
     ltable = s3db.pr_person_user
     query = (ltable.pe_id == person.pe_id)
     profile = db(query).select(limitby=(0, 1)).first()
+
+    form = current.auth()
 
     # Custom View
     response.view = "pr/profile.html"
@@ -3608,7 +3632,9 @@ def pr_remove_from_role(role_id, pe_id):
 def pr_get_role_paths(pe_id, roles=None, role_types=None):
     """
         Get the ancestor paths of the ancestor OUs this person entity
-        is affiliated with, sorted by roles
+        is affiliated with, sorted by roles.
+
+        Used by gis.set_config()
 
         @param pe_id: the person entity ID
         @param roles: list of roles to limit the search
@@ -3761,10 +3787,11 @@ def pr_get_ancestors(pe_id):
         paths).
 
         @param pe_id: the person entity ID
+        @param roles: list of roles to limit the search
 
         @returns: a list of PE-IDs
 
-        @todo: be able to filter by type and subtype
+        @todo: be able to filter by entity_type and subtype
     """
 
     db = current.db
@@ -3778,6 +3805,7 @@ def pr_get_ancestors(pe_id):
             (atable.pe_id == pe_id) & \
             (rtable.deleted != True) & \
             (rtable.role_type == OU)
+
     roles = db(query).select(rtable.ALL)
 
     paths = []

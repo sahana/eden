@@ -289,16 +289,8 @@ class S3AddResourceLink(S3NavigationItem):
                                                 vars=vars,
                                                 info=info,
                                                 title=title,
-                                                tooltip=tooltip)
-
-    # -------------------------------------------------------------------------
-    def check_active(self, request=None):
-        """ Deactivate the link if the target controller is deactivated """
-
-        c = self.get("controller")
-        if c:
-            return current.deployment_settings.has_module(c)
-        return True
+                                                tooltip=tooltip,
+                                                mandatory=True)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -910,6 +910,10 @@ div.dataTables_paginate {
 div.paging_full_numbers {
 	width: auto;
 }
+a.paginate_button,
+a.paginate_active {
+    text-decoration: none;
+}
 
 span.dataTable-btn {
 	background-color: #ddd;
@@ -1348,6 +1352,12 @@ div#last_update {
     height: 55px;
     padding: 4px;
     width: 55px;
+}
+/* HRM RHeader */
+.hrm_avatar {
+    float: left;
+    padding-bottom: 5px;
+    padding-right: 10px;
 }
 .comment-box {
     overflow: hidden;

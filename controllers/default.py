@@ -738,7 +738,8 @@ def contact():
         or:
             Custom View
     """
-    if auth.is_logged_in() and deployment_settings.get_options_support_requests():
+
+    if auth.is_logged_in() and deployment_settings.has_module("support"):
         # Provide an internal Support Requests ticketing system.
         prefix = "support"
         resourcename = "req"

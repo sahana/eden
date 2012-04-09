@@ -264,7 +264,7 @@ def setting():
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
-def email_settings():
+def inbound_email_settings():
 
     """
         RESTful CRUD controller for email settings
@@ -272,20 +272,20 @@ def email_settings():
         Only 1 of these ever in existence
     """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "msg_inbound_email_settings"
     table = s3db[tablename]
 
-    table.inbound_mail_server.label = T("Server")
-    table.inbound_mail_type.label = T("Type")
-    table.inbound_mail_ssl.label = "SSL"
-    table.inbound_mail_port.label = T("Port")
-    table.inbound_mail_username.label = T("Username")
-    table.inbound_mail_password.label = T("Password")
-    table.inbound_mail_delete.label = T("Delete from Server?")
-    table.inbound_mail_port.comment = DIV(DIV(_class="tooltip",
+    table.server.label = T("Server")
+    table.protocol.label = T("Protocol")
+    table.use_ssl.label = "SSL"
+    table.port.label = T("Port")
+    table.username.label = T("Username")
+    table.password.label = T("Password")
+    table.delete_from_server.label = T("Delete from Server?")
+    table.port.comment = DIV(DIV(_class="tooltip",
         _title="%s|%s" % (T("Port"),
                           T("For POP-3 this is usually 110 (995 for SSL), for IMAP this is usually 143 (993 for IMAP)."))))
-    table.inbound_mail_delete.comment = DIV(DIV(_class="tooltip",
+    table.delete_from_server.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("Delete"),
                               T("If this is set to True then mails will be deleted from the server after downloading."))))
 

@@ -1,0 +1,10 @@
+"Name","Config","Enabled","Visible","Base","Default","Folder","URL","URL2","URL3","Attribution","Zoom Levels"
+"OpenStreetMap (MapQuest)",,"True",,,"True",,"http://otile1.mqcdn.com/tiles/1.0.0/osm/","http://otile2.mqcdn.com/tiles/1.0.0/osm/","http://otile3.mqcdn.com/tiles/1.0.0/osm/","Tiles Courtesy of <a href=""http://open.mapquest.co.uk/"" target=""_blank"">MapQuest</a> <img src=""http://developer.mapquest.com/content/osm/mq_logo.png"" border=""0"">'",
+"OpenStreetMap (MapQuest)","TL","False",,,"False",,"http://otile1.mqcdn.com/tiles/1.0.0/osm/","http://otile2.mqcdn.com/tiles/1.0.0/osm/","http://otile3.mqcdn.com/tiles/1.0.0/osm/","Tiles Courtesy of <a href=""http://open.mapquest.co.uk/"" target=""_blank"">MapQuest</a> <img src=""http://developer.mapquest.com/content/osm/mq_logo.png"" border=""0"">'",
+"OpenStreetMap (Mapnik)",,"False",,,,,"http://a.tile.openstreetmap.org/","http://b.tile.openstreetmap.org/","http://c.tile.openstreetmap.org/","<a href=""http://www.openstreetmap.org/"" target=""_blank"">OpenStreetMap</a>'",
+"OpenStreetMap (CycleMap)",,"False",,,,,"http://a.tile.opencyclemap.org/cycle/","http://b.tile.opencyclemap.org/cycle/","http://c.tile.opencyclemap.org/cycle/","<a href=""http://www.opencyclemap.org/"" target=""_blank"">OpenCycleMap</a>'",
+"OpenStreetMap (Labels)",,"False","False","False",,,"http://tiler1.censusprofiler.org/labelsonly/",,,"Labels overlay CC-by-SA by <a href=""http://oobrien.com/oom/"" target=""_blank"">OpenOrienteeringMap</a>/<a href=""http://www.openstreetmap.org/"">OpenStreetMap</a> data'",
+"OpenStreetMap (Relief)",,"False","False","False",,,"http://toolserver.org/~cmarqu/hill/",,,"Relief by <a href=""http://hikebikemap.de/"" target=""_blank"">Hike &amp; Bike Map</a>'",
+"OpenStreetMap (Osmarender)",,"False",,,,,"http://a.tah.openstreetmap.org/Tiles/tile/","http://b.tah.openstreetmap.org/Tiles/tile/","http://c.tah.openstreetmap.org/Tiles/tile/","<a href=""http://www.openstreetmap.org/"" target=""_blank"">OpenStreetMap</a>'",18
+"OpenStreetMap (Taiwan)",,"False",,,,,"http://tile.openstreetmap.tw/tiles/",,,,
+"OpenStreetMap (Sahana)",,"False",,,,,"http://geo.eden.sahanafoundation.org/tiles/",,,,
