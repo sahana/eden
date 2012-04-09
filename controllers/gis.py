@@ -996,7 +996,7 @@ def layer_config():
     else:
         # Cannot import without a specific layer type
         csv_stylesheet = None
-        
+
     output = s3_rest_controller(csv_stylesheet = csv_stylesheet)
     return output
 
@@ -2338,11 +2338,9 @@ def display_feature():
         lon = lon,
         #zoom = zoom,
         bbox = bounds,
-        window = False,
+        window = True,
         closable = False,
         collapsed = True,
-        width=640,
-        height=480,
     )
 
     return dict(map=map)

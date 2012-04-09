@@ -1166,7 +1166,7 @@ class S3GISConfigModel(S3Model):
         # @ToDo: Settings that apply will be the Site Settings modified
         #        according to any active Event or Region config and any OU or
         #        Personal config found
-        
+
         pe_types = {
                     1: "person",
                     2: "group",
@@ -1175,7 +1175,7 @@ class S3GISConfigModel(S3Model):
                     7: "organisation",
                     9: "SITE_DEFAULT",
                 }
-        
+
         tablename = "gis_config"
         table = define_table(tablename,
                              # Name displayed in the GIS config menu.
@@ -3351,7 +3351,7 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
         # ToDo: Convert to popup? (HTML again!)
         represent = A(represent_text,
                       _style="cursor:pointer; cursor:hand",
-                      _onclick="s3_showMap(%i);return false" % location.id)
+                      _onclick="s3_viewMap(%i);return false" % location.id)
     else:
         represent = represent_text
 
