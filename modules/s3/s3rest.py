@@ -4701,8 +4701,10 @@ class S3ResourceFilter:
 
             # Add the left joins of the parent resource
             left = pf.left[parent.alias]
-            [self._add_query(join.second)
-             for tn in left for join in left[tn] if tn != resource._alias]
+            if left:
+                [self._add_query(join.second)
+                 for tn in left if tn != resource._alias
+                 for join in left[tn]]
 
             self.mvfltr = mvfltr
             self.vfltr = mvfltr

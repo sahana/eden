@@ -445,6 +445,30 @@ class S3ResourceFilterTests(unittest.TestCase):
         self.assertEqual(rfilter.left, Storage())
         rows = component.sqltable(as_rows=True)
 
+    def testComponentFilterConstruction3(self):
+
+        resource = s3mgr.define_resource("project", "project", id=1)
+
+        component = resource.components["activity"]
+        component.build_query()
+        rfilter = component.rfilter
+        query = rfilter.get_query()
+
+        # This will fail in 1st run as there is no ANONYMOUS role yet
+        self.assertEqual(str(query),"((((project_activity.deleted <> 'T') AND "
+                                    "((project_activity.owned_by_organisation IS NULL) OR "
+                                    "(project_activity.owned_by_organisation IN (3)))) AND "
+                                    "(((project_project.deleted <> 'T') AND "
+                                    "((project_project.owned_by_organisation IS NULL) OR "
+                                    "(project_project.owned_by_organisation IN (3)))) AND "
+                                    "(project_project.id = 1))) AND "
+                                    "((project_activity.project_id = project_project.id) AND "
+                                    "(project_activity.deleted <> 'T')))")
+
+        self.assertEqual(rfilter.joins, Storage())
+        self.assertEqual(rfilter.left, Storage())
+        rows = component.sqltable(as_rows=True)
+
     def testGetLeftJoins(self):
 
         q = (s3base.S3FieldSelector("organisation_id$name") == "test") & \
