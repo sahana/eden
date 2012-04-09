@@ -44,7 +44,7 @@ from s3utils import s3_debug
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3
 
-from s3rest import S3QueryField
+from s3rest import S3FieldSelector
 
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
@@ -301,7 +301,7 @@ class S3SearchSimpleWidget(S3SearchWidget):
                 # Create a queries that test the current
                 # value against each field
                 for field in self.field:
-                    field_query = S3QueryField(field).like(value)
+                    field_query = S3FieldSelector(field).like(value)
 
                     # We want a match against any field
                     if field_queries:
@@ -714,9 +714,9 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 raise NotImplementedError
 
             if str(field.type).startswith("list"):
-                query = S3QueryField(field.name).contains(value)
+                query = S3FieldSelector(field.name).contains(value)
             else:
-                query = S3QueryField(field.name).belongs(value)
+                query = S3FieldSelector(field.name).belongs(value)
 
             return query
         else:

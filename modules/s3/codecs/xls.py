@@ -106,7 +106,7 @@ class S3XLS(S3Codec):
 
         # Retrieve the resource contents
         table = resource.table
-        lfields, joins, ljoins = resource.get_lfields(list_fields)
+        lfields, joins, left, distinct = resource.resolve_selectors(list_fields)
 
         # Use the title_list CRUD string for the title
         name = "title_list"

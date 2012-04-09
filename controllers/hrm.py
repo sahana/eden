@@ -577,7 +577,8 @@ def person():
                     r.id = r.record.id
             if not r.record:
                 session.error = T("Record not found")
-                redirect(URL(group, args=["search"]))
+                redirect(URL(f="human_resource",
+                             args=["search"], vars={"group":group}))
             if hr_id and r.component_name == "human_resource":
                 r.component_id = hr_id
             s3mgr.configure("hrm_human_resource",
