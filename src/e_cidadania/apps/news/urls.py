@@ -32,6 +32,6 @@ urlpatterns = patterns('e_cidadania.apps.news.views',
     
     url(_(r'^(?P<post_id>\d+)/edit/$'), EditPost.as_view(), name='edit-post'),
     
-    url(_(r'^(?P<post_id>\d+)'), ViewPost.as_view(), name='view-post'),
+    url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name='view-post'),
 
 )

@@ -39,7 +39,7 @@ urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
     url(_(r'^add_support_vote/'), 'vote_proposal'),
 
-    url(_(r'^(?P<prop_id>\w+)/'), ViewProposal.as_view(), name='view-proposal'),
+    url(r'^(?P<prop_id>\w+)/', ViewProposal.as_view(), name='view-proposal'),
 
 )
 

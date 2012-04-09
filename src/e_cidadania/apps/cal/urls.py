@@ -24,6 +24,6 @@ from django.utils.translation import ugettext_lazy as _
 urlpatterns = patterns('e_cidadania.apps.cal.views',
 
     # News
-    url(_(r'^(?P<year>\d+)/(?P<month>\d+)/'), 'calendar', name='calendar-view'),
+    url(r'^(?P<year>\d+)/(?P<month>\d+)/', 'calendar', name='calendar-view'),
 
 )
