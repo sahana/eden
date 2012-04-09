@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-12 12:34+0100\n"
+"POT-Creation-Date: 2012-04-09 11:04+0200\n"
 "PO-Revision-Date: 2012-02-29 08:50+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -19,79 +19,79 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: models.py:33
+#: models.py:34
 msgid "Male"
 msgstr "Home"
 
-#: models.py:34
+#: models.py:35
 msgid "Female"
 msgstr "Muller"
 
-#: models.py:42
+#: models.py:43
 msgid "Interes"
 msgstr "Interese"
 
-#: models.py:54
+#: models.py:55
 msgid "Name"
 msgstr "Nome"
 
-#: models.py:55
+#: models.py:56
 msgid "Surname"
 msgstr "Apelido"
 
-#: models.py:56
+#: models.py:57
 msgid "Gender"
 msgstr "Sexo"
 
-#: models.py:59
+#: models.py:60
 msgid "Birth date"
 msgstr "Data de nacemento"
 
-#: models.py:63
+#: models.py:64
 msgid "Province"
 msgstr "Provincia"
 
-#: models.py:64
+#: models.py:65
 msgid "Region"
 msgstr "Rexión"
 
-#: models.py:65
+#: models.py:66
 msgid "Neighborhood"
 msgstr "Zona"
 
-#: models.py:68
+#: models.py:69
 msgid "Address"
 msgstr "Enderezo"
 
-#: models.py:69
+#: models.py:70
 msgid "Number"
 msgstr "Número"
 
-#: models.py:71
+#: models.py:72
 msgid "Floor"
 msgstr "Piso"
 
-#: models.py:72
+#: models.py:73
 msgid "Letter"
 msgstr "Letra"
 
-#: models.py:75
+#: models.py:76
 msgid "Phone 1"
 msgstr "Teléfono 1"
 
-#: models.py:76 models.py:78
+#: models.py:81 models.py:87
 msgid "9 digits maximum"
 msgstr "Máximo de 9 díxitos"
 
-#: models.py:77
+#: models.py:82
 msgid "Phone 2"
 msgstr "Teléfono 2"
 
-#: models.py:80
+#: models.py:89
 msgid "Identification document"
 msgstr "Documento de identidade"
 
-#: models.py:83
+#: models.py:92
 msgid "Website"
 msgstr "Páxina web"
 

@@ -18,50 +18,26 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: admin.py:39
-msgid "Description"
-msgstr ""
-
-#: admin.py:42
-msgid "Options"
-msgstr ""
-
-#: models.py:31
-msgid "Page Title"
-msgstr ""
-
-#: models.py:32
-msgid "URL"
-msgstr ""
-
 #: models.py:33
-msgid "Content"
+msgid "Subject"
 msgstr ""
 
 #: models.py:34
-msgid "Show in footer"
+msgid "Max: 250 characters"
 msgstr ""
 
 #: models.py:35
-msgid "Author"
+msgid "Message"
 msgstr ""
 
-#: models.py:37
-msgid "Last update"
+#: models.py:36
+msgid "Created on"
 msgstr ""
 
 #: models.py:38
-msgid "Order"
+msgid "Message creator"
 msgstr ""
 
-#: models.py:42
-msgid "Static Pages"
-msgstr ""
-
-#: templates/staticpages/staticpages_index.html:13
-msgid "Go back"
-msgstr ""
-
-#: templates/staticpages/staticpages_index.html:16
-msgid "last updated"
+#: models.py:39
+msgid "Last modification time"
 msgstr ""

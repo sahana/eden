@@ -138,3 +138,6 @@ class EmailValidationForm(forms.Form):
             return email
 
         raise forms.ValidationError(_("That e-mail is already used."))
+
+class ChangeEmail(EmailValidationForm):
+    email2 = forms.EmailField(label=u'Type Email again') 

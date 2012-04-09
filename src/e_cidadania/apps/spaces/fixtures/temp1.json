@@ -1,0 +1,78 @@
+[
+    {
+        "pk": 1, 
+        "model": "spaces.space", 
+        "fields": {
+            "name": "corrupt", 
+            "author": 1, 
+            "url": "http://127.0.0.1:8000/spaces/corrupt", 
+            "mod_proposals": true, 
+            "mod_debate": true, 
+            "mod_docs": true, 
+            "mod_news": true, 
+            "date": "2012-03-30 07:02:34", 
+            "logo": "spaces/logos/logo_1.jpeg", 
+            "banner": "spaces/banners/banner_1.jpeg", 
+            "public": true, 
+            "mod_cal": true, 
+            "description": "<p>\r\n\tHello&nbsp;</p>\r\n"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "spaces.space", 
+        "fields": {
+            "name": "corrupts", 
+            "author": 1, 
+            "url": "/corrupts", 
+            "mod_proposals": true, 
+            "mod_debate": true, 
+            "mod_docs": true, 
+            "mod_news": true, 
+            "date": "2012-03-30 07:04:16", 
+            "logo": "spaces/logos/logo_2.jpeg", 
+            "banner": "spaces/banners/banner_2.jpeg", 
+            "public": true, 
+            "mod_cal": true, 
+            "description": "<p>\r\n\tHello&nbsp;</p>\r\n"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "spaces.space", 
+        "fields": {
+            "name": "hello asdasd ", 
+            "author": 1, 
+            "url": "fnatic", 
+            "mod_proposals": true, 
+            "mod_debate": true, 
+            "mod_docs": true, 
+            "mod_news": true, 
+            "date": "2012-04-03 20:24:20", 
+            "logo": "spaces/logos/logo_3.jpeg", 
+            "banner": "spaces/banners/banner_3.jpeg", 
+            "public": true, 
+            "mod_cal": true, 
+            "description": "<p>\r\n\tiu amd asd dummy space</p>\r\n"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "spaces.space", 
+        "fields": {
+            "name": "sk", 
+            "author": 1, 
+            "url": "sk", 
+            "mod_proposals": true, 
+            "mod_debate": true, 
+            "mod_docs": true, 
+            "mod_news": true, 
+            "date": "2012-04-03 21:09:09", 
+            "logo": "spaces/logos/logo_4.png", 
+            "banner": "spaces/banners/banner_4.png", 
+            "public": true, 
+            "mod_cal": true, 
+            "description": "<p>\r\n\tsk gaing</p>\r\n"
+        }
+    }
+]

@@ -125,10 +125,9 @@ def add_intent(request, space_name):
          intent = Intent(user=request.user, space=space, token=token)
          intent.save()
          subject = _("New participation request")
-         body = _("User %s wants to participate in space %s.\n \
-                  Plese click on the link below to approve.\n %s" \
-                  % (request.user.username, space.name,
-                     intent.get_approve_url()))
+         body = _("User {0} wants to participate in space {1}.\n \
+                  Plese click on the link below to approve.\n {2}"\
+                  .format(request.user.username, space.name, intent.get_approve_url()))
          heading = _("Your request is being processed.")
          send_mail(subject=subject, message=body,
                    from_email="noreply@ecidadania.org",
@@ -139,26 +138,29 @@ def add_intent(request, space_name):
              {'space_name': space_name, 'heading': heading}, \
                                context_instance=RequestContext(request))
 
-@staff_member_required
-def validate_intent(request, space_name, token):
-     """
-     Adds the user to the space, validates the request to participate.
-     :attributes: space, intent
-     :rtype: Multiple entity objects.
-     :context: space_name, heading 
-     """
-     space = get_object_or_404(Space, url=space_name)
-     try:
-         intent = Intent.objects.get(token=token)
-         intent.user.profile.spaces.add(space)
-         intent.delete()
-         heading = _("The user has been authorized to participate in space \"%s\"." % space.name)
-     except Intent.DoesNotExist:
-         heading = _("The requested intent does not exist!")
 
-     return render_to_response('validate_intent.html', \
-             {'space_name': space_name, 'heading': heading}, \
-             context_instance=RequestContext(request))
+class ValidateIntent(DetailView):
+    context_object_name = 'space_name'
+    template_name = 'spaces/validate_intent.html'
+    heading = _("The requested intent does not exist!")
+
+    def get_object(self):
+        space_name = self.kwargs['space_name']
+        space_object = get_object_or_404(Space, url=space_name)
+
+        if self.request.user.is_staff:
+            intent = get_object_or_404(Intent, token=self.kwargs['token'])
+            intent.user.profile.spaces.add(space_object)
+            self.heading = _("The user has been authorized to participate in space \"%s\"." % space_object.name)
+            messages.info(self.request, _("Autorization succesful"))
+            self.template_name = 'validate_intent.html'
+        return space_object
+
+    def get_context_data(self, **kwargs):
+        context = super(ValidateIntent, self).get_context_data(**kwargs)
+        context['heading'] = self.heading
+        return context
+
 
 
 # SPACE VIEWS
@@ -395,7 +397,7 @@ class AddDocument(FormView):
     
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return '/spaces/' + self.space.name
+        return '/spaces/' + self.space.url
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])

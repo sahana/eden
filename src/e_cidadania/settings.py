@@ -2,7 +2,7 @@
 
 """
 Main configuration file for e-cidadania. Please refer to the documentation on
-http://docs.ecidadania.org before you modift anything.
+http://docs.ecidadania.org before you modify anything.
 """
 
 __version__ = "0.1.5"
@@ -47,7 +47,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db/sqlite.db',
+        'NAME': 'e_cidadania/db/sqlite.db',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -127,7 +127,14 @@ TEMPLATE_DIRS = (
     (cwd + '/templates'),
 )
 
-GRAPPELLI_ADMIN_TITLE = 'e-cidadania 0.1 / Administracion'
+# The administration panel link is hardcoded because we can't handle other
+# way of doing it without messing with grappelli or django-admin. The extra HTML
+# tags bring the title a dropdown menu functionality'
+#GRAPPELLI_ADMIN_TITLE = 'e-cidadania %s - <a href="/">Back to site</a>' % (__version__)
+GRAPPELLI_ADMIN_TITLE = "<li class='user-options-container collapse closed'> \
+<a href='javascript://' class='user-options-handler collapse-handler'> \
+e-cidadania %s</a><ul class='user-options'><li><a href='/' \
+style='padding:10px;'>Back to site</a></li></ul></li>" % (__version__)
 GRAPPELLI_ADMIN_URL = '/admin'
 GRAPPELLI_INDEX_DASHBOARD = 'e_cidadania.dashboard.CustomIndexDashboard'
 
