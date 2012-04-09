@@ -46,9 +46,9 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test1',
-        'USER': 'root',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'e_cidadania/db/sqlite.db',
+        'USER': '',
         'PASSWORD': '',
         'HOST': '',
         'PORT': '',
