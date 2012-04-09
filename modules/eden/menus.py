@@ -1161,12 +1161,14 @@ class S3OptionsMenu:
         if settings.get_project_community_activity():
             activities_label = "Communities"
             list_activities_label = "List All Communities"
+            search_activities_label = "Search Communities"
             list_activity_contacts_label = "List All Community Contacts"
             search_activity_contacts_label = "Search Community Contacts"
             import_activities_label = "Import Project Communities"
         else:
             activities_label = "Activities"
             list_activities_label = "List All Activities"
+            search_activities_label = "Search Activities"
             # @ToDo: These should always be Community Contacts as that's what they are...however they shouldn't link to Activities...
             list_activity_contacts_label = "List All Activity Contacts"
             search_activity_contacts_label = "Search Activity Contacts"
@@ -1183,6 +1185,7 @@ class S3OptionsMenu:
                     ),
                     M(activities_label, f="activity")(
                         M(list_activities_label),
+                        M(search_activities_label, m="search"),
                         M(list_activity_contacts_label, f="activity_contact"),
                         M(search_activity_contacts_label, f="activity_contact",
                           m="search"),

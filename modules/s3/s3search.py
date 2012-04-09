@@ -708,7 +708,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 value = [value]
 
             try:
-                field = resource.table[self.field]
+                field = self.field
+                if isinstance(field, (list, tuple)):
+                    field = field[0]
+                field = resource.table[field]
             except:
                 # field is virtual
                 raise NotImplementedError
