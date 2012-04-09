@@ -23,6 +23,7 @@ Proposal module URLs.
 """
 
 from django.conf.urls.defaults import *
+from django.utils.translation import ugettext_lazy as _
 from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
     DeleteProposal, EditProposal, AddProposal
 
@@ -30,13 +31,13 @@ urlpatterns = patterns('e_cidadania.apps.proposals.views',
 
     url(r'^$', ListProposals.as_view(), name='list-proposals'),
 
-    url(r'^add/', AddProposal.as_view(), name='add-proposal'),
+    url(_(r'^add/'), AddProposal.as_view(), name='add-proposal'),
 
-    url(r'^(?P<prop_id>\w+)/edit/$', EditProposal.as_view(), name='edit-proposal'),
+    url(_(r'^(?P<prop_id>\w+)/edit/$'), EditProposal.as_view(), name='edit-proposal'),
 
-    url(r'^(?P<prop_id>\w+)/delete/$', DeleteProposal.as_view(), name='delete-proposal'),
+    url(_(r'^(?P<prop_id>\w+)/delete/$'), DeleteProposal.as_view(), name='delete-proposal'),
 
-    url(r'^add_support_vote/', 'vote_proposal'),
+    url(_(r'^add_support_vote/'), 'vote_proposal'),
 
     url(r'^(?P<prop_id>\w+)/', ViewProposal.as_view(), name='view-proposal'),
 
