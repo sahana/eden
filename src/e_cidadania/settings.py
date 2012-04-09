@@ -131,7 +131,10 @@ TEMPLATE_DIRS = (
 # way of doing it without messing with grappelli or django-admin. The extra HTML
 # tags bring the title a dropdown menu functionality'
 #GRAPPELLI_ADMIN_TITLE = 'e-cidadania %s - <a href="/">Back to site</a>' % (__version__)
-GRAPPELLI_ADMIN_TITLE = "<li class='user-options-container collapse closed'><a href='javascript://' class='user-options-handler collapse-handler'>e-cidadania %s</a><ul class='user-options'><li><a href='/' style='padding:10px;'>Back to site</a></li></ul></li>" % (__version__)
+GRAPPELLI_ADMIN_TITLE = "<li class='user-options-container collapse closed'> \
+<a href='javascript://' class='user-options-handler collapse-handler'> \
+e-cidadania %s</a><ul class='user-options'><li><a href='/' \
+style='padding:10px;'>Back to site</a></li></ul></li>" % (__version__)
 GRAPPELLI_ADMIN_URL = '/admin'
 GRAPPELLI_INDEX_DASHBOARD = 'e_cidadania.dashboard.CustomIndexDashboard'
 
