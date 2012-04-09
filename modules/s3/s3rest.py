@@ -4953,7 +4953,10 @@ class S3ResourceFilter:
             try:
                 q = S3ResourceQuery(op, S3FieldSelector(fs), v)
             except SyntaxError:
-                # Probably invalid operator, skip
+                # Invalid query, skip
+                continue
+            except KeyError:
+                # Invalid operand, skip
                 continue
 
             # Invert operation
@@ -5597,7 +5600,10 @@ class S3ResourceQuery:
         real = False
         left = self.left
         if isinstance(left, S3FieldSelector):
-            lfield = left.resolve(resource)
+            try:
+                lfield = left.resolve(resource)
+            except KeyError, SyntaxError:
+                return None
             if lfield.field is not None:
                 real = True
         else:
@@ -5606,7 +5612,10 @@ class S3ResourceQuery:
                 real = True
         right = self.right
         if isinstance(right, S3FieldSelector):
-            rfield = right.resolve(resource)
+            try:
+                rfield = right.resolve(resource)
+            except KeyError, SyntaxError:
+                return None
             if rfield.field is None:
                 real = False
         else:
