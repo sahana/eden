@@ -20,17 +20,18 @@
 
 from django.conf.urls.defaults import *
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.news.views import DeletePost, ViewPost, AddPost, EditPost
 
 urlpatterns = patterns('e_cidadania.apps.news.views',
     
-    url(r'^add/$', AddPost.as_view(), name='add-post'),
+    url(_(r'^add/$'), AddPost.as_view(), name='add-post'),
     
-    url(r'^(?P<post_id>\d+)/delete/$', DeletePost.as_view(), name='delete-post'),
+    url(_(r'^(?P<post_id>\d+)/delete/$'), DeletePost.as_view(), name='delete-post'),
     
-    url(r'^(?P<post_id>\d+)/edit/$', EditPost.as_view(), name='edit-post'),
+    url(_(r'^(?P<post_id>\d+)/edit/$'), EditPost.as_view(), name='edit-post'),
     
-    url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name='view-post')
+    url(r'^(?P<post_id>\d+)', ViewPost.as_view(), name='view-post'),
 
 )

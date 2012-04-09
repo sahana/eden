@@ -23,6 +23,7 @@ This file contains all the URLs that e_cidadania will inherit when the user
 access to '/spaces/'.
 """
 from django.conf.urls.defaults import *
+from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.debate.views import ListDebates, ViewDebate
 
@@ -32,15 +33,15 @@ urlpatterns = patterns('e_cidadania.apps.debate.views',
 
     url(r'^(?P<debate_id>\d+)/', ViewDebate.as_view(), name='view-debate'),
     
-    url(r'^add/', 'add_new_debate', name='add-debate'),
+    url(_(r'^add/'), 'add_new_debate', name='add-debate'),
 
-    url(r'^update_position/', 'update_position', name='update-note-position'),
+    url(_(r'^update_position/'), 'update_position', name='update-note-position'),
     
-    url(r'^update_note/', 'update_note', name='update-note'),
+    url(_(r'^update_note/'), 'update_note', name='update-note'),
     
-    url(r'^create_note/', 'create_note', name='create-note'),
+    url(_(r'^create_note/'), 'create_note', name='create-note'),
     
-    url(r'^delete_note/', 'delete_note', name='delete-note'),
+    url(_(r'^delete_note/'), 'delete_note', name='delete-note'),
     
     # Editing debates is not allowed at this time
     #(r'^(?P<debate_id>\d+)', 'edit_debate'),
