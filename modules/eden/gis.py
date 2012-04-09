@@ -2016,6 +2016,7 @@ class S3LayerEntityModel(S3Model):
                                       limitby=(0, 1)).first()
             # Set all others in this config as not the default Base Layer
             query  = (ltable.config_id == config.id) & \
+                     (ltable.base == True) & \
                      (ltable.id != vars.id)
             db(query).update(base = False)
 

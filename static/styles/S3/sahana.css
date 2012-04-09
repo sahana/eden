@@ -1353,6 +1353,12 @@ div#last_update {
     padding: 4px;
     width: 55px;
 }
+/* HRM RHeader */
+.hrm_avatar {
+    float: left;
+    padding-bottom: 5px;
+    padding-right: 10px;
+}
 .comment-box {
     overflow: hidden;
     padding: 15px 0;
