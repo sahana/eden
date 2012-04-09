@@ -4874,10 +4874,15 @@ class S3ResourceFilter:
     @staticmethod
     def _andq(query, q):
 
+        try:
+            expand = str(q)
+        except ValueError:
+            # invalid data type in q
+            return query
         if query is None:
             query = q
         else:
-            if str(q) not in str(query):
+            if expand not in str(query):
                 query &= q
         return query
 
