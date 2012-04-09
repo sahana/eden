@@ -29,12 +29,10 @@
     	<script type="text/javascript">
     	    $(document).ready(function(){
                 $(".alert").alert();
+                $('#wysiwygtextarea').wysihtml5();
             });
     	</script>
 
-		<script>
-					$('#wysiwygtextarea').wysihtml5();
-		</script>
     	<!-- End load JavaScript -->
        	{% block extrajs %}
        	{% endblock %}
