@@ -439,7 +439,8 @@ class S3TrackingModel(S3Model):
              "inv_recv",
              "inv_recv_represent",
              "inv_track_item",
-             "inv_track_item_onaccept"
+             "inv_track_item_onaccept",
+             "inv_get_shipping_code"
              ]
 
     def model(self):
@@ -972,7 +973,7 @@ $(document).ready(function() {
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(inv_track_item_deleting = self.inv_track_item_deleting,
-                       inv_getShippingCode = self.getShippingCode,
+                       inv_get_shipping_code = self.inv_get_shipping_code,
                        inv_track_item_onaccept = self.inv_track_item_onaccept,
                       )
 
@@ -1009,7 +1010,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not stable[id].send_ref:
-            code = S3TrackingModel.getShippingCode("WB", stable[id].site_id, id)
+            code = S3TrackingModel.inv_get_shipping_code("WB", stable[id].site_id, id)
             db(stable.id == id).update(send_ref = code)
 
     # ---------------------------------------------------------------------
@@ -1078,7 +1079,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not rtable[id].recv_ref:
-            code = S3TrackingModel.getShippingCode("GRN", rtable[id].site_id, id)
+            code = S3TrackingModel.inv_get_shipping_code("GRN", rtable[id].site_id, id)
             db(rtable.id == id).update(recv_ref = code)
 
 
@@ -1207,7 +1208,7 @@ $(document).ready(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def getShippingCode(type, site_id, id):
+    def inv_get_shipping_code(type, site_id, id):
         s3db = current.s3db
         if site_id:
             ostable = s3db.org_site
