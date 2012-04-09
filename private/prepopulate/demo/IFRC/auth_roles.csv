@@ -22,6 +22,8 @@
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","hrm","training",,"READ",,,,,,
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","hrm","training_event",,"READ",,,,,,
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","hrm","certificate",,"READ",,,,,,
+"EVENT_EDIT","Events Editor","Can see/edit all Event records belonging to this Organisation. Cannot control access permissions.","irs",,,"ALL",,,,,,
+"EVENT_READ","Events Reader","Can see all Asset records belonging to this Organisation. Cannot edit any records or control access permissions.","irs",,,"READ",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","inv",,,"ALL",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","inv","warehouse",,"ALL",,,,,,
 "LOGS_EDIT","Logs Editor","Can see/edit all Logistics records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","inv","inv_item",,"ALL",,,,,,
