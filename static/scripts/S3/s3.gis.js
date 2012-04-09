@@ -77,9 +77,9 @@ Ext.onReady(function() {
     if (S3.gis.wmsBrowser) {
         items.push(S3.gis.wmsBrowser);
     }
-    if (S3.gis.searchCombo) {
-        items.push(S3.gis.searchCombo);
-    }
+    // if (S3.gis.searchCombo) {
+        // items.push(S3.gis.searchCombo);
+    // }
     if (S3.gis.printFormPanel) {
         items.push(S3.gis.printFormPanel);
     }
@@ -207,31 +207,6 @@ function addMap() {
             collapsible: true,
             collapseMode: 'mini',
             lines: false
-        });
-    }
-
-    // Search box
-    if (S3.i18n.gis_search) {
-        var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
-            map: map,
-            zoom: 12
-        });
-
-        S3.gis.searchCombo = new Ext.Panel({
-            id: 'searchCombo',
-            title: S3.i18n.gis_search,
-            layout: 'border',
-            rootVisible: false,
-            split: true,
-            autoScroll: true,
-            collapsible: true,
-            collapseMode: 'mini',
-            lines: false,
-            html: S3.i18n.gis_search_no_internet,
-            items: [{
-                    region: 'center',
-                    items: [ mapSearch ]
-                }]
         });
     }
 
@@ -666,4 +641,14 @@ function addToolbar() {
             google & addGoogleEarthControl(toolbar);
         }
     } catch(err) {};
+    
+    // Search box
+    if (S3.i18n.gis_search) {
+        var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
+            map: map,
+            zoom: 12
+        });
+        toolbar.addSeparator();
+        toolbar.add(mapSearch);
+    }
 }
