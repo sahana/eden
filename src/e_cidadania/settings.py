@@ -163,6 +163,7 @@ THIRDPARTY_APPS = (
 ECIDADANIA_MODULES = (
     # Modules created for e-cidadania and installed by default. You can add
     # here your own modules.
+	'e_cidadania.apps.custom_tags',
     'e_cidadania.apps.accounts',
     'e_cidadania.apps.proposals',
     'e_cidadania.apps.news',
