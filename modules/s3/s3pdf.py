@@ -3034,7 +3034,7 @@ class S3PDFDataSource:
 
         # Retrieve the resource contents
         table = resource.table
-        lfields, joins, ljoins = resource.get_lfields(list_fields)
+        lfields, joins, left, distinct = resource.resolve_selectors(list_fields)
         fields = [f for f in lfields if f.show]
         headers = [f.label for f in lfields if f.show]
         # @ToDo: make consistent with XLS
@@ -3593,13 +3593,13 @@ class S3PDFRHeader():
 # end of class S3PDFRHeader
 
 class S3html2pdf():
-        
+
     def __init__(self,
                  pageWidth,
                  exclude_class_list = []):
         """
             Method that takes html in the web2py helper objects
-            and converts it to pdf 
+            and converts it to pdf
         """
         self.exclude_class_list = exclude_class_list
         self.pageWidth = pageWidth
