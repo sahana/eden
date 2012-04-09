@@ -125,10 +125,9 @@ def add_intent(request, space_name):
          intent = Intent(user=request.user, space=space, token=token)
          intent.save()
          subject = _("New participation request")
-         body = _("User %s wants to participate in space %s.\n \
-                  Plese click on the link below to approve.\n %s" \
-                  % (request.user.username, space.name,
-                     intent.get_approve_url()))
+         body = _("User {0} wants to participate in space {1}.\n \
+                  Plese click on the link below to approve.\n {2}"\
+                  .format(request.user.username, space.name, intent.get_approve_url()))
          heading = _("Your request is being processed.")
          send_mail(subject=subject, message=body,
                    from_email="noreply@ecidadania.org",

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-12 12:34+0100\n"
+"POT-Creation-Date: 2012-04-09 11:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,12 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: admin.py:66
+#: admin.py:67
 msgid "Appearance"
 msgstr ""
 
-#: admin.py:69 templates/spaces/space_add.html:141
-#: templates/spaces/space_add.html:230 templates/spaces/space_edit.html:143
+#: admin.py:70 templates/spaces/space_add.html:140
+#: templates/spaces/space_add.html:228 templates/spaces/space_edit.html:143
 msgid "Modules"
 msgstr ""
 
@@ -36,147 +36,184 @@ msgstr ""
 msgid "Filetype not supported."
 msgstr ""
 
-#: models.py:49 models.py:99
+#: models.py:50 models.py:106
 msgid "Name"
 msgstr ""
 
-#: models.py:50
+#: models.py:51
 msgid "Max: 250 characters"
 msgstr ""
 
-#: models.py:51 templates/spaces/document_edit.html:21
+#: models.py:52 templates/spaces/document_edit.html:21
 msgid "URL"
 msgstr ""
 
-#: models.py:52
+#: models.py:57
 msgid ""
-"All lowercase. This will be the                                         "
+"Valid characters are lowercase, digits "
+"and                                          underscore. This will be the "
 "accesible URL"
 msgstr ""
 
-#: models.py:54 models.py:171 templates/spaces/event_add.html:138
-#: templates/spaces/space_add.html:226
+#: models.py:59 models.py:178 templates/spaces/event_add.html:138
+#: templates/spaces/space_add.html:224
 msgid "Description"
 msgstr ""
 
-#: models.py:55
+#: models.py:60
 msgid "Write here your description."
 msgstr ""
 
-#: models.py:56
+#: models.py:61
 msgid "Date of creation"
 msgstr ""
 
-#: models.py:58
+#: models.py:63
 msgid "Space creator"
 msgstr ""
 
-#: models.py:68
+#: models.py:66 models.py:68
+msgid "Valid extensions are jpg, jpeg, png and gif"
+msgstr ""
+
+#: models.py:75
 msgid "Public space"
 msgstr ""
 
-#: models.py:72
+#: models.py:79
 msgid "Debate"
 msgstr ""
 
-#: models.py:73 templates/spaces/space_index.html:26
-#: templates/spaces/space_index.html:79
+#: models.py:80 templates/spaces/space_index.html:26
+#: templates/spaces/space_index.html:90
 msgid "Proposals"
 msgstr ""
 
-#: models.py:74 templates/spaces/space_index.html:20
+#: models.py:81 templates/spaces/space_index.html:20
 #: templates/spaces/space_index.html:68
 msgid "News"
 msgstr ""
 
-#: models.py:75
+#: models.py:82
 msgid "Calendar"
 msgstr ""
 
-#: models.py:76 models.py:148 templates/spaces/space_index.html:29
+#: models.py:83 models.py:155 templates/spaces/space_index.html:29
 msgid "Documents"
 msgstr ""
 
-#: models.py:80
+#: models.py:87
 msgid "Space"
 msgstr ""
 
-#: models.py:81
+#: models.py:88
 msgid "Spaces"
 msgstr ""
 
-#: models.py:100
+#: models.py:107
 msgid "Website"
 msgstr ""
 
-#: models.py:101
+#: models.py:108
 msgid "Logo"
 msgstr ""
 
-#: models.py:107
+#: models.py:114
 msgid "Entity"
 msgstr ""
 
-#: models.py:108
+#: models.py:115
 msgid "Entities"
 msgstr ""
 
-#: models.py:120
+#: models.py:127
 msgid "Document title"
 msgstr ""
 
-#: models.py:122
+#: models.py:129
 msgid "File"
 msgstr ""
 
-#: models.py:129
+#: models.py:136
 msgid "Author"
 msgstr ""
 
-#: models.py:147
+#: models.py:154
 msgid "Document"
 msgstr ""
 
-#: models.py:163
+#: models.py:170
 msgid "Event name"
 msgstr ""
 
-#: models.py:165
+#: models.py:172
 msgid "Users"
 msgstr ""
 
-#: models.py:167
+#: models.py:174
 msgid "Created by"
 msgstr ""
 
-#: models.py:170
+#: models.py:177
 msgid "Event date"
 msgstr ""
 
-#: models.py:172 templates/spaces/event_add.html:139
+#: models.py:179 templates/spaces/event_add.html:139
 msgid "Location"
 msgstr ""
 
-#: models.py:176
+#: models.py:183
 msgid "Event"
 msgstr ""
 
-#: models.py:177 templates/spaces/space_index.html:32
+#: models.py:184 templates/spaces/space_index.html:32
 #: templates/spaces/space_index.html:101
 msgid "Events"
 msgstr ""
 
-#: views.py:82
+#: views.py:85
 #, python-format
 msgid "%s feed"
 msgstr ""
 
-#: views.py:88
+#: views.py:91
 #, python-format
 msgid "All the recent activity in %s "
 msgstr ""
 
-#: views.py:159
+#: views.py:121
+msgid "Access has been already authorized"
+msgstr ""
+
+#: views.py:127
+msgid "New participation request"
+msgstr ""
+
+#: views.py:128
+msgid ""
+"User {0} wants to participate in space {1}.\n"
+"                   Plese click on the link below to approve.\n"
+" {2}"
+msgstr ""
+
+#: views.py:131
+msgid "Your request is being processed."
+msgstr ""
+
+#: views.py:145
+msgid "The requested intent does not exist!"
+msgstr ""
+
+#: views.py:154
+#, python-format
+msgid "The user has been authorized to participate in space \"%s\"."
+msgstr ""
+
+#: views.py:155
+msgid "Autorization succesful"
+msgstr ""
+
+#: views.py:238
 msgid ""
 "Hello anonymous user. Remember                                               "
 "that this space is public to view, "
@@ -186,19 +223,15 @@ msgid ""
 "\">login</a> to participate."
 msgstr ""
 
-#: views.py:166
+#: views.py:245
 msgid ""
 "You're an anonymous user.                           You must <a href=\"/"
 "accounts/register\">register</a>                           or <a href=\"/"
 "accounts/login\">login</a> to access here."
 msgstr ""
 
-#: views.py:176
+#: views.py:255
 msgid "You're not registered to this space."
-msgstr ""
-
-#: views.py:410
-msgid "Document edited successfully."
 msgstr ""
 
 #: templates/spaces/document_add.html:4 templates/spaces/document_add.html:16
@@ -300,11 +333,11 @@ msgid "Create new event"
 msgstr ""
 
 #: templates/spaces/event_add.html:128 templates/spaces/event_edit.html:128
-#: templates/spaces/space_add.html:217 templates/spaces/space_edit.html:219
+#: templates/spaces/space_add.html:215 templates/spaces/space_edit.html:219
 msgid "Cancel"
 msgstr ""
 
-#: templates/spaces/event_add.html:129 templates/spaces/space_add.html:218
+#: templates/spaces/event_add.html:129 templates/spaces/space_add.html:216
 msgid "Create"
 msgstr ""
 
@@ -386,55 +419,54 @@ msgstr ""
 msgid "Create a new space"
 msgstr ""
 
-#: templates/spaces/space_add.html:172 templates/spaces/space_edit.html:174
+#: templates/spaces/space_add.html:154 templates/spaces/space_edit.html:174
 msgid "Entities participating"
 msgstr ""
 
-#: templates/spaces/space_add.html:223
+#: templates/spaces/space_add.html:221
 msgid "How to add new spaces"
 msgstr ""
 
-#: templates/spaces/space_add.html:225
+#: templates/spaces/space_add.html:223
 msgid "Space name"
 msgstr ""
 
-#: templates/spaces/space_add.html:225
+#: templates/spaces/space_add.html:223
 msgid ""
 "The name of the space. Have in mind that this name will be used as the URL "
 "of your space. We recommend to use all lowercase. (100 chars)"
 msgstr ""
 
-#: templates/spaces/space_add.html:226
+#: templates/spaces/space_add.html:224
 msgid ""
-"An optional description for your space. It won't be showed to the users, but "
-"to the admins."
+"An optional description for your space. This is publicly visible to everyone."
 msgstr ""
 
-#: templates/spaces/space_add.html:227
+#: templates/spaces/space_add.html:225
 msgid "Logotype"
 msgstr ""
 
-#: templates/spaces/space_add.html:227
+#: templates/spaces/space_add.html:225
 msgid "An image of 75px height and 100px width."
 msgstr ""
 
-#: templates/spaces/space_add.html:228
+#: templates/spaces/space_add.html:226
 msgid "Banner"
 msgstr ""
 
-#: templates/spaces/space_add.html:228
+#: templates/spaces/space_add.html:226
 msgid "Another image. 75px height."
 msgstr ""
 
-#: templates/spaces/space_add.html:229
+#: templates/spaces/space_add.html:227
 msgid "Authorized groups"
 msgstr ""
 
-#: templates/spaces/space_add.html:229
+#: templates/spaces/space_add.html:227
 msgid "This will set up what users can access to your space."
 msgstr ""
 
-#: templates/spaces/space_add.html:230
+#: templates/spaces/space_add.html:228
 msgid ""
 "Select the modules you will use in your space. This can be edited afterwards."
 msgstr ""
@@ -463,7 +495,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: templates/spaces/space_index.html:23 templates/spaces/space_index.html:90
+#: templates/spaces/space_index.html:23 templates/spaces/space_index.html:79
 msgid "Debates"
 msgstr ""
 
@@ -487,7 +519,7 @@ msgid "Current status:"
 msgstr ""
 
 #: templates/spaces/space_index.html:63
-msgid "Users:"
+msgid "Participants:"
 msgstr ""
 
 #: templates/spaces/space_index.html:65
@@ -509,19 +541,19 @@ msgid "Nothing published yet."
 msgstr ""
 
 #: templates/spaces/space_index.html:82
-msgid "proposed"
-msgstr ""
-
-#: templates/spaces/space_index.html:84 templates/spaces/space_index.html:238
-msgid "No proposals available."
-msgstr ""
-
-#: templates/spaces/space_index.html:93
 msgid "created debate"
 msgstr ""
 
-#: templates/spaces/space_index.html:95 templates/spaces/space_index.html:183
+#: templates/spaces/space_index.html:84 templates/spaces/space_index.html:183
 msgid "No debates started."
+msgstr ""
+
+#: templates/spaces/space_index.html:93
+msgid "proposed"
+msgstr ""
+
+#: templates/spaces/space_index.html:95 templates/spaces/space_index.html:238
+msgid "No proposals available."
 msgstr ""
 
 #: templates/spaces/space_index.html:106

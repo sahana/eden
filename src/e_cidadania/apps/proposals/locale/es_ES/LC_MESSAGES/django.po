@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-12 12:34+0100\n"
+"POT-Creation-Date: 2012-04-09 11:04+0200\n"
 "PO-Revision-Date: 2012-01-05 11:04\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,7 +94,7 @@ msgstr "Añadir nueva propuesta"
 #: templates/proposals/proposal_add.html:124
 #: templates/proposals/proposal_confirm_delete.html:26
 #: templates/proposals/proposal_edit.html:139
-#: templates/proposals/proposal_list.html:47
+#: templates/proposals/proposal_list.html:50
 msgid "Go back"
 msgstr "Volver"
 
@@ -173,17 +173,18 @@ msgstr "Eliminar"
 msgid "View proposal"
 msgstr "Ver propuesta"
 
-#: templates/proposals/proposal_detail.html:56
+#: templates/proposals/proposal_detail.html:65
+#: templates/proposals/proposal_list.html:29
 msgid "support"
 msgstr "soporte"
 
-#: templates/proposals/proposal_detail.html:61
-#: templates/proposals/proposal_list.html:34
+#: templates/proposals/proposal_detail.html:70
+#: templates/proposals/proposal_list.html:37
 msgid "proposed by "
 msgstr "propuesto por"
 
-#: templates/proposals/proposal_detail.html:61
-#: templates/proposals/proposal_list.html:34
+#: templates/proposals/proposal_detail.html:70
+#: templates/proposals/proposal_list.html:37
 msgid " at "
 msgstr "a las"
 
@@ -200,22 +201,22 @@ msgstr "Ver propuestas"
 msgid "Edit"
 msgstr "Editar"
 
-#: templates/proposals/proposal_list.html:34
+#: templates/proposals/proposal_list.html:37
 msgid "comments"
 msgstr "comentarios"
 
-#: templates/proposals/proposal_list.html:43
+#: templates/proposals/proposal_list.html:46
 msgid "There are no proposals for this space"
 msgstr "No hay propuesta para este espacio."
 
-#: templates/proposals/proposal_list.html:53
+#: templates/proposals/proposal_list.html:56
 msgid "previous"
 msgstr "anterior"
 
-#: templates/proposals/proposal_list.html:56
+#: templates/proposals/proposal_list.html:59
 msgid "of"
 msgstr "de"
 
-#: templates/proposals/proposal_list.html:59
+#: templates/proposals/proposal_list.html:62
 msgid "next"
 msgstr "siguiente"
