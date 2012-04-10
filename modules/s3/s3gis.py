@@ -3065,7 +3065,7 @@ class GIS(object):
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
 
-        if current.deployment_settings.get_gis_spatialdb():
+        if vars.wkt and current.deployment_settings.get_gis_spatialdb():
             # Also populate the spatial field
             vars.the_geom = vars.wkt
 
@@ -3916,7 +3916,7 @@ S3.gis.layers_feature_queries = new Array();"""
             else:
                 # Anonymous
                 # @ToDo: A deployment with many Anonymous Feature Queries being
-                #        accessed may need to revisit this design
+                #        accessed will need to change this design - e.g. use session ID instead
                 created_by = None
             query = query & (fqtable.created_by == created_by)
             db(query).delete()
