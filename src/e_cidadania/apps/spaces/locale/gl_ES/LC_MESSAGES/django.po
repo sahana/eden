@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:13+0200\n"
 "PO-Revision-Date: 2012-02-29 11:34+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -172,6 +172,86 @@ msgstr "Evento"
 #: templates/spaces/space_index.html:101
 msgid "Events"
 msgstr "Eventos"
+
+#: urls.py:40
+msgid "^(?P<space_name>\\w+)/rss/$"
+msgstr ""
+
+#: urls.py:43 urls.py:99
+msgid "^(?P<space_name>\\w+)/news/"
+msgstr ""
+
+#: urls.py:46
+msgid "^(?P<space_name>\\w+)/proposal/"
+msgstr ""
+
+#: urls.py:49
+msgid "^(?P<space_name>\\w+)/calendar/"
+msgstr ""
+
+#: urls.py:52
+msgid "^(?P<space_name>\\w+)/debate/"
+msgstr ""
+
+#: urls.py:59
+msgid "^(?P<space_name>\\w+)/docs/add/$"
+msgstr ""
+
+#: urls.py:61
+msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
+msgstr ""
+
+#: urls.py:63
+msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
+msgstr ""
+
+#: urls.py:65
+msgid "^(?P<space_name>\\w+)/docs/$"
+msgstr ""
+
+#: urls.py:72
+msgid "^(?P<space_name>\\w+)/event/add/$"
+msgstr ""
+
+#: urls.py:74
+msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/edit/$"
+msgstr ""
+
+#: urls.py:76
+msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/delete/$"
+msgstr ""
+
+#: urls.py:78
+msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/$"
+msgstr ""
+
+#: urls.py:80
+msgid "^(?P<space_name>\\w+)/event/$"
+msgstr ""
+
+#: urls.py:87
+msgid "^(?P<space_name>\\w+)/intent/$"
+msgstr ""
+
+#: urls.py:88
+msgid "^(?P<space_name>\\w+)/intent/approve/(?P<token>\\w+)/$"
+msgstr ""
+
+#: urls.py:95
+msgid "^(?P<space_name>\\w+)/edit/$"
+msgstr ""
+
+#: urls.py:97
+msgid "^(?P<space_name>\\w+)/delete/$"
+msgstr ""
+
+#: urls.py:101
+msgid "^add/$"
+msgstr ""
+
+#: urls.py:105
+msgid "^go/"
+msgstr ""
 
 #: views.py:85
 #, python-format

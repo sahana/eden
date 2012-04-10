@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:14+0200\n"
 "PO-Revision-Date: 2012-02-29 09:04+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -54,6 +54,18 @@ msgstr "Publicar en"
 #: models.py:44
 msgid "If you want to post to the index leave this blank"
 msgstr "Se queres postealo na páxina principal deixa isto en blanco"
+
+#: urls.py:29
+msgid "^add/$"
+msgstr ""
+
+#: urls.py:31
+msgid "^(?P<post_id>\\d+)/delete/$"
+msgstr ""
+
+#: urls.py:33
+msgid "^(?P<post_id>\\d+)/edit/$"
+msgstr ""
 
 #: templates/news/news_list.html:4
 msgid "News list"

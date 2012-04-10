@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:14+0200\n"
 "PO-Revision-Date: 2012-01-05 11:05\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,46 +18,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
-#: static/js/debate_board.js:11
+#: static/js/debate_board.js:12
 msgid "Write here your title"
 msgstr "Escribe aquí tu título"
 
-#: static/js/debate_board.js:12
+#: static/js/debate_board.js:13
 msgid "Write here your message"
 msgstr "Escribe aquí tu mensaje"
 
-#: static/js/debate_board.js:13
+#: static/js/debate_board.js:14
 msgid "Edit"
 msgstr "Editar"
 
-#: static/js/debate_board.js:14
+#: static/js/debate_board.js:15
 msgid "View"
 msgstr "Ver"
 
-#: static/js/debate_board.js:15
+#: static/js/debate_board.js:16
 msgid "There has been an error."
 msgstr "Ha habido un error."
 
-#: static/js/debate_board.js:16
+#: static/js/debate_board.js:17
 msgid "Couldn't create note."
 msgstr "No se ha podido crear la nota."
 
-#: static/js/debate_board.js:17
+#: static/js/debate_board.js:18
 msgid "Couldn't get note data."
 msgstr "No se ha podido obtener la nota."
 
-#: static/js/debate_board.js:18
+#: static/js/debate_board.js:19
 msgid "Couldn't save note."
 msgstr "No se ha podido guardar la nota."
 
-#: static/js/debate_board.js:19
+#: static/js/debate_board.js:20
 msgid "Couldn't save note position."
 msgstr "No se ha podido guardar la posición de la nota."
 
-#: static/js/debate_board.js:20
+#: static/js/debate_board.js:21
 msgid "Couldn't delete note."
 msgstr "No se ha podido eliminar la nota"
 
-#: static/js/debate_board.js:21
+#: static/js/debate_board.js:22
 msgid "Are you sure?"
 msgstr "¿Estás seguro?"

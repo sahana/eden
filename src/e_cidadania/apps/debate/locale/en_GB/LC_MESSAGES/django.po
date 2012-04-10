@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,6 +56,26 @@ msgstr ""
 
 #: models.py:116
 msgid "Last modification time"
+msgstr ""
+
+#: urls.py:36
+msgid "^add/"
+msgstr ""
+
+#: urls.py:38
+msgid "^update_position/"
+msgstr ""
+
+#: urls.py:40
+msgid "^update_note/"
+msgstr ""
+
+#: urls.py:42
+msgid "^create_note/"
+msgstr ""
+
+#: urls.py:44
+msgid "^delete_note/"
 msgstr ""
 
 #: templates/debate/debate_add.html:4
