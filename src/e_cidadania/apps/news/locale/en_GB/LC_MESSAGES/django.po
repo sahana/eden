@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -52,6 +52,18 @@ msgstr ""
 
 #: models.py:44
 msgid "If you want to post to the index leave this blank"
+msgstr ""
+
+#: urls.py:29
+msgid "^add/$"
+msgstr ""
+
+#: urls.py:31
+msgid "^(?P<post_id>\\d+)/delete/$"
+msgstr ""
+
+#: urls.py:33
+msgid "^(?P<post_id>\\d+)/edit/$"
 msgstr ""
 
 #: templates/news/news_list.html:4

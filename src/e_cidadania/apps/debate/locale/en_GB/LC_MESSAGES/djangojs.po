@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,46 +18,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: static/js/debate_board.js:11
+#: static/js/debate_board.js:12
 msgid "Write here your title"
 msgstr ""
 
-#: static/js/debate_board.js:12
+#: static/js/debate_board.js:13
 msgid "Write here your message"
 msgstr ""
 
-#: static/js/debate_board.js:13
+#: static/js/debate_board.js:14
 msgid "Edit"
 msgstr ""
 
-#: static/js/debate_board.js:14
+#: static/js/debate_board.js:15
 msgid "View"
 msgstr ""
 
-#: static/js/debate_board.js:15
+#: static/js/debate_board.js:16
 msgid "There has been an error."
 msgstr ""
 
-#: static/js/debate_board.js:16
+#: static/js/debate_board.js:17
 msgid "Couldn't create note."
 msgstr ""
 
-#: static/js/debate_board.js:17
+#: static/js/debate_board.js:18
 msgid "Couldn't get note data."
 msgstr ""
 
-#: static/js/debate_board.js:18
+#: static/js/debate_board.js:19
 msgid "Couldn't save note."
 msgstr ""
 
-#: static/js/debate_board.js:19
+#: static/js/debate_board.js:20
 msgid "Couldn't save note position."
 msgstr ""
 
-#: static/js/debate_board.js:20
+#: static/js/debate_board.js:21
 msgid "Couldn't delete note."
 msgstr ""
 
-#: static/js/debate_board.js:21
+#: static/js/debate_board.js:22
 msgid "Are you sure?"
 msgstr ""

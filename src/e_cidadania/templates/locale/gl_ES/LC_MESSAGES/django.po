@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:14+0200\n"
 "PO-Revision-Date: 2012-02-29 11:50+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -90,6 +90,43 @@ msgstr "Repo.or.cz (espello)"
 #: dashboard.py:157
 msgid "Recent Actions"
 msgstr "Accións recentes"
+
+#: urls.py:58
+msgid "^accounts/"
+msgstr ""
+
+#: urls.py:61
+msgid "^spaces/"
+msgstr ""
+
+#: urls.py:64
+msgid "^invite/"
+msgstr ""
+
+#: urls.py:67
+msgid "^news/$"
+msgstr ""
+
+#: urls.py:69
+msgid "^news/add/$"
+msgstr ""
+
+#: urls.py:71
+msgid "^news/(?P<post_id>\\w+)/delete/$"
+msgstr ""
+
+#: urls.py:74
+msgid "^news/(?P<post_id>\\w+)/edit/$"
+msgstr ""
+
+#: urls.py:77
+msgid "^news/(?P<post_id>\\w+)/$"
+msgstr ""
+
+#: urls.py:94
+#, fuzzy
+msgid "^comments/"
+msgstr "Comentarios"
 
 #: views.py:67
 #, fuzzy

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-09 11:04+0200\n"
+"POT-Creation-Date: 2012-04-10 10:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,17 +18,48 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: static/admin/js/SelectFilter2.js:77 static/grappelli/js/SelectFilter2.js:63
+#: static/admin/js/SelectFilter2.js:47 static/grappelli/js/SelectFilter2.js:40
+#, c-format
+msgid "Available %s"
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:54
+msgid "Filter"
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:61 static/grappelli/js/SelectFilter2.js:48
+msgid "Choose all"
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:67 static/grappelli/js/SelectFilter2.js:54
+msgid "Add"
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:69 static/grappelli/js/SelectFilter2.js:56
+msgid "Remove"
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:75 static/grappelli/js/SelectFilter2.js:62
+#, c-format
+msgid "Chosen %s"
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:76 static/grappelli/js/SelectFilter2.js:63
+msgid "Select your choice(s) and click "
+msgstr ""
+
+#: static/admin/js/SelectFilter2.js:81 static/grappelli/js/SelectFilter2.js:68
 msgid "Clear all"
 msgstr ""
 
-#: static/admin/js/actions.js:18 static/grappelli/js/actions.min.js:26
+#: static/admin/js/actions.js:18 static/admin/js/actions.min.js:1
+#: static/grappelli/js/actions.min.js:26
 msgid "%(sel)s of %(cnt)s selected"
 msgid_plural "%(sel)s of %(cnt)s selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: static/admin/js/actions.js:109
+#: static/admin/js/actions.js:109 static/admin/js/actions.min.js:5
 msgid ""
 "You have unsaved changes on individual editable fields. If you run an "
 "action, your unsaved changes will be lost."
@@ -48,17 +79,17 @@ msgid ""
 "button."
 msgstr ""
 
-#: static/admin/js/calendar.js:24 static/admin/js/dateparse.js:32
+#: static/admin/js/calendar.js:26 static/admin/js/dateparse.js:32
 msgid ""
 "January February March April May June July August September October November "
 "December"
 msgstr ""
 
-#: static/admin/js/calendar.js:25
+#: static/admin/js/calendar.js:27
 msgid "S M T W T F S"
 msgstr ""
 
-#: static/admin/js/collapse.js:9 static/admin/js/collapse.js.py:21
+#: static/admin/js/collapse.js:9 static/admin/js/collapse.js.c:21
 #: static/admin/js/collapse.min.js:1
 msgid "Show"
 msgstr ""
@@ -72,7 +103,7 @@ msgid "Sunday Monday Tuesday Wednesday Thursday Friday Saturday"
 msgstr ""
 
 #: static/admin/js/admin/DateTimeShortcuts.js:49
-#: static/admin/js/admin/DateTimeShortcuts.js:84
+#: static/admin/js/admin/DateTimeShortcuts.js:85
 msgid "Now"
 msgstr ""
 
@@ -80,84 +111,84 @@ msgstr ""
 msgid "Clock"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:80
+#: static/admin/js/admin/DateTimeShortcuts.js:81
 msgid "Choose a time"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:85
+#: static/admin/js/admin/DateTimeShortcuts.js:86
 msgid "Midnight"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:86
+#: static/admin/js/admin/DateTimeShortcuts.js:87
 msgid "6 a.m."
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:87
+#: static/admin/js/admin/DateTimeShortcuts.js:88
 msgid "Noon"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:91
-#: static/admin/js/admin/DateTimeShortcuts.js:188
+#: static/admin/js/admin/DateTimeShortcuts.js:92
+#: static/admin/js/admin/DateTimeShortcuts.js:197
 msgid "Cancel"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:133
-#: static/admin/js/admin/DateTimeShortcuts.js:182
+#: static/admin/js/admin/DateTimeShortcuts.js:137
+#: static/admin/js/admin/DateTimeShortcuts.js:190
 msgid "Today"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:137
+#: static/admin/js/admin/DateTimeShortcuts.js:141
 msgid "Calendar"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:180
+#: static/admin/js/admin/DateTimeShortcuts.js:188
 msgid "Yesterday"
 msgstr ""
 
-#: static/admin/js/admin/DateTimeShortcuts.js:184
+#: static/admin/js/admin/DateTimeShortcuts.js:192
 msgid "Tomorrow"
 msgstr ""
 
-#: static/js/debate_board.js:11
+#: static/js/debate_board.js:12
 msgid "Write here your title"
 msgstr ""
 
-#: static/js/debate_board.js:12
+#: static/js/debate_board.js:13
 msgid "Write here your message"
 msgstr ""
 
-#: static/js/debate_board.js:13
+#: static/js/debate_board.js:14
 msgid "Edit"
 msgstr ""
 
-#: static/js/debate_board.js:14
+#: static/js/debate_board.js:15
 msgid "View"
 msgstr ""
 
-#: static/js/debate_board.js:15
+#: static/js/debate_board.js:16
 msgid "There has been an error."
 msgstr ""
 
-#: static/js/debate_board.js:16
+#: static/js/debate_board.js:17
 msgid "Couldn't create note."
 msgstr ""
 
-#: static/js/debate_board.js:17
+#: static/js/debate_board.js:18
 msgid "Couldn't get note data."
 msgstr ""
 
-#: static/js/debate_board.js:18
+#: static/js/debate_board.js:19
 msgid "Couldn't save note."
 msgstr ""
 
-#: static/js/debate_board.js:19
+#: static/js/debate_board.js:20
 msgid "Couldn't save note position."
 msgstr ""
 
-#: static/js/debate_board.js:20
+#: static/js/debate_board.js:21
 msgid "Couldn't delete note."
 msgstr ""
 
-#: static/js/debate_board.js:21
+#: static/js/debate_board.js:22
 msgid "Are you sure?"
 msgstr ""

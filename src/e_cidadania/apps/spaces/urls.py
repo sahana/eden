@@ -22,7 +22,7 @@
 This file contains all the URLs that e_cidadania will inherit when the user
 access to '/spaces/'.
 """
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
