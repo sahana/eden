@@ -265,65 +265,39 @@ class S3HRModel(S3Model):
                          (hierarchy["L1"], "L1"),
                          (hierarchy["L2"], "L2"),
                         ]
-        
-        report_options = Storage(
-            search=[
-                S3SearchLocationHierarchyWidget(
-                    name="human_resource_search_L1",
-                    field="L1",
-                    cols = 3,
-                ),
-                S3SearchLocationHierarchyWidget(
-                    name="human_resource_search_L2",
-                    field="L2",
-                    cols = 3,
-                ),
-                S3SearchOptionsWidget(
-                    name="human_resource_search_site",
-                    label=T("Facility"),
-                    field="site_id"
-                ),
-            ],
-            rows=report_fields,
-            cols=report_fields,
-            facts=report_fields,
-            methods=["count", "list"],
-            layers=None,
-            default={},
-            reports={}
-        )
 
-        self.configure(tablename,
-                       super_entity = "sit_trackable",
-                       deletable = False,
-                       search_method = human_resource_search,
-                       onaccept = self.hrm_human_resource_onaccept,
-                       ondelete = self.hrm_human_resource_ondelete,
-                       deduplicate=self.hrm_human_resource_deduplicate,
-                       report_options=report_options,
-#                       report_filter=[
-#                            S3SearchLocationHierarchyWidget(
-#                                name="human_resource_search_L1",
-#                                field="L1",
-#                                cols = 3,
-#                            ),
-#                            S3SearchLocationHierarchyWidget(
-#                                name="human_resource_search_L2",
-#                                field="L2",
-#                                cols = 3,
-#                            ),
-#                            S3SearchOptionsWidget(
-#                                name="human_resource_search_site",
-#                                label=T("Facility"),
-#                                field="site_id"
-#                            ),
-#                        ],
-#                       report_rows = report_fields,
-#                       report_cols = report_fields,
-#                       report_fact = report_fields,
-#                       report_method=["count", "list"],
-                       # list_fields done in Controller to vary by Staff/Volunteer
-                  )
+        self.configure(
+            tablename,
+            super_entity = "sit_trackable",
+            deletable = False,
+            search_method = human_resource_search,
+            onaccept = self.hrm_human_resource_onaccept,
+            ondelete = self.hrm_human_resource_ondelete,
+            deduplicate=self.hrm_human_resource_deduplicate,
+            report_options = Storage(
+                search=[
+                    S3SearchLocationHierarchyWidget(
+                        name="human_resource_search_L1",
+                        field="L1",
+                        cols = 3,
+                    ),
+                    S3SearchLocationHierarchyWidget(
+                        name="human_resource_search_L2",
+                        field="L2",
+                        cols = 3,
+                    ),
+                    S3SearchOptionsWidget(
+                        name="human_resource_search_site",
+                        label=T("Facility"),
+                        field="site_id"
+                    ),
+                ],
+                rows=report_fields,
+                cols=report_fields,
+                facts=report_fields,
+                methods=["count", "list"],
+            )
+        )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -1557,35 +1531,38 @@ class S3HRSkillModel(S3Model):
         configure(tablename,
                   onaccept=self.hrm_training_onaccept,
                   ondelete=self.hrm_training_onaccept,
-                  search_method = training_search,
-                  report_filter=[
-                            S3SearchLocationHierarchyWidget(
-                                name="training_search_L1",
-                                field="person_id$L1",
-                                cols = 3,
-                            ),
-                            S3SearchLocationHierarchyWidget(
-                                name="training_search_L2",
-                                field="person_id$L2",
-                                cols = 3,
-                            ),
-                            S3SearchOptionsWidget(
-                                name="training_search_site",
-                                field="training_event_id$site_id",
-                                label = T("Facility"),
-                                cols = 3,
-                            ),
-                            S3SearchMinMaxWidget(
-                                name="training_search_date",
-                                method="range",
-                                label=T("Date"),
-                                field="training_event_id$start_date"
-                            ),
-                        ],
-                  report_rows = report_fields,
-                  report_cols = report_fields,
-                  report_fact = report_fields,
-                  report_method=["count", "list"])
+                  search_method=training_search,
+                  report_options=Storage(
+                      search=[
+                        S3SearchLocationHierarchyWidget(
+                            name="training_search_L1",
+                            field="person_id$L1",
+                            cols = 3,
+                        ),
+                        S3SearchLocationHierarchyWidget(
+                            name="training_search_L2",
+                            field="person_id$L2",
+                            cols = 3,
+                        ),
+                        S3SearchOptionsWidget(
+                            name="training_search_site",
+                            field="training_event_id$site_id",
+                            label = T("Facility"),
+                            cols = 3,
+                        ),
+                        S3SearchMinMaxWidget(
+                            name="training_search_date",
+                            method="range",
+                            label=T("Date"),
+                            field="training_event_id$start_date"
+                        ),
+                      ],
+                      rows=report_fields,
+                      cols=report_fields,
+                      facts=report_fields,
+                      methods=["count", "list"]
+                  )
+        )
 
         # =====================================================================
         # Certificates

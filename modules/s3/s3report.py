@@ -278,10 +278,11 @@ class S3Cube(S3CRUD):
         list_fields = _config("list_fields")
         if not list_fields:
             list_fields = [f.name for f in resource.readable_fields()]
-
-        report_rows = _config("report_rows", list_fields)
-        report_cols = _config("report_cols", list_fields)
-        report_fact = _config("report_fact", list_fields)
+        
+        report_options = _config("report_options")
+        report_rows = report_options.get("rows", list_fields)
+        report_cols = report_options.get("cols", list_fields)
+        report_fact = report_options.get("facts", list_fields)
 
         _select_field = self._select_field
         select_rows = _select_field(report_rows, _id="rows", _name="rows")
@@ -298,7 +299,7 @@ class S3Cube(S3CRUD):
         show_totals = INPUT(_type="checkbox", _id="totals", _name="totals",
                             value=show_totals)
 
-        methods = _config("report_method")
+        methods = report_options.get("methods")
         select_method = self._select_method(methods,
                                             _id="aggregate",
                                             _name="aggregate")
@@ -352,9 +353,15 @@ class S3Cube(S3CRUD):
 
         request = self.request
         resource = self.resource
-        filter_widgets = self._config("report_filter", None)
+
+        report_options = self._config("report_options", None)
+        if not report_options:
+            return None
+
+        filter_widgets = report_options.get("search", None)
         if not filter_widgets:
             return None
+
         vars = request.vars
         trows = []
         for widget in filter_widgets:
@@ -392,7 +399,11 @@ class S3Cube(S3CRUD):
         query = None
         errors = None
 
-        filter_widgets = self._config("report_filter", None)
+        report_options = self._config("report_options", None)
+        if not report_options:
+            return (None, None)
+        
+        filter_widgets = report_options.get("search", None)
         if not filter_widgets:
             return (None, None)
 

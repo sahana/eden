@@ -1386,28 +1386,31 @@ class S3ProjectDRRModel(S3Model):
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,
-                        report_filter=[
-                            S3SearchOptionsWidget(
-                                field="project_id",
-                                name="project",
-                                label=T("Project")
-                            ),
-                            S3SearchOptionsWidget(
-                                field=["beneficiary_type_id"],
-                                name="beneficiary_type_id",
-                                label=T("Beneficiary Type")
-                            ),
-                            # Can't search be VirtualFields currently
-                            # S3SearchLocationHierarchyWidget(
-                                # name="beneficiary_search_L1",
-                                # field="activity_id$L1",
-                                # cols = 3,
-                            # ),
-                        ],
-                        report_rows=report_fields,
-                        report_cols=report_fields,
-                        report_fact=["number"],
-                        report_method=["sum"])
+                        report_options=Storage(
+                            search=[
+                                S3SearchOptionsWidget(
+                                    field="project_id",
+                                    name="project",
+                                    label=T("Project")
+                                ),
+                                S3SearchOptionsWidget(
+                                    field=["beneficiary_type_id"],
+                                    name="beneficiary_type_id",
+                                    label=T("Beneficiary Type")
+                                ),
+                                # Can't search be VirtualFields currently
+                                # S3SearchLocationHierarchyWidget(
+                                    # name="beneficiary_search_L1",
+                                    # field="activity_id$L1",
+                                    # cols = 3,
+                                # ),
+                            ],
+                            rows=report_fields,
+                            cols=report_fields,
+                            facts=["number"],
+                            methods=["sum"]
+                        )
+        )
 
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", db.project_beneficiary,
