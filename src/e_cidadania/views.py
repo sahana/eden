@@ -123,6 +123,7 @@ class AddPost(FormView):
         form_uncommited.author = self.request.user
         form_uncommited.pub_index = True
         form_uncommited.save()
+        messages.success(self.request, _('Post added successfully.'))
         return super(AddPost, self).form_valid(form)
         
     @method_decorator(permission_required('news.add_post'))
