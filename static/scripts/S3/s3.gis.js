@@ -160,7 +160,8 @@ function addMap() {
             S3.gis.mapPanel
         ],
         activeItem: 0,
-        tbar: new Ext.Toolbar(),
+        // Height needed for the Throbber
+        tbar: new Ext.Toolbar({height: 34}),
         scope: this
     });
 
@@ -644,11 +645,28 @@ function addToolbar() {
     
     // Search box
     if (S3.i18n.gis_search) {
+        var width = Math.min(350, (S3.gis.map_width - 680));
         var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
             map: map,
-            zoom: 12
+            width: width,
+            listWidth: width,
+            minChars: 2,
+            // @ToDo: Restrict to the Country if using a Country config
+            //countryString: ,
+            emptyText: S3.i18n.gis_search
         });
         toolbar.addSeparator();
         toolbar.add(mapSearch);
     }
+    
+    // Throbber
+    var throbber = new Ext.BoxComponent({
+        autoEl: {
+            tag: 'img',
+            src: S3.gis.ajax_loader,
+        },
+        cls: 'hidden',
+        id: 'layer_throbber'
+    });
+    toolbar.add(throbber);
 }

@@ -3556,6 +3556,7 @@ class GIS(object):
 
         if config.pe_id or s3_has_role(MAP_ADMIN):
             # Personal/OU config or MapAdmin, so enable Save Button
+            # @ToDo: Need to make this recognise whether we have the ability edit the config
             region = "S3.gis.region = %i;\n" % config.id
         else:
             region = ""
@@ -3570,10 +3571,8 @@ class GIS(object):
 
         # Search
         if search:
-            search = """S3.i18n.gis_search = '%s';
-S3.i18n.gis_search_no_internet = '%s';
-""" % (T("Search Geonames"),
-       T("Geonames.org search requires Internet connectivity!"))
+            search = "S3.i18n.gis_search = '%s';\n" % T("Search location in Geonames")
+            #"S3.i18n.gis_search_no_internet = '%s';" % T("Geonames.org search requires Internet connectivity!")
         else:
             search = ""
 
