@@ -4457,9 +4457,8 @@ class S3Resource(object):
 
         # Joins
         for join in joins.values():
-            for j in join:
-                if str(j) not in str(query):
-                    query &= j
+            if str(join) not in str(query):
+                query &= join
 
         # Orderby
         if orderby is not None:
