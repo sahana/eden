@@ -2434,7 +2434,7 @@ class AuthS3(Auth):
             db(table._id == record_id).update(**data)
 
         return
-        
+
     # -------------------------------------------------------------------------
     def s3_send_welcome_email(self, user):
         """
@@ -4664,7 +4664,7 @@ class FaceBookAccount(OAuthAccount):
 
     # -------------------------------------------------------------------------
     def __init__(self):
-    
+
         from facebook import GraphAPI, GraphAPIError
 
         self.GraphAPI = GraphAPI
@@ -4817,7 +4817,7 @@ class GooglePlusAccount(OAuthAccount):
         """
             Build the url opener for managing HTTP Basic Athentication
         """
-        # Create an OpenerDirector with support 
+        # Create an OpenerDirector with support
         # for Basic HTTP Authentication...
 
         auth_handler = urllib2.HTTPBasicAuthHandler()

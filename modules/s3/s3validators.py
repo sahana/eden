@@ -714,7 +714,7 @@ class IS_LOCATION_SELECTOR(Validator):
                             lat_max = location.lat_max
                             )
 
-                if current.deployment_settings.get_gis_spatialdb():
+                if vars["wkt"] and current.deployment_settings.get_gis_spatialdb():
                     # Also populate the spatial field
                     vars["the_geom"] = vars["wkt"]
 
@@ -748,7 +748,7 @@ class IS_LOCATION_SELECTOR(Validator):
                             lat_max = location.lat_max
                             )
 
-                if current.deployment_settings.get_gis_spatialdb():
+                if vars["wkt"] and current.deployment_settings.get_gis_spatialdb():
                     # Also populate the spatial field
                     vars["the_geom"] = vars["wkt"]
 

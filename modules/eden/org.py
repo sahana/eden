@@ -786,7 +786,7 @@ class S3SiteModel(S3Model):
         add_component = self.add_component
         super_key = self.super_key
 
-        # =============================================================================
+        # =====================================================================
         # Site
         #
         # @ToDo: Rename as Facilities (ICS terminology)
@@ -817,7 +817,7 @@ class S3SiteModel(S3Model):
                                   organisation_id(),
                                   *s3.ownerstamp())
 
-        # -----------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
                                   #readable = True,
@@ -872,6 +872,7 @@ class S3SiteModel(S3Model):
                     org_site_id = site_id
                 )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def org_site_onaccept(form):
         """
@@ -893,25 +894,27 @@ class S3SiteModel(S3Model):
             temp_code = None
             wildcard_bit = 1
             length = len(code)
-            max_wc_bit = pow(2,length)
+            max_wc_bit = pow(2, length)
             while not temp_code and wildcard_bit < max_wc_bit:
                 wildcard_posn = []
                 for w in range(length):
-                    if wildcard_bit & pow(2,w):
-                        wildcard_posn.append(length-(1+w))
+                    if wildcard_bit & pow(2, w):
+                        wildcard_posn.append(length - (1 + w))
                 wildcard_bit += 1
                 code_list = S3SiteModel.getCodeList(code, wildcard_posn)
                 temp_code = S3SiteModel.returnUniqueCode(code, wildcard_posn, code_list)
         if temp_code:
-            db(site_table.id == form.vars.id).update(code = temp_code)
+            db(site_table.site_id == form.vars.site_id).update(code = temp_code)
 
     @staticmethod
     def getCodeList(code, wildcard_posn=[]):
+        """
+        """
         s3db = current.s3db
         db = current.db
         site_table = s3db.org_site
         temp_code = ""
-        # inject the wildcard charater in the right positions
+        # Inject the wildcard charater in the right positions
         for posn in range(len(code)):
             if posn in wildcard_posn:
                 temp_code += "%"
@@ -922,15 +925,18 @@ class S3SiteModel(S3Model):
         rows = db(query).select(site_table.id,
                                 site_table.code,
                                )
-        # extract the rows on the database to provide a list of used codes
+        # Extract the rows on the database to provide a list of used codes
         codeList = []
         for record in rows:
             codeList.append(record.code)
         return codeList
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
-        # select the replacement letters with numbers first and then
+        """
+        """
+        # Select the replacement letters with numbers first and then
         # followed by the letters in least commonly used order
         replacement_char = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
         rep_posn = [0] * len(wildcard_posn)

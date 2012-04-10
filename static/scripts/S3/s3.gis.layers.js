@@ -489,7 +489,10 @@ function addGeoJSONLayer(layer) {
     geojsonLayer.setVisibility(visibility);
     geojsonLayer.events.on({
         'featureselected': onGeojsonFeatureSelect,
-        'featureunselected': onFeatureUnselect
+        'featureunselected': onFeatureUnselect,
+        'loadstart': showThrobber,
+        'loadend': hideThrobber,
+        'loadcancel': hideThrobber
     });
     map.addLayer(geojsonLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -695,7 +698,10 @@ function addGPXLayer(layer) {
     gpxLayer.setVisibility(visibility);
     gpxLayer.events.on({
         'featureselected': onGpxFeatureSelect,
-        'featureunselected': onFeatureUnselect
+        'featureunselected': onFeatureUnselect,
+        'loadstart': showThrobber,
+        'loadend': hideThrobber,
+        'loadcancel': hideThrobber
     });
     map.addLayer(gpxLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -800,7 +806,10 @@ function addKMLLayer(layer) {
     kmlLayer.setVisibility(visibility);
     kmlLayer.events.on({
         'featureselected': onKmlFeatureSelect,
-        'featureunselected': onFeatureUnselect
+        'featureunselected': onFeatureUnselect,
+        'loadstart': showThrobber,
+        'loadend': hideThrobber,
+        'loadcancel': hideThrobber
     });
     map.addLayer(kmlLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1176,7 +1185,10 @@ function addWFSLayer(layer) {
     wfsLayer.setVisibility(visibility);
     wfsLayer.events.on({
         'featureselected': onWfsFeatureSelect,
-        'featureunselected': onFeatureUnselect
+        'featureunselected': onFeatureUnselect,
+        'loadstart': showThrobber,
+        'loadend': hideThrobber,
+        'loadcancel': hideThrobber
     });
     map.addLayer(wfsLayer);
     // Ensure Highlight & Popup Controls act on this layer
@@ -1312,6 +1324,15 @@ function addWMSLayer(layer) {
         wmsLayer.legendURL = legendURL;
     }
     map.addLayer(wmsLayer);
+}
+
+// Support Vector Layers
+function showThrobber() {
+    $('#layer_throbber').show().removeClass('hidden');
+}
+
+function hideThrobber() {
+    $('#layer_throbber').hide().addClass('hidden');
 }
 
 // Support GeoJSON Layers

@@ -91,7 +91,6 @@ class S3HRModel(S3Model):
         tablename = "hrm_human_resource"
         table = self.define_table(tablename,
                                   self.super_link("track_id", "sit_trackable"),
-                                  # Administrative data
                                   organisation_id(widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                                   empty=False),
                                   person_id(widget=S3AddPersonWidget(controller="hrm"),
@@ -145,6 +144,12 @@ class S3HRModel(S3Model):
                                               readable=False,
                                               writable=False),
                                   site_id,
+                                  Field("site_contact", "boolean",
+                                        label = T("Facility Contact"),
+                                        represent = lambda opt: \
+                                            (T("No"),
+                                             T("Yes"))[opt == True],
+                                        ),
                                   *(s3.lx_fields() + s3.meta_fields()))
 
         hrm_human_resource_requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -288,6 +293,7 @@ class S3HRModel(S3Model):
                        report_cols = report_fields,
                        report_fact = report_fields,
                        report_method=["count", "list"],
+                       # list_fields done in Controller to vary by Staff/Volunteer
                   )
 
         # ---------------------------------------------------------------------
@@ -439,8 +445,10 @@ class S3HRModel(S3Model):
         ltable = s3db.pr_person_user
         htable = s3db.hrm_human_resource
 
+        vars = form.vars
+
         # Get the full record
-        id = form.vars.id
+        id = vars.id
         if id:
             query = (htable.id == id)
             record = db(query).select(htable.id,
@@ -462,10 +470,11 @@ class S3HRModel(S3Model):
         # Affiliation
         s3db.pr_update_affiliations(htable, record)
 
-        if record.type == 1 and record.site_id:
+        site_id = record.site_id
+        if record.type == 1 and site_id:
             # Staff: update the location ID from the selected site
             stable = s3db.org_site
-            query = (stable._id == record.site_id)
+            query = (stable._id == site_id)
             site = db(query).select(stable.location_id,
                                     limitby=(0, 1)).first()
             if site:
@@ -494,13 +503,12 @@ class S3HRModel(S3Model):
             user_id = user.id
             data.owned_by_user = user.id
 
-        if not data:
-            return
-        record.update_record(**data)
+        if data:
+            record.update_record(**data)
 
-        if data.location_id:
-            # Populate the Lx fields
-            current.response.s3.lx_update(htable, record.id)
+            if data.location_id:
+                # Populate the Lx fields
+                current.response.s3.lx_update(htable, record.id)
 
         if user and record.organisation_id:
             profile = dict()
@@ -509,12 +517,23 @@ class S3HRModel(S3Model):
                 profile["organisation_id"] = record.organisation_id
             if not user.site_id:
                 # Set the Site in the Profile, if not already set
-                profile["site_id"] = record.site_id
+                profile["site_id"] = site_id
             if profile:
                 query = (utable.id == user.id)
                 db(query).update(**profile)
             # Set/retract the staff role
             S3HRModel.hrm_update_staff_role(record, user_id)
+
+        # Ensure only one Facility Contact per Facility
+        contact = vars.site_contact
+        if contact and site_id:
+            # Set all others in this Facility to not be the Site Contact
+            query  = (htable.site_id == site_id) & \
+                     (htable.site_contact == True) & \
+                     (htable.id != id)
+            # Prevent overwriting the person_id field!
+            htable.person_id.update = None
+            db(query).update(site_contact = False)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1502,13 +1521,11 @@ class S3HRSkillModel(S3Model):
                       field="person_id$L2",
                       cols = 3,
                     ),
-                    # Can't currently have an Options widget search through a double layer of references
-                    # Anyay, would we want to search by training location?
-                    # Would Office of Staff be a better filter?
+                    # Needs a Virtual Field
                     # S3SearchOptionsWidget(
                       # name="training_search_site",
-                      # label=T("Facility"),
-                      # field=["training_event_id$course_id$site_id"]
+                      # label=T("Participant's Office"),
+                      # field=["person_id$site_id"]
                     # ),
                     S3SearchOptionsWidget(
                       name="training_search_course",
@@ -2540,13 +2557,16 @@ def hrm_rheader(r, tabs=[]):
                     (T("Assets"), "asset"),
                    ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
-        rheader = DIV(DIV(s3_avatar_represent(record.id,
-                                              "pr_person",
-                                              _class="fleft"),
-                          _style="padding-bottom:10px;"),
+        rheader = DIV(A(s3_avatar_represent(record.id,
+                                          "pr_person",
+                                          _class="hrm_avatar"),
+                        _href=URL(f="person", args=[record.id, "image"]),
+                        ),
                       TABLE(
-            TR(TH(s3_fullname(record))),
-            ), rheader_tabs)
+                        TR(TH(s3_fullname(record),
+                              _style="padding-top: 15px;")
+                           ),
+                    ), rheader_tabs)
 
     elif resourcename == "training_event":
         # Tabs

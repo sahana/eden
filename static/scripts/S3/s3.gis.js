@@ -77,9 +77,9 @@ Ext.onReady(function() {
     if (S3.gis.wmsBrowser) {
         items.push(S3.gis.wmsBrowser);
     }
-    if (S3.gis.searchCombo) {
-        items.push(S3.gis.searchCombo);
-    }
+    // if (S3.gis.searchCombo) {
+        // items.push(S3.gis.searchCombo);
+    // }
     if (S3.gis.printFormPanel) {
         items.push(S3.gis.printFormPanel);
     }
@@ -160,7 +160,8 @@ function addMap() {
             S3.gis.mapPanel
         ],
         activeItem: 0,
-        tbar: new Ext.Toolbar(),
+        // Height needed for the Throbber
+        tbar: new Ext.Toolbar({height: 34}),
         scope: this
     });
 
@@ -207,31 +208,6 @@ function addMap() {
             collapsible: true,
             collapseMode: 'mini',
             lines: false
-        });
-    }
-
-    // Search box
-    if (S3.i18n.gis_search) {
-        var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
-            map: map,
-            zoom: 12
-        });
-
-        S3.gis.searchCombo = new Ext.Panel({
-            id: 'searchCombo',
-            title: S3.i18n.gis_search,
-            layout: 'border',
-            rootVisible: false,
-            split: true,
-            autoScroll: true,
-            collapsible: true,
-            collapseMode: 'mini',
-            lines: false,
-            html: S3.i18n.gis_search_no_internet,
-            items: [{
-                    region: 'center',
-                    items: [ mapSearch ]
-                }]
         });
     }
 
@@ -666,4 +642,31 @@ function addToolbar() {
             google & addGoogleEarthControl(toolbar);
         }
     } catch(err) {};
+    
+    // Search box
+    if (S3.i18n.gis_search) {
+        var width = Math.min(350, (S3.gis.map_width - 680));
+        var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
+            map: map,
+            width: width,
+            listWidth: width,
+            minChars: 2,
+            // @ToDo: Restrict to the Country if using a Country config
+            //countryString: ,
+            emptyText: S3.i18n.gis_search
+        });
+        toolbar.addSeparator();
+        toolbar.add(mapSearch);
+    }
+    
+    // Throbber
+    var throbber = new Ext.BoxComponent({
+        autoEl: {
+            tag: 'img',
+            src: S3.gis.ajax_loader,
+        },
+        cls: 'hidden',
+        id: 'layer_throbber'
+    });
+    toolbar.add(throbber);
 }

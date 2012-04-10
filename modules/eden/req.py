@@ -69,7 +69,7 @@ class S3RequestModel(S3Model):
              "req_req_ref",
              "req_hide_quantities",
              "req_create_form_mods",
-             "req_prep",
+             "req_prep"
             ]
 
     def model(self):

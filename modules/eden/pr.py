@@ -733,7 +733,7 @@ class S3PersonModel(S3Model):
                                        "middle_name",
                                        "last_name",
                                        "local_name",
-                                       #"identity.value"
+                                       "identity.value"
                                       ])
 
         # Resource configuration

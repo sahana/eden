@@ -3065,7 +3065,7 @@ class GIS(object):
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
 
-        if current.deployment_settings.get_gis_spatialdb():
+        if vars.wkt and current.deployment_settings.get_gis_spatialdb():
             # Also populate the spatial field
             vars.the_geom = vars.wkt
 
@@ -3556,6 +3556,7 @@ class GIS(object):
 
         if config.pe_id or s3_has_role(MAP_ADMIN):
             # Personal/OU config or MapAdmin, so enable Save Button
+            # @ToDo: Need to make this recognise whether we have the ability edit the config
             region = "S3.gis.region = %i;\n" % config.id
         else:
             region = ""
@@ -3570,10 +3571,8 @@ class GIS(object):
 
         # Search
         if search:
-            search = """S3.i18n.gis_search = '%s';
-S3.i18n.gis_search_no_internet = '%s';
-""" % (T("Search Geonames"),
-       T("Geonames.org search requires Internet connectivity!"))
+            search = "S3.i18n.gis_search = '%s';\n" % T("Search location in Geonames")
+            #"S3.i18n.gis_search_no_internet = '%s';" % T("Geonames.org search requires Internet connectivity!")
         else:
             search = ""
 
@@ -3916,7 +3915,7 @@ S3.gis.layers_feature_queries = new Array();"""
             else:
                 # Anonymous
                 # @ToDo: A deployment with many Anonymous Feature Queries being
-                #        accessed may need to revisit this design
+                #        accessed will need to change this design - e.g. use session ID instead
                 created_by = None
             query = query & (fqtable.created_by == created_by)
             db(query).delete()
