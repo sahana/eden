@@ -18,7 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls.defaults import *
+from django.conf.urls import *
+from django.utils.translation import ugettext_lazy as _
 
 from e_cidadania.apps.staticpages.views import ViewPage, EditPage, DeletePage
 
@@ -26,10 +27,10 @@ urlpatterns = patterns('e_cidadania.apps.staticpages.views',
 
     url(r'^$', ViewPage.as_view(), name='view-page'),
 
-    url(r'^edit/', EditPage.as_view(), name='edit-page'),
+    url(_(r'^edit/'), EditPage.as_view(), name='edit-page'),
     
-    url(r'^delete/', DeletePage.as_view(), name='delete-page'),
+    url(_(r'^delete/'), DeletePage.as_view(), name='delete-page'),
     
-    url(r'^add/', 'add_page', name='add-page')
+    url(_(r'^add/'), 'add_page', name='add-page')
 )
 

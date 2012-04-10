@@ -22,7 +22,7 @@
 Proposal module URLs.
 """
 
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 from e_cidadania.apps.proposals.views import ListProposals, ViewProposal, \
     DeleteProposal, EditProposal, AddProposal

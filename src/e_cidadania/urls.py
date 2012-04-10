@@ -22,7 +22,7 @@
 Main URLs for the e-cidadania platform.
 """
 
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -81,10 +81,6 @@ urlpatterns += i18n_patterns('',
     url(r'^rss/$', IndexEntriesFeed(), name='site-feed'),
     
     #(r'^api/', include('e_cidadania.apps.api.urls')),
-
-    # Static content #### FOR DEVELOPMENT!! ####
-    url(r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'uploads'}),
     
     # Static content #### FOR DEVELOPMENT!! ####
     url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
@@ -98,6 +94,12 @@ urlpatterns += i18n_patterns('',
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
     url(r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
+)
+
+urlpatterns += patterns('',
+    # Static content #### FOR DEVELOPMENT!! ####
+    url(r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': settings.MEDIA_ROOT}),
 )
 
 if settings.DEBUG:
