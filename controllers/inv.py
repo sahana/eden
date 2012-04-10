@@ -82,7 +82,7 @@ def warehouse():
                     name="warehouse_search_org",
                     label=T("Organization"),
                     comment=T("Search for warehouse by organization."),
-                    field=["organisation_id"],
+                    field="organisation_id",
                     represent ="%(name)s",
                     cols = 3
                   ),

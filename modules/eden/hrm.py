@@ -210,13 +210,13 @@ class S3HRModel(S3Model):
                       S3SearchOptionsWidget(
                         name="human_resource_search_type",
                         label=T("Type"),
-                        field=["type"],
+                        field="type",
                         cols = 3
                       ),
                       S3SearchOptionsWidget(
                         name="human_resource_search_org",
                         label=T("Organization"),
-                        field=["organisation_id"],
+                        field="organisation_id",
                         represent ="%(name)s",
                         cols = 3
                       ),
@@ -237,19 +237,19 @@ class S3HRModel(S3Model):
                       S3SearchOptionsWidget(
                         name="human_resource_search_site",
                         label=T("Facility"),
-                        field=["site_id"]
+                        field="site_id"
                       ),
                       # S3SearchSkillsWidget(
                         # name="human_resource_search_skills",
                         # label=T("Skills"),
-                        # field=["skill_id"]
+                        # field="skill_id"
                       # ),
                       # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
                       #S3SearchMinMaxWidget(
                       #  name="human_resource_search_date",
                       #  method="range",
                       #  label=T("Contract Expiry Date"),
-                      #  field=["end_date"]
+                      #  field="end_date"
                       #),
             )
         )
@@ -265,6 +265,33 @@ class S3HRModel(S3Model):
                          (hierarchy["L1"], "L1"),
                          (hierarchy["L2"], "L2"),
                         ]
+        
+        report_options = Storage(
+            search=[
+                S3SearchLocationHierarchyWidget(
+                    name="human_resource_search_L1",
+                    field="L1",
+                    cols = 3,
+                ),
+                S3SearchLocationHierarchyWidget(
+                    name="human_resource_search_L2",
+                    field="L2",
+                    cols = 3,
+                ),
+                S3SearchOptionsWidget(
+                    name="human_resource_search_site",
+                    label=T("Facility"),
+                    field="site_id"
+                ),
+            ],
+            rows=report_fields,
+            cols=report_fields,
+            facts=report_fields,
+            methods=["count", "list"],
+            layers=None,
+            default={},
+            reports={}
+        )
 
         self.configure(tablename,
                        super_entity = "sit_trackable",
@@ -273,32 +300,28 @@ class S3HRModel(S3Model):
                        onaccept = self.hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,
                        deduplicate=self.hrm_human_resource_deduplicate,
-                       report_filter=[
-                            #S3SearchLocationHierarchyWidget(
-                            #    name="location_search_L0",
-                            #    field="L0",
-                            #    cols = 3,
-                            #),
-                            S3SearchLocationHierarchyWidget(
-                                name="human_resource_search_L1",
-                                field="L1",
-                                cols = 3,
-                            ),
-                            S3SearchLocationHierarchyWidget(
-                                name="human_resource_search_L2",
-                                field="L2",
-                                cols = 3,
-                            ),
-                            S3SearchOptionsWidget(
-                                name="human_resource_search_site",
-                                label=T("Facility"),
-                                field=["site_id"]
-                            ),
-                        ],
-                       report_rows = report_fields,
-                       report_cols = report_fields,
-                       report_fact = report_fields,
-                       report_method=["count", "list"],
+                       report_options=report_options,
+#                       report_filter=[
+#                            S3SearchLocationHierarchyWidget(
+#                                name="human_resource_search_L1",
+#                                field="L1",
+#                                cols = 3,
+#                            ),
+#                            S3SearchLocationHierarchyWidget(
+#                                name="human_resource_search_L2",
+#                                field="L2",
+#                                cols = 3,
+#                            ),
+#                            S3SearchOptionsWidget(
+#                                name="human_resource_search_site",
+#                                label=T("Facility"),
+#                                field="site_id"
+#                            ),
+#                        ],
+#                       report_rows = report_fields,
+#                       report_cols = report_fields,
+#                       report_fact = report_fields,
+#                       report_method=["count", "list"],
                        # list_fields done in Controller to vary by Staff/Volunteer
                   )
 
@@ -1392,13 +1415,13 @@ class S3HRSkillModel(S3Model):
                     S3SearchOptionsWidget(
                       name="training_event_search_site",
                       label=T("Facility"),
-                      field=["site_id"]
+                      field="site_id"
                     ),
                     S3SearchMinMaxWidget(
                       name="training_event_search_date",
                       method="range",
                       label=T("Date"),
-                      field=["start_date"]
+                      field="start_date"
                     ),
             ))
 
@@ -1504,18 +1527,18 @@ class S3HRSkillModel(S3Model):
                     # S3SearchOptionsWidget(
                       # name="training_search_site",
                       # label=T("Participant's Office"),
-                      # field=["person_id$site_id"]
+                      # field="person_id$site_id"
                     # ),
                     S3SearchOptionsWidget(
                       name="training_search_course",
                       label=T("Course"),
-                      field=["training_event_id$course_id"]
+                      field="training_event_id$course_id"
                     ),
                     S3SearchMinMaxWidget(
                       name="training_search_date",
                       method="range",
                       label=T("Date"),
-                      field=["training_event_id$start_date"]
+                      field="training_event_id$start_date"
                     ),
             ))
 
@@ -1548,7 +1571,7 @@ class S3HRSkillModel(S3Model):
                             ),
                             S3SearchOptionsWidget(
                                 name="training_search_site",
-                                field=["training_event_id$site_id"],
+                                field="training_event_id$site_id",
                                 label = T("Facility"),
                                 cols = 3,
                             ),
@@ -1556,7 +1579,7 @@ class S3HRSkillModel(S3Model):
                                 name="training_search_date",
                                 method="range",
                                 label=T("Date"),
-                                field=["training_event_id$start_date"]
+                                field="training_event_id$start_date"
                             ),
                         ],
                   report_rows = report_fields,

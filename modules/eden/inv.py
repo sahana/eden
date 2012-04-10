@@ -255,7 +255,7 @@ $(document).ready(function() {
                           S3SearchOptionsWidget(
                               name="inv_item_search_site",
                               label=T("Facility"),
-                              field=["site_id"],
+                              field="site_id",
                               represent ="%(name)s",
                               comment=T("If none are selected, then all are searched."),
                               cols = 2
@@ -272,7 +272,7 @@ $(document).ready(function() {
                           # S3SearchOptionsWidget(
                               # name="inv_item_search_category",
                               # label=T("Category"),
-                              # field=["item_category"],
+                              # field="item_category",
                               ##represent ="%(name)s",
                               # comment=T("If none are selected, then all are searched."),
                               # cols = 2
@@ -281,7 +281,7 @@ $(document).ready(function() {
                               name="inv_item_search_expiry_date",
                               method="range",
                               label=T("Expiry Date"),
-                              field=["expiry_date"]
+                              field="expiry_date"
                               )
                          ]
 
@@ -806,31 +806,31 @@ class S3TrackingModel(S3Model):
                         method="range",
                         label=table[recv_search_date_field].label,
                         comment=recv_search_date_comment,
-                        field=[recv_search_date_field]
+                        field=recv_search_date_field
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_site",
                         label=T("Facility"),
-                        field=["site_id"],
+                        field="site_id",
                         represent ="%(name)s",
                         cols = 2
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_status",
                         label=T("Status"),
-                        field=["status"],
+                        field="status",
                         cols = 2
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_grn",
                         label=T("GRN Status"),
-                        field=["grn_status"],
+                        field="grn_status",
                         cols = 2
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_cert",
                         label=T("Certificate Status"),
-                        field=["grn_status"],
+                        field="grn_status",
                         cols = 2
                       ),
             ))

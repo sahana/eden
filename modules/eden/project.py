@@ -338,25 +338,25 @@ class S3ProjectModel(S3Model):
                         S3SearchOptionsWidget(
                             name = "project_search_sector",
                             label = sector,
-                            field = ["sector_id"],
+                            field = "sector_id",
                             cols = 4
                         ),
                         S3SearchOptionsWidget(
                             name = "project_search_hazard",
                             label = T("Hazard"),
-                            field = ["multi_hazard_id"],
+                            field = "multi_hazard_id",
                             cols = 4
                         ),
                         S3SearchOptionsWidget(
                             name = "project_search_theme",
                             label = T("Theme"),
-                            field = ["multi_theme_id"],
+                            field = "multi_theme_id",
                             cols = 4
                         ),
                         S3SearchOptionsWidget(
                             name = "project_search_hfa",
                             label = T("HFA"),
-                            field = ["hfa"],
+                            field = "hfa",
                             cols = 4
                         ),
                     )
@@ -375,7 +375,7 @@ class S3ProjectModel(S3Model):
                         S3SearchOptionsWidget(
                             name = "project_search_sector",
                             label = sector,
-                            field = ["sector_id"],
+                            field = "sector_id",
                             cols = 4
                         ),
                     )
@@ -1388,7 +1388,7 @@ class S3ProjectDRRModel(S3Model):
                         deduplicate=self.project_beneficiary_deduplicate,
                         report_filter=[
                             S3SearchOptionsWidget(
-                                field=["project_id"],
+                                field="project_id",
                                 name="project",
                                 label=T("Project")
                             ),
@@ -1832,27 +1832,27 @@ class S3ProjectTaskModel(S3Model):
                     #S3SearchOptionsWidget(
                         #name = "task_search_project",
                         #label = T("Project"),
-                        #field = ["project"],
+                        #field = "project",
                         #cols = 3
                     #),
                     # This Syntax not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
                     #    name = "task_search_project",
                     #    label = T("Project"),
-                    #    field = ["task.task_id:project_task:project_id$name"],
+                    #    field = "task.task_id:project_task:project_id$name",
                     #    cols = 3
                     #),
                     # Virtual fields not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
                         #name = "task_search_activity",
                         #label = T("Activity"),
-                        #field = ["activity"],
+                        #field = "activity",
                         #cols = 3
                     #),
                     S3SearchOptionsWidget(
                         name = "task_search_priority",
                         label = T("Priority"),
-                        field = ["priority"],
+                        field = "priority",
                         cols = 4
                     ),
                     S3SearchSimpleWidget(
@@ -1866,31 +1866,31 @@ class S3ProjectTaskModel(S3Model):
                     S3SearchOptionsWidget(
                         name = "task_search_created_by",
                         label = T("Created By"),
-                        field = ["created_by"],
+                        field = "created_by",
                         cols = 4
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_assignee",
                         label = T("Assigned To"),
-                        field = ["pe_id"],
+                        field = "pe_id",
                         cols = 4
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_created",
                         method="range",
                         label=T("Date Created"),
-                        field=["created_on"]
+                        field="created_on"
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_due",
                         method="range",
                         label=T("Date Due"),
-                        field=["date_due"]
+                        field="date_due"
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_status",
                         label = T("Status"),
-                        field = ["status"],
+                        field = "status",
                         cols = 4
                     ),
                 )

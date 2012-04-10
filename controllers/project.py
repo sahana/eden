@@ -419,7 +419,7 @@ def task():
         list_fields.insert(3, (T("Activity"), "activity"))
         s3mgr.configure(tablename,
                         report_filter=[
-                            s3base.S3SearchOptionsWidget(field=["project"],
+                            s3base.S3SearchOptionsWidget(field="project",
                                                          name="project",
                                                          label=T("Project"))
                         ],

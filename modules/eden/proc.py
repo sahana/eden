@@ -235,7 +235,7 @@ class S3ProcurementModel(S3Model):
                       #S3SearchOptionsWidget(
                       #  name="proc_plan_search_site",
                       #  label=T("Facility"),
-                      #  field=["site_id"],
+                      #  field="site_id",
                       #  represent ="%(name)s",
                       #  comment=T("If none are selected, then all are searched."),
                       #  cols = 2
@@ -244,13 +244,13 @@ class S3ProcurementModel(S3Model):
                       #  name="proc_plan_search_order_date",
                       #  method="range",
                       #  label=T("Order Date"),
-                      #  field=["order_date"]
+                      #  field="order_date"
                       #),
                       #S3SearchMinMaxWidget(
                       #  name="proc_plan_search_eta",
                       #  method="range",
                       #  label=T("Date Expected"),
-                      #  field=["eta"]
+                      #  field="eta"
                       #)
             ))
 

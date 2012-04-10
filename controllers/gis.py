@@ -121,7 +121,7 @@ def location():
             label = T("Search"),
             #comment = T("Search for a Location by name, including local names."),
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = ["name"]
+            field = "name"
             ),
             s3base.S3SearchLocationHierarchyWidget(
                 name="location_search_L0",
@@ -141,14 +141,14 @@ def location():
             s3base.S3SearchOptionsWidget(
                 name = "location_search_level",
                 label = T("Level"),
-                field = ["level"],
+                field = "level",
                 cols = 2
             ),
             # NB This currently only works for locations with the country as direct parent (i.e. mostly L1s)
             #s3base.S3SearchOptionsWidget(
             #    name = "location_search_country",
             #    label = T("Country"),
-            #    field = ["parent"],
+            #    field = "parent",
             #    cols = 2
             #),
         )

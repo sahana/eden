@@ -392,13 +392,13 @@ class S3OrganisationModel(S3Model):
                     S3SearchOptionsWidget(
                         name = "org_search_type",
                         label = T("Type"),
-                        field = ["type"],
+                        field = "type",
                         cols = 2
                     ),
                     S3SearchOptionsWidget(
                         name = "org_search_sector",
                         label = T("Sector"),
-                        field = ["sector_id"],
+                        field = "sector_id",
                         represent = self.org_sector_represent,
                         cols = 3
                     ),
@@ -406,7 +406,7 @@ class S3OrganisationModel(S3Model):
                     S3SearchOptionsWidget(
                         name = "org_search_home_country",
                         label = T("Home Country"),
-                        field = ["country"],
+                        field = "country",
                         cols = 3
                     ),
                 )
@@ -1729,7 +1729,7 @@ def org_office_controller():
                     name="office_search_org",
                     label=T("Organization"),
                     comment=T("Search for office by organization."),
-                    field=["organisation_id"],
+                    field="organisation_id",
                     represent ="%(name)s",
                     cols = 3
                   ),

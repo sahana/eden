@@ -257,7 +257,7 @@ class S3AssetModel(S3Model):
                     ),
                     S3SearchOptionsWidget(
                         name="asset_search_item_category",
-                        field=["item_id$item_category_id"],
+                        field="item_id$item_category_id",
                         label=T("Category"),
                         cols = 3
                     ),
@@ -290,7 +290,7 @@ class S3AssetModel(S3Model):
                             ),
                             S3SearchOptionsWidget(
                                 name="asset_search_item_category",
-                                field=["item_id$item_category_id"],
+                                field="item_id$item_category_id",
                                 label=T("Category"),
                                 cols = 3
                             ),

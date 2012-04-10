@@ -479,7 +479,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
             If the field is entered as kfield$field, will search field in the
             the referenced resource.
         """
-        field = self.field[0]
+
+        field = self.field
         kfield = None
 
         if field.find("$") != -1:
@@ -709,8 +710,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
             try:
                 field = self.field
-                if isinstance(field, (list, tuple)):
-                    field = field[0]
                 field = resource.table[field]
             except:
                 # field is virtual
@@ -886,7 +885,7 @@ class S3SearchLocationWidget(S3SearchWidget):
             # This requires the locations to have their bounds set properly
             # This can be done globally using:
             # gis.update_location_tree()
-            filter = (table[self.field[0]] == locations.id) & \
+            filter = (table[self.field] == locations.id) & \
                      (locations.lat_min <= lat_max) & \
                      (locations.lat_max >= lat_min) & \
                      (locations.lon_min <= lon_max) & \

@@ -427,7 +427,7 @@ class S3SupplyModel(S3Model):
                         name="item_search_brand",
                         label=T("Brand"),
                         comment=T("Search for an item by brand."),
-                        field=["brand_id"],
+                        field="brand_id",
                         represent ="%(name)s",
                         cols = 3
                       ),
@@ -435,7 +435,7 @@ class S3SupplyModel(S3Model):
                         name="item_search_year",
                         label=T("Year"),
                         comment=T("Search for an item by Year of Manufacture."),
-                        field=["year"],
+                        field="year",
                         #represent ="%(name)s",
                         cols = 1
                       ),
@@ -546,7 +546,7 @@ $(document).ready(function() {
                          name="catalog_item_search_catalog",
                          label=T("Catalog"),
                          comment=T("Search for an item by catalog."),
-                         field=["catalog_id"],
+                         field="catalog_id",
                          represent ="%(name)s",
                          cols = 3
                        ),
@@ -554,7 +554,7 @@ $(document).ready(function() {
                          name="catalog_item_search_category",
                          label=T("Category"),
                          comment=T("Search for an item by category."),
-                         field=["item_category_id"],
+                         field="item_category_id",
                          represent = lambda id: \
                             self.item_category_represent(id, use_code=False),
                          cols = 3
@@ -563,7 +563,7 @@ $(document).ready(function() {
                          name="catalog_item_search_brand",
                          label=T("Brand"),
                          comment=T("Search for an item by brand."),
-                         field=["item_id$brand_id"],
+                         field="item_id$brand_id",
                          represent ="%(name)s",
                          cols = 3
                        ),
@@ -812,7 +812,7 @@ S3FilterFieldChange({
                       S3SearchOptionsWidget(
                         name="item_entity_search_category",
                         label=T("Code Share"),
-                        field=["item_id$item_category_id"],
+                        field="item_id$item_category_id",
                         represent ="%(name)s",
                         comment=T("If none are selected, then all are searched."),
                         cols = 2
@@ -820,7 +820,7 @@ S3FilterFieldChange({
                       #S3SearchOptionsWidget(
                       #  name="item_entity_search_country",
                       #  label=T("Country"),
-                      #  field=["country"],
+                      #  field="country",
                       #  represent ="%(name)s",
                       #  comment=T("If none are selected, then all are searched."),
                       #  cols = 2

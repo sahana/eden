@@ -364,7 +364,7 @@ class S3IRSModel(S3Model):
                     ),
                     S3SearchOptionsWidget(
                         name="incident_search_category",
-                        field=["category"],
+                        field="category",
                         label = T("Category"),
                         cols = 3,
                     ),
@@ -372,7 +372,7 @@ class S3IRSModel(S3Model):
                         name="incident_search_date",
                         method="range",
                         label=T("Date"),
-                        field=["datetime"]
+                        field="datetime"
                     ),
             ))
 
@@ -404,7 +404,7 @@ class S3IRSModel(S3Model):
                             ),
                             S3SearchOptionsWidget(
                                 name="incident_search_category",
-                                field=["category"],
+                                field="category",
                                 label = T("Category"),
                                 cols = 3,
                             ),
@@ -412,7 +412,7 @@ class S3IRSModel(S3Model):
                                 name="incident_search_date",
                                 method="range",
                                 label=T("Date"),
-                                field=["datetime"]
+                                field="datetime"
                             ),
                         ],
                   report_rows = report_fields,
