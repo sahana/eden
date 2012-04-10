@@ -729,7 +729,8 @@ def recv():
                 # Display the values that can only be entered on create
                 tracktable.item_source_no.readable = True
                 tracktable.item_source_no.writable = True
-                tracktable.recv_quantity.readable = True
+                # This is a received purchase so change the label to reflect this
+                tracktable.quantity.label =  T("Quantity Received")
                 tracktable.recv_bin.readable = True
                 tracktable.recv_bin.writable = True
 

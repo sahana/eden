@@ -107,6 +107,10 @@ class S3InventoryModel(S3Model):
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
+        inv_source_type = { 0: None,
+                            1: T("Donated"),
+                            2: T("Procured"),
+                          }
         # =====================================================================
         # Inventory Item
         #
@@ -162,6 +166,14 @@ class S3InventoryModel(S3Model):
                                         "string",
                                         length = 16,
                                         label = itn_label,
+                                        ),
+                                  Field("source_type",
+                                        "integer",
+                                        requires = IS_NULL_OR(IS_IN_SET(inv_source_type)),
+                                        represent = lambda opt: inv_source_type.get(opt, UNKNOWN_OPT),
+                                        label = T("Type"),
+                                        default = 0,
+                                        writable = False,
                                         ),
                                   org_id(name = "owner_org_id",
                                          label = "Organization/Department",
@@ -439,7 +451,8 @@ class S3TrackingModel(S3Model):
              "inv_recv",
              "inv_recv_represent",
              "inv_track_item",
-             "inv_track_item_onaccept"
+             "inv_track_item_onaccept",
+             "inv_get_shipping_code",
              ]
 
     def model(self):
@@ -972,7 +985,7 @@ $(document).ready(function() {
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(inv_track_item_deleting = self.inv_track_item_deleting,
-                       inv_getShippingCode = self.getShippingCode,
+                       inv_get_shipping_code = self.inv_get_shipping_code,
                        inv_track_item_onaccept = self.inv_track_item_onaccept,
                       )
 
@@ -1009,7 +1022,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not stable[id].send_ref:
-            code = S3TrackingModel.getShippingCode("WB", stable[id].site_id, id)
+            code = S3TrackingModel.inv_get_shipping_code("WB", stable[id].site_id, id)
             db(stable.id == id).update(send_ref = code)
 
     # ---------------------------------------------------------------------
@@ -1078,7 +1091,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not rtable[id].recv_ref:
-            code = S3TrackingModel.getShippingCode("GRN", rtable[id].site_id, id)
+            code = S3TrackingModel.inv_get_shipping_code("GRN", rtable[id].site_id, id)
             db(rtable.id == id).update(recv_ref = code)
 
 
@@ -1190,9 +1203,8 @@ $(document).ready(function() {
             form.vars.supply_org_id = record.supply_org_id
             form.vars.pack_value = record.pack_value
             form.vars.currency = record.currency
-
         # if we have no send id then copy the quantity sent directly into the received field
-        if not form.vars.send_id:
+        else:
             form.vars.recv_quantity = form.vars.quantity
 
         # If their is a receiving bin select the right one
@@ -1207,7 +1219,7 @@ $(document).ready(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def getShippingCode(type, site_id, id):
+    def inv_get_shipping_code(type, site_id, id):
         s3db = current.s3db
         if site_id:
             ostable = s3db.org_site
@@ -1230,17 +1242,34 @@ $(document).ready(function() {
         rtable = s3db.inv_recv
         ritable = s3db.req_req_item
         rrtable = s3db.req_req
+        siptable = s3db.supply_item_pack
+        supply_item_add = s3db.supply_item_add
         oldTotal = 0
         # only modify the original inv. item total if we have a quantity on the form
-        # Their'll not be one if it is being received since by then it is read only
+        # and a sent item record to indicate where it came from.
+        # Their'll not be a quantity if it is being received since by then it is read only
         # It will be there on an import and so the value will be deducted correctly
-        if form.vars.quantity:
+        if form.vars.quantity and form.vars.send_inv_item_id:
+            stock_item = inv_item_table[form.vars.send_inv_item_id]
+            stock_quantity = stock_item.quantity
+            stock_pack = siptable[stock_item.item_pack_id].quantity
             if form.record:
                 if form.record.send_inv_item_id != None:
-                    oldTotal = form.record.quantity
-                    db(inv_item_table.id == form.record.send_inv_item_id).update(quantity = inv_item_table.quantity + oldTotal)
-            newTotal = form.vars.quantity
-            db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = inv_item_table.quantity - newTotal)
+                    # Items have already been removed from stock, so first put them back
+                    old_track_pack_quantity = siptable[form.record.item_pack_id].quantity
+                    stock_quantity = supply_item_add(stock_quantity,
+                                                     stock_pack,
+                                                     form.record.quantity,
+                                                     old_track_pack_quantity
+                                                    )
+
+            new_track_pack_quantity = siptable[form.vars.item_pack_id].quantity
+            newTotal = supply_item_add(stock_quantity,
+                                       stock_pack,
+                                       - form.vars.quantity,
+                                       new_track_pack_quantity
+                                      )
+            db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = newTotal)
         if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
@@ -1271,6 +1300,14 @@ $(document).ready(function() {
                 inv_item_id = inv_item_row.id
                 db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity + record.recv_quantity)
             else:
+                source_type = 0
+                if form.vars.send_id:
+                    source_type = stable[form.vars.send_id].source_type
+                else:
+                    if rtable[record.recv_id].type == 2:
+                        source_type = 1 # Donation
+                    else:
+                        source_type = 2 # Procured
                 inv_item_id = inv_item_table.insert(site_id = rtable[record.recv_id].site_id,
                                              item_id = record.item_id,
                                              item_pack_id = record.item_pack_id,
@@ -1282,14 +1319,20 @@ $(document).ready(function() {
                                              supply_org_id = record.supply_org_id,
                                              quantity = record.recv_quantity,
                                              item_source_no = record.item_source_no,
+                                             source_type = source_type,
                                             )
             # if this is linked to a request then update the quantity fulfil
             if record.req_item_id:
-                query = (ritable.id == track_item.req_item_id)
-                db(query).update(quantity_fulfil
-                                = ritable.quantity_fulfil
-                                + record.quantity
-                                )
+                req_item = ritable[record.req_item_id]
+                req_quantity = req_item.quantity_fulfil
+                req_pack_quantity = siptable[req_item.item_pack_id].quantity
+                track_pack_quantity = siptable[record.item_pack_id].quantity
+                quantity_fulfil = supply_item_add(req_quantity,
+                                                  req_pack_quantity,
+                                                  record.recv_quantity,
+                                                  track_pack_quantity
+                                                 )
+                db(ritable.id == record.req_item_id).update(quantity_fulfil)
 
             db(tracktable.id == id).update(recv_inv_item_id = inv_item_id,
                                            status = 4)
