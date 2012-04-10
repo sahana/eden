@@ -114,15 +114,16 @@ class AddPost(FormView):
     """
     form_class = NewsForm
     template_name = 'news/post_add.html'
-    success_url = '/'
+    
+    def get_success_url(self):
+        return '/news/'
     
     def form_valid(self, form):
         form_uncommited = form.save(commit=False)
         form_uncommited.author = self.request.user
         form_uncommited.pub_index = True
         form_uncommited.save()
-        
-        messages.success(request, _('Post added successfully.'))
+        return super(AddPost, self).form_valid(form)
         
     @method_decorator(permission_required('news.add_post'))
     def dispatch(self, *args, **kwargs):
