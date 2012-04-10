@@ -479,7 +479,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             If the field is entered as kfield$field, will search field in the
             the referenced resource.
         """
-
         field = self.field
         kfield = None
 
@@ -758,7 +757,7 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
             config = gis.get_config()
             field = level = config.search_level or "L0"
 
-        self.field = [field]
+        self.field = field
 
         label = gis.get_location_hierarchy()[level]
 
