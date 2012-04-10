@@ -1,7 +1,26 @@
 {{extend "layout.html"}}
 <div style='margin:10px 0px 10px 0px; width:100%; max-width:980px;'>
 <div id='home'>
-    <a href='{{=URL(f="map_viewing_client")}}' style='font-weight:bold;padding-left:8px;'>{{=T("View Fullscreen Map")}}</a></td>
+    <a href='{{=URL(f="map_viewing_client")}}' style='font-weight:bold;padding-left:8px;' id='gis_fullscreen_map-btn'>{{=T("View Fullscreen Map")}}</a></td>
     {{=XML(map)}}
 </div>
 </div>
+<script type="text/javascript">
+$(function(){
+    $('#gis_fullscreen_map-btn').click( function(evt) {
+        if (navigator.appVersion.indexOf("MSIE") != -1) {
+            // IE (even 9) doesn't like the dynamic full-screen, so simply do a page refresh for now
+        } else {
+            // Remove components from embedded Map's containers without destroying their contents
+            S3.gis.mapWestPanelContainer.removeAll(false);
+            S3.gis.mapPanelContainer.removeAll(false);
+            S3.gis.mapWin.items.items = [];
+            S3.gis.mapWin.doLayout();
+            S3.gis.mapWin.destroy();
+            // Add a full-screen window which will inherit these components
+            addMapWindow();
+            evt.preventDefault();
+        }
+    });
+});
+</script>

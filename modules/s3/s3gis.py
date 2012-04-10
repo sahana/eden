@@ -3794,13 +3794,14 @@ class GIS(object):
         # Layout
         s3_gis_window = ""
         s3_gis_windowHide = ""
-        s3_gis_windowNotClosable = ""
+        if not closable:
+            s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
+        else:
+            s3_gis_windowNotClosable = ""
         if window:
             s3_gis_window = "S3.gis.window = true;\n"
             if window_hide:
                 s3_gis_windowHide = "S3.gis.windowHide = true;\n"
-            elif not closable:
-                s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
 
         if maximizable:
             maximizable = "S3.gis.maximizable = true;\n"

@@ -515,12 +515,12 @@ function s3_showMap(feature_id) {
 	new Ext.Window({
 		autoWidth: true,
 		floating: true,
-		modal: true,
-		draggable: false,
+		//modal: true,
+		//draggable: false,
 		items: [{
-			xtype: "component",
+			xtype: 'component',
 			autoEl: {
-				tag: "iframe",
+				tag: 'iframe',
 				width: 650,
 				height: 490,
 				src: url
