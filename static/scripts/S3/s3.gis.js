@@ -686,7 +686,7 @@ function addToolbar() {
     var throbber = new Ext.BoxComponent({
         autoEl: {
             tag: 'img',
-            src: S3.gis.ajax_loader,
+            src: S3.gis.ajax_loader
         },
         cls: 'hidden',
         id: 'layer_throbber'

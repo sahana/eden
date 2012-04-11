@@ -515,8 +515,6 @@ function s3_showMap(feature_id) {
 	new Ext.Window({
 		autoWidth: true,
 		floating: true,
-		//modal: true,
-		//draggable: false,
 		items: [{
 			xtype: 'component',
 			autoEl: {
