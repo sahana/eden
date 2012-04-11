@@ -83,7 +83,7 @@ class EventCalendar(LocaleHTMLCalendar):
         """
         Group the returned events into their respective dates.
         """
-        field = lambda event: event.meeting_date.day
+        field = lambda event: event.event_date.day
         return dict(
             [(day, list(items)) for day, items in groupby(events, field)]
         )

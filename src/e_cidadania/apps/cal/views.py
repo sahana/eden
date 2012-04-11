@@ -41,10 +41,10 @@ def calendar(request, space_name, year, month):
                                   context_instance=RequestContext(request))
 
     place = get_object_or_404(Space, url=space_name)
-    meetings = Event.objects.order_by('event_date') \
+    events = Event.objects.order_by('event_date') \
                               .filter(space = place,
-                                      meeting_date__year = year,
-                                      meeting_date__month = month)
+                                      event_date__year = year,
+                                      event_date__month = month)
     
     cur_year, cur_month = int(year), int(month)
     next_month = cur_month + 1
@@ -53,7 +53,7 @@ def calendar(request, space_name, year, month):
 
     cur_lang = translation.get_language()
     cur_locale = translation.to_locale(cur_lang) + '.UTF-8' #default encoding with django
-    cal = EventCalendar(meetings, settings.FIRST_WEEK_DAY).formatmonth(cur_year, cur_month)
+    cal = EventCalendar(events, settings.FIRST_WEEK_DAY).formatmonth(cur_year, cur_month)
 
     # This code is quite strange, it worked like a charm, but one day it returned
     # a "too many values to unpack" error, and then just by removing the locale

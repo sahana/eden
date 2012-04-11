@@ -334,10 +334,10 @@
                                 });
                                 {% endcomment %} 
 		                        $.datepicker.setDefaults(
-		                            $.datepicker.regional[ "" ],
 		                            { onSelect: function(dateText) {
-                                        var month = dateText.split("/")[0];
-                                        var year = dateText.split("/")[2];
+                                        var date = $(this).datepicker("getDate");
+                                        var month = date.getMonth() + 1;
+                                        var year = date.getFullYear();
                                         window.location = "calendar/" + year + "/" + month + "/";
                                       }
                                     }
