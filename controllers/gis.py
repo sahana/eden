@@ -55,8 +55,8 @@ def define_map(window=False, toolbar=False, closable=True, maximizable=True, con
     # @ToDo: Make these configurable
     search = True
     legend = True
-    googleEarth = True
-    googleStreetview = True
+    #googleEarth = True
+    #googleStreetview = True
     catalogue_layers = True
 
     if config.wmsbrowser_url:

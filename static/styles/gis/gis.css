@@ -107,16 +107,16 @@
   width: 20px !important;
 }
 .gxp-icon-addlayers {
-    background-image: url(../../img/silk/add.png);
+    background-image: url(../../img/silk/add.png) !important;
 }
 .gxp-icon-addserver {
-    background-image: url(../../img/silk/server_add.png);
+    background-image: url(../../img/silk/server_add.png) !important;
 }
 .gxp-icon-getfeatureinfo {
-    background-image: url(../../img/silk/information.png);
+    background-image: url(../../img/silk/information.png) !important;
 }
 .gxp-icon-removelayers {
-    background-image: url(../../img/silk/delete.png);
+    background-image: url(../../img/silk/delete.png) !important;
 }
 #mappnlcntr .movefeature {
     background-image: url(../../img/gis/arrow_refresh.png) !important;

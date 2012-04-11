@@ -95,7 +95,6 @@ function addMap() {
 // Add the GeoExt UI
 function addMapUI() {
     S3.gis.mapPanel = new GeoExt.MapPanel({
-        //region: 'center',
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         id: 'mappanel',
@@ -110,40 +109,41 @@ function addMapUI() {
     S3.gis.portal = Object();
     S3.gis.portal.map = S3.gis.mapPanel;
 
-    // Ensure that mapPanel knows about whether our WMS layers are queryable
-    if (S3.gis.layers_wms) {
+    if (S3.i18n.gis_legend || S3.gis.layers_wms) {
         for (i = 0; i < map.layers.length; i++) {
+            // Ensure that legendPanel knows about the Markers for our Feature layers
+            if (map.layers[i].legendURL) {
+                S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
+            }
+            // Ensure that mapPanel knows about whether our WMS layers are queryable
             if (map.layers[i].queryable) {
                 S3.gis.mapPanel.layers.data.items[i].data.queryable = 1;
             }
         }
     }
 
-    // Google Earth
-    //if (S3.gis.Google && S3.gis.Google.Earth) {
-    //    S3.gis.googleEarthPanel = new gxp.GoogleEarthPanel({
-    //        mapPanel: S3.gis.mapPanel
-    //    });
-    //}
+    // Which Elements do we want in our mapWindow?
+    // @ToDo: Move all these to Plugins
 
     // Layer Tree
     addLayerTree();
+    items = [S3.gis.layerTree];
 
     // WMS Browser
     if (S3.gis.wms_browser_url) {
         addWMSBrowser();
+        if (S3.gis.wmsBrowser) {
+            items.push(S3.gis.wmsBrowser);
+        }
+    }
+
+    // Print Panel (currently still defined in modules/s3/s3gis.py)
+    if (S3.gis.printFormPanel) {
+        items.push(S3.gis.printFormPanel);
     }
 
     // Legend Panel
     if (S3.i18n.gis_legend) {
-
-        // Ensure that legendPanel knows about the Markers for our Feature layers
-        for (i = 0; i < map.layers.length; i++) {
-                if (map.layers[i].legendURL) {
-                    S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
-                }
-            }
-
        S3.gis.legendPanel = new GeoExt.LegendPanel({
             id: 'legendpanel',
             title: S3.i18n.gis_legend,
@@ -157,34 +157,18 @@ function addMapUI() {
             collapseMode: 'mini',
             lines: false
         });
+        items.push(S3.gis.legendPanel);
     }
 
     // Plugins
     for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
         S3.gis.plugins[i].setup(map);
-    }
-
-    // Which Elements do we want in our mapWindow?
-    // @ToDo: Move all these to Plugins
-    items = [S3.gis.layerTree];
-    if (S3.gis.wmsBrowser) {
-        items.push(S3.gis.wmsBrowser);
-    }
-    if (S3.gis.printFormPanel) {
-        items.push(S3.gis.printFormPanel);
-    }
-    if (S3.gis.legendPanel) {
-        items.push(S3.gis.legendPanel);
-    }
-    for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
         S3.gis.plugins[i].addToMapWindow(items);
     }
 
     // West Panel
     S3.gis.mapWestPanel = new Ext.Panel({
-        //region: 'west',
         id: 'tools',
-        //title: 'Tools',
         header: false,
         border: false,
         split: true,
@@ -455,6 +439,7 @@ function addToolbar() {
 
     //var toolbar = S3.gis.mapPanelContainer.getTopToolbar();
     var toolbar = new Ext.Toolbar({
+        id: 'gis_toolbar',
         // Height needed for the Throbber
         height: 34
     });
