@@ -670,16 +670,25 @@ class S3NavigationItem(object):
             return "<%s>" % label
 
     # -------------------------------------------------------------------------
-    def url(self):
+    def url(self, extension=None, **kwargs):
         """
             Return the target URL for this item, doesn't check permissions
+
+            @param extension: override the format extension
+            @param kwargs: override URL query vars
         """
 
         if not self.link:
             return None
 
         args = self.args
-        vars = self.vars
+        if self.vars:
+            vars = Storage(self.vars)
+            vars.update(kwargs)
+        else:
+            vars = Storage(kwargs)
+        if extension is None:
+            extension = self.extension
         a = self.get("application")
         if a is None:
             a = current.request.application
@@ -689,13 +698,17 @@ class S3NavigationItem(object):
         f = self.get("function")
         if f is None:
             f = "index"
+        f, args = self.__format(f, args, extension)
         return URL(a=a, c=c, f=f, args=args, vars=vars)
 
     # -------------------------------------------------------------------------
-    def accessible_url(self):
+    def accessible_url(self, extension=None, **kwargs):
         """
             Return the target URL for this item if accessible by the
             current user, otherwise False
+
+            @param extension: override the format extension
+            @param kwargs: override URL query vars
         """
 
         auth = current.auth
@@ -705,7 +718,13 @@ class S3NavigationItem(object):
             return None
 
         args = self.args
-        vars = self.vars
+        if self.vars:
+            vars = Storage(self.vars)
+            vars.update(kwargs)
+        else:
+            vars = Storage(kwargs)
+        if extension is None:
+            extension = self.extension
         a = self.get("application")
         if a is None:
             a = current.request.application
@@ -716,7 +735,29 @@ class S3NavigationItem(object):
         if f is None:
             f = "index"
         p = self.p
+        f, args = self.__format(f, args, extension)
         return aURL(p=p, a=a, c=c, f=f, args=args, vars=vars)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def __format(f, args, ext):
+        """
+            Append the format extension to the last argument
+
+            @param f: the function
+            @param args: argument list
+            @param ext: the format extension
+
+            @returns: tuple (f, args)
+        """
+        if not ext or ext == "html":
+            return f, args
+        items = [f]
+        if args:
+            items += args
+        items = [i.rsplit(".", 1)[0] for i in items]
+        items.append("%s.%s" % (items.pop(), ext))
+        return (items[0], items[1:])
 
     # -------------------------------------------------------------------------
     def render(self, request=None):

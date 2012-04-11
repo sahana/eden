@@ -2557,9 +2557,11 @@ def hrm_rheader(r, tabs=[]):
                     (T("Assets"), "asset"),
                    ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
-        rheader = DIV(s3_avatar_represent(record.id,
+        rheader = DIV(A(s3_avatar_represent(record.id,
                                           "pr_person",
                                           _class="hrm_avatar"),
+                        _href=URL(f="person", args=[record.id, "image"]),
+                        ),
                       TABLE(
                         TR(TH(s3_fullname(record),
                               _style="padding-top: 15px;")
