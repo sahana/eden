@@ -1006,25 +1006,25 @@ def recv_cancel():
                  args = [recv_id]))
 
 # -----------------------------------------------------------------------------
-def recv_sent():
-    """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
-        @ToDo: Consider making obsolete
-    """
-
-    send_id = request.args[0]
-    # This is more explicit than getting the site_id from the inv_send.to_site_id
-    # As there may be multiple sites per location.
-    #site_id = request.vars.site_id
-
-
-
-    # Flag shipment as received as received
-    s3db.inv_send[send_id] = dict(status = eden.inv.inv_ship_status["RECEIVED"])
-
-    # Redirect to rec
-    redirect(URL(c = "inv",
-                 f = "recv",
-                 args = [recv_id, "recv_item"]))
+#def recv_sent():
+#    """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
+#        @ToDo: Consider making obsolete
+#    """
+#
+#    send_id = request.args[0]
+#    # This is more explicit than getting the site_id from the inv_send.to_site_id
+#    # As there may be multiple sites per location.
+#    #site_id = request.vars.site_id
+#
+#
+#
+#    # Flag shipment as received as received
+#    s3db.inv_send[send_id] = dict(status = eden.inv.inv_ship_status["RECEIVED"])
+#
+#    # Redirect to rec
+#    redirect(URL(c = "inv",
+#                 f = "recv",
+#                 args = [recv_id, "recv_item"]))
 # =============================================================================
 def track_item():
     """ RESTful CRUD controller """
