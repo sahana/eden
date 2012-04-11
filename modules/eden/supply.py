@@ -914,10 +914,11 @@ S3FilterFieldChange({
         """
         if pack_quantity_1 == pack_quantity_2:
             # Faster calculation
-            return quantity_1 + quantity_2
+            quantity = quantity_1 + quantity_2
         else:
-            return ((quantity_1 * pack_quantity_1) +
-                    (quantity_2 * pack_quantity_2)) / pack_quantity_1
+            quantity = ((quantity_1 * pack_quantity_1) +
+                        (quantity_2 * pack_quantity_2)) / pack_quantity_1
+        return quantity
 
     # -------------------------------------------------------------------------
     @staticmethod

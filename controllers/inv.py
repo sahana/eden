@@ -307,8 +307,8 @@ def track_movement():
         if r.interactive:
             if "viewing" in request.vars:
                 dummy, item_id = request.vars.viewing.split(".")
-                filter = (table.item_id == item_id ) | \
-                         (table.send_inv_item_id == item_id)
+                filter = (table.send_inv_item_id == item_id ) | \
+                         (table.recv_inv_item_id == item_id)
                 response.s3.filter = filter
         return True
 
@@ -729,7 +729,8 @@ def recv():
                 # Display the values that can only be entered on create
                 tracktable.item_source_no.readable = True
                 tracktable.item_source_no.writable = True
-                tracktable.recv_quantity.readable = True
+                # This is a received purchase so change the label to reflect this
+                tracktable.quantity.label =  T("Quantity Received")
                 tracktable.recv_bin.readable = True
                 tracktable.recv_bin.writable = True
 

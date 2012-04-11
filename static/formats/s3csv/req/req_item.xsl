@@ -19,6 +19,7 @@
          CSV fields:
          Request........................req_req_item.req_id & req_req.request_number (lookup only)
          Item...........................req_req_item.item_id & supply_item.name (lookup only)
+         Pack...........................req_req_item.pack & supply_item_pack
          Quantity.......................req_req_item.quantity
          Currency.......................req_req_item.currency
          Value..........................req_req_item.pack_value
@@ -33,6 +34,11 @@
             <!-- Create each record -->
             <xsl:for-each select="table/row">
 
+                <xsl:variable name="item" select="col[@field='Item']/text()"/>
+                <xsl:variable name="pack" select="col[@field='Pack']/text()"/>
+                <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $pack)"/>
+                <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $pack)"/>
+
                 <!-- Request -->
                 <xsl:variable name="Request"><xsl:value-of select="col[@field='Request']"/></xsl:variable>
                 <resource name="req_req">
@@ -45,10 +51,24 @@
                 <!-- Supply Item -->
                 <resource name="supply_item">
 	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="col[@field='Item']"/>
+	                    <xsl:value-of select="$item_tuid"/>
 	                </xsl:attribute>
-	                <data field="name"><xsl:value-of select="col[@field='Item']"/></data>
-	                <data field="um"><xsl:value-of select="col[@field='Pack']"/></data>
+	                <data field="name"><xsl:value-of select="$item"/></data>
+	                <data field="um"><xsl:value-of select="$pack"/></data>
+	            </resource>
+
+                <!-- Supply Item Pack -->
+                <resource name="supply_item_pack">
+	                <xsl:attribute name="tuid">
+	                    <xsl:value-of select="$pack_tuid"/>
+	                </xsl:attribute>
+                    <!-- Link to item -->
+                    <reference field="item_id" resource="supply_item">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$item_tuid"/>
+                        </xsl:attribute>
+                    </reference>
+	                <data field="name"><xsl:value-of select="$pack"/></data>
 	            </resource>
 
                 <!-- Request Item -->
@@ -60,7 +80,12 @@
                     </reference>
                     <reference field="item_id" resource="supply_item">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="col[@field='Item']"/>
+                            <xsl:value-of select="$item_tuid"/>
+                        </xsl:attribute>
+                    </reference>
+                    <reference field="item_pack_id" resource="supply_item_pack">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$pack_tuid"/>
                         </xsl:attribute>
                     </reference>
                     <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
