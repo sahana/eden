@@ -279,11 +279,6 @@ class S3AddResourceLink(S3NavigationItem):
                 t = "%s_%s" % (c, f)
             label = S3CRUD.crud_string(t, "label_create_button")
 
-        # Always have format=popup in the URL
-        if vars is None:
-            vars = Storage()
-        vars["format"] = "popup"
-
         super(S3AddResourceLink, self).__init__(label, c=c, f=f, t=t,
                                                 m="create",
                                                 vars=vars,
@@ -300,11 +295,11 @@ class S3AddResourceLink(S3NavigationItem):
         if not item.authorized:
             return None
 
-        popup = A(item.label,
-                  _href=item.url(),
-                  _class="colorbox",
-                  _target="top",
-                  _title=item.opts.info)
+        popup_link = A(item.label,
+                       _href=item.url(format="popup"),
+                       _class="colorbox",
+                       _target="top",
+                       _title=item.opts.info)
 
         tooltip = item.opts.tooltip
         if tooltip is not None:
@@ -313,7 +308,7 @@ class S3AddResourceLink(S3NavigationItem):
         else:
             ttip = ""
 
-        return DIV(popup, ttip)
+        return DIV(popup_link, ttip)
 
 # =============================================================================
 def homepage(module=None, *match, **attr):
