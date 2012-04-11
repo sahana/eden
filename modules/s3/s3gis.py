@@ -270,6 +270,122 @@ class GIS(object):
             return wkt
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_dms_triplet(coord):
+        """
+            Gives the (degree, minutes, seconds) triplet from the coordinate
+        """
+
+        degrees = coord
+        minutes = (degrees - int(degrees)) * 60
+        seconds = (minutes - int(minutes)) * 60
+
+        return (int(degrees), int(minutes), int(seconds))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_from_triplet(coord):
+        """
+            Gives the decimal value of the coordinate, given a
+            (degrees, minutes, seconds) tuple
+        """
+        if (not isinstance(coord, tuple) and len(coord) != 3):
+            return None
+        else:
+            degrees, minutes, seconds = coord
+            floatval = degrees + minutes / 60.0 + seconds / 3600.0
+            return floatval
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_parse(coord, format="%f"):
+        """
+            Gives the (degree, minutes, seconds) triplet from the coordinate
+            Note: the format must be either %f or should contain %d, %m, %s
+
+            @returns tuple (degrees, minutes, seconds)
+            @returns None if coord does not conform to the format
+        """
+
+        if (format.trim() == "%f"):
+            if (isinstance(coord, float) or
+                isinstance(coord, int)):
+                return coord
+            else:
+                return None
+        else:
+            if (not isinstance(coord, str)):
+                return None
+
+            order = ['%d', '%m', '%s']
+            # consider only parts that are required by the format
+            order = filter(lambda part: part in format, order)
+            # sorts order in the order the items appear in the format
+            order = sorted(order, lambda part: format.find(part))
+
+            regex = re.escape(format)
+            regex = regex.replace("\\%d", "(\d+)") \
+                         .replace("\\%m", "(\d+)") \
+                         .replace("\\%s", "(\d+)")
+
+            # @ToDo: (shashi) Should this be cached?
+            regex_compiled = re.compile(regex, re.UNICODE)
+            matches = GIS.coordinate_dms_triplet(regex_compiled.match(coord))
+
+
+            if matches == None:
+                return None
+            else:
+                triplet = [0, 0, 0]
+                if ('%d' in format):
+                    triplet[0] = matches.group(order.find('%d') + 1)
+                if ('%m' in format):
+                    triplet[1] = matches.group(order.find('%m') + 1)
+                if ('%s' in format):
+                    triplet[2] = matches.group(order.find('%m') + 1)
+                return tuple(tiplet)
+
+            return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def format_coordinate(coord, format):
+        """
+            Format geographic coordinate in a given format; format specifiers:
+            * %f: decimal value of the coord
+            * %d: degrees
+            * %m: minutes
+            * %s: seconds
+
+            @returns string formatted value
+        """
+        if (isinstance(coord, tuple)):
+            degrees, minutes, seconds = coord
+            if ("%f" in format):
+                coord_float = GIS.coordinate_from_triplet(coord)
+        else:
+            coord_float = coord
+            degrees, minutes, seconds = GIS.coordinate_dms_triplet(coord)
+
+        formatted = format.replace("%d", "%d" % degrees) \
+                          .replace("%m", "%d" % minutes) \
+                          .replace("%s", "%d" % seconds) \
+                          .replace("%f", "%f" % coord_float)
+        return formatted
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_represent(coord):
+        """
+            Represent a coordinate (latitude or longitude) according
+            to deployment_settings or T()
+        """
+        settings = current.deployment_settings
+
+        format = settings.get_L10n_lat_lon_format()
+        return GIS.format_coordinate(coord, format)
+
+    # -------------------------------------------------------------------------
     def download_kml(self, record_id, filename):
         """
             Download a KML file:
