@@ -1824,8 +1824,17 @@ def org_office_controller():
 
         return True
     s3.prep = prep
-
-    rheader = s3db.org_rheader
+    # remove CRUD generated buttons in the tabs
+    manager.configure("inv_inv_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
+    if "inv_item" in request.args:
+        rheader = s3db.inv_warehouse_rheader
+    else:
+        rheader = s3db.org_rheader
     return s3_rest_controller("org", "office", rheader=rheader)
 
 # END =========================================================================

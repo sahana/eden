@@ -307,8 +307,8 @@ def track_movement():
         if r.interactive:
             if "viewing" in request.vars:
                 dummy, item_id = request.vars.viewing.split(".")
-                filter = (table.item_id == item_id ) | \
-                         (table.send_inv_item_id == item_id)
+                filter = (table.send_inv_item_id == item_id ) | \
+                         (table.recv_inv_item_id == item_id)
                 response.s3.filter = filter
         return True
 

@@ -107,6 +107,9 @@ class S3InventoryModel(S3Model):
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
         inv_source_type = { 0: None,
                             1: T("Donated"),
                             2: T("Procured"),
@@ -1276,11 +1279,11 @@ $(document).ready(function() {
         id = form.vars.id
         record = tracktable[id]
         if record.req_item_id:
-            req_id = ritable[req_item_id].req_id
-            req_ref = rrtable[req_id].ref_ref
-            db(stable.id == form.vars.send_id).update(req_ref = ref_ref)
+            req_id = ritable[record.req_item_id].req_id
+            req_ref = rrtable[req_id].req_ref
+            db(stable.id == form.vars.send_id).update(req_ref = req_ref)
             if form.vars.recv_id:
-                db(rtable.id == form.vars.recv_id).update(req_ref = ref_ref)
+                db(rtable.id == form.vars.recv_id).update(req_ref = req_ref)
 
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
@@ -1332,20 +1335,22 @@ $(document).ready(function() {
                                                   record.recv_quantity,
                                                   track_pack_quantity
                                                  )
-                db(ritable.id == record.req_item_id).update(quantity_fulfil)
+                db(ritable.id == record.req_item_id).update(quantity_fulfil = quantity_fulfil)
 
             db(tracktable.id == id).update(recv_inv_item_id = inv_item_id,
                                            status = 4)
             # If the receive quantity doesn't equal the sent quantity
             # then an adjustment needs to be set up
             if record.quantity != record.recv_quantity:
-                # De we have an adjustment record?
-                query = (tracktable.recv_id == recv_id) & \
-                        (tracktable.adj_id != None)
-                record = db(query).select(tracktable.adj_id,
+                # Do we have an adjustment record?
+                # (which might have be created for another item in this shipment)
+                query = (tracktable.recv_id == record.recv_id) & \
+                        (tracktable.adj_item_id != None)
+                adj_rec = db(query).select(tracktable.adj_item_id,
                                           limitby = (0, 1)).first()
-                if record:
-                    adj_id = record.adj_id
+                adjitemtable = s3db.inv_adj_item
+                if adj_rec:
+                    adj_id = adjitemtable[adj_rec.adj_item_id].adj_id
                 # If we don't yet have an adj record then create it
                 else:
                     adjtable = s3db.inv_adj
@@ -1358,7 +1363,6 @@ $(document).ready(function() {
                                              comments = recv_rec.comments,
                                             )
                 # Now create the adj item record
-                adjitemtable = s3db.inv_adj_item
                 adj_item_id = adjitemtable.insert(reason = 0,
                                                   adj_id = adj_id,
                                                   inv_item_id = record.send_inv_item_id, # original source inv_item
