@@ -80,7 +80,7 @@
 		"font-styles": true,
 		"emphasis": true,
 		"lists": true,
-		"html": false,
+		"html": true,
 		"link": true,
 		"image": true,
 		events: {},
@@ -111,7 +111,15 @@
 					check_attributes: {
 						href:   "url" // important to avoid XSS
 					}
-				}
+				},
+				"iframe": {
+					"check_attributes": {
+			            "width": "numbers",
+			            "src": "url",
+			            "height": "numbers"
+			        }
+				},
+
 			}
 		}
 	};
