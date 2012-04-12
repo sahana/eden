@@ -53,7 +53,8 @@ __all__ = ["URL2",
            "sort_dict_by_values",
            "jaro_winkler",
            "jaro_winkler_distance_row",
-           "soundex"]
+           "soundex",
+           "search_vars_represent"]
 
 import sys
 import os
@@ -978,5 +979,52 @@ def soundex(name, len=4):
 
     # return soundex code padded to len characters
     return (sndx + (len * "0"))[:len]
+
+# =============================================================================
+def search_vars_represent(search_vars):
+        """
+            Returns Search Criteria in a Human Readable Form
+        
+            @author: Pratyush Nigam
+        """
+    
+        import cPickle
+        import re
+        s = ""
+        search_vars = search_vars.replace("&apos;", "'")
+        try:
+            search_vars = cPickle.loads(str(search_vars))
+            s = "<p>"
+            pat = '_'
+            for var in search_vars.iterkeys():
+                if var == "criteria" :
+                    c_dict = search_vars[var]
+                    #s = s + crud_string("pr_save_search", "Search Criteria")
+                    for j in c_dict.iterkeys():
+                        st = str(j)
+                        if st[0] == '_':
+                            continue
+                        else:                         
+                            st = st.replace("_search_", " ")
+                            st = st.replace("_advanced", "")
+                            st = st.replace("_simple", "")
+                            st = st.replace("text", "text matching")
+                            """st = st.replace(search_vars["function"], "")
+                            st = st.replace(search_vars["prefix"], "")"""
+                            st = st.replace("_", " ")
+                            s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
+                elif var == "simple" or var == "advanced":
+                    continue
+                else:
+                    if var == "function":
+                        v1 = "Resource Name"
+                    elif var == "prefix":
+                        v1 = "Module"
+                    s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
+            s = s + "</p>"
+        except:
+            raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
+            
+        return XML(s)
 
 # END =========================================================================

@@ -1803,7 +1803,7 @@ class S3SavedSearch(S3Model):
                                         default = auth.user_id),
                                   Field("search_vars","text",
                                         label = T("Search Criteria"),
-                                        represent=lambda id:self.search_vars_represent(id)),
+                                        represent=lambda id:search_vars_represent(id)),
                                   Field("subscribed","boolean",
                                         default=False),
                                   person_id(label = T("Person"),
@@ -1842,53 +1842,6 @@ class S3SavedSearch(S3Model):
         #
         return Storage()
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-
-    def search_vars_represent(search_vars):
-        """
-        Represent the search criteria
-        @param search_vars: the pr_save_search record ID
-
-        @ToDo: Modify this function so that it displays a Human Readable representation of the criteria
-               Move this function to modules/s3/s3search
-               Use this function in controllers/msg instead of re-defining it there
-        """
-        import cPickle
-        import re
-        s = ""
-        search_vars = search_vars.replace("&apos;", "'")
-        try:
-            search_vars = cPickle.loads(str(search_vars))
-        except:
-            raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
-            s = "<p>"
-            pat = '_'
-            for var in search_vars.iterkeys():
-                if var == "criteria" :
-                    c_dict = search_vars[var]
-                    #s = s + crud_string("pr_save_search", "Search Criteria")
-                    for j in c_dict.iterkeys():
-                        if not re.match(pat,j):
-                            st = str(j)
-                            st = st.replace("_search_", " ")
-                            st = st.replace("_advanced", "")
-                            st = st.replace("_simple", "")
-                            st = st.replace("text", "text matching")
-                            """st = st.replace(search_vars["function"], "")
-                            st = st.replace(search_vars["prefix"], "")"""
-                            st = st.replace("_", " ")
-                            s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
-                elif var == "simple" or var == "advanced":
-                    continue
-                else:
-                    if var == "function":
-                        v1 = "Resource Name"
-                    elif var == "prefix":
-                        v1 = "Module"
-                    s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
-            s = s + "</p>"
-            return XML(s)
 
 # =============================================================================
 class S3PersonPresence(S3Model):
