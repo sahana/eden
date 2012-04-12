@@ -3257,7 +3257,30 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
     request = current.request
     gis = current.gis
 
-    def lat_lon_represent(location):
+    def lat_lon_format(coord, format=None):
+        """
+            Represent a coordinate (latitude or longitude) according to a
+            format. if format is not provided, uses deployment_settings.
+        """
+        if (format == None):
+            settings = current.deployment_settings
+            format = settings.get_L10n_lat_lon_format()
+
+        degrees = abs(coord)
+        minutes = (degrees - int(degrees)) * 60
+        seconds = (minutes - int(minutes)) * 60
+
+        # truncate (floor) degrees and minutes
+        degrees, minutes = (int(coord), int(minutes))
+
+        formatted = format.replace("%d", "%d" % degrees) \
+                          .replace("%m", "%d" % minutes) \
+                          .replace("%s", "%lf" % seconds) \
+                          .replace("%f", "%lf" % coord)
+        return formatted
+
+    # -------------------------------------------------------------------------
+    def lat_lon_represent(location, format=None):
         lat = location.lat
         lon = location.lon
         if lat is not None and lon is not None:
@@ -3271,7 +3294,10 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
             else:
                 lon_suffix = "W"
                 lon = -lon
-            text = "%s %s, %s %s" % (lat, lat_suffix, lon, lon_suffix)
+            text = "%s %s, %s %s" % (lat_lon_format(lat, format),
+                                     lat_suffix,
+                                     lat_lon_format(lon, format),
+                                     lon_suffix)
             return text
 
     def parent_represent(location):
