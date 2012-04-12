@@ -118,7 +118,6 @@ s3_accessible_query = auth.s3_accessible_query
 # Custom classes which extend default Gluon
 crud = s3base.CrudS3()
 current.crud = crud
-S3Comment = s3base.S3Comment
 S3DateTime = s3base.S3DateTime
 S3ResourceHeader = s3base.S3ResourceHeader
 

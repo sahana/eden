@@ -80,23 +80,9 @@ if deployment_settings.has_module("cr"):
                                                                           "cr_shelter_type.id",
                                                                           "%(name)s")),
                                           represent = lambda id: (id and [db.cr_shelter_type[id].name] or ["None"])[0],
-                                          comment = S3Comment(desc=None,
-                                                              title=None,
-                                                              anchor_link=\
-                                                                  URL(c="cr", f="shelter_type",
-                                                                      args="create",
-                                                                      vars=dict(format="popup")
-                                                                      ),
-                                                              anchor_title=ADD_SHELTER_TYPE,
-                                                              ),
-                                          # A(ADD_SHELTER_TYPE,
-                                          #             _class="colorbox",
-                                          #             _href=URL(c="cr",
-                                          #                       f="shelter_type",
-                                          #                       args="create",
-                                          #                       vars=dict(format="popup")),
-                                          #             _target="top",
-                                          #             _title=ADD_SHELTER_TYPE),
+                                          comment=S3AddResourceLink(c="cr",
+                                                                    f="shelter_type",
+                                                                    label=ADD_SHELTER_TYPE),
                                           ondelete = "RESTRICT",
                                           label = SHELTER_TYPE_LABEL)
 
