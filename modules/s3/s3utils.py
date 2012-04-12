@@ -982,14 +982,6 @@ def soundex(name, len=4):
 
 # =============================================================================
 def search_vars_represent(search_vars):
-        """
-        Represent the search criteria
-        @param search_vars: the pr_save_search record ID
-
-        @ToDo: Modify this function so that it displays a Human Readable representation of the criteria
-               Move this function to modules/s3/s3search
-               Use this function in controllers/msg instead of re-defining it there
-        """
         import cPickle
         import re
         s = ""
