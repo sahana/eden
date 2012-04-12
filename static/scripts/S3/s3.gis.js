@@ -594,7 +594,7 @@ function addToolbar() {
     }
 
     // Save Viewport
-    if ((undefined === S3.gis.loc_select) && (S3.gis.region)) {
+    if ((undefined === S3.gis.loc_select) && (S3.auth)) {
         addSaveButton(toolbar);
     }
     toolbar.addSeparator();

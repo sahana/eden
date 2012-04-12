@@ -779,6 +779,15 @@ def config():
                                                          not_filterby="layer_id",
                                                          not_filter_opts=[row.layer_id for row in rows]
                                                          )
+
+        elif r.representation == "url":
+            # Save from Map
+            if r.method == "create" and \
+                 auth.is_logged_in() and \
+                 not auth.s3_has_role(MAP_ADMIN):
+                pe_id = auth.user.pe_id
+                r.table.pe_id.default = pe_id
+
         return True
     response.s3.prep = prep
 
@@ -811,6 +820,25 @@ def config():
                                                 restrict = restrict
                                                 )
                                             )
+        elif r.representation == "url":
+            # Save from Map
+            result = json.loads(output["item"])
+            if result["status"] == "success":
+                # Process Layers
+                ltable = s3db.gis_layer_config
+                update_or_insert = ltable.update_or_insert
+                id = r.id
+                layers = json.loads(request.post_vars.layers)
+                for layer in layers:
+                    if "id" in layer:
+                        layer_id = layer["id"]
+                        query = (ltable.config_id == id) & \
+                                (ltable.layer_id == layer_id)
+                        # @ToDo: If this is a Base Layer, do we make it the default?
+                        update_or_insert(query,
+                                         config_id = id,
+                                         layer_id = layer_id,
+                                         visible = layer["visible"])
 
         return output
     response.s3.postp = postp
@@ -2289,38 +2317,33 @@ def display_feature():
                                                 table.parent,
                                                 table.lat,
                                                 table.lon,
+                                                #table.wkt,
                                                 limitby=(0, 1)).first()
 
-    config = gis.get_config()
+    if not feature:
+        session.error = T("Record not found!")
+        raise HTTP(404, body=s3mgr.xml.json_message(False, 404, session.error))
+    
+    # Centre on Feature
+    lat = feature.lat
+    lon = feature.lon
+    if (lat is None) or (lon is None):
+        if feature.parent:
+            # Skip the current record if we can
+            latlon = gis.get_latlon(feature.parent)
+        elif feature.id:
+            latlon = gis.get_latlon(feature.id)
+        if latlon:
+            lat = latlon["lat"]
+            lon = latlon["lon"]
+        else:
+            session.error = T("No location information defined!")
+            raise HTTP(404, body=s3mgr.xml.json_message(False, 404, session.error))
 
-    try:
-        # Centre on Feature
-        lat = feature.lat
-        lon = feature.lon
-        if (lat is None) or (lon is None):
-            if feature.parent:
-                # Skip the current record if we can
-                latlon = gis.get_latlon(feature.parent)
-            elif feature.id:
-                latlon = gis.get_latlon(feature.id)
-            else:
-                # nothing we can do!
-                raise
-            if latlon:
-                lat = latlon["lat"]
-                lon = latlon["lon"]
-            else:
-                # nothing we can do!
-                raise
-    except:
-        lat = config.lat
-        lon = config.lon
-
-    #if feature.parent:
+    # Default zoom +2 (same as a single zoom on a cluster)
+    # config = gis.get_config()
+    # zoom = config.zoom + 2
     bounds = gis.get_bounds(features=[feature])
-    #else:
-        # Default zoom +2 (same as a single zoom on a cluster)
-    #    zoom = config.zoom + 2
 
     map = gis.show_map(
         features = [{"lat"  : lat,

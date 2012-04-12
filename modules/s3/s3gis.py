@@ -503,20 +503,23 @@ class GIS(object):
     def get_bounds(self, features=[]):
         """
             Calculate the Bounds of a list of Features
-            e.g. to use in GPX export for correct zooming
+            e.g. When a map is displayed that focuses on a collection of points,
+                 the map is zoomed to show just the region bounding the points.
+            e.g. To use in GPX export for correct zooming
+`
             Ensure a minimum size of bounding box, and that the points
             are inset from the border.
             @ToDo: Optimised Geospatial routines rather than this crude hack
         """
 
-        config = self.get_config()
-
-        # When a map is displayed that focuses on a collection of points, the map is zoomed to show just the region bounding the points.
+        # 
         # Minimum Bounding Box
-        # - gives a minimum width and height in degrees for the region shown. Without this, a map showing a single point would not show any extent around that point. After the map is displayed, it can be zoomed as desired.
-        bbox_min_size = 0.03
+        # - gives a minimum width and height in degrees for the region shown.
+        # Without this, a map showing a single point would not show any extent around that point.
+        bbox_min_size = 0.05
         # Bounding Box Insets
-        # - adds a small amount of distance outside the points. Without this, the outermost points would be on the bounding box, and might not be visible.
+        # - adds a small amount of distance outside the points.
+        # Without this, the outermost points would be on the bounding box, and might not be visible.
         bbox_inset = 0.007
 
         if len(features) > 0:
@@ -557,35 +560,39 @@ class GIS(object):
                 max_lon = max(lon, max_lon)
                 max_lat = max(lat, max_lat)
 
-        else: # no features
+            # Assure a reasonable-sized box.
+            delta_lon = (bbox_min_size - (max_lon - min_lon)) / 2.0
+            if delta_lon > 0:
+                min_lon -= delta_lon
+                max_lon += delta_lon
+            delta_lat = (bbox_min_size - (max_lat - min_lat)) / 2.0
+            if delta_lat > 0:
+                min_lat -= delta_lat
+                max_lat += delta_lat
+            
+            # Move bounds outward by specified inset.
+            min_lon -= bbox_inset
+            max_lon += bbox_inset
+            min_lat -= bbox_inset
+            max_lat += bbox_inset
+
+            # Check that we're still within overall bounds
+            # - seems unnecessary?
+            #min_lon = max(config.min_lon, min_lon)
+            #min_lat = max(config.min_lat, min_lat)
+            #max_lon = min(config.max_lon, max_lon)
+            #max_lat = min(config.max_lat, max_lat)
+
+        else:
+            # no features
+            config = self.get_config()
             min_lon = config.min_lon or -180
             max_lon = config.max_lon or 180
             min_lat = config.min_lat or -90
             max_lat = config.max_lat or 90
 
-        # Assure a reasonable-sized box.
-        delta_lon = (bbox_min_size - (max_lon - min_lon)) / 2.0
-        if delta_lon > 0:
-            min_lon -= delta_lon
-            max_lon += delta_lon
-        delta_lat = (bbox_min_size - (max_lat - min_lat)) / 2.0
-        if delta_lat > 0:
-            min_lat -= delta_lat
-            max_lat += delta_lat
-
-        # Move bounds outward by specified inset.
-        min_lon -= bbox_inset
-        max_lon += bbox_inset
-        min_lat -= bbox_inset
-        max_lat += bbox_inset
-
-        # Check that we're still within overall bounds
-        min_lon = max(config.min_lon, min_lon)
-        min_lat = max(config.min_lat, min_lat)
-        max_lon = min(config.max_lon, max_lon)
-        max_lat = min(config.max_lat, max_lat)
-
-        return dict(min_lon=min_lon, min_lat=min_lat, max_lon=max_lon, max_lat=max_lat)
+        return dict(min_lon=min_lon, min_lat=min_lat,
+                    max_lon=max_lon, max_lat=max_lat)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -991,13 +998,21 @@ class GIS(object):
                         break
                 # Add Personal
                 pes.insert(0, pe_id)
-                query = ((ctable.pe_id.belongs(pes)) | 
-                         (ctable.uuid == "SITE_DEFAULT")) & \
-                        (mtable.id == stable.marker_id) & \
-                        (stable.id == ctable.symbology_id) & \
-                        (ptable.id == ctable.projection_id)
+                query = (ctable.pe_id.belongs(pes)) | \
+                        (ctable.uuid == "SITE_DEFAULT")
+                # Personal may well not be complete, so Left Join
+                left = [
+                        ptable.on(ptable.id == ctable.projection_id),
+                        stable.on(stable.id == ctable.symbology_id),
+                        mtable.on(mtable.id == stable.marker_id),
+                        ]
                 # Order by pe_type (defined in gis_config)
-                rows = db(query).select(orderby=ctable.pe_type)
+                # @ToDo: Do this purely from the hierarchy
+                rows = db(query).select(ctable.ALL,
+                                        mtable.ALL,
+                                        ptable.ALL,
+                                        left=left,
+                                        orderby=ctable.pe_type)
                 cache["ids"] = []
                 exclude = list(s3.all_meta_field_names)
                 append = exclude.append
@@ -1092,13 +1107,13 @@ class GIS(object):
             @ToDo: Config() class
         """
 
-        s3 = current.response.s3
+        gis = current.response.s3.gis
 
-        if not s3.gis.config:
+        if not gis.config:
             # Ask set_config to put the appropriate config in response.
             self.set_config()
 
-        return s3.gis.config
+        return gis.config
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3329,6 +3344,7 @@ class GIS(object):
                 name: string,           # Name for the Control
                 url: string             # URL of PDF server
                 }
+                @ToDo: Also add MGRS Search support: http://gxp.opengeo.org/master/examples/mgrs.html
             @param window: Have viewport pop out of page into a resizable window
             @param window_hide: Have the window hidden by default, ready to appear (e.g. on clicking a button)
             @param closable: In Window mode, whether the window is closable or not
@@ -3339,6 +3355,7 @@ class GIS(object):
                             .setup(map)
 
         """
+
         request = current.request
         response = current.response
         if not response.warning:
@@ -3353,9 +3370,7 @@ class GIS(object):
         public_url = settings.get_base_public_url()
 
         cachetable = s3db.gis_cache
-        MAP_ADMIN = session.s3.system_roles.MAP_ADMIN
-
-        s3_has_role = auth.s3_has_role
+        MAP_ADMIN = auth.s3_has_role(session.s3.system_roles.MAP_ADMIN)
 
         # Defaults
         # Also in static/S3/s3.gis.js
@@ -3560,12 +3575,14 @@ class GIS(object):
         else:
             draw_polygon = ""
 
-        if config.pe_id or s3_has_role(MAP_ADMIN):
-            # Personal/OU config or MapAdmin, so enable Save Button
-            # @ToDo: Need to make this recognise whether we have the ability edit the config
-            region = "S3.gis.region = %i;\n" % config.id
-        else:
-            region = ""
+        authenticated = ""
+        config_id = ""
+        if auth.is_logged_in():
+            authenticated = "S3.auth = true;\n"
+            if MAP_ADMIN or \
+               (config.pe_id == auth.user.pe_id):
+                # Personal config or MapAdmin, so enable Save Button for Updates
+                config_id = "S3.gis.config_id = %i;\n" % config.id
 
         # Upload Layer
         if settings.get_gis_geoserver_password():
@@ -3620,8 +3637,8 @@ class GIS(object):
                 subTitle = unicode(print_tool["subTitle"])
             else:
                 subTitle = unicode(T("Printed from Sahana Eden"))
-            if session.auth:
-                creator = unicode(session.auth.user.email)
+            if auth.is_logged_in():
+                creator = unicode(auth.user.email)
             else:
                 creator = ""
             print_tool1 = u"".join(("""
@@ -4120,8 +4137,9 @@ S3.i18n.gis_feature_info = '%s';
         # Configure settings to pass through to Static script
         # @ToDo: Consider passing this as JSON Objects to allow it to be done dynamically
         html.append(SCRIPT("".join((
+            authenticated,
             "S3.public_url = '%s';\n" % public_url,  # Needed just for GoogleEarthPanel
-            region,
+            config_id,
             s3_gis_window,
             s3_gis_windowHide,
             s3_gis_windowNotClosable,
@@ -4602,6 +4620,7 @@ class FeatureLayer(Layer):
 
             # Mandatory attributes
             output = {
+                "id": self.layer_id,
                 "name": self.safe_name,
                 "url": url,
             }
@@ -4625,6 +4644,7 @@ class GeoJSONLayer(Layer):
         def as_dict(self):
             # Mandatory attributes
             output = {
+                "id": self.layer_id,
                 "name": self.safe_name,
                 "url": self.url,
             }
@@ -4720,6 +4740,7 @@ class GeoRSSLayer(Layer):
 
             # Mandatory attributes
             output = {
+                    "id": self.layer_id,
                     "name": name_safe,
                     "url": url,
                 }
@@ -4869,6 +4890,7 @@ class GPXLayer(Layer):
 
             # Mandatory attributes
             output = {
+                    "id": self.layer_id,
                     "name": self.safe_name,
                     "url": url,
                 }
@@ -5004,6 +5026,7 @@ class KMLLayer(Layer):
                 url = self.url
 
             output = dict(
+                id = self.layer_id,
                 name = self.safe_name,
                 url = url,
             )
@@ -5070,6 +5093,7 @@ class ThemeLayer(Layer):
 
             # Mandatory attributes
             output = {
+                "id": self.layer_id,
                 "name": self.safe_name,
                 "url": url,
             }
@@ -5090,6 +5114,7 @@ class TMSLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             output = {
+                    "id": self.layer_id,
                     "name": self.safe_name,
                     "url": self.url,
                     "layername": self.layername
@@ -5117,6 +5142,7 @@ class WFSLayer(Layer):
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
             output = dict(
+                id = self.layer_id,
                 name = self.safe_name,
                 url = self.url,
                 title = self.title,
@@ -5161,6 +5187,7 @@ class WMSLayer(Layer):
             if self.queryable:
                 current.response.s3.gis.get_feature_info = True
             output = dict(
+                id = self.layer_id,
                 name = self.safe_name,
                 url = self.url,
                 layers = self.layers

@@ -477,6 +477,8 @@ function addGeoJSONLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             styleMap: featureClusterStyleMap,
@@ -681,6 +683,8 @@ function addGPXLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -791,6 +795,8 @@ function addKMLLayer(layer) {
                     interval: refresh * 1000 // milliseconds
                 })
             ],
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -941,6 +947,8 @@ function addTMSLayer(layer) {
     var tmsLayer = new OpenLayers.Layer.TMS(
         name, url, {
             dir: dir,
+            // This is used to Save State
+            layer_id: layer.id,
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels
@@ -1174,6 +1182,8 @@ function addWFSLayer(layer) {
             //saveStrategy
         ],
         dir: dir,
+        // This is used to Save State
+        layer_id: layer.id,
         projection: projection,
         //outputFormat: "json",
         //readFormat: new OpenLayers.Format.GeoJSON(),
@@ -1284,6 +1294,8 @@ function addWMSLayer(layer) {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             queryable: queryable,
             visibility: visibility

@@ -338,33 +338,38 @@ class S3XML(S3Codec):
         # would require a rework of all existing stylesheets (which is
         # however useful)
 
+        ATTRIBUTE = self.ATTRIBUTE
+
         success = False
 
         if root is None:
             root = etree.Element(self.TAG.root)
         if elements is not None or len(root):
             success = True
-        root.set(self.ATTRIBUTE.success, json.dumps(success))
+        set = root.set
+        set(ATTRIBUTE.success, json.dumps(success))
         if start is not None:
-            root.set(self.ATTRIBUTE.start, str(start))
+            set(ATTRIBUTE.start, str(start))
         if limit is not None:
-            root.set(self.ATTRIBUTE.limit, str(limit))
+            set(ATTRIBUTE.limit, str(limit))
         if results is not None:
-            root.set(self.ATTRIBUTE.results, str(results))
+            set(ATTRIBUTE.results, str(results))
         if elements is not None:
             root.extend(elements)
         if domain:
-            root.set(self.ATTRIBUTE.domain, self.domain)
+            set(ATTRIBUTE.domain, self.domain)
         if url:
-            root.set(self.ATTRIBUTE.url, current.response.s3.base_url)
-        root.set(self.ATTRIBUTE.latmin,
-                 str(current.gis.get_bounds()["min_lat"]))
-        root.set(self.ATTRIBUTE.latmax,
-                 str(current.gis.get_bounds()["max_lat"]))
-        root.set(self.ATTRIBUTE.lonmin,
-                 str(current.gis.get_bounds()["min_lon"]))
-        root.set(self.ATTRIBUTE.lonmax,
-                 str(current.gis.get_bounds()["max_lon"]))
+            set(ATTRIBUTE.url, current.response.s3.base_url)
+        # @ToDo: This should be done based on the features, not just the config
+        bounds = current.gis.get_bounds()
+        set(ATTRIBUTE.latmin,
+            str(bounds["min_lat"]))
+        set(ATTRIBUTE.latmax,
+            str(bounds["max_lat"]))
+        set(ATTRIBUTE.lonmin,
+            str(bounds["min_lon"]))
+        set(ATTRIBUTE.lonmax,
+            str(bounds["max_lon"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
