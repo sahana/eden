@@ -982,6 +982,12 @@ def soundex(name, len=4):
 
 # =============================================================================
 def search_vars_represent(search_vars):
+        """
+            Returns Search Criteria in a Human Readable Form
+        
+            @author: Pratyush Nigam
+        """
+    
         import cPickle
         import re
         s = ""
