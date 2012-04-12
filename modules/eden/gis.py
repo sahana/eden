@@ -3271,7 +3271,10 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
             else:
                 lon_suffix = "W"
                 lon = -lon
-            text = "%s %s, %s %s" % (lat, lat_suffix, lon, lon_suffix)
+            text = "%s %s, %s %s" % (gis.coordinate_represent(lat),
+                                     lat_suffix,
+                                     gis.coordinate_represent(lon),
+                                     lon_suffix)
             return text
 
     def parent_represent(location):
