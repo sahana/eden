@@ -523,7 +523,7 @@ class AddEvent(FormView):
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        return '/spaces/' + self.space.url
+        return '/spaces/' + self.space.url + '/'
 
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
