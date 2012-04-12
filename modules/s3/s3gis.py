@@ -270,6 +270,71 @@ class GIS(object):
             return wkt
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_dms_triplet(coord):
+        """
+            Gives the (degree, minutes, seconds) triplet from the coordinate
+        """
+
+        degrees = coord
+        minutes = (degrees - int(degrees)) * 60
+        seconds = (minutes - int(minutes)) * 60
+
+        return (int(degrees), int(minutes), seconds)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_from_triplet(coord):
+        """
+            Gives the decimal value of the coordinate, given a
+            (degrees, minutes, seconds) tuple
+        """
+        if (not isinstance(coord, tuple) and len(coord) != 3):
+            return None
+        else:
+            degrees, minutes, seconds = coord
+            floatval = degrees + minutes / 60.0 + seconds / 3600.0
+            return floatval
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def format_coordinate(coord, format):
+        """
+            Format geographic coordinate in a given format; format specifiers:
+            * %f: decimal value of the coord (double)
+            * %d: degrees (int)
+            * %m: minutes (int)
+            * %s: seconds (double)
+
+            @returns string formatted value
+        """
+        if (isinstance(coord, tuple)):
+            degrees, minutes, seconds = coord
+            if ("%f" in format):
+                coord_float = GIS.coordinate_from_triplet(coord)
+        else:
+            coord_float = coord
+            degrees, minutes, seconds = GIS.coordinate_dms_triplet(coord)
+
+        formatted = format.replace("%d", "%d" % degrees) \
+                          .replace("%m", "%d" % minutes) \
+                          .replace("%s", "%lf" % seconds) \
+                          .replace("%f", "%lf" % coord_float)
+        return formatted
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def coordinate_represent(coord):
+        """
+            Represent a coordinate (latitude or longitude) according
+            to deployment_settings
+        """
+        settings = current.deployment_settings
+
+        format = settings.get_L10n_lat_lon_format()
+        return GIS.format_coordinate(coord, format)
+
+    # -------------------------------------------------------------------------
     def download_kml(self, record_id, filename):
         """
             Download a KML file:
