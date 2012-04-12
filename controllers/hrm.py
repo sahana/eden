@@ -95,17 +95,6 @@ def human_resource():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
-    # NB Change these & change the list_fields.pop() later
-    list_fields = ["id",
-                   "person_id",
-                   "job_title",
-                   "organisation_id",
-                   "site_id",
-                   "location_id",
-                   "type",
-                   "status",
-                  ]
-
     # Must specify a group to create HRs
     # Interactive
     group = request.vars.get("group", None)
@@ -126,7 +115,17 @@ def human_resource():
         _location.writable = True
         _location.readable = True
         _location.label = T("Home Address")
-        list_fields.pop(4)
+        table.site_contact.writable = False
+        table.site_contact.readable = False
+        list_fields = ["id",
+                       "person_id",
+                       "job_title",
+                       "organisation_id",
+                       "location_id",
+                       "status",
+                      ]
+        s3mgr.configure(tablename,
+                        list_fields = list_fields)
         table.job_title.label = T("Volunteer Role")
         s3.crud_strings[tablename].update(
             title_create = T("Add Volunteer"),
@@ -137,9 +136,12 @@ def human_resource():
             subtitle_list = T("Volunteers"),
             label_create_button = T("Add Volunteer"),
             msg_record_created = T("Volunteer added"))
-        # Remove Type filter from the Search widget
+        # Remove inappropriate filters from the Search widget
         human_resource_search = s3mgr.model.get_config(tablename,
                                                        "search_method")
+        # Facility
+        human_resource_search._S3Search__advanced.pop(6)
+        # Type
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
@@ -154,8 +156,17 @@ def human_resource():
         _type.writable = False
         table.site_id.writable = True
         table.site_id.readable = True
-        list_fields.pop(5)
-        list_fields.append("end_date")
+        list_fields = ["id",
+                       "person_id",
+                       "job_title",
+                       "organisation_id",
+                       "site_id",
+                       "site_contact",
+                       "end_date",
+                       "status",
+                      ]
+        s3mgr.configure(tablename,
+                        list_fields = list_fields)
         s3.crud_strings[tablename].update(
             title_create = T("Add Staff Member"),
             title_list = T("Staff"),
@@ -175,9 +186,6 @@ def human_resource():
         human_resource_search._S3Search__advanced.pop(1)
         s3mgr.configure(tablename,
                         search_method = human_resource_search)
-
-    s3mgr.configure(tablename,
-                    list_fields = list_fields)
 
     def prep(r):
         if r.interactive:
@@ -569,7 +577,8 @@ def person():
                     r.id = r.record.id
             if not r.record:
                 session.error = T("Record not found")
-                redirect(URL(group, args=["search"]))
+                redirect(URL(f="human_resource",
+                             args=["search"], vars={"group":group}))
             if hr_id and r.component_name == "human_resource":
                 r.component_id = hr_id
             s3mgr.configure("hrm_human_resource",

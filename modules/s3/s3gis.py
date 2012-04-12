@@ -903,7 +903,7 @@ class GIS(object):
                         table[level].label = labels[level]
 
     # -------------------------------------------------------------------------
-    def set_config(self, config_id, force_update_cache=False):
+    def set_config(self, config_id=None, force_update_cache=False):
         """
             Reads the specified GIS config from the DB, caches it in response.
 
@@ -924,21 +924,18 @@ class GIS(object):
 
             @param: config_id. use '0' to set the SITE_DEFAULT
 
-            @ToDo: Merge configs for Site/OU/User/Region/Event
-                   - for layers, merge is permissive, so more layers are shown,
-                     except when explicitly excluded lower down the hierarchy
+            @ToDo: Merge configs for Event
         """
 
         session = current.session
         s3 = current.response.s3
 
         # If an id has been supplied, try it first. If it matches what's in
-        # session / response, there's no work to do.
-        if config_id and not force_update_cache:
-            if session.s3.gis_config_id == config_id and \
-               s3.gis.config and \
-               s3.gis.config.id == config_id:
-                return
+        # response, there's no work to do.
+        if config_id and not force_update_cache and \
+           s3.gis.config and \
+           s3.gis.config.id == config_id:
+            return
 
         db = current.db
         s3db = current.s3db
@@ -949,6 +946,7 @@ class GIS(object):
         stable = s3db.gis_symbology
         ltable = s3db.gis_layer_config
 
+        cache = Storage()
         row = None
         if config_id:
             query = (ctable.id == config_id) & \
@@ -957,37 +955,108 @@ class GIS(object):
                     (ptable.id == ctable.projection_id)
             row = db(query).select(limitby=(0, 1)).first()
 
-        cache = Storage()
+        elif config_id is 0:
+            # Use site default.
+            config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
+            if not config:
+                # No configs found at all
+                s3.gis.config = cache
+                return cache
+            query = (ctable.id == config.id) & \
+                    (mtable.id == stable.marker_id) & \
+                    (stable.id == ctable.symbology_id) & \
+                    (ptable.id == ctable.projection_id)
+            row = db(query).select(limitby=(0, 1)).first()
+
 
         # If no id supplied, or the requested config does not exist,
         # fall back to personal or site config.
         if not row:
-            if config_id is not 0:
-                # Read personalised config, if available.
-                auth = current.auth
-                if auth.is_logged_in():
-                    query = (ctable.pe_id == auth.user.pe_id) & \
-                            (mtable.id == stable.marker_id) & \
-                            (stable.id == ctable.symbology_id) & \
-                            (ptable.id == ctable.projection_id)
-                    row = db(query).select(limitby=(0, 1)).first()
-            if not row:
-                # No personal config or not logged in. Use site default.
-                config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
-                if not config:
-                    # No configs found at all
-                    s3.gis.config = cache
-                    return cache
-                query = (ctable.id == config.id) & \
+            # Read personalised config, if available.
+            auth = current.auth
+            if auth.is_logged_in():
+                pe_id = auth.user.pe_id
+                # OU configs
+                # List of roles to check (in order)
+                roles = ["Staff", "Volunteer"]
+                role_paths = s3db.pr_get_role_paths(pe_id, roles=roles)
+                # Unordered list of PEs
+                pes = []
+                append = pes.append
+                for role in roles:
+                    if role in role_paths:
+                        # @ToDo: Read the person's gis_config to disambiguate which Path to use, if there are issues
+                        pes = role_paths[role].nodes()
+                        # Staff don't check Volunteer's OUs
+                        break
+                # Add Personal
+                pes.insert(0, pe_id)
+                query = ((ctable.pe_id.belongs(pes)) | 
+                         (ctable.uuid == "SITE_DEFAULT")) & \
                         (mtable.id == stable.marker_id) & \
                         (stable.id == ctable.symbology_id) & \
                         (ptable.id == ctable.projection_id)
-                row = db(query).select(limitby=(0, 1)).first()
+                # Order by pe_type (defined in gis_config)
+                rows = db(query).select(orderby=ctable.pe_type)
+                cache["ids"] = []
+                exclude = list(s3.all_meta_field_names)
+                append = exclude.append
+                for fieldname in ["delete_record", "update_record",
+                                  "pe_path",
+                                  "gis_layer_config", "gis_menu"]:
+                    append(fieldname)
+                for row in rows:
+                    config = row["gis_config"]
+                    if not config_id:
+                        config_id = config.id
+                    cache["ids"].append(config.id)
+                    fields = filter(lambda key: key not in exclude,
+                                    config)
+                    for key in fields:
+                        if key not in cache or cache[key] is None:
+                            cache[key] = config[key]
+                    if "epsg" not in cache or cache["epsg"] is None:
+                        projection = row["gis_projection"]
+                        for key in ["epsg", "units", "maxResolution", "maxExtent"]:
+                            cache[key] = projection[key] if key in projection else None
+                    if "image" not in cache or cache["image"] is None:
+                        marker = row["gis_marker"]
+                        for key in ["image", "height", "width"]:
+                            cache["marker_%s" % key] = marker[key] if key in marker else None
+                    if "base" not in cache:
+                        # Default Base Layer?
+                        query = (ltable.config_id == config.id) & \
+                                (ltable.base == True) & \
+                                (ltable.enabled == True)
+                        base = db(query).select(ltable.layer_id,
+                                                limitby=(0, 1)).first()
+                        if base:
+                            cache["base"] = base.layer_id
+                # Add NULL values for any that aren't defined, to avoid KeyErrors
+                for key in ["epsg", "units", "maxResolution", "maxExtent",
+                            "marker_image", "marker_height", "marker_width",
+                            "base"]:
+                    if key not in cache:
+                        cache[key] = None
 
-        if row:
-            if not config_id:
-                config_id = row["gis_config"].id
+        if not row:
+            # No personal config or not logged in. Use site default.
+            config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)).first()
+            if not config:
+                # No configs found at all
+                s3.gis.config = cache
+                return cache
+            query = (ctable.id == config.id) & \
+                    (mtable.id == stable.marker_id) & \
+                    (stable.id == ctable.symbology_id) & \
+                    (ptable.id == ctable.projection_id)
+            row = db(query).select(limitby=(0, 1)).first()
+
+        if row and not cache:
+            # We had a single row
             config = row["gis_config"]
+            config_id = config.id
+            cache["ids"] = [config_id]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
             fields = filter(lambda key: key not in s3.all_meta_field_names,
@@ -1011,9 +1080,6 @@ class GIS(object):
 
         # Store the values
         s3.gis.config = cache
-        if cache:
-            # Store ID in Session
-            session.s3.gis_config_id = config_id
 
         # Let caller know if their id was valid.
         return config_id if row else cache
@@ -1030,7 +1096,7 @@ class GIS(object):
 
         if not s3.gis.config:
             # Ask set_config to put the appropriate config in response.
-            self.set_config(current.session.s3.gis_config_id)
+            self.set_config()
 
         return s3.gis.config
 
@@ -1908,9 +1974,12 @@ class GIS(object):
             (module, resourcename) = tablename.split("_", 1)
             query = (table.module == module) & \
                     (table.resource == resourcename) & \
-                    (table.layer_id == ltable.layer_id) & \
-                    (ltable.marker_id == mtable.id) & \
-                    (ltable.symbology_id == symbology_id)
+                    (table.layer_id == ltable.layer_id)
+
+            left = [
+                    mtable.on((ltable.marker_id == mtable.id) & \
+                              (ltable.symbology_id == symbology_id))
+                    ]
 
             layers = db(query).select(mtable.image,
                                       mtable.height,
@@ -1920,6 +1989,7 @@ class GIS(object):
                                       table.filter_value,
                                       table.popup_label,
                                       table.popup_fields,
+                                      left=left,
                                       cache=s3db.cache)
             if not record and len(layers) > 1:
                 # We can't provide details for the whole table, but need to do a per-record check
@@ -1928,14 +1998,22 @@ class GIS(object):
                 frow = row.gis_layer_feature
                 if not record or not frow.filter_field:
                     # We only have 1 row
-                    return dict(marker = row.gis_marker,
+                    marker = row.gis_marker
+                    if not marker.image:
+                        # Use Default Marker
+                        marker = Marker().as_dict()
+                    return dict(marker = marker,
                                 #gps_marker = row.gis_layer_symbology.gps_marker,
                                 popup_label = frow.popup_label,
                                 popup_fields = frow.popup_fields,
                                 )
                 # Check if the record matches the filter
                 if str(record[frow.filter_field]) == frow.filter_value:
-                    return dict(marker = row.gis_marker,
+                    marker = row.gis_marker
+                    if not marker.image:
+                        # Use Default Marker
+                        marker = Marker().as_dict()
+                    return dict(marker = marker,
                                 #gps_marker = row.gis_layer_symbology.gps_marker,
                                 popup_label = frow.popup_label,
                                 popup_fields = frow.popup_fields,
@@ -1943,9 +2021,10 @@ class GIS(object):
             # No Feature Layer defined or
             # Row doesn't match any of the filters
             # Default Marker
-            return dict(marker = Marker().as_dict(),
+            marker = Marker().as_dict()
+            return dict(marker = marker,
                         #gps_marker = row.gis_layer_symbology.gps_marker,
-                        popup_label = "",
+                        popup_label = tablename or "",
                         popup_fields = None,
                         )
 
@@ -2994,7 +3073,7 @@ class GIS(object):
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
 
-        if current.deployment_settings.get_gis_spatialdb():
+        if vars.wkt and current.deployment_settings.get_gis_spatialdb():
             # Also populate the spatial field
             vars.the_geom = vars.wkt
 
@@ -3355,11 +3434,7 @@ class GIS(object):
                                  width = config.marker_width,
                                  url = URL(c="static", f="img",
                                            args=["markers", config.marker_image]))
-        symbology = config.symbology_id
-
         markers = {}
-
-        html = DIV(_id="map_wrapper")
 
         #####
         # CSS
@@ -3369,6 +3444,8 @@ class GIS(object):
         ######
         # HTML
         ######
+        html = DIV(_id="map_wrapper")
+
         # Map (Embedded not Window)
         html.append(DIV(_id="map_panel"))
 
@@ -3485,6 +3562,7 @@ class GIS(object):
 
         if config.pe_id or s3_has_role(MAP_ADMIN):
             # Personal/OU config or MapAdmin, so enable Save Button
+            # @ToDo: Need to make this recognise whether we have the ability edit the config
             region = "S3.gis.region = %i;\n" % config.id
         else:
             region = ""
@@ -3499,10 +3577,8 @@ class GIS(object):
 
         # Search
         if search:
-            search = """S3.i18n.gis_search = '%s';
-S3.i18n.gis_search_no_internet = '%s';
-""" % (T("Search Geonames"),
-       T("Geonames.org search requires Internet connectivity!"))
+            search = "S3.i18n.gis_search = '%s';\n" % T("Search location in Geonames")
+            #"S3.i18n.gis_search_no_internet = '%s';" % T("Geonames.org search requires Internet connectivity!")
         else:
             search = ""
 
@@ -3724,13 +3800,14 @@ S3.i18n.gis_search_no_internet = '%s';
         # Layout
         s3_gis_window = ""
         s3_gis_windowHide = ""
-        s3_gis_windowNotClosable = ""
+        if not closable:
+            s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
+        else:
+            s3_gis_windowNotClosable = ""
         if window:
             s3_gis_window = "S3.gis.window = true;\n"
             if window_hide:
                 s3_gis_windowHide = "S3.gis.windowHide = true;\n"
-            elif not closable:
-                s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
 
         if maximizable:
             maximizable = "S3.gis.maximizable = true;\n"
@@ -3845,7 +3922,7 @@ S3.gis.layers_feature_queries = new Array();"""
             else:
                 # Anonymous
                 # @ToDo: A deployment with many Anonymous Feature Queries being
-                #        accessed may need to revisit this design
+                #        accessed will need to change this design - e.g. use session ID instead
                 created_by = None
             query = query & (fqtable.created_by == created_by)
             db(query).delete()
@@ -4233,6 +4310,7 @@ class Layer(object):
         append = self.sublayers.append
         self.scripts = []
 
+        s3 = current.response.s3
         s3db = current.s3db
         s3_has_role = current.auth.s3_has_role
 
@@ -4242,13 +4320,13 @@ class Layer(object):
         ltable = s3db.gis_layer_config
 
         fields = table.fields
-        metafields = current.response.s3.all_meta_field_names
+        metafields = s3.all_meta_field_names
         fields = [table[f] for f in fields if f not in metafields]
         fields.append(ltable.visible)
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.enabled == True) & \
-                (ltable.config_id == current.session.s3.gis_config_id)
-        if current.response.s3.gis.base == True:
+                (ltable.config_id.belongs(s3.gis.config.ids))
+        if s3.gis.base == True:
             if self.tablename == "gis_layer_empty":
                 # Show even if disabled (as fallback)
                 query = (table.id > 0)
@@ -4365,6 +4443,7 @@ class BingLayer(Layer):
         append = self.sublayers.append
         self.scripts = []
 
+        s3 = current.response.s3
         s3db = current.s3db
         s3_has_role = current.auth.s3_has_role
 
@@ -4374,12 +4453,12 @@ class BingLayer(Layer):
         ltable = s3db.gis_layer_config
 
         fields = table.fields
-        metafields = current.response.s3.all_meta_field_names
+        metafields = s3.all_meta_field_names
         fields = [table[f] for f in fields if f not in metafields]
         fields.append(ltable.visible)
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.enabled == True) & \
-                (ltable.config_id == current.session.s3.gis_config_id)
+                (ltable.config_id.belongs(s3.gis.config.ids))
         rows = current.db(query).select(*fields)
         for _record in rows:
             # Check user is allowed to access the layer
@@ -4630,7 +4709,7 @@ class GeoRSSLayer(Layer):
                         #db(query).update(modified_on=request.utcnow)
                         pass
                     else:
-                        raise Exception("%s down & no cached copy available" % url)
+                        response.warning += "%s down & no cached copy available" % url
 
             name_safe = self.safe_name
 
@@ -4668,6 +4747,7 @@ class GoogleLayer(Layer):
         append = self.sublayers.append
         self.scripts = []
 
+        s3 = current.response.s3
         s3db = current.s3db
         s3_has_role = current.auth.s3_has_role
 
@@ -4677,12 +4757,12 @@ class GoogleLayer(Layer):
         ltable = s3db.gis_layer_config
 
         fields = table.fields
-        metafields = current.response.s3.all_meta_field_names
+        metafields = s3.all_meta_field_names
         fields = [table[f] for f in fields if f not in metafields]
         fields.append(ltable.visible)
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.enabled == True) & \
-                (ltable.config_id == current.session.s3.gis_config_id)
+                (ltable.config_id.belongs(s3.gis.config.ids))
         rows = current.db(query).select(*fields)
         for _record in rows:
             # Check user is allowed to access the layer

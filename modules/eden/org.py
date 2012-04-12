@@ -786,7 +786,7 @@ class S3SiteModel(S3Model):
         add_component = self.add_component
         super_key = self.super_key
 
-        # =============================================================================
+        # =====================================================================
         # Site
         #
         # @ToDo: Rename as Facilities (ICS terminology)
@@ -804,11 +804,10 @@ class S3SiteModel(S3Model):
         table = self.super_entity(tablename, "site_id", org_site_types,
                                   # @ToDo: Make Sites Trackable (Mobile Hospitals & Warehouses)
                                   #super_link("track_id", "sit_trackable"),
-                                  #Field("code",
-                                  #      length=10,           # Mayon compatibility
-                                  #      notnull=True,
-                                  #      unique=True,
-                                  #      label=T("Code")),
+                                  Field("code",
+                                        length=10,           # Mayon compatibility
+                                        writable = False,
+                                        label=T("Code")),
                                   Field("name",
                                         length=64,           # Mayon compatibility
                                         notnull=True,
@@ -818,7 +817,7 @@ class S3SiteModel(S3Model):
                                   organisation_id(),
                                   *s3.ownerstamp())
 
-        # -----------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
                                   #readable = True,
@@ -862,12 +861,116 @@ class S3SiteModel(S3Model):
         add_component("req_commit",
                       org_site=super_key(table))
 
+        self.configure(tablename,
+                       onaccept = self.org_site_onaccept,
+                       )
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(
                     org_site_id = site_id
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_site_onaccept(form):
+        """
+            Create the code from the name
+        """
+
+        s3db = current.s3db
+        db = current.db
+        site_table = s3db.org_site
+        settings = current.deployment_settings
+
+        name = form.vars.name
+        code_len = settings.get_org_site_code_len()
+        temp_code = name[:code_len].upper()
+        query = (site_table.code == temp_code)
+        row = db(query).select(site_table.id,
+                               limitby=(0, 1)).first()
+        if row:
+            code = temp_code
+            temp_code = None
+            wildcard_bit = 1
+            length = len(code)
+            max_wc_bit = pow(2, length)
+            while not temp_code and wildcard_bit < max_wc_bit:
+                wildcard_posn = []
+                for w in range(length):
+                    if wildcard_bit & pow(2, w):
+                        wildcard_posn.append(length - (1 + w))
+                wildcard_bit += 1
+                code_list = S3SiteModel.getCodeList(code, wildcard_posn)
+                temp_code = S3SiteModel.returnUniqueCode(code, wildcard_posn, code_list)
+        if temp_code:
+            db(site_table.site_id == form.vars.site_id).update(code = temp_code)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def getCodeList(code, wildcard_posn=[]):
+        """
+        """
+
+        s3db = current.s3db
+        db = current.db
+        site_table = s3db.org_site
+        temp_code = ""
+
+        # Inject the wildcard charater in the right positions
+        for posn in range(len(code)):
+            if posn in wildcard_posn:
+                temp_code += "%"
+            else:
+                temp_code += code[posn]
+        # Now set up the db call
+        query = site_table.code.like(temp_code)
+        rows = db(query).select(site_table.id,
+                                site_table.code,
+                               )
+        # Extract the rows on the database to provide a list of used codes
+        codeList = []
+        for record in rows:
+            codeList.append(record.code)
+        return codeList
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
+        """
+        """
+
+        # Select the replacement letters with numbers first and then
+        # followed by the letters in least commonly used order
+        replacement_char = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
+        rep_posn = [0] * len(wildcard_posn)
+        finished = False
+        while (not finished):
+            # Find the next code to try
+            temp_code = ""
+            r = 0
+            for posn in range(len(code)):
+                if posn in wildcard_posn:
+                    temp_code += replacement_char[rep_posn[r]]
+                    r += 1
+                else:
+                    temp_code += code[posn]
+            if temp_code not in code_list:
+                return temp_code
+            # set up the next rep_posn
+            p = 0
+            while (p<len(wildcard_posn)):
+                if rep_posn[p] == 35: # the maximum number of replacement characters
+                    rep_posn[p] = 0
+                    p += 1
+                else:
+                    rep_posn[p] = rep_posn[p] + 1
+                    break
+            # if no new permutation of replacement characters has been found
+            if p == len(wildcard_posn):
+                return None
+
 
 # =============================================================================
 class S3FacilityModel(S3Model):
@@ -1498,7 +1601,6 @@ def org_rheader(r, tabs=[]):
         tabs.append((T("Attachments"), "document"))
 
 
-        rheader_tabs = s3_rheader_tabs(r, tabs)
         logo = org_organisation_logo(record.organisation_id)
 
         rData = TABLE(
@@ -1531,6 +1633,8 @@ def org_rheader(r, tabs=[]):
             rheader.append(TABLE(TR(TD(logo),TD(rData))))
         else:
             rheader.append(rData)
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader.append(rheader_tabs)
 
         #if r.component and r.component.name == "req":

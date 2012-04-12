@@ -109,5 +109,14 @@ if __name__ == '__main__':
             # To examine each task function in the debugger, set a breakpoint
             # here, then step into the function.
             task_function(*task_args, **task_vars)  # SET BREAKPOINT HERE
-        except Exception, e:
-            print >> sys.stderr, "Task %s threw:\n%s" % (task_name, str(e))
+        except Exception:
+            print >> sys.stderr, "Task %s threw:\n" % task_name
+            import traceback
+            exc_type, exc_value, exc_trace = sys.exc_info()
+            traceback.print_exception(exc_type, exc_value, exc_trace, file=sys.stderr)
+            try:
+                # Python docs for sys.exc_info() warn that one must clean up the
+                # extracted trace object.
+                del exc_trace
+            except:
+                pass

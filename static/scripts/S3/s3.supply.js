@@ -36,8 +36,8 @@ $(document).ready(function() {
         if ($('[name = "inv_item_id"]').length > 0) {
             id = $('[name = "inv_item_id"]').val()
         }
-        else if  ($('[name = "send_stock_id"]').length > 0) {
-            id = $('[name = "send_stock_id"]').val()
+        else if  ($('[name = "send_inv_item_id"]').length > 0) {
+            id = $('[name = "send_inv_item_id"]').val()
         }
         else if  ($('[name = "item_id"]').length > 0) {
             id = $('[name = "item_id"]').val()

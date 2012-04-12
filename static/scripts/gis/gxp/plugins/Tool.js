@@ -6,6 +6,10 @@
  * of the license.
  */
 
+/**
+ * requires GeoExt/widgets/Action.js
+ */
+
 /** api: (define)
  *  module = gxp.plugins
  *  class = Tool
@@ -236,12 +240,19 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
                 }
                 parts = actionTarget.split(".");
                 ref = parts[0];
+                if (ref) {
+                    if (ref == "map") {
+                        ct = this.target.mapPanel;
+                    } else {
+                        ct = Ext.getCmp(ref) || this.target.portal[ref];
+                        if (!ct) {
+                            throw new Error("Can't find component with id: " + ref);
+                        }
+                    }
+                } else {
+                    ct = this.target.portal;
+                }
                 item = parts.length > 1 && parts[1];
-                ct = ref ?
-                    ref == "map" ?
-                        this.target.mapPanel :
-                        (Ext.getCmp(ref) || this.target.portal[ref]) :
-                    this.target.portal;
                 if (item) {
                     meth = {
                         "tbar": "getTopToolbar",
@@ -316,7 +327,10 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
      *  :arg config: ``Object`` configuration for the ``Ext.Component`` to be
      *      added to the ``outputTarget``. Properties of this configuration
      *      will be overridden by the applications ``outputConfig`` for the
-     *      tool instance.
+     *      tool instance. Tool plugins that want to reuse their output (after
+     *      being closed by a window or crumb panel) can also provide an
+     *      ``Ext.Component`` instance here, if it was previously created with
+     *      ``addOutput``.
      *  :return: ``Ext.Component`` The component added to the ``outputTarget``. 
      *
      *  Adds output to the tool's ``outputTarget``. This method is meant to be
@@ -337,7 +351,9 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
             } else {
                 container = Ext.getCmp(ref) || this.target.portal[ref];
             }
-            Ext.apply(config, this.outputConfig);
+            if (!(config instanceof Ext.Component)) {
+                Ext.apply(config, this.outputConfig);
+            }
         } else {
             var outputConfig = this.outputConfig || {};
             container = new Ext.Window(Ext.apply({
@@ -353,14 +369,24 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
                 }]
             }, outputConfig)).show().items.get(0);
         }
-        var component = container.add(config);            
-        if (component instanceof Ext.Window) {
-            component.show();
+        if (container) {
+            var component = container.add(config);
+            component.on("removed", function(cmp) {
+                this.output.remove(cmp);
+            }, this, {single: true});
+            if (component instanceof Ext.Window) {
+                component.show();
+            } else {
+                container.doLayout();
+            }
+            this.output.push(component);
+            return component;
         } else {
-            container.doLayout();
+            var ptype = this.ptype;
+            if (window.console) {
+                console.error("Failed to create output for plugin with ptype: " + ptype);
+            }
         }
-        this.output.push(component);
-        return component;
     },
     
     /** api: method[removeOutput]

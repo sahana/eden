@@ -9,12 +9,6 @@
 module = request.controller
 resourcename = request.function
 
-# @todo: rewrite this for new framework:
-#if not deployment_settings.get_security_map() or s3_has_role(MAP_ADMIN):
-#   response.menu_options.append([T("Service Catalogue"), False, URL(f="map_service_catalogue")])
-#   # Not yet ready for Production
-#   response.menu_options.append([T("De-duplicator"), False, URL(f="location_duplicates")])
-
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -25,13 +19,10 @@ def index():
     response.title = module_name
 
     # Include an embedded Map on the index page
-
-    # Icon toolbar?
-    toolbar = True
-
     map = define_map(window=False,
-                     toolbar=toolbar,
-                     maximizable=True)
+                     toolbar=True,
+                     closable=False,
+                     maximizable=False)
 
     return dict(map=map)
 
@@ -64,8 +55,8 @@ def define_map(window=False, toolbar=False, closable=True, maximizable=True, con
     # @ToDo: Make these configurable
     search = True
     legend = True
-    googleEarth = True
-    googleStreetview = True
+    #googleEarth = True
+    #googleStreetview = True
     catalogue_layers = True
 
     if config.wmsbrowser_url:
@@ -113,7 +104,7 @@ def location():
             label = T("Search"),
             #comment = T("Search for a Location by name, including local names."),  # How? These aren't fields in this table or in a table that we link to.
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = [ "name" ]
+            field = ["name"]
             )
         ),
         advanced = (s3base.S3SearchSimpleWidget(
@@ -121,7 +112,7 @@ def location():
             label = T("Search"),
             #comment = T("Search for a Location by name, including local names."),
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = [ "name"]
+            field = ["name"]
             ),
             s3base.S3SearchOptionsWidget(
                 name = "location_search_level",
@@ -996,7 +987,7 @@ def layer_config():
     else:
         # Cannot import without a specific layer type
         csv_stylesheet = None
-        
+
     output = s3_rest_controller(csv_stylesheet = csv_stylesheet)
     return output
 
@@ -2338,9 +2329,11 @@ def display_feature():
         lon = lon,
         #zoom = zoom,
         bbox = bounds,
-        window = True,
+        window = False,
         closable = False,
-        collapsed = True
+        collapsed = True,
+        width=640,
+        height=480,
     )
 
     return dict(map=map)

@@ -214,7 +214,7 @@ $(document).ready(function() {
     } );
     now = new Date();
     $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
-	
+
 	// Social Media 'share' buttons
     if ($('#socialmedia_share').length > 0) {
         // DIV exists (deployment_setting on)
@@ -509,6 +509,23 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
     $('#map').html(iframe);
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
 }
+function s3_showMap(feature_id) {
+    // Display a Feature on a BaseMap within an iframe
+    var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
+	new Ext.Window({
+		autoWidth: true,
+		floating: true,
+		items: [{
+			xtype: 'component',
+			autoEl: {
+				tag: 'iframe',
+				width: 650,
+				height: 490,
+				src: url
+			}
+		}]
+	}).show();
+}
 
 // ============================================================================
 /**
@@ -651,7 +668,7 @@ function S3FilterFieldChange (setting) {
 	                for (var i = 0; i < data.length; i++) {
 	                	if (i == 0) {first_value = data[i][FieldID]};
 	                    options += '<option value="' +  data[i][FieldID] + '">';
-	                    options += this.fncRepresent( data[i], this.PrepResult);
+	                    options += this.fncRepresent( data[i], PrepResult);
 	                    options += '</option>';
 	                }
 	            }

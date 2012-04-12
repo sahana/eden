@@ -9,6 +9,12 @@
 /**
  * @requires plugins/ClickableFeatures.js
  * @requires widgets/FeatureEditPopup.js
+ * @requires util.js
+ * requires OpenLayers/Control/DrawFeature.js
+ * requires OpenLayers/Handler/Point.js
+ * requires OpenLayers/Handler/Path.js
+ * requires OpenLayers/Handler/Polygon.js
+ * requires OpenLayers/Control/SelectFeature.js
  */
 
 /** api: (define)
@@ -37,6 +43,12 @@ gxp.plugins.FeatureEditor = Ext.extend(gxp.plugins.ClickableFeatures, {
      *  iconCls to use for the add button.
      */
     iconClsAdd: "gxp-icon-addfeature",
+
+    /** api: config[closeOnSave]
+     * ``Boolean``
+     * If true, close the popup after saving. Defaults to false.
+     */
+    closeOnSave: false,
 
     /** api: config[supportAbstractGeometry]
      *  Should we support layers that advertize an abstract geometry type?
@@ -340,7 +352,7 @@ gxp.plugins.FeatureEditor = Ext.extend(gxp.plugins.ClickableFeatures, {
                 if (feature) {
                     this.fireEvent("featureeditable", this, feature, false);
                 }
-                if (popup && !popup.hidden) {
+                if (feature && feature.geometry && popup && !popup.hidden) {
                     popup.close();
                 }
             },
@@ -404,8 +416,13 @@ gxp.plugins.FeatureEditor = Ext.extend(gxp.plugins.ClickableFeatures, {
                                 featureStore.on({
                                     write: {
                                         fn: function() {
-                                            if (popup && popup.isVisible()) {
-                                                popup.enable();
+                                            if (popup) {
+                                                if (popup.isVisible()) {
+                                                    popup.enable();
+                                                }
+                                                if (this.closeOnSave) {
+                                                    popup.close();
+                                                }
                                             }
                                             var layer = featureManager.layerRecord;
                                             this.target.fireEvent("featureedit", featureManager, {

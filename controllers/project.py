@@ -287,10 +287,10 @@ def activity():
 
         return True
     response.s3.prep = prep
-    
+
     # Pre-process
     def postp(r, output):
-        if r.representation == "plain": 
+        if r.representation == "plain":
             # Add VirtualFields to Map Popup
             # Can't inject into SQLFORM, so need to simply replace
             item = TABLE()
@@ -307,7 +307,7 @@ def activity():
             output["item"] = item
         return output
     response.s3.postp = postp
-    
+
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact")]
     if drr:
@@ -531,7 +531,7 @@ def task():
                         output["form"][0].insert(0, project[0])
                     except:
                         pass
-                    
+
         return output
     response.s3.postp = postp
 

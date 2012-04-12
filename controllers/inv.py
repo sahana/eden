@@ -102,7 +102,7 @@ def warehouse():
 
     # CRUD pre-process
     def prep(r):
-        if r.interactive and r.tablename == "org_office":
+        if r.tablename == "org_office": # and r.interactive:
 
             if r.method != "read":
                 # Don't want to see in Create forms
@@ -179,6 +179,13 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % csv_template
 
 
+    # remove CRUD generated buttons in the tabs
+    s3mgr.configure("inv_inv_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
 
 
     output = s3_rest_controller(module, resourcename,
@@ -190,6 +197,8 @@ def warehouse():
                                     dict(label="Organisation",
                                          field=s3db.org_organisation_id(comment=None))
                                 ])
+    if "add_btn" in output:
+        del output["add_btn"]
     return output
 
 # =============================================================================
@@ -208,7 +217,9 @@ def req_match():
 # =============================================================================
 def inv_item():
     """ REST Controller """
+
     table = s3db.inv_inv_item
+    s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
 
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -251,10 +262,19 @@ def inv_item():
             resource.skip_import = True
     s3mgr.import_prep = import_prep
 
+
     # Limit site_id to sites the user has permissions for
     auth.permission.permitted_facilities(table=table,
                                          error_msg=T("You do not have permission for any site to add an inventory item."))
 
+    if len(request.args) > 1 and request.args[1] == "track_item":
+        # remove CRUD generated buttons in the tabs
+        s3mgr.configure("inv_track_item",
+                        create=False,
+                        listadd=False,
+                        editable=False,
+                        deletable=False,
+                       )
 
     # remove CRUD generated buttons in the tabs
     s3mgr.configure("inv_inv_item",
@@ -277,6 +297,38 @@ def inv_item():
     if "add_btn" in output:
         del output["add_btn"]
     return output
+
+# -----------------------------------------------------------------------------
+def track_movement():
+    """ REST Controller """
+    table = s3db.inv_track_item
+
+    def prep(r):
+        if r.interactive:
+            if "viewing" in request.vars:
+                dummy, item_id = request.vars.viewing.split(".")
+                filter = (table.item_id == item_id ) | \
+                         (table.send_inv_item_id == item_id)
+                response.s3.filter = filter
+        return True
+
+    s3mgr.configure("inv_track_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
+
+    response.s3.prep = prep
+    rheader = response.s3.inv_warehouse_rheader
+    output =  s3_rest_controller("inv",
+                                 "track_item",
+                                 rheader=rheader,
+                                )
+    if "add_btn" in output:
+        del output["add_btn"]
+    return output
+
 # -----------------------------------------------------------------------------
 def inv_item_quantity():
     """
@@ -333,9 +385,9 @@ def send():
 
     # Set Validator for checking against the number of items in the warehouse
     vars = request.vars
-    if (vars.send_stock_id):
+    if (vars.send_inv_item_id):
         s3db.inv_track_item.quantity.requires = QUANTITY_INV_ITEM(db,
-                                                                 vars.send_stock_id,
+                                                                 vars.send_inv_item_id,
                                                                  vars.item_pack_id)
 
     def prep(r):
@@ -354,7 +406,7 @@ def send():
                 # Restrict to items from this warehouse only
                 tracktable = s3db.inv_track_item
                 comp_rec = tracktable[r.component_id]
-                tracktable.send_stock_id.requires = IS_ONE_OF(db,
+                tracktable.send_inv_item_id.requires = IS_ONE_OF(db,
                                                          "inv_inv_item.id",
                                                          s3db.inv_item_represent,
                                                          orderby="inv_inv_item.id",
@@ -372,8 +424,14 @@ def send():
                 tracktable.item_source_no.writable = False
                 tracktable.expiry_date.readable = False
                 tracktable.expiry_date.writable = False
+                tracktable.pack_value.readable = False
+                tracktable.pack_value.writable = False
+                tracktable.currency.readable = False
+                tracktable.currency.writable = False
                 tracktable.bin.readable = False
                 tracktable.bin.writable = False
+                tracktable.owner_org_id.readable = False
+                tracktable.owner_org_id.writable = False
                 tracktable.supply_org_id.readable = False
                 tracktable.supply_org_id.writable = False
                 # Hide the link to the receive and adjustment records
@@ -651,12 +709,13 @@ def recv():
                 tracktable.item_source_no.readable = True
                 tracktable.item_source_no.writable = False
                 tracktable.item_id.writable = False
-                tracktable.send_stock_id.writable = False
+                tracktable.send_inv_item_id.writable = False
                 tracktable.item_pack_id.writable = False
                 tracktable.quantity.writable = False
                 tracktable.currency.writable = False
                 tracktable.pack_value.writable = False
                 tracktable.expiry_date.writable = False
+                tracktable.owner_org_id.writable = False
                 tracktable.supply_org_id.writable = False
                 tracktable.recv_quantity.readable = True
                 tracktable.recv_quantity.writable = True
@@ -665,8 +724,8 @@ def recv():
             else:
                 tracktable = s3db.inv_track_item
                 # Hide the values that will be copied from the inv_inv_item record
-                tracktable.send_stock_id.readable = False
-                tracktable.send_stock_id.writable = False
+                tracktable.send_inv_item_id.readable = False
+                tracktable.send_inv_item_id.writable = False
                 # Display the values that can only be entered on create
                 tracktable.item_source_no.readable = True
                 tracktable.item_source_no.writable = True
@@ -856,6 +915,10 @@ def recv_process():
     # the onaccept will then move the values into the site update any request
     # record, create any adjustment if needed and change the status to Arrived
     db(tracktable.recv_id == recv_id).update(status = 3)
+    # Move each item to the site
+    track_rows = db(tracktable.recv_id == recv_id).select(tracktable.id)
+    for track_item in track_rows:
+        s3.inv_track_item_onaccept( Storage(vars=Storage(track_item) ) )
 
     # Go to the Inventory of the Site which has received these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
@@ -885,7 +948,7 @@ def recv_cancel():
     rtable = s3db.inv_recv
     stable = s3db.inv_send
     tracktable = s3db.inv_track_item
-    stocktable = s3db.inv_inv_item
+    inv_item_table = s3db.inv_inv_item
     ritable = s3db.req_req_item
     if not auth.s3_has_permission("delete",
                                   rtable,
@@ -910,9 +973,9 @@ def recv_cancel():
     recv_items = db(query).select()
     send_id = None
     for recv_item in recv_items:
-        stock_id = recv_item.recv_stock_id
+        inv_item_id = recv_item.recv_inv_item_id
         # This assumes that the inv_item has the quantity
-        db(stocktable.id == stock_id).update(quantity = stocktable.quantity - recv_item.quantity)
+        db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity - recv_item.quantity)
         db(tracktable.recv_id == recv_id).update(status = 2) # In transit
         # @todo potential problem in that the send id should be the same for all track items but is not explicitly checked
         if send_id == None and recv_item.send_id != None:
@@ -941,17 +1004,7 @@ def recv_cancel():
                  f = "recv",
                  args = [recv_id]))
 
-
-
-
-
 # -----------------------------------------------------------------------------
-
-
-
-
-
-
 def recv_sent():
     """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
         @ToDo: Consider making obsolete
@@ -974,22 +1027,22 @@ def recv_sent():
 # =============================================================================
 def track_item():
     """ RESTful CRUD controller """
+    s3mgr.configure("inv_track_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
+
     output = s3_rest_controller("inv",
                                 "track_item",
                                 rheader=response.s3.inv_warehouse_rheader,
                                )
     return output
-# =============================================================================
 
+# =============================================================================
 def adj():
     """ RESTful CRUD controller """
-    s3mgr.load("inv_adj")
-    s3db = current.s3db
-    db = current.db
-    auth = current.auth
-    request = current.request
-    response = current.response
-    s3 = response.s3
 
     tablename = "inv_adj"
     table = s3db.inv_adj
@@ -1018,9 +1071,18 @@ def adj():
                     table.adjuster_id.writable = False
                     table.site_id.writable = False
                     table.comments.writable = False
+                else:
+                    if "site" in request.vars:
+                        table.site_id.writable = True
+                        table.site_id.default = request.vars.site
         return True
-
     response.s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            s3_action_buttons(r, deletable=False)
+        return output
+    response.s3.postp = postp
 
     if len(request.args) > 1 and request.args[1] == "adj_item" and table[request.args[0]].status:
         # remove CRUD generated buttons in the tabs
@@ -1037,18 +1099,13 @@ def adj():
                                )
     return output
 
+# -----------------------------------------------------------------------------
 def adj_close():
     """ RESTful CRUD controller """
-    s3mgr.load("inv_adj")
-    s3db = current.s3db
-    db = current.db
-    auth = current.auth
-    request = current.request
-    response = current.response
-    s3 = response.s3
+
     atable = s3db.inv_adj
     aitable = s3db.inv_adj_item
-    stocktable = s3db.inv_inv_item
+    inv_item_table = s3db.inv_inv_item
     otable = s3db.org_office
 
     # Limit site_id to sites the user has permissions for
@@ -1073,7 +1130,7 @@ def adj_close():
     for adj_item in adj_items:
         # if we don't have a stock item then create it
         if adj_item.inv_item_id == None:
-            stock_id = stocktable.insert(site_id = adj_rec.site_id,
+            inv_item_id = inv_item_table.insert(site_id = adj_rec.site_id,
                                          item_id = adj_item.item_id,
                                          item_pack_id = adj_item.item_pack_id,
                                          currency = adj_item.currency,
@@ -1083,10 +1140,10 @@ def adj_close():
                                          quantity = adj_item.new_quantity,
                                         )
             # and add the inventory item id to the adjustment record
-            db(aitable.id == adj_item.id).update(inv_item_id = stock_id)
+            db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
         # otherwise copy the details to the stock item
         else:
-            db(stocktable.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
+            db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
                                                              bin = adj_item.bin,
                                                              pack_value = adj_item.pack_value,
                                                              expiry_date = adj_item.expiry_date,

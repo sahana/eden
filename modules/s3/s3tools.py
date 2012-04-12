@@ -309,15 +309,19 @@ class S3BulkImporter(object):
         self.importTasks = []
         self.specialTasks = []
         self.tasks = []
-        self.alternateTables = {"hrm_person":  {"tablename":"hrm_human_resource",
-                                                "loader":response.s3.hrm_person_loader,
-                                                "prefix":"pr",
-                                                "name":"person"},
-                                "inv_warehouse":  {"tablename":"org_office",
-                                                   "prefix":"org",
-                                                   "name":"office"},
-                                "req_req":     {"loader":response.s3.req_loader},
-                                "req_req_item":{"loader":response.s3.req_item_loader},
+        # loaders aren't defined currently
+        self.alternateTables = {"hrm_person": {"tablename":"hrm_human_resource",
+                                               #"loader":response.s3.hrm_person_loader,
+                                               "prefix":"pr",
+                                               "name":"person"},
+                                "inv_warehouse": {"tablename":"org_office",
+                                                  "prefix":"org",
+                                                  "name":"office"},
+                                "member_person": {"tablename":"member_membership",
+                                                  "prefix":"pr",
+                                                  "name":"person"},
+                                #"req_req":     {"loader":response.s3.req_loader},
+                                #"req_req_item":{"loader":response.s3.req_item_loader},
                                }
         self.errorList = []
         self.resultList = []

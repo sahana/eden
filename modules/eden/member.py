@@ -106,12 +106,13 @@ class S3MembersModel(S3Model):
                                   Field("membership_paid", "list:integer",
                                         label = T("Membership Paid"),
                                         # @ToDo: IS_NULL_OR()
+                                        # https://groups.google.com/d/topic/web2py/qLo16MRi0UY/discussion
                                         requires = IS_LIST_OF(IS_IN_SET(year_opts)),
                                         ),
                                   # Location (from pr_address component)
                                   location_id(readable=False,
                                               writable=False),
-                                  *s3.meta_fields())
+                                   *(s3.lx_fields() + s3.meta_fields()))
 
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Member"),
@@ -131,17 +132,113 @@ class S3MembersModel(S3Model):
             msg_list_empty = T("No members currently registered"))
 
         self.configure(tablename,
+                       deduplicate = self.member_deduplicate,
+                       onaccept = self.member_onaccept,
                        list_fields=[
                                 "person_id",
                                 "type",
                                 "start_date",
                                 "end_date",
+                                "membership_paid",
                                 #@ToDo: virtual field to show if they are paid-up or not? (or rely on report?)
                             ])
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage()
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def member_onaccept(form):
+        """ On-accept for Member records """
+
+        db = current.db
+        s3db = current.s3db
+
+        utable = current.auth.settings.table_user
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        mtable = s3db.member_membership
+
+        # Get the full record
+        id = form.vars.id
+        if id:
+            query = (mtable.id == id)
+            record = db(query).select(mtable.id,
+                                      mtable.person_id,
+                                      mtable.organisation_id,
+                                      mtable.deleted,
+                                      limitby=(0, 1)).first()
+        else:
+            return
+
+        data = Storage()
+
+        # Affiliation
+        s3db.pr_update_affiliations(mtable, record)
+
+        # Update the location ID from the Home Address
+        atable = s3db.pr_address
+        query = (atable.pe_id == ptable.pe_id) & \
+                (ptable.id == record.person_id) & \
+                (atable.type == 1) & \
+                (atable.deleted == False)
+        address = db(query).select(atable.location_id,
+                                   limitby=(0, 1)).first()
+        if address:
+            data.location_id = address.location_id
+
+        # Add record owner (user)
+        query = (ptable.id == record.person_id) & \
+                (ltable.pe_id == ptable.pe_id) & \
+                (utable.id == ltable.user_id)
+        user = db(query).select(utable.id,
+                                utable.organisation_id,
+                                utable.site_id,
+                                limitby=(0, 1)).first()
+        if user:
+            user_id = user.id
+            data.owned_by_user = user.id
+
+        if not data:
+            return
+        record.update_record(**data)
+
+        if data.location_id:
+            # Populate the Lx fields
+            current.response.s3.lx_update(mtable, record.id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def member_deduplicate(item):
+        """
+            Member record duplicate detection, used for the deduplicate hook
+
+            @param item: the S3ImportItem to check
+        """
+
+        if item.tablename == "member_membership":
+
+            db = current.db
+            s3db = current.s3db
+
+            mtable = s3db.member_membership
+
+            data = item.data
+
+            person_id = data.person_id
+            organisation_id = data.organisation_id
+
+            # 1 Membership record per Person<>Organisation
+            query = (mtable.deleted != True) & \
+                    (mtable.person_id == person_id) & \
+                    (mtable.organisation_id == organisation_id)
+            row = db(query).select(mtable.id,
+                                   limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
+
 
 # =============================================================================
 def member_rheader(r, tabs=[]):

@@ -40,24 +40,32 @@ __all__ = ["S3PersonEntity",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
+            # Representation Methods
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
-           "pr_contacts",
            "pr_rheader",
+            # Custom Resource Methods
+           "pr_contacts",
+           "pr_profile",
+            # Hierarchy Manipulation
            "pr_update_affiliations",
            "pr_add_affiliation",
            "pr_remove_affiliation",
+            # PE Helpers
            "pr_get_pe_id",
+            # Back-end Role Tools
            "pr_define_role",
            "pr_delete_role",
            "pr_add_to_role",
            "pr_remove_from_role",
+            # Hierarchy Lookup
            "pr_get_role_paths",
            "pr_get_role_branches",
            "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
+            # Internal Path Tools
            "pr_rebuild_path",
            "pr_role_rebuild_path"]
 
@@ -68,6 +76,7 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 from ..s3 import *
+from layouts import *
 
 OU = 1 # role type which indicates hierarchy, see role_types
 OTHER_ROLE = 9
@@ -106,10 +115,19 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
+        #if current.deployment_settings.get_ui_camp():
+        #    shelter = T("Camp")
+        #else:
+        #    shelter = T("Shelter")
         pe_types = Storage(pr_person = T("Person"),
                            pr_group = T("Group"),
                            org_organisation = T("Organization"),
                            org_office = T("Office"),
+                           # If we want these, then pe_id needs adding to their
+                           # tables & configuring as a super-entity
+                           #cr_shelter = shelter,
+                           #fire_station = T("Fire Station"),
+                           #hms_hospital = T("Hospital"),
                            dvi_body = T("Body"))
 
         tablename = "pr_pentity"
@@ -1409,6 +1427,7 @@ class S3PersonAddressModel(S3Model):
         db = current.db
         s3db = current.s3db
         request = current.request
+        settings = current.deployment_settings
         lx_update = current.response.s3.lx_update
 
         vars = form.vars
@@ -1439,16 +1458,27 @@ class S3PersonAddressModel(S3Model):
                     lx_update(table, person.id)
 
             if person and str(vars.type) == "1": # Home Address
-                # Also check for any Volunteer HRM record(s)
-                htable = s3db.hrm_human_resource
-                query = (htable.person_id == person.id) & \
-                        (htable.type == 2) & \
-                        (htable.deleted != True)
-                hrs = db(query).select(htable.id)
-                for hr in hrs:
-                    db(htable.id == hr.id).update(location_id=location_id)
-                    # Update the Lx fields
-                    lx_update(htable, hr.id)
+                if settings.has_module("hrm"):
+                    # Also check for any Volunteer HRM record(s)
+                    htable = s3db.hrm_human_resource
+                    query = (htable.person_id == person.id) & \
+                            (htable.type == 2) & \
+                            (htable.deleted != True)
+                    hrs = db(query).select(htable.id)
+                    for hr in hrs:
+                        db(htable.id == hr.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        lx_update(htable, hr.id)
+                if settings.has_module("member"):
+                    # Also check for any Member record(s)
+                    mtable = s3db.member_membership
+                    query = (mtable.person_id == person.id) & \
+                            (mtable.deleted != True)
+                    members = db(query).select(mtable.id)
+                    for member in members:
+                        db(mtable.id == member.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
@@ -2554,8 +2584,8 @@ class S3PersonDescription(S3Model):
         return
 
 # =============================================================================
-# =============================================================================
 # Representation Methods
+# =============================================================================
 #
 def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
@@ -2657,12 +2687,93 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
         comment = T("Type the first few characters of one of the Person's names.")
     if child is None:
         child = "person_id"
-    return s3_popup_comment(c="pr", f="person",
-                            vars=dict(caller=caller, child=child),
-                            title=current.messages.ADD_PERSON,
-                            tooltip="%s|%s" % (title, comment))
+    return S3AddResourceLink(c="pr", f="person",
+                             vars=dict(caller=caller, child=child),
+                             title=current.messages.ADD_PERSON,
+                             tooltip="%s|%s" % (title, comment))
 
 # =============================================================================
+def pr_rheader(r, tabs=[]):
+    """
+        Person Registry resource headers
+        - used in PR, HRM, DVI, MPR, MSG, VOL
+    """
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+    gis = current.gis
+    s3 = current.response.s3
+
+    tablename, record = s3_rheader_resource(r)
+
+    if r.representation == "html":
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        if tablename == "pr_person":
+            person = record
+            if person:
+                s3 = current.response.s3
+                ptable = r.table
+                itable = s3db.pr_image
+                query = (itable.pe_id == record.pe_id) & \
+                        (itable.profile == True)
+                image = db(query).select(itable.image,
+                                         limitby=(0, 1)).first()
+                if image:
+                    image = TD(itable.image.represent(image.image),
+                               _rowspan=3)
+                else:
+                    image = ""
+                rheader = DIV(TABLE(
+                    TR(TH("%s: " % T("Name")),
+                       s3_fullname(person),
+                       TH("%s: " % T("ID Tag Number")),
+                       "%(pe_label)s" % person,
+                       image),
+                    TR(TH("%s: " % T("Date of Birth")),
+                       "%s" % (person.date_of_birth or T("unknown")),
+                       TH("%s: " % T("Gender")),
+                       "%s" % s3.pr_gender_opts.get(person.gender, T("unknown"))),
+
+                    TR(TH("%s: " % T("Nationality")),
+                       "%s" % (gis.get_country(person.nationality, key_type="code") or T("unknown")),
+                       TH("%s: " % T("Age Group")),
+                       "%s" % s3.pr_age_group_opts.get(person.age_group, T("unknown"))),
+
+                    ), rheader_tabs)
+                return rheader
+
+        elif tablename == "pr_group":
+            group = record
+            if group:
+                table = s3db.pr_group_membership
+                query = (table.group_id == record.id) & \
+                        (table.group_head == True)
+                leader = db(query).select(table.person_id,
+                                          limitby=(0, 1)).first()
+                if leader:
+                    leader = s3_fullname(leader.person_id)
+                else:
+                    leader = ""
+                rheader = DIV(TABLE(
+                                TR(TH("%s: " % T("Name")),
+                                   group.name,
+                                   TH("%s: " % T("Leader")) if leader else "",
+                                   leader),
+                                TR(TH("%s: " % T("Description")),
+                                   group.description or "",
+                                   TH(""),
+                                   "")
+                                ), rheader_tabs)
+                return rheader
+
+    return None
+
+# =============================================================================
+# Custom Resource Methods
+# =============================================================================
+#
 def pr_contacts(r, **attr):
     """
         Custom Method to provide the details for the Person's Contacts Tab:
@@ -2816,6 +2927,7 @@ def pr_contacts(r, **attr):
 def pr_profile(r, **attr):
     """
         Custom Method to provide the auth_user profile as a Tab of the Person
+        @ToDo: Complete this (currently unfinished)
     """
 
     if r.http != "GET":
@@ -2832,6 +2944,8 @@ def pr_profile(r, **attr):
     query = (ltable.pe_id == person.pe_id)
     profile = db(query).select(limitby=(0, 1)).first()
 
+    form = current.auth()
+
     # Custom View
     response.view = "pr/profile.html"
 
@@ -2845,89 +2959,16 @@ def pr_profile(r, **attr):
         )
 
 # =============================================================================
-def pr_rheader(r, tabs=[]):
-    """
-        Person Registry resource headers
-        - used in PR, HRM, DVI, MPR, MSG, VOL
-    """
-
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-    gis = current.gis
-    s3 = current.response.s3
-
-    tablename, record = s3_rheader_resource(r)
-
-    if r.representation == "html":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-
-        if tablename == "pr_person":
-            person = record
-            if person:
-                s3 = current.response.s3
-                ptable = r.table
-                itable = s3db.pr_image
-                query = (itable.pe_id == record.pe_id) & \
-                        (itable.profile == True)
-                image = db(query).select(itable.image,
-                                         limitby=(0, 1)).first()
-                if image:
-                    image = TD(itable.image.represent(image.image),
-                               _rowspan=3)
-                else:
-                    image = ""
-                rheader = DIV(TABLE(
-                    TR(TH("%s: " % T("Name")),
-                       s3_fullname(person),
-                       TH("%s: " % T("ID Tag Number")),
-                       "%(pe_label)s" % person,
-                       image),
-                    TR(TH("%s: " % T("Date of Birth")),
-                       "%s" % (person.date_of_birth or T("unknown")),
-                       TH("%s: " % T("Gender")),
-                       "%s" % s3.pr_gender_opts.get(person.gender, T("unknown"))),
-
-                    TR(TH("%s: " % T("Nationality")),
-                       "%s" % (gis.get_country(person.nationality, key_type="code") or T("unknown")),
-                       TH("%s: " % T("Age Group")),
-                       "%s" % s3.pr_age_group_opts.get(person.age_group, T("unknown"))),
-
-                    ), rheader_tabs)
-                return rheader
-
-        elif tablename == "pr_group":
-            group = record
-            if group:
-                table = s3db.pr_group_membership
-                query = (table.group_id == record.id) & \
-                        (table.group_head == True)
-                leader = db(query).select(table.person_id,
-                                          limitby=(0, 1)).first()
-                if leader:
-                    leader = s3_fullname(leader.person_id)
-                else:
-                    leader = ""
-                rheader = DIV(TABLE(
-                                TR(TH("%s: " % T("Name")),
-                                   group.name,
-                                   TH("%s: " % T("Leader")) if leader else "",
-                                   leader),
-                                TR(TH("%s: " % T("Description")),
-                                   group.description or "",
-                                   TH(""),
-                                   "")
-                                ), rheader_tabs)
-                return rheader
-
-    return None
-
-# =============================================================================
-# Affiliation Callbacks
+# Hierarchy Manipulation
 # =============================================================================
 #
 def pr_update_affiliations(table, record):
-    """ Update all affiliations related to this record """
+    """
+        Update OU affiliations related to this record
+
+        @param table: the table
+        @param record: the record
+    """
 
     if hasattr(table, "_tablename"):
         rtype = table._tablename
@@ -2963,6 +3004,7 @@ def pr_update_affiliations(table, record):
                 update(person_id)
 
     elif rtype == "pr_group_membership":
+
         mtable = s3db.pr_group_membership
         if not isinstance(record, Row):
             record = db(mtable.id == record).select(mtable.ALL,
@@ -2972,6 +3014,7 @@ def pr_update_affiliations(table, record):
         pr_group_update_affiliations(record)
 
     elif rtype == "org_organisation_branch":
+
         ltable = s3db.org_organisation_branch
         if not isinstance(record, Row):
             record = db(ltable.id == record).select(ltable.ALL,
@@ -2981,12 +3024,18 @@ def pr_update_affiliations(table, record):
         pr_organisation_update_affiliations(record)
 
     elif rtype == "org_site":
+
         pr_site_update_affiliations(record)
 
     return
 
 # =============================================================================
 def pr_organisation_update_affiliations(record):
+    """
+        Update affiliations for a branch organisation
+
+        @param record: the org_organisation_branch record
+    """
 
     db = current.db
     s3db = current.s3db
@@ -3052,7 +3101,7 @@ def pr_group_update_affiliations(record):
         Update affiliations for group memberships, currently this makes
         all members of a group organisational units of the group.
 
-        @param record: the membership record
+        @param record: the pr_membership record
     """
 
     db = current.db
@@ -3118,7 +3167,7 @@ def pr_site_update_affiliations(record):
     """
         Update the affiliations of an org_site instance
 
-        @param record: the instance record
+        @param record: the org_site instance record
     """
 
     db = current.db
@@ -3271,9 +3320,6 @@ def pr_human_resource_update_affiliations(person_id):
     return
 
 # =============================================================================
-# Affiliation Helpers
-# =============================================================================
-#
 def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     """
         Add a new affiliation record
@@ -3409,7 +3455,7 @@ def pr_get_pe_id(entity, record_id=None):
     return None
 
 # =============================================================================
-# Back-end Role tools
+# Back-end Role Tools
 # =============================================================================
 #
 def pr_define_role(pe_id,
@@ -3425,6 +3471,8 @@ def pr_define_role(pe_id,
         @param role_type: the role type (from pr_role_types), default 9
         @param entity_type: limit selection in CRUD forms to this entity type
         @param sub_type: limit selection in CRUD forms to this entity sub-type
+
+        @returns: the role ID
     """
 
     db = current.db
@@ -3531,17 +3579,21 @@ def pr_remove_from_role(role_id, pe_id):
     return
 
 # =============================================================================
-# Back-end Path Tools
+# Hierarchy Lookup
 # =============================================================================
 #
 def pr_get_role_paths(pe_id, roles=None, role_types=None):
     """
-        Get the ancestor paths of the ancester OU's this person entity
-        is affiliated with, sorted by roles
+        Get the ancestor paths of the ancestor OUs this person entity
+        is affiliated with, sorted by roles.
+
+        Used by gis.set_config()
 
         @param pe_id: the person entity ID
         @param roles: list of roles to limit the search
         @param role_types: list of role types to limit the search
+
+        @returns: a Storage() of S3MultiPaths with the role names as keys
 
         @note: role_types is ignored if roles gets specified
     """
@@ -3556,17 +3608,20 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
             (atable.role_id == rtable.id) & \
             (atable.pe_id == pe_id) & \
             (rtable.deleted != True)
+
     if roles is not None:
+        # Limit the lookup to these roles
         if not isinstance(roles, (list, tuple)):
             roles = [roles]
         query &= (rtable.role.belongs(roles))
     elif role_types is not None:
+        # Limit the lookup to these types of roles
         if not isinstance(role_types, (list, tuple)):
             role_types = [role_types]
         query &= (rtable.role_type.belongs(role_types))
-    rows = db(query).select(rtable.role,
-                            rtable.path,
-                            rtable.pe_id)
+
+    rows = db(query).select(rtable.role, rtable.path, rtable.pe_id)
+
     role_paths = Storage()
     for role in rows:
         name = role.role
@@ -3578,13 +3633,26 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
         path = pr_get_path(role.pe_id)
         multipath.extend(role.pe_id, path, cut=pe_id)
         role_paths[name] = multipath.clean()
+
     return role_paths
 
 # =============================================================================
-def pr_get_role_branches(pe_id, roles=None, role_types=None, entity_type=None):
+def pr_get_role_branches(pe_id,
+                         roles=None,
+                         role_types=None,
+                         entity_type=None):
     """
         Get all descendants of the immediate ancestors of the entity
         within these roles/role types
+
+        @param pe_id: the person entity ID
+        @param roles: list of roles to limit the search
+        @param role_types: list of role types to limit the search
+        @param entity_type: limit the result to this entity type
+
+        @returns: a list of PE-IDs
+
+        @note: role_types is ignored if roles gets specified
     """
 
     db = current.db
@@ -3594,28 +3662,40 @@ def pr_get_role_branches(pe_id, roles=None, role_types=None, entity_type=None):
     atable = s3db.pr_affiliation
     etable = s3db.pr_pentity
 
-    rn = rtable._tablename
-    en = etable._tablename
-
     query = (atable.deleted != True) & \
             (atable.pe_id == pe_id) & \
             (atable.role_id == rtable.id) & \
             (rtable.pe_id == etable.pe_id)
 
     if roles is not None:
+        # Limit the search to these roles
         if not isinstance(roles, (list, tuple)):
             roles = [roles]
         query &= (rtable.role.belongs(roles))
+
     elif role_types is not None:
+        # Limit the search to these types of roles
         if not isinstance(role_types, (list, tuple)):
             role_types = [role_types]
         query &= (rtable.role_type.belongs(role_types))
+
     rows = db(query).select(rtable.pe_id, etable.instance_type)
 
-    nodes = [r[rn].pe_id for r in rows]
-    result = [r[rn].pe_id for r in rows if entity_type is None or r[en].instance_type == entity_type]
+    # Table names to retrieve the data from the rows
+    rtn = rtable._tablename
+    etn = etable._tablename
+
+    # Get the immediate ancestors
+    nodes = [r[rtn].pe_id for r in rows]
+
+    # Filter the result by entity type
+    result = [r[rtn].pe_id for r in rows
+              if entity_type is None or r[etn].instance_type == entity_type]
+
+    # Get the branches
     branches = pr_get_descendants(nodes, entity_type=entity_type)
-    return result+branches
+
+    return result + branches
 
 # =============================================================================
 def pr_get_path(pe_id):
@@ -3623,6 +3703,8 @@ def pr_get_path(pe_id):
         Get all ancestor paths of a person entity
 
         @param pe_id: the person entity ID
+
+        @returns: an S3MultiPath instance
     """
 
     db = current.db
@@ -3658,8 +3740,11 @@ def pr_get_ancestors(pe_id):
         paths).
 
         @param pe_id: the person entity ID
+        @param roles: list of roles to limit the search
 
-        @todo: be able to filter by type and subtype
+        @returns: a list of PE-IDs
+
+        @todo: be able to filter by entity_type and subtype
     """
 
     db = current.db
@@ -3673,7 +3758,9 @@ def pr_get_ancestors(pe_id):
             (atable.pe_id == pe_id) & \
             (rtable.deleted != True) & \
             (rtable.role_type == OU)
+
     roles = db(query).select(rtable.ALL)
+
     paths = []
     append = paths.append
     for role in roles:
@@ -3685,6 +3772,7 @@ def pr_get_ancestors(pe_id):
         path.extend(role.pe_id, ppath, cut=pe_id)
         append(path)
     ancestors = S3MultiPath.all_nodes(paths)
+
     return ancestors
 
 # =============================================================================
@@ -3696,7 +3784,7 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
         @param pe_ids: person entity ID or list of IDs
         @param skip: list of person entity IDs to skip during descending
 
-        @todo: be able to filter by type and subtype
+        @returns: a list of PE-IDs
     """
 
     db = current.db
@@ -3776,7 +3864,7 @@ def pr_rebuild_path(pe_id, clear=False):
 # =============================================================================
 def pr_role_rebuild_path(role_id, skip=[], clear=False):
     """
-        Rebuild the ancestor path in a role within the OU hierarchy
+        Rebuild the ancestor path of a role within the OU hierarchy
 
         @param role_id: the role ID
         @param skip: list of role IDs to skip during recursion

@@ -57,6 +57,7 @@ from htmlentitydefs import name2codepoint
 from gluon import *
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
+from gluon.languages import lazyT
 
 try:
     from lxml import etree
@@ -3033,22 +3034,18 @@ class S3PDFDataSource:
 
         # Retrieve the resource contents
         table = resource.table
-        lfields, joins, ljoins = resource.get_lfields(list_fields)
+        lfields, joins, left, distinct = resource.resolve_selectors(list_fields)
         fields = [f for f in lfields if f.show]
         headers = [f.label for f in lfields if f.show]
-        # @ToDo: make consistent with XLS
-        # items = resource.sqltable(fields=list_fields,
-                                    #start=None,
-                                    #limit=None,
-                                    #orderby=orderby,
-                                    #no_ids=True,
-                                    #as_page=True)
         if orderby != None:
-            self.records = resource.select(table.ALL,
-                                           orderby=orderby)
-        else:
-            self.records = resource.select(table.ALL,
-                                           orderby=fields[0].field)
+            orderby = fields[0].field
+        self.records = resource.sqltable(fields=list_fields,
+                                         start=None,
+                                         limit=None,
+                                         orderby=orderby,
+                                         no_ids=True,
+                                         as_rows=True)
+
         # Pass to getLabels
         self.labels = headers
         # Pass to getData
@@ -3592,13 +3589,13 @@ class S3PDFRHeader():
 # end of class S3PDFRHeader
 
 class S3html2pdf():
-        
+
     def __init__(self,
                  pageWidth,
                  exclude_class_list = []):
         """
             Method that takes html in the web2py helper objects
-            and converts it to pdf 
+            and converts it to pdf
         """
         self.exclude_class_list = exclude_class_list
         self.pageWidth = pageWidth
@@ -3618,17 +3615,17 @@ class S3html2pdf():
     def select_tag(self, html, title=False):
         if self.exclude_tag(html):
             return None
-        if isinstance(html,TABLE):
+        if isinstance(html, TABLE):
             return self.parse_table(html)
-        elif isinstance(html,A):
+        elif isinstance(html, A):
             return self.parse_a(html)
-        elif isinstance(html,P):
+        elif isinstance(html, P):
             return self.parse_p(html)
-        elif isinstance(html,IMG):
+        elif isinstance(html, IMG):
             return self.parse_img(html)
-        elif isinstance(html,DIV):
+        elif isinstance(html, DIV):
             return self.parse_div(html)
-        elif (isinstance(html,str) or current.T(html) == html):
+        elif (isinstance(html, str) or isinstance(html, lazyT)):
             if title:
                 return [Paragraph(html, self.titlestyle)]
             else:

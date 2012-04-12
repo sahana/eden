@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-    VITA Person Registry, Controllers
+    Person Registry, Controllers
 
-    @author: nursix
-    @author: Pratyush Nigam <pratyush.nigam@gmail.com>
     @see: U{http://eden.sahanafoundation.org/wiki/BluePrintVITA}
 """
 
-module = request.controller      # @ToDo: unify prefix and module across all controllers in some cleanup sprints
-prefix = request.controller
+module = request.controller
 resourcename = request.function
 
 # -----------------------------------------------------------------------------
@@ -47,7 +44,7 @@ def index():
     """ Module's Home Page """
 
     try:
-        module_name = deployment_settings.modules[prefix].name_nice
+        module_name = deployment_settings.modules[module].name_nice
     except:
         module_name = T("Person Registry")
 
@@ -65,6 +62,7 @@ def index():
 
     def postp(r, output):
         if isinstance(output, dict):
+            # Add information for Dashboard
             pr_gender_opts = s3db.pr_gender_opts
             pr_age_group_opts = s3db.pr_age_group_opts
             table = db.pr_person
@@ -83,7 +81,10 @@ def index():
                 age.append([str(pr_age_group_opts[a_opt]), int(count)])
 
             total = int(db(table.deleted == False).count())
-            output.update(module_name=module_name, gender=json.dumps(gender), age=json.dumps(age), total=total)
+            output.update(module_name=module_name,
+                          gender=json.dumps(gender),
+                          age=json.dumps(age),
+                          total=total)
         if r.interactive:
             if not r.component:
                 label = READ
@@ -407,7 +408,10 @@ def presence():
 
 # -----------------------------------------------------------------------------
 def pentity():
-    """ RESTful CRUD controller """
+    """
+        RESTful CRUD controller
+        - used by AutocompleteWidget
+    """
 
     return s3_rest_controller()
 

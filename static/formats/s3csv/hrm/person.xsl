@@ -14,6 +14,7 @@
          Office Lat.....................optional.....office latitude
          Office Lon.....................optional.....office longitude
          Office Street address..........optional.....office street address
+         Office Country.................optional.....office country
          Office City....................optional.....office city
          Office Postcode................optional.....office postcode
          Job Title......................optional.....human_resource job title
@@ -23,7 +24,6 @@
          Last Name......................optional.....person last name (required in some deployments)
          Initials.......................optional.....person initials
          DOB............................optional.....person date of birth
-         Skills.........................optional.....comma-separated list of skills
          Email..........................required.....person email address
          Mobile Phone...................optional.....person mobile phone number
          Office Phone...................optional.....office phone number
@@ -33,10 +33,12 @@
          Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
          Home Lon.......................optional.....person home address longitude
+         Home Country...................optional.....person home address Country
          Home L1........................optional.....person home address L1
          Home L2........................optional.....person home address L2
          Home L3........................optional.....person home address L3
          Home L4........................optional.....person home address L4
+         Skills.........................optional.....comma-separated list of skills
          Teams..........................optional.....comma-separated list of Groups
          Projects.......................optional.....comma-separated list of Projects (not yet implemented)
 
@@ -168,7 +170,8 @@
                                     <data field="addr_street">
                                         <xsl:value-of select="concat(
                                                                 col[@field='Office Street address'], ', ',
-                                                                col[@field='Office City'])"/>
+                                                                col[@field='Office City'], ', ',
+                                                                col[@field='Office Country'])"/>
                                     </data>
                                 </xsl:if>
                                 <xsl:if test="col[@field='Office Postcode']!=''">
