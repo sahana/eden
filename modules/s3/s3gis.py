@@ -280,7 +280,7 @@ class GIS(object):
         minutes = (degrees - int(degrees)) * 60
         seconds = (minutes - int(minutes)) * 60
 
-        return (int(degrees), int(minutes), int(seconds))
+        return (int(degrees), int(minutes), seconds)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -298,64 +298,13 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def coordinate_parse(coord, format="%f"):
-        """
-            Gives the (degree, minutes, seconds) triplet from the coordinate
-            Note: the format must be either %f or should contain %d, %m, %s
-
-            @returns tuple (degrees, minutes, seconds)
-            @returns None if coord does not conform to the format
-        """
-
-        if (format.trim() == "%f"):
-            if (isinstance(coord, float) or
-                isinstance(coord, int)):
-                return coord
-            else:
-                return None
-        else:
-            if (not isinstance(coord, str)):
-                return None
-
-            order = ['%d', '%m', '%s']
-            # consider only parts that are required by the format
-            order = filter(lambda part: part in format, order)
-            # sorts order in the order the items appear in the format
-            order = sorted(order, lambda part: format.find(part))
-
-            regex = re.escape(format)
-            regex = regex.replace("\\%d", "(\d+)") \
-                         .replace("\\%m", "(\d+)") \
-                         .replace("\\%s", "(\d+)")
-
-            # @ToDo: (shashi) Should this be cached?
-            regex_compiled = re.compile(regex, re.UNICODE)
-            matches = GIS.coordinate_dms_triplet(regex_compiled.match(coord))
-
-
-            if matches == None:
-                return None
-            else:
-                triplet = [0, 0, 0]
-                if ('%d' in format):
-                    triplet[0] = matches.group(order.find('%d') + 1)
-                if ('%m' in format):
-                    triplet[1] = matches.group(order.find('%m') + 1)
-                if ('%s' in format):
-                    triplet[2] = matches.group(order.find('%m') + 1)
-                return tuple(tiplet)
-
-            return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def format_coordinate(coord, format):
         """
             Format geographic coordinate in a given format; format specifiers:
-            * %f: decimal value of the coord
-            * %d: degrees
-            * %m: minutes
-            * %s: seconds
+            * %f: decimal value of the coord (double)
+            * %d: degrees (int)
+            * %m: minutes (int)
+            * %s: seconds (double)
 
             @returns string formatted value
         """
@@ -369,8 +318,8 @@ class GIS(object):
 
         formatted = format.replace("%d", "%d" % degrees) \
                           .replace("%m", "%d" % minutes) \
-                          .replace("%s", "%d" % seconds) \
-                          .replace("%f", "%f" % coord_float)
+                          .replace("%s", "%lf" % seconds) \
+                          .replace("%f", "%lf" % coord_float)
         return formatted
 
     # -------------------------------------------------------------------------
