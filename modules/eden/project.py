@@ -1162,17 +1162,11 @@ class S3ProjectDRRModel(S3Model):
         tablename = "project_organisation"
         table = self.define_table(tablename,
                                   project_id(),
-                                  organisation_id(comment = DIV(A(T("Add Organization"),
-                                                                  _class="colorbox",
-                                                                  _href=URL(c="org", f="organisation",
-                                                                            args="create",
-                                                                            vars=dict(format="popup")),
-                                                                  _target="top",
-                                                                  _title=T("Add Organization")),
-                                                                DIV(_class="tooltip",
-                                                                    _title="%s|%s" % (T("Organization"),
-                                                                                      organisation_help))
-                                                                )
+                                  organisation_id(comment=S3AddResourceLink(c="org",
+                                                                            f="organisation",
+                                                                            label=T("Add Organization"),
+                                                                            title=T("Organization"),
+                                                                            tooltip=organisation_help)
                                                   ),
                                   Field("role", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),

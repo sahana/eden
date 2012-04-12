@@ -149,14 +149,11 @@ if deployment_settings.has_module(module):
             name_nice_plural = T("Baseline Types"))
 
         def baseline_type_comment():
+            # ToDo: Is this membership check required?
             if auth.has_membership(auth.id_group("'Administrator'")):
-                return DIV(A(ADD_BASELINE_TYPE,
-                             _class="colorbox",
-                             _href=URL(c="assess", f="baseline_type", args="create", vars=dict(format="popup")),
-                             _target="top",
-                             _title=ADD_BASELINE_TYPE
-                             )
-                           )
+                return S3AddResourceLink(c="assess",
+                                         f="baseline_type",
+                                         label=ADD_BASELINE_TYPE)
             else:
                 return None
 

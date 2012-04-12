@@ -44,6 +44,7 @@ from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 T = current.T
 organisation_type_opts = {
@@ -312,10 +313,6 @@ class S3OrganisationModel(S3Model):
             msg_record_deleted = T("Organization deleted"),
             msg_list_empty = T("No Organizations currently registered"))
 
-        organisation_popup_url = URL(c="org", f="organisation",
-                                     args="create",
-                                     vars=dict(format="popup"))
-
         # @ToDo: Deployment_setting
         organisation_dropdown_not_ac = False
         if organisation_dropdown_not_ac:
@@ -325,17 +322,22 @@ class S3OrganisationModel(S3Model):
             help = T("Enter some characters to bring up a list of possible matches")
             widget = S3OrganisationAutocompleteWidget()
 
-        organisation_comment = DIV(A(ADD_ORGANIZATION,
-                                   _class="colorbox",
-                                   _href=organisation_popup_url,
-                                   _target="top",
-                                   _title=ADD_ORGANIZATION),
-                                 DIV(DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Organization"),
-                                                           help))))
+        organisation_comment = S3AddResourceLink(c="org",
+                                                 f="organisation",
+                                                 label=ADD_ORGANIZATION,
+                                                 title=T("Organization"),
+                                                 tooltip=help)
+        
+        from_organisation_comment = S3AddResourceLink(c="org",
+                                                      f="organisation",
+                                                      vars=dict(child="from_organisation_id"),
+                                                      label=ADD_ORGANIZATION,
+                                                      title=T("Organization"),
+                                                      tooltip=help)
 
-        from_organisation_comment = copy.deepcopy(organisation_comment)
-        from_organisation_comment[0]["_href"] = organisation_comment[0]["_href"].replace("popup", "popup&child=from_organisation_id")
+        # This deepcopy stuff causes an error about NoneTypes not being copyable.
+        #from_organisation_comment = copy.deepcopy(organisation_comment)
+        #from_organisation_comment[0]["_href"] = organisation_comment[0]["_href"].replace("popup", "popup&child=from_organisation_id")
 
         organisation_id = S3ReusableField("organisation_id",
                                           db.org_organisation, sortby="name",
@@ -483,17 +485,11 @@ class S3OrganisationModel(S3Model):
                                                                    filter_opts=[4])),
                                    represent = self.donor_represent,
                                    label = T("Funding Organization"),
-                                   comment = DIV(A(ADD_DONOR,
-                                                   _class="colorbox",
-                                                   _href=URL(c="org", f="organisation",
-                                                             args="create",
-                                                             vars=dict(format="popup",
-                                                                       child="donor_id")),
-                                                   _target="top",
-                                                   _title=ADD_DONOR),
-                                                DIV( _class="tooltip",
-                                                     _title="%s|%s" % (ADD_DONOR,
-                                                                       ADD_DONOR_HELP))),
+                                   comment=S3AddResourceLink(c="org",
+                                                             f="organisation",
+                                                             vars=dict(child="donor_id"),
+                                                             label=ADD_DONOR,
+                                                             tooltip=ADD_DONOR_HELP),
                                    ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
@@ -1093,16 +1089,11 @@ class S3RoomModel(S3Model):
             msg_record_deleted = T("Room deleted"),
             msg_list_empty = T("No Rooms currently registered"))
 
-        room_comment = DIV(A(ADD_ROOM,
-                             _class="colorbox",
-                             _href=URL(c="org", f="room",
-                                       args="create",
-                                       vars=dict(format="popup")),
-                             _target="top",
-                             _title=ADD_ROOM),
-                           DIV(_class="tooltip",
-                               _title="%s|%s" % (ADD_ROOM,
-                                                 T("Select a Room from the list or click 'Add Room'"))),
+        room_comment = DIV(
+                           S3AddResourceLink(c="org",
+                                         f="room",
+                                         label=ADD_ROOM,
+                                         tooltip=T("Select a Room from the list or click 'Add Room'")),
                            # Filters Room based on site
                            SCRIPT("""S3FilterFieldChange({
                                          'FilterField':   'site_id',
@@ -1110,7 +1101,7 @@ class S3RoomModel(S3Model):
                                          'FieldPrefix':   'org',
                                          'FieldResource': 'room',
                                          });""")
-                            )
+                           )
 
         # Reusable field for other tables to reference
         room_id = S3ReusableField("room_id", db.org_room, sortby="name",
@@ -1184,16 +1175,10 @@ class S3OfficeModel(S3Model):
         }
 
         ADD_OFFICE = T("Add Office")
-        office_comment = DIV(A(ADD_OFFICE,
-                               _class="colorbox",
-                               _href=URL(c="org", f="office",
-                                         args="create",
-                                         vars=dict(format="popup")),
-                               _target="top",
-                               _title=ADD_OFFICE),
-                             DIV(_class="tooltip",
-                                 _title="%s|%s" % (ADD_OFFICE,
-                                                   T("If you don't see the Office in the list, you can add a new one by clicking link 'Add Office'."))))
+        office_comment = S3AddResourceLink(c="org",
+                                           f="office",
+                                           label=ADD_OFFICE,
+                                           tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add Office'."))
 
         tablename = "org_office"
         table = self.define_table(tablename,

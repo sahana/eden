@@ -227,15 +227,11 @@ def location():
                 table.parent.comment = parent_comment
             else:
                 # Include 'Add Location' button
-                table.parent.comment = DIV(A(ADD_LOCATION,
-                                             _class="colorbox",
-                                             _href=URL(c="gis", f="location",
-                                                       args="create",
-                                                       vars=dict(format="popup",
-                                                                 child="parent")),
-                                             _target="top",
-                                             _title=ADD_LOCATION),
-                                           parent_comment),
+                table.parent.comment = DIV(S3AddResourceLink(c="gis",
+                                                         f="location",
+                                                         vars=dict(child="parent")),
+                                           parent_comment)
+
             table.osm_id.comment = DIV(_class="stickytip",
                                        _title="OpenStreetMap ID|%s%s%s" % (T("The"),
                                                                            " <a href='http://openstreetmap.org' target=_blank>OpenStreetMap</a> ID. ",

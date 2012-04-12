@@ -110,16 +110,10 @@ def shelter():
         HELP = T("The Shelter this person is checking into.")
     ADD_SHELTER = response.s3.ADD_SHELTER
     SHELTER_LABEL = response.s3.SHELTER_LABEL
-    field.comment = DIV(A(ADD_SHELTER,
-                          _class="colorbox",
-                          _href=URL(c="cr", f="shelter",
-                                    args="create",
-                                    vars=dict(format="popup")),
-                          _target="top",
-                          _title=ADD_SHELTER),
-                        DIV( _class="tooltip",
-                             _title="%s|%s" % (SHELTER_LABEL,
-                                               HELP)))
+    field.comment = S3AddResourceLink(c="cr",
+                                      f="shelter",
+                                      title=ADD_SHELTER,
+                                      tooltip=HELP)
     field.label = SHELTER_LABEL
     field.readable = True
     field.writable = True
@@ -181,7 +175,7 @@ def cr_shelter_prep(r):
         if r.method != "read":
             # Don't want to see in Create forms
             # inc list_create (list_fields over-rides)
-           address_hide(r.table)
+            address_hide(r.table)
 
         if r.component:
             if r.component.name == "inv_item" or \
@@ -224,17 +218,11 @@ def cr_shelter_prep(r):
                 add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create_button")
                 db.pr_presence.pe_id.comment = \
                     DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
-                        DIV(A(add_group_label,
-                              _class="colorbox",
-                              _href=URL(c="pr", f="group", args="create",
-                                        vars=dict(format="popup", child="pe_id")),
-                              _target="top",
-                              _title=add_group_label),
-                            DIV(_class="tooltip",
-                                _title="%s|%s" % (T("Create Group Entry"),
-                                                  T("Create a group entry in the registry.")))
-                            )
-                        )
+                        S3AddResourceLink(c="pr",
+                                          f="group",
+                                          title=add_group_label,
+                                          tooltip=T("Create a group entry in the registry."))
+                    )
                 db.pr_presence.pe_id.widget = S3AutocompleteWidget("pr", "pentity")
                 # Set defaults
                 db.pr_presence.datetime.default = request.utcnow
