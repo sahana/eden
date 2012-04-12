@@ -304,15 +304,15 @@ def edit_space(request, space_name):
             form_uncommited.author = request.user
             
             new_space = form_uncommited.save()
-            space = form_uncommited.url
+            space = get_object_or_404(Space, name=form_uncommited.name)
             
             ef_uncommited = entity_forms.save(commit=False)
             for ef in ef_uncommited:
                 ef.space = space
                 ef.save()
             
-            #messages.success(request, _('Space edited successfully'))
-            return redirect('/spaces/' + space)
+            messages.success(request, _('Space edited successfully'))
+            return redirect('/spaces/' + space.url)
 
     for i in request.user.profile.spaces.all():
         if i.url == space_name or request.user.is_staff:
