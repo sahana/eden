@@ -327,7 +327,7 @@ class GIS(object):
     def coordinate_represent(coord):
         """
             Represent a coordinate (latitude or longitude) according
-            to deployment_settings or T()
+            to deployment_settings
         """
         settings = current.deployment_settings
 

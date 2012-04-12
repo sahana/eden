@@ -354,9 +354,6 @@ class S3Config(Storage):
         return self.L10n.get("utc_offset", "UTC +0000")
     def get_L10n_lat_lon_format(self):
         return self.L10n.get("geo_lat_lon_display_format", "%f")
-    def get_L10n_lat_lon_input_format(self):
-        # also used for output in forms
-        return self.L10n.get("geo_lat_lon_input_format", "%f")
     def get_L10n_mandatory_lastname(self):
         return self.L10n.get("mandatory_lastname", False)
     def get_L10n_thousands_separator(self):
