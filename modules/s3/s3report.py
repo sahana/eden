@@ -312,7 +312,7 @@ class S3Cube(S3CRUD):
             form.append(TABLE(filter_widgets, _id="filter_options"))
 
         # Append report options, always
-        report_options = TABLE(
+        form_report_options = TABLE(
                     TR(
                         TD(LABEL("Rows:"), _class="w2p_fl"),
                         TD(LABEL("Columns:"), _class="w2p_fl"),
@@ -340,8 +340,11 @@ class S3Cube(S3CRUD):
                         # @todo: Reset-link to restore pre-defined parameters,
                         #        show only if URL vars present
                         #A(T("Reset"), _class="action-lnk"),
-                        _colspan=3), _id="report_options")
-        form.append(report_options)
+                        _colspan=3
+                    ),
+                    _id="report_options"
+                )
+        form.append(form_report_options)
 
         return form
 
@@ -1007,6 +1010,7 @@ class S3ContingencyTable(TABLE):
         labels = []
         get_mname = report.mname
         for field, method in layers:
+            # ToDO: change this to 
             label = get_label(lfields, field, tablename, "report_fact")
             mname = get_mname(method)
             if not labels:

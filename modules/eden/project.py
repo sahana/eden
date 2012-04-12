@@ -694,9 +694,10 @@ class S3ProjectModel(S3Model):
                   onvalidation=self.project_activity_onvalidation,
                   onaccept=self.project_activity_onaccept,
                   deduplicate=self.project_activity_deduplicate,
-                  report_rows=report_fields,
-                  report_cols=report_fields,
-                  report_fact=report_fields,
+                  report_options=Storage(
+                                         rows=report_fields,
+                                         cols=report_fields,
+                                         facts=report_fields),
                   list_fields = list_fields,
                   )
 
