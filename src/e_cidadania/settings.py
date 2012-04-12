@@ -25,8 +25,6 @@ GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHx
 # Stablish WYSIWYG editor for HTML forms. By default, we set CKEditor, but if
 # you want to use YUI editor just comment DJANGO_WYSIWYG_FLAVOR.
 # Values: ckeditor, empty
-DJANGO_WYSIWYG_FLAVOR = "ckeditor"
-DJANGO_WYSIWYG_MEDIA_URL = "/static/ckeditor/"
 
 # Registration mail settings
 #EMAIL_HOST = ""
@@ -162,7 +160,6 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 THIRDPARTY_APPS = (
     # This list is from the third party software included in e-cidadania or
     # system-wide dependencies.
-    'django_wysiwyg',
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
     #'django_extensions',
@@ -171,6 +168,7 @@ THIRDPARTY_APPS = (
 ECIDADANIA_MODULES = (
     # Modules created for e-cidadania and installed by default. You can add
     # here your own modules.
+	'e_cidadania.apps.custom_tags',
     'e_cidadania.apps.accounts',
     'e_cidadania.apps.proposals',
     'e_cidadania.apps.news',
