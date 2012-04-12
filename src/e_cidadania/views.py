@@ -66,7 +66,7 @@ def index_view(request):
     if request.user.is_anonymous():
         messages.info(request, _("Hi! It seems that it's your first time here. \
             Maybe you want to <a href=\"/accounts/register\">register</a> \
-            or <a href=\"/accounts/login\">login</a> if you have an account."))
+            or <a href=\"/accounts/login/\">login</a> if you have an account."))
     return render_to_response('site_index.html',
                               extra_context,
                               context_instance=RequestContext(request))
@@ -114,15 +114,17 @@ class AddPost(FormView):
     """
     form_class = NewsForm
     template_name = 'news/post_add.html'
-    success_url = '/'
+    
+    def get_success_url(self):
+        return '/news/'
     
     def form_valid(self, form):
         form_uncommited = form.save(commit=False)
         form_uncommited.author = self.request.user
         form_uncommited.pub_index = True
         form_uncommited.save()
-        
-        messages.success(request, _('Post added successfully.'))
+        messages.success(self.request, _('Post added successfully.'))
+        return super(AddPost, self).form_valid(form)
         
     @method_decorator(permission_required('news.add_post'))
     def dispatch(self, *args, **kwargs):
