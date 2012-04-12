@@ -999,12 +999,18 @@ class GIS(object):
                 # Order by pe_type (defined in gis_config)
                 rows = db(query).select(orderby=ctable.pe_type)
                 cache["ids"] = []
+                exclude = list(s3.all_meta_field_names)
+                append = exclude.append
+                for fieldname in ["delete_record", "update_record",
+                                  "pe_path",
+                                  "gis_layer_config", "gis_menu"]:
+                    append(fieldname)
                 for row in rows:
                     config = row["gis_config"]
                     if not config_id:
                         config_id = config.id
                     cache["ids"].append(config.id)
-                    fields = filter(lambda key: key not in s3.all_meta_field_names,
+                    fields = filter(lambda key: key not in exclude,
                                     config)
                     for key in fields:
                         if key not in cache or cache[key] is None:
@@ -1027,7 +1033,9 @@ class GIS(object):
                         if base:
                             cache["base"] = base.layer_id
                 # Add NULL values for any that aren't defined, to avoid KeyErrors
-                for key in ["epsg", "units", "maxResolution", "maxExtent", "image", "height", "width", "base"]:
+                for key in ["epsg", "units", "maxResolution", "maxExtent",
+                            "marker_image", "marker_height", "marker_width",
+                            "base"]:
                     if key not in cache:
                         cache[key] = None
 
@@ -3426,11 +3434,7 @@ class GIS(object):
                                  width = config.marker_width,
                                  url = URL(c="static", f="img",
                                            args=["markers", config.marker_image]))
-        symbology = config.symbology_id
-
         markers = {}
-
-        html = DIV(_id="map_wrapper")
 
         #####
         # CSS
@@ -3440,6 +3444,8 @@ class GIS(object):
         ######
         # HTML
         ######
+        html = DIV(_id="map_wrapper")
+
         # Map (Embedded not Window)
         html.append(DIV(_id="map_panel"))
 
@@ -3556,6 +3562,7 @@ class GIS(object):
 
         if config.pe_id or s3_has_role(MAP_ADMIN):
             # Personal/OU config or MapAdmin, so enable Save Button
+            # @ToDo: Need to make this recognise whether we have the ability edit the config
             region = "S3.gis.region = %i;\n" % config.id
         else:
             region = ""
@@ -3570,10 +3577,8 @@ class GIS(object):
 
         # Search
         if search:
-            search = """S3.i18n.gis_search = '%s';
-S3.i18n.gis_search_no_internet = '%s';
-""" % (T("Search Geonames"),
-       T("Geonames.org search requires Internet connectivity!"))
+            search = "S3.i18n.gis_search = '%s';\n" % T("Search location in Geonames")
+            #"S3.i18n.gis_search_no_internet = '%s';" % T("Geonames.org search requires Internet connectivity!")
         else:
             search = ""
 
@@ -3795,13 +3800,14 @@ S3.i18n.gis_search_no_internet = '%s';
         # Layout
         s3_gis_window = ""
         s3_gis_windowHide = ""
-        s3_gis_windowNotClosable = ""
+        if not closable:
+            s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
+        else:
+            s3_gis_windowNotClosable = ""
         if window:
             s3_gis_window = "S3.gis.window = true;\n"
             if window_hide:
                 s3_gis_windowHide = "S3.gis.windowHide = true;\n"
-            elif not closable:
-                s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
 
         if maximizable:
             maximizable = "S3.gis.maximizable = true;\n"

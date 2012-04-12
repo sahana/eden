@@ -66,51 +66,12 @@ Ext.onReady(function() {
     // Build the OpenLayers map
     addMap();
 
-    // Set some common options
-    if ( undefined == S3.gis.west_collapsed ) {
-        S3.gis.west_collapsed = false;
-    }
-
-    // Which Elements do we want in our mapWindow?
-    // @ToDo: Move all these to Plugins
-    items = [S3.gis.layerTree];
-    if (S3.gis.wmsBrowser) {
-        items.push(S3.gis.wmsBrowser);
-    }
-    // if (S3.gis.searchCombo) {
-        // items.push(S3.gis.searchCombo);
-    // }
-    if (S3.gis.printFormPanel) {
-        items.push(S3.gis.printFormPanel);
-    }
-    if (S3.gis.legendPanel) {
-        items.push(S3.gis.legendPanel);
-    }
-
-    for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
-        S3.gis.plugins[i].addToMapWindow(items);
-    }
-
-    // Instantiate the main Map window
-    if (S3.gis.window) {
-        addMapWindow(items);
-    } else {
-        // Embedded Map
-        addMapPanel(items);
-    }
+    // Add the GeoExt UI
+    addMapUI();
 
     // If we were instantiated with bounds, use these now
     if ( S3.gis.bounds ) {
         map.zoomToExtent(S3.gis.bounds);
-    }
-
-    // Ensure that mapPanel knows about whether our WMS layers are queryable
-    if (S3.gis.layers_wms) {
-        for (i = 0; i < map.layers.length; i++) {
-            if (map.layers[i].queryable) {
-                S3.gis.mapPanel.layers.data.items[i].data.queryable = 1;
-            }
-        }
     }
 
     // Toolbar Tooltips
@@ -118,7 +79,7 @@ Ext.onReady(function() {
 });
 
 
-// Add Map
+// Build the OpenLayers map
 function addMap() {
     map = new OpenLayers.Map('center', S3.gis.options);
 
@@ -129,10 +90,11 @@ function addMap() {
     // Controls (add these after the layers)
     // defined in s3.gis.controls.js
     addControls();
+}
 
-    // GeoExt UI
+// Add the GeoExt UI
+function addMapUI() {
     S3.gis.mapPanel = new GeoExt.MapPanel({
-        region: 'center',
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         id: 'mappanel',
@@ -147,7 +109,107 @@ function addMap() {
     S3.gis.portal = Object();
     S3.gis.portal.map = S3.gis.mapPanel;
 
-    // We need to put the mapPanel inside a 'card' container for the Google Earth Panel
+    if (S3.i18n.gis_legend || S3.gis.layers_wms) {
+        for (i = 0; i < map.layers.length; i++) {
+            // Ensure that legendPanel knows about the Markers for our Feature layers
+            if (map.layers[i].legendURL) {
+                S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
+            }
+            // Ensure that mapPanel knows about whether our WMS layers are queryable
+            if (map.layers[i].queryable) {
+                S3.gis.mapPanel.layers.data.items[i].data.queryable = 1;
+            }
+        }
+    }
+
+    // Which Elements do we want in our mapWindow?
+    // @ToDo: Move all these to Plugins
+
+    // Layer Tree
+    addLayerTree();
+    items = [S3.gis.layerTree];
+
+    // WMS Browser
+    if (S3.gis.wms_browser_url) {
+        addWMSBrowser();
+        if (S3.gis.wmsBrowser) {
+            items.push(S3.gis.wmsBrowser);
+        }
+    }
+
+    // Print Panel (currently still defined in modules/s3/s3gis.py)
+    if (S3.gis.printFormPanel) {
+        items.push(S3.gis.printFormPanel);
+    }
+
+    // Legend Panel
+    if (S3.i18n.gis_legend) {
+       S3.gis.legendPanel = new GeoExt.LegendPanel({
+            id: 'legendpanel',
+            title: S3.i18n.gis_legend,
+            defaults: {
+                labelCls: 'mylabel',
+                style: 'padding:4px'
+            },
+            bodyStyle: 'padding:4px',
+            autoScroll: true,
+            collapsible: true,
+            collapseMode: 'mini',
+            lines: false
+        });
+        items.push(S3.gis.legendPanel);
+    }
+
+    // Plugins
+    for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
+        S3.gis.plugins[i].setup(map);
+        S3.gis.plugins[i].addToMapWindow(items);
+    }
+
+    // West Panel
+    S3.gis.mapWestPanel = new Ext.Panel({
+        id: 'tools',
+        header: false,
+        border: false,
+        split: true,
+        items: items
+    });
+
+    // Instantiate the main Map window
+    if (S3.gis.window) {
+        addMapWindow();
+    } else {
+        // Embedded Map
+        addMapPanel();
+    }
+}
+
+// Put into a Container to allow going fullscreen from a BorderLayout
+function addWestPanel() {
+    if ( undefined == S3.gis.west_collapsed ) {
+        S3.gis.west_collapsed = false;
+    }
+    S3.gis.mapWestPanelContainer = new Ext.Panel({
+        region: 'west',
+        header: false,
+        border: true,
+        width: 250,
+        autoScroll: true,
+        collapsible: true,
+        collapseMode: 'mini',
+        collapsed: S3.gis.west_collapsed,
+        items: [
+            S3.gis.mapWestPanel
+        ]
+    });
+};
+
+// Put into a Container to allow going fullscreen from a BorderLayout
+// We need to put the mapPanel inside a 'card' container for the Google Earth Panel
+function addMapPanelContainer() {
+    if (S3.gis.toolbar) {
+        addToolbar();
+    }
     S3.gis.mapPanelContainer = new Ext.Panel({
         layout: 'card',
         region: 'center',
@@ -160,94 +222,48 @@ function addMap() {
             S3.gis.mapPanel
         ],
         activeItem: 0,
-        tbar: new Ext.Toolbar(),
+        tbar: S3.gis.toolbar,
         scope: this
     });
 
     if (S3.gis.Google && S3.gis.Google.Earth) {
-        // Add now rather than when button pressed as otherwise 1st press doesn't do anything
+        // Instantiate afresh after going fullscreen as fails otherwise
         S3.gis.googleEarthPanel = new gxp.GoogleEarthPanel({
             mapPanel: S3.gis.mapPanel
         });
+        // Add now rather than when button pressed as otherwise 1st press doesn't do anything
         S3.gis.mapPanelContainer.items.items.push(S3.gis.googleEarthPanel);
     }
-
-    // Layer Tree
-    addLayerTree();
-
-    // Toolbar
-    if (S3.gis.toolbar) {
-        addToolbar();
-    }
-
-    // WMS Browser
-    if (S3.gis.wms_browser_url) {
-        addWMSBrowser();
-    }
-
-    // Legend Panel
-    if (S3.i18n.gis_legend) {
-
-        // Ensure that legendPanel knows about the Markers for our Feature layers
-        for (i = 0; i < map.layers.length; i++) {
-                if (map.layers[i].legendURL) {
-                    S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
-                }
-            }
-
-       S3.gis.legendPanel = new GeoExt.LegendPanel({
-            id: 'legendpanel',
-            title: S3.i18n.gis_legend,
-            defaults: {
-                labelCls: 'mylabel',
-                style: 'padding:5px'
-            },
-            bodyStyle: 'padding:5px',
-            autoScroll: true,
-            collapsible: true,
-            collapseMode: 'mini',
-            lines: false
-        });
-    }
-
-    for ( var i = 0; i < S3.gis.plugins.length; ++i ) {
-        S3.gis.plugins[i].setup(map);
-    }
-}
+};
 
 // Create an embedded Map Panel
-function addMapPanel(items) {
+function addMapPanel() {
+    addWestPanel();
+    addMapPanelContainer();
+
     S3.gis.mapWin = new Ext.Panel({
         id: 'gis-map-panel',
         renderTo: 'map_panel',
         autoScroll: true,
-        maximizable: true,
+        //maximizable: true,
         titleCollapse: true,
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         layout: 'border',
-        items: [{
-                region: 'west',
-                id: 'tools',
-                //title: 'Tools',
-                header: false,
-                border: true,
-                width: 250,
-                autoScroll: true,
-                collapsible: true,
-                collapseMode: 'mini',
-                collapsed: S3.gis.west_collapsed,
-                split: true,
-                items: items
-                },
-                S3.gis.mapPanelContainer
-                ]
+        items: [
+            S3.gis.mapWestPanelContainer,
+            S3.gis.mapPanelContainer
+        ]
     });
 }
 
 // Create a floating Map Window
-function addMapWindow(items) {
-    S3.gis.mapWin = new Ext.Window({
+// This is also called when an embedded map is made to go fullscreen
+function addMapWindow() {
+    addWestPanel();
+    addMapPanelContainer();
+
+    var mapWin = new Ext.Window({
         id: 'gis-map-window',
         collapsible: false,
         constrain: true,
@@ -259,27 +275,12 @@ function addMapWindow(items) {
         height: S3.gis.map_height,
         width: S3.gis.map_width,
         layout: 'border',
-        items: [{
-                region: 'west',
-                id: 'tools',
-                //title: 'Tools',
-                header: false,
-                border: true,
-                width: 250,
-                autoScroll: true,
-                collapsible: true,
-                collapseMode: 'mini',
-                collapsed: S3.gis.west_collapsed,
-                split: true,
-                items: items
-                },
-                S3.gis.mapPanelContainer
-                ]
+        items: [
+            S3.gis.mapWestPanelContainer,
+            S3.gis.mapPanelContainer
+        ]
     });
 
-    // Shortcut
-    var mapWin = S3.gis.mapWin;
-    
     mapWin.on("beforehide", function(mw){
     	if (mw.maximized) {
     		mw.restore();
@@ -292,6 +293,9 @@ function addMapWindow(items) {
         mapWin.show();
         mapWin.maximize();
     }
+
+    // pass to Global Scope
+    S3.gis.mapWin = mapWin;
 }
 
 // Add LayerTree (to be called after the layers are added)
@@ -433,7 +437,12 @@ function addWMSBrowser() {
 // The buttons called from here are defined in s3.gis.controls.js
 function addToolbar() {
 
-    var toolbar = S3.gis.mapPanelContainer.getTopToolbar();
+    //var toolbar = S3.gis.mapPanelContainer.getTopToolbar();
+    var toolbar = new Ext.Toolbar({
+        id: 'gis_toolbar',
+        // Height needed for the Throbber
+        height: 34
+    });
 
     var zoomfull = new GeoExt.Action({
         control: new OpenLayers.Control.ZoomToMaxExtent(),
@@ -644,11 +653,31 @@ function addToolbar() {
     
     // Search box
     if (S3.i18n.gis_search) {
+        var width = Math.min(350, (S3.gis.map_width - 680));
         var mapSearch = new GeoExt.ux.GeoNamesSearchCombo({
             map: map,
-            zoom: 12
+            width: width,
+            listWidth: width,
+            minChars: 2,
+            // @ToDo: Restrict to the Country if using a Country config
+            //countryString: ,
+            emptyText: S3.i18n.gis_search
         });
         toolbar.addSeparator();
         toolbar.add(mapSearch);
     }
+    
+    // Throbber
+    var throbber = new Ext.BoxComponent({
+        autoEl: {
+            tag: 'img',
+            src: S3.gis.ajax_loader
+        },
+        cls: 'hidden',
+        id: 'layer_throbber'
+    });
+    toolbar.add(throbber);
+    
+    // pass to Global Scope
+    S3.gis.toolbar = toolbar;
 }

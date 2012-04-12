@@ -1,3 +1,6 @@
+/**
+ * @requires GeoExt/Lang.js
+ */
 
 GeoExt.Lang.add("es", {
 
@@ -43,7 +46,6 @@ GeoExt.Lang.add("es", {
     },
 
     "gxp.plugins.GoogleEarth.prototype": {
-        apiKeyPrompt: "Please enter the Google API key for ",
         menuText: "Vista 3D",
         tooltip: "Vista 3D"
     },
@@ -62,6 +64,7 @@ GeoExt.Lang.add("es", {
     },
     
     "gxp.plugins.LayerTree.prototype": {
+        shortTitle: "Capas",
         rootNodeText: "Capas",
         overlayNodeText: "Capas superpuestas",
         baseNodeText: "Capa base"
@@ -364,7 +367,7 @@ GeoExt.Lang.add("es", {
         dataStoreEmptyText: "Almacén de datos por defecto"
     },
     
-    "gxp.NewSourceWindow.prototype": {
+    "gxp.NewSourceDialog.prototype": {
         title: "Añadir Servidor...",
         cancelText: "Cancelar",
         addServerText: "Añadir Servidor",

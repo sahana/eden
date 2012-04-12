@@ -516,9 +516,9 @@ function s3_showMap(feature_id) {
 		autoWidth: true,
 		floating: true,
 		items: [{
-			xtype: "component",
+			xtype: 'component',
 			autoEl: {
-				tag: "iframe",
+				tag: 'iframe',
 				width: 650,
 				height: 490,
 				src: url

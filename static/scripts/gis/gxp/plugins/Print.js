@@ -8,6 +8,7 @@
 
 /**
  * @requires plugins/Tool.js
+ * requires GeoExt/data/PrintProvider.js
  */
 
 /** api: (define)
@@ -87,6 +88,12 @@ gxp.plugins.Print = Ext.extend(gxp.plugins.Tool, {
      */
     previewText: "Print Preview",
 
+    /** api: config[openInNewWindow]
+     *  ``Boolean``
+     *  If true, always open in new window regardless of the browser type.
+     */
+    openInNewWindow: false,
+
     /** private: method[constructor]
      */
     constructor: function(config) {
@@ -105,6 +112,31 @@ gxp.plugins.Print = Ext.extend(gxp.plugins.Tool, {
                 customParams: this.customParams,
                 autoLoad: false,
                 listeners: {
+                    beforedownload: function(provider, url) {
+                        if (this.openInNewWindow === true) {
+                            window.open(url);
+                            return false;
+                        }
+                    },
+                    beforeencodelegend: function(provider, jsonData, legend) {
+                        if (legend && legend.ptype === "gxp_layermanager") {
+                            var encodedLegends = [];
+                            var output = legend.output;
+                            if (output && output[0]) {
+                                output[0].getRootNode().cascade(function(node) {
+                                    if (node.component && !node.component.hidden) {
+                                        var cmp = node.component;
+                                        var encFn = this.encoders.legends[cmp.getXType()];
+                                        encodedLegends = encodedLegends.concat(
+                                            encFn.call(this, cmp, jsonData.pages[0].scale));
+                                    }
+                                }, provider);
+                            }
+                            jsonData.legends = encodedLegends;
+                            // cancel normal encoding of legend
+                            return false;
+                        }
+                    },
                     beforeprint: function() {
                         // The print module does not like array params.
                         // TODO Remove when http://trac.geoext.org/ticket/216 is fixed.
@@ -145,8 +177,9 @@ gxp.plugins.Print = Ext.extend(gxp.plugins.Tool, {
                 handler: function() {
                     var supported = getSupportedLayers();
                     if (supported.length > 0) {
-                        createPrintWindow.call(this);
+                        var printWindow = createPrintWindow.call(this);
                         showPrintWindow.call(this);
+                        return printWindow;
                     } else {
                         // no layers supported
                         Ext.Msg.alert(
@@ -204,10 +237,22 @@ gxp.plugins.Print = Ext.extend(gxp.plugins.Tool, {
             function createPrintWindow() {
                 var legend = null;
                 if (this.includeLegend === true) {
-                    for (var key in this.target.tools) {
-                        var tool = this.target.tools[key];
+                    var key, tool;
+                    for (key in this.target.tools) {
+                        tool = this.target.tools[key];
                         if (tool.ptype === "gxp_legend") {
                             legend = tool.getLegendPanel();
+                            break;
+                        }
+                    }
+                    // if not found, look for a layer manager instead
+                    if (legend === null) {
+                        for (key in this.target.tools) {
+                            tool = this.target.tools[key];
+                            if (tool.ptype === "gxp_layermanager") {
+                                legend = tool;
+                                break;
+                            }
                         }
                     }
                 }
@@ -261,6 +306,7 @@ gxp.plugins.Print = Ext.extend(gxp.plugins.Tool, {
                         beforedestroy: destroyPrintComponents
                     }
                 });
+                return printWindow;
             }
 
             function showPrintWindow() {

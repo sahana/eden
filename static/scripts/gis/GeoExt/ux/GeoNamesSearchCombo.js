@@ -296,7 +296,7 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
             })
         });
 
-        if(this.zoom > 0) {
+        if (this.zoom > 0) {
             this.on("select", function(combo, record, index) {
                 var position = new OpenLayers.LonLat(
                     record.data.lng, record.data.lat
@@ -305,7 +305,21 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
                     new OpenLayers.Projection("EPSG:4326"),
                     this.map.getProjectionObject()
                 );
-                this.map.setCenter(position, this.zoom);
+                // Patch to vary the zoom level by result selected
+                if (record.data.fcode.lastIndexOf('PCL', 0) === 0) {
+                    var zoom = 5;
+                } else if (record.data.fcode == 'ADM1') {
+                    var zoom = 7;
+                } else if (record.data.fcode == 'ADM2') {
+                    var zoom = 9;
+                } else if (record.data.fcode == 'ADM3') {
+                    var zoom = 10;
+                } else if (record.data.fcode == 'ADM4') {
+                    var zoom = 11;
+                } else {
+                    var zoom = 12;
+                }
+                this.map.setCenter(position, zoom);
             }, this);
         }
     }

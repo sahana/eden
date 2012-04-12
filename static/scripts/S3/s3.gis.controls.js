@@ -733,7 +733,7 @@ function addPdfControl(toolbar) {
 // WMS GetFeatureInfo control
 function addWMSGetFeatureInfoControl(toolbar) {
     S3.gis.wmsGetFeatureInfo = new gxp.plugins.WMSGetFeatureInfo({
-        actionTarget: 'mappnlcntr.tbar',
+        actionTarget: 'gis_toolbar',
         outputTarget: 'map',
         outputConfig: {
             width: 400,

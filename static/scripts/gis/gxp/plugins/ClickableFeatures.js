@@ -8,6 +8,10 @@
 
 /**
  * @requires plugins/Tool.js
+ * requires OpenLayers/Protocol/HTTP.js
+ * requires OpenLayers/Control/SelectFeature.js
+ * requires OpenLayers/Format/WMSGetFeatureInfo.js
+ * requires OpenLayers/Filter/FeatureId.js
  */
 
 /** api: (define)
@@ -24,7 +28,10 @@ Ext.namespace("gxp.plugins");
  *  .. class:: ClickableFeatures(config)
  *
  *    Base class for tools that need to handle feature clicks. Don't create
- *    instances of this base class.
+ *    instances of this base class. This tool uses a combination of WMS
+ *    GetFeatureInfo and WFS GetFeature, because of the better algorithm 
+ *    in WMS GetFeatureInfo to return a limited set of features from a crowded 
+ *    spot.
  */   
 gxp.plugins.ClickableFeatures = Ext.extend(gxp.plugins.Tool, {
     
@@ -86,9 +93,9 @@ gxp.plugins.ClickableFeatures = Ext.extend(gxp.plugins.Tool, {
         if (config && "autoLoadFeatures" in config) {
             config.autoLoadFeature = config.autoLoadFeatures;
             delete config.autoLoadFeatures;
-            window.setTimeout(function() {
-                throw("Deprecated config option 'autoLoadFeatures' for ptype: '" + config.ptype + "'. Use 'autoLoadFeature' instead.");
-            }, 0);
+            if (window.console) {
+                console.warn("Deprecated config option 'autoLoadFeatures' for ptype: '" + config.ptype + "'. Use 'autoLoadFeature' instead.");
+            }
         }
         gxp.plugins.ClickableFeatures.superclass.constructor.apply(this, [config]);
     },

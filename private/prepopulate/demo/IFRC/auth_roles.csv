@@ -1,5 +1,7 @@
 "uid","role"," description","controller","function","table","uacl","oacl","org","facility","hidden","system","protected"
-"AUTHENTICATED","Authenticated","","pr","person_search",,"READ",,,,,,
+"AUTHENTICATED","Authenticated",,"pr","person_search",,"READ",,,,,,
+"AUTHENTICATED","Authenticated",,"org","office",,"READ",,,,,,
+"AUTHENTICATED","Authenticated",,"inv","warehouse",,"READ",,,,,,
 "ASSET_EDIT","Assets Editor","Can see/edit all Asset records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","asset",,,"ALL",,,,,,
 "ASSET_READ","Assets Reader","Can see all Asset records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","asset",,,"READ",,,,,,
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.",,,"pr_person","ALL",,,,,,
@@ -12,6 +14,7 @@
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","hrm","training",,"ALL",,,,,,
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","hrm","training_event",,"ALL",,,,,,
 "HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","hrm","certificate",,"ALL",,,,,,
+"HR_EDIT","HR Editor","Can see/edit all HR records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","org","office",,"ALL",,,,,,
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.",,,"pr_person","READ",,,,,,
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","hrm",,,"READ",,,,,,
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","hrm","human_resource",,"READ",,,,,,
@@ -48,4 +51,5 @@
 "MEMBER_READ","Members Reader","Can see all Member records belonging to this Organisation. Cannot edit any records or control access permissions.","member",,,"READ",,,,,,
 "PROJECT_EDIT","Projects Editor","Can see/edit all Project records belonging to this Organisation. Cannot control access permissions.","project",,,"ALL",,,,,,
 "PROJECT_READ","Projects Reader","Can see all Project records belonging to this Organisation. Cannot edit any records or control access permissions.","project",,,"READ",,,,,,
-"ORG_ADMIN","Organisation Admin","Can create Events.","event",,,"ALL",,,,,,
+"ORG_ADMIN","Organisation Admin","Can control all record permissions","event",,,"ALL",,,,,,
+"ORG_ADMIN","Organisation Admin","Can control all record permissions","org",,,"ALL",,,,,,
