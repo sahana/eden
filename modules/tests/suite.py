@@ -3,8 +3,14 @@
 # or
 # python web2py.py -S eden -M -R applications/eden/modules/tests/suite.py -A testscript
 
+import sys
+import re
+import time
+import unittest
+
 # Selenium WebDriver
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 from gluon.storage import Storage
@@ -36,12 +42,44 @@ else:
     test = None
 
 if test:
-    # Run specified Test
+    # Run specified Test after logging in
+    # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
+    # Maybe this could be bypassed for a test run within the suite by passing it an argument
+    login(account="admin")
     globals()[test]()
+
 else:
     # Run all Tests
-    staff()
-    inventory()
-
-# Cleanup
-browser.close()
+    # Log into admin testing account
+    login(account="admin")
+    
+    # List of individual automated test scripts which Suite will run one by one:
+    # Organization Management (ORG) tests
+    org001() # Setup Organizations
+    org002() # Setup Offices
+    
+    # Human Resources Management (HRM) tests
+    hrm001() # Setup Staff
+    hrm002() # Setup New Volunteer
+    hrm003() # Setup Training Course
+    hrm004() # Setup Training Event
+    hrm005() # Assign staff to Organization
+    hrm006() # Assign Staff to office
+    hrm007() # Assign staff to warehouse
+    
+    # Inventory management (INV) tests
+    inv001() # Setup Warehouses     // needs more refining
+    inv002() # Setup Items        // needs more refining
+    inv003() # Setup Catalogues // needs more refining
+    inv004() # Setup Categories // needs more refining
+    inv005() # Create Requests // needs more refining
+    inv006() # Match Requests // needs more refining
+    
+    # Assets management (ASSET) tests
+    asset001() # Set up Assets
+    
+    # Log out of testing account
+    logout() #
+    
+    # Cleanup 
+    browser.close()
