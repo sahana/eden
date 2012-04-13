@@ -1809,6 +1809,7 @@ class S3LayerEntityModel(S3Model):
     names = ["gis_layer_entity",
              "gis_layer_config",
              "gis_layer_symbology",
+             "gis_layer_config_onaccept",
             ]
 
     def model(self):
@@ -1987,6 +1988,7 @@ class S3LayerEntityModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage(
                 gis_layer_types = layer_types,
+                gis_layer_config_onaccept = self.layer_config_onaccept
             )
 
     # -------------------------------------------------------------------------
@@ -2482,7 +2484,9 @@ class S3MapModel(S3Model):
         # Google
         #
 
-        google_layer_types = ["satellite", "maps", "hybrid", "mapmaker", "mapmakerhybrid", "earth", "streetview"]
+        google_layer_types = ["satellite", "maps", "hybrid", "terrain",
+                              "mapmaker", "mapmakerhybrid",
+                              "earth", "streetview"]
 
         tablename = "gis_layer_google"
         table = define_table(tablename,
