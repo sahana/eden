@@ -191,6 +191,7 @@ class ListNews(ListView):
 
         return news
 
+@login_required
 def invite(request):
 
     """
