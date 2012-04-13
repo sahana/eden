@@ -734,6 +734,7 @@ class S3OptionsMenu:
                         #M("Geocode", f="geocode_manual"),
                     ),
                     M("Configuration", f="config", args=config_args(),
+                      _id="gis_menu_config",
                       check=config_menu),
                     M("Admin", restrict=[MAP_ADMIN])(
                         M("Hierarchy", f="hierarchy"),

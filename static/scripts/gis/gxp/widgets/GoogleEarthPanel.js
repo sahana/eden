@@ -160,12 +160,6 @@ gxp.GoogleEarthPanel = Ext.extend(Ext.Panel, {
         
         this.layers.on("add", this.updateLayers, this);
 
-        this.on("beforedestroy", function() {
-            this.layers.un("remove", this.updateLayers, this);
-            this.layers.un("update", this.updateLayers, this);
-            this.layers.un("add", this.updateLayers, this);
-        }, this);
-        
         this.fireEvent("pluginready", this.earth);
 
         // Set up events. Notice global google namespace.
@@ -201,6 +195,7 @@ gxp.GoogleEarthPanel = Ext.extend(Ext.Panel, {
     onShowEvent: function() {
         if (this.rendered) {
             this.layerCache = {};
+            // Wrap in try/catch to ensure can use rest of map offline
             try {
                 google.earth.createInstance(
                     this.body.dom,
@@ -209,8 +204,17 @@ gxp.GoogleEarthPanel = Ext.extend(Ext.Panel, {
                         this.fireEvent("pluginfailure", this, code);
                     }).createDelegate(this)
                 );
-            } catch (err) {};
+            } catch(err) {}
         }
+    },
+
+    /**
+     */
+    beforeDestroy: function() {
+        this.layers.un("remove", this.updateLayers, this);
+        this.layers.un("update", this.updateLayers, this);
+        this.layers.un("add", this.updateLayers, this);
+        gxp.GoogleEarthPanel.superclass.beforeDestroy.call(this);
     },
 
     /** private: method[updateLayers]
@@ -221,7 +225,10 @@ gxp.GoogleEarthPanel = Ext.extend(Ext.Panel, {
     updateLayers: function() {
         if (!this.earth) return;
 
-        var features = this.earth.getFeatures();
+        // Wrap in try/catch to avoid "Bad NPObject as private data!"
+        try {
+            var features = this.earth.getFeatures();
+        } catch(err) { return; }
         var f = features.getFirstChild();
 
         while (f != null) {

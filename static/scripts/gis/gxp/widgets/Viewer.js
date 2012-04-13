@@ -6,6 +6,18 @@
  * of the license.
  */
 
+/**
+ * @requires util.js
+ * requires OpenLayers/Control/Attribution.js
+ * requires OpenLayers/Control/ZoomPanel.js
+ * requires OpenLayers/Control/Navigation.js
+ * requires OpenLayers/Kinetic.js
+ * requires OpenLayers/Control/PanPanel.js
+ * requires GeoExt/widgets/MapPanel.js
+ * requires GeoExt/widgets/ZoomSlider.js
+ * requires GeoExt/widgets/tips/ZoomSliderTip.js
+ */
+
 /** api: (define)
  *  module = gxp
  *  class = Viewer
@@ -91,6 +103,9 @@ gxp.Viewer = Ext.extend(Ext.util.Observable, {
      *  * items: not available - use ``mapItems`` instead
      *  * tbar: not available - use :class:`gxp.Tool` plugins to populate
      *    the tbar
+     *  * wrapDateLine: ``Boolean`` Should we wrap the dateline? Defaults to
+     *    true
+     *  * numZoomLevels: ``Integer`` The number of zoom levels to use.
      *  * layers: ``Array(Object)``. Each object has a ``source`` property
      *    referencing a :class:`gxp.plugins.LayerSource`. The viewer will call
      *    the ``createLayerRecord`` of this source with the object as
@@ -384,6 +399,11 @@ gxp.Viewer = Ext.extend(Ext.util.Observable, {
         
         var config = Ext.apply({}, this.initialConfig.map);
         var mapConfig = {};
+        var baseLayerConfig = {
+            wrapDateLine: config.wrapDateLine !== undefined ? config.wrapDateLine : true,
+            numZoomLevels: config.numZoomLevels,
+            displayInLayerSwitcher: false
+        };
         
         // split initial map configuration into map and panel config
         if (this.initialConfig.map) {
@@ -403,7 +423,10 @@ gxp.Viewer = Ext.extend(Ext.util.Observable, {
             map: Ext.applyIf({
                 theme: mapConfig.theme || null,
                 controls: mapConfig.controls || [
-                    new OpenLayers.Control.Navigation({zoomWheelOptions: {interval: 250}}),
+                    new OpenLayers.Control.Navigation({
+                        zoomWheelOptions: {interval: 250},
+                        dragPanOptions: {enableKinetic: true}
+                    }),
                     new OpenLayers.Control.PanPanel(),
                     new OpenLayers.Control.ZoomPanel(),
                     new OpenLayers.Control.Attribution()
@@ -415,7 +438,7 @@ gxp.Viewer = Ext.extend(Ext.util.Observable, {
             center: config.center && new OpenLayers.LonLat(config.center[0], config.center[1]),
             resolutions: config.resolutions,
             forceInitialExtent: true,
-            layers: null,
+            layers: [new OpenLayers.Layer(null, baseLayerConfig)],
             items: this.mapItems,
             plugins: this.mapPlugins,
             tbar: config.tbar || new Ext.Toolbar({
@@ -660,6 +683,7 @@ gxp.Viewer = Ext.extend(Ext.util.Observable, {
         Ext.apply(this.sources, sources);
         
         //standardize portal configuration to portalConfig
+        /*
         if (state.portalItems) {
             //initial config included both portal config and items
             if (state.portalConfig && state.portalConfig.items && state.portalConfig.items.length) {
@@ -676,11 +700,15 @@ gxp.Viewer = Ext.extend(Ext.util.Observable, {
                 state.portalConfig.items = state.portalItems;
             }
         }
-        
+        */
+       
         //get tool states, for most tools this will be the same as its initial config
         state.tools = [];
         Ext.iterate(this.tools,function(key,val,obj){
-            state.tools.push(val.getState());
+            //only get and persist the state if there a tool specific getState method
+            if(val.getState != gxp.plugins.Tool.prototype.getState){
+                state.tools.push(val.getState());
+            }
         });
         return state;
     },

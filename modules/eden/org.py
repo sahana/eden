@@ -47,19 +47,23 @@ from ..s3 import *
 
 T = current.T
 organisation_type_opts = {
-    1:T("Government"),
-    2:T("Embassy"),
-    3:T("International NGO"),
-    4:T("Donor"),               # Don't change this number without changing organisation_popup.html
-    6:T("National NGO"),
-    7:T("UN"),
-    8:T("International Organization"),
-    9:T("Military"),
-    10:T("Private"),
-    11:T("Intergovernmental Organization"),
-    12:T("Institution"),
-    13:T("Red Cross / Red Crescent")
-    #12:"MINUSTAH"   Haiti-specific
+    # http://hxl.humanitarianresponse.info/index.html#Organisation
+    1:T("Government"),          # HXL: Government organisation
+    2:T("Embassy"),             # Add to HXL?
+    3:T("International NGO"),   # HXL: NGO - split?
+    4:T("Donor"),               # HXL: Bilateral organisation. Don't change this number without changing organisation_popup.html
+    6:T("National NGO"),        # HXL: NGO - split?
+    7:T("UN"),                  # HXL: UN agency
+    8:T("International Organization"), # remove?
+    9:T("Military"),            # Add to HXL?
+    10:T("Private"),            # HXL: Private organisation / foundation
+    11:T("Intergovernmental Organization"), # HXL: Inter-governmental organisation
+    12:T("Institution"),        # remove?
+    13:T("Red Cross / Red Crescent") # HXL: Red cross / red crescent
+    # These are affiliation roles:
+    # http://eden.sahanafoundation.org/wiki/BluePrintPersonEntityModel#Roles
+    # HXL: Distributing partner
+    # HXL: Supplying agency
 }
 
 # =============================================================================

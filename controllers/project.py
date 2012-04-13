@@ -17,8 +17,10 @@ def index():
     """ Module's Home Page """
 
     # Bypass home page & go direct to searching for Projects
-    redirect(URL(f="project", vars={"tasks":1}))
-    #return project()
+    if deployment_settings.get_project_drr():
+        return project()
+    else:
+        redirect(URL(f="project", vars={"tasks":1}))
 
     module_name = deployment_settings.modules[module].name_nice
     response.title = module_name

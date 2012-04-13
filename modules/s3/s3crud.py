@@ -1701,7 +1701,7 @@ class S3CRUD(S3Method):
 
         # Build response
         if success and result.committed:
-            id = result.id
+            r.id = result.id
             method = result.method
             if method == result.METHOD.CREATE:
                 item = xml.json_message(True, 201, "Created as %s?%s.id=%s" %
@@ -1710,7 +1710,7 @@ class S3CRUD(S3Method):
                                    vars=dict(),
                                   )
                             ),
-                         result.name, result.id)
+                         r.name, result.id)
                         )
             else:
                 item = xml.json_message(True, 200, "Record updated")
