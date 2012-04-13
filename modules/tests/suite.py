@@ -40,7 +40,7 @@ if test:
     globals()[test]()
 else:
 #    staff()
-    list_organization()
+    create_organization()
     create_office()
 
 # Cleanup

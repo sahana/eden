@@ -1,4 +1,4 @@
-__all__ = ["list_organization"]
+__all__ = ["create_organization"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -9,7 +9,7 @@ from tests import *
 
 # -----------------------------------------------------------------------------
 
-def list_organization():
+def create_organization():
 
     config = current.test_config
     browser = config.browser
