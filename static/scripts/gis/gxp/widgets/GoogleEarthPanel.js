@@ -195,13 +195,16 @@ gxp.GoogleEarthPanel = Ext.extend(Ext.Panel, {
     onShowEvent: function() {
         if (this.rendered) {
             this.layerCache = {};
-            google.earth.createInstance(
-                this.body.dom,
-                this.onEarthReady.createDelegate(this),
-                (function(code) {
-                    this.fireEvent("pluginfailure", this, code);
-                }).createDelegate(this)
-            );
+            // Wrap in try/catch to ensure can use rest of map offline
+            try {
+                google.earth.createInstance(
+                    this.body.dom,
+                    this.onEarthReady.createDelegate(this),
+                    (function(code) {
+                        this.fireEvent("pluginfailure", this, code);
+                    }).createDelegate(this)
+                );
+            } catch(err) {}
         }
     },
 
@@ -222,7 +225,10 @@ gxp.GoogleEarthPanel = Ext.extend(Ext.Panel, {
     updateLayers: function() {
         if (!this.earth) return;
 
-        var features = this.earth.getFeatures();
+        // Wrap in try/catch to avoid "Bad NPObject as private data!"
+        try {
+            var features = this.earth.getFeatures();
+        } catch(err) { return; }
         var f = features.getFirstChild();
 
         while (f != null) {

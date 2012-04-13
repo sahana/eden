@@ -307,8 +307,8 @@ def track_movement():
         if r.interactive:
             if "viewing" in request.vars:
                 dummy, item_id = request.vars.viewing.split(".")
-                filter = (table.item_id == item_id ) | \
-                         (table.send_inv_item_id == item_id)
+                filter = (table.send_inv_item_id == item_id ) | \
+                         (table.recv_inv_item_id == item_id)
                 response.s3.filter = filter
         return True
 
@@ -729,7 +729,8 @@ def recv():
                 # Display the values that can only be entered on create
                 tracktable.item_source_no.readable = True
                 tracktable.item_source_no.writable = True
-                tracktable.recv_quantity.readable = True
+                # This is a received purchase so change the label to reflect this
+                tracktable.quantity.label =  T("Quantity Received")
                 tracktable.recv_bin.readable = True
                 tracktable.recv_bin.writable = True
 
@@ -1005,25 +1006,25 @@ def recv_cancel():
                  args = [recv_id]))
 
 # -----------------------------------------------------------------------------
-def recv_sent():
-    """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
-        @ToDo: Consider making obsolete
-    """
-
-    send_id = request.args[0]
-    # This is more explicit than getting the site_id from the inv_send.to_site_id
-    # As there may be multiple sites per location.
-    #site_id = request.vars.site_id
-
-
-
-    # Flag shipment as received as received
-    s3db.inv_send[send_id] = dict(status = eden.inv.inv_ship_status["RECEIVED"])
-
-    # Redirect to rec
-    redirect(URL(c = "inv",
-                 f = "recv",
-                 args = [recv_id, "recv_item"]))
+#def recv_sent():
+#    """ wrapper function to copy data from a shipment which was sent to the warehouse to a recv shipment (will happen at destination WH)
+#        @ToDo: Consider making obsolete
+#    """
+#
+#    send_id = request.args[0]
+#    # This is more explicit than getting the site_id from the inv_send.to_site_id
+#    # As there may be multiple sites per location.
+#    #site_id = request.vars.site_id
+#
+#
+#
+#    # Flag shipment as received as received
+#    s3db.inv_send[send_id] = dict(status = eden.inv.inv_ship_status["RECEIVED"])
+#
+#    # Redirect to rec
+#    redirect(URL(c = "inv",
+#                 f = "recv",
+#                 args = [recv_id, "recv_item"]))
 # =============================================================================
 def track_item():
     """ RESTful CRUD controller """
