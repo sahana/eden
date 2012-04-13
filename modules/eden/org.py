@@ -882,7 +882,6 @@ class S3SiteModel(S3Model):
         """
             Create the code from the name
         """
-
         s3db = current.s3db
         db = current.db
         site_table = s3db.org_site
@@ -911,17 +910,14 @@ class S3SiteModel(S3Model):
         if temp_code:
             db(site_table.site_id == form.vars.site_id).update(code = temp_code)
 
-    # -------------------------------------------------------------------------
     @staticmethod
     def getCodeList(code, wildcard_posn=[]):
         """
         """
-
         s3db = current.s3db
         db = current.db
         site_table = s3db.org_site
         temp_code = ""
-
         # Inject the wildcard charater in the right positions
         for posn in range(len(code)):
             if posn in wildcard_posn:
@@ -944,7 +940,6 @@ class S3SiteModel(S3Model):
     def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
         """
         """
-
         # Select the replacement letters with numbers first and then
         # followed by the letters in least commonly used order
         replacement_char = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
@@ -1833,8 +1828,17 @@ def org_office_controller():
 
         return True
     s3.prep = prep
-
-    rheader = s3db.org_rheader
+    # remove CRUD generated buttons in the tabs
+    manager.configure("inv_inv_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
+    if "inv_item" in request.args:
+        rheader = s3db.inv_warehouse_rheader
+    else:
+        rheader = s3db.org_rheader
     return s3_rest_controller("org", "office", rheader=rheader)
 
 # END =========================================================================
