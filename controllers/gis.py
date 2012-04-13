@@ -24,6 +24,24 @@ def index():
                      closable=False,
                      maximizable=False)
 
+    # Code to go fullscreen
+    response.s3.jquery_ready.append("""
+$('#gis_fullscreen_map-btn').click( function(evt) {
+    if (navigator.appVersion.indexOf("MSIE") != -1) {
+        // IE (even 9) doesn't like the dynamic full-screen, so simply do a page refresh for now
+    } else {
+        // Remove components from embedded Map's containers without destroying their contents
+        S3.gis.mapWestPanelContainer.removeAll(false);
+        S3.gis.mapPanelContainer.removeAll(false);
+        S3.gis.mapWin.items.items = [];
+        S3.gis.mapWin.doLayout();
+        S3.gis.mapWin.destroy();
+        // Add a full-screen window which will inherit these components
+        addMapWindow();
+        evt.preventDefault();
+    }
+});""")
+                     
     return dict(map=map)
 
 # =============================================================================
@@ -787,6 +805,7 @@ def config():
                  not auth.s3_has_role(MAP_ADMIN):
                 pe_id = auth.user.pe_id
                 r.table.pe_id.default = pe_id
+                r.table.pe_type.default = 1
 
         return True
     response.s3.prep = prep
@@ -796,12 +815,12 @@ def config():
         if r.interactive:
             if r.component_name == "layer_entity":
                 s3_action_buttons(r, deletable=False)
-                # Show the enable button if the layer is not currently disabled
                 ltable = s3db.gis_layer_config
-                query = (ltable.enabled == False) & \
-                        (ltable.config_id == r.table.id)
-                rows = db(query).select(ltable.layer_id)
-                restrict = [str(row.layer_id) for row in rows]
+                query = (ltable.config_id == r.id)
+                rows = db(query).select(ltable.layer_id,
+                                        ltable.enabled)
+                # Show the enable button if the layer is not currently enabled
+                restrict = [str(row.layer_id) for row in rows if not row.enabled]
                 response.s3.actions.append(dict(label=str(T("Enable")),
                                                 _class="action-btn",
                                                 url=URL(args=[r.id, "layer_entity", "[id]", "enable"]),
@@ -809,11 +828,7 @@ def config():
                                                 )
                                             )
                 # Show the disable button if the layer is not currently disabled
-                ltable = s3db.gis_layer_config
-                query = (ltable.enabled != False) & \
-                        (ltable.config_id == r.table.id)
-                rows = db(query).select(ltable.layer_id)
-                restrict = [str(row.layer_id) for row in rows]
+                restrict = [str(row.layer_id) for row in rows if row.enabled]
                 response.s3.actions.append(dict(label=str(T("Disable")),
                                                 _class="action-btn",
                                                 url=URL(args=[r.id, "layer_entity", "[id]", "disable"]),
@@ -826,19 +841,34 @@ def config():
             if result["status"] == "success":
                 # Process Layers
                 ltable = s3db.gis_layer_config
-                update_or_insert = ltable.update_or_insert
                 id = r.id
                 layers = json.loads(request.post_vars.layers)
+                form = Storage()
                 for layer in layers:
                     if "id" in layer:
                         layer_id = layer["id"]
+                        vars = Storage(
+                                config_id = id,
+                                layer_id = layer_id,
+                            )
+                        if "base" in layer:
+                            vars.base = layer["base"]
+                        if "visible" in layer:
+                            vars.visible = layer["visible"]
+                        else:
+                            vars.visible = False
+                        # Update or Insert?
                         query = (ltable.config_id == id) & \
                                 (ltable.layer_id == layer_id)
-                        # @ToDo: If this is a Base Layer, do we make it the default?
-                        update_or_insert(query,
-                                         config_id = id,
-                                         layer_id = layer_id,
-                                         visible = layer["visible"])
+                        record = db(query).select(ltable.id,
+                                                  limitby=(0, 1)).first()
+                        if record:
+                            vars.id = record.id
+                        else:
+                            vars.id = ltable.insert(**vars)
+                        # Ensure that Default Base processing happens properly
+                        form.vars = vars
+                        s3db.gis_layer_config_onaccept(form)
 
         return output
     response.s3.postp = postp
