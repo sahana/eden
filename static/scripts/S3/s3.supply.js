@@ -154,7 +154,7 @@ $(document).ready(function() {
 							RecvTable += data[0].id
 							
 						} else {
-							RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/', ShipmentType, '_item');
+							RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
 							RecvTable += "<a href = '" + RecvURL + "'>"; 
 							if (data[i].date != null) {
 								RecvTable += data[i].date.substring(0, 10) + ' - '
