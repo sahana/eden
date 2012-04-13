@@ -352,6 +352,17 @@ class S3Config(Storage):
         return self.L10n.get("datetime_format", T("%Y-%m-%d %H:%M:%S"))
     def get_L10n_utc_offset(self):
         return self.L10n.get("utc_offset", "UTC +0000")
+    def get_L10n_lat_lon_format(self):
+        """
+            This is used to format latitude and longitude fields when they are
+            displayed by eden. The format string may include the following
+            placeholders:
+            - %d -- Degress (integer)
+            - %m -- Minutes (integer)
+            - %s -- Seconds (double)
+            - %f -- Degrees in decimal (double)
+        """
+        return self.L10n.get("lat_lon_display_format", "%f")
     def get_L10n_mandatory_lastname(self):
         return self.L10n.get("mandatory_lastname", False)
     def get_L10n_thousands_separator(self):
