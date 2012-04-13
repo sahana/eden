@@ -25,7 +25,7 @@ update_check_needed = False
 #-------------------------------------Check To See If First Run or Not ---------------------------------
 
 if not os.path.exists(os.getcwd() + "/applications/eden/models/000_config.py"):
-    redirect( URL(c="default",f="websetup"))
+    redirect("http://localhost:8000/websetup")
 
 
 try:
