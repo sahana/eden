@@ -399,7 +399,7 @@ deployment_settings.gis.display_L0 = False
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 
-# Organisation Management
+# Organsiation Management
 # Set the length of the auto-generated org/site code the default is 10
 #deployment_settings.org.site_code_len = 3
 
