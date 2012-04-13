@@ -8,7 +8,7 @@ from selenium import webdriver
 
 from gluon import current
 from gluon.storage import Storage
-
+import sys
 # S3 Tests
 from tests import *
 
@@ -39,8 +39,9 @@ if test:
     # Run specified Test
     globals()[test]()
 else:
-    # Run all Tests
-    staff()
+#    staff()
+    list_organization()
+    create_office()
 
 # Cleanup
 browser.close()
