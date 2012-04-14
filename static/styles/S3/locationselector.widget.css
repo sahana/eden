@@ -1,0 +1,14 @@
+.gis_coord_wrap .decimal {
+    width: 180px;
+}
+
+.gis_coord_wrap .gis_coord_dms input {
+    width: 32px;
+}
+
+.gis_coord_wrap .gis_coord_dms input.seconds {
+    width: 64px;
+}
+.gis_coord_dms {
+font-weight: bold;
+}
