@@ -424,17 +424,19 @@ class S3XML(S3Codec):
         """
 
         if f in (self.CUSER, self.MUSER, self.OUSER):
-            return cache.ram("auth_user_%s" % v,
-                             lambda: self.represent_user(v), time_expire=60)
+            represent = current.cache.ram("auth_user_%s" % v,
+                                          lambda: self.represent_user(v),
+                                          time_expire=60)
         elif f in (self.OGROUP):
-            return cache.ram("auth_group_%s" % v,
-                             lambda: self.represent_role(v), time_expire=60)
-
-        manager = current.manager
-        return manager.represent(table[f],
-                                 value=v,
-                                 strip_markup=True,
-                                 xml_escape=True)
+            represent = current.cache.ram("auth_group_%s" % v,
+                                          lambda: self.represent_role(v),
+                                          time_expire=60)
+        else:
+            represent = current.manager.represent(table[f],
+                                                  value=v,
+                                                  strip_markup=True,
+                                                  xml_escape=True)
+        return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
