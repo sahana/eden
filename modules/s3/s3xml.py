@@ -424,9 +424,11 @@ class S3XML(S3Codec):
         """
 
         if f in (self.CUSER, self.MUSER, self.OUSER):
-            return self.represent_user(v)
+            return cache.ram("auth_user_%s" % v,
+                             lambda: self.represent_user(v), time_expire=60)
         elif f in (self.OGROUP):
-            return self.represent_role(v)
+            return cache.ram("auth_group_%s" % v,
+                             lambda: self.represent_role(v), time_expire=60)
 
         manager = current.manager
         return manager.represent(table[f],
@@ -443,10 +445,8 @@ class S3XML(S3Codec):
         utable = auth.settings.table_user
         user = None
         if "email" in utable:
-            user = db(utable.id == user_id).select(
-                        utable.email,
-                        limitby=(0, 1),
-                        cache=(cache.ram, S3XML.CACHE_TTL)).first()
+            user = db(utable.id == user_id).select(utable.email,
+                                                   limitby=(0, 1)).first()
         if user:
             return user.email
         return None
