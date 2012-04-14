@@ -37,6 +37,7 @@ __all__ = ["S3HiddenWidget",
            #"S3UploadWidget",
            "S3AutocompleteWidget",
            "S3LocationAutocompleteWidget",
+           "S3LatLonWidget",
            "S3OrganisationAutocompleteWidget",
            "S3PersonAutocompleteWidget",
            "S3SiteAutocompleteWidget",
@@ -1611,14 +1612,10 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                     _id="gis_location_postcode",
                                     _name="gis_location_postcode",
                                     _disabled="disabled")
-            lat_widget = INPUT(value=lat,
-                               _id="gis_location_lat",
-                               _name="gis_location_lat",
-                               _disabled="disabled")
-            lon_widget = INPUT(value=lon,
-                               _id="gis_location_lon",
-                               _name="gis_location_lon",
-                               _disabled="disabled")
+
+            lat_widget = S3LatLonWidget("lat", True).widget(value=lat)
+            lon_widget = S3LatLonWidget("lon", True).widget(value=lon)
+
             for level in levels:
                 if level == "L0":
                     # L0 has been handled as special case earlier
@@ -1666,10 +1663,9 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                      _name="gis_location_street")
             postcode_widget = INPUT(_id="gis_location_postcode",
                                     _name="gis_location_postcode")
-            lat_widget = INPUT(_id="gis_location_lat",
-                               _name="gis_location_lat")
-            lon_widget = INPUT(_id="gis_location_lon",
-                               _name="gis_location_lon")
+            lat_widget = S3LatLonWidget("lat").widget()
+            lon_widget = S3LatLonWidget("lon").widget()
+
             for level in levels:
                 hidden = ""
                 if level == "L0":
@@ -1895,6 +1891,96 @@ S3.i18n.gis_country_required = '%s';""" % (country_snippet,
                         requires=requires
                       )
 
+# -----------------------------------------------------------------------------
+class S3LatLonWidget(DoubleWidget):
+    """
+        Widget for latitude or longitude input, gives option to input in terms
+        of degrees, minutes and seconds
+    """
+
+    _id = ""
+    _name = ""
+    disabled = False
+
+    def __init__(self, type, disabled=False):
+        self._id = "gis_location_%s" % type
+        self._name = self._id
+        self.disabled = disabled
+
+    def widget(self,
+               field = None,
+               value = None):
+
+        s3 = current.response.s3
+        T = current.T
+        BUTTON = TAG.button
+
+        attr = dict(value=value,
+                    _class="decimal %s" % self._class,
+                    _id=self._id,
+                    _name=self._name)
+
+        attr_dms = dict()
+
+        if self.disabled:
+            attr["_disabled"] = "disabled"
+            attr_dms["_disabled"] = "disabled"
+
+        dms_boxes = SPAN(
+                        INPUT(_class="degrees", **attr_dms), "° ",
+                        INPUT(_class="minutes", **attr_dms), "' ",
+                        INPUT(_class="seconds", **attr_dms), "\" ",
+                        BUTTON(T("use decimal"),
+                            _class="gis_coord_switch_decimal"),
+                        _style="display: none;",
+                        _class="gis_coord_dms"
+                    )
+
+        decimal = SPAN(
+                        INPUT(**attr),
+                        BUTTON(T("use Degrees Minutes Seconds"),
+                            _class="gis_coord_switch_dms"
+                        ),
+                        _class="gis_coord_decimal"
+                  )
+
+        if not s3.lat_lon_i18n_appended:
+            s3.js_global.append("""
+S3.i18n.gis_only_numbers =
+  {degrees: '%s', minutes: '%s',seconds: '%s', decimal: '%s'};
+S3.i18n.gis_range_error =
+  {degrees: {lat: '%s', lon: '%s'}, minutes: '%s', seconds: '%s',
+    decimal: {lat: '%s', lon: '%s'}}
+"""     %  (T("Degrees must be a number."),
+            T("Minutes must be a number."),
+            T("Seconds must be a number."),
+            T("Degrees must be a number."),
+            T("Degrees in a latitude must be between -90 to 90."),
+            T("Degrees in a longitude must be between -180 to 180."),
+            T("Minutes must be less than 60."),
+            T("Seconds must be less than 60."),
+            T("Latitude must be between -90 and 90."),
+            T("Longitude must be between -180 and 180.")))
+
+            s3.lat_lon_i18n_appended = True
+
+        if s3.debug and \
+            (not "S3/locationselector.widget.css" in s3.stylesheets):
+            s3.stylesheets.append("S3/locationselector.widget.css")
+
+
+        if (field == None):
+            return SPAN(decimal,
+                        dms_boxes,
+                        _class="gis_coord_wrap")
+        else:
+            return SPAN(
+                        decimal,
+                        dms_boxes,
+                        *controls,
+                        requires = field.requires,
+                        _class="gis_coord_wrap"
+                      )
 
 # -----------------------------------------------------------------------------
 class S3CheckboxesWidget(OptionsWidget):

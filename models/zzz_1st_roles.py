@@ -164,7 +164,7 @@ if len(pop_list) > 0:
                 dict(c="project", uacl=acl.READ, oacl=default_oacl),
                 dict(c="cr", uacl=acl.READ, oacl=default_oacl),
                 dict(c="hms", uacl=acl.READ, oacl=default_oacl),
-                dict(c="inv", uacl=acl.READ, oacl=default_oacl),
+                #dict(c="inv", uacl=acl.READ, oacl=default_oacl),
                 dict(c="supply", uacl=acl.READ, oacl=default_oacl),
                 dict(c="delphi", uacl=acl.READ, oacl=default_oacl),
 

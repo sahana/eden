@@ -743,15 +743,15 @@ def config():
                     field.writable = False
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(
-                    title_create = T("Add Layer Configuration for this Profile"),
+                    title_create = T("Add Layer to this Profile"),
                     title_display = LAYER_DETAILS,
                     title_list = LAYERS,
                     title_update = EDIT_LAYER,
-                    subtitle_create = T("Add New Layer Configuration"),
-                    subtitle_list = T("List Layer Configurations in Profile"),
-                    label_list_button = T("List Layer Configurations in Profile"),
-                    label_create_button = ADD_LAYER,
-                    label_delete_button = T("Remove Layer Configuration from Profile"),
+                    subtitle_create = T("Add Layer from Catalog"),
+                    subtitle_list = T("List Layers in Profile"),
+                    label_list_button = T("List Layers in Profile"),
+                    label_create_button = T("Add Layer from Catalog"),
+                    label_delete_button = T("Remove Layer from Profile"),
                     msg_record_created = LAYER_ADDED,
                     msg_record_modified = LAYER_UPDATED,
                     msg_list_empty = T("No Layers currently configured in this Profile"),
