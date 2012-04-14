@@ -120,6 +120,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'e_cidadania.urls'
+APPEND_SLASH = True
 
 TEMPLATE_DIRS = (
     (cwd + '/templates'),
