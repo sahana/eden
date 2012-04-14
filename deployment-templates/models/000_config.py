@@ -5,7 +5,7 @@
     All settings which are typically edited for a deployment should be done here
     Deployers shouldn't typically need to edit any other files.
     NOTE FOR DEVELOPERS:
-    /models/000_config.py is NOT in the BZR repository, as this file will be changed
+    /models/000_config.py is NOT in the Git repository, as this file will be changed
     during deployments.
     To for changes to be committed to trunk, please also edit:
     deployment-templates/models/000_config.py
@@ -60,9 +60,11 @@ deployment_settings.auth.registration_requires_approval = False
 # Uncomment this to allow users to Login using Gmail's SMTP
 #deployment_settings.auth.gmail_domains = ["gmail.com"]
 # Fill these to allow users to Login using Facebook
+# https://developers.facebook.com/apps
 #deployment_settings.auth.facebook_id = ""
 #deployment_settings.auth.facebook_secret = ""
 # Fill these to allow users to Login using Google
+# https://code.google.com/apis/console/
 #deployment_settings.auth.google_id = ""
 #deployment_settings.auth.google_secret = ""
 # Uncomment this to allow users to Login using OpenID

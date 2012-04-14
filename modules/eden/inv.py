@@ -1304,8 +1304,8 @@ $(document).ready(function() {
                 db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity + record.recv_quantity)
             else:
                 source_type = 0
-                if form.vars.send_id:
-                    source_type = stable[form.vars.send_id].source_type
+                if form.vars.send_inv_item_id:
+                    source_type = inv_item_table[form.vars.send_inv_item_id].source_type
                 else:
                     if rtable[record.recv_id].type == 2:
                         source_type = 1 # Donation
