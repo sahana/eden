@@ -47,7 +47,15 @@ if len(pop_list) > 0:
         #                     timeout=300, # seconds
         #                     repeats=0    # unlimited
         #                    )
-
+        
+        #Processing of unparsed messages.
+        #s3task.schedule_task("process_log",
+                             #period=300,  # seconds
+                             #timeout=300, # seconds
+                             #repeats=0    # unlimited
+                             #)
+        
+        
     # Person Registry
     tablename = "pr_person"
     table = db[tablename]
