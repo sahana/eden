@@ -393,8 +393,8 @@ function s3_gis_lat_lon_converter() {
     function set($e) {
         return function (v) {
             // clear and focus or set a field
-            $e.val(v||"")
-            if (typeof(v) == "undefined") $e.focus();
+            $e.val(v||'')
+            if (typeof(v) == 'undefined') $e.focus();
         }
     }
 
@@ -429,17 +429,17 @@ function s3_gis_lat_lon_converter() {
 
     function to_decimal(wrap) {
 
-        var d = $(".degrees", wrap).val() || 0,
-            m = $(".minutes", wrap).val() || 0,
-            s = $(".seconds", wrap).val() || 0,
+        var d = $('.degrees', wrap).val() || 0,
+            m = $('.minutes', wrap).val() || 0,
+            s = $('.seconds', wrap).val() || 0,
 
-            set_d = set($(".degrees", wrap)),
-            set_m = set($(".minutes", wrap)),
-            set_s = set($(".seconds", wrap)),
-            set_dec = set($(".decimal", wrap)),
+            set_d = set($('.degrees', wrap)),
+            set_m = set($('.minutes', wrap)),
+            set_s = set($('.seconds', wrap)),
+            set_dec = set($('.decimal', wrap)),
 
-            isLat = $(".decimal", wrap)
-                        .attr("id") == "gis_location_lat";
+            isLat = $('.decimal', wrap)
+                        .attr('id') == 'gis_location_lat';
 
         // validate degrees
         if (!isNum(d)) {
@@ -494,28 +494,28 @@ function s3_gis_lat_lon_converter() {
 
         var dms = get_dms(decimal);
 
-        set_dec("" + decimal);
-        set_d(dms.d || "0");
-        set_m(dms.m || "0");
-        set_s(dms.s || "0");
+        set_dec('' + decimal);
+        set_d(dms.d || '0');
+        set_m(dms.m || '0');
+        set_s(dms.s || '0');
     }
 
-    $(".gis_coord_dms input").blur(function () {
+    $('.gis_coord_dms input').blur(function () {
         to_decimal(get_wrap($(this)));
     }).keypress(function(e) {
         if (e.which == 13) e.preventDefault();
     });
 
     function to_dms(wrap) {
-        var field = $(".decimal", wrap),
+        var field = $('.decimal', wrap),
             dec = field.val(),
-            isLat = $(".decimal", wrap).attr("id") == "gis_location_lat";
+            isLat = $('.decimal', wrap).attr('id') == 'gis_location_lat';
 
-        if (dec == "") return;
+        if (dec == '') return;
 
         if (!isNum(dec)) {
             alert(nanError.decimal);
-            field.val("").focus();
+            field.val('').focus();
             return;
         }
 
@@ -528,33 +528,33 @@ function s3_gis_lat_lon_converter() {
 
         var dms = get_dms(dec);
 
-        $(".degrees", wrap).val(dms.d || "0");
-        $(".minutes", wrap).val(dms.m || "0");
-        $(".seconds", wrap).val(dms.s || "0");
+        $('.degrees', wrap).val(dms.d || '0');
+        $('.minutes', wrap).val(dms.m || '0');
+        $('.seconds', wrap).val(dms.s || '0');
     }
 
-    $(".gis_coord_decimal input").blur(function () {
+    $('.gis_coord_decimal input').blur(function () {
         to_dms(get_wrap($(this)));
     }).keypress(function(e) {
         if (e.which == 13) e.preventDefault();
     });
 
-    $(".gis_coord_switch_dms").click(function (evt) {
+    $('.gis_coord_switch_dms').click(function (evt) {
         var wrap = get_wrap($(this));
-        $(".gis_coord_dms", wrap).show();
-        $(".gis_coord_decimal", wrap).hide();
+        $('.gis_coord_dms', wrap).show();
+        $('.gis_coord_decimal', wrap).hide();
         evt.preventDefault();
     });
 
-    $(".gis_coord_switch_decimal").click(function (evt) {
+    $('.gis_coord_switch_decimal').click(function (evt) {
         var wrap = get_wrap($(this));
-        $(".gis_coord_decimal", wrap).show();
-        $(".gis_coord_dms", wrap).hide();
+        $('.gis_coord_decimal', wrap).show();
+        $('.gis_coord_dms', wrap).hide();
         evt.preventDefault();
     });
 
     // Initially fill up the dms boxes
-    $(".gis_coord_wrap").each(function () {
+    $('.gis_coord_wrap').each(function () {
         to_dms($(this));
     });
 }
