@@ -1613,8 +1613,10 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                                     _name="gis_location_postcode",
                                     _disabled="disabled")
 
-            lat_widget = S3LatLonWidget("lat", True).widget(value=lat)
-            lon_widget = S3LatLonWidget("lon", True).widget(value=lon)
+            lat_widget = S3LatLonWidget("lat",
+                disabled=True).widget(value=lat)
+            lon_widget = S3LatLonWidget("lon",
+                switch_button=True, disabled=True).widget(value=lon)
 
             for level in levels:
                 if level == "L0":
@@ -1664,7 +1666,7 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
             postcode_widget = INPUT(_id="gis_location_postcode",
                                     _name="gis_location_postcode")
             lat_widget = S3LatLonWidget("lat").widget()
-            lon_widget = S3LatLonWidget("lon").widget()
+            lon_widget = S3LatLonWidget("lon", switch_button=True).widget()
 
             for level in levels:
                 hidden = ""
@@ -1901,18 +1903,19 @@ class S3LatLonWidget(DoubleWidget):
     _id = ""
     _name = ""
     disabled = False
+    switch_button = False
 
-    def __init__(self, type, disabled=False):
+    def __init__(self, type, switch_button=False, disabled=False):
         self._id="gis_location_%s" % type
         self._name=self._id
         self.disabled=disabled
+        self.switch_button=switch_button
 
     def widget(self,
                field = None,
                value = None):
         s3 = current.response.s3
         T = current.T
-        BUTTON = TAG.button
 
         attr = dict(value=value,
                     _class="decimal %s" % self._class,
@@ -1929,17 +1932,20 @@ class S3LatLonWidget(DoubleWidget):
                         INPUT(_class="degrees", **attr_dms), "° ",
                         INPUT(_class="minutes", **attr_dms), "' ",
                         INPUT(_class="seconds", **attr_dms), "\" ",
-                        BUTTON(T("in decimal"),
-                            _class="gis_coord_switch_decimal"),
+                        ["",
+                            DIV(A(T("Use decimal"),
+                                    _class="action-btn gis_coord_switch_decimal"))
+                        ][self.switch_button],
                         _style="display: none;",
                         _class="gis_coord_dms"
                     )
 
         decimal = SPAN(
                         INPUT(**attr),
-                        BUTTON(T("in DMS"),
-                            _class="gis_coord_switch_dms"
-                        ),
+                        ["",
+                            DIV(A(T("Use deg, min, sec"),
+                                    _class="action-btn gis_coord_switch_dms"))
+                        ][self.switch_button],
                         _class="gis_coord_decimal"
                   )
 
