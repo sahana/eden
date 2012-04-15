@@ -293,6 +293,11 @@ def activity():
     # Pre-process
     def postp(r, output):
         if r.representation == "plain":
+            def represent(record, field):
+                if field.represent:
+                    return field.represent(record[field])
+                else:
+                    return record[field]
             # Add VirtualFields to Map Popup
             # Can't inject into SQLFORM, so need to simply replace
             item = TABLE()
@@ -301,7 +306,7 @@ def activity():
             fields = [table[f] for f in table.fields if table[f].readable]
             record = r.record
             for field in fields:
-                item.append(TR(TD(field.label), TD(field.represent(record[field]))))
+                item.append(TR(TD(field.label), TD(represent(record, field))))
             hierarchy = gis.get_location_hierarchy()
             item.append(TR(TD(hierarchy["L4"]), TD(record["name"])))
             for field in ["L3", "L2", "L1"]:

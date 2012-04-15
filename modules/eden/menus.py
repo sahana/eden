@@ -961,6 +961,7 @@ class S3OptionsMenu:
                         M("List All"),
                         M("Open Incidents", vars={"open":1}),
                         M("Timeline", args="timeline"),
+                        M("Import", m="import"),
                         M("Search", m="search"),
                         M("Report", m="report",
                           vars=dict(rows="L1",
