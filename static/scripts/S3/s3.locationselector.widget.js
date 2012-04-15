@@ -542,12 +542,18 @@ function s3_gis_lat_lon_converter() {
     $('.gis_coord_switch_dms').click(function (evt) {
         $('.gis_coord_dms').show();
         $('.gis_coord_decimal').hide();
+        $('.gis_coord_wrap').each(function () {
+            to_dms($(this));
+        });
         evt.preventDefault();
     });
 
     $('.gis_coord_switch_decimal').click(function (evt) {
         $('.gis_coord_decimal').show();
         $('.gis_coord_dms').hide();
+        $('.gis_coord_wrap').each(function () {
+            to_decimal($(this));
+        });
         evt.preventDefault();
     });
 
