@@ -722,7 +722,7 @@ class S3XML(S3Codec):
                     if current.deployment_settings.get_gis_spatialdb():
                         if current.auth.permission.format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
-                            geojson = db(query).select(ktable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias('geojson'),
+                            geojson = db(query).select(ktable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"),
                                                        limitby=(0, 1)).first().geojson
                             if geojson:
                                 # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
@@ -731,7 +731,7 @@ class S3XML(S3Codec):
                                 WKT = True
                         else:
                             # Do the Simplify direct from the DB
-                            wkt = db(query).select(ktable.the_geom.st_simplify(0.001).st_astext().with_alias('wkt'),
+                            wkt = db(query).select(ktable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"),
                                                    limitby=(0, 1)).first().wkt
                             if wkt:
                                 # Convert the WKT in XSLT

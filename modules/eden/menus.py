@@ -739,6 +739,7 @@ class S3OptionsMenu:
                       check=config_menu),
                     M("Admin", restrict=[MAP_ADMIN])(
                         M("Hierarchy", f="hierarchy"),
+                        M("Layers", f="catalog"),
                         M("Markers", f="marker"),
                         M("Projections", f="projection"),
                         M("Symbology", f="symbology"),

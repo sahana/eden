@@ -4056,6 +4056,7 @@ S3.gis.layers_feature_queries[%i] = {
                 OSMLayer,
                 TMSLayer,
                 WMSLayer,
+                XYZLayer,
                 JSLayer,
                 ThemeLayer,
                 GeoJSONLayer,
@@ -4089,6 +4090,8 @@ S3.gis.layers_feature_queries[%i] = {
                         layer_types = [TMSLayer]
                     elif layer_type == "gis_layer_wms":
                         layer_types = [WMSLayer]
+                    elif layer_type == "gis_layer_xyz":
+                        layer_types = [XYZLayer]
                     elif layer_type == "gis_layer_empty":
                         layer_types = [EmptyLayer]
             if not layer_types:
@@ -5119,7 +5122,7 @@ class TMSLayer(Layer):
                 url2 = (self.url2, (None,)),
                 url3 = (self.url3, (None,)),
                 format = (self.img_format, ("png", None)),
-                zoomLevels = (self.zoom_levels, (9,)),
+                zoomLevels = (self.zoom_levels, (19,)),
                 attribution = (self.attribution, (None,)),
             )
             self.setup_folder(output)
@@ -5212,6 +5215,35 @@ class WMSLayer(Layer):
                 queryable = (self.queryable, (False, )),
             )
             self.setup_folder_visibility_and_opacity(output)
+            return output
+
+# -----------------------------------------------------------------------------
+class XYZLayer(Layer):
+    """
+        XYZ Layers from Catalogue
+    """
+
+    tablename = "gis_layer_xyz"
+    js_array = "S3.gis.layers_xyz"
+
+    # -------------------------------------------------------------------------
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            output = {
+                    "id": self.layer_id,
+                    "name": self.safe_name,
+                    "url": self.url
+                }
+            self.add_attributes_if_not_default(
+                output,
+                _base = (self._base, (False,)),
+                url2 = (self.url2, (None,)),
+                url3 = (self.url3, (None,)),
+                format = (self.img_format, ("png", None)),
+                zoomLevels = (self.zoom_levels, (19,)),
+                attribution = (self.attribution, (None,)),
+            )
+            self.setup_folder(output)
             return output
 
 
