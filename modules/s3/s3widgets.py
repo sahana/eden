@@ -3134,15 +3134,18 @@ class S3OptionsMatrixWidget(object):
     """
     def __init__(self, rows, columns, checklist=None):
         """
-            :param rows:
+            @param rows:
                 A tuple containing (name,label) tuples where name is used in the
                 input name (row_column) and label is used in the row headers
-            :param columns:
+            @type rows: tuple of tuples
+            @param columns:
                 A tuple containing (name,label) tuples where name is used in the
                 input name (row_column) and label is used in the column headers
-            :param checklist:
+            @type columns: tuple of tuples
+            @param checklist:
                 A tuple of strings that will match the name of the checkboxes
                 to be enabled/checked
+            @type checklist: tuple of strings
         """
         self.rows = rows
         self.columns = columns
@@ -3169,7 +3172,7 @@ class S3OptionsMatrixWidget(object):
                 cell_name = "%s_%s" % (row[0], column[0])
 
                 # This determines if the checkbox should be checked
-                if cell_name in self.checklist:
+                if self.checklist is not None and cell_name in self.checklist:
                     cell_value = "on"
                 else:
                     cell_value = ""
@@ -3177,8 +3180,8 @@ class S3OptionsMatrixWidget(object):
                 row_cells.append(
                                  TD(
                                     INPUT(
-                                          _type='checkbox',
-                                          _id='id_%s' % cell_name,
+                                          _type="checkbox",
+                                          _id="id_%s" % cell_name,
                                           _name=cell_name,
                                           value=cell_value
                                           )
