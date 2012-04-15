@@ -95,6 +95,8 @@ class S3MessagingModel(S3Model):
                                         represent = lambda direction: \
                                             (direction and ["In"] or ["Out"])[0],
                                         label = T("Direction")),
+                                  Field("is_parsed", "boolean", default = False),
+                                  Field("reply", "text"),
                                   *s3.meta_fields())
 
         self.configure(tablename,
