@@ -52,7 +52,7 @@ from gluon.html import *
 from gluon.http import redirect
 
 from s3crud import S3CRUD
-from s3utils import s3_debug
+from s3utils import s3_debug,soundex
 from s3validators import IS_ONE_OF, IS_ONE_OF_EMPTY
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
@@ -216,93 +216,129 @@ class S3Msg(object):
         contact_keywords = ["email", "mobile", "facility", "clinical",
                             "security", "phone", "status", "hospital",
                             "person", "organisation"]
-
+        
+        pkeywords = primary_keywords+contact_keywords
         keywords = string.split(message)
-        query = []
+        pquery = []
         name = ""
         reply = ""
         for word in keywords:
-            match = difflib.get_close_matches(word, primary_keywords + contact_keywords)
+            match = None
+            for key in pkeywords:
+                if soundex(key) == soundex(word):
+                    match = key
+                    break
             if match:
-                query.append(match[0])
+                pquery.append(match)
             else:
                 name = word
-
+            
         # ---------------------------------------------------------------------
         # Person Search [get name person phone email]
-        if "person" in query:
-            result = person_search(name)
-
+        if "person" in pquery:
+            
+            table = s3db.pr_person
+            rows = db(table.id > 0).select(table.pe_id,
+                                           table.first_name,
+                                           table.middle_name,
+                                           table.last_name)
+            for row in rows:
+                result = []
+                if (soundex(str(name)) == soundex(str(row.first_name))) or \
+                   (soundex(str(name)) == soundex(str(row.middle_name))) or \
+                   (soundex(str(name)) == soundex(str(row.last_name))):
+                    presult = dict(name = row.first_name, id = row.pe_id)
+                    result.append(presult)
+                    break    
+            
             if len(result) > 1:
                 return T("Multiple Matches")
             if len(result) == 1:
-                if "Person" in result[0]["name"]:
-                    reply = result[0]["name"]
-                    table = s3db.pr_contact
-                    if "email" in query:
-                        query = (table.pe_id == result[0]["id"]) & \
-                                (table.contact_method == "EMAIL")
-                        recipient = db(query).select(table.value,
-                                                     orderby = table.priority,
-                                                     limitby=(0, 1)).first()
-                        reply = "%s Email->%s" % (reply, recipient.value)
-                    if "mobile" in query:
-                        query = (table.pe_id == result[0]["id"]) & \
-                                (table.contact_method == "SMS")
-                        recipient = db(query).select(table.value,
-                                                     orderby = table.priority,
-                                                     limitby=(0, 1)).first()
-                        reply = "%s Mobile->%s" % (reply,
-                                                   recipient.value)
-
-            if len(reply) == 0:
+                reply = result[0]["name"]
+                table = s3db.pr_contact
+                if "email" in pquery:
+                    query = (table.pe_id == result[0]["id"]) & \
+                        (table.contact_method == "EMAIL")
+                    recipient = db(query).select(table.value,
+                                                 orderby = table.priority,
+                                                 limitby=(0, 1)).first()
+                    reply = "%s Email->%s" % (reply, recipient.value)
+                if "phone" in pquery:
+                    query = (table.pe_id == result[0]["id"]) & \
+                        (table.contact_method == "SMS")
+                    recipient = db(query).select(table.value,
+                                                 orderby = table.priority,
+                                                 limitby=(0, 1)).first()
+                    reply = "%s Mobile->%s" % (reply,
+                                               recipient.value)
+                    
+            if len(result) == 0:
                 return T("No Match")
 
             return reply
 
         # ---------------------------------------------------------------------
         #  Hospital Search [example: get name hospital facility status ]
-        if "hospital" in query:
+        if "hospital" in pquery:
             table = s3db.hms_hospital
-            resource = s3mgr.define_resource("hms", "hospital")
-            result = resource.search_simple(fields=["name"], label = str(name))
+            rows = db(table.id > 0).select(table.id,
+                                           table.name,
+                                           table.aka1,
+                                           table.aka2)
+            for row in rows:
+                result = []
+                if (soundex(str(name)) == soundex(str(row.name))) or \
+                   (soundex(name) == soundex(str(row.aka1))) or \
+                   (soundex(name) == soundex(str(row.aka2))):
+                    result.append(row)
+                    break    
+            
+
             if len(result) > 1:
                 return T("Multiple Matches")
 
             if len(result) == 1:
-                hospital = db(table.id == result[0]).select().first()
+                hospital = db(table.id == result[0].id).select().first()
                 reply = "%s %s (%s) " % (reply, hospital.name,
                                          T("Hospital"))
-                if "phone" in query:
+                if "phone" in pquery:
                     reply = reply + "Phone->" + str(hospital.phone_emergency)
-                if "facility" in query:
+                if "facility" in pquery:
                     reply = reply + "Facility status " + str(table.facility_status.represent(hospital.facility_status))
-                if "clinical" in query:
+                if "clinical" in pquery:
                     reply = reply + "Clinical status " + str(table.clinical_status.represent(hospital.clinical_status))
-                if "security" in query:
+                if "security" in pquery:
                     reply = reply + "Security status " + str(table.security_status.represent(hospital.security_status))
 
-            if len(reply) == 0:
+            if len(result) == 0:
                 return T("No Match")
 
             return reply
 
         # ---------------------------------------------------------------------
         # Organization search [example: get name organisation phone]
-        if "organisation" in query:
+        if "organisation" in pquery:
             table = s3db.org_organisation
-            resource = s3mgr.define_resource("org", "organisation")
-            result = resource.search_simple(fields=["name"], label = str(name))
+            rows = db(table.id > 0).select(table.id,
+                                           table.name,
+                                           table.acronym)
+            for row in rows:
+                result = []
+                if (soundex(str(name)) == soundex(str(row.name))) or \
+                   (soundex(str(name)) == soundex(str(row.acronym))):
+                    result.append(row)
+                    break    
+            
             if len(result) > 1:
                 return T("Multiple Matches")
 
             if len(result) == 1:
-                organisation = db(table.id == result[0]).select().first()
+                organisation = db(table.id == result[0].id).select().first()
                 reply = "%s %s (%s) " % (reply, organisation.name,
                                          T("Organization"))
-                if "phone" in query:
+                if "phone" in pquery:
                     reply = reply + "Phone->" + str(organisation.donation_phone)
-                if "office" in query:
+                if "office" in pquery:
                     reply = reply + "Address->" + s3_get_db_field_value(tablename = "org_office",
                                                                         fieldname = "address",
                                                                         look_up_value = organisation.id)
@@ -313,6 +349,31 @@ class S3Msg(object):
 
         return "Please provide one of the keywords - person, hospital, organisation"
 
+
+
+    # =========================================================================
+    # Processing of Unparsed Messages
+    # =========================================================================
+    def process_log(self):
+        """
+            Processes the unparsed messages in msg_log.
+        """            
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.msg_log
+        
+        query = (ltable.is_parsed == False)& \
+            (ltable.inbound == True)
+        rows = db(query).select()
+        
+        for row in rows:
+            message = row.message
+            reply = self.parse_message(message)
+            db(ltable.id == row.id).update(reply = reply,is_parsed = True)
+            
+        return
+    
+    
     # =========================================================================
     # Outbound Messages
     # =========================================================================
