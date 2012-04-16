@@ -65,4 +65,4 @@ Collaborate
 
 * **Translating** e-cidadania achieves to be international. If you want to translate it to your language just follow the steps in the documentation an send your catalog to us, we will include it ASAP.
 
-* **Bug reporting** You can report the bugs you find in the application in this trac: http://dev.ecidadania.org
+* **Bug reporting** You can report the bugs you find in the application in this trac: http://code.ecidadania.org
