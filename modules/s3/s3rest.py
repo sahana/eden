@@ -37,7 +37,8 @@ __all__ = ["S3RequestManager",
            "S3Request",
            "S3Resource",
            "S3ResourceFilter",
-           "S3FieldSelector"]
+           "S3FieldSelector",
+           "S3TypeConverter"]
 
 import sys
 import datetime
@@ -5795,6 +5796,24 @@ class S3TypeConverter:
 
         if b is None:
             return None
+        if type(a) is type:
+            if a in (str, unicode):
+                return cls._str(b)
+            if a is int:
+                return cls._int(b)
+            if a is bool:
+                return cls._bool(b)
+            if a is long:
+                return cls._long(b)
+            if a is float:
+                return cls._float(b)
+            if a is datetime.datetime:
+                return cls._datetime(b)
+            if a is datetime.date:
+                return cls._date(b)
+            if a is datetime.time:
+                return cls._time(b)
+            raise TypeError
         if type(b) is type(a) or isinstance(b, type(a)):
             return b
         if isinstance(a, (list, tuple)):
@@ -5896,8 +5915,12 @@ class S3TypeConverter:
         elif isinstance(b, basestring):
             manager = current.manager
             xml = manager.xml
-            tfmt = xml.ISOFORMAT
-            (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(v, tfmt)
+            try:
+                tfmt = xml.ISOFORMAT
+                (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(b, tfmt)
+            except ValueError:
+                tfmt = "%Y-%m-%d %H:%M:%S"
+                (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(b, tfmt)
             return datetime.datetime(y,m,d,hh,mm,ss)
         else:
             raise TypeError
