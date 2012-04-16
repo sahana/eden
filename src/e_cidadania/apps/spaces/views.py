@@ -312,7 +312,7 @@ def edit_space(request, space_name):
                 ef.save()
             
             messages.success(request, _('Space edited successfully'))
-            return redirect('/spaces/' + space.url)
+            return redirect('/spaces/' + space.url + '/')
 
     for i in request.user.profile.spaces.all():
         if i.url == space_name or request.user.is_staff:
