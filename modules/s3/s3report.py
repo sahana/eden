@@ -38,11 +38,13 @@
 __all__ = ["S3Cube"]
 
 import sys
+import datetime
 import gluon.contrib.simplejson as json
 
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import *
+from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate
@@ -1216,6 +1218,29 @@ class S3ContingencyTable(TABLE):
         if field in lfields:
             lfield = lfields[field]
             if lfield.field:
+                f = lfield.field
+                ftype = str(f.type)
+                if ftype not in ("string", "text") and \
+                   isinstance(value, basestring):
+                    # pyvttbl converts col/row headers into unicode,
+                    # but represent may need the original data type,
+                    # hence try to convert it back here:
+                    convert = S3TypeConverter.convert
+                    try:
+                        if ftype == "boolean":
+                            value = convert(bool, value)
+                        elif ftype == "integer":
+                            value = convert(int, value)
+                        elif ftype == "float":
+                            value = convert(float, value)
+                        elif ftype == "date":
+                            value = convert(datetime.date, value)
+                        elif ftype == "time":
+                            value = convert(datetime.time, value)
+                        elif ftype == "datetime":
+                            value = convert(datetime.datetime, value)
+                    except TypeError, ValueError:
+                        pass
                 return manager.represent(lfield.field, value,
                                          strip_markup=True)
         if value is None:
