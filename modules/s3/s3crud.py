@@ -1937,6 +1937,7 @@ class S3CRUD(S3Method):
             @param left: list of left joins
         """
 
+        db = current.db
         vars = self.request.get_vars
         resource = self.resource
 
@@ -1962,14 +1963,17 @@ class S3CRUD(S3Method):
                     # Old DAL version?
                     join = [j for j in left if j.table._tablename == tn]
                 if not join:
-                    left.append(current.db[tn].on(field == current.db[tn].id))
+                    left.append(db[tn].on(field == db[tn].id))
                 else:
-                    join[0].query = (join[0].query) | (field == current.db[tn].id)
+                    try:
+                        join[0].second = (join[0].second) | (field == db[tn].id)
+                    except:
+                        join[0].query = (join[0].query) | (field == db[tn].id)
                 if isinstance(field.sortby, (list, tuple)):
-                    flist.extend([current.db[tn][f] for f in field.sortby])
+                    flist.extend([db[tn][f] for f in field.sortby])
                 else:
-                    if field.sortby in current.db[tn]:
-                        flist.append(current.db[tn][field.sortby])
+                    if field.sortby in db[tn]:
+                        flist.append(db[tn][field.sortby])
             else:
                 flist.append(field)
 
@@ -2027,6 +2031,7 @@ class S3CRUD(S3Method):
             @param left: list of left joins
         """
 
+        db = current.db
         vars = self.request.get_vars
         table = resource.table
         tablename = table._tablename
@@ -2062,15 +2067,15 @@ class S3CRUD(S3Method):
                         # Old DAL version?
                         join = [j for j in left if j.table._tablename == tn]
                     if not join:
-                        left.append(current.db[tn].on(c == current.db[tn].id))
+                        left.append(db[tn].on(c == db[tn].id))
                     else:
                         try:
                             join[0].query = (join[0].second) | \
-                                            (c == current.db[tn].id)
+                                            (c == db[tn].id)
                         except:
                             # Old DAL version?
                             join[0].query = (join[0].query) | \
-                                            (c == current.db[tn].id)
+                                            (c == db[tn].id)
                 if not isinstance(c.sortby, (list, tuple)):
                     orderby.append("%s.%s%s" % (tn, c.sortby, direction(i)))
                 else:
