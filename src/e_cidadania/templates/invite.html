@@ -26,7 +26,8 @@ application with txt files and that's efficiency.
                 <button type="submit" class="btn btn-large">{% trans "Submit" %}</button>
             </form>
             {% else %}
-            <p>{% trans "To send invitations via e-mail you have to be <a href='/accounts/login/'>logged in</a>."%}
+            {% comment %}The reason why the invitation link is harcoded is the quotes.{% endcomment %}
+            <p>{% trans "To send invitations via e-mail you have to be <a href='/accounts/login/'>logged in</a>." %}
             {% endif %}
         </div>
     </div>
