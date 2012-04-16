@@ -3545,4 +3545,6 @@ class S3GridChildAnalysis(S3AbstractAnalysis):
                   yLabel=None):
         return self.widget.drawChart(series_id, output, data, label, xLabel, yLabel)
 
+    def filter(self, filterType, groupedData):
+        return self.widget.filter(filterType, groupedData)
 # END =========================================================================
