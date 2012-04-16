@@ -250,28 +250,81 @@ def hrm_map_popup(r):
     """
 
     output = TABLE()
+    append = output.append
     # Edit button
-    output.append(TR(TD(A(T("Edit"),
-                        _target="_blank",
-                        _id="edit-btn",
-                        _href=URL(args=[r.id, "update"])))))
+    append(TR(TD(A(T("Edit"),
+                   _target="_blank",
+                   _id="edit-btn",
+                   _href=URL(args=[r.id, "update"])))))
 
     # First name, last name
-    output.append(TR(TD(B("%s:" % T("Name"))),
-                     TD(s3_fullname(r.record.person_id))))
+    append(TR(TD(B("%s:" % T("Name"))),
+              TD(s3_fullname(r.record.person_id))))
 
     # Job Title
     if r.record.job_title:
-        output.append(TR(TD(B("%s:" % r.table.job_title.label)),
-                         TD(r.record.job_title)))
+        append(TR(TD(B("%s:" % r.table.job_title.label)),
+                  TD(r.record.job_title)))
 
     # Organization (better with just name rather than Represent)
-    table = s3db.org_organisation
-    query = (table.id == r.record.organisation_id)
-    name = db(query).select(table.name,
-                            limitby=(0, 1)).first().name
-    output.append(TR(TD(B("%s:" % r.table.organisation_id.label)),
-                     TD(name)))
+    # @ToDo: Make this configurable - some deployments will only see
+    #        their staff so this is a meaningless field
+    #table = s3db.org_organisation
+    #query = (table.id == r.record.organisation_id)
+    #name = db(query).select(table.name,
+    #                        limitby=(0, 1)).first().name
+    #append(TR(TD(B("%s:" % r.table.organisation_id.label)),
+    #          TD(name)))
+
+    # Components link to the Person record
+    person_id = r.record.person_id
+
+    # Skills
+    table = s3db.hrm_competency
+    stable = s3db.hrm_skill
+    query = (table.person_id == person_id) & \
+            (table.skill_id == stable.id)
+    skills = db(query).select(stable.name)
+    if skills:
+        vals = [skill.name for skill in skills]
+        if len(skills) > 1:
+            represent = ", ".join(vals)
+        else:
+            represent = len(vals) and vals[0] or ""
+        append(TR(TD(B("%s:" % T("Skills"))),
+                  TD(represent)))
+
+    # Certificates
+    table = s3db.hrm_certification
+    ctable = s3db.hrm_certificate
+    query = (table.person_id == person_id) & \
+            (table.certificate_id == ctable.id)
+    certificates = db(query).select(ctable.name)
+    if certificates:
+        vals = [cert.name for cert in certificates]
+        if len(certificates) > 1:
+            represent = ", ".join(vals)
+        else:
+            represent = len(vals) and vals[0] or ""
+        append(TR(TD(B("%s:" % T("Certificates"))),
+                  TD(represent)))
+
+    # Trainings
+    table = s3db.hrm_training
+    etable = s3db.hrm_training_event
+    ctable = s3db.hrm_course
+    query = (table.person_id == person_id) & \
+            (table.training_event_id == etable.id) & \
+            (etable.course_id == ctable.id)
+    trainings = db(query).select(ctable.name)
+    if trainings:
+        vals = [train.name for train in trainings]
+        if len(trainings) > 1:
+            represent = ", ".join(vals)
+        else:
+            represent = len(vals) and vals[0] or ""
+        append(TR(TD(B("%s:" % T("Trainings"))),
+                  TD(represent)))
 
     if r.record.location_id:
         table = s3db.gis_location
@@ -282,12 +335,12 @@ def hrm_map_popup(r):
         # City
         # Street address
         if location.addr_street:
-            output.append(TR(TD(B("%s:" % table.addr_street.label)),
-                             TD(location.addr_street)))
+            append(TR(TD(B("%s:" % table.addr_street.label)),
+                      TD(location.addr_street)))
     # Mobile phone number
     ptable = s3db.pr_person
     ctable = s3db.pr_contact
-    query = (ptable.id == r.record.person_id) & \
+    query = (ptable.id == person_id) & \
             (ctable.pe_id == ptable.pe_id)
     contacts = db(query).select(ctable.contact_method,
                                 ctable.value)
@@ -298,8 +351,8 @@ def hrm_map_popup(r):
         elif contact.contact_method == "SMS":
             mobile_phone = contact.value
     if mobile_phone:
-        output.append(TR(TD(B("%s:" % msg.CONTACT_OPTS.get("SMS"))),
-                         TD(mobile_phone)))
+        append(TR(TD(B("%s:" % msg.CONTACT_OPTS.get("SMS"))),
+                  TD(mobile_phone)))
     # Office number
     if r.record.site_id:
         table = s3db.org_office
@@ -307,15 +360,15 @@ def hrm_map_popup(r):
         office = db(query).select(table.phone1,
                                   limitby=(0, 1)).first()
         if office and office.phone1:
-            output.append(TR(TD(B("%s:" % T("Office Phone"))),
-                             TD(office.phone1)))
+            append(TR(TD(B("%s:" % T("Office Phone"))),
+                      TD(office.phone1)))
         else:
             # @ToDo: Support other Facility Types (Hospitals & Shelters)
             pass
     # Email address (as hyperlink)
     if email:
-        output.append(TR(TD(B("%s:" % msg.CONTACT_OPTS.get("EMAIL"))),
-                         TD(A(email, _href="mailto:%s" % email))))
+        append(TR(TD(B("%s:" % msg.CONTACT_OPTS.get("EMAIL"))),
+                  TD(A(email, _href="mailto:%s" % email))))
 
     return output
 

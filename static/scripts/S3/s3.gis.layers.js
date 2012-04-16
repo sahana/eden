@@ -223,6 +223,39 @@ function addDraftLayer() {
     map.addLayer(S3.gis.draftLayer);
 }
 
+/**
+ * Class: OpenLayers.Strategy.AttributeCluster
+ * Strategy for vector feature clustering based on feature attributes.
+ *
+ * Inherits from:
+ *  - <OpenLayers.Strategy.Cluster>
+ */
+OpenLayers.Strategy.AttributeCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
+    /**
+     * the attribute to use for comparison
+     */
+    attribute: null,
+    /**
+     * Method: shouldCluster
+     * Determine whether to include a feature in a given cluster.
+     *
+     * Parameters:
+     * cluster - {<OpenLayers.Feature.Vector>} A cluster.
+     * feature - {<OpenLayers.Feature.Vector>} A feature.
+     *
+     * Returns:
+     * {Boolean} The feature should be included in the cluster.
+     */
+    shouldCluster: function(cluster, feature) {
+        var cc_attrval = cluster.cluster[0].attributes[this.attribute];
+        var fc_attrval = feature.attributes[this.attribute];
+        var superProto = OpenLayers.Strategy.Cluster.prototype;
+        return cc_attrval === fc_attrval && 
+               superProto.shouldCluster.apply(this, arguments);
+    },
+    CLASS_NAME: "OpenLayers.Strategy.AttributeCluster"
+});
+
 // GeoJSON
 // Used also by internal Feature Layers, Feature Queries & GeoRSS feeds
 function addGeoJSONLayer(layer) {
@@ -410,8 +443,17 @@ function addGeoJSONLayer(layer) {
             },
             fill: function(feature) {
                 if (feature.cluster) {
-                    // fillColor for Clustered Point
-                    var color = '#8087ff';
+                    if (feature.cluster[0].attributes.colour) {
+                        // Use colour from features
+                        var color = feature.cluster[0].attributes.colour;
+                        if ( color.indexOf('#') == -1) {
+                            // gis_layer_theme
+                            color = '#' + color;
+                        }
+                    } else {
+                        // default fillColor for Clustered Point
+                        var color = '#8087ff';
+                    }
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
@@ -426,9 +468,18 @@ function addGeoJSONLayer(layer) {
                 return color;
             },
             stroke: function(feature) {
-                // strokeColor for Clustered Point
                 if (feature.cluster) {
-                    var color = '#2b2f76';
+                    if (feature.cluster[0].attributes.colour) {
+                        // Use colour from features
+                        var color = feature.cluster[0].attributes.colour;
+                        if ( color.indexOf('#') == -1) {
+                            // gis_layer_theme
+                            color = '#' + color;
+                        }
+                    } else {
+                        // default strokeColor for Clustered Point
+                        var color = '#2b2f76';
+                    }
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
@@ -492,7 +543,8 @@ function addGeoJSONLayer(layer) {
                     //    }
                     //}
                 }),
-                new OpenLayers.Strategy.Cluster({
+                new OpenLayers.Strategy.AttributeCluster({
+                    attribute: 'colour',
                     distance: cluster_distance,
                     threshold: cluster_threshold
                 })

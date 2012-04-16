@@ -124,6 +124,10 @@ if len(pop_list) > 0:
                                 dict(t="pr_person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
                                 # But need to be able to add/edit addresses
                                 dict(c="pr", f="person", uacl=acl.CREATE, oacl=acl.READ|acl.UPDATE),
+                                # And access the Autocompletes
+                                dict(c="pr", f="person_search", uacl=acl.READ),
+                                dict(c="pr", f="pentity", uacl=acl.READ),
+                                dict(c="msg", f="search", uacl=acl.READ),
                                 # Authenticated  users can see the Supply Catalogue
                                 dict(c="supply", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                                 uid=sysroles.AUTHENTICATED,
