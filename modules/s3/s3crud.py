@@ -452,11 +452,9 @@ class S3CRUD(S3Method):
             # Details Link
             authorised = self._permitted(method="read")
             if authorised:
-                popup_url = _config("popup_url", None)
-                if not popup_url:
-                    popup_url = r.url(method="read", representation="html")
-                if popup_url:
-                    details_btn = A(T("Show Details"), _href=popup_url,
+                href = r.url(method="read", representation="html")
+                if href:
+                    details_btn = A(T("Show Details"), _href=href,
                                     _id="details-btn", _target="_blank")
                     output["details_btn"] = details_btn
 

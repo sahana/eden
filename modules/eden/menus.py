@@ -739,7 +739,6 @@ class S3OptionsMenu:
                       check=config_menu),
                     M("Admin", restrict=[MAP_ADMIN])(
                         M("Hierarchy", f="hierarchy"),
-                        M("Layers", f="catalog"),
                         M("Markers", f="marker"),
                         M("Projections", f="projection"),
                         M("Symbology", f="symbology"),
@@ -961,7 +960,6 @@ class S3OptionsMenu:
                         M("List All"),
                         M("Open Incidents", vars={"open":1}),
                         M("Timeline", args="timeline"),
-                        M("Import", m="import"),
                         M("Search", m="search"),
                         M("Report", m="report",
                           vars=dict(rows="L1",

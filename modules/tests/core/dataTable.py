@@ -21,6 +21,42 @@ from s3 import s3_debug
 import time
 
 # -----------------------------------------------------------------------------
+def convert_repr_number (number):
+    """
+        helper function to convert a string representation back to a number.
+        Assumptions:
+         * It may have a thousand separator
+         * It may have a decimal point
+         * If it has a thousand separator then it will have a decimal point
+        It will return false is the number doesn't look valid
+    """
+    sep = ""
+    dec = ""
+    part_one = "0"
+    part_two = ""
+    for digit in number:
+        if digit.isdigit():
+            if sep == "":
+                part_one += digit
+            else:
+                part_two += digit
+        else:
+            if digit == "-" and part_one == "0":
+                part_one = "-0"
+            elif sep == "" and sep != digit:
+                sep = digit
+            elif dec == "":
+                dec = digit
+                part_two += "."
+            else:
+                # Doesn't look like a valid number repr so return 
+                return False
+    if dec == "":
+        return float("%s.%s" % (part_one, part_two))
+    else:
+        return float("%s%s" % (part_one, part_two))
+
+# -----------------------------------------------------------------------------
 def dt_filter(search_string=" ",
               forceClear = True,
               quiet = True):
@@ -131,62 +167,113 @@ def dt_data_item(row = 1,
 def dt_find(search = "",
             row = None,
             column = None,
+            cellList = None,
             tableID = "list",
             first = False,
            ):
-    """ Find the cells where search is found in the dataTable """
-    # 'todo need to fix the searching on numbers
+    """
+        Find the cells where search is found in the dataTable
+        search: the string to search for. If you pass in a number (int, float)
+                then the function will attempt to convert all text values to
+                a float for comparison by using the convert_repr_number helper
+                function
+        row: The row or list of rows to search along
+        column: The column or list of columns to search down
+        cellList: This is a list of cells which may be returned from a previous
+                  call, these cells will be searched again for the search string.
+                  However if a row or column value is also provided then for
+                  each cell in cellList the column or row will be offset.
+                  For example cellList = [(3,1)] and column = 5, means rather
+                  than looking in cell (3,1) the function will look in cell (3,5)
+        tableID:  The HTML id of the table
+        first:    Stop on the first match, or find all matches
+
+        Example of use (test url: /inv/warehouse/n/inv_item 
+                                 {where n is the warehouse id}
+                       ):
+
+            match = dt_find("Plastic Sheets")
+            if match:
+                if not dt_find(4200, cellList=match, column=5, first=True):
+                    assert 0, "Unable to find 4200 Plastic Sheets"
+            else:
+                assert 0, "Unable to find any Plastic Sheets"
+
+    """
     config = current.test_config
     browser = config.browser
 
-    # Calculate the rows that need to be navigated along to find the search string
-    colList = []
-    rowList = []
-    if row == None:
-        r = 1
-        while True:
-            tr =  ".//*[@id='%s']/tbody/tr[%s]" % (tableID, r)
-            try:
-                elem = browser.find_element_by_xpath(tr)
-                rowList.append(r)
-                r += 1
-            except:
-                break
-    elif isinstance(row, int):
-        rowList = [row]
-    else:
-        rowList = row
-    # Calculate the columns that need to be navigated down to find the search string
-    if column == None:
-        c = 1
-        while True:
-            td = ".//*[@id='%s']/tbody/tr[1]/td[%s]" % (tableID, c)
-            try:
-                elem = browser.find_element_by_xpath(td)
-                colList.append(c)
-                c += 1
-            except:
-                break
-    elif isinstance(column, int):
-        colList = [column]
-    else:
-        colList = column
-    s3_debug("rows %s, columns %s" % (rowList, colList))
-    # Now try and find a match
+    def find_match(search, tableID, r, c):
+        td = ".//*[@id='%s']/tbody/tr[%s]/td[%s]" % (tableID, r, c)
+        try:
+            elem = browser.find_element_by_xpath(td)
+            text = elem.text
+            if isinstance(search,(int, float)):
+                text = convert_repr_number(text)
+            if text == search:
+                return (r, c)
+        except:
+            return False
+
     result = []
-    for r in rowList:
-        for c in colList:
-            td = ".//*[@id='%s']/tbody/tr[%s]/td[%s]" % (tableID, r, c)
-            try:
-                elem = browser.find_element_by_xpath(td)
-                s3_debug("got %s, needle %s" % (elem.text, search))
-                if elem.text == search:
+    if cellList:
+        for cell in cellList:
+            if row:
+                r = row
+            else:
+                r = cell[0]
+            if column:
+                c = column
+            else:
+                c = cell[1]
+            found =  find_match(search, tableID, r, c)
+            if found:
+                result.append(found)
+                if first:
+                    return result
+
+    else:
+        # Calculate the rows that need to be navigated along to find the search string
+        colList = []
+        rowList = []
+
+        if row == None:
+            r = 1
+            while True:
+                tr =  ".//*[@id='%s']/tbody/tr[%s]" % (tableID, r)
+                try:
+                    elem = browser.find_element_by_xpath(tr)
+                    rowList.append(r)
+                    r += 1
+                except:
+                    break
+        elif isinstance(row, int):
+            rowList = [row]
+        else:
+            rowList = row
+        # Calculate the columns that need to be navigated down to find the search string
+        if column == None:
+            c = 1
+            while True:
+                td = ".//*[@id='%s']/tbody/tr[1]/td[%s]" % (tableID, c)
+                try:
+                    elem = browser.find_element_by_xpath(td)
+                    colList.append(c)
+                    c += 1
+                except:
+                    break
+        elif isinstance(column, int):
+            colList = [column]
+        else:
+            colList = column
+        # Now try and find a match
+        for r in rowList:
+            for c in colList:
+                found =  find_match(search, tableID, r, c)
+                if found:
+                    result.append(found)
                     if first:
-                        return (r, c)
-                    else:
-                        result.append((r, c))
-            except:
-                pass
+                        return result
     return result
 
         

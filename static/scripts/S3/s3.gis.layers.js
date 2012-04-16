@@ -43,12 +43,6 @@ function addLayers() {
             addWMSLayer(S3.gis.layers_wms[i]);
         }
     }
-    // XYZ
-    if (S3.gis.layers_xyz) {
-        for (i = 0; i < S3.gis.layers_xyz.length; i++) {
-            addXYZLayer(S3.gis.layers_xyz[i]);
-        }
-    }
     // Empty
     if (S3.gis.EmptyLayer) {
         var layer = new OpenLayers.Layer(S3.gis.EmptyLayer.name, {
@@ -1001,7 +995,7 @@ function addTMSLayer(layer) {
     if (undefined != layer.zoomLevels) {
         var numZoomLevels = layer.zoomLevels;
     } else {
-        var numZoomLevels = 19;
+        var numZoomLevels = 9;
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
@@ -1416,58 +1410,6 @@ function addWMSLayer(layer) {
     map.addLayer(wmsLayer);
     if (layer._base) {
         map.setBaseLayer(wmsLayer);
-    }
-}
-
-// XYZ
-function addXYZLayer(layer) {
-    var name = layer.name;
-    var url = [layer.url];
-    if (undefined != layer.url2) {
-        url.push(layer.url2);
-    }
-    if (undefined != layer.url3) {
-        url.push(layer.url3);
-    }
-    var layername = layer.layername;
-    if (undefined != layer.zoomLevels) {
-        var numZoomLevels = layer.zoomLevels;
-    } else {
-        var numZoomLevels = 19;
-    }
-    if (undefined != layer.dir) {
-        var dir = layer.dir;
-        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
-            // Add this folder to the list of folders
-            S3.gis.dirs.push(dir);
-        }
-    } else {
-        // Default folder
-        var dir = '';
-    }
-    if (undefined != layer.format) {
-        var format = layer.format;
-    } else {
-        var format = 'png';
-    }
-
-    var xyzLayer = new OpenLayers.Layer.XYZ(
-        name, url, {
-            dir: dir,
-            // This is used to Save State
-            layer_id: layer.id,
-            layername: layername,
-            type: format,
-            numZoomLevels: numZoomLevels
-        }
-    );
-
-    if (undefined != layer.attribution) {
-        xyzLayer.attribution = layer.attribution;
-    }
-    map.addLayer(xyzLayer);
-    if (layer._base) {
-        map.setBaseLayer(xyzLayer);
     }
 }
 

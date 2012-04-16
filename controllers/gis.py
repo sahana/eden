@@ -710,11 +710,6 @@ LIST_TYPE_LAYERS_FMT = "List %s Layers"
 NO_TYPE_LAYERS_FMT = "No %s Layers currently defined"
 
 # -----------------------------------------------------------------------------
-def catalog():
-    """ Custom View to link to different Layers """
-    return dict()
-
-# -----------------------------------------------------------------------------
 def config():
     """ RESTful CRUD controller """
 
@@ -748,15 +743,15 @@ def config():
                     field.writable = False
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(
-                    title_create = T("Add Layer to this Profile"),
+                    title_create = T("Add Layer Configuration for this Profile"),
                     title_display = LAYER_DETAILS,
                     title_list = LAYERS,
                     title_update = EDIT_LAYER,
-                    subtitle_create = T("Add Layer from Catalog"),
-                    subtitle_list = T("List Layers in Profile"),
-                    label_list_button = T("List Layers in Profile"),
-                    label_create_button = T("Add Layer from Catalog"),
-                    label_delete_button = T("Remove Layer from Profile"),
+                    subtitle_create = T("Add New Layer Configuration"),
+                    subtitle_list = T("List Layer Configurations in Profile"),
+                    label_list_button = T("List Layer Configurations in Profile"),
+                    label_create_button = ADD_LAYER,
+                    label_delete_button = T("Remove Layer Configuration from Profile"),
                     msg_record_created = LAYER_ADDED,
                     msg_record_modified = LAYER_UPDATED,
                     msg_list_empty = T("No Layers currently configured in this Profile"),
@@ -1038,26 +1033,6 @@ def track():
     return s3_rest_controller()
 
 # =============================================================================
-def inject_enable(output):
-    """
-        Inject an 'Enable in Default Config?' checkbox into the form
-    """
-
-    if "form" in output:
-        row = s3.crud.formstyle(id  = "layer_enable",
-                                label  = LABEL("%s:" % T("Enable in Default Config?"),
-                                               _for="enable"
-                                               ),
-                                widget = (INPUT(_name="enable",
-                                                _type="checkbox",
-                                                 _value="on",
-                                                 _id="layer_enable",
-                                                _class="boolean"),
-                                           ),
-                                comment = "")
-        output["form"][0][-2].append(row)
-
-# -----------------------------------------------------------------------------
 def layer_config():
     """ RESTful CRUD controller """
 
@@ -1158,6 +1133,26 @@ def layer_entity():
         return True
     response.s3.prep = prep
 
+    # Post-processor
+    def postp(r, output):
+        s3_action_buttons(r)
+        # Only show the disable button if the layer is not currently disabled
+        # @ToDo: Fix for new data model
+        ltable = s3db.gis_layer_config
+        query = (ltable.enabled != False) & \
+                (r.table.layer_id == ltable.layer_id)
+        rows = db(query).select(r.table.id)
+        restrict = [str(row.id) for row in rows]
+        response.s3.actions.append(dict(label=str(T("Disable")),
+                                        _class="action-btn",
+                                        url=URL(args=["[id]", "disable"]),
+                                        restrict = restrict
+                                        )
+                                    )
+
+        return output
+    #response.s3.postp = postp
+
     output = s3_rest_controller(rheader=s3db.gis_rheader)
     return output
 
@@ -1215,13 +1210,23 @@ def layer_feature():
 
     # Post-processor
     def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+        s3_action_buttons(r)
+        # Only show the disable button if the layer is not currently disabled
+        # @ToDo: Fix for new data model
+        ltable = s3db.gis_layer_config
+        query = (ltable.enabled != False) & \
+                (r.table.layer_id == ltable.layer_id)
+        rows = db(query).select(r.table.id)
+        restrict = [str(row.id) for row in rows]
+        response.s3.actions.append(dict(label=str(T("Disable")),
+                                        _class="action-btn",
+                                        url=URL(args=["[id]", "disable"]),
+                                        restrict = restrict
+                                        )
+                                    )
+
         return output
-    response.s3.postp = postp
+    #response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
     return output
@@ -1280,15 +1285,6 @@ def layer_openstreetmap():
         return True
     response.s3.prep = prep
 
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
-
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
     return output
@@ -1341,15 +1337,6 @@ def layer_bing():
 
         return True
     response.s3.prep = prep
-
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
@@ -1455,15 +1442,6 @@ def layer_google():
                                                          )
         return True
     response.s3.prep = prep
-
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
@@ -1608,16 +1586,6 @@ def layer_geojson():
         return True
     response.s3.prep = prep
 
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
-
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
     return output
@@ -1706,12 +1674,20 @@ def layer_georss():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+            s3_action_buttons(r)
+            # Only show the enable button if the layer is not currently enabled
+            # @ToDo: Fix for new data model
+            query = (r.table.enabled != True)
+            rows = db(query).select(r.table.id)
+            restrict = [str(row.id) for row in rows]
+            response.s3.actions.append(dict(label=str(T("Enable")),
+                                            _class="action-btn",
+                                            url=URL(args=["[id]", "enable"]),
+                                            restrict = restrict
+                                            )
+                                        )
         return output
-    response.s3.postp = postp
+    #response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
@@ -1777,15 +1753,6 @@ def layer_gpx():
                                                          )
         return True
     response.s3.prep = prep
-
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
@@ -1874,10 +1841,7 @@ def layer_kml():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+            s3_action_buttons(r, copyable=True)
         return output
     response.s3.postp = postp
 
@@ -1951,10 +1915,17 @@ def layer_theme():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+            s3_action_buttons(r, copyable=True)
+            # Only show the enable button if the layer is not currently enabled
+            #query = (r.table.enabled != True)
+            #rows = db(query).select(r.table.id)
+            #restrict = [str(row.id) for row in rows]
+            #response.s3.actions.append(dict(label=str(T("Enable")),
+            #                                _class="action-btn",
+            #                                url=URL(args=["[id]", "enable"]),
+            #                                restrict = restrict
+            #                                )
+            #                            )
         return output
     response.s3.postp = postp
 
@@ -2039,10 +2010,17 @@ def layer_tms():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+            s3_action_buttons(r, copyable=True)
+            # Only show the enable button if the layer is not currently enabled
+            #query = (r.table.enabled != True)
+            #rows = db(query).select(r.table.id)
+            #restrict = [str(row.id) for row in rows]
+            #response.s3.actions.append(dict(label=str(T("Enable")),
+            #                                _class="action-btn",
+            #                                url=URL(args=["[id]", "enable"]),
+            #                                restrict = restrict
+            #                                )
+            #                            )
         return output
     response.s3.postp = postp
 
@@ -2111,10 +2089,7 @@ def layer_wfs():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+            s3_action_buttons(r, copyable=True)
         return output
     response.s3.postp = postp
 
@@ -2185,10 +2160,17 @@ def layer_wms():
     # Post-processor
     def postp(r, output):
         if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
+            s3_action_buttons(r, copyable=True)
+            # Only show the enable button if the layer is not currently enabled
+            #query = (r.table.enabled != True)
+            #rows = db(query).select(r.table.id)
+            #restrict = [str(row.id) for row in rows]
+            #response.s3.actions.append(dict(label=str(T("Enable")),
+            #                                _class="action-btn",
+            #                                url=URL(args=["[id]","enable"]),
+            #                                restrict = restrict
+            #                                )
+            #                            )
         return output
     response.s3.postp = postp
 
@@ -2197,88 +2179,9 @@ def layer_wms():
     return output
 
 # -----------------------------------------------------------------------------
-def layer_xyz():
-    """ RESTful CRUD controller """
-
-    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-        auth.permission.fail()
-
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-
-    # CRUD Strings
-    type = "XYZ"
-    LAYERS = T(TYPE_LAYERS_FMT % type)
-    ADD_NEW_LAYER = T(ADD_NEW_TYPE_LAYER_FMT % type)
-    EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
-    LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
-    NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
-    s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
-        title_display=LAYER_DETAILS,
-        title_list=LAYERS,
-        title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
-        subtitle_create=ADD_NEW_LAYER,
-        subtitle_list=LIST_LAYERS,
-        label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
-        label_delete_button = DELETE_LAYER,
-        msg_record_created=LAYER_ADDED,
-        msg_record_modified=LAYER_UPDATED,
-        msg_record_deleted=LAYER_DELETED,
-        msg_list_empty=NO_LAYERS)
-
-    # Custom Method
-    s3mgr.model.set_method(module, resourcename,
-                           method="enable",
-                           action=enable_layer)
-
-    # Pre-processor
-    def prep(r):
-        if r.interactive:
-            if r.component_name == "config":
-                ltable = s3db.gis_layer_config
-                field = ltable.visible
-                field.readable = False
-                field.writable = False
-                if r.method != "update":
-                    # Only show Configs with no definition yet for this layer
-                    table = r.table
-                    # Find the records which are used
-                    query = (ltable.layer_id == table.layer_id) & \
-                            (table.id == r.id)
-                    rows = db(query).select(ltable.config_id)
-                    # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
-                                                         "%(name)s",
-                                                         not_filterby="config_id",
-                                                         not_filter_opts=[row.config_id for row in rows]
-                                                         )
-        return True
-    response.s3.prep = prep
-
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                s3_action_buttons(r, copyable=True)
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
-
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
-
-    return output
-
-# -----------------------------------------------------------------------------
+@auth.s3_requires_membership("MapAdmin")
 def layer_js():
     """ RESTful CRUD controller """
-
-    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-        auth.permission.fail()
 
     tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
@@ -2327,15 +2230,6 @@ def layer_js():
                                                          )
         return True
     response.s3.prep = prep
-
-    # Post-processor
-    def postp(r, output):
-        if r.interactive and r.method != "import":
-            if not r.component:
-                # Inject checkbox to enable layer in default config
-                inject_enable(output)
-        return output
-    response.s3.postp = postp
 
     output = s3_rest_controller(rheader=s3db.gis_rheader)
 
