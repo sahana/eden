@@ -54,9 +54,9 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
-from gluon.storage import Storage
-from gluon.sql import Row, Rows
 from gluon import *
+from gluon.sql import Row, Rows
+from gluon.storage import Storage
 from gluon.tools import callback
 import gluon.contrib.simplejson as json
 
@@ -425,7 +425,9 @@ class S3RequestManager(object):
                 text = cache.ram(key,
                                  lambda: field.represent(val),
                                  time_expire=60)
-                if not isinstance(text, basestring):
+                if isinstance(text, DIV):
+                    text = str(text)
+                elif not isinstance(text, basestring):
                     text = unicode(text)
         else:
             if val is None:
@@ -1754,7 +1756,7 @@ class S3Request(object):
                 args.append(method)
 
         f = self.function
-        if not representation==self.DEFAULT_REPRESENTATION:
+        if not representation == self.DEFAULT_REPRESENTATION:
             if len(args) > 0:
                 args[-1] = "%s.%s" % (args[-1], representation)
             else:

@@ -3370,7 +3370,7 @@ class GIS(object):
         # Defaults
         # Also in static/S3/s3.gis.js
         # http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
-        self.cluster_distance = 2    # pixels
+        self.cluster_distance = 20   # pixels
         self.cluster_threshold = 2   # minimum # of features to form a cluster
 
         # Support bookmarks (such as from the control)

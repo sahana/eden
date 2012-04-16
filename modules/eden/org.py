@@ -1774,6 +1774,8 @@ def org_office_controller():
             table.obsolete.readable = False
             if r.record and r.record.type == 5:
                 s3.crud_strings["org_office"].title_display = T("Warehouse Details")
+                manager.configure(r.tablename,
+                                  popup_url=URL(args=[r.id, "inv_item"]))
 
         if r.record and settings.has_module("hrm"):
             # Cascade the organisation_id from the office to the staff

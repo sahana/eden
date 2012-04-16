@@ -3287,7 +3287,7 @@ def cluster_distance():
                                          _title="%s|%s" % (T("Cluster Distance"),
                                                            T("The number of pixels apart that features need to be before they are clustered."))),
                            requires = IS_INT_IN_RANGE(1, 30),
-                           default = 5)
+                           default = 20)
 
 # =============================================================================
 def cluster_threshold():

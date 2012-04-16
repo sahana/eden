@@ -33,7 +33,7 @@ S3.gis.options = {
 // Default values if not set by the layer
 // Also in modules/s3/s3gis.py
 // http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
-S3.gis.cluster_distance = 2;    // pixels
+S3.gis.cluster_distance = 20;    // pixels
 S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 
 /* Configure the Viewport */
