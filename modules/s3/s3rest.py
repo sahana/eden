@@ -4713,27 +4713,27 @@ class S3ResourceFilter:
 
             # Add the subqueries and filters for this component
             if alias in cquery:
-                self.add_filter(cquery[alias])
+                [self.add_filter(q) for q in cquery[alias]]
             if alias in cvfltr:
-                self.add_filter(cvfltr[alias])
+                [self.add_filter(f) for f in cvfltr[alias]]
 
             if resource.link is not None:
                 # If this component has a link table, add the subqueries
                 # and filters for the link table
                 lname = resource.link.alias
                 if lname in cquery:
-                    self.add_filter(cquery[lname])
+                    [self.add_filter(q) for q in cquery[lname]]
                 if lname in cvfltr:
-                    self.add_filter(cvfltr[lname])
+                    [self.add_filter(f) for f in cvfltr[lname]]
 
             elif resource.linked is not None:
                 # Otherwise, if this is a linktable, add the subqueries
                 # and filters for the linked table
                 cname = resource.linked.alias
                 if cname in cquery:
-                    self.add_filter(cquery[cname])
+                    [self.add_filter(q) for q in cquery[cname]]
                 if cname in cvfltr:
-                    self.add_filter(cvfltr[cname])
+                    [self.add_filter(f) for f in cvfltr[cname]]
 
         # Master resource query -----------------------------------------------
         else:
