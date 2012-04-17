@@ -1,4 +1,6 @@
-__all__ = ["inventory"]
+__all__ = ["inventory",
+           "requests",
+          ]
 
 # Selenium WebDriver
 from selenium import webdriver
@@ -56,15 +58,34 @@ def inventory():
     # Having opened the Lospalos warehouse
     # After a prepop the warehouse should have:
     #    4200 plastic sheets from Australia RC
-    #    2000 plastic sheets from Acme 
+    #    2000 plastic sheets from Acme
     match = dt_find("Plastic Sheets")
     if match:
-        found = False
-        for cell in match:
-            if dt_find("4200", row=cell[0], column=5, first=True):
-               found = True
-        assert found, "Unable to find 4200 Plastic Sheets"
+        if not dt_find(4200, cellList=match, column=5, first=True):
+            assert 0, "Unable to find 4200 Plastic Sheets"
+        if not dt_find(2000, cellList=match, column=5, first=True):
+            assert 0, "Unable to find 2000 Plastic Sheets"
     else:
         assert 0, "Unable to find any Plastic Sheets"
     
+    assert 0, "Keep the browser window open"
+
+# -----------------------------------------------------------------------------
+def requests():
+    """ Tests for Requests """
+
+    config = current.test_config
+    browser = config.browser
+
+    # Login
+    login()
+
+    # Open Request module
+    url = "%s/req/req/create" % config.url
+    browser.get(url)
+    w_autocomplete("Beat",
+                 "req_req_requester",
+                 "Beatriz de Carvalho",
+                )
+
     assert 0, "Keep the browser window open"

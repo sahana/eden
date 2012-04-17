@@ -292,7 +292,7 @@ def inv_item():
                                                           field=s3db.org_organisation_id(comment=None)
                                                           )
                                                      ],
-                                 interactive_report = True
+                                 interactive_report = True,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -395,10 +395,11 @@ def send():
         response.s3.gis.tab = "search"
 
         if r.component:
+            SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
             # Can only create or delete track items for a send record if the status is preparing
             if r.method == "create" or r.method == "delete":
                 record = table[r.id]
-                if record.status != 1:
+                if record.status != SHIP_STATUS_IN_PROCESS:
                     return False
             if r.method == "delete":
                 return s3.inv_track_item_deleting(r.component_id)
@@ -440,7 +441,6 @@ def send():
                 tracktable.adj_item_id.readable = False
                 tracktable.adj_item_id.writable = False
             if r.interactive:
-                SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
                 SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
                 if r.record.status == SHIP_STATUS_IN_PROCESS:
                     s3.crud_strings.inv_send.title_update = \

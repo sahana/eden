@@ -1971,7 +1971,7 @@ $.post('%s',
                 qstn_type = qstn["type"]
                 answers = getAnswers(qstn_id, series_id)
                 analysisTool = survey_analysis_type[qstn_type](qstn_id, answers)
-                label = analysisTool.qstnWidget.question.name
+                label = analysisTool.qstnWidget.fullName()
                 if len(label) > 20:
                     label = "%s..." % label[0:20]
                 legendLabels.append(label)
