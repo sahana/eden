@@ -107,9 +107,9 @@ class S3LocationModel(S3Model):
         if current.deployment_settings.get_gis_spatialdb():
             # Add a spatial field
             # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
-            meta_spatial_fields = (meta_fields() + (Field("the_geom", "geometry()"),))
+            meta_spatial_fields = (s3.lx_fields() + meta_fields() + (Field("the_geom", "geometry()"),))
         else:
-            meta_spatial_fields = meta_fields()
+            meta_spatial_fields = (s3.lx_fields() + meta_fields())
 
         tablename = "gis_location"
         table = define_table(tablename,
@@ -194,7 +194,9 @@ class S3LocationModel(S3Model):
                              #Field("ce", "integer", writable=False, readable=False), # Circular 'Error' around Lat/Lon (in m). Needed for CoT.
                              #Field("le", "integer", writable=False, readable=False), # Linear 'Error' for the Elevation (in m). Needed for CoT.
                              Field("area", "double", writable=False, readable=False), # Area of the Polygon (in km2).
-                             Field("population", "integer", writable=False, readable=False, represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),), # Population of the Location
+                             Field("population", "integer",
+                                   label = T("Population"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              Field("source", length=32,
                                     requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                              s3.comments(),
@@ -319,7 +321,8 @@ class S3LocationModel(S3Model):
                                       "gis_feature_type",
                                       "lat",
                                       "lon"
-                                    ])
+                                    ]
+                        )
 
         # Names as component of Locations
         self.add_component("gis_location_name", gis_location="location_id")
@@ -634,6 +637,25 @@ class S3LocationModel(S3Model):
 
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
+
+        # Add the Lx
+        if level == "L0":
+            vars.L0 = vars.name
+        elif level == "L1":
+            vars.L1 = vars.name
+            if parent:
+                query = (table.id == parent)
+                country = db(query).select(table.name,
+                                           limitby=(0, 1)).first()
+                if country:
+                    vars.L0 = country.name
+        else:
+            # Get Names of ancestors at each level
+            vars = gis.get_parent_per_level(vars,
+                                            vars.id,
+                                            feature=vars,
+                                            ids=False,
+                                            names=True)
 
         return
 
