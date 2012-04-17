@@ -12,15 +12,6 @@ def create_office():
     config = current.test_config
     browser = config.browser
     driver = browser
-    url = "http://127.0.0.1:8000/eden/default/user/login"
-    browser.get(url)
-#    driver.find_element_by_id("auth_menu_login").click()
-    driver.find_element_by_css_selector("form").click()
-    driver.find_element_by_id("auth_user_email").clear()
-    driver.find_element_by_id("auth_user_email").send_keys("admin@example.com")
-    driver.find_element_by_id("auth_user_password").clear()
-    driver.find_element_by_id("auth_user_password").send_keys("testing")
-    driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     driver.find_element_by_xpath("//div[@id='facility_box']/a[4]/div").click()
     driver.find_element_by_id("show-add-btn").click()
     driver.find_element_by_id("org_office_name").clear()
@@ -40,6 +31,6 @@ def create_office():
     driver.find_element_by_id("org_office_comments").clear()
     driver.find_element_by_id("org_office_comments").send_keys("This is a Test Office")
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
-
-    # Logout
-    logout()
+#
+#    # Logout
+#    logout()

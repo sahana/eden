@@ -5,7 +5,8 @@
 
 # Selenium WebDriver
 from selenium import webdriver
-
+from selenium.common.exceptions import NoSuchElementException
+import unittest, re, time
 from gluon import current
 from gluon.storage import Storage
 import sys
@@ -39,9 +40,31 @@ if test:
     # Run specified Test
     globals()[test]()
 else:
+#<<<<<<< HEAD
 #    staff()
+
+    config = current.test_config
+    browser = config.browser
+    driver = browser
+    url = "http://127.0.0.1:8000/eden/default/user/login"
+    browser.get(url)
+    
+    #@ToDo: Going to revamp the login system and use core/auth.py system in the near future. This login is only temporary to save time for internal dev. 
+    driver.find_element_by_css_selector("form").click()
+    driver.find_element_by_id("auth_user_email").clear()
+    driver.find_element_by_id("auth_user_email").send_keys("admin@example.com")
+    driver.find_element_by_id("auth_user_password").clear()
+    driver.find_element_by_id("auth_user_password").send_keys("testing")
+    driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     create_organization()
     create_office()
-
-# Cleanup
-browser.close()
+    create_staff()
+    create_volunteer()
+#=======
+#    # Run all Tests
+#    staff()
+#    inventory()
+##>>>>>>> upstream/master
+#
+## Cleanup
+#browser.close()
