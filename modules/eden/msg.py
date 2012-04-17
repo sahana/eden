@@ -95,6 +95,12 @@ class S3MessagingModel(S3Model):
                                         represent = lambda direction: \
                                             (direction and ["In"] or ["Out"])[0],
                                         label = T("Direction")),
+                                  Field("is_parsed", "boolean", default = False,
+                                        represent = lambda status: \
+                                            (status and ["Parsed"] or ["Not Parsed"])[0],
+                                        label = T("Parsing Status")),
+                                  Field("reply", "text" ,
+                                        label = T("Reply")),                                        
                                   *s3.meta_fields())
 
         self.configure(tablename,
@@ -110,7 +116,9 @@ class S3MessagingModel(S3Model):
                                     "actionable",
                                     "actioned",
                                     #"actioned_comments",
-                                    #"priority"
+                                    #"priority",
+                                    "is_parsed",
+                                    "reply"
                                     ])
 
         # Components

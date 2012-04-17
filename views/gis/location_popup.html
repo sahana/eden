@@ -5,8 +5,7 @@
 <p>&nbsp;</p>
 {{try:}}
 {{=XML(_map)}}
-{{except:}}
-{{pass}}
+{{except:}}{{pass}}
 {{if "caller" in request.vars:}}
     <script type="text/javascript">//<![CDATA[
     function getCurrentPosition(position){
@@ -71,8 +70,7 @@
             } else {
                 // geolocation is not available...IE sucks! ;)
             }
-    {{else:}}
-    {{pass}}
+    {{else:}}{{pass}}
 
             // Provide tiered Location AutoCompletes
             // Hide the real Input Field
@@ -105,6 +103,5 @@
     //]]></script>
 {{pass}}
 {{if r.method != "read":}}
-    {{include "gis/feature_crud.js"}}
+  {{include "gis/feature_crud.js"}}
 {{pass}}
-{{include "gis/convert_gps.html"}}

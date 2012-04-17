@@ -410,9 +410,11 @@ def presence():
 def pentity():
     """
         RESTful CRUD controller
-        - used by AutocompleteWidget
+        - limited to just search.json for use in Autocompletes
     """
 
+    response.s3.prep = lambda r: r.representation == "json" and \
+                                 r.method == "search"
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -433,10 +435,6 @@ def tooltip():
 
     if "formfield" in request.vars:
         response.view = "pr/ajaxtips/%s.html" % request.vars.formfield
-    return dict()
-
-# -----------------------------------------------------------------------------
-def guide():
     return dict()
 
 # -----------------------------------------------------------------------------

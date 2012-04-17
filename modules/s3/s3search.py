@@ -1468,6 +1468,8 @@ class S3Search(S3CRUD):
                 # We have some features returned
                 map_popup = gis.show_map(
                                         feature_queries=feature_queries,
+                                        catalogue_layers=True,
+                                        legend=True,
                                         toolbar=True,
                                         collapsed=True,
                                         bbox=bounds,
@@ -1482,6 +1484,8 @@ class S3Search(S3CRUD):
                                         # Added by search widget onClick in s3.dataTables.js
                                         #add_polygon = True,
                                         #add_polygon_active = True,
+                                        catalogue_layers=True,
+                                        legend=True,
                                         toolbar=True,
                                         collapsed=True,
                                         #search = True,

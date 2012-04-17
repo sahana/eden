@@ -47,19 +47,23 @@ from ..s3 import *
 
 T = current.T
 organisation_type_opts = {
-    1:T("Government"),
-    2:T("Embassy"),
-    3:T("International NGO"),
-    4:T("Donor"),               # Don't change this number without changing organisation_popup.html
-    6:T("National NGO"),
-    7:T("UN"),
-    8:T("International Organization"),
-    9:T("Military"),
-    10:T("Private"),
-    11:T("Intergovernmental Organization"),
-    12:T("Institution"),
-    13:T("Red Cross / Red Crescent")
-    #12:"MINUSTAH"   Haiti-specific
+    # http://hxl.humanitarianresponse.info/index.html#Organisation
+    1:T("Government"),          # HXL: Government organisation
+    2:T("Embassy"),             # Add to HXL?
+    3:T("International NGO"),   # HXL: NGO - split?
+    4:T("Donor"),               # HXL: Bilateral organisation. Don't change this number without changing organisation_popup.html
+    6:T("National NGO"),        # HXL: NGO - split?
+    7:T("UN"),                  # HXL: UN agency
+    8:T("International Organization"), # remove?
+    9:T("Military"),            # Add to HXL?
+    10:T("Private"),            # HXL: Private organisation / foundation
+    11:T("Intergovernmental Organization"), # HXL: Inter-governmental organisation
+    12:T("Institution"),        # remove?
+    13:T("Red Cross / Red Crescent") # HXL: Red cross / red crescent
+    # These are affiliation roles:
+    # http://eden.sahanafoundation.org/wiki/BluePrintPersonEntityModel#Roles
+    # HXL: Distributing partner
+    # HXL: Supplying agency
 }
 
 # =============================================================================
@@ -878,7 +882,6 @@ class S3SiteModel(S3Model):
         """
             Create the code from the name
         """
-
         s3db = current.s3db
         db = current.db
         site_table = s3db.org_site
@@ -907,17 +910,14 @@ class S3SiteModel(S3Model):
         if temp_code:
             db(site_table.site_id == form.vars.site_id).update(code = temp_code)
 
-    # -------------------------------------------------------------------------
     @staticmethod
     def getCodeList(code, wildcard_posn=[]):
         """
         """
-
         s3db = current.s3db
         db = current.db
         site_table = s3db.org_site
         temp_code = ""
-
         # Inject the wildcard charater in the right positions
         for posn in range(len(code)):
             if posn in wildcard_posn:
@@ -940,7 +940,6 @@ class S3SiteModel(S3Model):
     def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
         """
         """
-
         # Select the replacement letters with numbers first and then
         # followed by the letters in least commonly used order
         replacement_char = "1234567890ZQJXKVBWPYGUMCFLDHSIRNOATE"
@@ -1775,6 +1774,8 @@ def org_office_controller():
             table.obsolete.readable = False
             if r.record and r.record.type == 5:
                 s3.crud_strings["org_office"].title_display = T("Warehouse Details")
+                manager.configure(r.tablename,
+                                  popup_url=URL(args=[r.id, "inv_item"]))
 
         if r.record and settings.has_module("hrm"):
             # Cascade the organisation_id from the office to the staff
@@ -1829,8 +1830,17 @@ def org_office_controller():
 
         return True
     s3.prep = prep
-
-    rheader = s3db.org_rheader
+    # remove CRUD generated buttons in the tabs
+    manager.configure("inv_inv_item",
+                    create=False,
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                   )
+    if "inv_item" in request.args:
+        rheader = s3db.inv_warehouse_rheader
+    else:
+        rheader = s3db.org_rheader
     return s3_rest_controller("org", "office", rheader=rheader)
 
 # END =========================================================================

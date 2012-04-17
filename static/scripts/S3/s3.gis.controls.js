@@ -663,6 +663,9 @@ function addSaveButton(toolbar) {
                     if (id) {
                         // Ensure that future saves are updates, not creates
                         S3.gis.config_id = id;
+                        // Change the Menu link
+                        var url = S3.Ap.concat('/gis/config/', id, '/layer_entity')
+                        $('#gis_menu_config').attr('href', url);
                     }
                 },
                 //failure: otherFn,
@@ -703,10 +706,18 @@ function getState() {
     // @ToDo: Filter
     var layers = [];
     var layer_config;
+    var base_id = map.baseLayer.options.layer_id;
     Ext.iterate(map.layers, function(key, val, obj) {
+        var id = key.options.layer_id;
         layer_config = {
-            id: key.options.layer_id,
-            visible: key.visibility
+            id: id
+        }
+        // Only return non-default options
+        if (key.visibility) {
+            layer_config['visible'] = key.visibility;
+        }
+        if (id == base_id) {
+            layer_config['base'] = true;   
         }
         layers.push(layer_config);
     });

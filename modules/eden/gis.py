@@ -1809,6 +1809,7 @@ class S3LayerEntityModel(S3Model):
     names = ["gis_layer_entity",
              "gis_layer_config",
              "gis_layer_symbology",
+             "gis_layer_config_onaccept",
             ]
 
     def model(self):
@@ -1849,6 +1850,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_tms = T("TMS Layer"),
                               gis_layer_wfs = T("WFS Layer"),
                               gis_layer_wms = T("WMS Layer"),
+                              gis_layer_xyz = T("XYZ Layer"),
                             )
 
         tablename = "gis_layer_entity"
@@ -1987,6 +1989,7 @@ class S3LayerEntityModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage(
                 gis_layer_types = layer_types,
+                gis_layer_config_onaccept = self.layer_config_onaccept
             )
 
     # -------------------------------------------------------------------------
@@ -2115,6 +2118,7 @@ class S3FeatureLayerModel(S3Model):
             msg_list_empty = T("No Feature Layers currently defined"))
 
         self.configure(tablename,
+                       onaccept=gis_layer_onaccept,
                        super_entity="gis_layer_entity",
                        deduplicate=self.gis_layer_feature_deduplicate,
                        list_fields=["id",
@@ -2215,6 +2219,7 @@ class S3MapModel(S3Model):
              "gis_layer_tms",
              "gis_layer_wfs",
              "gis_layer_wms",
+             "gis_layer_xyz",
              #"gis_style"
             ]
 
@@ -2303,6 +2308,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2332,6 +2338,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2361,6 +2368,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2398,6 +2406,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2452,6 +2461,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   deduplicate = self.gis_layer_georss_deduplicate,
                   super_entity="gis_layer_entity")
 
@@ -2482,7 +2492,9 @@ class S3MapModel(S3Model):
         # Google
         #
 
-        google_layer_types = ["satellite", "maps", "hybrid", "mapmaker", "mapmakerhybrid", "earth", "streetview"]
+        google_layer_types = ["satellite", "maps", "hybrid", "terrain",
+                              "mapmaker", "mapmakerhybrid",
+                              "earth", "streetview"]
 
         tablename = "gis_layer_google"
         table = define_table(tablename,
@@ -2496,6 +2508,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2546,6 +2559,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2588,6 +2602,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   deduplicate = self.gis_layer_kml_deduplicate,
                   super_entity="gis_layer_entity")
 
@@ -2632,6 +2647,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2664,6 +2680,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2709,6 +2726,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2746,13 +2764,13 @@ class S3MapModel(S3Model):
                                    requires = IS_INT_IN_RANGE(1, 30),
                                     label=T("Zoom Levels"),
                                    default=19),
-                             projection_id(default=1), # 900913
                              gis_layer_folder()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2825,6 +2843,7 @@ class S3MapModel(S3Model):
                              *meta_fields())
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -2904,12 +2923,58 @@ class S3MapModel(S3Model):
         #table.url.requires = [IS_URL, IS_NOT_EMPTY()]
 
         configure(tablename,
+                  onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
 
         # Components
         # Configs
         add_component("gis_config",
                       gis_layer_wms=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # ---------------------------------------------------------------------
+        # XYZ
+        # - e.g. used by OSM community for JOSM/Potlatch
+        #
+        # @ToDo: Support Overlays with Opacity
+        #
+
+        tablename = "gis_layer_xyz"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(),
+                             Field("description", label=T("Description")),
+                             Field("url", label=T("Location"), requires=IS_NOT_EMPTY(),
+                                   comment=DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("Location"),
+                                                                 T("The URL to access the service.")))),
+                             Field("url2", label=T("Secondary Server (Optional)")),
+                             Field("url3", label=T("Tertiary Server (Optional)")),
+                             Field("img_format", label=T("Format")),
+                             Field("attribution", label=T("Attribution")),
+                             Field("zoom_levels", "integer",
+                                   requires = IS_INT_IN_RANGE(1, 30),
+                                    label=T("Zoom Levels"),
+                                   default=19),
+                             gis_layer_folder()(),
+                             role_required(),       # Single Role
+                             #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                             *meta_fields())
+
+        configure(tablename,
+                  onaccept=gis_layer_onaccept,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_xyz=Storage(
                                     link="gis_layer_config",
                                     pkey="layer_id",
                                     joinby="layer_id",
@@ -2981,7 +3046,6 @@ class S3MapModel(S3Model):
                       of the record being imported
 
           If the record is a duplicate then it will set the job method to update
-
         """
 
         db = current.db
@@ -3012,7 +3076,6 @@ class S3MapModel(S3Model):
                       of the record being imported
 
           If the record is a duplicate then it will set the job method to update
-
         """
 
         db = current.db
@@ -3224,7 +3287,7 @@ def cluster_distance():
                                          _title="%s|%s" % (T("Cluster Distance"),
                                                            T("The number of pixels apart that features need to be before they are clustered."))),
                            requires = IS_INT_IN_RANGE(1, 30),
-                           default = 5)
+                           default = 20)
 
 # =============================================================================
 def cluster_threshold():
@@ -3236,6 +3299,40 @@ def cluster_threshold():
                                                            T("The minimum number of features to form a cluster."))),
                            requires = IS_INT_IN_RANGE(1, 10),
                            default = 2)
+
+# =============================================================================
+def gis_layer_onaccept(form):
+    """
+        Process the enable checkbox
+    """
+
+    enable = current.request.post_vars.enable
+
+    if enable:
+        # Find the Default config
+        db = current.db
+        s3db = current.s3db
+        ctable = s3db.gis_config
+        query = (ctable.uuid == "SITE_DEFAULT")
+        config = db(query).select(ctable.id,
+                                  limitby=(0, 1)).first()
+        if not config:
+            return
+        config_id = config.id
+        layer_id = form.vars.layer_id
+        # Update or Insert?
+        ltable = s3db.gis_layer_config
+        query = (ltable.config_id == config_id) & \
+                (ltable.layer_id == layer_id)
+        record = db(query).select(ltable.id,
+                                  limitby=(0, 1)).first()
+        if record:
+            db(query).update(enabled=True)
+        else:
+            ltable.insert(config_id = config_id,
+                          layer_id = layer_id,
+                          enabled = True)
+    return
 
 # =============================================================================
 def gis_location_represent_row(location, showlink=True, simpletext=False):
@@ -3257,7 +3354,30 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
     request = current.request
     gis = current.gis
 
-    def lat_lon_represent(location):
+    def lat_lon_format(coord, format=None):
+        """
+            Represent a coordinate (latitude or longitude) according to a
+            format. if format is not provided, uses deployment_settings.
+        """
+        if (format == None):
+            settings = current.deployment_settings
+            format = settings.get_L10n_lat_lon_format()
+
+        degrees = abs(coord)
+        minutes = (degrees - int(degrees)) * 60
+        seconds = (minutes - int(minutes)) * 60
+
+        # truncate (floor) degrees and minutes
+        degrees, minutes = (int(coord), int(minutes))
+
+        formatted = format.replace("%d", "%d" % degrees) \
+                          .replace("%m", "%d" % minutes) \
+                          .replace("%s", "%lf" % seconds) \
+                          .replace("%f", "%lf" % coord)
+        return formatted
+
+    # -------------------------------------------------------------------------
+    def lat_lon_represent(location, format=None):
         lat = location.lat
         lon = location.lon
         if lat is not None and lon is not None:
@@ -3271,7 +3391,10 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
             else:
                 lon_suffix = "W"
                 lon = -lon
-            text = "%s %s, %s %s" % (lat, lat_suffix, lon, lon_suffix)
+            text = "%s %s, %s %s" % (lat_lon_format(lat, format),
+                                     lat_suffix,
+                                     lat_lon_format(lon, format),
+                                     lon_suffix)
             return text
 
     def parent_represent(location):
@@ -3586,6 +3709,7 @@ def gis_rheader(r, tabs=[]):
          resourcename == "layer_tms" or \
          resourcename == "layer_wms" or \
          resourcename == "layer_wfs" or \
+         resourcename == "layer_xyz" or \
          resourcename == "layer_coordinate" or \
          resourcename == "layer_gpx" or \
          resourcename == "layer_js" :

@@ -91,7 +91,7 @@ class S3EventModel(S3Model):
                                   Field("name", notnull=True, # Name could be a code
                                         length=64,    # Mayon compatiblity
                                         label=T("Name")),
-                                  #Field("code",       # e.g. to link to WebEOC
+                                  #Field("code",       # e.g. to link to WebEOC or GLIDE (http://glidenumber.net/glide/public/about.jsp)
                                   #      length=64,    # Mayon compatiblity
                                   #      label=T("Code")),
                                   countries_id(

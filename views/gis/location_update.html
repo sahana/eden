@@ -10,8 +10,7 @@
 <p>&nbsp;</p>
 {{try:}}
 {{=XML(_map)}}
-{{except:}}
-{{pass}}
+{{except:}}{{pass}}
 <script type="text/javascript">//<![CDATA[
 $(function() {
     var level = $('#gis_location_level').val();
@@ -37,4 +36,3 @@ $(function() {
 });
 //]]></script>
 {{include "gis/feature_crud.js"}}
-{{include "gis/convert_gps.html"}}
