@@ -171,8 +171,13 @@ class S3LocationModel(S3Model):
                                    requires = IS_LENGTH(2 ** 24),                # Full WKT validation is done in the onvalidation callback - all we do here is allow longer fields than the default (2 ** 16)
                                    represent = gis.abbreviate_wkt,
                                    label = "WKT (Well-Known Text)"),
+                             Field("population", "integer",
+                                   label = T("Population"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              Field("url", label = "URL",
                                    requires = IS_NULL_OR(IS_URL())),
+                             Field("source", length=32,
+                                    requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                              Field("geonames_id", "integer", unique=True,    # Geonames ID (for cross-correlation. OSM cannot take data from Geonames as 'polluted' with unclear sources, so can't use them as UUIDs)
                                    requires = IS_EMPTY_OR([IS_INT_IN_RANGE(0, 999999999),
                                                            IS_NOT_ONE_OF(db, "%s.geonames_id" % tablename)]),
@@ -194,11 +199,6 @@ class S3LocationModel(S3Model):
                              #Field("ce", "integer", writable=False, readable=False), # Circular 'Error' around Lat/Lon (in m). Needed for CoT.
                              #Field("le", "integer", writable=False, readable=False), # Linear 'Error' for the Elevation (in m). Needed for CoT.
                              Field("area", "double", writable=False, readable=False), # Area of the Polygon (in km2).
-                             Field("population", "integer",
-                                   label = T("Population"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("source", length=32,
-                                    requires=IS_NULL_OR(IS_IN_SET(gis_source_opts))),
                              s3.comments(),
                              format=gis_location_represent,
                              *meta_spatial_fields)
@@ -652,7 +652,7 @@ class S3LocationModel(S3Model):
         else:
             # Get Names of ancestors at each level
             vars = gis.get_parent_per_level(vars,
-                                            vars.id,
+                                            vars.id, # Will be None for Creates
                                             feature=vars,
                                             ids=False,
                                             names=True)
