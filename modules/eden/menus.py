@@ -1073,6 +1073,7 @@ class S3OptionsMenu:
                         M("List/Add", f="group"),
                         M("Group Memberships", f="group_membership"),
                     ),
+                    M("Email InBox", f="email_inbox"),
                     M("Log", f="log"),
                     M("Outbox", f="outbox"),
                     M("Search Twitter Tags", f="twitter_search")(
