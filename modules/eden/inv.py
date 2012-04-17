@@ -260,6 +260,14 @@ $(document).ready(function() {
                               comment=T("If none are selected, then all are searched."),
                               cols = 2
                               ),
+                          S3SearchOptionsWidget(
+                              name="inv_item_search_supply_org",
+                              label=T("Supplier/Donor"),
+                              field=["supply_org_id"],
+                              represent ="%(name)s",
+                              comment=T("If none are selected, then all are searched."),
+                              cols = 2
+                              ),
                           # NotImplemented yet
                           # S3SearchOptionsWidget(
                               # name="inv_item_search_category",
@@ -303,12 +311,12 @@ $(document).ready(function() {
                                       (T("Category"), "item_category"),
                                       ],
                        #report_cols = ["site_id", "currency"],
-                       report_cols = ["site_id"],
+                       report_cols = ["site_id", "supply_org_id"],
                        report_fact = ["quantity",
                                       (T("Total Value"), "total_value"),
                                       ],
                        report_method=["sum"],
-                       report_groupby = self.inv_inv_item.site_id,
+#                       report_groupby = self.inv_inv_item.site_id,
                        report_hide_comments = True,
                        deduplicate = self.inv_item_duplicate
                        )
@@ -1269,7 +1277,7 @@ $(document).ready(function() {
             new_track_pack_quantity = siptable[form.vars.item_pack_id].quantity
             newTotal = supply_item_add(stock_quantity,
                                        stock_pack,
-                                       - form.vars.quantity,
+                                       - float(form.vars.quantity),
                                        new_track_pack_quantity
                                       )
             db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = newTotal)
