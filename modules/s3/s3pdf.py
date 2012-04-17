@@ -411,20 +411,22 @@ class S3PDF(S3Method):
                                  footer=self.pageFooter,
                                  filename = filename)
 
+                # get the header details, if appropriate
+                if "rheader" in attr and attr["rheader"]:
+                    self.extractrHeader(attr["rheader"])
+                elif componentname: 
+                    self.addrHeader(self.resource,
+                                    list_fields,
+                                    report_hide_comments=report_hide_comments)
                 # Add details to the document
                 if componentname == None:
                     # Document that only has a resource list
-                    if "rheader" in attr and attr["rheader"]:
-                        self.extractrHeader(attr["rheader"])
                     self.addTable(self.resource,
                                   list_fields=list_fields,
                                   report_groupby=report_groupby,
                                   report_hide_comments=report_hide_comments)
                 else:
                     # Document that has a resource header and component list
-                    self.addrHeader(self.resource,
-                                    list_fields,
-                                    report_hide_comments=report_hide_comments)
                     # Get the raw data for the component
                     ptable = self.resource.table
                     ctable = db[componentname]

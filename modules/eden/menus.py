@@ -734,6 +734,10 @@ class S3OptionsMenu:
                         M("Import", m="import"),
                         #M("Geocode", f="geocode_manual"),
                     ),
+                    M("Population Report", f="location", m="report",
+                      vars=dict(rows="name",
+                                fact="population",
+                                aggregate="sum")),
                     M("Configuration", f="config", args=config_args(),
                       _id="gis_menu_config",
                       check=config_menu),
@@ -1073,6 +1077,7 @@ class S3OptionsMenu:
                         M("List/Add", f="group"),
                         M("Group Memberships", f="group_membership"),
                     ),
+                    M("Email InBox", f="email_inbox"),
                     M("Log", f="log"),
                     M("Outbox", f="outbox"),
                     M("Search Twitter Tags", f="twitter_search")(

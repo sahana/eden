@@ -116,21 +116,27 @@ def location():
     table = s3db[tablename]
 
     # Location Search Method
-    gis_location_search = s3base.S3LocationSearch(
-        simple = (s3base.S3SearchSimpleWidget(
-            name="location_search_text_simple",
-            label = T("Search"),
-            #comment = T("Search for a Location by name, including local names."),  # How? These aren't fields in this table or in a table that we link to.
-            comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = ["name"]
-            )
-        ),
-        advanced = (s3base.S3SearchSimpleWidget(
+    gis_location_adv_search = (s3base.S3SearchSimpleWidget(
             name = "location_search_text_advanced",
             label = T("Search"),
             #comment = T("Search for a Location by name, including local names."),
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
             field = ["name"]
+            ),
+            s3base.S3SearchLocationHierarchyWidget(
+                name="location_search_L0",
+                field="L0",
+                cols = 3,
+            ),
+            s3base.S3SearchLocationHierarchyWidget(
+                name="location_search_L1",
+                field="L1",
+                cols = 3,
+            ),
+            s3base.S3SearchLocationHierarchyWidget(
+                name="location_search_L2",
+                field="L2",
+                cols = 3,
             ),
             s3base.S3SearchOptionsWidget(
                 name = "location_search_level",
@@ -146,13 +152,31 @@ def location():
             #    cols = 2
             #),
         )
+    gis_location_search = s3base.S3LocationSearch(
+        simple = (s3base.S3SearchSimpleWidget(
+            name="location_search_text_simple",
+            label = T("Search"),
+            #comment = T("Search for a Location by name, including local names."),  # How? These aren't fields in this table or in a table that we link to.
+            comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
+            field = ["name"]
+            )
+        ),
+        advanced = (
+            gis_location_adv_search
+        )
     )
 
     s3mgr.configure(tablename,
                     # Don't include Bulky Location Selector in List Views
                     listadd=False,
                     # Custom Search Method
-                    search_method=gis_location_search)
+                    search_method=gis_location_search,
+                    report_filter=gis_location_adv_search,
+                    report_rows = ["name"],
+                    report_cols = [],
+                    report_fact = ["population"],
+                    report_method=["sum"],
+                    )
 
     # Custom Method
     s3mgr.model.set_method("gis", "location", method="parents",
@@ -389,7 +413,9 @@ def location():
     output = s3_rest_controller(csv_extra_fields = [
                                     dict(label="Country",
                                          field=country())
-                                ])
+                                ],
+                                interactive_report = True
+                                )
 
     _map = vars.get("_map", None)
     if _map and isinstance(output, dict):

@@ -1,4 +1,3 @@
-"ADM2_NAME","ADM3_NAME","ADM4_NAME","CODE","LON","LAT"
 ,"Abafala","Mumana",15111,126.56328,-8.56498
 ,"Abafala","Wabere",15112,126.57467,-8.569
 ,"Abani","Ato",15133,124.34222,-9.47556
@@ -37,6 +36,7 @@
 ,"Acumau","Relolisa",15146,125.6453,-8.61786
 ,"Acumau","Remexio",15145,125.66626,-8.61549
 ,"Acumau","Ulaen",15148,125.63962,-8.63478
+"ADM2_NAME","ADM3_NAME","ADM4_NAME","CODE","LON","LAT"
 ,"Afaca","Afaca",15151,126.60062,-8.54558
 ,"Afaca","Boralai",15152,126.60256,-8.55183
 ,"Afaca","Loirae",15153,126.6131,-8.56321
@@ -88,6 +88,7 @@
 ,"Aidabaleten","Biacau",15208,125.05694,-8.83384
 ,"Aidabaleten","Biahian",15213,125.04673,-8.86252
 ,"Aidabaleten","Biarua",15217,125.15002,-8.83809
+,"Aidabaleten","Enelaran",15273,125.06601,-8.82812
 ,"Aidabaleten","Fatulagung",15205,125.10496,-8.79577
 ,"Aidabaleten","Fatumea",15219,125.1375,-8.85972
 ,"Aidabaleten","Fatumulih",15203,125.09934,-8.79413
@@ -160,7 +161,6 @@
 ,"Alaua Leten","Baguia",15268,126.6606,-8.62747
 ,"Alaua Leten","Maurubiasa",15270,126.65393,-8.62346
 ,"Alaua Leten","Uasufa",15267,126.65959,-8.62852
-,"Aodabaleten","Enelaran",15273,125.06601,-8.82812
 ,"Asulau","Caisoro",15279,125.26454,-8.72995
 ,"Asulau","Ceres",15275,125.23416,-8.75399
 ,"Asulau","Direma",15278,125.25314,-8.73814
