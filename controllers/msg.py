@@ -304,6 +304,25 @@ def inbound_email_settings():
 
 
 # -----------------------------------------------------------------------------
+def email_inbox():
+
+    """
+        RESTful CRUD controller for the Email Inbox
+        - all Inbound Email Messages go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_email_inbox"
+    table = s3db[tablename]
+
+    s3mgr.configure(tablename, listadd=False)
+    return s3_rest_controller()
+
+
+# -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def modem_settings():
 
