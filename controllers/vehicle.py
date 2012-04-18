@@ -61,14 +61,13 @@ def vehicle():
     # Only select from vehicles
     field = table.item_id
     field.label = T("Vehicle Type")
-    field.comment = DIV(A(T("Add Vehicle Type"),
-                          _class="colorbox",
-                          _href=URL(c="supply", f="item", args="create",
-                                    vars=dict(format="popup", vehicle="1")),
-                          _target="top", _title=T("Add a new vehicle type")),
-                        DIV(_class="tooltip",
-                            _title="%s|%s" % (T("Vehicle Type"),
-                                              T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))))
+    field.comment = S3AddResourceLink(c="supply",
+                                      f="item",
+                                      label=T("Add Vehicle Type"),
+                                      info=T("Add a new vehicle type"),
+                                      title=T("Vehicle Type"),
+                                      tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
+
     field.widget = None # We want a simple dropdown
     ctable = s3db.supply_item_category
     itable = s3db.supply_item

@@ -775,6 +775,7 @@ class S3CRUD(S3Method):
         listadd = _config("listadd", True)
         addbtn = _config("addbtn", False)
         list_fields = _config("list_fields")
+
         report_groupby = _config("report_groupby")
         report_hide_comments = _config("report_hide_comments")
 

@@ -38,6 +38,7 @@ from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 # @ToDo: Put the most common patterns at the top to optimise
 um_patterns = ["\sper\s?(.*)$",                         # CHOCOLATE, per 100g
@@ -132,17 +133,11 @@ class S3SupplyModel(S3Model):
                                                     sort=True)),
                     represent = self.supply_brand_represent,
                     label = T("Brand"),
-                    comment = DIV(A(ADD_BRAND,
-                                    _class="colorbox",
-                                    _href=URL(c="supply", f="brand",
-                                              args="create",
-                                              vars=dict(format="popup")),
-                                    _target="top",
-                                    _title=ADD_BRAND),
-                                  DIV( _class="tooltip",
-                                       _title="%s|%s" % (T("Brand"),
-                                                         T("The list of Brands are maintained by the Administrators.")))
-                              ),
+                    comment=S3AddResourceLink(c="supply",
+                                              f="brand",
+                                              label=ADD_BRAND,
+                                              title=T("Brand"),
+                                              tooltip=T("The list of Brands are maintained by the Administrators.")),
                     ondelete = "RESTRICT")
 
         # =====================================================================
@@ -189,17 +184,11 @@ class S3SupplyModel(S3Model):
                                               look_up_value = id) or NONE,
                     default = 1,
                     label = T("Catalog"),
-                    comment = DIV(A(ADD_CATALOG,
-                                    _class="colorbox",
-                                    _href=URL(c="supply", f="catalog",
-                                              args="create",
-                                              vars=dict(format="popup")),
-                                    _target="top",
-                                    _title=ADD_CATALOG),
-                                  DIV( _class="tooltip",
-                                       _title="%s|%s" % (T("Catalog"),
-                                                         T("The list of Catalogs are maintained by the Administrators.")))
-                              ),
+                    comment=S3AddResourceLink(c="supply",
+                                              f="catalog",
+                                              label=ADD_CATALOG,
+                                              title=T("Catalog"),
+                                              tooltip=T("The list of Catalogs are maintained by the Administrators.")),
                     ondelete = "RESTRICT")
 
         # Categories as component of Catalogs
@@ -264,17 +253,11 @@ class S3SupplyModel(S3Model):
                                                     "%(name)s",
                                                     sort=True))
 
-        item_category_comment = DIV(A(ADD_ITEM_CATEGORY,
-                                      _class="colorbox",
-                                      _href=URL(c="supply", f="item_category",
-                                                args="create",
-                                                vars=dict(format="popup")),
-                                      _target="top",
-                                      _title=ADD_ITEM_CATEGORY),
-                                    DIV( _class="tooltip",
-                                         _title="%s|%s" % (T("Item Category"),
-                                                           ADD_ITEM_CATEGORY)),
-                                    )
+        item_category_comment = S3AddResourceLink(c="supply",
+                                                  f="item_category",
+                                                  label=ADD_ITEM_CATEGORY,
+                                                  title=T("Item Category"),
+                                                  tooltip=ADD_ITEM_CATEGORY)
 
         table.parent_item_category_id.requires = item_category_requires
         table.parent_item_category_id.represent = self.item_category_represent
@@ -419,19 +402,11 @@ class S3SupplyModel(S3Model):
                                                                    show_um=False,
                                                                    none_value=None),
                                     ),
-                    comment = DIV(A(ADD_ITEM,
-                                    _class="colorbox",
-                                    _href=URL(c="supply", f="item",
-                                              args="create",
-                                              vars=dict(format="popup")),
-                                    _target="top",
-                                    _title=ADD_ITEM),
-                                  DIV( _class="tooltip",
-                                       _title="%s|%s" % (T("Item"),
-                                                         T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog.")
-                                                         )
-                                      )
-                                  ),
+                    comment=S3AddResourceLink(c="supply",
+                                              f="item",
+                                              label=ADD_ITEM,
+                                              title=T("Item"),
+                                              tooltip=T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog.")),
                     ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------
@@ -452,7 +427,7 @@ class S3SupplyModel(S3Model):
                         name="item_search_brand",
                         label=T("Brand"),
                         comment=T("Search for an item by brand."),
-                        field=["brand_id"],
+                        field="brand_id",
                         represent ="%(name)s",
                         cols = 3
                       ),
@@ -460,7 +435,7 @@ class S3SupplyModel(S3Model):
                         name="item_search_year",
                         label=T("Year"),
                         comment=T("Search for an item by Year of Manufacture."),
-                        field=["year"],
+                        field="year",
                         #represent ="%(name)s",
                         cols = 1
                       ),
@@ -571,7 +546,7 @@ $(document).ready(function() {
                          name="catalog_item_search_catalog",
                          label=T("Catalog"),
                          comment=T("Search for an item by catalog."),
-                         field=["catalog_id"],
+                         field="catalog_id",
                          represent ="%(name)s",
                          cols = 3
                        ),
@@ -579,7 +554,7 @@ $(document).ready(function() {
                          name="catalog_item_search_category",
                          label=T("Category"),
                          comment=T("Search for an item by category."),
-                         field=["item_category_id"],
+                         field="item_category_id",
                          represent = lambda id: \
                             self.item_category_represent(id, use_code=False),
                          cols = 3
@@ -588,7 +563,7 @@ $(document).ready(function() {
                          name="catalog_item_search_brand",
                          label=T("Brand"),
                          comment=T("Search for an item by brand."),
-                         field=["item_id$brand_id"],
+                         field="item_id$brand_id",
                          represent ="%(name)s",
                          cols = 3
                        ),
@@ -668,20 +643,11 @@ $(document).ready(function() {
                                          ),
                     represent = self.item_pack_represent,
                     label = T("Pack"),
-                    comment = DIV(DIV( _class="tooltip",
-                                       _title="%s|%s" % (T("Item Packs"),
-                                                         T("The way in which an item is normally distributed"))),
-                                  A( ADD_ITEM_PACK,
-                                     _class="colorbox",
-                                     _href=URL(c="supply", f="item_pack",
-                                               args="create",
-                                               vars=dict(format="popup")
-                                               ),
-                                     _target="top",
-                                     _id = "item_pack_add",
-                                     _style = "display: none",
-                                     ),
-                                  ),
+                    comment=S3AddResourceLink(c="supply",
+                                              f="item_pack",
+                                              label=ADD_ITEM_PACK,
+                                              title=T("Item Packs"),
+                                              tooltip=T("The way in which an item is normally distributed")),
                     script = SCRIPT(
 """
 S3FilterFieldChange({
@@ -846,7 +812,7 @@ S3FilterFieldChange({
                       S3SearchOptionsWidget(
                         name="item_entity_search_category",
                         label=T("Code Share"),
-                        field=["item_id$item_category_id"],
+                        field="item_id$item_category_id",
                         represent ="%(name)s",
                         comment=T("If none are selected, then all are searched."),
                         cols = 2
@@ -854,7 +820,7 @@ S3FilterFieldChange({
                       #S3SearchOptionsWidget(
                       #  name="item_entity_search_country",
                       #  label=T("Country"),
-                      #  field=["country"],
+                      #  field="country",
                       #  represent ="%(name)s",
                       #  comment=T("If none are selected, then all are searched."),
                       #  cols = 2

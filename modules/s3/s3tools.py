@@ -33,8 +33,7 @@
 __all__ = ["SQLTABLES3",
            "CrudS3",
            "S3BulkImporter",
-           "S3DateTime",
-           "S3Comment"]
+           "S3DateTime"]
 
 import sys
 import os
@@ -644,160 +643,162 @@ class S3DateTime(object):
 
 # =============================================================================
 
-class S3Comment(object):
-    """
-    Stores resource table field comment, so that it can later be
-    represented in different formats
-
-    @author: Shiv Deepak
-    """
-
-    def __init__(self, desc=None, title=None,
-                 anchor_title=None, anchor_link=None):
-        """
-            Initialise the object
-
-            @param desc: the actual comment which will be displayed as tooltip
-
-            @param title: the title of the comment, mostly it will the
-                          name of the field to which the comment belongs to
-
-            @param anchor_title: hiperlink title for HTML forms, added just
-                                 just before the tooltip
-
-            @param anchor_link: hiperlink url, anchor_title and anchor_link
-                                should be specified together
-        """
-
-        self.desc = unicode(desc).decode("utf-8") if desc else None
-        self.title = unicode(title).decode("utf-8") if title else None
-
-        self.anchor_title =\
-            str(anchor_title).decode("utf-8") if anchor_title else None
-        self.anchor_link =\
-            str(anchor_link).decode("utf-8") if anchor_link else None
-
-    def markup(self):
-        """
-            General HTML output for webpages with tooltip
-
-            @return: field's comment in HTML markup,
-                     return object will be of type
-                     U{XmlComponent
-                     <http://web2py.com/examples/static/epydoc/web2py.gluon.html-module.html>}
-        """
-
-        xmlescape = lambda m: escape(m)
-
-        if self.anchor_title and self.anchor_link:
-
-            if self.desc:
-                need_tooltip=True
-                desc = xmlescape(self.desc)
-                if self.title == None:
-                    title = ""
-                    tooltip_text = desc
-                else:
-                    title = xmlescape(self.title)
-                    tooltip_text = "%s|%s" % (title, desc)
-            else:
-                need_tooltip=False
-
-            anchor_title = xmlescape(self.anchor_title)
-            anchor_link = xmlescape(self.anchor_link)
-
-            if need_tooltip:
-                output = DIV(A(anchor_title,
-                               _href=anchor_link,
-                               _class="colorbox",
-                               _target='top',
-                               _title=anchor_title),
-                             DIV(_class="tooltip",
-                                 _title=tooltip_text
-                                 )
-                             )
-            else:
-                output = DIV(A(anchor_title,
-                               _href=anchor_link,
-                               _class="colorbox",
-                               _target='top',
-                               _title=anchor_title),
-                             )
-
-        elif self.title and self.desc:
-
-            desc = xmlescape(self.desc)
-            title = xmlescape(self.title)
-
-            output = DIV(_class="tooltip",
-                         _title="%s|%s" % (title,
-                                           desc),
-                         )
-
-        elif self.desc:
-
-            desc = xmlescape(self.desc)
-
-            output = DIV(_class="tooltip",
-                         _title=desc,
-                         )
-
-        else:
-            output = DIV("")
-
-        return output
-
-    def plaintext(self):
-        """
-            Comment in plain text, suitable on PDF
-
-            @return: field's comment in plain text
-        """
-
-        output = self.desc if self.desc else ""
-        return output
-
-    def xml(self):
-        """
-            to impart U{XmlComponent
-            <http://web2py.com/examples/static/epydoc/web2py.gluon.html-module.html>}
-            behaviour to the class
-        """
-        return str(self)
-
-    # Magic Methods for string like behaviour
-    def __str__(self):
-        output = self.markup()
-        return output.xml()
-
-    def __repr__(self):
-        return str(self)
-
-    def __len__(self):
-        return len(str(self))
-
-    def __add__(self,other):
-        return '%s%s' % (self,other)
-
-    def __radd__(self,other):
-        return '%s%s' % (other,self)
-
-    def __cmp__(self,other):
-        return cmp(str(self),str(other))
-
-    def __hash__(self):
-        return hash(str(self))
-
-    def __getattr__(self,name):
-        return getattr(str(self),name)
-
-    def __getitem__(self,i):
-        return str(self)[i]
-
-    def __getslice__(self,i,j):
-        return str(self)[i:j]
-
-    def __iter__(self):
-        for c in str(self): yield c
+# James 2012-04-13
+# This is now deprecated in favour of S3AddResourceLink
+#class S3Comment(object):
+#    """
+#    Stores resource table field comment, so that it can later be
+#    represented in different formats
+#
+#    @author: Shiv Deepak
+#    """
+#
+#    def __init__(self, desc=None, title=None,
+#                 anchor_title=None, anchor_link=None):
+#        """
+#            Initialise the object
+#
+#            @param desc: the actual comment which will be displayed as tooltip
+#
+#            @param title: the title of the comment, mostly it will the
+#                          name of the field to which the comment belongs to
+#
+#            @param anchor_title: hiperlink title for HTML forms, added just
+#                                 just before the tooltip
+#
+#            @param anchor_link: hiperlink url, anchor_title and anchor_link
+#                                should be specified together
+#        """
+#
+#        self.desc = unicode(desc).decode("utf-8") if desc else None
+#        self.title = unicode(title).decode("utf-8") if title else None
+#
+#        self.anchor_title =\
+#            str(anchor_title).decode("utf-8") if anchor_title else None
+#        self.anchor_link =\
+#            str(anchor_link).decode("utf-8") if anchor_link else None
+#
+#    def markup(self):
+#        """
+#            General HTML output for webpages with tooltip
+#
+#            @return: field's comment in HTML markup,
+#                     return object will be of type
+#                     U{XmlComponent
+#                     <http://web2py.com/examples/static/epydoc/web2py.gluon.html-module.html>}
+#        """
+#
+#        xmlescape = lambda m: escape(m)
+#
+#        if self.anchor_title and self.anchor_link:
+#
+#            if self.desc:
+#                need_tooltip=True
+#                desc = xmlescape(self.desc)
+#                if self.title == None:
+#                    title = ""
+#                    tooltip_text = desc
+#                else:
+#                    title = xmlescape(self.title)
+#                    tooltip_text = "%s|%s" % (title, desc)
+#            else:
+#                need_tooltip=False
+#
+#            anchor_title = xmlescape(self.anchor_title)
+#            anchor_link = xmlescape(self.anchor_link)
+#
+#            if need_tooltip:
+#                output = DIV(A(anchor_title,
+#                               _href=anchor_link,
+#                               _class="colorbox",
+#                               _target='top',
+#                               _title=anchor_title),
+#                             DIV(_class="tooltip",
+#                                 _title=tooltip_text
+#                                 )
+#                             )
+#            else:
+#                output = DIV(A(anchor_title,
+#                               _href=anchor_link,
+#                               _class="colorbox",
+#                               _target='top',
+#                               _title=anchor_title),
+#                             )
+#
+#        elif self.title and self.desc:
+#
+#            desc = xmlescape(self.desc)
+#            title = xmlescape(self.title)
+#
+#            output = DIV(_class="tooltip",
+#                         _title="%s|%s" % (title,
+#                                           desc),
+#                         )
+#
+#        elif self.desc:
+#
+#            desc = xmlescape(self.desc)
+#
+#            output = DIV(_class="tooltip",
+#                         _title=desc,
+#                         )
+#
+#        else:
+#            output = DIV("")
+#
+#        return output
+#
+#    def plaintext(self):
+#        """
+#            Comment in plain text, suitable on PDF
+#
+#            @return: field's comment in plain text
+#        """
+#
+#        output = self.desc if self.desc else ""
+#        return output
+#
+#    def xml(self):
+#        """
+#            to impart U{XmlComponent
+#            <http://web2py.com/examples/static/epydoc/web2py.gluon.html-module.html>}
+#            behaviour to the class
+#        """
+#        return str(self)
+#
+#    # Magic Methods for string like behaviour
+#    def __str__(self):
+#        output = self.markup()
+#        return output.xml()
+#
+#    def __repr__(self):
+#        return str(self)
+#
+#    def __len__(self):
+#        return len(str(self))
+#
+#    def __add__(self,other):
+#        return '%s%s' % (self,other)
+#
+#    def __radd__(self,other):
+#        return '%s%s' % (other,self)
+#
+#    def __cmp__(self,other):
+#        return cmp(str(self),str(other))
+#
+#    def __hash__(self):
+#        return hash(str(self))
+#
+#    def __getattr__(self,name):
+#        return getattr(str(self),name)
+#
+#    def __getitem__(self,i):
+#        return str(self)[i]
+#
+#    def __getslice__(self,i,j):
+#        return str(self)[i:j]
+#
+#    def __iter__(self):
+#        for c in str(self): yield c
 
 # END =========================================================================

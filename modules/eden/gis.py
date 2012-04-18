@@ -45,6 +45,7 @@ from gluon import *
 from gluon.dal import Row, Rows
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 # =============================================================================
 class S3LocationModel(S3Model):
@@ -1014,18 +1015,13 @@ class S3GISConfigModel(S3Model):
                                     requires = IS_NULL_OR(IS_ONE_OF(db, "gis_marker.id", "%(name)s", zero=T("Use default"))),
                                     represent = self.gis_marker_represent,
                                     label = T("Marker"),
-                                    comment = DIV(A(ADD_MARKER,
-                                                    _class="colorbox",
-                                                    _href=URL(c="gis", f="marker",
-                                                              args="create",
-                                                              vars=dict(format="popup")),
-                                                    _target="top",
-                                                    _title=ADD_MARKER),
-                                              DIV(_class="tooltip",
-                                                  _title="%s|%s|%s|%s" % (T("Marker"),
-                                                                          T("Defines the icon used for display of features on interactive map & KML exports."),
-                                                                          T("A Marker assigned to an individual Location is set if there is a need to override the Marker assigned to the Feature Class."),
-                                                                          T("If neither are defined, then the Default Marker is used.")))),
+                                    comment=S3AddResourceLink(c="gis",
+                                                              f="marker",
+                                                              label=ADD_MARKER,
+                                                              title=T("Marker"),
+                                                              tooltip="%s|%s|%s" % (T("Defines the icon used for display of features on interactive map & KML exports."),
+                                                                                    T("A Marker assigned to an individual Location is set if there is a need to override the Marker assigned to the Feature Class."),
+                                                                                    T("If neither are defined, then the Default Marker is used."))),
                                     ondelete = "SET NULL")
 
         # Components
@@ -1096,18 +1092,13 @@ class S3GISConfigModel(S3Model):
                                             (id and [db(db.gis_projection.id == id).select(db.gis_projection.name,
                                                                                            limitby=(0, 1)).first().name] or [NONE])[0],
                                         label = T("Projection"),
-                                        comment = DIV(A(ADD_PROJECTION,
-                                                        _class="colorbox",
-                                                        _href=URL(c="gis", f="projection",
-                                                                  args="create",
-                                                                  vars=dict(format="popup")),
-                                                        _target="top",
-                                                        _title=ADD_PROJECTION),
-                                                      DIV(_class="tooltip",
-                                                          _title="%s|%s|%s|%s" % (T("Projection"),
-                                                                                  T("The system supports 2 projections by default:"),
-                                                                                  T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
-                                                                                  T("WGS84 (EPSG 4236) is required for many WMS servers.")))),
+                                        comment=S3AddResourceLink(c="gis",
+                                                                  f="projection",
+                                                                  label=ADD_PROJECTION,
+                                                                  title=T("Projection"),
+                                                                  tooltip="%s|%s|%s" % (T("The system supports 2 projections by default:"),
+                                                                                        T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
+                                                                                        T("WGS84 (EPSG 4236) is required for many WMS servers."))),
                                         ondelete = "RESTRICT")
 
         configure(tablename,

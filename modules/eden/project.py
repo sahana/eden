@@ -338,25 +338,25 @@ class S3ProjectModel(S3Model):
                         S3SearchOptionsWidget(
                             name = "project_search_sector",
                             label = sector,
-                            field = ["sector_id"],
+                            field = "sector_id",
                             cols = 4
                         ),
                         S3SearchOptionsWidget(
                             name = "project_search_hazard",
                             label = T("Hazard"),
-                            field = ["multi_hazard_id"],
+                            field = "multi_hazard_id",
                             cols = 4
                         ),
                         S3SearchOptionsWidget(
                             name = "project_search_theme",
                             label = T("Theme"),
-                            field = ["multi_theme_id"],
+                            field = "multi_theme_id",
                             cols = 4
                         ),
                         S3SearchOptionsWidget(
                             name = "project_search_hfa",
                             label = T("HFA"),
-                            field = ["hfa"],
+                            field = "hfa",
                             cols = 4
                         ),
                     )
@@ -375,7 +375,7 @@ class S3ProjectModel(S3Model):
                         S3SearchOptionsWidget(
                             name = "project_search_sector",
                             label = sector,
-                            field = ["sector_id"],
+                            field = "sector_id",
                             cols = 4
                         ),
                     )
@@ -694,9 +694,18 @@ class S3ProjectModel(S3Model):
                   onvalidation=self.project_activity_onvalidation,
                   onaccept=self.project_activity_onaccept,
                   deduplicate=self.project_activity_deduplicate,
-                  report_rows=report_fields,
-                  report_cols=report_fields,
-                  report_fact=report_fields,
+                  report_options=Storage(
+                                         rows=report_fields,
+                                         cols=report_fields,
+                                         facts=report_fields,
+                                         defaults=Storage(
+                                                          rows="project_id",
+                                                          cols="name",
+                                                          fact="time_actual",
+                                                          aggregate="sum",
+                                                          totals=True
+                                                          )
+                                         ),
                   list_fields = list_fields,
                   )
 
@@ -1162,17 +1171,11 @@ class S3ProjectDRRModel(S3Model):
         tablename = "project_organisation"
         table = self.define_table(tablename,
                                   project_id(),
-                                  organisation_id(comment = DIV(A(T("Add Organization"),
-                                                                  _class="colorbox",
-                                                                  _href=URL(c="org", f="organisation",
-                                                                            args="create",
-                                                                            vars=dict(format="popup")),
-                                                                  _target="top",
-                                                                  _title=T("Add Organization")),
-                                                                DIV(_class="tooltip",
-                                                                    _title="%s|%s" % (T("Organization"),
-                                                                                      organisation_help))
-                                                                )
+                                  organisation_id(comment=S3AddResourceLink(c="org",
+                                                                            f="organisation",
+                                                                            label=T("Add Organization"),
+                                                                            title=T("Organization"),
+                                                                            tooltip=organisation_help)
                                                   ),
                                   Field("role", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
@@ -1392,28 +1395,31 @@ class S3ProjectDRRModel(S3Model):
         self.configure(tablename,
                         onaccept=self.project_beneficiary_onaccept,
                         deduplicate=self.project_beneficiary_deduplicate,
-                        report_filter=[
-                            S3SearchOptionsWidget(
-                                field=["project_id"],
-                                name="project",
-                                label=T("Project")
-                            ),
-                            S3SearchOptionsWidget(
-                                field=["beneficiary_type_id"],
-                                name="beneficiary_type_id",
-                                label=T("Beneficiary Type")
-                            ),
-                            # Can't search be VirtualFields currently
-                            # S3SearchLocationHierarchyWidget(
-                                # name="beneficiary_search_L1",
-                                # field="activity_id$L1",
-                                # cols = 3,
-                            # ),
-                        ],
-                        report_rows=report_fields,
-                        report_cols=report_fields,
-                        report_fact=["number"],
-                        report_method=["sum"])
+                        report_options=Storage(
+                            search=[
+                                S3SearchOptionsWidget(
+                                    field="project_id",
+                                    name="project",
+                                    label=T("Project")
+                                ),
+                                S3SearchOptionsWidget(
+                                    field=["beneficiary_type_id"],
+                                    name="beneficiary_type_id",
+                                    label=T("Beneficiary Type")
+                                ),
+                                # Can't search be VirtualFields currently
+                                # S3SearchLocationHierarchyWidget(
+                                    # name="beneficiary_search_L1",
+                                    # field="activity_id$L1",
+                                    # cols = 3,
+                                # ),
+                            ],
+                            rows=report_fields,
+                            cols=report_fields,
+                            facts=["number"],
+                            methods=["sum"]
+                        )
+        )
 
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", db.project_beneficiary,
@@ -1838,27 +1844,27 @@ class S3ProjectTaskModel(S3Model):
                     #S3SearchOptionsWidget(
                         #name = "task_search_project",
                         #label = T("Project"),
-                        #field = ["project"],
+                        #field = "project",
                         #cols = 3
                     #),
                     # This Syntax not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
                     #    name = "task_search_project",
                     #    label = T("Project"),
-                    #    field = ["task.task_id:project_task:project_id$name"],
+                    #    field = "task.task_id:project_task:project_id$name",
                     #    cols = 3
                     #),
                     # Virtual fields not supported by Search Widgets yet
                     #S3SearchOptionsWidget(
                         #name = "task_search_activity",
                         #label = T("Activity"),
-                        #field = ["activity"],
+                        #field = "activity",
                         #cols = 3
                     #),
                     S3SearchOptionsWidget(
                         name = "task_search_priority",
                         label = T("Priority"),
-                        field = ["priority"],
+                        field = "priority",
                         cols = 4
                     ),
                     S3SearchSimpleWidget(
@@ -1872,31 +1878,31 @@ class S3ProjectTaskModel(S3Model):
                     S3SearchOptionsWidget(
                         name = "task_search_created_by",
                         label = T("Created By"),
-                        field = ["created_by"],
+                        field = "created_by",
                         cols = 4
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_assignee",
                         label = T("Assigned To"),
-                        field = ["pe_id"],
+                        field = "pe_id",
                         cols = 4
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_created",
                         method="range",
                         label=T("Date Created"),
-                        field=["created_on"]
+                        field="created_on"
                     ),
                     S3SearchMinMaxWidget(
                         name="task_search_date_due",
                         method="range",
                         label=T("Date Due"),
-                        field=["date_due"]
+                        field="date_due"
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_status",
                         label = T("Status"),
-                        field = ["status"],
+                        field = "status",
                         cols = 4
                     ),
                 )
