@@ -37,7 +37,8 @@ __all__ = ["S3RequestManager",
            "S3Request",
            "S3Resource",
            "S3ResourceFilter",
-           "S3FieldSelector"]
+           "S3FieldSelector",
+           "S3TypeConverter"]
 
 import sys
 import datetime
@@ -54,9 +55,9 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
-from gluon.storage import Storage
-from gluon.sql import Row, Rows
 from gluon import *
+from gluon.sql import Row, Rows
+from gluon.storage import Storage
 from gluon.tools import callback
 import gluon.contrib.simplejson as json
 
@@ -425,7 +426,9 @@ class S3RequestManager(object):
                 text = cache.ram(key,
                                  lambda: field.represent(val),
                                  time_expire=60)
-                if not isinstance(text, basestring):
+                if isinstance(text, DIV):
+                    text = str(text)
+                elif not isinstance(text, basestring):
                     text = unicode(text)
         else:
             if val is None:
@@ -1754,7 +1757,7 @@ class S3Request(object):
                 args.append(method)
 
         f = self.function
-        if not representation==self.DEFAULT_REPRESENTATION:
+        if not representation == self.DEFAULT_REPRESENTATION:
             if len(args) > 0:
                 args[-1] = "%s.%s" % (args[-1], representation)
             else:
@@ -4713,27 +4716,27 @@ class S3ResourceFilter:
 
             # Add the subqueries and filters for this component
             if alias in cquery:
-                self.add_filter(cquery[alias])
+                [self.add_filter(q) for q in cquery[alias]]
             if alias in cvfltr:
-                self.add_filter(cvfltr[alias])
+                [self.add_filter(f) for f in cvfltr[alias]]
 
             if resource.link is not None:
                 # If this component has a link table, add the subqueries
                 # and filters for the link table
                 lname = resource.link.alias
                 if lname in cquery:
-                    self.add_filter(cquery[lname])
+                    [self.add_filter(q) for q in cquery[lname]]
                 if lname in cvfltr:
-                    self.add_filter(cvfltr[lname])
+                    [self.add_filter(f) for f in cvfltr[lname]]
 
             elif resource.linked is not None:
                 # Otherwise, if this is a linktable, add the subqueries
                 # and filters for the linked table
                 cname = resource.linked.alias
                 if cname in cquery:
-                    self.add_filter(cquery[cname])
+                    [self.add_filter(q) for q in cquery[cname]]
                 if cname in cvfltr:
-                    self.add_filter(cvfltr[cname])
+                    [self.add_filter(f) for f in cvfltr[cname]]
 
         # Master resource query -----------------------------------------------
         else:
@@ -5795,6 +5798,24 @@ class S3TypeConverter:
 
         if b is None:
             return None
+        if type(a) is type:
+            if a in (str, unicode):
+                return cls._str(b)
+            if a is int:
+                return cls._int(b)
+            if a is bool:
+                return cls._bool(b)
+            if a is long:
+                return cls._long(b)
+            if a is float:
+                return cls._float(b)
+            if a is datetime.datetime:
+                return cls._datetime(b)
+            if a is datetime.date:
+                return cls._date(b)
+            if a is datetime.time:
+                return cls._time(b)
+            raise TypeError
         if type(b) is type(a) or isinstance(b, type(a)):
             return b
         if isinstance(a, (list, tuple)):
@@ -5896,8 +5917,12 @@ class S3TypeConverter:
         elif isinstance(b, basestring):
             manager = current.manager
             xml = manager.xml
-            tfmt = xml.ISOFORMAT
-            (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(v, tfmt)
+            try:
+                tfmt = xml.ISOFORMAT
+                (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(b, tfmt)
+            except ValueError:
+                tfmt = "%Y-%m-%d %H:%M:%S"
+                (y,m,d,hh,mm,ss,t0,t1,t2) = time.strptime(b, tfmt)
             return datetime.datetime(y,m,d,hh,mm,ss)
         else:
             raise TypeError

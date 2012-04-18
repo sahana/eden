@@ -2037,23 +2037,40 @@ $.post('%s',
         else:
             seriesList = [series_id]
         pqstn_name = None
+        pqstn = {}
         if "post_vars" in request and len(request.post_vars) > 0:
             if "pqstn_name" in request.post_vars:
                 pqstn_name = request.post_vars.pqstn_name
+        if pqstn_name == None:
+            pqstn = survey_getPriorityQuestionForSeries(series_id)
+            pqstn_name = pqstn["name"]
         feature_queries = []
         bounds = {}
+
+        # Build the drop down list of priority questions
+        allQuestions = survey_getAllQuestionsForSeries(series_id)
+        numericTypeList = ("Numeric")
+        numericQuestions = survey_get_series_questions_of_type(allQuestions,
+                                                               numericTypeList)
+        numQstns = []
+        for question in numericQuestions:
+            numQstns.append(question["name"])
+
+        form = FORM(_id="mapQstnForm")
+        table = TABLE()
+
+        priorityQstn = SELECT(numQstns, _name="pqstn_name",
+                              value=pqstn_name)
 
         # Set up the legend
         for series_id in seriesList:
             series_name = survey_getSeriesName(series_id)
             response_locations = getLocationList(series_id)
-            if pqstn_name == None:
-                pqstn = survey_getPriorityQuestionForSeries(series_id)
-            else:
-                pqstn = survey_getQuestionFromName(pqstn_name,
-                                                      series_id)
+            if pqstn == {} and pqstn_name:
+                for question in numericQuestions:
+                    if pqstn_name == question["name"]:
+                        pqstn = question
             if pqstn != {}:
-                pqstn_name = pqstn["name"]
                 pqstn_id = pqstn["qstn_id"]
                 answers = survey_getAllAnswersForQuestionInSeries(pqstn_id,
                                                                      series_id)
@@ -2133,19 +2150,6 @@ $.post('%s',
                            #collapsed = True,
                            catalogue_layers = True,
                           )
-        allQuestions = survey_getAllQuestionsForSeries(series_id)
-        numericTypeList = ("Numeric")
-        numericQuestions = survey_get_series_questions_of_type(allQuestions,
-                                                                  numericTypeList)
-        numQstns = []
-        for question in numericQuestions:
-            numQstns.append(question["name"])
-
-        form = FORM(_id="mapQstnForm")
-        table = TABLE()
-
-        priorityQstn = SELECT(numQstns, _name="pqstn_name",
-                              value=pqstn_name)
         series = INPUT(_type="hidden",
                        _id="selectSeriesID",
                        _name="series",

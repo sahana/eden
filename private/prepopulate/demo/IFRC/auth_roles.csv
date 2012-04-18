@@ -1,5 +1,7 @@
 "uid","role"," description","controller","function","table","uacl","oacl","org","facility","hidden","system","protected"
+"AUTHENTICATED","Authenticated",,"pr","pentity",,"READ",,,,,,
 "AUTHENTICATED","Authenticated",,"pr","person_search",,"READ",,,,,,
+"AUTHENTICATED","Authenticated",,"msg","search",,"READ",,,,,,
 "AUTHENTICATED","Authenticated",,"org","office",,"READ",,,,,,
 "AUTHENTICATED","Authenticated",,"inv","warehouse",,"READ",,,,,,
 "ASSET_EDIT","Assets Editor","Can see/edit all Asset records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","asset",,,"ALL",,,,,,

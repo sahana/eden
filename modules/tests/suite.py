@@ -41,6 +41,7 @@ if test:
 else:
     # Run all Tests
     staff()
+    inventory()
 
 # Cleanup
 browser.close()

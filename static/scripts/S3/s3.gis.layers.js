@@ -43,13 +43,25 @@ function addLayers() {
             addWMSLayer(S3.gis.layers_wms[i]);
         }
     }
+    // XYZ
+    if (S3.gis.layers_xyz) {
+        for (i = 0; i < S3.gis.layers_xyz.length; i++) {
+            addXYZLayer(S3.gis.layers_xyz[i]);
+        }
+    }
     // Empty
     if (S3.gis.EmptyLayer) {
-        var layer = new OpenLayers.Layer(S3.gis.EmptyLayer, {
-            isBaseLayer: true,
-            'displayInLayerSwitcher': true}
+        var layer = new OpenLayers.Layer(S3.gis.EmptyLayer.name, {
+                isBaseLayer: true,
+                displayInLayerSwitcher: true,
+                // This is used to Save State
+                layer_id: S3.gis.EmptyLayer.id
+            }
         );
         map.addLayer(layer);
+        if (S3.gis.EmptyLayer.base) {
+            map.setBaseLayer(layer);
+        }
     }
     // JS (generated server-side in s3gis.py)
     try {
@@ -139,35 +151,41 @@ function addBingLayers() {
         layer = new OpenLayers.Layer.Bing({
             key: ApiKey,
             type: 'Aerial',
-            name: bing.Aerial
+            name: bing.Aerial.name,
+            // This is used to Save State
+            layer_id: bing.Aerial.id
         });
         map.addLayer(layer);
+        if (Bing.Base == 'aerial') {
+            map.setBaseLayer(layer);
+        }
     }
     if (bing.Road) {
         layer = new OpenLayers.Layer.Bing({
             key: ApiKey,
             type: 'Road',
-            name: bing.Road
+            name: bing.Road.name,
+            // This is used to Save State
+            layer_id: bing.Road.id
         });
         map.addLayer(layer);
+        if (Bing.Base == 'road') {
+            map.setBaseLayer(layer);
+        }
     }
     if (bing.Hybrid) {
         layer = new OpenLayers.Layer.Bing({
             key: ApiKey,
             type: 'AerialWithLabels',
-            name: bing.Hybrid
+            name: bing.Hybrid.name,
+            // This is used to Save State
+            layer_id: bing.Hybrid.id
         });
         map.addLayer(layer);
+        if (Bing.Base == 'hybrid') {
+            map.setBaseLayer(layer);
+        }
     }
-    //if (bing.Terrain) {
-    //    layer = new OpenLayers.Layer.VirtualEarth({
-    //        bing.Terrain, {
-    //            type: VEMapStyle.Shaded,
-    //            'sphericalMercator': true
-    //        }
-    //    });
-    //    map.addLayer(layer);
-    //}
 }
 
 // CoordinateGrid
@@ -175,7 +193,9 @@ function addCoordinateGrid() {
     map.addLayer(new OpenLayers.Layer.cdauth.CoordinateGrid(null, {
         name: S3.gis.CoordinateGrid.name,
         shortName: 'grid',
-        visibility: S3.gis.CoordinateGrid.visibility
+        visibility: S3.gis.CoordinateGrid.visibility,
+        // This is used to Save State
+        layer_id: S3.gis.CoordinateGrid.id
     }));
 }
 
@@ -202,6 +222,39 @@ function addDraftLayer() {
     S3.gis.draftLayer.setVisibility(true);
     map.addLayer(S3.gis.draftLayer);
 }
+
+/**
+ * Class: OpenLayers.Strategy.AttributeCluster
+ * Strategy for vector feature clustering based on feature attributes.
+ *
+ * Inherits from:
+ *  - <OpenLayers.Strategy.Cluster>
+ */
+OpenLayers.Strategy.AttributeCluster = OpenLayers.Class(OpenLayers.Strategy.Cluster, {
+    /**
+     * the attribute to use for comparison
+     */
+    attribute: null,
+    /**
+     * Method: shouldCluster
+     * Determine whether to include a feature in a given cluster.
+     *
+     * Parameters:
+     * cluster - {<OpenLayers.Feature.Vector>} A cluster.
+     * feature - {<OpenLayers.Feature.Vector>} A feature.
+     *
+     * Returns:
+     * {Boolean} The feature should be included in the cluster.
+     */
+    shouldCluster: function(cluster, feature) {
+        var cc_attrval = cluster.cluster[0].attributes[this.attribute];
+        var fc_attrval = feature.attributes[this.attribute];
+        var superProto = OpenLayers.Strategy.Cluster.prototype;
+        return cc_attrval === fc_attrval && 
+               superProto.shouldCluster.apply(this, arguments);
+    },
+    CLASS_NAME: "OpenLayers.Strategy.AttributeCluster"
+});
 
 // GeoJSON
 // Used also by internal Feature Layers, Feature Queries & GeoRSS feeds
@@ -390,8 +443,17 @@ function addGeoJSONLayer(layer) {
             },
             fill: function(feature) {
                 if (feature.cluster) {
-                    // fillColor for Clustered Point
-                    var color = '#8087ff';
+                    if (feature.cluster[0].attributes.colour) {
+                        // Use colour from features
+                        var color = feature.cluster[0].attributes.colour;
+                        if ( color.indexOf('#') == -1) {
+                            // gis_layer_theme
+                            color = '#' + color;
+                        }
+                    } else {
+                        // default fillColor for Clustered Point
+                        var color = '#8087ff';
+                    }
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
@@ -406,9 +468,18 @@ function addGeoJSONLayer(layer) {
                 return color;
             },
             stroke: function(feature) {
-                // strokeColor for Clustered Point
                 if (feature.cluster) {
-                    var color = '#2b2f76';
+                    if (feature.cluster[0].attributes.colour) {
+                        // Use colour from features
+                        var color = feature.cluster[0].attributes.colour;
+                        if ( color.indexOf('#') == -1) {
+                            // gis_layer_theme
+                            color = '#' + color;
+                        }
+                    } else {
+                        // default strokeColor for Clustered Point
+                        var color = '#2b2f76';
+                    }
                 } else if (feature.attributes.colour) {
                     // Use colour from feature
                     var color = feature.attributes.colour;
@@ -472,11 +543,14 @@ function addGeoJSONLayer(layer) {
                     //    }
                     //}
                 }),
-                new OpenLayers.Strategy.Cluster({
+                new OpenLayers.Strategy.AttributeCluster({
+                    attribute: 'colour',
                     distance: cluster_distance,
                     threshold: cluster_threshold
                 })
             ],
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             styleMap: featureClusterStyleMap,
@@ -509,93 +583,143 @@ function addGoogleLayers() {
         // v2 API
         if (google.Satellite) {
             layer = new OpenLayers.Layer.Google(
-                google.Satellite, {
+                google.Satellite.name, {
                     type: G_SATELLITE_MAP,
-                    sphericalMercator: true
+                    sphericalMercator: true,
+                    // This is used to Save State
+                    layer_id: google.Satellite.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'satellite') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.Maps) {
             layer = new OpenLayers.Layer.Google(
-                google.Maps, {
+                google.Maps.name, {
                     type: G_NORMAL_MAP,
-                    sphericalMercator: true
+                    sphericalMercator: true,
+                    // This is used to Save State
+                    layer_id: google.Maps.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'maps') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.Hybrid) {
             layer = new OpenLayers.Layer.Google(
-                google.Hybrid, {
+                google.Hybrid.name, {
                     type: G_HYBRID_MAP,
-                    sphericalMercator: true
+                    sphericalMercator: true,
+                    // This is used to Save State
+                    layer_id: google.Hybrid.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'maps') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.Terrain) {
             layer = new OpenLayers.Layer.Google(
-                google.Terrain, {
+                google.Terrain.name, {
                     type: G_PHYSICAL_MAP,
-                    sphericalMercator: true
+                    sphericalMercator: true,
+                    // This is used to Save State
+                    layer_id: google.Terrain.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'terrain') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.MapMaker) {
             layer = new OpenLayers.Layer.Google(
-                google.MapMaker, {
+                google.MapMaker.name, {
                     type: G_MAPMAKER_NORMAL_MAP,
-                    sphericalMercator: true
+                    sphericalMercator: true,
+                    // This is used to Save State
+                    layer_id: layer.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'mapmaker') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.MapMakerHybrid) {
             layer = new OpenLayers.Layer.Google(
-                google.MapMakerHybrid, {
+                google.MapMakerHybrid.name, {
                     type: G_MAPMAKER_HYBRID_MAP,
-                    sphericalMercator: true
+                    sphericalMercator: true,
+                    // This is used to Save State
+                    layer_id: layer.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'mapmakerhybrid') {
+                map.setBaseLayer(layer);
+            }
         }
     } else {
         // v3 API
         if (google.Satellite) {
             layer = new OpenLayers.Layer.Google(
-                google.Satellite, {
-                    type: google.maps.MapTypeId.SATELLITE,
-                    numZoomLevels: 22
+                google.Satellite.name, {
+                    type: 'satellite',
+                    numZoomLevels: 22,
+                    // This is used to Save State
+                    layer_id: google.Satellite.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'satellite') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.Maps) {
             layer = new OpenLayers.Layer.Google(
-                google.Maps, {
-                    numZoomLevels: 20
+                google.Maps.name, {
+                    numZoomLevels: 20,
+                    // This is used to Save State
+                    layer_id: google.Maps.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'maps') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.Hybrid) {
             layer = new OpenLayers.Layer.Google(
-                google.Hybrid, {
-                    type: google.maps.MapTypeId.HYBRID,
-                    numZoomLevels: 20
+                google.Hybrid.name, {
+                    type: 'hybrid',
+                    numZoomLevels: 20,
+                    // This is used to Save State
+                    layer_id: google.Hybrid.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'hybrid') {
+                map.setBaseLayer(layer);
+            }
         }
         if (google.Terrain) {
             layer = new OpenLayers.Layer.Google(
-                google.Terrain, {
-                    type: google.maps.MapTypeId.TERRAIN
+                google.Terrain.name, {
+                    type: 'terrain',
+                    // This is used to Save State
+                    layer_id: google.Terrain.id
                 }
             );
             map.addLayer(layer);
+            if (google.Base == 'terrain') {
+                map.setBaseLayer(layer);
+            }
         }
     }
 }
@@ -681,6 +805,8 @@ function addGPXLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -791,6 +917,8 @@ function addKMLLayer(layer) {
                     interval: refresh * 1000 // milliseconds
                 })
             ],
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -876,7 +1004,9 @@ function addOSMLayer(layer) {
             getURL: osm_getTileURL,
             displayOutsideMaxExtent: true,
             numZoomLevels: numZoomLevels,
-            isBaseLayer: isBaseLayer
+            isBaseLayer: isBaseLayer,
+            // This is used to Save State
+            layer_id: layer.id
         }
     );
     if (undefined != layer.attribution) {
@@ -884,6 +1014,9 @@ function addOSMLayer(layer) {
     }
     osmLayer.setVisibility(visibility);
     map.addLayer(osmLayer);
+    if (layer._base) {
+        map.setBaseLayer(osmLayer);
+    }
 }
 
 // Supports OpenStreetMap TMS Layers
@@ -920,7 +1053,7 @@ function addTMSLayer(layer) {
     if (undefined != layer.zoomLevels) {
         var numZoomLevels = layer.zoomLevels;
     } else {
-        var numZoomLevels = 9;
+        var numZoomLevels = 19;
     }
     if (undefined != layer.dir) {
         var dir = layer.dir;
@@ -941,6 +1074,8 @@ function addTMSLayer(layer) {
     var tmsLayer = new OpenLayers.Layer.TMS(
         name, url, {
             dir: dir,
+            // This is used to Save State
+            layer_id: layer.id,
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels
@@ -951,6 +1086,9 @@ function addTMSLayer(layer) {
         tmsLayer.attribution = layer.attribution;
     }
     map.addLayer(tmsLayer);
+    if (layer._base) {
+        map.setBaseLayer(tmsLayer);
+    }
 }
 // WFS
 // @ToDo: WFS-T Editing: http://www.gistutor.com/openlayers/22-advanced-openlayers-tutorials/47-openlayers-wfs-t-using-a-geoserver-hosted-postgis-layer.html
@@ -1174,6 +1312,8 @@ function addWFSLayer(layer) {
             //saveStrategy
         ],
         dir: dir,
+        // This is used to Save State
+        layer_id: layer.id,
         projection: projection,
         //outputFormat: "json",
         //readFormat: new OpenLayers.Format.GeoJSON(),
@@ -1284,6 +1424,8 @@ function addWMSLayer(layer) {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
+            // This is used to Save State
+            layer_id: layer.id,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             queryable: queryable,
             visibility: visibility
@@ -1324,6 +1466,61 @@ function addWMSLayer(layer) {
         wmsLayer.legendURL = legendURL;
     }
     map.addLayer(wmsLayer);
+    if (layer._base) {
+        map.setBaseLayer(wmsLayer);
+    }
+}
+
+// XYZ
+function addXYZLayer(layer) {
+    var name = layer.name;
+    var url = [layer.url];
+    if (undefined != layer.url2) {
+        url.push(layer.url2);
+    }
+    if (undefined != layer.url3) {
+        url.push(layer.url3);
+    }
+    var layername = layer.layername;
+    if (undefined != layer.zoomLevels) {
+        var numZoomLevels = layer.zoomLevels;
+    } else {
+        var numZoomLevels = 19;
+    }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
+    }
+    if (undefined != layer.format) {
+        var format = layer.format;
+    } else {
+        var format = 'png';
+    }
+
+    var xyzLayer = new OpenLayers.Layer.XYZ(
+        name, url, {
+            dir: dir,
+            // This is used to Save State
+            layer_id: layer.id,
+            layername: layername,
+            type: format,
+            numZoomLevels: numZoomLevels
+        }
+    );
+
+    if (undefined != layer.attribution) {
+        xyzLayer.attribution = layer.attribution;
+    }
+    map.addLayer(xyzLayer);
+    if (layer._base) {
+        map.setBaseLayer(xyzLayer);
+    }
 }
 
 // Support Vector Layers
