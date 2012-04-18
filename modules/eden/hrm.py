@@ -274,6 +274,11 @@ class S3HRModel(S3Model):
                        ondelete = self.hrm_human_resource_ondelete,
                        deduplicate=self.hrm_human_resource_deduplicate,
                        report_filter=[
+                            #S3SearchLocationHierarchyWidget(
+                            #    name="location_search_L0",
+                            #    field="L0",
+                            #    cols = 3,
+                            #),
                             S3SearchLocationHierarchyWidget(
                                 name="human_resource_search_L1",
                                 field="L1",

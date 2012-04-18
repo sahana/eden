@@ -433,7 +433,7 @@ class S3Cube(S3CRUD):
                           _selected= value == f.selector and "selected" or None)
                    for f in lfields
                     if (f.field is None or f.field.name != table._id.name) and f.show]
-        if len(options) < 2:
+        if len(options) and len(options) < 2:
             options[0].update(_selected="selected")
         else:
             options.insert(0, OPTION("", _value=None))
@@ -1137,7 +1137,8 @@ class S3ContingencyTable(TABLE):
         if cols and col_titles and col_totals:
             dcols = top(zip(col_titles, col_totals))
         row_label = "%s %s" % (BY, str(row_label))
-        col_label = "%s %s" % (BY, str(col_label))
+        if col_label:
+            col_label = "%s %s" % (BY, str(col_label))
         layer_label=str(layer_label)
         json_data = json.dumps(dict(rows=drows,
                                     cols=dcols,

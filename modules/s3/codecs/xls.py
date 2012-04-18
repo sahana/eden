@@ -155,7 +155,7 @@ class S3XLS(S3Codec):
                  * report_groupby: Used to create a grouping of the result:
                                    either a Field object of the resource
                                    or a string which matches a value in the heading
-                 * use_colour:     True to add colour to the cells. default True
+                 * use_colour:     True to add colour to the cells. default False
         """
         import datetime
         try:
@@ -175,7 +175,7 @@ class S3XLS(S3Codec):
         title = attr.get("title")
         list_fields = attr.get("list_fields")
         report_groupby = attr.get("report_groupby")
-        use_colour = attr.get("use_colour", True)
+        use_colour = attr.get("use_colour", False)
         # Extract the data from the data_source
         if isinstance(data_source, (list, tuple)):
             headers = data_source[0]

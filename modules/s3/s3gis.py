@@ -605,7 +605,10 @@ class GIS(object):
         table = db.gis_location
 
         query = (table.id == feature_id)
-        feature = db(query).select(table.path,
+        feature = db(query).select(table.id,
+                                   table.name,
+                                   table.level,
+                                   table.path,
                                    table.parent,
                                    limitby=(0, 1)).first()
 
@@ -737,20 +740,26 @@ class GIS(object):
         if not results:
             results = {}
 
-        if not feature or "path" not in feature or "parent" not in feature:
+        id = feature_id
+        if not feature_id and "path" not in feature and "parent" in feature:
+            # gis_location_onvalidation on a Create => no ID yet
+            # Read the Parent's path instead
+            feature = self._lookup_parent_path(feature.parent)
+            id = feature.id
+        elif not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
 
         if feature and (feature.path or feature.parent):
             if feature.path:
                 path = feature.path
             else:
-                path = self.update_location_tree(feature_id, feature.parent)
+                path = self.update_location_tree(id, feature.parent)
 
             # Get ids of ancestors at each level.
             if feature.parent:
                 strict = self.get_strict_hierarchy(feature.parent)
             else:
-                strict = self.get_strict_hierarchy(feature_id)
+                strict = self.get_strict_hierarchy(id)
             if path and strict and not names:
                 # No need to do a db lookup for parents in this case -- we
                 # know the levels of the parents from their position in path.
@@ -762,7 +771,7 @@ class GIS(object):
                 for (i, id) in enumerate(path_ids[:-1]):
                     results["L%i" % i] = id
             elif path:
-                ancestors = self.get_parents(feature_id, feature=feature)
+                ancestors = self.get_parents(id, feature=feature)
                 if ancestors:
                     for ancestor in ancestors:
                         if ancestor.level and ancestor.level in self.hierarchy_level_keys:
@@ -774,7 +783,9 @@ class GIS(object):
                                 results[ancestor.level] = ancestor.name
                             else:
                                 results[ancestor.level] = ancestor.id
-
+            if not feature_id:
+                # Add the Parent in (we only need the version required for gis_location onvalidation here)
+                results[feature.level] = feature.name
             if names:
                 # We need to have entries for all levels
                 # (both for address onvalidation & new LocationSelector)
