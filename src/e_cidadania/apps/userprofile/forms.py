@@ -24,7 +24,8 @@ class LocationForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ('location', 'latitude', 'longitude', 'country')
+        fields = ('location', 'latitude', 'longitude', 'country', 'region',
+                'city', 'district')
 
 class ProfileForm(forms.ModelForm):
     """
@@ -33,7 +34,7 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         exclude = ('date', 'location', 'latitude', 'longitude', 'country',
-                   'user', 'public')
+                   'region', 'city', 'district', 'user', 'public')
 
 class PublicFieldsForm(forms.ModelForm):
     """

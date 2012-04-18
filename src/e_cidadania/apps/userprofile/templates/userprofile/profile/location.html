@@ -15,6 +15,12 @@
 		            <div class="span12">
 		                <h3 for="id_country">{% trans "Country" %}</h3>
 		                <p>{{ form.country }}</p>
+		                <h3 for="id_region">{% trans "Region" %}</h3>
+		                <p>{{ form.region }}</p>
+		                <h3 for="id_city">{% trans "City" %}</h3>
+		                <p>{{ form.city }}</p>
+		                <h3 for="id_district">{% trans "District" %}</h3>
+		                <p>{{ form.district }}</p>
 		                {% if GOOGLE_MAPS_API_KEY %}
 			                <div class="mapinfo">
 				                <h3>{% trans "Location" %}</h3>

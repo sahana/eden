@@ -61,9 +61,10 @@ class UserProfile(BaseProfile):
                                  blank=True)
     
     # Maybe one day this will be replaced by a list of choices.
-    province = models.CharField(_('Province'), max_length=50)
+    country = models.CharField(_('Country'), max_length=50)
     region = models.CharField(_('Region'), max_length=50)
-    neighbourhood = models.CharField(_('Neighbourhood'), max_length=50)
+    city = models.CharField(_('City'), max_length=50)
+    district = models.CharField(_('District'), max_length=50)
     
     # Detailed overview of the address
     address = models.CharField(_('Address'), max_length=100)
