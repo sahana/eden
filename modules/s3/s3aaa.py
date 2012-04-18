@@ -2878,7 +2878,7 @@ class S3Permission(object):
         fields = [f for f in ownership_fields if f in table.fields]
         if not fields:
             # Ownership is not defined for this table
-            return (None, None, None, None)
+            return (None, None, None)
 
         if isinstance(record, Row):
             # Check if all necessary fields are present
@@ -2900,7 +2900,7 @@ class S3Permission(object):
             record = current.db(query).select(limitby=(0, 1), *fs).first()
         if not record:
             # Record does not exist
-            return (None, None, None, None)
+            return (None, None, None)
 
         if "owned_by_group" in record:
             owner_role = record["owned_by_group"]

@@ -272,6 +272,24 @@ class S3IRSModel(S3Model):
                                    requires = IS_NULL_OR(IS_UTC_DATETIME())
                                   ),
                              location_id(),
+                             # Very basic Impact Assessment
+                             Field("affected", "integer",
+                                   label=T("Number of People Affected"),
+                                   represent = lambda val: val or T("unknown"),
+                                   ),
+                             Field("dead", "integer",
+                                   label=T("Number of People Dead"),
+                                   represent = lambda val: val or T("unknown"),
+                                   ),
+                             Field("injured", "integer",
+                                   label=T("Number of People Injured"),
+                                   represent = lambda val: val or T("unknown"),
+                                   ),
+                             # Probably too much to try & capture
+                             #Field("missing", "integer",
+                             #      label=T("Number of People Missing")),
+                             #Field("displaced", "integer",
+                             #      label=T("Number of People Displaced")),
                              Field("verified", "boolean",    # Ushahidi-compatibility
                                    # We don't want these visible in Create forms
                                    # (we override in Update forms in controller)
@@ -311,6 +329,7 @@ class S3IRSModel(S3Model):
             title_display = T("Incident Report Details"),
             title_list = LIST_INC_REPORTS,
             title_update = T("Edit Incident Report"),
+            title_upload = T("Import Incident Reports"),
             title_search = T("Search Incident Reports"),
             subtitle_create = T("Add New Incident Report"),
             subtitle_list = T("Incident Reports"),
@@ -406,6 +425,9 @@ class S3IRSModel(S3Model):
                                  "datetime",
                                  "location_id",
                                  #"organisation_id",
+                                 "affected",
+                                 "dead",
+                                 "injured",
                                  "verified",
                                  "message",
                                 ])

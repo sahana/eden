@@ -338,33 +338,38 @@ class S3XML(S3Codec):
         # would require a rework of all existing stylesheets (which is
         # however useful)
 
+        ATTRIBUTE = self.ATTRIBUTE
+
         success = False
 
         if root is None:
             root = etree.Element(self.TAG.root)
         if elements is not None or len(root):
             success = True
-        root.set(self.ATTRIBUTE.success, json.dumps(success))
+        set = root.set
+        set(ATTRIBUTE.success, json.dumps(success))
         if start is not None:
-            root.set(self.ATTRIBUTE.start, str(start))
+            set(ATTRIBUTE.start, str(start))
         if limit is not None:
-            root.set(self.ATTRIBUTE.limit, str(limit))
+            set(ATTRIBUTE.limit, str(limit))
         if results is not None:
-            root.set(self.ATTRIBUTE.results, str(results))
+            set(ATTRIBUTE.results, str(results))
         if elements is not None:
             root.extend(elements)
         if domain:
-            root.set(self.ATTRIBUTE.domain, self.domain)
+            set(ATTRIBUTE.domain, self.domain)
         if url:
-            root.set(self.ATTRIBUTE.url, current.response.s3.base_url)
-        root.set(self.ATTRIBUTE.latmin,
-                 str(current.gis.get_bounds()["min_lat"]))
-        root.set(self.ATTRIBUTE.latmax,
-                 str(current.gis.get_bounds()["max_lat"]))
-        root.set(self.ATTRIBUTE.lonmin,
-                 str(current.gis.get_bounds()["min_lon"]))
-        root.set(self.ATTRIBUTE.lonmax,
-                 str(current.gis.get_bounds()["max_lon"]))
+            set(ATTRIBUTE.url, current.response.s3.base_url)
+        # @ToDo: This should be done based on the features, not just the config
+        bounds = current.gis.get_bounds()
+        set(ATTRIBUTE.latmin,
+            str(bounds["min_lat"]))
+        set(ATTRIBUTE.latmax,
+            str(bounds["max_lat"]))
+        set(ATTRIBUTE.lonmin,
+            str(bounds["min_lon"]))
+        set(ATTRIBUTE.lonmax,
+            str(bounds["max_lon"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
@@ -419,15 +424,19 @@ class S3XML(S3Codec):
         """
 
         if f in (self.CUSER, self.MUSER, self.OUSER):
-            return self.represent_user(v)
+            represent = current.cache.ram("auth_user_%s" % v,
+                                          lambda: self.represent_user(v),
+                                          time_expire=60)
         elif f in (self.OGROUP):
-            return self.represent_role(v)
-
-        manager = current.manager
-        return manager.represent(table[f],
-                                 value=v,
-                                 strip_markup=True,
-                                 xml_escape=True)
+            represent = current.cache.ram("auth_group_%s" % v,
+                                          lambda: self.represent_role(v),
+                                          time_expire=60)
+        else:
+            represent = current.manager.represent(table[f],
+                                                  value=v,
+                                                  strip_markup=True,
+                                                  xml_escape=True)
+        return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -438,10 +447,8 @@ class S3XML(S3Codec):
         utable = auth.settings.table_user
         user = None
         if "email" in utable:
-            user = db(utable.id == user_id).select(
-                        utable.email,
-                        limitby=(0, 1),
-                        cache=(cache.ram, S3XML.CACHE_TTL)).first()
+            user = db(utable.id == user_id).select(utable.email,
+                                                   limitby=(0, 1)).first()
         if user:
             return user.email
         return None
@@ -715,7 +722,7 @@ class S3XML(S3Codec):
                     if current.deployment_settings.get_gis_spatialdb():
                         if current.auth.permission.format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
-                            geojson = db(query).select(ktable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias('geojson'),
+                            geojson = db(query).select(ktable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"),
                                                        limitby=(0, 1)).first().geojson
                             if geojson:
                                 # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
@@ -724,7 +731,7 @@ class S3XML(S3Codec):
                                 WKT = True
                         else:
                             # Do the Simplify direct from the DB
-                            wkt = db(query).select(ktable.the_geom.st_simplify(0.001).st_astext().with_alias('wkt'),
+                            wkt = db(query).select(ktable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"),
                                                    limitby=(0, 1)).first().wkt
                             if wkt:
                                 # Convert the WKT in XSLT

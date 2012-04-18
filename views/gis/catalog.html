@@ -1,5 +1,5 @@
 {{extend "layout.html"}}
-<h3>{{=T("Add/Edit/Remove Layers")}}:</h3>
+<h3>{{=T("Manage Layers in Catalog")}}:</h3>
 <ul>
 <li><a href='{{=URL(f="layer_feature")}}'>Features</a> - Internal Resources</li>
 <li><a href='{{=URL(f="layer_geojson")}}'>GeoJSON</a> - Feeds</li>
@@ -11,13 +11,6 @@
 <li><a href='{{=URL(f="layer_tms")}}'>TMS</a> - Tile Mapping Service</li>
 <li><a href='{{=URL(f="layer_wfs")}}'>WFS</a> - Web Feature Service</li>
 <li><a href='{{=URL(f="layer_wms")}}'>WMS</a> - Web Map Service</li>
-<!--<li><a href='{{=URL(f="layer_xyz")}}'>XYZ</a> - XYZ Tiles</li>-->
-<li><a href='{{=URL(f="layer_js")}}'>JS</a> - Advanced Javascript Layers (needs extra permissions as dangerous!)</li>
+<li><a href='{{=URL(f="layer_xyz")}}'>XYZ</a> - XYZ Tiles</li>
+<li><a href='{{=URL(f="layer_js")}}'>JS</a> - Advanced Javascript Layers</li>
 </ul>
-<h3>{{=T("Enable/Disable Layers")}}:</h3>
-<div id='table-container'>
-{{try:}}
- {{=items}}
-{{except:}}
-{{pass}}
-</div>

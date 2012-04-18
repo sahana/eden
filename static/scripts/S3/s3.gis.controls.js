@@ -644,25 +644,95 @@ function addSaveButton(toolbar) {
         tooltip: S3.i18n.gis_save,
         handler: function() {
             // Read current settings from map
-            var lonlat = map.getCenter();
-            var zoom_current = map.getZoom();
-            // Convert back to LonLat for saving
-            lonlat.transform(map.getProjectionObject(), S3.gis.proj4326);
+            var state = getState();
+            var layersStr = Ext.util.JSON.encode(state.layers);
+            var pluginsStr = Ext.util.JSON.encode(state.plugins);
             // Use AJAX to send back
-            var url = S3.Ap.concat('/gis/config/' + S3.gis.region + '.url/update');
+            if (S3.gis.config_id) {
+                var url = S3.Ap.concat('/gis/config/' + S3.gis.config_id + '.url/update');
+            } else {
+                var url = S3.Ap.concat('/gis/config.url/create');
+            }
             Ext.Ajax.request({
                 url: url,
-                method: 'GET',
+                method: 'POST',
+                // @ToDo: Make the return value visible to the user
+                success: function(response, opts) {
+                    var obj = Ext.decode(response.responseText);
+                    var id = obj.message.split('=', 2)[1];
+                    if (id) {
+                        // Ensure that future saves are updates, not creates
+                        S3.gis.config_id = id;
+                        // Change the Menu link
+                        var url = S3.Ap.concat('/gis/config/', id, '/layer_entity')
+                        $('#gis_menu_config').attr('href', url);
+                    }
+                },
+                //failure: otherFn,
                 params: {
-                    lat: lonlat.lat,
-                    lon: lonlat.lon,
-                    zoom: zoom_current
+                    lat: state.lat,
+                    lon: state.lon,
+                    zoom: state.zoom,
+                    layers: layersStr,
+                    plugins: pluginsStr
                 }
             });
         }
     });
     toolbar.addSeparator();
     toolbar.addButton(saveButton);
+}
+
+// Get the State of the Map
+// so that it can be Saved & Reloaded later
+// @ToDo: so that it can be Saved for Printing
+// @ToDo: so that a Bookmark can be shared
+function getState() {
+
+    // State stored a a JSON array
+    var state = {};
+
+    // Viewport
+    var lonlat = map.getCenter();
+    // Convert back to LonLat for saving
+    lonlat.transform(map.getProjectionObject(), S3.gis.proj4326);
+    state.lon = lonlat.lon;
+    state.lat = lonlat.lat;
+    state.zoom = map.getZoom();
+
+    // Layers
+    // - Visible
+    // @ToDo: Popups
+    // @ToDo: Filter
+    var layers = [];
+    var layer_config;
+    var base_id = map.baseLayer.options.layer_id;
+    Ext.iterate(map.layers, function(key, val, obj) {
+        var id = key.options.layer_id;
+        layer_config = {
+            id: id
+        }
+        // Only return non-default options
+        if (key.visibility) {
+            layer_config['visible'] = key.visibility;
+        }
+        if (id == base_id) {
+            layer_config['base'] = true;   
+        }
+        layers.push(layer_config);
+    });
+    state.layers = layers;
+
+    // Plugins
+    var plugins = [];
+    Ext.iterate(S3.gis.plugins, function(key, val, obj) {
+        if (key.getState) {
+            plugins.push(key.getState());
+        }
+    });
+    state.plugins = plugins;
+
+    return state;
 }
 
 // MGRS Grid PDF Control

@@ -469,6 +469,26 @@ class S3ResourceFilterTests(unittest.TestCase):
         self.assertEqual(rfilter.left, Storage())
         rows = component.sqltable(as_rows=True)
 
+    def testComponentFilterConstruction4(self):
+
+        resource = s3mgr.define_resource("pr", "person",
+                                         id=1,
+                                         components=["competency"],
+                                         filter=(s3base.S3FieldSelector("competency.id") == 1))
+
+        component = resource.components["competency"]
+        query = component.get_query()
+        self.assertEqual(str(query), "((((hrm_competency.deleted <> 'T') AND "
+                                     "((hrm_competency.owned_by_organisation IS NULL) OR "
+                                     "(hrm_competency.owned_by_organisation IN (3)))) AND "
+                                     "((((pr_person.deleted <> 'T') AND "
+                                     "((pr_person.owned_by_organisation IS NULL) OR "
+                                     "(pr_person.owned_by_organisation IN (3)))) AND "
+                                     "(pr_person.id = 1)) AND "
+                                     "(hrm_competency.id = 1))) AND "
+                                     "((hrm_competency.person_id = pr_person.id) AND "
+                                     "(hrm_competency.deleted <> 'T')))")
+
     def testGetLeftJoins(self):
 
         q = (s3base.S3FieldSelector("organisation_id$name") == "test") & \

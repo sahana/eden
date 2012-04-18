@@ -180,7 +180,8 @@ class S3OptionsMenuLayout(S3NavigationItem):
                     # Submenu
                     _href = item.url()
                     return LI(DIV(A(item.label,
-                                    _href=_href),
+                                    _href=_href,
+                                    _id=item.attr._id),
                                   _class="hoverable"),
                               UL(items,
                                  _class="submenu"))
@@ -189,12 +190,14 @@ class S3OptionsMenuLayout(S3NavigationItem):
                     if item.parent.parent is None:
                         # Top level item
                         return LI(DIV(A(item.label,
-                                        _href=item.url()),
+                                        _href=item.url(),
+                                        _id=item.attr._id),
                                       _class="hoverable"))
                     else:
                         # Submenu item
                         return LI(A(item.label,
-                                    _href=item.url()))
+                                    _href=item.url(),
+                                    _id=item.attr._id))
             else:
                 # Main menu
                 return UL(items, _id="subnav")

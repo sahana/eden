@@ -31,6 +31,9 @@
          Lon..................float...........Longitude (Decimal Degrees)
          Image................string..........doc_image.url
          URL..................string..........doc_document.url
+         Affected.............integer.........irs_ireport.affected
+         Dead.................integer.........irs_ireport.dead
+         Injured..............integer.........irs_ireport.injured
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -65,6 +68,9 @@
             <data field="message"><xsl:value-of select="col[@field='Message']"/></data>
             <data field="datetime"><xsl:value-of select="col[@field='Date']"/></data>
             <data field="expiry"><xsl:value-of select="col[@field='Expiry']"/></data>
+            <data field="affected"><xsl:value-of select="col[@field='Affected']"/></data>
+            <data field="dead"><xsl:value-of select="col[@field='Dead']"/></data>
+            <data field="injured"><xsl:value-of select="col[@field='Injured']"/></data>
 
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
