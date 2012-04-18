@@ -1056,13 +1056,22 @@ $(document).ready(function() {
         tracktable.send_inv_item_id.readable = False
         tracktable.recv_inv_item_id.readable = False
 
+        list_fields = ["item_id",
+                       "item_source_no",
+                       "item_pack_id",
+                       "quantity",
+                       "bin",
+                      ]
         exporter = S3PDF()
         return exporter(r,
                         method="list",
                         componentname="inv_track_item",
                         formname="Waybill",
                         filename="Waybill-%s" % site,
+                        list_fields = list_fields,
                         report_hide_comments=True,
+                        report_footer = inv_send_report_footer,
+                        report_landscape = True,
                         **attr
                        )
 
@@ -1125,12 +1134,20 @@ $(document).ready(function() {
         record = table[r.id]
         site_id = record.site_id
         site = table.site_id.represent(site_id,False)
+        list_fields = ["item_id",
+                       "item_source_no",
+                       "item_pack_id",
+                       "quantity",
+                       "bin",
+                       "adj_item_id",
+                      ]
 
         exporter = S3PDF()
         return exporter(r,
                         method="list",
                         formname="Goods Received Note",
                         filename="GRN-%s" % site,
+                        list_fields = list_fields,
                         report_hide_comments=True,
                         componentname = "inv_track_item",
                         **attr
@@ -1729,6 +1746,56 @@ def inv_send_rheader(r):
                           )
             return rheader
     return None
+
+# ---------------------------------------------------------------------
+def inv_send_report_footer(r):
+    record = r.record
+    if record:
+        footer = DIV (TABLE (TR(TH(T("Commodities Loaded")),
+                                TH(T("Date")),
+                                TH(T("Function")),
+                                TH(T("Name")),
+                                TH(T("Signature")),
+                                TH(T("Location (Site)")),
+                                TH(T("Condition")),
+                                ),
+                             TR(TD(T("Loaded By")),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                             TR(TD(T("Transported By")),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                             TR(TH(T("Reception")),
+                                TH(T("Date")),
+                                TH(T("Function")),
+                                TH(T("Name")),
+                                TH(T("Signature")),
+                                TH(T("Location (Site)")),
+                                TH(T("Condition")),
+                                ),
+                             TR(TD(T("Received By")),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                            )
+                     )
+        return footer
+    return None
+
 
 # =============================================================================
 def inv_recv_rheader(r):
