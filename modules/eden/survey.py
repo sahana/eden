@@ -2063,6 +2063,29 @@ $.post('%s',
                               value=pqstn_name)
 
         # Set up the legend
+        priorityObj = S3AnalysisPriority(range=[-.66, .66],
+                                         colour={-1:"#888888", # grey
+                                                  0:"#008000", # green
+                                                  1:"#FFFF00", # yellow
+                                                  2:"#FF0000", # red
+                                                 },
+                                         # Make Higher-priority show up more clearly
+                                         opacity={-1:0.5,
+                                                   0:0.6,
+                                                   1:0.7,
+                                                   2:0.8,
+                                                },
+                                         image={-1:"grey",
+                                                 0:"green",
+                                                 1:"yellow",
+                                                 2:"red",
+                                                },
+                                         desc={-1:"No Data",
+                                                0:"Low",
+                                                1:"Average",
+                                                2:"High",
+                                                },
+                                          zero = True)
         for series_id in seriesList:
             series_name = survey_getSeriesName(series_id)
             response_locations = getLocationList(series_id)
@@ -2079,23 +2102,6 @@ $.post('%s',
                 analysisTool.advancedResults()
             else:
                 analysisTool = None
-            priorityObj = S3AnalysisPriority(range=[-.66, .66],
-                                             colour={-1:"#888888", # grey
-                                                     0:"#008000", # green
-                                                     1:"#FFFF00", # yellow
-                                                     2:"#FF0000", # red
-                                                     },
-                                              image={-1:"grey",
-                                                      0:"green",
-                                                      1:"yellow",
-                                                      2:"red",
-                                                    },
-                                               desc={-1:"No Data",
-                                                      0:"Low",
-                                                      1:"Average",
-                                                      2:"High",
-                                                    },
-                                              zero = True)
             if analysisTool != None and not math.isnan(analysisTool.mean):
                 pBand = analysisTool.priorityBand(priorityObj)
                 legend = TABLE(
@@ -2113,7 +2119,8 @@ $.post('%s',
 
             if len(response_locations) > 0:
                 for i in range( 0 , len( response_locations) ):
-                    complete_id = response_locations[i].complete_id
+                    location = response_locations[i]
+                    complete_id = location.complete_id
                     # Insert how we want this to appear on the map
                     url = URL(c="survey",
                               f="series",
@@ -2123,16 +2130,17 @@ $.post('%s',
                                     "read"
                                     ]
                               )
-                    response_locations[i].shape = "circle"
-                    response_locations[i].size = 5
+                    location.shape = "circle"
+                    location.size = 5
                     if analysisTool is None:
                         priority = -1
                     else:
                         priority = analysisTool.priority(complete_id,
                                                          priorityObj)
-                    response_locations[i].colour = priorityObj.colour[priority]
-                    response_locations[i].popup_url = url
-                    response_locations[i].popup_label = response_locations[i].name
+                    location.colour = priorityObj.colour[priority]
+                    location.opacity = priorityObj.opacity[priority]
+                    location.popup_url = url
+                    location.popup_label = response_locations[i].name
                 feature_queries.append({ "name": "%s: Assessments" % series_name,
                                          "query": response_locations,
                                          "active": True })

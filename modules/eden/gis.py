@@ -2280,6 +2280,7 @@ class S3MapModel(S3Model):
                                    requires=IS_NULL_OR(IS_IN_SET(["circle", "square", "star", "x", "cross", "triangle"]))),
                              Field("size", "integer"),
                              Field("colour", requires=IS_NULL_OR(IS_HTML_COLOUR())),
+                             gis_opacity()(),
                              *meta_fields())
 
         # ---------------------------------------------------------------------

@@ -327,7 +327,7 @@ function addGeoJSONLayer(layer) {
         labelAlign: 'cm',
         pointRadius: '${radius}',
         fillColor: '${fill}',
-        fillOpacity: opacity,
+        fillOpacity: '${fillOpacity}',
         strokeColor: '${stroke}',
         strokeWidth: 2,
         strokeOpacity: opacity,
@@ -393,15 +393,6 @@ function addGeoJSONLayer(layer) {
                 }
                 return pix;
             },
-            //graphicOpacity: function(feature) {
-                // Unclustered Point
-            //    var opacity = styleMarker.opacity;
-                // Clustered Point
-            //    if (feature.cluster) {
-            //        opacity = '';
-            //    }
-            //    return opacity;
-            //},
             graphicName: function(feature) {
                 if (feature.cluster) {
                     // Clustered Point
@@ -467,6 +458,24 @@ function addGeoJSONLayer(layer) {
                 }
                 return color;
             },
+            fillOpacity: function(feature) {
+                if (feature.cluster) {
+                    if (feature.cluster[0].attributes.opacity) {
+                        // Use opacity from features
+                        var opacity = feature.cluster[0].attributes.opacity;
+                    } else {
+                        // default fillOpacity for Clustered Point
+                        var opacity = opacity;
+                    }
+                } else if (feature.attributes.opacity) {
+                    // Use opacity from feature
+                    var opacity = feature.attributes.opacity;
+                } else {
+                    // default fillOpacity for Unclustered Point
+                    var opacity = opacity;
+                }
+                return opacity;
+            },
             stroke: function(feature) {
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
@@ -485,7 +494,7 @@ function addGeoJSONLayer(layer) {
                     var color = feature.attributes.colour;
                     if ( color.indexOf('#') == -1) {
                         // gis_layer_theme
-                        color = '#FFFFFF';
+                        color = '#' + color;
                     }
                 } else {
                     // default strokeColor for Unclustered Point
