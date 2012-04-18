@@ -3173,10 +3173,10 @@ class S3SliderWidget(FormWidget):
                  maxval,
                  steprange,
                  value):
-        self.minval = minval;
-        self.maxval = maxval;
-        self.steprange = steprange;
-        self.value = value;
+        self.minval = minval
+        self.maxval = maxval
+        self.steprange = steprange
+        self.value = value
 
     def __call__(self, field, value, **attributes):
 
@@ -3216,4 +3216,77 @@ $( '#%s' ).slider('option', 'value', parseFloat('%f'));
 
         return TAG[""](sliderdiv, sliderinput)
 
-# END =========================================================================
+
+class S3OptionsMatrixWidget(object):
+    """
+        Constructs a two dimensional array/grid of checkboxes
+        with row and column headers.
+    """
+    def __init__(self, rows, columns, _id=None, checklist=None):
+        """
+            @param rows:
+                A tuple containing (name,label) tuples where name is used in the
+                input name (row_column) and label is used in the row headers
+            @type rows: tuple
+            @param columns:
+                A tuple containing (name,label) tuples where name is used in the
+                input name (row_column) and label is used in the column headers
+            @type columns: tuple
+            @param checklist:
+                A tuple of strings that will match the name of the checkboxes
+                to be enabled/checked
+            @type checklist: tuple
+        """
+        self.rows = rows
+        self.columns = columns
+        self._id = _id if _id is not None else ""
+        self.checklist = checklist
+
+    def __call__(self):
+        """
+            Returns the grid/matrix of checkboxes as a web2py TABLE object and
+            adds references to required Javascript files.
+        """
+        
+        grid_column_header_cells = [TH()]
+        for column in self.columns:
+            # Get the "label" from the column tuple
+            grid_column_header_cells.append(TH(column[1]))
+        
+        grid_rows = []
+        for row in self.rows:
+            # Create a list to hold our table cells
+            # the first cell will hold the row label
+            row_cells = [TH(row[1])]
+            for column in self.columns:
+                # Construct the checkbox name attribute out of the row and
+                # column name values
+                cell_name = "%s_%s" % (row[0], column[0])
+
+                # This determines if the checkbox should be checked
+                if self.checklist is not None and cell_name in self.checklist:
+                    cell_value = "on"
+                else:
+                    cell_value = ""
+
+                row_cells.append(
+                                 TD(
+                                    INPUT(
+                                          _type="checkbox",
+                                          _id="id_%s" % cell_name,
+                                          _name=cell_name,
+                                          value=cell_value
+                                          )
+                                    )
+                                 )
+            grid_rows.append(TR(row_cells))
+        
+        grid_header = THEAD(TR(grid_column_header_cells))
+
+        current.response.s3.scripts.append( "/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application )
+        jquery_selector = "#%s" % self._id if self._id != "" else "."  
+        current.response.s3.jquery_ready.append("""
+$('{0}').s3optionsmatrix();
+""".format(jquery_selector))
+
+        return TABLE(grid_header, TBODY(grid_rows), _id=self._id, _class="s3optionsmatrix")
