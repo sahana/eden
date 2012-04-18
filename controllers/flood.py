@@ -53,9 +53,9 @@ river_id = S3ReusableField("river_id", table,
                            represent = lambda id: (id and [db(db.flood_river.id == id).select(db.flood_river.name,
                                                                                               limitby=(0, 1)).first().name] or ["None"])[0],
                            label = T("River"),
-                           comment = A(ADD_RIVER, _class="colorbox",
-                                       _href=URL(c="flood", f="river", args="create", vars=dict(format="popup")),
-                                       _target="top", _title=ADD_RIVER),
+                           comment=S3AddResourceLink(c="flood",
+                                                     f="river",
+                                                     title=ADD_RIVER)
                            ondelete = "RESTRICT")
 
 # -----------------------------------------------------------------------------
