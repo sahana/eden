@@ -3980,6 +3980,8 @@ S3.gis.layers_feature_queries = new Array();"""
                     rowdict["size"] = row["size"]
                 if "colour" in row:
                     rowdict["colour"] = row["colour"]
+                if "opacity" in row:
+                    rowdict["opacity"] = row["opacity"]
                 record_id = fqtable.insert(**rowdict)
                 if not created_by:
                     auth.s3_make_session_owner(fqtable, record_id)

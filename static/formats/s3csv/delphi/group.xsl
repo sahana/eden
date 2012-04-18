@@ -18,6 +18,7 @@
 
            You can add a third argument &ignore_errors
          CSV fields:
+         UUID....................delphi_group
          Name....................delphi_group
          Description.............delphi_group
 
@@ -38,9 +39,11 @@
 
         <!-- Create the Group -->
         <resource name="delphi_group">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$GroupName"/>
-            </xsl:attribute>
+            <xsl:if test="col[@field='UUID']!=''">
+                <xsl:attribute name="uuid">
+                    <xsl:value-of select="col[@field='UUID']"/>
+                </xsl:attribute>
+            </xsl:if>
             <data field="name"><xsl:value-of select="$GroupName"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
         </resource>

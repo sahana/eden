@@ -199,6 +199,11 @@
                     <colour>
                         <xsl:value-of select="data[@field='colour']"/>
                     </colour>
+                    <xsl:if test="data[@field='opacity']!=''">
+                        <opacity>
+                            <xsl:value-of select="data[@field='opacity']"/>
+                        </opacity>
+                    </xsl:if>
                 </xsl:otherwise>
             </xsl:choose>
         </properties>

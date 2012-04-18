@@ -135,9 +135,9 @@ class AuthS3(Auth):
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
         self.messages.email_verified = "Email verified - you can now login"
-        self.messages.welcome_email = "Welcome to %(system_name)s" % \
+        self.messages.welcome_email_subject = "Welcome to %(system_name)s" % \
             dict(system_name=system_name)
-        self.messages.welcome_email_subject = \
+        self.messages.welcome_email = \
             "Welcome to %(system_name)s - click on the link %(url)s to complete your profile" % \
                 dict(system_name = system_name,
                      url = deployment_settings.get_base_public_url() + URL("default", "user", args=["profile"]))

@@ -49,7 +49,7 @@ deployment_settings.auth.registration_requires_approval = False
 #deployment_settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
 #deployment_settings.auth.registration_organisation_default = "My Organisation"
-# Uncomment & populate these to set the default roelsd assigned to newly-registered users
+# Uncomment & populate these to set the default roles assigned to newly-registered users
 #deployment_settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to request an image when users register
 #deployment_settings.auth.registration_requests_image = True
