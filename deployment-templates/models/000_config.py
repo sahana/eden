@@ -48,8 +48,8 @@ deployment_settings.auth.registration_requires_approval = False
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #deployment_settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
-#deployment_settings.auth.registration_organisation_default = "My Organisation"
-# Uncomment & populate these to set the default roelsd assigned to newly-registered users
+deployment_settings.auth.registration_organisation_default = "Maldivian Red Crescent"
+# Uncomment & populate these to set the default roles assigned to newly-registered users
 #deployment_settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to request an image when users register
 #deployment_settings.auth.registration_requests_image = True
