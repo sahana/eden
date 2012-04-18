@@ -1,4 +1,4 @@
-__all__ = ["create_office"]
+__all__ = ["create_warehouse"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -6,9 +6,11 @@ from selenium.common.exceptions import NoSuchElementException
 from gluon import current
 from s3 import s3_debug
 from tests import *
+import unittest, re, time
 
-def create_office():
-    
+
+
+def create_warehouse():
     config = current.test_config
     browser = config.browser
     driver = browser
@@ -23,24 +25,18 @@ def create_office():
     config = current.test_config
     browser = config.browser
     driver = browser
-    driver.find_element_by_xpath("//div[@id='facility_box']/a[4]/div").click()
-    driver.find_element_by_id("show-add-btn").click()
+    driver.find_element_by_link_text("Warehouse").click()
+    driver.find_element_by_link_text("New").click()
+    driver.find_element_by_id("org_office_name").click()
     driver.find_element_by_id("org_office_name").clear()
-    driver.find_element_by_id("org_office_name").send_keys("Bucharest RFAAT Centre (Test)")
+    driver.find_element_by_id("org_office_name").send_keys("Bucharest RFAAT Central Warehouse (Test)")
     driver.find_element_by_id("org_office_code").clear()
-    driver.find_element_by_id("org_office_code").send_keys("12345678")
+    driver.find_element_by_id("org_office_code").send_keys("12345679")
     w_autocomplete("Rom","org_office_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
-    driver.find_element_by_id("org_office_type").click()
-    driver.find_element_by_id("org_office_type").send_keys("Headquarters")
+    driver.find_element_by_id("gis_location_L0").click()
     driver.find_element_by_id("gis_location_L0").send_keys("Romania")
     driver.find_element_by_id("gis_location_street").clear()
-    driver.find_element_by_id("gis_location_street").send_keys("102 Diminescu St")
-    driver.find_element_by_id("gis_location_L3_ac").clear()
-    driver.find_element_by_id("gis_location_L3_ac").send_keys("Bucharest")
-    driver.find_element_by_id("org_office_comments").click()
+    driver.find_element_by_id("gis_location_street").send_keys("103 Diminescu St")
     driver.find_element_by_id("org_office_comments").clear()
-    driver.find_element_by_id("org_office_comments").send_keys("This is a Test Office")
+    driver.find_element_by_id("org_office_comments").send_keys("This is a Test Warehouse")
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
-#
-#    # Logout
-#    logout()

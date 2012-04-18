@@ -9,16 +9,13 @@ from tests import *
 import unittest, re, time
 
 def create_staff():
+
     config = current.test_config
     browser = config.browser
     driver = browser
     driver.find_element_by_link_text("Staff & Volunteers").click()
     driver.find_element_by_link_text("New Staff Member").click()
-    driver.find_element_by_id("dummy_hrm_human_resource_organisation_id").click()
-    driver.find_element_by_id("dummy_hrm_human_resource_organisation_id").clear()
-    driver.find_element_by_id("dummy_hrm_human_resource_organisation_id").send_keys("Romanian Food Assistance Association")
-    time.sleep(5)
-    driver.find_element_by_id("ui-menu-0-0").click()
+    w_autocomplete("Rom","hrm_human_resource_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
     driver.find_element_by_id("pr_person_first_name").clear()
     driver.find_element_by_id("pr_person_first_name").send_keys("Robert")
     driver.find_element_by_id("pr_person_middle_name").clear()
@@ -43,11 +40,7 @@ def create_staff():
     driver.find_element_by_id("hrm_human_resource_end_date").click()
     driver.find_element_by_id("hrm_human_resource_end_date").clear()
     driver.find_element_by_id("hrm_human_resource_end_date").send_keys("2015-03-02")
-    driver.find_element_by_xpath("//tr[@id='hrm_human_resource_site_id__row1']/td[2]").click()
-    driver.find_element_by_id("dummy_hrm_human_resource_site_id").clear()
-    driver.find_element_by_id("dummy_hrm_human_resource_site_id").send_keys("Bucharest RFAAT Centre")
-    time.sleep(5)
-    driver.find_element_by_id("ui-menu-0-0").click()
+    w_autocomplete("Buch","hrm_human_resource_site","Bucharest RFAAT Centre (Test) (Office)",False)
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     
     

@@ -22,7 +22,6 @@ def create_organization():
     driver.find_element_by_id("org_organisation_acronym").clear()
     driver.find_element_by_id("org_organisation_acronym").send_keys("RFAAT")
     driver.find_element_by_id("org_organisation_type").send_keys("Institution")
-    # ERROR: Caught exception [ERROR: Unsupported command [addSelection]]
     driver.find_element_by_id("org_organisation_region").clear()
     driver.find_element_by_id("org_organisation_region").send_keys("???")
     driver.find_element_by_id("org_organisation_country").send_keys("Romania")
@@ -31,6 +30,7 @@ def create_organization():
     driver.find_element_by_id("org_organisation_comments").clear()
     driver.find_element_by_id("org_organisation_comments").send_keys("This is a Test Organization")
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
+    driver.find_element_by_link_text("Home").click()
 
 #    # Logout
 #    logout()
