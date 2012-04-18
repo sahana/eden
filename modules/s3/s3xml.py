@@ -155,9 +155,6 @@ class S3XML(S3Codec):
         lonmin="lonmin",
         lonmax="lonmax",
         marker="marker",
-        shape="shape",  # for GIS Feature Queries
-        size="size",    # for GIS Feature Queries
-        colour="colour",# for GIS Feature Queries
         popup="popup",  # for GIS Feature Layers/Queries
         sym="sym",      # For GPS
         type="type",
@@ -633,10 +630,6 @@ class S3XML(S3Codec):
             @param rmap: list of references to encode
             @param download_url: download URL of this instance
             @param marker: marker dict or filename
-            @param shape: shape as alternative to marker
-            @param size: size of shape
-            @param colour: colour of shape
-            @param popup_url:  URL used for onClick Popup contents
         """
 
         gis = current.gis

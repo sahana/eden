@@ -356,14 +356,14 @@ class S3Msg(object):
     # =========================================================================
     def process_log(self):
         """
-            Processes the unparsed messages in msg_log.
-        """            
+            Processes the unparsed messages in msg_log
+        """
+
         db = current.db
-        s3db = current.s3db
-        ltable = s3db.msg_log
+        ltable = current.s3db.msg_log
         
-        query = (ltable.is_parsed == False)& \
-            (ltable.inbound == True)
+        query = (ltable.is_parsed == False) & \
+                (ltable.inbound == True)
         rows = db(query).select()
         
         for row in rows:
