@@ -697,7 +697,15 @@ class S3ProjectModel(S3Model):
                   report_options=Storage(
                                          rows=report_fields,
                                          cols=report_fields,
-                                         facts=report_fields),
+                                         facts=report_fields,
+                                         defaults=Storage(
+                                                          rows="project_id",
+                                                          cols="name",
+                                                          fact="time_actual",
+                                                          aggregate="sum",
+                                                          totals=True
+                                                          )
+                                         ),
                   list_fields = list_fields,
                   )
 

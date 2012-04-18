@@ -85,54 +85,103 @@ class S3Cube(S3CRUD):
         manager = current.manager
         session = current.session
         response = current.response
-
         table = self.table
 
-        _vars = r.get_vars
+        # The list of keys that we can accept for reports
+        report_options_keys = ['rows', 'cols', 'fact', 'aggregate', 'totals']
+
+        # Get the values out of the URL
+        selected_values_url = {}
+        for key, value in r.get_vars.iteritems():
+            if key in report_options_keys and value:
+                selected_values_url[key] = value
+
+        # Fetch the default report options from the table/model configuration
+        report_options_model = manager.model.get_config(self.resource.tablename, "report_options")
+        if report_options_model is not None:
+            selected_values_defaults = report_options_model.get('defaults', None)
+
 
         # Generate form -------------------------------------------------------
         # @todo: do this only in interactive formats
         #
+        selected_values_post = None
         show_form = attr.get("interactive_report", False)
+
+        if r.http == "POST":
+            form_values = r.post_vars
+        elif "report_options" in session.s3:
+            form_values = session.s3.report_options.get(self.resource.tablename, Storage())
+        else:
+            form_values = Storage()
+
         if show_form:
             form = self._create_form()
-            if form.accepts(r.post_vars, session,
+            if form.accepts(form_values, session,
                             formname="report",
                             keepvalues=True):
                 query, errors = self._process_filter_options(form)
                 if r.http == "POST" and not errors:
+                    # save the selected values into the session
+                    if 'report_options' not in session.s3:
+                        session.s3.report_options = {}
+                    
+                    session.s3.report_options[self.resource.tablename] = form.vars
+
                     self.resource.add_filter(query)
-                _vars = form.vars
+                    
+                    # If the user posts the form, we want to use this over
+                    # all other possible value groups
+                    selected_values_post = session.s3.report_options[self.resource.tablename]
         else:
             form = None
+        
+        # Has the user posted the form before and got a saved session for this
+        # resource?
+        try:
+            selected_values_session = session.s3.report_options[self.resource.tablename]
+        except KeyError:
+            selected_values_session = None
 
-        # Get rows, cols, fact and aggregate ----------------------------------
-        #
-        rows = _vars.get("rows", None)
-        cols = _vars.get("cols", None)
-        fact = _vars.get("fact", None)
-        aggregate = _vars.get("aggregate", None)
-        show_totals = _vars.get("totals", "on")
+        # POST > GET > session > defaults > list view 
+        if selected_values_post:
+            selected_values = selected_values_post
+        elif selected_values_url:
+            selected_values = selected_values_url
+        elif selected_values_session:
+            selected_values = selected_values_session
+        elif selected_values_defaults:
+            selected_values = selected_values_defaults
+        # elif pre-defined report, use them
+        #     report_options_predefined
+        else:
+            selected_values = {}
 
-        if not rows:
-            rows = None
-        if not cols:
-            cols = None
+        # Get rows, cols, facts and aggregate
+        rows = selected_values.get("rows", None)
+        cols = selected_values.get("cols", None)
+        fact = selected_values.get("fact", None)
+        aggregate = selected_values.get("aggregate", "list")
+        show_totals = selected_values.get("totals", False)
+
         if not rows and not cols:
             self.method = "list"
-        if not aggregate:
-            aggregate = "list"
-        if show_totals is None or \
-           str(show_totals).lower() in ("false", "off"):
+
+        # @FixMe: This won't work with the form. Only a query string or
+        # default value in the report_options can turn off totals
+        if str(show_totals).lower() in ("false", "off"):
             show_totals = False
         else:
             show_totals = True
+
         layers = []
+
         if not fact:
             if "name" in table:
                 fact = "name"
             else:
                 fact = table._id.name
+
         if fact:
             if not isinstance(fact, list):
                 fact = [fact]
@@ -291,8 +340,8 @@ class S3Cube(S3CRUD):
 
         show_totals = True
         if request.env.request_method == "GET" and \
-           "show_totals" in request.get_vars:
-            show_totals = request.get_vars["show_totals"]
+           "totals" in request.get_vars:
+            show_totals = request.get_vars["totals"]
             if show_totals.lower() in ("false", "off"):
                 show_totals = False
 
@@ -1011,7 +1060,7 @@ class S3ContingencyTable(TABLE):
         get_mname = report.mname
         for field, method in layers:
             # ToDO: change this to 
-            label = get_label(lfields, field, tablename, "report_fact")
+            label = get_label(lfields, field, tablename, "fact")
             mname = get_mname(method)
             if not labels:
                 m = method == "list" and get_mname("count") or mname
@@ -1021,7 +1070,7 @@ class S3ContingencyTable(TABLE):
 
         # Columns field title
         if cols:
-            col_label = get_label(lfields, cols, tablename, "report_cols")
+            col_label = get_label(lfields, cols, tablename, "cols")
             _colspan = numcols + 1
         else:
             col_label = ""
@@ -1031,7 +1080,7 @@ class S3ContingencyTable(TABLE):
         titles = TR(layers_title, cols_title)
 
         # Rows field title
-        row_label = get_label(lfields, rows, tablename, "report_rows")
+        row_label = get_label(lfields, rows, tablename, "rows")
         rows_title = TH(row_label, _style=_style)
 
         headers = TR(rows_title)
