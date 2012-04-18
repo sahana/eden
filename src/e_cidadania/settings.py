@@ -163,6 +163,7 @@ THIRDPARTY_APPS = (
     # system-wide dependencies.
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
+    'e_cidadania.apps.third_party.smart_selects'
     #'django_extensions',
 )
 
