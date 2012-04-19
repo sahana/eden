@@ -159,6 +159,8 @@ class S3Cube(S3CRUD):
         cols = form_values.get("cols", None)
         fact = form_values.get("fact", None)
         aggregate = form_values.get("aggregate", "list")
+        if not aggregate:
+            aggregate = "list"
 
         # Fall back to list if no dimensions specified
         if not rows and not cols:

@@ -344,9 +344,6 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
-        if len(self.field) > 1:
-            raise SyntaxError("Only one search field allowed")
-
         if not self.search_field:
             self.build_master_query(resource)
 
