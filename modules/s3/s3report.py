@@ -145,6 +145,8 @@ class S3Cube(S3CRUD):
                 query, errors = self._process_filter_options(form)
                 if r.http == "POST" and not errors:
                     self.resource.add_filter(query)
+                if "totals" not in r.post_vars:
+                    r.post_vars["totals"] = "off"
         else:
             form = None
 
@@ -165,7 +167,7 @@ class S3Cube(S3CRUD):
             self.method = "list"
 
         # Show totals?
-        show_totals = str(form_values.get("totals", True))
+        show_totals = form_values.get("totals", True)
         if show_totals and str(show_totals).lower() in ("false", "off"):
             show_totals = False
         else:
