@@ -27,7 +27,9 @@
     	<script type="text/javascript">
     	    $(document).ready(function(){
                 $(".alert").alert();
-            });
+                });
+            $.datepicker.setDefaults({
+                    });
     	</script>
     	<!-- End load JavaScript -->
        	{% block extrajs %}
@@ -140,7 +142,9 @@
 	                (c) 2010-{% now "Y" %} <a href="http://trac.cidadania.coop">e-cidadania</a> {% trans "created by" %} <a href="http://www.cidadania.coop">Cidadania Sociedade Cooperativa</a>
 	            {% endblock %}
 	        </div>
-	    </div>
+            </div>
+            <div>
+            </div>
 	</body>
 </html>
 

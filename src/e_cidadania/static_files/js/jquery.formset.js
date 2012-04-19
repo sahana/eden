@@ -88,9 +88,11 @@
                 del.remove();
             }
             if (hasChildElements(row)) {
-                insertDeleteLink(row);
-                row.addClass(options.formCssClass);
-                applyExtraClasses(row, i);
+                //if(!row(':first')){
+                     insertDeleteLink(row);
+                     row.addClass(options.formCssClass);
+                     applyExtraClasses(row, i);
+                //}
             }
         });
 
@@ -158,7 +160,7 @@
     $.fn.formset.defaults = {
         prefix: 'form',                  // The form prefix for your django formset
         formTemplate: null,              // The jQuery selection cloned to generate new form instances
-        addText: '',          // Text for the add link
+        addText: 'add',          // Text for the add link
         deleteText: 'remove',            // Text for the delete link
         addCssClass: 'add-row',          // CSS class applied to the add link
         deleteCssClass: 'delete-row',    // CSS class applied to the delete link

@@ -92,7 +92,7 @@
                 <div class="clearfix {% if form.event_date.errors %}error{% endif%}"> 
                     <label for="prependedInput">{{ form.event_date.label }}</label> 
                     <div class="input">
-                        <input type="text" name="event_date" id="datepicker">
+                        <input type="text" name="event_date" id="datepicker" class="hasDatePicker">
                         <span class="help-inline">
                             {% if form.event_date.errors %}
                                 {% for error in form.event_date.errors %}
