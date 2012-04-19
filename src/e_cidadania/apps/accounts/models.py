@@ -62,7 +62,6 @@ class UserProfile(BaseProfile):
     birthdate = models.DateField(_('Birth date'), default=datetime.date.today(),
                                  blank=True)
     
-    # Maybe one day this will be replaced by a list of choices.
     country = models.ForeignKey(Country, null=True)
     region = ChainedForeignKey(
         Region,
