@@ -6,7 +6,7 @@ from django.utils.encoding import iri_to_uri
 from django.utils.safestring import mark_safe
 from django.db.models import get_model
 import locale
-from smart_selects.utils import unicode_sorter
+from e_cidadania.apps.third_party.smart_selects.utils import unicode_sorter
 
 
 if django.VERSION >= (1, 2, 0) and getattr(settings,

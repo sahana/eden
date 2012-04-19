@@ -1,4 +1,4 @@
-from smart_selects.widgets import ChainedSelect
+from e_cidadania.apps.third_party.smart_selects.widgets import ChainedSelect
 from django.forms.models import ModelChoiceField
 from django.forms import ChoiceField
 from django.db.models import get_model

@@ -2,7 +2,7 @@ from django.db.models import get_model
 from django.http import HttpResponse
 from django.utils import simplejson
 import locale
-from smart_selects.utils import unicode_sorter
+from e_cidadania.apps.third_party.smart_selects.utils import unicode_sorter
 
 def filterchain(request, app, model, field, value, manager=None):
     Model = get_model(app, model)

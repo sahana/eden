@@ -28,6 +28,8 @@ from django.conf import settings
 
 from e_cidadania.apps.userprofile.models import BaseProfile
 from e_cidadania.apps.spaces.models import Space
+from e_cidadania.apps.accounts.locations import Country, Region, City
+from e_cidadania.apps.third_party.smart_selects.db_fields import ChainedForeignKey
 
 GENDER = (
 
@@ -61,9 +63,21 @@ class UserProfile(BaseProfile):
                                  blank=True)
     
     # Maybe one day this will be replaced by a list of choices.
-    country = models.CharField(_('Country'), max_length=50)
-    region = models.CharField(_('Region'), max_length=50)
-    city = models.CharField(_('City'), max_length=50)
+    country = models.ForeignKey(Country, null=True)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="country",
+        chained_model_field="country",
+        show_all=True,
+        auto_choose=True,
+        null=True
+    )
+    city = ChainedForeignKey(
+        City,
+        chained_field="region",
+        chained_model_field="region",
+        null=True
+    )
     district = models.CharField(_('District'), max_length=50)
     
     # Detailed overview of the address
