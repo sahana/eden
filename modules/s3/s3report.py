@@ -175,11 +175,13 @@ class S3Cube(S3CRUD):
 
         # Get the layers
         layers = []
+
         if not fact:
             if "name" in table:
                 fact = "name"
             else:
                 fact = table._id.name
+
         if fact:
             if not isinstance(fact, list):
                 fact = [fact]
@@ -1053,7 +1055,6 @@ class S3ContingencyTable(TABLE):
         labels = []
         get_mname = S3Cube.mname
         for field, method in layers:
-            # ToDO: change this to
             label = get_label(lfields, field, tablename, "fact")
             mname = get_mname(method)
             if not labels:
