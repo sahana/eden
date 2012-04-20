@@ -645,11 +645,11 @@ $(document).ready(function() {
                                          ),
                     represent = self.item_pack_represent,
                     label = T("Pack"),
-                    comment=S3AddResourceLink(c="supply",
-                                              f="item_pack",
-                                              label=ADD_ITEM_PACK,
-                                              title=T("Item Packs"),
-                                              tooltip=T("The way in which an item is normally distributed")),
+                    #comment=S3AddResourceLink(c="supply",
+                    #                          f="item_pack",
+                    #                          label=ADD_ITEM_PACK,
+                    #                          title=T("Item Packs"),
+                    #                          tooltip=T("The way in which an item is normally distributed")),
                     script = SCRIPT(
 """
 S3FilterFieldChange({
