@@ -441,6 +441,7 @@ $('#%s').autocomplete({
     select: function( event, ui ) {
         $( '#%s' ).val( ui.item.%s );
         $( '#%s' ).val( ui.item.id );
+        $( '#%s' ).change();
         """ % (dummy_input,
                dummy_input,
                url,
@@ -452,6 +453,7 @@ $('#%s').autocomplete({
                fieldname,
                dummy_input,
                fieldname,
+               real_input,
                real_input), self.post_process, """
         data.accept = true;
         return false;
