@@ -48,7 +48,7 @@ from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate
-from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT
+from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
 
 
 # =============================================================================
@@ -1260,7 +1260,7 @@ class S3ContingencyTable(TABLE):
                 value = value and len(value) or 0
             if not len(totals) and append is not None:
                 append(value)
-            totals.append(str(value))
+            totals.append(IS_NUMBER.represent(value))
         totals = " / ".join(totals)
         return totals
 
