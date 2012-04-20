@@ -48,7 +48,7 @@ def w_autocomplete(search,
             if not quiet:
                 print "Looking for element ui-menu-%s-%s" %(automenu,automenu)
             try:
-                menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,automenu))
+                menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
             except:
                 menuitem = None
             while menuitem:
