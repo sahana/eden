@@ -93,9 +93,8 @@ function sitestart() {
     dropdown();
     msg();
     // This function activates the datepicker sitewide
-    $(function() {
-	    $( "#datepicker" ).datepicker();
-    });
+            $.datepicker.setDefaults({dateFormat:'dd/mm/yy'});
+	    $( ".hasDatePicker, #datepicker" ).datepicker();
 }
 
 $(document).ready(function(){

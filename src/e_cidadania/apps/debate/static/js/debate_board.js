@@ -267,7 +267,8 @@ function addTableColumn() {
     var inputs = $('#' + tableID + ' input').length;
     var tdlength = $('#' + tableID + ' td').length;
     var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
-    
+
+    if (criteriacount >= 10) return false;
     $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria" + (criteriacount+1) + "' class='criteria-vtitle'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
     $('#' + tableID + ' tbody tr').each(function(){
         //var tdlength = $('#' + tableID + ' td').length;
@@ -275,6 +276,35 @@ function addTableColumn() {
         tdlength += 1;
     });
     makeSortable();
+}
+
+function addTableRow() {
+    var tableID =$('table').attr('id');
+    var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
+    var tdlength = $('#' + tableID + 'td').length;
+
+    var t = $('table');
+    var numColumns = $('th[id^=debate-vcriteria]', t).length;
+    var numRows = $('td[class=criteria-htitle]', t).length;
+    if (numRows >= 10) return false;
+
+    var tr = $('<tr>');
+    tr.append("<td class='criteria-htitle'><div id='debate-ttitle'><input id='" + tableID + "-criteria" + (numRows+1) + "' type='text'></div></td>");
+    for (i=0; i<numColumns; i++) {
+        tr.append('<td>');
+    }
+    t.append(tr);
+
+}
+
+function removeTableRow() {
+    var t = $('table');
+    var numRows = $('td[class=criteria-htitle]', t).length;
+    if (numRows < 2) return false;
+    $('tbody tr:last-child').fadeOut("fast", function() {
+        $(this).remove();
+    });
+
 }
 
 function removeTableColumn() {
@@ -301,8 +331,8 @@ function saveTable() {
         saveTable() - Saves the table data. Instead of using a standard form,
         we submite the data trough ajax post, and treat it as a form in the
         django view.
-    */   
-    $('#ajaxform').submit( function() {
+    */
+    $('#ajaxform').submit( function(e) {
         var tableID = $('table').attr('id');
 
         var xvalues = [];
@@ -311,24 +341,21 @@ function saveTable() {
             xvalues.push(field.value);
         });
         $('#id_columns').val(xvalues);
-        
         var sortable = [];
         var rows = $('#' + tableID + ' tbody tr');
-        alert('Tengo ' + rows.length + ' filas')
+      //  alert('Tengo ' + rows.length + ' filas')
         $.each(rows, function(i, field) {
-            alert('Deberia manipular un row y manipulo: '+ this);
+        //    alert('Deberia manipular un row y manipulo: '+ this);
             var rowID = this.attr('id');
             $(rowID + ' td').each(function() {
-                alert('Deberia manipular un TD y pillo: ' + this);
+      //          alert('Deberia manipular un TD y pillo: ' + this);
                 sortable.push($(this).attr('id'));
             })
-            alert('Estos son los sortables: ' + sortable[0]);
+    //        alert('Estos son los sortables: ' + sortable[0]);
             $(this).val(sortable);
             sortable.length = 0;
-        })
-              
-        return true;
-  });
+        });
+    });
 }
 
 /*******************
@@ -342,5 +369,6 @@ $(document).ready(function() {
     makeSortable();
     // Show controls for some notes
     showControls();
+    saveTable();
 });
 

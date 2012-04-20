@@ -97,28 +97,25 @@ def add_new_debate(request, space_name):
 
                 saved_debate = debate_form_uncommited.save()
                 debate_instance = get_object_or_404(Debate, pk=current_debate_id)
- 
+
                 for form in row_formset.forms:
                     row = form.save(commit=False)
                     row.debate = debate_instance
-                
+
                 for form in column_formset.forms:
                     column = form.save(commit=False)
                     column.debate = debate_instance
-                                
+
                 return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
-                
-        return render_to_response('debate/debate_add_simple.html',
+        return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,
                                    'rowform': row_formset,
                                    'colform': column_formset,
                                    'get_place': place,
                                    'debateid': current_debate_id},
                                   context_instance=RequestContext(request))
-            
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
-    
 def get_debates(request):
 
     """

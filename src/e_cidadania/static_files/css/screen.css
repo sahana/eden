@@ -406,7 +406,7 @@ td.filled ul li a {
     overflow: hidden;
 }
 
-#debate, #debate td, #debate th {
+#debate, #debate td {
     border-style: none;
 }
 
@@ -416,6 +416,7 @@ td.filled ul li a {
 	border-style: inset;
 	border-color: #CCC;
 	border-collapse: collapse;
+        width: 161px;
 }
 tbody td {
     width: 0;
@@ -480,9 +481,13 @@ tbody * ul {
 }
 
 #new-column-btn, #new-row-btn, #del-column-btn, #del-row-btn {
-    padding: 5px;
-    margin: 5px;
+    margin-right: 5px;
 }
+
+#contenttitles h2 {
+  margin-bottom: 20px;
+}
+
 
 #new-column-btn, #del-column-btn {
     float: right;
@@ -501,8 +506,6 @@ table .criteria-title {
 }
 
 #debate td:first-child {
-    background: transparent;
-    border-style: none;
 }
 
 .debate-ttitle {
@@ -525,18 +528,76 @@ table .criteria-title {
     padding: 5px 0px 5px 0px;
 }
 
-#debate thead th {
+#debate thead th, {
     padding: 5px 5px 5px 5px;
     background: #EEE;
     border-top: 1px solid #CCC;
     border-left: 1px solid #CCC;
     border-right: 1px solid #CCC;
+    width: 200px;
 }
 
-#debate thead th:first-child {
-    background: transparent;
-    border: none;
+#debate  input {
+  width: 100px;
+  text-align: center;
+  margin: 0;
 }
 
+#debate-ttitle input{
+
+}
+
+#corner.corner-criteria {
+  background: transparent;
+  border: none;
+}
+
+.criteria-vtitle  {
+    background-color: #eee;
+    border-top:1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    width: 201px;
+    height:42px;
+
+}
+
+#debate {
+min-width: 1300px;
+
+}
+
+.delete-row {
+}
+
+#buttons {
+  background: transparent;
+}
+
+#debate3 {
+  margin-bottom: 30px;
+}
+
+table {
+  border-radius:10px;
+  -webkit-border-radius: 0 0 10px 10px;
+  -moz-border-radius: 0 0 10px 10px;
+}
+
+.criteria-htitle {
+  height: 125px;
+  vertical-align: middle;
+  border: 0 !important;
+  background: url('/static/assets/table/row.png') no-repeat left center;
+}
+
+#contenttitles {
+  margin-bottom: 20px;
+}
 /* END DEBATE */
 
+
+/* Hide the links added by the jquery plugin - we will use our own */
+#debate table a.delete-row, #debate table a.add-row {
+  display:none;
+}
