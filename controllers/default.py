@@ -770,6 +770,5 @@ def contact():
         response.title = T("Contact us")
         return dict()
 
-def websetup():              # redirects to the websetup tool
-    return dict()
+
 # END =========================================================================
