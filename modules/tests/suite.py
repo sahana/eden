@@ -56,7 +56,11 @@ else:
     create_staff()
     create_volunteer()
     create_warehouse()
-    requests()
+    create_item()
+    create_catalog()
+    create_category()
+    create_request()
+    
 #=======
 #    # Run all Tests - this runs all the said test scripts ^^
 

@@ -15,11 +15,7 @@ def create_volunteer():
     driver = browser
     driver.find_element_by_link_text("Staff & Volunteers").click()
     driver.find_element_by_link_text("New Volunteer").click()
-    driver.find_element_by_id("dummy_hrm_human_resource_organisation_id").click()
-    driver.find_element_by_id("dummy_hrm_human_resource_organisation_id").clear()
-    driver.find_element_by_id("dummy_hrm_human_resource_organisation_id").send_keys("Romanian Food Assistance Association")
-    time.sleep(5)
-    driver.find_element_by_id("ui-menu-5-0").click()
+    w_autocomplete("Rom","hrm_human_resource_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
     driver.find_element_by_id("pr_person_first_name").clear()
     driver.find_element_by_id("pr_person_first_name").send_keys("John")
     driver.find_element_by_id("pr_person_last_name").clear()
