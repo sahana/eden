@@ -121,8 +121,10 @@ class S3Cube(S3CRUD):
         # Get the URL options
         report_options_keys = ['rows', 'cols', 'fact', 'aggregate', 'totals']
         url_options = Storage([(k, v) for k, v in r.get_vars.iteritems()
-                                      if k in report_options_keys and v])
+                                      if k[0] != "_" and v])
 
+        # Figure out which set of form values to use
+        # POST > GET > session > table defaults > list view
         if r.http == "POST":
             form_values = r.post_vars
         elif url_options:
@@ -134,27 +136,41 @@ class S3Cube(S3CRUD):
         else:
             form_values = Storage()
 
-        # Generate form -------------------------------------------------------
-        #
+        # Generate the report and resource filter form
         show_form = attr.get("interactive_report", True)
         if show_form:
+            # The totals option is used to turn OFF the totals cols/rows but
+            # post vars only contain checkboxes that are enabled and checked.
+            if r.http == "POST" and "totals" not in r.post_vars:
+                r.post_vars["totals"] = "off"
+
             form = self._create_form(form_values)
+
             if form.accepts(form_values, session,
                             formname="report",
                             keepvalues=True):
-                query, errors = self._process_filter_options(form)
-                if r.http == "POST" and not errors:
-                    self.resource.add_filter(query)
-                if "totals" not in r.post_vars:
-                    r.post_vars["totals"] = "off"
+                # This validates the form values against the form and
+                # populates the form.vars property
+                pass
+            else:
+                # The user has not submitted the report form and so we use
+                # the form values from the fallback
+                form.vars = form_values
+
+            query, errors = self._process_filter_options(form)
+
+            if not errors:
+                self.resource.add_filter(query)
         else:
             form = None
 
+        # Save the form values into the session
         if form_values:
             if 'report_options' not in session.s3:
                 session.s3.report_options = Storage()
-            session.s3.report_options[tablename] = Storage([(k, v) for k, v in form_values.iteritems()
-                                                                   if k in report_options_keys and v])
+
+            session.s3.report_options[tablename] = Storage([(k, v) for k, v in form.vars.iteritems()
+                                                                   if k[0] != "_" and v])
 
         # Get rows, cols, facts and aggregate
         rows = form_values.get("rows", None)
@@ -343,11 +359,11 @@ class S3Cube(S3CRUD):
         select_fact = _select_field(report_fact, _id="fact", _name="fact",
                                     form_values=form_values)
 
+        # totals are "on" or True by default
         show_totals = True
-        if request.env.request_method == "GET" and \
-           "totals" in form_values:
+        if "totals" in form_values:
             show_totals = form_values["totals"]
-            if show_totals.lower() in ("false", "off"):
+            if str(show_totals).lower() in ("false", "off"):
                 show_totals = False
 
         show_totals = INPUT(_type="checkbox", _id="totals", _name="totals",
@@ -362,7 +378,7 @@ class S3Cube(S3CRUD):
         form = FORM()
 
         # Append filter widgets, if configured
-        filter_widgets = self._build_filter_widgets()
+        filter_widgets = self._build_filter_widgets(form_values)
         if filter_widgets:
             form.append(TABLE(filter_widgets, _id="filter_options"))
 
@@ -404,7 +420,7 @@ class S3Cube(S3CRUD):
         return form
 
     # -------------------------------------------------------------------------
-    def _build_filter_widgets(self):
+    def _build_filter_widgets(self, form_values=None):
         """
             Builds the filter form widgets
         """
@@ -420,7 +436,7 @@ class S3Cube(S3CRUD):
         if not filter_widgets:
             return None
 
-        vars = request.vars
+        vars = form_values if form_values else request.vars
         trows = []
         for widget in filter_widgets:
             name = widget.attr["_name"]
@@ -449,6 +465,9 @@ class S3Cube(S3CRUD):
             Processes the filter widgets into a filter query
 
             @param form: the filter form
+            
+            @rtype: tuple
+            @return: A tuple containing (query object, validation errors)
         """
 
         session = current.session
