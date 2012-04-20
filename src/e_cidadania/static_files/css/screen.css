@@ -416,14 +416,16 @@ td.filled ul li a {
 	border-style: inset;
 	border-color: #CCC;
 	border-collapse: collapse;
-        width: 161px;
 }
+
 tbody td {
     width: 0;
 }
+
 tbody td.criteria-title, tbody th.criteria-title {
     width: 160px;
 }
+
 .handler {
     float: left;
     height: 10px;
@@ -455,6 +457,10 @@ tbody td.criteria-title, tbody th.criteria-title {
     /*-webkit-transform: rotate(-2deg);
     -moz-transform: rotate(-2deg);
     -o-transform: rotate(-2deg);*/
+}
+
+#debate th {
+    border: none;
 }
 
 .note-text {
@@ -528,7 +534,7 @@ table .criteria-title {
     padding: 5px 0px 5px 0px;
 }
 
-#debate thead th, {
+#debate thead th {
     padding: 5px 5px 5px 5px;
     background: #EEE;
     border-top: 1px solid #CCC;
@@ -537,67 +543,63 @@ table .criteria-title {
     width: 200px;
 }
 
-#debate  input {
-  width: 100px;
-  text-align: center;
-  margin: 0;
+#debate input {
+    width: 100px;
+    text-align: center;
+    margin: 0;
 }
 
-#debate-ttitle input{
-
+#debate-ttitle input {
 }
 
 #corner.corner-criteria {
-  background: transparent;
-  border: none;
+    background: transparent;
+    border: none;
 }
 
-.criteria-vtitle  {
+.criteria-vtitle {
     background-color: #eee;
     border-top:1px solid #ccc;
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
     width: 201px;
     height:42px;
-
 }
 
-#debate {
-min-width: 1300px;
-
-}
+/*#debate {
+    min-width: 1300px;
+}*/
 
 .delete-row {
 }
 
 #buttons {
-  background: transparent;
+    background: transparent;
 }
 
 #debate3 {
-  margin-bottom: 30px;
+    margin-bottom: 30px;
 }
 
 table {
-  border-radius:10px;
-  -webkit-border-radius: 0 0 10px 10px;
-  -moz-border-radius: 0 0 10px 10px;
+    border-radius:10px;
+    -webkit-border-radius: 0 0 10px 10px;
+    -moz-border-radius: 0 0 10px 10px;
 }
 
 .criteria-htitle {
-  height: 125px;
-  vertical-align: middle;
-  border: 0 !important;
-  background: url('/static/assets/table/row.png') no-repeat left center;
+    height: 125px;
+    vertical-align: middle;
+    border: 0 !important;
+    background: url('/static/assets/table/row.png') no-repeat left center;
 }
 
 #contenttitles {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
-/* END DEBATE */
-
 
 /* Hide the links added by the jquery plugin - we will use our own */
 #debate table a.delete-row, #debate table a.add-row {
-  display:none;
+    display:none;
 }
+/* END DEBATE */

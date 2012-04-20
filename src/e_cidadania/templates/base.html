@@ -15,6 +15,7 @@
 		<meta name="Description" content="e-cidadania es una plataforma de democracia participativa"/>
 		<meta name="Robots" content="all"/>
 		<!-- Load JavaScript -->
+        <script type="text/javascript" src="{% url 'django.views.i18n.javascript_catalog' %}"></script>
 		<script src="http://www.google.com/jsapi?key=ABQIAAAATqrYeRgzMa92HeAJ337iJhRWlTAuTwYT79cviOHriikXgTyaXRSApoqdJPf4dwJKYRnFn_s4iABNkg" type="text/javascript"></script>
 		<script src="{{ STATIC_URL }}/js/wysihtml5-0.3.0_rc2.js"></script>
 		<script type="text/javascript">
@@ -133,7 +134,6 @@
 	    </div>
 		
 		<!-- Load JavaScript -->
-        <script type="text/javascript" src="{% url 'django.views.i18n.javascript_catalog' %}"></script>
         <script src="{{ STATIC_URL }}/js/bootstrap.min.js" type="text/javascript"></script>
 		<script src="{{ STATIC_URL }}/js/site.js" type="text/javascript"></script>
         <script src="{{ STATIC_URL }}/js/jquery.notify.min.js" type="text/javascript"></script>
