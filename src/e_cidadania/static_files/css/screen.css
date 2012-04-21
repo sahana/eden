@@ -540,7 +540,7 @@ table .criteria-title {
     border-top: 1px solid #CCC;
     border-left: 1px solid #CCC;
     border-right: 1px solid #CCC;
-    width: 200px;
+    width: 150px;
 }
 
 #debate input {
@@ -565,10 +565,6 @@ table .criteria-title {
     width: 201px;
     height:42px;
 }
-
-/*#debate {
-    min-width: 1300px;
-}*/
 
 .delete-row {
 }
