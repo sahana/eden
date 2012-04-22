@@ -163,6 +163,7 @@ THIRDPARTY_APPS = (
     # system-wide dependencies.
     'e_cidadania.apps.userprofile',
     'e_cidadania.apps.tagging',
+    'e_cidadania.apps.third_party.smart_selects',
     #'django_extensions',
 )
 
@@ -178,6 +179,7 @@ ECIDADANIA_MODULES = (
     'e_cidadania.apps.staticpages',
     'e_cidadania.apps.cal',
     'e_cidadania.apps.massmail',
+
     #'debug_toolbar',
 )
 
