@@ -588,7 +588,7 @@ $(function() {
         NONE = current.messages.NONE
 
         site_id = r.vars.site_id
-        site_name = s3db.org_site_represent(site_id, link = False)
+        site_name = s3db.org_site_represent(site_id, show_link = False)
 
         output = {}
         output["title"] = T("Check Request")
@@ -1827,7 +1827,7 @@ def req_rheader(r, check_page = False):
 
                 site_id = request.vars.site_id
                 if site_id:
-                    site_name = s3db.org_site_represent(site_id, link = False)
+                    site_name = s3db.org_site_represent(site_id, show_link = False)
                     commit_btn = TAG[""](
                                 A( T("Commit from %s") % site_name,
                                     _href = URL(c = "req",
