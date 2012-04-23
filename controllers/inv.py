@@ -49,9 +49,9 @@ def warehouse():
 
     if "viewing" in request.get_vars:
         viewing = request.get_vars.viewing
-        tn, record = viewing.split(".", 1)
+        tn, id = viewing.split(".", 1)
         if tn == "org_office":
-            request.args.insert(0, record)
+            request.args.insert(0, id)
 
     s3.crud_strings[tablename] = s3.org_warehouse_crud_strings
 

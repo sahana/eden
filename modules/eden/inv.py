@@ -1452,8 +1452,9 @@ def inv_tabs(r):
     if settings.has_module("inv") and \
         auth.s3_has_permission("read", "inv_inv_item"):
         collapse_tabs = settings.get_inv_collapse_tabs()
+        tablename, record = s3_rheader_resource(r)
         if collapse_tabs and not \
-            (r.tablename == "org_office" and r.record.type == 5): # 5 = Warehouse
+            (tablename == "org_office" and record.type == 5): # 5 = Warehouse
             # Test if the tabs are collapsed
             show_collapse = True
             show_inv = r.get_vars.show_inv
