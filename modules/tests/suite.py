@@ -60,6 +60,7 @@ else:
     create_catalog()
     create_category()
     create_request()
+    create_match_request()
     
 #=======
 #    # Run all Tests - this runs all the said test scripts ^^
