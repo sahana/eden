@@ -364,7 +364,7 @@ class S3IRSModel(S3Model):
                     ),
                     S3SearchOptionsWidget(
                         name="incident_search_category",
-                        field=["category"],
+                        field="category",
                         label = T("Category"),
                         cols = 3,
                     ),
@@ -372,7 +372,7 @@ class S3IRSModel(S3Model):
                         name="incident_search_date",
                         method="range",
                         label=T("Date"),
-                        field=["datetime"]
+                        field="datetime"
                     ),
             ))
 
@@ -391,7 +391,8 @@ class S3IRSModel(S3Model):
                   create_next = URL(args=["[id]", "update"]),
                   update_next = URL(args=["[id]", "update"]),
                   search_method = ireport_search,
-                  report_filter=[
+                  report_options=Storage(
+                      search=[
                             S3SearchLocationHierarchyWidget(
                                 name="incident_search_L1",
                                 field="L1",
@@ -404,7 +405,7 @@ class S3IRSModel(S3Model):
                             ),
                             S3SearchOptionsWidget(
                                 name="incident_search_category",
-                                field=["category"],
+                                field="category",
                                 label = T("Category"),
                                 cols = 3,
                             ),
@@ -412,13 +413,14 @@ class S3IRSModel(S3Model):
                                 name="incident_search_date",
                                 method="range",
                                 label=T("Date"),
-                                field=["datetime"]
+                                field="datetime"
                             ),
-                        ],
-                  report_rows = report_fields,
-                  report_cols = report_fields,
-                  report_fact = report_fields,
-                  report_method=["count", "list"],
+                      ],
+                      rows=report_fields,
+                      cols=report_fields,
+                      facts=report_fields,
+                      methods=["count", "list"]
+                  ),
                   list_fields = ["id",
                                  "name",
                                  "category",

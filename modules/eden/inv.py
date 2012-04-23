@@ -242,51 +242,54 @@ $(document).ready(function() {
 });"""),
                                 )
 
-        report_filter = [
-                         S3SearchSimpleWidget(
-                             name="inv_item_search_text",
-                             label=T("Search"),
-                             comment=T("Search for an item by text."),
-                             field=[ "item_id$name",
-                                     #"item_id$category_id$name",
-                                     #"site_id$name"
-                                    ]
-                             ),
-                          S3SearchOptionsWidget(
-                              name="inv_item_search_site",
-                              label=T("Facility"),
-                              field=["site_id"],
-                              represent ="%(name)s",
-                              comment=T("If none are selected, then all are searched."),
-                              cols = 2
-                              ),
-                          S3SearchOptionsWidget(
-                              name="inv_item_search_supply_org",
-                              label=T("Supplier/Donor"),
-                              field=["supply_org_id"],
-                              represent ="%(name)s",
-                              comment=T("If none are selected, then all are searched."),
-                              cols = 2
-                              ),
-                          # NotImplemented yet
-                          # S3SearchOptionsWidget(
-                              # name="inv_item_search_category",
-                              # label=T("Category"),
-                              # field=["item_category"],
-                              ##represent ="%(name)s",
-                              # comment=T("If none are selected, then all are searched."),
-                              # cols = 2
-                              # ),
-                          S3SearchMinMaxWidget(
-                              name="inv_item_search_expiry_date",
-                              method="range",
-                              label=T("Expiry Date"),
-                              field=["expiry_date"]
-                              )
-                         ]
+        report_options = Storage(
+            search=[
+                S3SearchSimpleWidget(
+                    name="inv_item_search_text",
+                    label=T("Search"),
+                    comment=T("Search for an item by text."),
+                    field=[
+                        "item_id$name",
+                        #"item_id$category_id$name",
+                        #"site_id$name"
+                    ]
+                ),
+                S3SearchOptionsWidget(
+                    name="inv_item_search_site",
+                    label=T("Facility"),
+                    field="site_id",
+                    represent ="%(name)s",
+                    comment=T("If none are selected, then all are searched."),
+                    cols = 2
+                ),
+                # NotImplemented yet
+                # S3SearchOptionsWidget(
+                    # name="inv_item_search_category",
+                    # label=T("Category"),
+                    # field="item_category",
+                    ##represent ="%(name)s",
+                    # comment=T("If none are selected, then all are searched."),
+                    # cols = 2
+                # ),
+                S3SearchMinMaxWidget(
+                    name="inv_item_search_expiry_date",
+                    method="range",
+                    label=T("Expiry Date"),
+                    field="expiry_date"
+                )
+            ],
+            #rows=["item_id", "currency"],
+            rows=["item_id", (T("Category"), "item_category"),],
+            #cols=["site_id", "currency"],
+            cols=["site_id"],
+            facts=["quantity", (T("Total Value"), "total_value"),],
+            methods=["sum"],
+            groupby=self.inv_inv_item.site_id,
+            hide_comments=True,
+        )
 
         # Item Search Method (Advanced Search only)
-        inv_item_search = S3Search(advanced=report_filter)
+        inv_item_search = S3Search(advanced=report_options.get("search"))
 
         self.configure(tablename,
                        super_entity = "supply_item_entity",
@@ -305,19 +308,7 @@ $(document).ready(function() {
                                       ],
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
-                       report_filter = report_filter,
-                       #report_rows = ["item_id", "currency"],
-                       report_rows = ["item_id",
-                                      (T("Category"), "item_category"),
-                                      ],
-                       #report_cols = ["site_id", "currency"],
-                       report_cols = ["site_id", "supply_org_id"],
-                       report_fact = ["quantity",
-                                      (T("Total Value"), "total_value"),
-                                      ],
-                       report_method=["sum"],
-#                       report_groupby = self.inv_inv_item.site_id,
-                       report_hide_comments = True,
+                       report_options = report_options,
                        deduplicate = self.inv_item_duplicate
                        )
 
@@ -806,31 +797,31 @@ class S3TrackingModel(S3Model):
                         method="range",
                         label=table[recv_search_date_field].label,
                         comment=recv_search_date_comment,
-                        field=[recv_search_date_field]
+                        field=recv_search_date_field
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_site",
                         label=T("Facility"),
-                        field=["site_id"],
+                        field="site_id",
                         represent ="%(name)s",
                         cols = 2
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_status",
                         label=T("Status"),
-                        field=["status"],
+                        field="status",
                         cols = 2
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_grn",
                         label=T("GRN Status"),
-                        field=["grn_status"],
+                        field="grn_status",
                         cols = 2
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_cert",
                         label=T("Certificate Status"),
-                        field=["grn_status"],
+                        field="grn_status",
                         cols = 2
                       ),
             ))
@@ -1056,13 +1047,22 @@ $(document).ready(function() {
         tracktable.send_inv_item_id.readable = False
         tracktable.recv_inv_item_id.readable = False
 
+        list_fields = ["item_id",
+                       "item_source_no",
+                       "item_pack_id",
+                       "quantity",
+                       "bin",
+                      ]
         exporter = S3PDF()
         return exporter(r,
                         method="list",
                         componentname="inv_track_item",
                         formname="Waybill",
                         filename="Waybill-%s" % site,
+                        list_fields = list_fields,
                         report_hide_comments=True,
+                        report_footer = inv_send_report_footer,
+                        report_landscape = True,
                         **attr
                        )
 
@@ -1125,12 +1125,20 @@ $(document).ready(function() {
         record = table[r.id]
         site_id = record.site_id
         site = table.site_id.represent(site_id,False)
+        list_fields = ["item_id",
+                       "item_source_no",
+                       "item_pack_id",
+                       "quantity",
+                       "bin",
+                       "adj_item_id",
+                      ]
 
         exporter = S3PDF()
         return exporter(r,
                         method="list",
                         formname="Goods Received Note",
                         filename="GRN-%s" % site,
+                        list_fields = list_fields,
                         report_hide_comments=True,
                         componentname = "inv_track_item",
                         **attr
@@ -1729,6 +1737,56 @@ def inv_send_rheader(r):
                           )
             return rheader
     return None
+
+# ---------------------------------------------------------------------
+def inv_send_report_footer(r):
+    record = r.record
+    if record:
+        footer = DIV (TABLE (TR(TH(T("Commodities Loaded")),
+                                TH(T("Date")),
+                                TH(T("Function")),
+                                TH(T("Name")),
+                                TH(T("Signature")),
+                                TH(T("Location (Site)")),
+                                TH(T("Condition")),
+                                ),
+                             TR(TD(T("Loaded By")),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                             TR(TD(T("Transported By")),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                             TR(TH(T("Reception")),
+                                TH(T("Date")),
+                                TH(T("Function")),
+                                TH(T("Name")),
+                                TH(T("Signature")),
+                                TH(T("Location (Site)")),
+                                TH(T("Condition")),
+                                ),
+                             TR(TD(T("Received By")),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                            )
+                     )
+        return footer
+    return None
+
 
 # =============================================================================
 def inv_recv_rheader(r):

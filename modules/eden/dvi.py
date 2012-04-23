@@ -34,6 +34,7 @@ __all__ = ["S3DVIModel"]
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 # =============================================================================
 class S3DVIModel(S3Model):
@@ -431,14 +432,12 @@ class S3DVIModel(S3Model):
         c_comment = T("Type the first few characters of one of the Person's names.")
 
         ADD_PERSON = T("Add Person")
-        return DIV(A(ADD_PERSON,
-                        _class="colorbox",
-                        _href=URL(c="pr", f="person", args="create",
-                                vars=dict(format="popup", child=fieldname)),
-                        _target="top",
-                        _title=ADD_PERSON),
-                   DIV(DIV(_class="tooltip",
-                           _title="%s|%s" % (c_title, c_comment))))
+        return S3AddResourceLink(c="pr",
+                                 f="person",
+                                 vars=dict(child=fieldname),
+                                 label=ADD_PERSON,
+                                 title=c_title,
+                                 tooltip=c_comment)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -77,6 +77,7 @@ from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 from ..s3 import *
 from layouts import *
+from eden.layouts import S3AddResourceLink
 
 OU = 1 # role type which indicates hierarchy, see role_types
 OTHER_ROLE = 9
@@ -1018,16 +1019,11 @@ class S3GroupModel(S3Model):
                                                                    filterby="system",
                                                                    filter_opts=(False,))),
                                    represent = group_represent,
-                                    comment = \
-                                        DIV(A(s3.crud_strings.pr_group.label_create_button,
-                                              _class="colorbox",
-                                              _href=URL(c="pr", f="group", args="create",
-                                                        vars=dict(format="popup")),
-                                              _target="top",
-                                              _title=s3.crud_strings.pr_group.label_create_button),
-                                            DIV(DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Create Group Entry"),
-                                                                      T("Create a group entry in the registry."))))),
+                                   comment=S3AddResourceLink(c="pr",
+                                                             f="group",
+                                                             label=s3.crud_strings.pr_group.label_create_button,
+                                                             title=T("Create Group Entry"),
+                                                             tooltip=T("Create a group entry in the registry.")),
                                    ondelete = "RESTRICT")
 
         # Components
@@ -1938,17 +1934,12 @@ class S3PersonPresence(S3Model):
                                   Field("shelter_id", "integer",
                                         readable = False,
                                         writable = False),
-                                  location_id(widget = S3LocationAutocompleteWidget(),
-                                              comment = DIV(A(ADD_LOCATION,
-                                                              _class="colorbox",
-                                                              _target="top",
-                                                              _title=ADD_LOCATION,
-                                                              _href=URL(c="gis", f="location",
-                                                                        args="create",
-                                                                        vars=dict(format="popup"))),
-                                                            DIV(_class="tooltip",
-                                                                _title="%s|%s" % (T("Current Location"),
-                                                                                  T("The Current Location of the Person/Group, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
+                                  location_id(widget=S3LocationAutocompleteWidget(),
+                                              comment=S3AddResourceLink(c="gis",
+                                                                        f="location",
+                                                                        label=ADD_LOCATION,
+                                                                        title=T("Current Location"),
+                                                                        tooltip=T("The Current Location of the Person/Group, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))),
                                   Field("location_details",
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Location Details"),
@@ -1974,29 +1965,23 @@ class S3PersonPresence(S3Model):
                                    location_id("orig_id",
                                                label=T("Origin"),
                                                widget = S3LocationAutocompleteWidget(),
-                                               comment = DIV(A(ADD_LOCATION,
-                                                               _class="colorbox",
-                                                               _target="top",
-                                                               _title=ADD_LOCATION,
-                                                               _href=URL(c="gis", f="location",
-                                                                         args="create",
-                                                                         vars=dict(format="popup"))),
-                                                             DIV(_class="tooltip",
-                                                                 _title="%s|%s" % (T("Origin"),
-                                                                                   T("The Location the Person has come from, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
+                                               comment=S3AddResourceLink(c="gis",
+                                                                         f="location",
+                                                                         label=ADD_LOCATION,
+                                                                         title=T("Origin"),
+                                                                         tooltip=T("The Location the Person has come from, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))
+                                               ),
+
                                    location_id("dest_id",
                                                label=T("Destination"),
                                                widget = S3LocationAutocompleteWidget(),
-                                               comment = DIV(A(ADD_LOCATION,
-                                                               _class="colorbox",
-                                                               _target="top",
-                                                               _title=ADD_LOCATION,
-                                                               _href=URL(c="gis", f="location",
-                                                                         args="create",
-                                                                         vars=dict(format="popup"))),
-                                                             DIV(_class="tooltip",
-                                                                 _title="%s|%s" % (T("Destination"),
-                                                                                   T("The Location the Person is going to, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))))),
+                                               comment=S3AddResourceLink(c="gis",
+                                                                         f="location",
+                                                                         label=ADD_LOCATION,
+                                                                         title=T("Destination"),
+                                                                         tooltip=T("The Location the Person is going to, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))
+                                               ),
+
                                    Field("comment"),
                                    Field("closed", "boolean",
                                          default=False,

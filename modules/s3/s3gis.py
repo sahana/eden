@@ -3598,6 +3598,9 @@ class GIS(object):
         else:
             upload_layer = ""
 
+        # Layer Properties
+        layer_properties = "S3.i18n.gis_properties = 'Layer Properties';\n"
+
         # Search
         if search:
             search = "S3.i18n.gis_search = '%s';\n" % T("Search location in Geonames")
@@ -3980,6 +3983,8 @@ S3.gis.layers_feature_queries = new Array();"""
                     rowdict["size"] = row["size"]
                 if "colour" in row:
                     rowdict["colour"] = row["colour"]
+                if "opacity" in row:
+                    rowdict["opacity"] = row["opacity"]
                 record_id = fqtable.insert(**rowdict)
                 if not created_by:
                     auth.s3_make_session_owner(fqtable, record_id)
@@ -4186,7 +4191,8 @@ S3.i18n.gis_feature_info = '%s';
             legend,                     # Presence of label turns feature on
             search,                     # Presence of label turns feature on
             getfeatureinfo,             # Presence of labels turns feature on
-            upload_layer,               # Presence of labels turns feature on
+            upload_layer,               # Presence of label turns feature on
+            layer_properties,           # Presence of label turns feature on
             "S3.i18n.gis_requires_login = '%s';\n" % T("Requires Login"),
             "S3.i18n.gis_base_layers = '%s';\n" % T("Base Layers"),
             "S3.i18n.gis_overlays = '%s';\n" % T("Overlays"),
@@ -4645,6 +4651,8 @@ class FeatureLayer(Layer):
             # Mandatory attributes
             output = {
                 "id": self.layer_id,
+                # Defaults client-side if not-provided
+                #"type": "feature",
                 "name": self.safe_name,
                 "url": url,
             }
@@ -4670,6 +4678,7 @@ class GeoJSONLayer(Layer):
             # Mandatory attributes
             output = {
                 "id": self.layer_id,
+                "type": "geojson",
                 "name": self.safe_name,
                 "url": self.url,
             }
@@ -4767,6 +4776,7 @@ class GeoRSSLayer(Layer):
             # Mandatory attributes
             output = {
                     "id": self.layer_id,
+                    "type": "georss",
                     "name": name_safe,
                     "url": url,
                 }
@@ -5101,6 +5111,7 @@ class ThemeLayer(Layer):
             # Mandatory attributes
             output = {
                 "id": self.layer_id,
+                "type": "theme",
                 "name": self.safe_name,
                 "url": url,
             }
@@ -5123,6 +5134,7 @@ class TMSLayer(Layer):
         def as_dict(self):
             output = {
                     "id": self.layer_id,
+                    "type": "tms",
                     "name": self.safe_name,
                     "url": self.url,
                     "layername": self.layername

@@ -57,16 +57,9 @@ if deployment_settings.has_module("assess"):
 
         def impact_type_comment():
             if auth.has_membership(auth.id_group("'Administrator'")):
-                return DIV(A(ADD_IMPACT_TYPE,
-                             _class="colorbox",
-                             _href=URL(c="impact", f="type",
-                                       args="create",
-                                       vars=dict(format="popup",
-                                                 child="impact_type_id")),
-                             _target="top",
-                             _title=ADD_IMPACT_TYPE
-                             )
-                           )
+                return S3AddResourceLink(c="impact",
+                                         f="type",
+                                         vars=dict(child="impact_type_id"))
             else:
                 return None
 

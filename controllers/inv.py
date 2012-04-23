@@ -82,7 +82,7 @@ def warehouse():
                     name="warehouse_search_org",
                     label=T("Organization"),
                     comment=T("Search for warehouse by organization."),
-                    field=["organisation_id"],
+                    field="organisation_id",
                     represent ="%(name)s",
                     cols = 3
                   ),
@@ -735,7 +735,7 @@ def recv():
                 tracktable.recv_bin.writable = True
 
             SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
-            if r.record.status == SHIP_STATUS_IN_PROCESS:
+            if r.record and r.record.status == SHIP_STATUS_IN_PROCESS:
                 s3.crud_strings.inv_recv.title_update = \
                 s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
         else:

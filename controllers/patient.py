@@ -63,13 +63,13 @@ def patient():
                     s3base.S3SearchOptionsWidget(
                         name = "patient_search_country",
                         label = T("Country"),
-                        field = ["country"],
+                        field = "country",
                         cols = 2
                     ),
                     s3base.S3SearchOptionsWidget(
                         name = "patient_search_hospital",
                         label = T("Hospital"),
-                        field = ["hospital_id"],
+                        field = "hospital_id",
                         cols = 2
                     ),
         )

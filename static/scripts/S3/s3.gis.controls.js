@@ -869,3 +869,102 @@ function addRemoveLayersControl() {
     S3.gis.layerTree.mapPanel = S3.gis.mapPanel;
     S3.gis.removeLayerControl.addActions();
 }
+
+// Layer Properties control
+function addLayerPropertiesButton() {
+    var layerPropertiesButton = new Ext.Toolbar.Button({
+        iconCls: 'gxp-icon-layerproperties',
+        tooltip: S3.i18n.gis_properties,
+        handler: function() {
+            // Find the Selected Node
+            function isSelected(node) {
+                var selected = node.isSelected();
+                if (selected) {
+                    if (!node.leaf) {
+                        // Don't try & open Properties for a Folder
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            var node = S3.gis.layerTree.root.findChildBy(isSelected, null, true);
+            if (node) {
+                var layer_type = node.layer.layer_type;
+                var url = S3.Ap.concat('/gis/layer_' + layer_type + '.plain?layer_' + layer_type + '.layer_id=' + node.layer.layer_id + '&update=1');
+                Ext.Ajax.request({
+                    url: url,
+                    method: 'GET',
+                    success: function(response, opts) {
+                        // Close any existing window
+                        if (S3.gis.propertiesWindow) {
+                            S3.gis.propertiesWindow.close();
+                        }
+                        S3.gis.propertiesWindow = new Ext.Window({
+                            width: 280,
+                            height: 350,
+                            layout: 'fit',
+                            // @ToDo: i18n
+                            title: 'Layer Properties',
+                            items: [
+                                {
+                                // Tab to View/Edit Basic Details
+                                html: response.responseText
+                                }
+                            // @ToDo: Tab for Search Widget
+                            // @ToDo: Tab for Styling (esp. Thematic Mapping)
+                            ]
+                        })
+                        S3.gis.propertiesWindow.show();
+                        // Set the form to use AJAX submission
+                        $('#plain form').submit(function() {
+                            var id = $('#plain input[name="id"]').val();
+                            var update_url = S3.Ap.concat('/gis/layer_' + layer_type + '/' + id + '.plain/update');
+                            var fields = $('#plain input');
+                            var ids = [];
+                            Ext.iterate(fields, function(key, val, obj) {
+                                if (val.id && (val.id.indexOf('gis_layer_') != -1)) {
+                                       ids.push(val.id);
+                                }
+                            });
+                            var pcs = [];
+                            for (i=0; i < ids.length; i++) {
+                                q = $('#' + ids[i]).serialize();
+                                if (q) { 
+                                    pcs.push(q);
+                                }
+                            }
+                            q = $('#plain input[name="id"]').serialize();
+                            if (q) {
+                                pcs.push(q);
+                            }
+                            q = $('#plain input[name="_formkey"]').serialize();
+                            if (q) {
+                                pcs.push(q);
+                            }
+                            q = $('#plain input[name="_formname"]').serialize();
+                            if (q) {
+                                pcs.push(q);
+                            }
+                            if (pcs.length > 0) {
+                                var query = pcs.join("&");
+                                $.ajax({type: 'POST',
+                                            url: update_url,
+                                            data: query,
+                                            success: function(msg) {
+                                                $('#plain').html(msg);
+                                            }
+                                        });
+                            }
+                            return false;
+                        })
+                    }
+                });
+            }
+        }
+    });
+    var toolbar = S3.gis.layerTree.getTopToolbar();
+    toolbar.add(layerPropertiesButton);
+}

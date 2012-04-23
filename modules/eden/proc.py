@@ -34,6 +34,7 @@ __all__ = ["S3SupplierModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 # =============================================================================
 class S3ProcurementModel(S3Model):
@@ -234,7 +235,7 @@ class S3ProcurementModel(S3Model):
                       #S3SearchOptionsWidget(
                       #  name="proc_plan_search_site",
                       #  label=T("Facility"),
-                      #  field=["site_id"],
+                      #  field="site_id",
                       #  represent ="%(name)s",
                       #  comment=T("If none are selected, then all are searched."),
                       #  cols = 2
@@ -243,13 +244,13 @@ class S3ProcurementModel(S3Model):
                       #  name="proc_plan_search_order_date",
                       #  method="range",
                       #  label=T("Order Date"),
-                      #  field=["order_date"]
+                      #  field="order_date"
                       #),
                       #S3SearchMinMaxWidget(
                       #  name="proc_plan_search_eta",
                       #  method="range",
                       #  label=T("Date Expected"),
-                      #  field=["eta"]
+                      #  field="eta"
                       #)
             ))
 
@@ -358,14 +359,9 @@ class S3SupplierModel(S3Model):
                                                                       sort=True)),
                                       represent = self.proc_supplier_represent,
                                       label = T("Supplier"),
-                                      comment = DIV(A(T("Add Supplier"),
-                                                      _class="colorbox",
-                                                      _href=URL(c="proc", f="supplier",
-                                                                args="create",
-                                                                vars=dict(format="popup")),
-                                                      _target="top",
-                                                      _title=T("Add Supplier"))
-                                                ),
+                                      comment=S3AddResourceLink(c="proc",
+                                                                f="supplier",
+                                                                label=T("Add Supplier")),
                                       ondelete = "RESTRICT")
 
         # Plans as a component of Supplier

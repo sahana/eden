@@ -121,7 +121,7 @@ def location():
             label = T("Search"),
             #comment = T("Search for a Location by name, including local names."),
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-            field = ["name"]
+            field = "name"
             ),
             s3base.S3SearchLocationHierarchyWidget(
                 name="location_search_L0",
@@ -141,14 +141,14 @@ def location():
             s3base.S3SearchOptionsWidget(
                 name = "location_search_level",
                 label = T("Level"),
-                field = ["level"],
+                field = "level",
                 cols = 2
             ),
             # NB This currently only works for locations with the country as direct parent (i.e. mostly L1s)
             #s3base.S3SearchOptionsWidget(
             #    name = "location_search_country",
             #    label = T("Country"),
-            #    field = ["parent"],
+            #    field = "parent",
             #    cols = 2
             #),
         )
@@ -269,15 +269,11 @@ def location():
                 table.parent.comment = parent_comment
             else:
                 # Include 'Add Location' button
-                table.parent.comment = DIV(A(ADD_LOCATION,
-                                             _class="colorbox",
-                                             _href=URL(c="gis", f="location",
-                                                       args="create",
-                                                       vars=dict(format="popup",
-                                                                 child="parent")),
-                                             _target="top",
-                                             _title=ADD_LOCATION),
-                                           parent_comment),
+                table.parent.comment = DIV(S3AddResourceLink(c="gis",
+                                                         f="location",
+                                                         vars=dict(child="parent")),
+                                           parent_comment)
+
             table.osm_id.comment = DIV(_class="stickytip",
                                        _title="OpenStreetMap ID|%s%s%s" % (T("The"),
                                                                            " <a href='http://openstreetmap.org' target=_blank>OpenStreetMap</a> ID. ",

@@ -36,6 +36,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
 from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
 # =============================================================================
 class HospitalDataModel(S3Model):
@@ -373,7 +374,7 @@ class HospitalDataModel(S3Model):
                       S3SearchOptionsWidget(
                         name="hospital_facility_type",
                         label=T("Facility Type"),
-                        field=["facility_type"]
+                        field="facility_type"
                       ),
                       # for testing:
                       S3SearchMinMaxWidget(
@@ -381,7 +382,7 @@ class HospitalDataModel(S3Model):
                         method="range",
                         label=T("Total Beds"),
                         comment=T("Select a range for the number of total beds"),
-                        field=["total_beds"]
+                        field="total_beds"
                       ),
                     ))
 
@@ -404,18 +405,11 @@ class HospitalDataModel(S3Model):
                                "available_beds"])
 
         # Reusable field
-        hms_hospital_id_comment = DIV(A(ADD_HOSPITAL,
-                                        _class="colorbox",
-                                        _href=URL(c="hms", f="hospital",
-                                                  args="create",
-                                                  vars=dict(format="popup")),
-                                        _target="top",
-                                        _title=ADD_HOSPITAL),
-                                      DIV(DIV(_class="tooltip",
-                                              _title="%s|%s" % (T("Hospital"),
-                                                                T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Add Hospital'.")))))
-                                                                # If using Autocomplete Widget
-                                                                #T("Enter some characters to bring up a list of possible matches")))))
+        hms_hospital_id_comment = S3AddResourceLink(c="hms",
+                                                    f="hospital",
+                                                    label=ADD_HOSPITAL,
+                                                    title=T("Hospital"),
+                                                    tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Add Hospital'."))
 
         hospital_id = S3ReusableField("hospital_id", db.hms_hospital,
                                       sortby="name",

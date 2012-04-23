@@ -418,11 +418,15 @@ def task():
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
         s3mgr.configure(tablename,
-                        report_filter=[
-                            s3base.S3SearchOptionsWidget(field=["project"],
-                                                         name="project",
-                                                         label=T("Project"))
-                        ],
+                        report_options=Storage(
+                            search=[
+                                s3base.S3SearchOptionsWidget(
+                                    field="project",
+                                    name="project",
+                                    label=T("Project")
+                                )
+                            ]
+                        ),
                         list_fields=list_fields)
         if "open" in request.get_vars:
             # Show Only Open Tasks

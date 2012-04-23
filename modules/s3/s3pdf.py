@@ -411,13 +411,17 @@ class S3PDF(S3Method):
                                  footer=self.pageFooter,
                                  filename = filename)
 
+                if "report_landscape" in attr:
+                    self.setLandscape()
                 # get the header details, if appropriate
                 if "rheader" in attr and attr["rheader"]:
                     self.extractrHeader(attr["rheader"])
+                    self.addSpacer(3)
                 elif componentname: 
                     self.addrHeader(self.resource,
                                     list_fields,
                                     report_hide_comments=report_hide_comments)
+                    self.addSpacer(3)
                 # Add details to the document
                 if componentname == None:
                     # Document that only has a resource list
@@ -443,12 +447,19 @@ class S3PDF(S3Method):
                         for component in self.resource.components.values():
                             find_fields += component.readable_fields()
                         fields = []
-                        for field in find_fields:
-                            if field.type == "id":
-                                continue
-                            if report_hide_comments and field.name == "comments":
-                                continue
-                            fields.append(field)
+                        if list_fields:
+                            for lf in list_fields:
+                                for field in find_fields:
+                                    if field.name == lf:
+                                        fields.append(field)
+                                        break
+                        else:
+                            for field in find_fields:
+                                if field.type == "id":
+                                    continue
+                                if report_hide_comments and field.name == "comments":
+                                    continue
+                                fields.append(field)
                         if not fields:
                             fields = [table.id]
                         label_fields = [f.label for f in fields]
@@ -468,6 +479,9 @@ class S3PDF(S3Method):
                         self.addTable(raw_data = raw_data,
                                       list_fields=label_fields)
 
+                if "report_footer" in attr:
+                    self.addSpacer(3)
+                    self.extractrHeader(attr["report_footer"])
                 # Build the document
                 doc = self.buildDoc()
 
@@ -3371,7 +3385,9 @@ class S3PDFTable(object):
                         for i in range(1, len(self.data)): # skip the heading
                             try:
                                 comments = self.data[i][colNo]
-                                comments = self.pdf.addParagraph(comments, False)
+                                comments = self.pdf.addParagraph(comments, append=False)
+                                if comments:
+                                    self.data[i][colNo] = comments
                             except IndexError:
                                 pass
                         colWidths[colNo] = self.MIN_COMMENT_COL_WIDTH
@@ -3461,7 +3477,7 @@ class S3PDFTable(object):
         return pages
 
     # -------------------------------------------------------------------------
-    def tableStyle(self, startRow, rowCnt, endCol):
+    def tableStyle(self, startRow, rowCnt, endCol, colour_required = False):
         """
             Internally used method to assign a style to the table
 
@@ -3479,30 +3495,39 @@ class S3PDFTable(object):
         style = [("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
                  ("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                 ("BACKGROUND", (0, 0), (endCol, 0), self.headerColour),
                  ("LINEBELOW", (0, 0), (endCol, 0), 1, Color(0, 0, 0)),
                  ("FONTNAME", (0, 0), (endCol, 0), "Helvetica-Bold"),
                 ]
+        if colour_required:
+            style.append(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
+        else:
+            style.append(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
         if self.report_groupby != None:
             style.append(("LEFTPADDING", (0, 0), (-1, -1), 20))
         rowColourCnt = 0 # used to alternate the colours correctly when we have subheadings
         for i in range(rowCnt):
             # If subheading
             if startRow + i in self.subheadingList:
-                style.append(("BACKGROUND", (0, i), (endCol, i),
-                              self.headerColour))
+                if colour_required:
+                    style.append(("BACKGROUND", (0, i), (endCol, i),
+                                  self.headerColour))
                 style.append(("FONTNAME", (0, i), (endCol, i),
                               "Helvetica-Bold"))
                 style.append(("SPAN", (0, i), (endCol, i)))
                 style.append(("LEFTPADDING", (0, i), (endCol, i), 6))
-            elif rowColourCnt % 2 == 0:
-                style.append(("BACKGROUND", (0, i), (endCol, i),
-                              self.evenColour))
-                rowColourCnt += 1
-            else:
-                style.append(("BACKGROUND", (0, i), (endCol, i),
-                              self.oddColour))
-                rowColourCnt += 1
+            elif i > 0:
+                if colour_required:
+                    if rowColourCnt % 2 == 0:
+                        style.append(("BACKGROUND", (0, i), (endCol, i),
+                                      self.evenColour))
+                        rowColourCnt += 1
+                    else:
+                        style.append(("BACKGROUND", (0, i), (endCol, i),
+                                      self.oddColour))
+                        rowColourCnt += 1
+                else:
+                    style.append(("LINEBELOW", (0, i), (endCol, i), 1, colors.lightgrey))
+        style.append(("BOX", (0, 0), (-1,-1), 1, Color(0, 0, 0)))
         return style
 
 #end of class S3PDFTable
@@ -3540,7 +3565,7 @@ class S3PDFRHeader():
         self.data = []
         self.subheadingList = []
         self.labels = []
-        self.fontsize = 12
+        self.fontsize = 10
 
     def build(self):
         """
@@ -3601,14 +3626,14 @@ class S3html2pdf():
         """
         self.exclude_class_list = exclude_class_list
         self.pageWidth = pageWidth
-        self.fontsize = 12
+        self.fontsize = 10
         styleSheet = getSampleStyleSheet()
         self.normalstyle = styleSheet["Normal"]
         self.normalstyle.fontName = "Helvetica"
-        self.normalstyle.fontSize = 10
+        self.normalstyle.fontSize = 9
         self.titlestyle = deepcopy(styleSheet["Normal"])
         self.titlestyle.fontName = "Helvetica-Bold"
-        self.titlestyle.fontSize = 11
+        self.titlestyle.fontSize = 10
 
     def parse(self, html):
         result = self.select_tag(html)
@@ -3716,6 +3741,7 @@ class S3html2pdf():
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
                  ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+                 ('GRID',(0,0),(-1,-1),0.5,colors.grey),
                 ]
         content = []
         rowCnt = 0
@@ -3759,6 +3785,7 @@ class S3html2pdf():
                             colWidths.append(width)
                         row.append(result)
                         if isinstance(component,TH):
+                            style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
                             style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
                         colCnt += 1
         if row == []:
