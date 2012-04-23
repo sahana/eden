@@ -118,7 +118,6 @@ s3_accessible_query = auth.s3_accessible_query
 # Custom classes which extend default Gluon
 crud = s3base.CrudS3()
 current.crud = crud
-S3Comment = s3base.S3Comment
 S3DateTime = s3base.S3DateTime
 S3ResourceHeader = s3base.S3ResourceHeader
 
@@ -158,13 +157,9 @@ s3chart = s3base.S3Chart
 current.chart = s3chart
 
 # -----------------------------------------------------------------------------
-def s3_auth_on_login(form):
-    """
-        Actions to be performed upon successful login
-            Do not redirect from here!
-    """
+def s3_clear_session():
 
-    # S3XRC last seen records (rcvars)
+    # S3ResourceManager last seen records (rcvars)
     s3mgr.clear_session()
 
     # Session-owned records
@@ -172,9 +167,18 @@ def s3_auth_on_login(form):
         del session["owned_records"]
 
     if "s3" in session:
-        # HRM session vars
-        if "hrm" in session.s3:
-            del session.s3["hrm"]
+        opts = ["hrm", "report_options", "utc_offset"]
+        for o in opts:
+            if o in session.s3:
+                del session.s3[o]
+
+# -----------------------------------------------------------------------------
+def s3_auth_on_login(form):
+    """
+        Actions to be performed upon successful login
+            Do not redirect from here!
+    """
+    s3_clear_session()
 
 # -----------------------------------------------------------------------------
 def s3_auth_on_logout(user):
@@ -182,19 +186,6 @@ def s3_auth_on_logout(user):
         Actions to be performed after logout
             Do not redirect from here!
     """
-
-    # S3XRC last seen records (rcvars)
-    s3mgr.clear_session()
-
-    if "s3" in session:
-        # HRM session vars
-        if "hrm" in session.s3:
-            del session.s3["hrm"]
-
-    # Reset UTC offset
-    try:
-        del session.s3["utc_offset"]
-    except:
-        pass
+    s3_clear_session()
 
 # END =========================================================================

@@ -364,7 +364,7 @@ function addLayerTree() {
         children: nodesArr
     });
 
-    if (S3.i18n.gis_uploadlayer) {
+    if (S3.i18n.gis_uploadlayer || S3.i18n.gis_properties) {
         var tbar = new Ext.Toolbar();
     } else {
         var tbar = null;
@@ -387,10 +387,12 @@ function addLayerTree() {
 
     // Add/Remove Layers
     if (S3.i18n.gis_uploadlayer) {
-        //S3.gis.layerTree.tbar = new Ext.Toolbar();
         addRemoveLayersControl();
     }
-
+    // Layer Properties
+    if (S3.i18n.gis_properties) {
+        addLayerPropertiesButton();
+    }
 }
 
 // Add WMS Browser

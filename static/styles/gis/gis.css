@@ -118,6 +118,9 @@
 .gxp-icon-removelayers {
     background-image: url(../../img/silk/delete.png) !important;
 }
+.gxp-icon-layerproperties {
+    background-image: url(../../img/silk/wrench.png) !important;
+}
 #mappnlcntr .movefeature {
     background-image: url(../../img/gis/arrow_refresh.png) !important;
     height: 20px !important;

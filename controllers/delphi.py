@@ -565,7 +565,8 @@ def results(r, **attr):
                  num_voted=0,
                  chart="",
                  table_color="",
-                 grids=""
+                 grids="",
+                 summary=""
                 )
 
     problem = r.record

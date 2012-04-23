@@ -282,7 +282,7 @@ class S3AddResourceLink(S3NavigationItem):
                 t = "%s_%s" % (c, f)
             label = S3CRUD.crud_string(t, "label_create_button")
 
-        super(S3AddResourceLink, self).__init__(label, c=c, f=f, t=t,
+        return super(S3AddResourceLink, self).__init__(label, c=c, f=f, t=t,
                                                 m="create",
                                                 vars=vars,
                                                 info=info,
@@ -307,7 +307,7 @@ class S3AddResourceLink(S3NavigationItem):
         tooltip = item.opts.tooltip
         if tooltip is not None:
             ttip = DIV(_class="tooltip",
-                       _title="%s|%s" % (item.label, tooltip))
+                       _title="%s|%s" % (item.opts.title, tooltip))
         else:
             ttip = ""
 

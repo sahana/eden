@@ -55,7 +55,8 @@ function addLayers() {
                 isBaseLayer: true,
                 displayInLayerSwitcher: true,
                 // This is used to Save State
-                layer_id: S3.gis.EmptyLayer.id
+                layer_id: S3.gis.EmptyLayer.id,
+                layer_type: 'empty'
             }
         );
         map.addLayer(layer);
@@ -153,7 +154,8 @@ function addBingLayers() {
             type: 'Aerial',
             name: bing.Aerial.name,
             // This is used to Save State
-            layer_id: bing.Aerial.id
+            layer_id: bing.Aerial.id,
+            layer_type: 'bing'
         });
         map.addLayer(layer);
         if (Bing.Base == 'aerial') {
@@ -166,7 +168,8 @@ function addBingLayers() {
             type: 'Road',
             name: bing.Road.name,
             // This is used to Save State
-            layer_id: bing.Road.id
+            layer_id: bing.Road.id,
+            layer_type: 'bing'
         });
         map.addLayer(layer);
         if (Bing.Base == 'road') {
@@ -179,7 +182,8 @@ function addBingLayers() {
             type: 'AerialWithLabels',
             name: bing.Hybrid.name,
             // This is used to Save State
-            layer_id: bing.Hybrid.id
+            layer_id: bing.Hybrid.id,
+            layer_type: 'bing'
         });
         map.addLayer(layer);
         if (Bing.Base == 'hybrid') {
@@ -195,7 +199,8 @@ function addCoordinateGrid() {
         shortName: 'grid',
         visibility: S3.gis.CoordinateGrid.visibility,
         // This is used to Save State
-        layer_id: S3.gis.CoordinateGrid.id
+        layer_id: S3.gis.CoordinateGrid.id,
+        layer_type: 'coordinate'
     }));
 }
 
@@ -320,6 +325,12 @@ function addGeoJSONLayer(layer) {
     } else {
         projection = new OpenLayers.Projection('EPSG:' + projection);
     }
+    if (undefined != layer.type) {
+        var layer_type = layer.type;
+    } else {
+        // Feature Layers
+        var layer_type = 'feature';
+    }
 
     // Style Rule For Clusters
     var cluster_style = {
@@ -327,7 +338,7 @@ function addGeoJSONLayer(layer) {
         labelAlign: 'cm',
         pointRadius: '${radius}',
         fillColor: '${fill}',
-        fillOpacity: opacity,
+        fillOpacity: '${fillOpacity}',
         strokeColor: '${stroke}',
         strokeWidth: 2,
         strokeOpacity: opacity,
@@ -393,15 +404,6 @@ function addGeoJSONLayer(layer) {
                 }
                 return pix;
             },
-            //graphicOpacity: function(feature) {
-                // Unclustered Point
-            //    var opacity = styleMarker.opacity;
-                // Clustered Point
-            //    if (feature.cluster) {
-            //        opacity = '';
-            //    }
-            //    return opacity;
-            //},
             graphicName: function(feature) {
                 if (feature.cluster) {
                     // Clustered Point
@@ -467,6 +469,24 @@ function addGeoJSONLayer(layer) {
                 }
                 return color;
             },
+            fillOpacity: function(feature) {
+                if (feature.cluster) {
+                    if (feature.cluster[0].attributes.opacity) {
+                        // Use opacity from features
+                        var opacity = feature.cluster[0].attributes.opacity;
+                    } else {
+                        // default fillOpacity for Clustered Point
+                        var opacity = opacity;
+                    }
+                } else if (feature.attributes.opacity) {
+                    // Use opacity from feature
+                    var opacity = feature.attributes.opacity;
+                } else {
+                    // default fillOpacity for Unclustered Point
+                    var opacity = opacity;
+                }
+                return opacity;
+            },
             stroke: function(feature) {
                 if (feature.cluster) {
                     if (feature.cluster[0].attributes.colour) {
@@ -485,7 +505,7 @@ function addGeoJSONLayer(layer) {
                     var color = feature.attributes.colour;
                     if ( color.indexOf('#') == -1) {
                         // gis_layer_theme
-                        color = '#FFFFFF';
+                        color = '#' + color;
                     }
                 } else {
                     // default strokeColor for Unclustered Point
@@ -551,6 +571,7 @@ function addGeoJSONLayer(layer) {
             ],
             // This is used to Save State
             layer_id: layer.id,
+            layer_type: layer_type,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             styleMap: featureClusterStyleMap,
@@ -587,7 +608,8 @@ function addGoogleLayers() {
                     type: G_SATELLITE_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Satellite.id
+                    layer_id: google.Satellite.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -601,7 +623,8 @@ function addGoogleLayers() {
                     type: G_NORMAL_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Maps.id
+                    layer_id: google.Maps.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -615,7 +638,8 @@ function addGoogleLayers() {
                     type: G_HYBRID_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Hybrid.id
+                    layer_id: google.Hybrid.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -629,7 +653,8 @@ function addGoogleLayers() {
                     type: G_PHYSICAL_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Terrain.id
+                    layer_id: google.Terrain.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -643,7 +668,8 @@ function addGoogleLayers() {
                     type: G_MAPMAKER_NORMAL_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: layer.id
+                    layer_id: layer.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -657,7 +683,8 @@ function addGoogleLayers() {
                     type: G_MAPMAKER_HYBRID_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: layer.id
+                    layer_id: layer.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -673,7 +700,8 @@ function addGoogleLayers() {
                     type: 'satellite',
                     numZoomLevels: 22,
                     // This is used to Save State
-                    layer_id: google.Satellite.id
+                    layer_id: google.Satellite.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -686,7 +714,8 @@ function addGoogleLayers() {
                 google.Maps.name, {
                     numZoomLevels: 20,
                     // This is used to Save State
-                    layer_id: google.Maps.id
+                    layer_id: google.Maps.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -700,7 +729,8 @@ function addGoogleLayers() {
                     type: 'hybrid',
                     numZoomLevels: 20,
                     // This is used to Save State
-                    layer_id: google.Hybrid.id
+                    layer_id: google.Hybrid.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -713,7 +743,8 @@ function addGoogleLayers() {
                 google.Terrain.name, {
                     type: 'terrain',
                     // This is used to Save State
-                    layer_id: google.Terrain.id
+                    layer_id: google.Terrain.id,
+                    layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -807,6 +838,7 @@ function addGPXLayer(layer) {
             ],
             // This is used to Save State
             layer_id: layer.id,
+            layer_type: 'gpx',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -919,6 +951,7 @@ function addKMLLayer(layer) {
             ],
             // This is used to Save State
             layer_id: layer.id,
+            layer_type: 'kml',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -1006,7 +1039,8 @@ function addOSMLayer(layer) {
             numZoomLevels: numZoomLevels,
             isBaseLayer: isBaseLayer,
             // This is used to Save State
-            layer_id: layer.id
+            layer_id: layer.id,
+            layer_type: 'openstreetmap'
         }
     );
     if (undefined != layer.attribution) {
@@ -1076,6 +1110,7 @@ function addTMSLayer(layer) {
             dir: dir,
             // This is used to Save State
             layer_id: layer.id,
+            layer_type: 'tms',
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels
@@ -1314,6 +1349,7 @@ function addWFSLayer(layer) {
         dir: dir,
         // This is used to Save State
         layer_id: layer.id,
+        layer_type: 'wfs',
         projection: projection,
         //outputFormat: "json",
         //readFormat: new OpenLayers.Format.GeoJSON(),
@@ -1426,6 +1462,7 @@ function addWMSLayer(layer) {
             isBaseLayer: isBaseLayer,
             // This is used to Save State
             layer_id: layer.id,
+            layer_type: 'wms',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             queryable: queryable,
             visibility: visibility
@@ -1508,6 +1545,7 @@ function addXYZLayer(layer) {
             dir: dir,
             // This is used to Save State
             layer_id: layer.id,
+            layer_type: 'xyz',
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels

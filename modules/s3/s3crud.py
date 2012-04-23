@@ -543,7 +543,7 @@ class S3CRUD(S3Method):
         if not authorised:
             r.unauthorised()
 
-        if r.interactive:
+        if r.interactive or representation == "plain":
 
             # Form configuration
             subheadings = _config("subheadings")
@@ -613,6 +613,9 @@ class S3CRUD(S3Method):
 
             # Put form into output
             output["form"] = form
+            if representation == "plain":
+                output["item"] = form
+                output["title"] = ""
 
             # Add delete and list buttons
             buttons = self.insert_buttons(r, "delete",
@@ -632,7 +635,7 @@ class S3CRUD(S3Method):
 
             # Redirection
             update_next = _config("update_next")
-            if representation in ("popup", "iframe"):
+            if representation in ("popup", "iframe", "plain"):
                 self.next = None
             elif not update_next:
                 self.next = r.url(method="")
@@ -775,6 +778,7 @@ class S3CRUD(S3Method):
         listadd = _config("listadd", True)
         addbtn = _config("addbtn", False)
         list_fields = _config("list_fields")
+
         report_groupby = _config("report_groupby")
         report_hide_comments = _config("report_hide_comments")
 
@@ -999,8 +1003,25 @@ class S3CRUD(S3Method):
             output = json(result)
 
         elif representation == "plain":
-            items = resource.sqltable(fields=list_fields,
-                                      as_list=True)
+            if resource.count() == 1:
+                # Provide the record
+                # (used by Map's Layer Properties window)
+                resource.load()
+                r.record = resource.records().first()
+                if r.record:
+                    r.id = r.record.id
+                    if "update" in request.get_vars and \
+                       self._permitted(method="update"):
+                         items = self.update(r, **attr).get("form", None)
+                    else:
+                        items = self.sqlform(record_id=r.id,
+                                             readonly=True,
+                                             format=representation)
+                else:
+                    raise HTTP(404, body="Record not Found")
+            else:
+                items = resource.sqltable(fields=list_fields,
+                                          as_list=True)
             response.view = "plain.html"
             return dict(item=items)
 
@@ -1500,7 +1521,7 @@ class S3CRUD(S3Method):
                 delete_btn = self.crud_button(DELETE, _href=href_delete,
                                               _id="delete-btn",
                                               _class="delete-btn")
-                output.update(delete_btn=delete_btn)
+                output["delete_btn"] = delete_btn
 
         return output
 

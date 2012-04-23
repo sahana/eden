@@ -2743,26 +2743,36 @@ class S3AnalysisPriority():
                           4:"#FF0000", # red
                           5:"#880088", # purple
                         },
+                 # Make Higher-priority show up more clearly
+                 opacity={-1:0.5,
+                           0:0.6,
+                           1:0.6,
+                           2:0.7,
+                           3:0.7,
+                           4:0.8,
+                           5:0.8,
+                        },
                  image={-1:"grey",
-                          0:"blue",
-                          1:"green",
-                          2:"yellow",
-                          3:"orange",
-                          4:"red",
-                          5:"purple",
+                         0:"blue",
+                         1:"green",
+                         2:"yellow",
+                         3:"orange",
+                         4:"red",
+                         5:"purple",
                         },
                  desc={-1:"No Data",
-                          0:"Very Low",
-                          1:"Low",
-                          2:"Medium Low",
-                          3:"Medium High",
-                          4:"High",
-                          5:"Very High",
+                        0:"Very Low",
+                        1:"Low",
+                        2:"Medium Low",
+                        3:"Medium High",
+                        4:"High",
+                        5:"Very High",
                         },
                  zero = True
                  ):
         self.range = range
         self.colour = colour
+        self.opacity = opacity
         self.image = image
         self.description = desc
 
