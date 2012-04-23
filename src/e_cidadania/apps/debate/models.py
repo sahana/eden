@@ -74,7 +74,7 @@ class Column(models.Model):
     
     .. versionadded:: 0.1b
     """
-    criteria = models.CharField(_('Criteria'), max_length=100)
+    criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
     debate = models.ForeignKey(Debate, blank=True, null=True)
     
     def __unicode__(self):
@@ -87,7 +87,7 @@ class Row(models.Model):
     
     .. versionadded:: 0.1b
     """
-    criteria = models.CharField(_('Criteria'), max_length=100)
+    criteria = models.CharField(_('Criteria'), max_length=100, blank=True, null=True)
     debate = models.ForeignKey(Debate, blank=True, null=True)
     
     def __unicode__(self):
