@@ -38,7 +38,7 @@ def req_controller():
 #        item_id = inv_item.item_id
 #        s3db.req_req_item[request.vars.req_item_id] = dict(site_id = site_id)
 #        response.confirmation = T("%(item)s requested from %(site)s" % {"item":s3db.supply_item_represent(item_id, show_link = False),
-#                                                                        "site":s3db.org_site_represent(site_id, link=False)
+#                                                                        "site":s3db.org_site_represent(site_id, show_link=False)
 #                                                                        })
 #
 #    default_type = request.vars.default_type

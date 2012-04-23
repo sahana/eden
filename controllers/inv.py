@@ -567,7 +567,7 @@ def send_process():
             db(ritable.id == track_item.req_item_id).update(quantity_transit = ritable.quantity_transit + track_item.quantity)
     # Create a Receive record
     recv_id = s3db.inv_recv.insert(sender_id = send_record.sender_id,
-                                   tracking_no = send_record.tracking_no,
+                                   send_ref = send_record.send_ref,
                                    from_site_id = send_record.site_id,
                                    eta = send_record.delivery_date,
                                    recipient_id = send_record.recipient_id,
@@ -703,6 +703,8 @@ def recv():
             tracktable.bin.writable = False
             tracktable.adj_item_id.readable = False
             tracktable.adj_item_id.writable = False
+            tracktable.recv_quantity.readable = True
+            tracktable.recv_quantity.writable = True
 
             if r.method == "update" and record.status==2:
                 # Hide the values that will be copied from the inv_inv_item record
@@ -717,8 +719,6 @@ def recv():
                 tracktable.expiry_date.writable = False
                 tracktable.owner_org_id.writable = False
                 tracktable.supply_org_id.writable = False
-                tracktable.recv_quantity.readable = True
-                tracktable.recv_quantity.writable = True
                 tracktable.recv_bin.readable = True
                 tracktable.recv_bin.writable = True
             else:
@@ -730,7 +730,7 @@ def recv():
                 tracktable.item_source_no.readable = True
                 tracktable.item_source_no.writable = True
                 # This is a received purchase so change the label to reflect this
-                tracktable.quantity.label =  T("Quantity Received")
+                tracktable.quantity.label =  T("Quantity Delivered")
                 tracktable.recv_bin.readable = True
                 tracktable.recv_bin.writable = True
 
@@ -741,8 +741,6 @@ def recv():
         else:
             table.sender_id.readable = False
             table.sender_id.writable = False
-            table.from_site_id.readable = False
-            table.from_site_id.writable = False
             if r.id:
                 record = table[r.id]
                 # If this is part of a shipment then lock down the type and site_id
@@ -752,6 +750,8 @@ def recv():
                 if record.status == 1:
                     table.recipient_id.writable = False
                     table.date.writable = False
+                    table.from_site_id.readable = False
+                    table.from_site_id.writable = False
 
         return True
     response.s3.prep = prep

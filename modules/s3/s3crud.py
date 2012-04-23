@@ -475,7 +475,7 @@ class S3CRUD(S3Method):
         #    return exporter(r, **attr)
 
         elif representation == "pdf":
-            exporter = S3PDF()
+            exporter = resource.exporter.pdf
             return exporter(r, **attr)
 
         elif representation == "xls":
@@ -781,6 +781,8 @@ class S3CRUD(S3Method):
 
         report_groupby = _config("report_groupby")
         report_hide_comments = _config("report_hide_comments")
+        report_filename = _config("report_filename")
+        report_formname = _config("report_formname")
 
         # Check permission to read in this table
         authorised = self._permitted()
@@ -1034,8 +1036,13 @@ class S3CRUD(S3Method):
         #    return exporter(r, **attr)
 
         elif representation == "pdf":
-            exporter = S3PDF()
-            return exporter(r, **attr)
+            exporter = resource.exporter.pdf
+            return exporter(r,
+                            list_fields=list_fields,
+                            report_hide_comments = report_hide_comments,
+                            report_filename = report_filename,
+                            report_formname = report_formname,
+                            **attr)
 
         elif representation == "xls":
             exporter = S3Exporter()
