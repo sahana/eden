@@ -55,7 +55,7 @@ river_id = S3ReusableField("river_id", table,
                            label = T("River"),
                            comment=S3AddResourceLink(c="flood",
                                                      f="river",
-                                                     title=ADD_RIVER)
+                                                     title=ADD_RIVER),
                            ondelete = "RESTRICT")
 
 # -----------------------------------------------------------------------------

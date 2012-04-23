@@ -392,16 +392,18 @@ class S3SupplyModel(S3Model):
                                          sort=True),
                     represent = self.supply_item_represent,
                     label = T("Item"),
-                    widget = S3SearchAutocompleteWidget(
-                                    get_fieldname = "item_id",
-                                    tablename = "supply_catalog_item",
-                                    represent = lambda id: \
-                                        self.supply_item_represent(id,
-                                                                   show_link=False,
-                                                                   # @ToDo: this doesn't work
-                                                                   show_um=False,
-                                                                   none_value=None),
-                                    ),
+                    widget = S3AutocompleteWidget("supply", 
+                                         "item"),
+                    #widget = S3SearchAutocompleteWidget(
+                    #                get_fieldname = "item_id",
+                    #                tablename = "supply_catalog_item",
+                    #                represent = lambda id: \
+                    #                    self.supply_item_represent(id,
+                    #                                               show_link=False,
+                    #                                               # @ToDo: this doesn't work
+                    #                                               show_um=False,
+                    #                                               none_value=None),
+                    #                ),
                     comment=S3AddResourceLink(c="supply",
                                               f="item",
                                               label=ADD_ITEM,
@@ -643,11 +645,11 @@ $(document).ready(function() {
                                          ),
                     represent = self.item_pack_represent,
                     label = T("Pack"),
-                    comment=S3AddResourceLink(c="supply",
-                                              f="item_pack",
-                                              label=ADD_ITEM_PACK,
-                                              title=T("Item Packs"),
-                                              tooltip=T("The way in which an item is normally distributed")),
+                    #comment=S3AddResourceLink(c="supply",
+                    #                          f="item_pack",
+                    #                          label=ADD_ITEM_PACK,
+                    #                          title=T("Item Packs"),
+                    #                          tooltip=T("The way in which an item is normally distributed")),
                     script = SCRIPT(
 """
 S3FilterFieldChange({

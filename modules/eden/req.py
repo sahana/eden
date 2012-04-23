@@ -89,7 +89,7 @@ class S3RequestModel(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        #s3_date_format = settings.get_L10n_date_format()
+        s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
@@ -160,7 +160,8 @@ class S3RequestModel(S3Model):
                                                         #maximum=request.utcnow,
                                                         maximum=request.utcnow.date(),
                                                         error_message="%s %%(max)s!" %
-                                                            T("Enter a valid past date")))],
+                                                            T("Enter a valid past date"),
+                                                        format = s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
                                         #                          future=0),

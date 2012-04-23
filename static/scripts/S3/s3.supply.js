@@ -263,6 +263,7 @@ $(document).ready(function() {
 	});
 	*/
 	/* Populate Site & Org Based on Person */
+	/* @ToDo: have this only select the correct site - and not disable the field
 	$('#asset_log_person_id').change( function() {
 		// Cancel previous request
 		try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
@@ -316,5 +317,5 @@ $(document).ready(function() {
 			$('#dummy_asset_log_organisation_id').val('')
 												 .removeAttr('disabled');
 		}
-	});
+	});*/
 });
