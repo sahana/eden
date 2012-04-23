@@ -933,7 +933,7 @@ class AssetVirtualFields:
                                             stable.instance_type,
                                             limitby=(0, 1)).first()
             if site:
-                return s3db.org_site_represent(site, link=False)
+                return s3db.org_site_represent(site, show_link=False)
         return current.messages.NONE
 
 # END =========================================================================

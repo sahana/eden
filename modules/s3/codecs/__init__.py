@@ -31,3 +31,4 @@
 """
 
 from xls import *
+from pdf import *

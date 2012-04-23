@@ -306,6 +306,7 @@ $(document).ready(function() {
                                       "owner_org_id",
                                       "supply_org_id",
                                       ],
+                       report_hide_comments = True,
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
                        report_options = report_options,
@@ -544,7 +545,7 @@ class S3TrackingModel(S3Model):
                                         label = T("To Facility"),
                                         requires = IS_ONE_OF(db,
                                                              "org_site.site_id",
-                                                             lambda id: org_site_represent(id, link = False),
+                                                             lambda id: org_site_represent(id, show_link = False),
                                                              sort=True,
                                                              ),
                                         ondelete = "SET NULL",
@@ -663,6 +664,7 @@ class S3TrackingModel(S3Model):
                                         "reference org_site",
                                         label = T("From Facility"),
                                         ondelete = "SET NULL",
+                                        widget = S3SiteAutocompleteWidget(),
                                         represent = org_site_represent
                                         ),
                                   Field("eta", "date",
@@ -993,7 +995,7 @@ $(document).ready(function() {
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_send_represent(id):
+    def inv_send_represent(id, show_link=True):
         """
         """
 
@@ -1006,10 +1008,15 @@ $(document).ready(function() {
             send_row = db(table.id == id).select(table.date,
                                                  table.to_site_id,
                                                  limitby=(0, 1)).first()
-            return SPAN(table.to_site_id.represent(send_row.to_site_id),
-                        " - ",
-                        table.date.represent(send_row.date)
-                        )
+            if show_link:
+                return SPAN(table.to_site_id.represent(send_row.to_site_id),
+                            " - ",
+                            table.date.represent(send_row.date)
+                            )
+            else:
+                return "%s - %s" % (table.to_site_id.represent(send_row.to_site_id, show_link = False),
+                                    table.date.represent(send_row.date),
+                                   )
         else:
             return current.messages.NONE
 
@@ -1053,16 +1060,16 @@ $(document).ready(function() {
                        "quantity",
                        "bin",
                       ]
-        exporter = S3PDF()
+        exporter = r.resource.exporter.pdf
         return exporter(r,
                         method="list",
-                        componentname="inv_track_item",
-                        formname="Waybill",
-                        filename="Waybill-%s" % site,
+                        report_componentname = "inv_track_item",
+                        report_title="Waybill",
+                        report_filename="Waybill-%s" % site,
                         list_fields = list_fields,
                         report_hide_comments=True,
                         report_footer = inv_send_report_footer,
-                        report_landscape = True,
+                        paper_alignment = "Landscape",
                         **attr
                        )
 
@@ -1133,14 +1140,15 @@ $(document).ready(function() {
                        "adj_item_id",
                       ]
 
-        exporter = S3PDF()
+        exporter = r.resource.exporter.pdf
         return exporter(r,
                         method="list",
-                        formname="Goods Received Note",
-                        filename="GRN-%s" % site,
+                        report_title="Goods Received Note",
+                        report_filename="GRN-%s" % site,
                         list_fields = list_fields,
                         report_hide_comments=True,
-                        componentname = "inv_track_item",
+                        report_componentname = "inv_track_item",
+                        paper_alignment = "Landscape",
                         **attr
                        )
 
@@ -1164,13 +1172,13 @@ $(document).ready(function() {
         site_id = record.site_id
         site = table.site_id.represent(site_id,False)
 
-        exporter = S3PDF()
+        exporter = r.resource.exporter.pdf
         return exporter(r,
                         method="list",
-                        formname="Donation Certificate",
-                        filename="DC-%s" % site,
+                        report_title="Donation Certificate",
+                        report_filename="DC-%s" % site,
                         report_hide_comments=True,
-                        componentname = "inv_track_item",
+                        report_componentname = "inv_track_item",
                         **attr
                        )
 
@@ -1222,8 +1230,10 @@ $(document).ready(function() {
             form.vars.supply_org_id = record.supply_org_id
             form.vars.pack_value = record.pack_value
             form.vars.currency = record.currency
-        # if we have no send id then copy the quantity sent directly into the received field
-        else:
+        # if we have no send id and no recv_quantity then
+        # copy the quantity sent directly into the received field
+        # This is for when their is no related send record
+        elif not form.vars.recv_quantity:
             form.vars.recv_quantity = form.vars.quantity
 
         # If their is a receiving bin select the right one
