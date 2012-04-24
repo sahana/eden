@@ -36,6 +36,7 @@ __all__ = ["S3InventoryModel",
            "inv_recv_rheader",
            "inv_send_rheader",
            "inv_ship_status",
+           "inv_tracking_status",
            "inv_adj_rheader",
           ]
 
@@ -65,6 +66,30 @@ shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
 
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
+
+TRACK_STATUS_UNKNOWN    = 0
+TRACK_STATUS_PREPARING  = 1
+TRACK_STATUS_TRANSIT    = 2
+TRACK_STATUS_UNLOADING  = 3
+TRACK_STATUS_ARRIVED    = 4
+TRACK_STATUS_CANCELED   = 5
+
+inv_tracking_status = {
+                        "UNKNOWN"    : TRACK_STATUS_UNKNOWN,
+                        "IN_PROCESS"  : TRACK_STATUS_PREPARING,
+                        "SENT"       : TRACK_STATUS_TRANSIT,
+                        "UNLOADING"  : TRACK_STATUS_UNLOADING,
+                        "RECEIVED"   : TRACK_STATUS_ARRIVED,
+                        "CANCEL"     : TRACK_STATUS_CANCELED,
+                      }
+
+tracking_status = {0 : T("Unknown"),
+                   1 : T("Preparing"),
+                   2 : T("In transit"),
+                   3 : T("Unloading"),
+                   4 : T("Arrived"),
+                   5 : T("Canceled"),
+                   }
 
 itn_label = T("Item Source Tracking Number")
 # Overwrite the label until we have a better way to do this
@@ -451,8 +476,10 @@ class S3TrackingModel(S3Model):
 
     names = ["inv_send",
              "inv_send_represent",
+             "inv_send_ref_represent",
              "inv_recv",
              "inv_recv_represent",
+             "inv_recv_ref_represent",
              "inv_track_item",
              "inv_track_item_onaccept",
              "inv_get_shipping_code",
@@ -487,18 +514,25 @@ class S3TrackingModel(S3Model):
 
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+        s3_string_represent = lambda str: str if str else NONE
 
         send_ref = S3ReusableField( "send_ref",
                                     "string",
                                     label = wn_label,
-                                    writable = False)
+                                    writable = False,
+                                    represent = self.inv_send_ref_represent,
+                                   )
         recv_ref = S3ReusableField( "recv_ref",
                                     "string",
                                     label = grn_label,
-                                    writable = False)
-        purchase_ref = S3ReusableField( "purchase_ref",
-                                        "string",
-                                        label = po_label)
+                                    writable = False,
+                                    represent = self.inv_recv_ref_represent,
+                                   )
+        purchase_ref = S3ReusableField("purchase_ref",
+                                       "string",
+                                       label = po_label,
+                                       represent = s3_string_represent,
+                                      )
 
         # =====================================================================
         # Send (Outgoing / Dispatch / etc)
@@ -859,15 +893,7 @@ class S3TrackingModel(S3Model):
         # =====================================================================
         # Tracking Items
         #
-        tracking_status = {0 : T("Unknown"),
-                           1 : T("Preparing"),
-                           2 : T("In transit"),
-                           3 : T("Unloading"),
-                           4 : T("Arrived"),
-                           5 : T("Canceled"),
-                           }
 
-        # @todo add the optional adj_id
         tablename = "inv_track_item"
         table = self.define_table("inv_track_item",
                                   org_id(name = "track_org_id",
@@ -908,7 +934,9 @@ $(document).ready(function() {
                                   Field("quantity",
                                         "double",
                                         label = T("Quantity Sent"),
-                                        notnull = True),
+                                        notnull = True,
+                                        requires=IS_NOT_EMPTY(),
+                                        ),
                                   Field("recv_quantity",
                                         "double",
                                         label = T("Quantity Received"),
@@ -939,6 +967,7 @@ $(document).ready(function() {
                                               ondelete = "RESTRICT"),  # received inventory
                                   Field("recv_bin",                # The bin at destination
                                         "string",
+                                        label = T("Loading Bin"),
                                         length = 16,
                                         readable = False,
                                         writable = False,
@@ -1189,6 +1218,60 @@ $(document).ready(function() {
             return value
         else:
             return B(value)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_send_ref_represent(value, show_link=True):
+        """
+            Represent for the Waybill number, 
+            if show_link is True then it will generate a link to the pdf
+        """
+        if value:
+
+            if show_link:
+                db = current.db
+                s3db = current.s3db
+    
+                table = s3db.inv_send
+                send_row = db(table.send_ref == value).select(table.id,
+                                                              limitby=(0, 1)
+                                                             ).first()
+                return A(value,
+                         _href = URL(f = "send",
+                                     args = [send_row.id, "form"]
+                                    ),
+                        )
+            else:
+                return B(value)
+        else:
+            return current.messages.NONE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_recv_ref_represent(value, show_link=True):
+        """
+            Represent for the Goods Received Note 
+            if show_link is True then it will generate a link to the pdf
+        """
+        if value:
+
+            if show_link:
+                db = current.db
+                s3db = current.s3db
+    
+                table = s3db.inv_recv
+                recv_row = db(table.recv_ref == value).select(table.id,
+                                                              limitby=(0, 1)
+                                                             ).first()
+                return A(value,
+                         _href = URL(f = "recv",
+                                     args = [recv_row.id, "form"]
+                                    ),
+                        )
+            else:
+                return B(value)
+        else:
+            return current.messages.NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1819,24 +1902,28 @@ def inv_recv_rheader(r):
             table = r.table
 
             rheader = DIV( TABLE(
-                               TR( TH( "%s: " % table.eta.label),
-                                   table.eta.represent(record.eta),
-                                   TH("%s: " % table.status.label),
+                               TR( TH("%s: " % table.status.label),
                                    table.status.represent(record.status),
                                   ),
-                               TR( TH( "%s: " % table.date.label),
+                               TR( TH( "%s: " % table.eta.label),
+                                   table.eta.represent(record.eta),
+                                   TH( "%s: " % table.date.label),
                                    table.date.represent(record.date),
-                                  ),
-                               TR( TH( "%s: " % table.site_id.label),
-                                   table.site_id.represent(record.site_id),
                                   ),
                                TR( TH( "%s: " % table.from_site_id.label),
                                    table.from_site_id.represent(record.from_site_id),
+                                   TH( "%s: " % table.site_id.label),
+                                   table.site_id.represent(record.site_id),
                                   ),
                                TR( TH( "%s: " % table.sender_id.label),
                                    s3_fullname(record.sender_id),
                                    TH( "%s: " % table.recipient_id.label),
                                    s3_fullname(record.recipient_id),
+                                  ),
+                               TR( TH( "%s: " % table.send_ref.label),
+                                   table.send_ref.represent(record.send_ref),
+                                   TH( "%s: " % table.recv_ref.label),
+                                   table.recv_ref.represent(record.recv_ref),
                                   ),
                                TR( TH( "%s: " % table.comments.label),
                                    TD(record.comments or "", _colspan=2),
@@ -1851,7 +1938,8 @@ def inv_recv_rheader(r):
                record.status == SHIP_STATUS_IN_PROCESS:
                 if auth.s3_has_permission("update",
                                           "inv_recv",
-                                          record_id=record.id):
+                                          record_id=record.id) and \
+                not r.component:
                     tracktable = current.s3db.inv_track_item
                     query = (tracktable.recv_id == record.id) & \
                             (tracktable.recv_quantity == None)
@@ -1874,21 +1962,6 @@ def inv_recv_rheader(r):
                         msg = T("You need to check all item quantities and allocate to bins before you can receive the shipment")
                         rfooter.append(SPAN(msg))
             else:
-                grn_btn = A( T("Goods Received Note"),
-                              _href = URL(f = "recv",
-                                          args = [record.id, "form"]
-                                          ),
-                              _class = "action-btn"
-                              )
-                rfooter.append(grn_btn)
-                dc_btn = A( T("Donation Certificate"),
-                              _href = URL(f = "recv",
-                                          args = [record.id, "cert"]
-                                          ),
-                              _class = "action-btn"
-                              )
-                rfooter.append(dc_btn)
-
                 if record.status == SHIP_STATUS_RECEIVED:
                     if current.auth.s3_has_permission("delete",
                                                       "inv_recv",

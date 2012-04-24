@@ -87,11 +87,14 @@ class S3RequestModel(S3Model):
         human_resource_id = self.pr_person_id
         event_id = self.event_event_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        s3_string_represent = lambda str: str if str else NONE
 
         # Multiple Item/Skill Types per Request?
         multiple_req_items = settings.get_req_multiple_req_items()
@@ -109,7 +112,9 @@ class S3RequestModel(S3Model):
         req_ref = S3ReusableField( "req_ref",
                                    "string",
                                    label = rn_label,
-                                   writable = False)
+                                   writable = False,
+                                   represent = s3_string_represent,
+                                   )
 
         req_priority_opts = {
             3:T("High"),
