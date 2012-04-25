@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -22,8 +21,9 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 
-from e_cidadania.apps.spaces.file_validation import ContentTypeRestrictedFileField
+from core.spaces.file_validation import ContentTypeRestrictedFileField
 from fields import StdImageField
 
 ALLOWED_CONTENT_TYPES = [
@@ -200,7 +200,6 @@ class Intent(models.Model):
     reqested_on = models.DateTimeField(auto_now_add=True)
 
     def get_approve_url(self):
-        from django.contrib.sites.models import Site
         site = Site.objects.all()[0]
         return "http://%s%sintent/approve/%s" % (site.domain, self.space.get_absolute_url(), self.token)
 

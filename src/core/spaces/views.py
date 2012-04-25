@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -24,6 +23,7 @@ These are the views that control the spaces, meetings and documents.
 
 import datetime
 import itertools
+import hashlib
 
 # Generic class-based views
 from django.views.generic.base import TemplateView, RedirectView
@@ -57,13 +57,13 @@ from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
 # e-cidadania data models
-from e_cidadania.apps.spaces.models import Space, Entity, Document, Event, Intent
-from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.spaces.forms import SpaceForm, DocForm, EventForm, \
+from core.spaces.models import Space, Entity, Document, Event, Intent
+from apps.ecidadania.news.models import Post
+from core.spaces.forms import SpaceForm, DocForm, EventForm, \
      EntityFormSet
-from e_cidadania.apps.proposals.models import Proposal
-from e_cidadania.apps.staticpages.models import StaticPage
-from e_cidadania.apps.debate.models import Debate
+from apps.ecidadania.proposals.models import Proposal
+from apps.ecidadania.staticpages.models import StaticPage
+from apps.ecidadania.debate.models import Debate
 from django.conf import settings
 
 #
@@ -114,7 +114,6 @@ def add_intent(request, space_name):
      :rtype: Multiple entity objects.
      :context: space_name, heading
      """
-     import hashlib
      space = get_object_or_404(Space, url=space_name)
      try:
          intent = Intent.objects.get(user=request.user, space=space)

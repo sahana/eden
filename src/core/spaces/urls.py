@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -25,7 +24,7 @@ access to '/spaces/'.
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
+from core.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
                                           DeleteSpace, ListDocs, DeleteDocument, \
                                           ListEvents, DeleteEvent, ViewEvent, \
                                           ListPosts, SpaceFeed, AddDocument, \
@@ -34,22 +33,22 @@ from e_cidadania.apps.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
-urlpatterns = patterns('e_cidadania.apps.spaces.views',
+urlpatterns = patterns('core.spaces.views',
 
     # RSS Feed
     url(_(r'^(?P<space_name>\w+)/rss/$'), SpaceFeed(), name='space-feed'),
     
     # News
-    url(_(r'^(?P<space_name>\w+)/news/'), include('e_cidadania.apps.news.urls')),
+    url(_(r'^(?P<space_name>\w+)/news/'), include('apps.ecidadania.news.urls')),
 
     # Proposals
-    url(_(r'^(?P<space_name>\w+)/proposal/'), include('e_cidadania.apps.proposals.urls')),
+    url(_(r'^(?P<space_name>\w+)/proposal/'), include('apps.ecidadania.proposals.urls')),
     
     # Calendar
-    url(_(r'^(?P<space_name>\w+)/calendar/'), include('e_cidadania.apps.cal.urls')),
+    url(_(r'^(?P<space_name>\w+)/calendar/'), include('apps.ecidadania.cal.urls')),
 
     # Debates
-    url(_(r'^(?P<space_name>\w+)/debate/'), include('e_cidadania.apps.debate.urls')),
+    url(_(r'^(?P<space_name>\w+)/debate/'), include('apps.ecidadania.debate.urls')),
 
 )
 

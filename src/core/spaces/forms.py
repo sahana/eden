@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -27,7 +26,7 @@ from the data models.
 from django.forms import ModelForm, ValidationError
 from django.forms.models import modelformset_factory
 
-from e_cidadania.apps.spaces.models import Space, Document, Event, Entity
+from core.spaces.models import Space, Document, Event, Entity
 
 class SpaceForm(ModelForm):
     
