@@ -2,7 +2,7 @@
 from django.template import Library, Node, Template, TemplateSyntaxError, \
                             Variable
 from django.utils.translation import ugettext as _
-from e_cidadania.apps.userprofile.models import Avatar, AVATAR_SIZES
+from apps.thirdparty.userprofile.models import Avatar, AVATAR_SIZES
 from django.contrib.auth.models import User
 from django.conf import settings
 import Image

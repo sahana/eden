@@ -52,7 +52,7 @@ from apps.thirdparty.userprofile.models import EmailValidation, Avatar
 if not settings.AUTH_PROFILE_MODULE:
     raise SiteProfileNotAvailable
 try:
-    section, belongs_to, app_label, model_name = settings.AUTH_PROFILE_MODULE.split('.')
+    app_label, model_name = settings.AUTH_PROFILE_MODULE.split('.')
     #app_label, model_name = settings.AUTH_PROFILE_MODULE.split('.')
     Profile = models.get_model(app_label, model_name)
 except (ImportError, ImproperlyConfigured):
