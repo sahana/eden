@@ -5,8 +5,8 @@ Main configuration file for e-cidadania. Please refer to the documentation on
 http://docs.ecidadania.org before you modify anything.
 """
 
-__version__ = "0.1.5"
-__status__ = "beta"
+__version__ = "0.2"
+__status__ = "alpha 1"
 
 # Get the current directory
 import os
@@ -17,7 +17,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 # Extending the user profile a bit more
-AUTH_PROFILE_MODULE = "accounts.UserProfile"
+AUTH_PROFILE_MODULE = "apps.ecidadania.accounts.UserProfile"
 ACCOUNT_ACTIVATION_DAYS = 2
 LOGIN_REDIRECT_URL = '/accounts/'
 GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHxRSapJw6ROu7OKaPDPIwetftitHBcw'
@@ -37,7 +37,7 @@ GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHx
 FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
 
 ADMINS = (
-    ('Oscar Carballal', 'oscar@cidadania.coop'),
+    ('', ''),
 )
 
 MANAGERS = ADMINS
@@ -45,7 +45,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'e_cidadania/db/sqlite.db',
+        'NAME': 'db/sqlite.db',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -119,7 +119,7 @@ MIDDLEWARE_CLASSES = (
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-ROOT_URLCONF = 'e_cidadania.urls'
+ROOT_URLCONF = 'urls'
 APPEND_SLASH = True
 
 TEMPLATE_DIRS = (
@@ -135,7 +135,7 @@ GRAPPELLI_ADMIN_TITLE = "<li class='user-options-container collapse closed'> \
 e-cidadania %s</a><ul class='user-options'><li><a href='/' \
 style='padding:10px;'>Back to site</a></li></ul></li>" % (__version__)
 GRAPPELLI_ADMIN_URL = '/admin'
-GRAPPELLI_INDEX_DASHBOARD = 'e_cidadania.dashboard.CustomIndexDashboard'
+GRAPPELLI_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
 
 # We separate the applications so we can manage them through scripts
 # Please do not touch this unless you know very well what you're doing
@@ -161,24 +161,22 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 THIRDPARTY_APPS = (
     # This list is from the third party software included in e-cidadania or
     # system-wide dependencies.
-    'e_cidadania.apps.userprofile',
-    'e_cidadania.apps.tagging',
+    'apps.thirdparty.userprofile',
+    'apps.thirdparty.tagging',
     #'django_extensions',
 )
 
 ECIDADANIA_MODULES = (
     # Modules created for e-cidadania and installed by default. You can add
-    # here your own modules.
-	'e_cidadania.apps.custom_tags',
-    'e_cidadania.apps.accounts',
-    'e_cidadania.apps.proposals',
-    'e_cidadania.apps.news',
-    'e_cidadania.apps.debate',
-    'e_cidadania.apps.spaces',
-    'e_cidadania.apps.staticpages',
-    'e_cidadania.apps.cal',
-    'e_cidadania.apps.massmail',
-    #'debug_toolbar',
+    # here your own modules
+    'core.spaces',
+    'apps.ecidadania.accounts',
+    'apps.ecidadania.proposals',
+    'apps.ecidadania.news',
+    'apps.ecidadania.debate',
+    'apps.ecidadania.staticpages',
+    'apps.ecidadania.cal',
+    'extras.custom_tags',
 )
 
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
@@ -211,12 +209,3 @@ LOGGING = {
         },
     }
 }
-
-
-# WARNING. THIS SECTION WILL HAVE VOLATILE CODE, PROBABLY FOR
-# COMPATIBILITY WITH OLDER OR NEWER VERSIONS OF DJANGO
-
-# Activate the new url syntax in django 1.3 which will be
-# compatible till 1.5
-import django.template
-django.template.add_to_builtins('django.templatetags.future')
