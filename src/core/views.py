@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -35,10 +34,10 @@ from django.views.generic.detail import DetailView
 from django.views.generic import FormView
 from django.utils.decorators import method_decorator
 
-from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.news.forms import NewsForm
-from e_cidadania.apps.spaces.models import Space
-from e_cidadania.apps.staticpages.models import StaticPage
+from apps.ecidadania.news.models import Post
+from apps.ecidadania.news.forms import NewsForm
+from core.spaces.models import Space
+from apps.ecidadania.staticpages.models import StaticPage
 from e_cidadania import settings
 
 def index_view(request):
