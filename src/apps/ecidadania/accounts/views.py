@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -23,17 +22,12 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
 from django.contrib.auth.models import User
-#from django.views.generic.list_detail import object_list
-#from django.views.generic.list_detail import object_detail
-#from django.views.generic.create_update import create_object
-#from django.views.generic.create_update import update_object
-#from django.views.generic.create_update import delete_object
 
-from e_cidadania.apps.accounts.models import UserProfile, Phone
+from apps.ecidadania.accounts.models import UserProfile, Phone
 
+# This views are no longer required since they were replaced by userprofile
 @login_required
 def view_profile(request):
-
 
     """
     Return the profile of the current logged user.

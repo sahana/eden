@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -20,11 +19,13 @@
 
 from django.contrib import admin
 
-from e_cidadania.apps.debate.models import Debate, Note, Column, Row
+from apps.ecidadania.debate.models import Debate, Note, Column, Row
 
 class ColumnInline(admin.TabularInline):
 
     """
+    This TabularInline form allows the user to add the debate Columns in the same
+    form as the debate.
     """
     model = Column
     extra = 2
@@ -32,6 +33,8 @@ class ColumnInline(admin.TabularInline):
 class RowInline(admin.TabularInline):
 
     """
+    This TabularInline form allows the user to add the debate Rows in the same
+    form as the debate.
     """
     model = Row
     extra = 2

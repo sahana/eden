@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -23,8 +22,8 @@ from django.utils.safestring import mark_safe
 from django.template import RequestContext
 from django.utils import translation
 
-from e_cidadania.apps.spaces.models import Event, Space
-from e_cidadania.apps.cal.models import EventCalendar
+from core.spaces.models import Event, Space
+from apps.ecidadania.cal.models import EventCalendar
 from e_cidadania import settings
 
 def calendar(request, space_name, year, month):
@@ -32,7 +31,7 @@ def calendar(request, space_name, year, month):
     """
     Returns an localized event calendar with all the Meeting objects.
     
-    :Contexts: calendar, nextmonth, prevmonth, get_place
+    :Context: calendar, nextmonth, prevmonth, get_place
     :Returns: Localized HTML Calendar
     """
     # Avoid people writing wrong numbers or any program errors.

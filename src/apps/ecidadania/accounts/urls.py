@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -29,8 +28,5 @@ urlpatterns = patterns('',
 
     (r'logout/$', 'django.contrib.auth.views.logout',
                   {'template_name': 'accounts/logout.html'}),
-
-    #(r'^/', include('ecidadania.apps.userprofile.urls'))
-    #(r'profile/', 'accounts.views.view_profile'),
 
 )

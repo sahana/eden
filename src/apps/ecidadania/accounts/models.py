@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -26,8 +25,8 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from e_cidadania.apps.userprofile.models import BaseProfile
-from e_cidadania.apps.spaces.models import Space
+from apps.thirdparty.userprofile.models import BaseProfile
+from core.spaces.models import Space
 
 GENDER = (
 

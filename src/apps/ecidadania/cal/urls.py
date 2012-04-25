@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -21,7 +20,7 @@
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 
-urlpatterns = patterns('e_cidadania.apps.cal.views',
+urlpatterns = patterns('apps.ecidadania.cal.views',
 
     # News
     url(r'^(?P<year>\d+)/(?P<month>\d+)/', 'calendar', name='calendar-view'),

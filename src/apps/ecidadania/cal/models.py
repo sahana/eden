@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -19,7 +18,10 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
-The following source code is based on the work of Eivind Uggedal <eivind@uggedal.com>
+The calendar module calls a version of Python HTML Calendar and adds some
+functions to use django objects with it.
+
+The source code is based on the work of Eivind Uggedal <eivind@uggedal.com>
 """
 
 from calendar import LocaleHTMLCalendar

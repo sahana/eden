@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -25,7 +24,7 @@ This file contains all the forms for the debate modules.
 from django.forms import ModelForm, Textarea, TextInput
 from django.forms.models import modelformset_factory
 
-from e_cidadania.apps.debate.models import Debate, Note, Row, Column
+from apps.ecidadania.debate.models import Debate, Note, Row, Column
 
 class DebateForm(ModelForm):
 

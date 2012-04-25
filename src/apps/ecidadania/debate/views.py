@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -48,10 +47,10 @@ from django.forms.formsets import formset_factory, BaseFormSet
 from django.core.exceptions import ObjectDoesNotExist
 
 # Application models
-from e_cidadania.apps.debate.models import Debate, Note, Row, Column
-from e_cidadania.apps.debate.forms import DebateForm, UpdateNoteForm, \
+from apps.ecidadania.debate.models import Debate, Note, Row, Column
+from apps.ecidadania.debate.forms import DebateForm, UpdateNoteForm, \
     NoteForm, RowForm, ColumnForm, UpdateNotePosition
-from e_cidadania.apps.spaces.models import Space
+from core.spaces.models import Space
 
 
 def add_new_debate(request, space_name):
@@ -59,6 +58,11 @@ def add_new_debate(request, space_name):
     """
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
+    
+    .. versionadded:: 0.1.5
+
+    :attributes: debate_form, row_formset, column_formset
+    :context: form, rowform, colform, get_place, debateid
     """
     place = get_object_or_404(Space, url=space_name)
     
@@ -118,6 +122,8 @@ def add_new_debate(request, space_name):
                                   context_instance=RequestContext(request))
     return render_to_response('not_allowed.html',
                               context_instance=RequestContext(request))
+
+
 def get_debates(request):
 
     """
@@ -125,6 +131,7 @@ def get_debates(request):
     """
     data = [debate.title for debate in Debate.objects.all().order_by('title')]
     return render_to_response(json.dumps(data), content_type='application/json')
+
 
 def create_note(request, space_name):
 
@@ -201,6 +208,7 @@ def update_note(request, space_name):
         
     return HttpResponse(msg)
 
+
 def update_position(request, space_name):
 
     """
@@ -245,6 +253,8 @@ def delete_note(request, space_name):
 class ViewDebate(DetailView):
     """
     View a debate.
+    
+    :context: get_place, notes, columns, rows
     """
     context_object_name = 'debate'
     template_name = 'debate/debate_view.html'
@@ -261,7 +271,6 @@ class ViewDebate(DetailView):
 
     def get_context_data(self, **kwargs):
         """
-
         """
         context = super(ViewDebate, self).get_context_data(**kwargs)
         columns = Column.objects.all().filter(debate=self.kwargs['debate_id'])
@@ -289,6 +298,8 @@ class ViewDebate(DetailView):
 class ListDebates(ListView):
     """
     Return a list of debates for the current space.
+    
+    :context: get_place
     """
     paginate_by = 10
 
