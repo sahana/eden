@@ -1,4 +1,5 @@
-__all__ = ["create_warehouse"]
+# Set up Warehouses
+__all__ = ["inv001"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -10,7 +11,7 @@ import unittest, re, time
 
 
 
-def create_warehouse():
+def inv001():
 
     config = current.test_config
     browser = config.browser

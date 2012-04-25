@@ -1,4 +1,5 @@
-__all__ = ["create_request"]
+# Create Requests // needs more refining
+__all__ = ["inv005"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -8,7 +9,7 @@ from s3 import s3_debug
 from tests import *
 import unittest, re, time
 
-def create_request():
+def inv005():
     
     config = current.test_config
     browser = config.browser

@@ -27,7 +27,6 @@ config.url = base_url
 
 browser = config.browser = webdriver.Firefox()
 browser.implicitly_wait(config.timeout)
-
 # Do we have any command-line arguments?
 args = sys.argv
 if args[1:]:
@@ -37,33 +36,38 @@ else:
     test = None
 
 if test:
-    # Run specified Test
+    # Run specified Test after logging in
+    login(account="admin")
     globals()[test]()
-else:
-    config = current.test_config
-    browser = config.browser
-    driver = browser
-    url = "http://127.0.0.1:8000/eden/default/user/login"
-    browser.get(url)
-    driver.find_element_by_css_selector("form").click()
-    driver.find_element_by_id("auth_user_email").clear()
-    driver.find_element_by_id("auth_user_email").send_keys("admin@example.com")
-    driver.find_element_by_id("auth_user_password").clear()
-    driver.find_element_by_id("auth_user_password").send_keys("testing")
-    driver.find_element_by_css_selector("input[type=\"submit\"]").click()
-    create_organization()
-    create_office()
-    create_staff()
-    create_volunteer()
-    create_warehouse()
-    create_item()
-    create_catalog()
-    create_category()
-    create_request()
-    create_match_request()
     
-#=======
-#    # Run all Tests - this runs all the said test scripts ^^
-
-## Cleanup //to be completed.
-#browser.close()
+else:
+    # Log into admin testing account
+    login(account="admin")
+    
+    # List of individual automated test scripts which Suite will run one by one:
+    # Human Resources Management (HRM) tests
+    hrm001() # Set up Staff
+    hrm002() # Set up New Volunteer
+    hrm003() # Set up Training Course
+    
+    # Organization Management (ORG) tests
+    org001() # Set up Organizations
+    org002() # Set up Offices
+    
+    # Inventory management (INV) tests
+    inv001() # Set up Warehouses
+    inv002() # Set up Items
+    inv003() # Set up Catalogues
+    inv004() # Set up Categories
+    inv005() # Create Requests // needs more refining
+    inv006() # Match Requests // needs more refining
+    
+    # Assets management (ASSET) tests
+    asset001() # Set up Assets
+    
+    # Log out of testing account
+    logout() #
+    
+    
+    # Cleanup 
+    browser.close()

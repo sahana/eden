@@ -1,4 +1,5 @@
-__all__ = ["create_office"]
+# Set up Offices
+__all__ = ["org002"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -7,7 +8,7 @@ from gluon import current
 from s3 import s3_debug
 from tests import *
 
-def create_office():
+def org002():
     
     config = current.test_config
     browser = config.browser

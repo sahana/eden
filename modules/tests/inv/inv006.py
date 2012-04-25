@@ -1,4 +1,5 @@
-__all__ = ["create_match_request"]
+# Match Requests // needs more refining
+__all__ = ["inv006"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -8,7 +9,7 @@ from s3 import s3_debug
 from tests import *
 import unittest, re, time
 
-def create_match_request():
+def inv006():
 
     config = current.test_config
     browser = config.browser
