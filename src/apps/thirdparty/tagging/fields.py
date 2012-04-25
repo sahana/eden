@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from apps.thirdparty.tagging import settings
 from apps.thirdparty.tagging.models import Tag
 from apps.thirdparty.tagging.utils import edit_string_for_tags
+from apps.thirdparty.tagging import forms
 
 class TagField(CharField):
     """
@@ -101,7 +102,6 @@ class TagField(CharField):
         return 'CharField'
 
     def formfield(self, **kwargs):
-        from e_cidadania.apps.tagging import forms
         defaults = {'form_class': forms.TagField}
         defaults.update(kwargs)
         return super(TagField, self).formfield(**defaults)

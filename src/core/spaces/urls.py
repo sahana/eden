@@ -53,7 +53,7 @@ urlpatterns = patterns('core.spaces.views',
 )
 
 # Document URLs
-urlpatterns += patterns('e_cidadania.apps.spaces.views',
+urlpatterns += patterns('core.spaces.views',
 
     url(_(r'^(?P<space_name>\w+)/docs/add/$'), AddDocument.as_view(), name='add-document'),
 
@@ -66,7 +66,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 )
 
 # Event URLs
-urlpatterns += patterns('e_cidadania.apps.spaces.views',
+urlpatterns += patterns('core.spaces.views',
 
     url(_(r'^(?P<space_name>\w+)/event/add/$'), AddEvent.as_view(), name='add-event'),
 
@@ -81,7 +81,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 )
 
 # Intent URLs
-urlpatterns += patterns('e_cidadania.apps.spaces.views',
+urlpatterns += patterns('core.spaces.views',
 
     url(_(r'^(?P<space_name>\w+)/intent/$'), 'add_intent', name='add-intent'),
     url(_(r'^(?P<space_name>\w+)/intent/approve/(?P<token>\w+)/$'), ValidateIntent.as_view(), name='validate-intent'),
@@ -89,7 +89,7 @@ urlpatterns += patterns('e_cidadania.apps.spaces.views',
 )
 
 # Spaces URLs
-urlpatterns += patterns('e_cidadania.apps.spaces.views',
+urlpatterns += patterns('core.spaces.views',
 
     url(_(r'^(?P<space_name>\w+)/edit/$'), 'edit_space', name='edit-space'),
 

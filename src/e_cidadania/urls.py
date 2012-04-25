@@ -38,6 +38,7 @@ admin.autodiscover()
 js_info_dict = {
     'packages': ('apps.ecidadania.debate',),
 }
+
 urlpatterns = patterns('',
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),

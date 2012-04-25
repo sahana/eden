@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.thirdparty,userprofile.models import EmailValidation, Avatar
+from apps.thirdparty.userprofile.models import EmailValidation, Avatar
 
 class EmailValidationAdmin(admin.ModelAdmin):
     list_display = ('__unicode__',)

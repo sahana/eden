@@ -22,7 +22,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 
 from apps.thirdparty.tagging.fields import TagField
-from apps.thirdparty.models import Tag
+from apps.thirdparty.tagging.models import Tag
 from core.spaces.models import Space
 
 class Post(models.Model):

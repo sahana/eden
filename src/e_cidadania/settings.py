@@ -64,7 +64,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db/sqlite.db',
+        'NAME': 'e_cidadania/db/sqlite.db',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -138,7 +138,7 @@ MIDDLEWARE_CLASSES = (
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'e_cidadania.urls'
 APPEND_SLASH = True
 
 TEMPLATE_DIRS = (
@@ -228,3 +228,8 @@ LOGGING = {
         },
     }
 }
+
+# Activate the new url syntax in django 1.3 which will be
+# compatible till 1.5
+import django.template
+django.template.add_to_builtins('django.templatetags.future')
