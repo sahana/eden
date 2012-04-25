@@ -267,14 +267,16 @@ function addTableColumn() {
     var inputs = $('#' + tableID + ' input').length;
     var tdlength = $('#' + tableID + ' td').length;
     var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
+    var formCount = parseInt($('#id_colform-TOTAL_FORMS').val());
 
     if (criteriacount >= 10) return false;
-    $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria" + (criteriacount+1) + "' class='criteria-vtitle'><input id='" + tableID + "-criteria" + (inputs+1) + "' type='text' class='small' value='Test criteria'></th>");
+    $('#' + tableID + ' tr:first').append("<th id='debate-vcriteria" + (criteriacount+1) + "' class='criteria-vtitle'><input id='" + tableID + "-criteria" + (inputs+1) + "' name='colform-" + (criteriacount) + "-criteria' type='text' class='small' value='Test criteria'></th>");
     $('#' + tableID + ' tbody tr').each(function(){
         //var tdlength = $('#' + tableID + ' td').length;
         $(this).append("<td id='sortable" + (tdlength) + "-" + tableID + "' class='connectedSortable'></td>").fadeIn("slow");
         tdlength += 1;
     });
+    $('#id_colform-TOTAL_FORMS').val(formCount + 1);
     makeSortable();
 }
 
@@ -282,6 +284,7 @@ function addTableRow() {
     var tableID =$('table').attr('id');
     var criteriacount = $('#' + tableID + ' th[id^=debate-vcriteria]').length;
     var tdlength = $('#' + tableID + 'td').length;
+    var formCount_row = parseInt($('#id_rowform-TOTAL_FORMS').val());
 
     var t = $('table');
     var numColumns = $('th[id^=debate-vcriteria]', t).length;
@@ -289,7 +292,8 @@ function addTableRow() {
     if (numRows >= 10) return false;
 
     var tr = $('<tr>');
-    tr.append("<td class='criteria-htitle'><div id='debate-ttitle'><input id='" + tableID + "-criteria" + (numRows+1) + "' type='text'></div></td>");
+    tr.append("<td class='criteria-htitle'><div id='debate-ttitle'><input id='" + tableID + "-criteria" + (numRows) + "' name='rowform-" + (numRows) + "-criteria' type='text'></div></td>");
+    $('#id_rowform-TOTAL_FORMS').val(formCount_row + 1);
     for (i=0; i<numColumns; i++) {
         tr.append('<td>');
     }
@@ -300,9 +304,12 @@ function addTableRow() {
 function removeTableRow() {
     var t = $('table');
     var numRows = $('td[class=criteria-htitle]', t).length;
+    var formCount_row = parseInt($('#id_rowform-TOTAL_FORMS').val());
     if (numRows < 2) return false;
     $('tbody tr:last-child').fadeOut("fast", function() {
         $(this).remove();
+    $('#id_rowform-TOTAL_FORMS').val(formCount_row - 1);
+
     });
 
 }
@@ -312,12 +319,16 @@ function removeTableColumn() {
         removeTableColumn() - Deletes the last column (all the last TDs).
     */
     var tableID = $('table').attr('id');
+    var formCount = parseInt($('#id_colform-TOTAL_FORMS').val());
     var columns = $('#' + tableID+ ' tr:last td').length;
     if (columns > 2) {
         $('#' + tableID + ' th:last-child, #' + tableID + ' td:last-child').fadeOut("fast", function() {
             $(this).remove();
+        $('#id_colform-TOTAL_FORMS').val(formCount - 1);
+
         });
-    } else {
+    } 
+    else {
         $('#jsnotify').notify("create", {
             title: "Can't delete column",
             text: "There must be at least one column in the table.",
@@ -336,19 +347,16 @@ function saveTable() {
         var tableID = $('table').attr('id');
 
         var xvalues = [];
-        var xfields = $('th.criteria-vtitle :input');
-        $.each(xfields, function(i, field){
-            xvalues.push(field.value);
-        });
+      //  var xfields = $('th.criteria-vtitle :input');
+      //  $.each(xfields, function(i, field){
+      //      xvalues.push(field.value);
+      //  });
         $('#id_columns').val(xvalues);
         var sortable = [];
         var rows = $('#' + tableID + ' tbody tr');
-      //  alert('Tengo ' + rows.length + ' filas')
         $.each(rows, function(i, field) {
-        //    alert('Deberia manipular un row y manipulo: '+ this);
             var rowID = this.attr('id');
             $(rowID + ' td').each(function() {
-      //          alert('Deberia manipular un TD y pillo: ' + this);
                 sortable.push($(this).attr('id'));
             })
     //        alert('Estos son los sortables: ' + sortable[0]);

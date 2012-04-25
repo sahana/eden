@@ -74,8 +74,8 @@ def add_new_debate(request, space_name):
             for form in self.forms:
                 form.empty_permitted = False
 
-    RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet)
-    ColumnFormSet = formset_factory(ColumnForm, max_num=10, formset=RequiredFormSet)
+    RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet, can_delete=True)
+    ColumnFormSet = formset_factory(ColumnForm, max_num=10, formset=RequiredFormSet, can_delete=True)
    
     debate_form = DebateForm(request.POST or None)
     row_formset = RowFormSet(request.POST or None, prefix="rowform")
@@ -101,10 +101,12 @@ def add_new_debate(request, space_name):
                 for form in row_formset.forms:
                     row = form.save(commit=False)
                     row.debate = debate_instance
+                    row.save()
 
                 for form in column_formset.forms:
                     column = form.save(commit=False)
                     column.debate = debate_instance
+                    column.save()
 
                 return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
         return render_to_response('debate/debate_add.html',
