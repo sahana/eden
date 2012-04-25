@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -22,21 +21,19 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required, permission_required
-
 from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic import FormView
-
 from django.template import RequestContext
 from django.views.generic.create_update import create_object
 from django.views.generic.create_update import update_object
-
 from django.contrib.auth.models import User
-from e_cidadania.apps.spaces.models import Space
-from e_cidadania.apps.news.models import Post
-from e_cidadania.apps.news.forms import NewsForm
+
+from core.spaces.models import Space
+from apps.ecidadania.news.models import Post
+from apps.ecidadania.news.forms import NewsForm
 
 
 class AddPost(FormView):

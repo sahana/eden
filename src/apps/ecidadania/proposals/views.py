@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -27,21 +26,19 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic import FormView
-
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.template import RequestContext
 from django.views.decorators.http import require_POST
 from django.db.models import Count
 from django.utils.decorators import method_decorator
-
 from django.views.generic.create_update import update_object
 from django.db.models import F
 from django.http import HttpResponse
 
-from e_cidadania.apps.proposals.models import Proposal
-from e_cidadania.apps.proposals.forms import ProposalForm, VoteProposal
-from e_cidadania.apps.spaces.models import Space
+from apps.ecidadania.proposals.models import Proposal
+from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal
+from core.spaces.models import Space
 
 
 class AddProposal(FormView):

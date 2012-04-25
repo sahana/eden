@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -21,7 +20,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.news.models import Post
+from apps.ecidadania.news.models import Post
 
 class PostAdmin(admin.ModelAdmin):
 

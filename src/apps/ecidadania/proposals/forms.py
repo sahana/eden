@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -26,7 +25,7 @@ from django.forms import ModelForm, forms
 from django.core import validators
 from django.contrib.auth.models import User
 
-from e_cidadania.apps.proposals.models import Proposal
+from apps.ecidadania.proposals.models import Proposal
 
 class ProposalForm(ModelForm):
 

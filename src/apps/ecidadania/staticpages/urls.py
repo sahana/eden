@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -21,9 +20,9 @@
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.staticpages.views import ViewPage, EditPage, DeletePage
+from apps.ecidadania.staticpages.views import ViewPage, EditPage, DeletePage
 
-urlpatterns = patterns('e_cidadania.apps.staticpages.views',
+urlpatterns = patterns('apps.ecidadania.staticpages.views',
 
     url(r'^$', ViewPage.as_view(), name='view-page'),
 

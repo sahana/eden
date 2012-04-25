@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -22,9 +21,9 @@ from django.conf.urls import *
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.news.views import DeletePost, ViewPost, AddPost, EditPost
+from apps.ecidadania.news.views import DeletePost, ViewPost, AddPost, EditPost
 
-urlpatterns = patterns('e_cidadania.apps.news.views',
+urlpatterns = patterns('apps.ecidadania.news.views',
     
     url(_(r'^add/$'), AddPost.as_view(), name='add-post'),
     

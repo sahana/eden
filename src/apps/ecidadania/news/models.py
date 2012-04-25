@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -22,10 +21,9 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 
-from e_cidadania.apps.tagging.fields import TagField
-from e_cidadania.apps.tagging.models import Tag
-
-from e_cidadania.apps.spaces.models import Space
+from apps.thirdparty.tagging.fields import TagField
+from apps.thirdparty.models import Tag
+from core.spaces.models import Space
 
 class Post(models.Model):
 

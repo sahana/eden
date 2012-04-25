@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -25,7 +24,7 @@ The proposal administration allows to edit every proposal made in the system.
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.apps.proposals.models import Proposal
+from apps.ecidadania.proposals.models import Proposal
 
 class ProposalAdmin(admin.ModelAdmin):
 

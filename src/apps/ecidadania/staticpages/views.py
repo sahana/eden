@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -35,7 +34,7 @@ from django.views.generic.list_detail import object_list, object_detail
 from django.views.generic.create_update import create_object, update_object
 from django.views.generic.create_update import delete_object
 
-from e_cidadania.apps.staticpages.models import StaticPage
+from apps.ecidadania.staticpages.models import StaticPage
 
 
 @permission_required('staticpages.add_staticpage')
