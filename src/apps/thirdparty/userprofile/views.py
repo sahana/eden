@@ -42,11 +42,11 @@ from django.contrib.auth.models import User, SiteProfileNotAvailable
 from django.template import RequestContext
 from django.conf import settings
 
-from e_cidadania.apps.proposals.models import Proposal
-from e_cidadania.apps.userprofile.forms import AvatarForm, AvatarCropForm, \
+from apps.ecidadania.proposals.models import Proposal
+from apps.thirdparty.userprofile.forms import AvatarForm, AvatarCropForm, \
                           EmailValidationForm, ProfileForm, RegistrationForm, \
                           LocationForm, PublicFieldsForm, ChangeEmail
-from e_cidadania.apps.userprofile.models import EmailValidation, Avatar
+from apps.thirdparty.userprofile.models import EmailValidation, Avatar
 
 
 if not settings.AUTH_PROFILE_MODULE:

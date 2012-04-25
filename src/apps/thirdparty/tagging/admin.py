@@ -1,6 +1,6 @@
 from django.contrib import admin
-from e_cidadania.apps.tagging.models import Tag, TaggedItem
-from e_cidadania.apps.tagging.forms import TagAdminForm
+from apps.thirdparty.tagging.models import Tag, TaggedItem
+from apps.thirdparty.tagging.forms import TagAdminForm
 
 class TagAdmin(admin.ModelAdmin):
     form = TagAdminForm
