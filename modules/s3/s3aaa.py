@@ -1627,7 +1627,6 @@ class AuthS3(Auth):
         if self.override:
             return True
 
-        session = current.session
         if not self.is_logged_in():
             basic = self.basic()
             try:

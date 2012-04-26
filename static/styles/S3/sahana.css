@@ -1300,7 +1300,10 @@ div#last_update {
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -32px -16px;
 }
-
+/* Grow Input */
+li input + a {
+    text-decoration: none;
+}
 
 .rfilter {
     float: left;
