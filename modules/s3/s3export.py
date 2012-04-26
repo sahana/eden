@@ -68,6 +68,7 @@ class S3Exporter(object):
         )
 
         self.xls = S3Codec.get_codec("xls").encode
+        self.pdf = S3Codec.get_codec("pdf").encode
 
     # -------------------------------------------------------------------------
     def csv(self, resource):

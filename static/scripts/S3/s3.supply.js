@@ -28,23 +28,27 @@ $(document).ready(function() {
     function InvItemPackIDChange() {     
     	// Cancel previous request
       	try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
-    	
+
         $('#TotalQuantity').remove();   
-        if ($('#inv_quantity_ajax_throbber').length == 0 ) {
-        	$('[name = "quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
-        }
         if ($('[name = "inv_item_id"]').length > 0) {
             id = $('[name = "inv_item_id"]').val()
         }
         else if  ($('[name = "send_inv_item_id"]').length > 0) {
             id = $('[name = "send_inv_item_id"]').val()
         }
-        else if  ($('[name = "item_id"]').length > 0) {
-            id = $('[name = "item_id"]').val()
-        }
+// Following condition removed since it doesn't appear to be correct
+// the ajax call is looking for the number of items in stock, but
+// this is the supply catalogue id - not an id related to an inventory
+//        else if  ($('[name = "item_id"]').length > 0) {
+//            id = $('[name = "item_id"]').val()
+//        }
         else
-            return
+            return;
+
         var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
+        if ($('#inv_quantity_ajax_throbber').length == 0 ) {
+        	$('[name = "quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
+        }
         
 	    // Save JSON Request by element id
         S3.JSONRequest[$(this).attr('id')] = $.getJSON(url, function(data) {

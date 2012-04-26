@@ -1433,7 +1433,7 @@ def org_organisation_logo(id, type="png"):
     
 
 # =============================================================================
-def org_site_represent(id, link=True):
+def org_site_represent(id, show_link=True):
     """ Represent a Facility in option fields or list views """
 
     db = current.db
@@ -1488,7 +1488,7 @@ def org_site_represent(id, link=True):
         # Since name is notnull for all types so far, this won't be reached.
         represent = "[site %d] (%s)" % (id, instance_type_nice)
 
-    if link and site:
+    if show_link and site:
         if not id:
             query = (table.site_id == site.site_id)
             id = db(query).select(table.id,
