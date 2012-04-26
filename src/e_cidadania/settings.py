@@ -24,8 +24,8 @@ Main configuration file for e-cidadania. Please refer to the documentation on
 http://docs.ecidadania.org before you modify anything.
 """
 
-__version__ = "0.2"
-__status__ = "alpha 1"
+__version__ = "0.1.5"
+__status__ = "beta 2"
 
 # Get the current directory
 import os
