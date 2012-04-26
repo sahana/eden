@@ -329,6 +329,68 @@ def activity():
                               rheader=rheader,
                               csv_template="activity")
 
+
+def community():
+    """
+    RESTful CRUD controller to display project community information
+    """
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component is not None:
+                if r.component_name == "document":
+                    doc_table = s3db.doc_document
+                    doc_table.organisation_id.readable = False
+                    doc_table.person_id.readable = False
+                    doc_table.location_id.readable = False
+                    doc_table.organisation_id.writable = False
+                    doc_table.person_id.writable = False
+                    doc_table.location_id.writable = False
+
+        return True
+    response.s3.prep = prep
+
+    # Pre-process
+    def postp(r, output):
+        if r.representation == "plain":
+            def represent(record, field):
+                if field.represent:
+                    return field.represent(record[field])
+                else:
+                    return record[field]
+            # Add VirtualFields to Map Popup
+            # Can't inject into SQLFORM, so need to simply replace
+            item = TABLE()
+            table.id.readable = False
+            table.location_id.readable = False
+            fields = [table[f] for f in table.fields if table[f].readable]
+            record = r.record
+            for field in fields:
+                item.append(TR(TD(field.label), TD(represent(record, field))))
+            hierarchy = gis.get_location_hierarchy()
+            item.append(TR(TD(hierarchy["L4"]), TD(record["name"])))
+            for field in ["L3", "L2", "L1"]:
+                item.append(TR(TD(hierarchy[field]), TD(record[field])))
+            output["item"] = item
+        return output
+    response.s3.postp = postp
+
+    tabs = [(T("Details"), None),
+            (T("Contact Persons"), "contact"),
+            (T("Beneficiaries"), "beneficiary"),
+            #(T("Tasks"), "task"),
+            #(T("Documents"), "document"),
+            ]
+
+    rheader = lambda r: s3db.project_rheader(r, tabs)
+    return s3_rest_controller(interactive_report=True,
+                              rheader=rheader,
+                              csv_template="community")
+
+
 # -----------------------------------------------------------------------------
 def activity_contact():
     """ RESTful CRUD controller """
