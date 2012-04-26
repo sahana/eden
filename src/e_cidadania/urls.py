@@ -94,6 +94,9 @@ urlpatterns += i18n_patterns('',
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
     url(r'^(?P<slug>[\w\-]+)/', include('apps.ecidadania.staticpages.urls')),
+    
+    # For smart_selects app
+    url(r'^chaining/', include('apps.thirdparty.smart_selects.urls')),
 )
 
 urlpatterns += patterns('',

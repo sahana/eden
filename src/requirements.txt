@@ -4,3 +4,4 @@ django-wysiwyg
 django-grappelli
 feedparser
 python-dateutil==1.5
+pyyaml

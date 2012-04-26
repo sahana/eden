@@ -180,6 +180,7 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 THIRDPARTY_APPS = (
     # This list is from the third party software included in e-cidadania or
     # system-wide dependencies.
+    'apps.thirdparty.smart_selects',
     'apps.thirdparty.userprofile',
     'apps.thirdparty.tagging',
     #'django_extensions',

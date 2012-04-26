@@ -8,7 +8,6 @@ from django.template import loader, Context
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.conf import settings
-from apps.thirdparty.userprofile.countries import CountryField
 import datetime
 import cPickle as pickle
 import base64
@@ -24,7 +23,6 @@ class BaseProfile(models.Model):
 
     user = models.ForeignKey(User, unique=True)
     date = models.DateTimeField(default=datetime.datetime.now)
-    country = CountryField(null=True, blank=True)
     latitude = models.DecimalField(max_digits=10, decimal_places=6, blank=True, null=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=6, blank=True, null=True)
     location = models.CharField(max_length=255, blank=True)

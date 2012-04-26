@@ -27,6 +27,8 @@ from django.conf import settings
 
 from apps.thirdparty.userprofile.models import BaseProfile
 from core.spaces.models import Space
+from apps.ecidadania.accounts.locations import Country, Region, City
+from apps.thirdparty.smart_selects.db_fields import ChainedForeignKey
 
 GENDER = (
 
@@ -59,10 +61,22 @@ class UserProfile(BaseProfile):
     birthdate = models.DateField(_('Birth date'), default=datetime.date.today(),
                                  blank=True)
     
-    # Maybe one day this will be replaced by a list of choices.
-    province = models.CharField(_('Province'), max_length=50)
-    region = models.CharField(_('Region'), max_length=50)
-    neighbourhood = models.CharField(_('Neighbourhood'), max_length=50)
+    country = models.ForeignKey(Country, null=True)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="country",
+        chained_model_field="country",
+        show_all=True,
+        auto_choose=True,
+        null=True
+    )
+    city = ChainedForeignKey(
+        City,
+        chained_field="region",
+        chained_model_field="region",
+        null=True
+    )
+    district = models.CharField(_('District'), max_length=50)
     
     # Detailed overview of the address
     address = models.CharField(_('Address'), max_length=100)
