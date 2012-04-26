@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010 Cidadanía Coop.
-# Written by: Oscar Carballal Prego <info@oscarcp.com>
+# Copyright (c) 2010-2012 Cidadania S. Coop. Galega
 #
 # This file is part of e-cidadania.
 #
@@ -29,7 +28,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
 
-from e_cidadania.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
+from core.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
                               DeletePost, ViewPost
 
 admin.autodiscover()
@@ -37,8 +36,9 @@ admin.autodiscover()
 # We put here the dictionary with all the packages for translatin JavaScript code
 # Please refer to https://docs.djangoproject.com/en/dev/topics/i18n/internationalization/#specifying-translation-strings-in-javascript-code
 js_info_dict = {
-    'packages': ('e_cidadania.apps.debate',),
+    'packages': ('apps.ecidadania.debate',),
 }
+
 urlpatterns = patterns('',
     # i18n switcher
     (r'^i18n/', include('django.conf.urls.i18n')),
@@ -52,16 +52,16 @@ urlpatterns += i18n_patterns('',
     (r'^admin/?', include(admin.site.urls)),
 
     # Index
-    url(r'^$', 'e_cidadania.views.index_view', name='site-index'),
+    url(r'^$', 'core.views.index_view', name='site-index'),
 
     # User accounts
-    url(_(r'^accounts/'), include('e_cidadania.apps.userprofile.urls')),
+    url(_(r'^accounts/'), include('apps.thirdparty.userprofile.urls')),
 
     # Spaces
-    url(_(r'^spaces/'), include('e_cidadania.apps.spaces.urls')),
+    url(_(r'^spaces/'), include('core.spaces.urls')),
     
     # Invitations
-    url(_(r'^invite/'), 'e_cidadania.views.invite', name='invite'),
+    url(_(r'^invite/'), 'core.views.invite', name='invite'),
     
     # News (this view of news is only for the index)
     url(_(r'^news/$'), ListNews.as_view(), name='list-site-news'),
@@ -93,7 +93,7 @@ urlpatterns += i18n_patterns('',
 
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
-    url(r'^(?P<slug>[\w\-]+)/', include('e_cidadania.apps.staticpages.urls')),
+    url(r'^(?P<slug>[\w\-]+)/', include('apps.ecidadania.staticpages.urls')),
 )
 
 urlpatterns += patterns('',
