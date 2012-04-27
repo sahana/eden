@@ -150,6 +150,15 @@ function addLayers() {
 }
 
 // ArcGIS REST
+/*
+@ToDo: Features not Images, so that we can have popups
+- will require a new OpenLayers.Format.ArcREST
+
+@ToDo: Support Token Authentication
+- Request Token during init of layer:
+result = GET http[s]://hostname/ArcGIS/tokens?request=getToken&username=myusername&password=mypassword
+- Append ?token=result to the URL
+*/
 function addArcRESTLayer(layer) {
     var name = layer.name;
     var url = [layer.url];
@@ -188,10 +197,10 @@ function addArcRESTLayer(layer) {
 
     var arcRESTLayer = new OpenLayers.Layer.ArcGIS93Rest(
         name, url, {
+            // There are other possible options, but this should be sufficient for our needs
             layers: 'show:' + layers,
             isBaseLayer: isBaseLayer,
             transparent: transparent,
-            visibility: visibility,
             dir: dir,
             // This is used to Save State
             layer_id: layer.id,

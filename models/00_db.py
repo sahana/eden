@@ -78,12 +78,14 @@ else:
 
 current.db = db
 
-#if request.env.web2py_runtime_gae:        # if running on Google App Engine
-#session.connect(request, response, db=db) # Store sessions and tickets in DB
-### or use the following lines to store sessions in Memcache (GAE-only)
-# from gluon.contrib.memdb import MEMDB
-# from google.appengine.api.memcache import Client
-# session.connect(request, response, db=MEMDB(Client())
+# Sessions Storage
+if deployment_settings.get_base_session_memcache():
+    # Store sessions in Memcache
+    from gluon.contrib.memcache import MemcacheClient
+    cache.memcache = MemcacheClient(request,
+                                    [deployment_settings.get_base_session_memcache()])
+    from gluon.contrib.memdb import MEMDB
+    session.connect(request, response, db=MEMDB(cache.memcache))
 
 ####################################################################
 # Instantiate Classes from Modules                                 #
