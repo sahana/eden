@@ -209,6 +209,8 @@ class S3Config(Storage):
         return self.base.get("public_url", "http://127.0.0.1:8000")
     def get_base_cdn(self):
         return self.base.get("cdn", False)
+    def get_base_session_memcache(self):
+        return self.base.get("session_memcache", False)
 
     # -------------------------------------------------------------------------
     # Database settings

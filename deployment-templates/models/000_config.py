@@ -134,6 +134,9 @@ deployment_settings.mail.approver = "useradmin@your.org"
 # Daily Limit on Sending of emails
 #deployment_settings.mail.limit = 1000
 
+#Enable session store in Memcache
+#deployment_settings.base.session_memcache = '127.0.0.1:11211'
+
 # Frontpage settings
 # RSS feeds
 deployment_settings.frontpage.rss = [
