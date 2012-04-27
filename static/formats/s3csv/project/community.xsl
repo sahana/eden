@@ -82,7 +82,7 @@
                 </xsl:call-template>
             </xsl:variable>
             <xsl:if test="$ActivityTypeRef">
-                <reference field="multi_activity_type_id" resource="project_community_type">
+                <reference field="multi_activity_type_id" resource="project_activity_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('[', $ActivityTypeRef, ']')"/>
                     </xsl:attribute>
@@ -126,7 +126,7 @@
     <xsl:template name="resource">
         <xsl:param name="item"/>
 
-        <resource name="project_community_type">
+        <resource name="project_activity_type">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
             </xsl:attribute>

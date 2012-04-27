@@ -727,14 +727,14 @@ class S3ProjectModel(S3Model):
         # Components
 
         # Contact Persons
-        add_component("pr_person",
-                      project_activity=Storage(
-                            name="contact",
-                            link="project_activity_contact",
-                            joinby="activity_id",
-                            key="person_id",
-                            actuate="hide",
-                            autodelete=False))
+#        add_component("pr_person",
+#                      project_activity=Storage(
+#                            name="contact",
+#                            link="project_activity_contact",
+#                            joinby="activity_id",
+#                            key="person_id",
+#                            actuate="hide",
+#                            autodelete=False))
 
         # Beneficiaries
         add_component("project_beneficiary",
@@ -758,7 +758,8 @@ class S3ProjectModel(S3Model):
                              project_id(),
                              Field("name",
                                    label = T("Short Description"),
-                                   requires=IS_NOT_EMPTY()),
+                                   requires=IS_NOT_EMPTY()
+                                   ),
                              location_id(
                                    readable = True,
                                    writable = True,
@@ -1234,13 +1235,12 @@ class S3ProjectModel(S3Model):
     def project_community_onaccept(form):
         """
         """
-        vars = form.vars
-        location_id = vars.location_id
+        location_id = form.vars.location_id
 
         if location_id:
             # Populate the Lx fields
             ctable = current.s3db.project_community
-            current.response.s3.lx_update(ctable, vars.id)
+            current.response.s3.lx_update(ctable, form.vars.id)
 
         return
 
@@ -1269,6 +1269,8 @@ class S3ProjectModel(S3Model):
     def project_community_deduplicate(item):
         """ Import item de-duplication """
 
+        db = current.db
+
         if item.id:
             return
         if item.tablename != "project_community":
@@ -1278,7 +1280,7 @@ class S3ProjectModel(S3Model):
 
         if "project_id" in item.data and \
                 "location_id" in item.data:
-            # Match activity by project_id and location_id
+            # Match community by project_id and location_id
             project_id = item.data.project_id
             location_id = item.data.location_id
             query = (table.project_id == project_id) & \
