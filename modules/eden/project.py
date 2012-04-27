@@ -765,17 +765,6 @@ class S3ProjectModel(S3Model):
                                    writable = True,
                                    widget = S3LocationSelectorWidget(hide_address=True)),
                              multi_activity_type_id(),
-                             Field("time_estimated", "double",
-                                   readable=True,
-                                   writable=True,
-                                   label = "%s (%s)" % (T("Time Estimate"),
-                                                        T("hours"))),
-                             Field("time_actual", "double",
-                                   readable=True,
-                                   # Gets populated from constituent Tasks
-                                   writable=False,
-                                   label = "%s (%s)" % (T("Time Taken"),
-                                                        T("hours"))),
                              comments(),
                              format="%(name)s",
                              *(s3.lx_fields() + s3.meta_fields()))
@@ -833,8 +822,6 @@ class S3ProjectModel(S3Model):
         report_fields = [(T("Community"), "name"),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
-                         (T("Time Estimated"), "time_estimated"),
-                         (T("Time Actual"), "time_actual"),
                         ]
         list_fields = ["name",
                        "project_id",
@@ -857,8 +844,8 @@ class S3ProjectModel(S3Model):
                                          defaults=Storage(
                                                           rows="project_id",
                                                           cols="name",
-                                                          fact="time_actual",
-                                                          aggregate="sum",
+                                                          fact="multi_activity_type_id",
+                                                          aggregate="list",
                                                           totals=True
                                                           )
                                          ),
