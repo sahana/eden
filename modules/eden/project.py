@@ -1518,8 +1518,7 @@ class S3ProjectDRRModel(S3Model):
                                   # populated automatically
                                   project_id(readable=False,
                                              writable=False),
-                                  activity_id(comment=None),
-                                  community_id(),
+                                  community_id(comment=None),
                                   beneficiary_type_id(empty=False),
                                   Field("number", "integer",
                                         label = T("Quantity"),
@@ -1527,10 +1526,6 @@ class S3ProjectDRRModel(S3Model):
                                         represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                                   s3.comments(),
                                   *s3.meta_fields())
-
-        # Field configuration
-        if pca:
-            table.activity_id.label = T("Community")
 
         # CRUD Strings
         ADD_BNF = T("Add Beneficiaries")
@@ -1558,7 +1553,7 @@ class S3ProjectDRRModel(S3Model):
 
         # Resource Configuration
         report_fields=[
-                      "activity_id",
+                      "community_id",
                       (T("Beneficiary Type"), "beneficiary_type_id"),
                       "project_id",
                       "project_id$multi_hazard_id",
@@ -1719,15 +1714,15 @@ class S3ProjectDRRModel(S3Model):
         s3db = current.s3db
 
         btable = s3db.project_beneficiary
-        atable = s3db.project_activity
+        ctable = s3db.project_community
 
         record_id = form.vars.id
         query = (btable.id == record_id) & \
-                (atable.id == btable.activity_id)
-        activity = db(query).select(atable.project_id,
+                (ctable.id == btable.community_id)
+        community = db(query).select(ctable.project_id,
                                     limitby=(0, 1)).first()
-        if activity:
-            db(btable.id == record_id).update(project_id=activity.project_id)
+        if community:
+            db(btable.id == record_id).update(project_id=community.project_id)
         return
 
     # ---------------------------------------------------------------------
@@ -1741,13 +1736,13 @@ class S3ProjectDRRModel(S3Model):
             return
         if item.tablename == "project_beneficiary" and \
             "beneficiary_type_id" in item.data and \
-            "activity_id" in item.data:
+            "community_id" in item.data:
             # Match beneficiary by type and activity_id
             table = item.table
             beneficiary_type_id = item.data.beneficiary_type_id
-            activity_id = item.data.activity_id
+            community_id = item.data.community_id
             query = (table.beneficiary_type_id == beneficiary_type_id) & \
-                    (table.activity_id == activity_id)
+                    (table.community_id == community_id)
             duplicate = db(query).select(table.id,
                                             limitby=(0, 1)).first()
             if duplicate:
@@ -3310,98 +3305,62 @@ class S3ProjectCommunityVirtualfields:
 class S3ProjectBeneficiaryVirtualfields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["activity_id"]
+    extra_fields = ["community_id"]
 
-    def L0(self):
+    @staticmethod
+    def _get_community_location(community_id):
+        """
+        Grab the first location from the database for this community and
+        return the location tree
+        """
         db = current.db
         s3db = current.s3db
-        s3 = current.response.s3
 
-        atable = s3db.project_activity
-        query = (atable.id == self.project_beneficiary.activity_id)
-        activity = db(query).select(atable.location_id,
-                                    limitby=(0, 1)).first()
+        # The project_community database table
+        tbl = s3db.project_community
+        query = (tbl.id == community_id)
 
-        if activity:
-            parents = Storage()
+        community = db(query).select(tbl.location_id, limitby=(0,1)).first()
+
+        parents = Storage()
+        if community:
             parents = current.gis.get_parent_per_level(parents,
-                                                       activity.location_id,
+                                                       community.location_id,
                                                        ids=False,
                                                        names=True)
-            if "L0" in parents:
-                return parents["L0"]
-            else:
-                return current.messages.NONE
+
+        return parents
+
+    def L0(self):
+        parents = self._get_community_location(self.project_beneficiary.community_id)
+
+        if "L0" in parents:
+            return parents["L0"]
         else:
             return current.messages.NONE
 
 
     def L1(self):
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
+        parents = self._get_community_location(self.project_beneficiary.community_id)
 
-        atable = s3db.project_activity
-        query = (atable.id == self.project_beneficiary.activity_id)
-        activity = db(query).select(atable.location_id,
-                                    limitby=(0, 1)).first()
-
-        if activity:
-            parents = Storage()
-            parents = current.gis.get_parent_per_level(parents,
-                                                       activity.location_id,
-                                                       ids=False,
-                                                       names=True)
-            if "L1" in parents:
-                return parents["L1"]
-            else:
-                return current.messages.NONE
+        if "L1" in parents:
+            return parents["L1"]
         else:
             return current.messages.NONE
 
     def L2(self):
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
+        parents = self._get_community_location(self.project_beneficiary.community_id)
 
-        atable = s3db.project_activity
-        query = (atable.id == self.project_beneficiary.activity_id)
-        activity = db(query).select(atable.location_id,
-                                    limitby=(0, 1)).first()
-
-        if activity:
-            parents = Storage()
-            parents = current.gis.get_parent_per_level(parents,
-                                                       activity.location_id,
-                                                       ids=False,
-                                                       names=True)
-            if "L2" in parents:
-                return parents["L2"]
-            else:
-                return current.messages.NONE
+        if "L2" in parents:
+            return parents["L2"]
         else:
             return current.messages.NONE
 
     def L3(self):
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
+        parents = self._get_community_location(self.project_beneficiary.community_id)
 
-        atable = s3db.project_activity
-        query = (atable.id == self.project_beneficiary.activity_id)
-        activity = db(query).select(atable.location_id,
-                                    limitby=(0, 1)).first()
-
-        if activity:
-            parents = Storage()
-            parents = current.gis.get_parent_per_level(parents,
-                                                       activity.location_id,
-                                                       ids=False,
-                                                       names=True)
-            if "L3" in parents:
-                return parents["L3"]
-            else:
-                return current.messages.NONE
+        if "L3" in parents:
+            return parents["L3"]
         else:
             return current.messages.NONE
 

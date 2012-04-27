@@ -79,8 +79,8 @@ def project():
     # Pre-process
     def prep(r):
         btable = s3db.project_beneficiary
-        btable.activity_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                    "project_activity.id",
+        btable.community_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                    "project_community.id",
                                                     "%(name)s",
                                                     filterby="project_id",
                                                     filter_opts=[r.id],
@@ -102,7 +102,7 @@ def project():
                             del project_organisation_roles[host_role]
                             otable.role.requires = \
                                 IS_NULL_OR(IS_IN_SET(project_organisation_roles))
-                elif r.component_name == "activity":
+                elif r.component_name in ("activity", "community"):
                     # Default the Location Selector list of countries to those found in the project
                     countries = r.record.countries_id
                     if countries:
