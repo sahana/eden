@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -56,10 +56,11 @@ OpenLayers.Layer.ArcGIS93Rest = OpenLayers.Class(OpenLayers.Layer.Grid, {
      * url - {String} Base url for the ArcGIS server REST service
      * options - {Object} An object with key/value pairs representing the
      *                    options and option values.
+     *
      * Valid Options:
-     *        format: {String} MIME type of desired image type.
-     *        layers: {String} Comma-separated list of layers to display.
-     *        srs: {String} Projection ID.
+     *        format - {String} MIME type of desired image type.
+     *        layers - {String} Comma-separated list of layers to display.
+     *        srs - {String} Projection ID.
      */
     initialize: function(name, url, params, options) {
         var newArguments = [];
@@ -132,7 +133,9 @@ OpenLayers.Layer.ArcGIS93Rest = OpenLayers.Class(OpenLayers.Layer.Grid, {
         // ArcGIS Server only wants the numeric portion of the projection ID.
         var projWords = this.projection.getCode().split(":");
         var srid = projWords[projWords.length - 1];
-
+        if (srid == 900913) {
+            srid = 3857;
+        }
         var imageSize = this.getImageSize(); 
         var newParams = {
             'BBOX': bounds.toBBOX(),

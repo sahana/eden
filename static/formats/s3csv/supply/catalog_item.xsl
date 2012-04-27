@@ -28,6 +28,10 @@
          Unit of Measure.................supply_item.um
          Pack............................supply_item_pack.name
          Pack Quantity...................supply_item_pack.quantity
+         Pack2...........................supply_item_pack.name
+         Pack2 Quantity..................supply_item_pack.quantity
+         Pack3...........................supply_item_pack.name
+         Pack3 Quantity..................supply_item_pack.quantity
          Weight..........................supply_item.weight
          Length..........................supply_item.length
          Width...........................supply_item.width
@@ -157,7 +161,6 @@
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="um" select="col[@field='Unit of Measure']"/>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
-        <xsl:variable name="pack_quantity" select="col[@field='Pack Quantity']"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
@@ -165,7 +168,7 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="col[@field='Item Name']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Item Code']"/></data>
-            <data field="um"><xsl:value-of select="col[@field='Unit of Measure']"/></data>
+            <data field="um"><xsl:value-of select="$um"/></data>
             <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
             <data field="year"><xsl:value-of select="col[@field='Year']"/></data>
             <data field="weight"><xsl:value-of select="col[@field='Weight']"/></data>
@@ -194,7 +197,19 @@
 	        <xsl:if test="$pack!=''">
 	            <resource name="supply_item_pack">
 	                <data field="name"><xsl:value-of select="$pack"/></data>
-	                <data field="quantity"><xsl:value-of select="$pack_quantity"/></data>
+	                <data field="quantity"><xsl:value-of select="col[@field='Pack Quantity']"/></data>
+	            </resource>
+	        </xsl:if>
+            <xsl:if test="col[@field='Pack2']!=''">
+	            <resource name="supply_item_pack">
+	                <data field="name"><xsl:value-of select="col[@field='Pack2']"/></data>
+	                <data field="quantity"><xsl:value-of select="col[@field='Pack2 Quantity']"/></data>
+	            </resource>
+	        </xsl:if>
+            <xsl:if test="col[@field='Pack3']!=''">
+	            <resource name="supply_item_pack">
+	                <data field="name"><xsl:value-of select="col[@field='Pack3']"/></data>
+	                <data field="quantity"><xsl:value-of select="col[@field='Pack3 Quantity']"/></data>
 	            </resource>
 	        </xsl:if>
         </resource>
