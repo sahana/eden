@@ -765,6 +765,17 @@ class S3ProjectModel(S3Model):
                                    writable = True,
                                    widget = S3LocationSelectorWidget(hide_address=True)),
                              multi_activity_type_id(),
+                             Field("time_estimated", "double",
+                                   readable=True,
+                                   writable=True,
+                                   label = "%s (%s)" % (T("Time Estimate"),
+                                                        T("hours"))),
+                             Field("time_actual", "double",
+                                   readable=True,
+                                   # Gets populated from constituent Tasks
+                                   writable=False,
+                                   label = "%s (%s)" % (T("Time Taken"),
+                                                        T("hours"))),
                              comments(),
                              format="%(name)s",
                              *(s3.lx_fields() + s3.meta_fields()))
@@ -775,9 +786,9 @@ class S3ProjectModel(S3Model):
         ADD_COMMUNITY = T("Add Community")
         LIST_COMMUNITIES = T("List Communities")
         crud_strings[tablename] = Storage(
-                title_create = ADD_ACTIVITY,
+                title_create = ADD_COMMUNITY,
                 title_display = T("Community Details"),
-                title_list = LIST_ACTIVITIES,
+                title_list = LIST_COMMUNITIES,
                 title_update = T("Edit Community Details"),
                 title_search = T("Search Community"),
                 title_upload = T("Import Community Data"),
@@ -819,11 +830,15 @@ class S3ProjectModel(S3Model):
         )
 
         # Resource Configuration
-        report_fields = [(T("Project"), "project_id"),
+        report_fields = [(T("Community"), "name"),
+                         (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
+                         (T("Time Estimated"), "time_estimated"),
+                         (T("Time Actual"), "time_actual"),
                         ]
         list_fields = ["name",
                        "project_id",
+                       "multi_activity_type_id",
                        "comments"
                        ]
 
@@ -835,18 +850,18 @@ class S3ProjectModel(S3Model):
                   onvalidation=self.project_community_onvalidation,
                   onaccept=self.project_community_onaccept,
                   deduplicate=self.project_community_deduplicate,
-#                  report_options=Storage(
-#                                         rows=report_fields,
-#                                         cols=report_fields,
-#                                         facts=report_fields,
-#                                         defaults=Storage(
-#                                                          rows="project_id",
-#                                                          cols="name",
-#                                                          fact="time_actual",
-#                                                          aggregate="sum",
-#                                                          totals=True
-#                                                          )
-#                                         ),
+                  report_options=Storage(
+                                         rows=report_fields,
+                                         cols=report_fields,
+                                         facts=report_fields,
+                                         defaults=Storage(
+                                                          rows="project_id",
+                                                          cols="name",
+                                                          fact="time_actual",
+                                                          aggregate="sum",
+                                                          totals=True
+                                                          )
+                                         ),
                   list_fields = list_fields,
                   )
 
