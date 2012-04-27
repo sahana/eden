@@ -86,26 +86,23 @@ deployment_settings.base.migrate = True
 # To just create the .table files:
 #deployment_settings.base.fake_migrate = True
 
-# Enable/disable pre-population of the database.
-# Should be non-zero on 1st_run to pre-populate the database
-# - unless doing a manual DB migration
-# Then set to zero in Production (to save 1x DAL hit every page)
+# Pre-Populate
+# http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
+# Configure/disable pre-population of the database.
+# To pre-populate the database On 1st run should specify directory(s) in 
+# /private/prepopulate/
+# eg:
+# ["default"]
+# ["demo/Standard"]
+# ["demo/IFRC_Train"]
+# ["roles", "user"]
+# Unless doing a manual DB migration, where prepopulate = []
+# In Production, prepopulate = [] (to save 1x DAL hit every page)
+deployment_settings.base.prepopulate = ["default"]
 # NOTE: the web UI will not be accessible while the DB is empty,
 # instead run:
 #   python web2py.py -N -S eden -M
 # to create the db structure, then exit and re-import the data.
-# This is a simple status flag with the following meanings
-# 0 - No pre-population
-# 1 - Base data entered in the database
-# 2 - Regression (data used by the regression tests)
-# 3 - Scalability testing
-# 4-9 Reserved
-# 10 - User (data required by the user typically for specialised test)
-# 11-19 Reserved
-# 20+ Demo (Data required for a default demo)
-#     Each subsequent Demos can take any unique number >= 20
-#     The actual demo will be defined by the file demo_folders.cfg
-deployment_settings.base.prepopulate = 1
 
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
