@@ -1429,7 +1429,7 @@ def org_organisation_logo(id, type="png"):
                        _height = "60px",
                       )
         return logo
-    return None
+    return DIV() # no logo so return an empty div
     
 
 # =============================================================================
