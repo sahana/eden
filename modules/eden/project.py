@@ -681,7 +681,10 @@ class S3ProjectModel(S3Model):
                         ]
 
         if drr:
-            next = "beneficiary"
+            # disabled until beneficiaries are updated to support both
+            # communities and activities
+            #next = "beneficiary"
+            next = "task"
         else:
             next = "task"
         configure(tablename,
@@ -737,8 +740,10 @@ class S3ProjectModel(S3Model):
 #                            autodelete=False))
 
         # Beneficiaries
-        add_component("project_beneficiary",
-                      project_activity="activity_id")
+        # Disabled until beneficiaries are updated to support both
+        # communities and activities
+        #add_component("project_beneficiary",
+        #              project_activity="activity_id")
 
         # Tasks
         add_component("project_task",
