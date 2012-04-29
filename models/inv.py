@@ -118,61 +118,61 @@ if session.s3.show_inv == None:
 
 # -----------------------------------------------------------------------------
 # Inv Send Incoming as a simulated "component" of Inventory Store
-def inv_incoming():
-    """
-        Pipeline Report showing the inbound shipments which haven't yet been received
-        Allows easy access to Receive these shipments into the Inventory
-
-        @ToDo: Provide a function to allow adding new expected shipments which are coming ex-system
-               - this would be adding a Sent Shipment with us as Destination, not Source
-    """
-
-    tablename, id = request.vars.viewing.split(".")
-    record = s3db[tablename][id]
-    to_site_id = record.site_id
-    site_id = record.site_id
-
-    rheader_dict = dict(org_office = s3db.org_rheader)
-    if deployment_settings.has_module("cr"):
-        rheader_dict["cr_shelter"] = response.s3.shelter_rheader
-    if deployment_settings.has_module("hms"):
-        rheader_dict["hms_hospital"] = s3db.hms_hospital_rheader
-
-    stable = s3db.inv_send
-    SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
-    response.s3.filter = (stable.status == SHIP_STATUS_SENT) & \
-                         (stable.to_site_id == to_site_id)
-
-    s3mgr.configure("inv_send", insertable=False)
-
-    response.s3.actions = [dict(url = URL(c="inv", f="send",
-                                          args = ["[id]", "send_item"],
-                                          vars = dict(site_id = site_id)
-                                          ),
-                                _class = "action-btn",
-                                label = str(T("Review"))),
-                           dict(url = URL(c="inv", f="recv_sent",
-                                          args = ["[id]"],
-                                          vars = dict(site_id = site_id)
-                                           ),
-                                _class = "action-btn",
-                                label = "%s    " % T("Process")),
-                           ]
-
-    # @ToDo: Probably need to adjust some more CRUD strings:
-    s3.crud_strings["inv_send"].update(
-        msg_record_modified = T("Incoming Shipment updated"),
-        msg_record_deleted = T("Incoming Shipment canceled"),
-        msg_list_empty = T("No Incoming Shipments"))
-
-    output = s3_rest_controller("inv", "send",
-                                method = "list",
-                                rheader = rheader_dict[tablename],
-                                title = s3.crud_strings[tablename]["title_display"])
-
-    if tablename == "org_office" and isinstance(output, dict):
-        output["title"] = T("Warehouse Details")
-
-    return output
+#def inv_incoming():
+#    """
+#        Pipeline Report showing the inbound shipments which haven't yet been received
+#        Allows easy access to Receive these shipments into the Inventory
+#
+#        @ToDo: Provide a function to allow adding new expected shipments which are coming ex-system
+#               - this would be adding a Sent Shipment with us as Destination, not Source
+#    """
+#
+#    tablename, id = request.vars.viewing.split(".")
+#    record = s3db[tablename][id]
+#    to_site_id = record.site_id
+#    site_id = record.site_id
+#
+#    rheader_dict = dict(org_office = s3db.org_rheader)
+#    if deployment_settings.has_module("cr"):
+#        rheader_dict["cr_shelter"] = response.s3.shelter_rheader
+#    if deployment_settings.has_module("hms"):
+#        rheader_dict["hms_hospital"] = s3db.hms_hospital_rheader
+#
+#    stable = s3db.inv_send
+#    SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
+#    response.s3.filter = (stable.status == SHIP_STATUS_SENT) & \
+#                         (stable.to_site_id == to_site_id)
+#
+#    s3mgr.configure("inv_send", insertable=False)
+#
+#    response.s3.actions = [dict(url = URL(c="inv", f="send",
+#                                          args = ["[id]", "send_item"],
+#                                          vars = dict(site_id = site_id)
+#                                          ),
+#                                _class = "action-btn",
+#                                label = str(T("Review"))),
+#                           dict(url = URL(c="inv", f="recv_sent",
+#                                          args = ["[id]"],
+#                                          vars = dict(site_id = site_id)
+#                                           ),
+#                                _class = "action-btn",
+#                                label = "%s    " % T("Process")),
+#                           ]
+#
+#    # @ToDo: Probably need to adjust some more CRUD strings:
+#    s3.crud_strings["inv_send"].update(
+#        msg_record_modified = T("Incoming Shipment updated"),
+#        msg_record_deleted = T("Incoming Shipment canceled"),
+#        msg_list_empty = T("No Incoming Shipments"))
+#
+#    output = s3_rest_controller("inv", "send",
+#                                method = "list",
+#                                rheader = rheader_dict[tablename],
+#                                title = s3.crud_strings[tablename]["title_display"])
+#
+#    if tablename == "org_office" and isinstance(output, dict):
+#        output["title"] = T("Warehouse Details")
+#
+#    return output
 
 # END =========================================================================

@@ -128,13 +128,13 @@ class S3InventoryModel(S3Model):
         org_site_represent = self.org_site_represent
 
         item_pack_virtualfields = self.supply_item_pack_virtualfields
+        messages = current.messages
+        NONE = messages.NONE
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
         inv_source_type = { 0: None,
                             1: T("Donated"),
                             2: T("Procured"),
@@ -415,15 +415,36 @@ $(document).ready(function() {
 
         db = current.db
         s3db = current.s3db
+        
+        s3_string_represent = lambda str: str if str else ""
 
         itable = s3db.inv_inv_item
         stable = s3db.supply_item
         query = (itable.id == id) & \
                 (itable.item_id == stable.id)
         record = db(query).select(stable.name,
+                                  stable.um,
+                                  itable.item_source_no,
+                                  itable.bin,
+                                  itable.expiry_date,
+                                  itable.supply_org_id,
                                   limitby = (0, 1)).first()
         if record:
-            return record.name
+            s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+            ctn = s3_string_represent(record.inv_inv_item.item_source_no)
+            org = s3db.org_organisation_represent(record.inv_inv_item.supply_org_id)
+            if record.inv_inv_item.expiry_date:
+                exp_date = " expires: %s" % s3_date_represent(record.inv_inv_item.expiry_date)
+            else:
+                exp_date = ""
+            bin = s3_string_represent(record.inv_inv_item.bin)
+            return "%s (%s%s) %s %s %s" % (record.supply_item.name,
+                                         record.supply_item.um,
+                                         exp_date,
+                                         ctn,
+                                         org,
+                                         bin,
+                                        )
         else:
             return None
 
@@ -905,6 +926,7 @@ class S3TrackingModel(S3Model):
                                         "string",
                                         length = 16,
                                         label = itn_label,
+                                        represent = s3_string_represent
                                         ),
                                   Field("status",
                                         "integer",
@@ -956,6 +978,7 @@ $(document).ready(function() {
                                   Field("bin",                # The bin at origin
                                         "string",
                                         length = 16,
+                                        represent = s3_string_represent,
                                         ),
                                   send_id(), # send record
                                   recv_id(), # receive record
@@ -971,6 +994,7 @@ $(document).ready(function() {
                                         length = 16,
                                         readable = False,
                                         writable = False,
+                                        represent = s3_string_represent,
                                         widget = S3InvBinWidget("inv_track_item")
                                         ),
                                   org_id(name = "owner_org_id",
@@ -990,18 +1014,18 @@ $(document).ready(function() {
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
 
         # CRUD strings
-        ADD_SEND_ITEM = T("Add Item to Shipment")
-        LIST_SEND_ITEMS = T("List Sent Items")
+        ADD_TRACK_ITEM = T("Add Item to Shipment")
+        LIST_TRACK_ITEMS = T("List of Shipping Items")
         s3.crud_strings[tablename] = Storage(
-            title_create = ADD_SEND_ITEM,
+            title_create = ADD_TRACK_ITEM,
             title_display = T("Sent Item Details"),
-            title_list = LIST_SEND_ITEMS,
+            title_list = LIST_TRACK_ITEMS,
             title_update = T("Edit Sent Item"),
             title_search = T("Search Sent Items"),
             subtitle_create = T("Add New Sent Item"),
             subtitle_list = T("Shipment Items"),
-            label_list_button = LIST_SEND_ITEMS,
-            label_create_button = ADD_SEND_ITEM,
+            label_list_button = LIST_TRACK_ITEMS,
+            label_create_button = ADD_TRACK_ITEM,
             label_delete_button = T("Delete Sent Item"),
             msg_record_created = T("Item Added to Shipment"),
             msg_record_modified = T("Sent Item updated"),
@@ -1010,6 +1034,19 @@ $(document).ready(function() {
 
         # Resource configuration
         self.configure(tablename,
+                       list_fields = ["id",
+                                      "status",
+                                      "item_id",
+                                      "item_pack_id",
+                                      "send_id",
+                                      "quantity",
+                                      "bin",
+                                      "recv_id",
+                                      "recv_quantity",
+                                      "recv_bin",
+                                      "owner_org_id",
+                                      "supply_org_id",
+                                     ],
                        onaccept = self.inv_track_item_onaccept,
                        onvalidation = self.inv_track_item_onvalidate,
                        )
@@ -1035,15 +1072,15 @@ $(document).ready(function() {
 
             table = s3db.inv_send
             send_row = db(table.id == id).select(table.date,
-                                                 table.to_site_id,
+                                                 table.site_id,
                                                  limitby=(0, 1)).first()
             if show_link:
-                return SPAN(table.to_site_id.represent(send_row.to_site_id),
+                return SPAN(table.site_id.represent(send_row.site_id),
                             " - ",
                             table.date.represent(send_row.date)
                             )
             else:
-                return "%s - %s" % (table.to_site_id.represent(send_row.to_site_id, show_link = False),
+                return "%s - %s" % (table.site_id.represent(send_row.site_id, show_link = False),
                                     table.date.represent(send_row.date),
                                    )
         else:
@@ -1104,7 +1141,7 @@ $(document).ready(function() {
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_recv_represent(id):
+    def inv_recv_represent(id, show_link=True):
         """
             @ToDo: 'From Organisation' is great for Donations
             (& Procurement if we make Suppliers Organisations), but isn't useful
@@ -1118,29 +1155,33 @@ $(document).ready(function() {
 
             table = s3db.inv_recv
             inv_recv_row = db(table.id == id).select(table.date,
-                                                     table.from_site_id,
+                                                     table.site_id,
                                                      limitby=(0, 1)).first()
-            return SPAN(table.from_site_id.represent(inv_recv_row.from_site_id),
-                        " - ",
-                        table.date.represent(inv_recv_row.date)
-                        )
+            if show_link:
+                return SPAN(table.site_id.represent(inv_recv_row.site_id),
+                            " - ",
+                            table.date.represent(inv_recv_row.date)
+                            )
+            else:
+                return "%s - %s" % (table.site_id.represent(inv_recv_row.site_id, show_link = False),
+                                    table.date.represent(inv_recv_row.date),
+                                   )
         else:
             return current.messages.NONE
 
     @staticmethod
     def inv_recv_onaccept(form):
         """
-           When a inv send record is created then create the recv_ref.
+           When a inv recv record is created then create the recv_ref.
         """
         s3db = current.s3db
         db = current.db
         rtable = s3db.inv_recv
-        # If the send_ref is None then set it up
+        # If the recv_ref is None then set it up
         id = form.vars.id
         if not rtable[id].recv_ref:
             code = S3TrackingModel.inv_get_shipping_code("GRN", rtable[id].site_id, id)
             db(rtable.id == id).update(recv_ref = code)
-
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1398,7 +1439,10 @@ $(document).ready(function() {
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
         if tracktable[id].status == 3:
-            query = (inv_item_table.item_id == record.item_id) & \
+            recv_rec = rtable[record.recv_id]
+            recv_site_id = recv_rec.site_id
+            query = (inv_item_table.site_id == recv_site_id) & \
+                    (inv_item_table.item_id == record.item_id) & \
                     (inv_item_table.item_pack_id == record.item_pack_id) & \
                     (inv_item_table.currency == record.currency) & \
                     (inv_item_table.pack_value == record.pack_value) & \
@@ -1416,11 +1460,11 @@ $(document).ready(function() {
                 if form.vars.send_inv_item_id:
                     source_type = inv_item_table[form.vars.send_inv_item_id].source_type
                 else:
-                    if rtable[record.recv_id].type == 2:
+                    if recv_rec.type == 2:
                         source_type = 1 # Donation
                     else:
                         source_type = 2 # Procured
-                inv_item_id = inv_item_table.insert(site_id = rtable[record.recv_id].site_id,
+                inv_item_id = inv_item_table.insert(site_id = recv_site_id,
                                              item_id = record.item_id,
                                              item_pack_id = record.item_pack_id,
                                              currency = record.currency,
@@ -1593,7 +1637,40 @@ def inv_warehouse_rheader(r):
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "track_movement/"),
                ]
-        rheader = DIV (s3_rheader_tabs(r, tabs))
+        rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
+        table = current.s3db[tablename]
+        rheader = DIV( TABLE(
+                           TR( TH("%s: " % table.item_id.label),
+                               table.item_id.represent(record.item_id),
+                               TH( "%s: " % table.item_pack_id.label),
+                               table.item_pack_id.represent(record.item_pack_id),
+                              ),
+                           TR( TH( "%s: " % table.site_id.label),
+                               TD(table.site_id.represent(record.site_id), _colspan=3),
+                              ),
+                             ),
+                        rheader_tabs
+                        )
+    if tablename == "inv_track_item" and record != None:
+        table = current.s3db["inv_inv_item"]
+        irecord = table[record.item_id]
+        tabs = [(T("Details"), None),
+                (T("Track Shipment"), "inv_item/"),
+               ]
+        rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
+        rheader = DIV( TABLE(
+                           TR( TH("%s: " % table.item_id.label),
+                               table.item_id.represent(irecord.item_id),
+                               TH( "%s: " % table.item_pack_id.label),
+                               table.item_pack_id.represent(irecord.item_pack_id),
+                              ),
+                           TR( TH( "%s: " % table.site_id.label),
+                               TD(table.site_id.represent(irecord.site_id), _colspan=3),
+                              ),
+                             ),
+                        rheader_tabs
+                        )
+
     rfooter = TAG[""]()
     if record and "site_id" in record:
         if (r.component and r.component.name == "inv_item"):

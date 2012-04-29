@@ -34,6 +34,7 @@ __all__ = ["S3RequestModel",
            "S3CommitItemModel",
            "S3CommitPersonModel",
            "req_item_onaccept",
+           "req_update_status",
            "req_rheader",
            "req_match",
            ]
@@ -57,7 +58,7 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
-rn_label = T("Requisition Number")
+rn_label = T("Requisition Reference")
 
 # =============================================================================
 class S3RequestModel(S3Model):
@@ -475,6 +476,7 @@ $(function() {
 
         # Hide fields which don't make sense in a Create form
         table = s3db.req_req
+        table.req_ref.readable = False
         table.commit_status.readable = table.commit_status.writable = False
         table.transit_status.readable = table.transit_status.writable = False
         table.fulfil_status.readable = table.fulfil_status.writable = False
@@ -521,7 +523,7 @@ $(function() {
             if not req:
                 return NONE
             req = "%s - %s" % (table.site_id.represent(req.site_id,
-                                                       link = False),
+                                                       show_link = False),
                                table.date.represent(req.date))
             if link:
                 return A(req,
@@ -687,8 +689,8 @@ $(function() {
                                  item_pack_represent(req_item.item_pack_id),
                                  # This requires an action btn to get the req_id
                                  req_item.quantity_commit,
-                                 req_item.quantity_fulfil,
                                  req_item.quantity_transit,
+                                 req_item.quantity_fulfil,
                                  #req_quantity_represent(req_item.quantity_commit, "commit"),
                                  #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
                                  #req_quantity_represent(req_item.quantity_transit, "transit"),
@@ -1646,12 +1648,7 @@ def req_item_onaccept(form):
         Partial = some items have quantity > 0
         Complete = quantity_x = quantity(requested) for ALL items
     """
-
-    db = current.db
-    s3db = current.s3db
     s3mgr = current.manager
-
-    table = s3db.req_req_item
 
     if form and form.vars.req_id:
         req_id = form.vars.req_id
@@ -1661,6 +1658,13 @@ def req_item_onaccept(form):
         # @todo: should raise a proper HTTP status here
         raise Exception("can not get req_id")
 
+    req_update_status(req_id)
+
+def req_update_status(req_id):
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.req_req_item
     is_none = dict(commit = True,
                    transit = True,
                    fulfil = True)
@@ -1668,7 +1672,6 @@ def req_item_onaccept(form):
     is_complete = dict(commit = True,
                        transit = True,
                        fulfil = True)
-
     # Must check all items in the req
     query = (table.req_id == req_id) & \
             (table.deleted == False )
@@ -1696,7 +1699,7 @@ def req_item_onaccept(form):
 
     rtable = s3db.req_req
     db(rtable.id == req_id).update(**status_update)
-
+    
 # =============================================================================
 def req_skill_onaccept(form):
     """
@@ -1835,14 +1838,15 @@ def req_rheader(r, check_page = False):
                 if site_id:
                     site_name = s3db.org_site_represent(site_id, show_link = False)
                     commit_btn = TAG[""](
-                                A( T("Commit from %s") % site_name,
-                                    _href = URL(c = "req",
-                                                f = "commit_req",
-                                                args = [r.id],
-                                                vars = dict(site_id = site_id)
-                                                ),
-                                    _class = "action-btn"
-                                   ),
+# Removed to try and simplify the workflow - GF
+#                                A( T("Commit from %s") % site_name,
+#                                    _href = URL(c = "req",
+#                                                f = "commit_req",
+#                                                args = [r.id],
+#                                                vars = dict(site_id = site_id)
+#                                                ),
+#                                    _class = "action-btn"
+#                                   ),
                                 A( T("Send from %s") % site_name,
                                     _href = URL(c = "req",
                                                 f = "send_req",

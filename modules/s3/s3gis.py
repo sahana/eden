@@ -79,6 +79,15 @@ try:
 except ImportError:
     s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
+DEBUG = False
+if DEBUG:
+    import datetime
+    print >> sys.stderr, "S3GIS: DEBUG MODE"
+    def _debug(m):
+        print >> sys.stderr, m
+else:
+    _debug = lambda m: None
+
 # Map WKT types to db types
 GEOM_TYPES = {
     "point": 1,
@@ -1492,64 +1501,6 @@ class GIS(object):
         return None
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_representation(field,
-                           value):
-        """
-            Return a quick representation for a Field based on it's value
-            - faster than field.represent(value)
-            Used by get_popup_tooltip()
-
-            @ToDo: Move out of S3GIS
-        """
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        cache = current.cache
-        fieldname = field.name
-        tablename = field.tablename
-
-        # Fallback representation is the value itself
-        represent = value
-
-        # If the field is an integer lookup then returning that isn't much help
-        if fieldname == "type":
-            if tablename == "hrm_human_resource":
-                represent = cache.ram("hrm_type_%s" % value,
-                                      lambda: s3db.hrm_type_opts.get(value, ""),
-                                      time_expire=60)
-            elif tablename == "org_office":
-                represent = cache.ram("office_type_%s" % value,
-                                      lambda: s3db.org_office_type_opts.get(value, ""),
-                                      time_expire=60)
-        elif field.type[:9] == "reference":
-                tablename = field.type[10:]
-                if tablename == "pr_person":
-                    # Unlikely to be the same person in multiple popups so no value to caching
-                    represent = s3_fullname(value)
-                else:
-                    table = s3db[tablename]
-                    if "name" in table.fields:
-                        # Simple Name lookup faster than full represent
-                        represent = cache.ram("%s_%s_%s" % (tablename, fieldname, value),
-                                              lambda: db(table.id == value).select(table.name,
-                                                                                   limitby=(0, 1)).first().name,
-                                              time_expire=60)
-                    else:
-                        # Do the normal represent
-                        represent = cache.ram("%s_%s_%s" % (tablename, fieldname, value),
-                                              lambda: field.represent(value),
-                                              time_expire=60)
-        elif field.type.startswith("list"):
-            # Do the normal represent
-            represent = cache.ram("%s_%s_%s" % (tablename, fieldname, value),
-                                  lambda: field.represent(value),
-                                  time_expire=60)
-
-        return represent
-
-    # -------------------------------------------------------------------------
     def get_features_in_polygon(self, location, tablename=None, category=None):
         """
             Returns a gluon.sql.Rows of Features within a Polygon.
@@ -1932,26 +1883,25 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def get_marker_and_popup(layer_id=None, # Used by S3REST: S3Resource.export_tree()
-                             marker=None,   # Used by S3REST: S3Resource.export_tree()
-                             tablename=None,  # Used by S3Search: search_interactive()
-                             record=None      # Used by S3Search: search_interactive()
+                             resource=None, # Used by S3REST & S3Search
+                             record=None    # Used by S3Search: search_interactive()
                             ):
         """
             Returns the marker, popup_fields and popup_label for a Map Layer
 
             Used by S3REST: S3Resource.export_tree():
             @param: layer_id - db.gis_layer_feature.id
-            @param: marker - a default marker image (what would provide this?)
+            @param: resource - S3Resource instance
 
             Used by S3Search: search_interactive():
-            @param: tablename - the tablename for a resource
+            @param: resource - S3Resource instance
             @param: record - the record for a resource
         """
 
         db = current.db
         s3db = current.s3db
 
-        table = s3db.gis_layer_feature
+        ftable = s3db.gis_layer_feature
         ltable = s3db.gis_layer_symbology
         mtable = s3db.gis_marker
 
@@ -1964,14 +1914,16 @@ class GIS(object):
 
         if layer_id:
             # Feature Layer called by S3REST: S3Resource.export_tree()
-            query = (table.id == layer_id) & \
-                    (table.layer_id == ltable.layer_id) & \
+            if DEBUG:
+                start = datetime.datetime.now()
+            query = (ftable.id == layer_id) & \
+                    (ftable.layer_id == ltable.layer_id) & \
                     (ltable.marker_id == mtable.id) & \
                     (ltable.symbology_id == symbology_id)
             layer = db(query).select(mtable.image,
                                      ltable.gps_marker,
-                                     table.popup_label,
-                                     table.popup_fields,
+                                     ftable.popup_label,
+                                     ftable.popup_fields,
                                      limitby=(0, 1)).first()
 
             if layer:
@@ -1985,19 +1937,76 @@ class GIS(object):
                 popup_label = ""
                 popup_fields = "name"
 
+            if resource:
+                # Build the Popup Tooltips now so that representations can be
+                # looked-up in bulk rather than as a separate lookup per record
+                table = resource.table
+                tablename = resource.tablename
+                tooltips = {}
+                #for record in resource:
+                #    tooltip = GIS.get_popup_tooltip(table, record,
+                #                                    popup_label, popup_fields)
+                #    tooltips[record.id] = tooltip
+                if popup_label:
+                    _tooltip = "(%s)" % current.T(popup_label)
+                else:
+                    _tooltip = ""
+
+                if popup_fields:
+                    popup_fields = popup_fields.split("/")
+
+                if popup_fields:
+                    represents = {}
+                    for fieldname in popup_fields:
+                        try:
+                            field = table[fieldname]
+                        except:
+                            # This field isn't in the table
+                            popup_fields.remove(fieldname)
+                        else:
+                            _represents = GIS.get_representation(field, resource)
+                            represents[fieldname] = _represents
+
+                for record in resource:
+                    tooltip = _tooltip
+                    if popup_fields:
+                        first = True
+                        for fieldname in popup_fields:
+                            value = record[fieldname]
+                            if first:
+                                tooltip = "%s %s" % (represents[fieldname][value], tooltip)
+                                first = False
+                            else:
+                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
+
+                    tooltips[record.id] = tooltip
+
+                tooltips[tablename] = tooltips
+
+            if DEBUG:
+                end = datetime.datetime.now()
+                duration = end - start
+                duration = '{:.2f}'.format(duration.total_seconds())
+                query = (ftable.id == layer_id)
+                layer_name = db(query).select(ftable.name,
+                                              limitby=(0, 1)).first().name
+                _debug("marker/tooltip lookup of layer %s completed in %s seconds" % \
+                        (layer_name, duration))
+
             return dict(marker = marker,
                         gps_marker = gps_marker,
                         popup_label = popup_label,
-                        popup_fields = popup_fields,
+                        tooltips = tooltips,
                         )
 
-        elif tablename:
+        elif resource:
             # Search results called by S3Search: search_interactive()
+            # @ToDo: Refactor to return tooltips instead of popup_fields
             def get_layers(tablename):
                 (module, resourcename) = tablename.split("_", 1)
-                query = (table.module == module) & \
-                        (table.resource == resourcename) & \
-                        (table.layer_id == ltable.layer_id)
+                query = (ftable.module == module) & \
+                        (ftable.resource == resourcename) & \
+                        (ftable.layer_id == ltable.layer_id)
 
                 left = [
                         mtable.on((ltable.marker_id == mtable.id) & \
@@ -2008,13 +2017,14 @@ class GIS(object):
                                           mtable.height,
                                           mtable.width,
                                           #ltable.gps_marker,
-                                          table.filter_field,
-                                          table.filter_value,
-                                          table.popup_label,
-                                          table.popup_fields,
+                                          ftable.filter_field,
+                                          ftable.filter_value,
+                                          ftable.popup_label,
+                                          ftable.popup_fields,
                                           left=left)
                 return layers
 
+            tablename = resource.tablename
             layers = current.cache.ram("%s_marker" % tablename,
                                        lambda: get_layers(tablename),
                                        time_expire=60)
@@ -2060,12 +2070,13 @@ class GIS(object):
             return None
 
     # -------------------------------------------------------------------------
-    def get_popup_tooltip(self, table, record, popup_label, popup_fields):
+    @staticmethod
+    def get_popup_tooltip(table, record, popup_label, popup_fields):
         """
             Returns the HTML popup_tooltip for a Map feature
 
-            Used by S3XML.gis_encode()
-            Used by S3Search: search_interactive()
+            Was used by S3XML.gis_encode()
+            Still used by S3Search: search_interactive()
 
             @param: table
             @param: record
@@ -2085,7 +2096,7 @@ class GIS(object):
                 value = record[fieldname]
                 if value:
                     field = table[fieldname]
-                    represent = self.get_representation(field, value)
+                    represent = GIS.get_representation(field, value=value)
                     tooltip = "%s %s" % (represent, tooltip)
             except:
                 # This field isn't in the table
@@ -2099,13 +2110,125 @@ class GIS(object):
                     value = record[fieldname]
                     if value:
                         field = table[fieldname]
-                        represent = self.get_representation(field, value)
+                        represent = GIS.get_representation(field, value=value)
                         tooltip = "%s<br />%s" % (tooltip, represent)
             except:
                 # This field isn't in the table
                 pass
 
         return tooltip
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_representation(field,
+                           resource=None,
+                           value=None):
+        """
+            Return a quick representation for a Field based on it's value
+            - faster than field.represent(value)
+            Used by get_popup_tooltip()
+
+            @ToDo: Move out of S3GIS
+        """
+
+        db = current.db
+        s3db = current.s3db
+        cache = current.cache
+        fieldname = field.name
+        tablename = field.tablename
+
+        if resource:
+            # We can lookup the representations in bulk rather than 1/record
+            if DEBUG:
+                start = datetime.datetime.now()
+            represents = {}
+            values = [record[fieldname] for record in resource]
+            # Deduplicate
+            values = list(set(values))
+            if fieldname == "type":
+                if tablename == "hrm_human_resource":
+                    for value in values:
+                        represents[value] = s3db.hrm_type_opts.get(value, "")
+                elif tablename == "org_office":
+                    for value in values:
+                        represents[value] = s3db.org_office_type_opts.get(value, "")
+            elif field.type[:9] == "reference":
+                tablename = field.type[10:]
+                if tablename == "pr_person":
+                    represents = s3_fullname(values)
+                    # Need to modify this function to be able to handle bulk lookups
+                    #for value in values:
+                    #    represents[value] = s3_fullname(value)
+                else:
+                    table = s3db[tablename]
+                    if "name" in table.fields:
+                        # Simple Name lookup faster than full represent
+                        rows = db(table.id.belongs(values)).select(table.id,
+                                                                   table.name)
+                        for row in rows:
+                            represents[row.id] = row.name
+                    else:
+                        # Do the normal represent
+                        for value in values:
+                            represents[value] = field.represent(value)
+            elif field.type.startswith("list"):
+                # Do the normal represent
+                for value in values:
+                    represents[value] = field.represent(value)
+            else:
+                # Fallback representation is the value itself
+                for value in values:
+                    represents[value] = value
+
+            if DEBUG:
+                end = datetime.datetime.now()
+                duration = end - start
+                duration = '{:.2f}'.format(duration.total_seconds())
+                _debug("representation of %s completed in %s seconds" % \
+                        (fieldname, duration))
+            return represents
+
+        else:
+            # We look up the represention for just this one value at a time
+
+            # If the field is an integer lookup then returning that isn't much help
+            if fieldname == "type":
+                if tablename == "hrm_human_resource":
+                    represent = cache.ram("hrm_type_%s" % value,
+                                          lambda: s3db.hrm_type_opts.get(value, ""),
+                                          time_expire=60)
+                elif tablename == "org_office":
+                    represent = cache.ram("office_type_%s" % value,
+                                          lambda: s3db.org_office_type_opts.get(value, ""),
+                                          time_expire=60)
+            elif field.type[:9] == "reference":
+                    tablename = field.type[10:]
+                    if tablename == "pr_person":
+                        # Unlikely to be the same person in multiple popups so no value to caching
+                        represent = s3_fullname(value)
+                    else:
+                        table = s3db[tablename]
+                        if "name" in table.fields:
+                            # Simple Name lookup faster than full represent
+                            represent = cache.ram("%s_%s_%s" % (tablename, fieldname, value),
+                                                  lambda: db(table.id == value).select(table.name,
+                                                                                       limitby=(0, 1)).first().name,
+                                                  time_expire=60)
+                        else:
+                            # Do the normal represent
+                            represent = cache.ram("%s_%s_%s" % (tablename, fieldname, value),
+                                                  lambda: field.represent(value),
+                                                  time_expire=60)
+            elif field.type.startswith("list"):
+                # Do the normal represent
+                represent = cache.ram("%s_%s_%s" % (tablename, fieldname, value),
+                                      lambda: field.represent(value),
+                                      time_expire=60)
+            else:
+                # Fallback representation is the value itself
+                represent = value
+
+            return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
