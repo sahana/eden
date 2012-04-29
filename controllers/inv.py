@@ -665,14 +665,15 @@ def recv():
     s3mgr.load("inv_recv")
     s3mgr.load("inv_adj_item")
     tablename = "inv_recv"
-    table = s3db.inv_recv
+    recvtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
 
     # Limit site_id to sites the user has permissions for
     if deployment_settings.get_inv_shipment_name() == "order":
         error_msg = T("You do not have permission for any facility to add an order.")
     else:
         error_msg = T("You do not have permission for any facility to receive a shipment.")
-    auth.permission.permitted_facilities(table=table,
+    auth.permission.permitted_facilities(table=recvtable,
                                          error_msg=error_msg)
 
     # The inv_recv record might be created when the shipment is send and so it
@@ -681,82 +682,126 @@ def recv():
     if len(request.args) > 0:
         try:
             id = request.args[0]
-            if table[id].recipient_id == None:
-                db(table.id == id).update(recipient_id = auth.s3_logged_in_person())
+            if recvtable[id].recipient_id == None:
+                db(recvtable.id == id).update(recipient_id = auth.s3_logged_in_person())
         except:
             pass
 
+    SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
+    SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
+    SHIP_STATUS_RECEIVED = s3db.inv_ship_status["RECEIVED"]
+    SHIP_STATUS_CANCEL = s3db.inv_ship_status["CANCEL"]
+
+    def set_recv_attr(status):
+        recvtable.sender_id.readable = False
+        recvtable.sender_id.writable = False
+        recvtable.grn_status.readable = False
+        recvtable.grn_status.writable = False
+        recvtable.cert_status.readable = False
+        recvtable.cert_status.writable = False
+        recvtable.eta.readable = False
+        recvtable.req_ref.writable = True
+        if status == SHIP_STATUS_IN_PROCESS:
+            recvtable.sender_id.writable = True
+            recvtable.send_ref.writable = True
+            recvtable.recv_ref.readable = False
+        else:
+            # Make all fields writable False
+            for field in recvtable.fields:
+                recvtable[field].writable = False
+
+    TRACK_STATUS_UNKNOWN    = s3db.inv_tracking_status["UNKNOWN"]
+    TRACK_STATUS_PREPARING  = s3db.inv_tracking_status["IN_PROCESS"]
+    TRACK_STATUS_TRANSIT    = s3db.inv_tracking_status["SENT"]
+    TRACK_STATUS_UNLOADING  = s3db.inv_tracking_status["UNLOADING"]
+    TRACK_STATUS_ARRIVED    = s3db.inv_tracking_status["RECEIVED"]
+    TRACK_STATUS_CANCELED   = s3db.inv_tracking_status["CANCEL"]
+
+    def set_track_attr(status):
+        # By default Make all fields writable False
+        for field in tracktable.fields:
+            tracktable[field].writable = False
+        # Hide some fields
+        tracktable.send_id.readable = False
+        tracktable.recv_id.readable = False
+        tracktable.bin.readable = False
+        tracktable.adj_item_id.readable = False
+        tracktable.recv_quantity.readable = True
+        if status == TRACK_STATUS_PREPARING:
+            # show some fields
+            tracktable.item_source_no.writable = True
+            tracktable.item_id.writable = True
+            tracktable.item_pack_id.writable = True
+            tracktable.quantity.writable = True
+            tracktable.currency.writable = True
+            tracktable.pack_value.writable = True
+            tracktable.expiry_date.writable = True
+            tracktable.recv_bin.writable = True
+            tracktable.owner_org_id.writable = True
+            tracktable.supply_org_id.writable = True
+            tracktable.comments.writable = True
+            tracktable.recv_quantity.readable = False
+            # hide some fields
+            tracktable.send_inv_item_id.readable = False
+            # change some labels
+            tracktable.quantity.label = T("Quantity Delivered")
+            tracktable.recv_bin.label = T("Bin")
+        elif status == TRACK_STATUS_TRANSIT:
+            # Hide the values that will be copied from the inv_inv_item record
+            tracktable.send_inv_item_id.readable = False
+            tracktable.send_inv_item_id.writable = False
+            # Display the values that can only be entered on create
+            tracktable.item_source_no.readable = True
+            tracktable.item_source_no.writable = True
+            tracktable.recv_quantity.writable = True            # This is a received purchase so change the label to reflect this
+            tracktable.quantity.label =  T("Quantity Delivered")
+            tracktable.recv_bin.readable = True
+            tracktable.recv_bin.writable = True
+        elif status == TRACK_STATUS_ARRIVED:
+            tracktable.item_source_no.readable = True
+            tracktable.item_source_no.writable = False
+            tracktable.item_id.writable = False
+            tracktable.send_inv_item_id.writable = False
+            tracktable.item_pack_id.writable = False
+            tracktable.quantity.writable = False
+            tracktable.currency.writable = False
+            tracktable.pack_value.writable = False
+            tracktable.expiry_date.writable = False
+            tracktable.owner_org_id.writable = False
+            tracktable.supply_org_id.writable = False
+            tracktable.recv_bin.readable = True
+            tracktable.recv_bin.writable = True
+
+        
     def prep(r):
         if r.component:
-            record = table[r.id]
+            # if we have a component then set the track_item attributes
+            record = recvtable[r.id]
             # Can only create or delete track items for a recv record if the status is preparing
             if r.method == "create" or r.method == "delete":
-                if record.status != 1:
+                if record.status != SHIP_STATUS_IN_PROCESS:
                     return False
-            tracktable = s3db.inv_track_item
-            # Hide the link to the send and adjustment records
-            tracktable.send_id.readable = False
-            tracktable.send_id.writable = False
-            tracktable.recv_id.readable = False
-            tracktable.recv_id.writable = False
-            tracktable.bin.readable = False
-            tracktable.bin.writable = False
-            tracktable.adj_item_id.readable = False
-            tracktable.adj_item_id.writable = False
-            tracktable.recv_quantity.readable = True
-            tracktable.recv_quantity.writable = True
-
-            if r.method == "update" and record.status==2:
-                # Hide the values that will be copied from the inv_inv_item record
-                tracktable.item_source_no.readable = True
-                tracktable.item_source_no.writable = False
-                tracktable.item_id.writable = False
-                tracktable.send_inv_item_id.writable = False
-                tracktable.item_pack_id.writable = False
-                tracktable.quantity.writable = False
-                tracktable.currency.writable = False
-                tracktable.pack_value.writable = False
-                tracktable.expiry_date.writable = False
-                tracktable.owner_org_id.writable = False
-                tracktable.supply_org_id.writable = False
-                tracktable.recv_bin.readable = True
-                tracktable.recv_bin.writable = True
+            if r.component_id:
+                track_record = tracktable[r.component_id]
+                set_track_attr(track_record.status)
             else:
-                tracktable = s3db.inv_track_item
-                # Hide the values that will be copied from the inv_inv_item record
-                tracktable.send_inv_item_id.readable = False
-                tracktable.send_inv_item_id.writable = False
-                # Display the values that can only be entered on create
-                tracktable.item_source_no.readable = True
-                tracktable.item_source_no.writable = True
-                # This is a received purchase so change the label to reflect this
-                tracktable.quantity.label =  T("Quantity Delivered")
-                tracktable.recv_bin.readable = True
-                tracktable.recv_bin.writable = True
+                set_track_attr(TRACK_STATUS_PREPARING)
 
-            SHIP_STATUS_IN_PROCESS = s3db.inv_ship_status["IN_PROCESS"]
             if r.record and r.record.status == SHIP_STATUS_IN_PROCESS:
                 s3.crud_strings.inv_recv.title_update = \
                 s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
         else:
-            table.sender_id.readable = False
-            table.sender_id.writable = False
+            # else set the recv attributes
             if r.id:
-                record = table[r.id]
-                # If this is part of a shipment then lock down the type and site_id
-                if record.sender_id != None:
-                    table.type.writable = False
-                    table.site_id.writable = False
-                if record.status == 1:
-                    table.recipient_id.writable = False
-                    table.date.writable = False
-                    table.from_site_id.readable = False
-                    table.from_site_id.writable = False
-
+                record = recvtable[r.id]
+                set_recv_attr(record.status)
+            else:
+                set_recv_attr(SHIP_STATUS_IN_PROCESS)
+                recvtable.recv_ref.readable = False
         return True
     response.s3.prep = prep
 
-    if len(request.args) > 1 and request.args[1] == "track_item" and table[request.args[0]].status:
+    if len(request.args) > 1 and request.args[1] == "track_item" and recvtable[request.args[0]].status:
         # remove CRUD generated buttons in the tabs
         s3mgr.configure("inv_track_item",
                         create=False,
@@ -764,7 +809,7 @@ def recv():
                         editable=False,
                         deletable=False,
                        )
-        if table[request.args[0]].status == 2:
+        if recvtable[request.args[0]].status == 2:
             s3mgr.configure("inv_track_item",
                             editable=True,
                            )
@@ -921,20 +966,25 @@ def recv_process():
     for track_item in track_rows:
         s3.inv_track_item_onaccept( Storage(vars=Storage(track_item) ) )
 
-    # Go to the Inventory of the Site which has received these items
-    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
-                                                          site_id)
-    query = (otable.id == id)
-    otype = db(query).select(otable.type, limitby = (0, 1)).first()
-    if otype and otype.type == 5:
-        url = URL(c = "inv",
-                 f = "warehouse",
-                 args = [id, "inv_item"])
-    else:
-        url = URL(c = "org",
-                 f = "office",
-                 args = [id, "inv_item"])
-    redirect(url)
+    session.confirmation = T("Shipment Items Received")
+    redirect(URL(c = "inv",
+                 f = "recv",
+                 args = [recv_id]))
+
+#    # Go to the Inventory of the Site which has received these items
+#    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
+#                                                          site_id)
+#    query = (otable.id == id)
+#    otype = db(query).select(otable.type, limitby = (0, 1)).first()
+#    if otype and otype.type == 5:
+#        url = URL(c = "inv",
+#                 f = "warehouse",
+#                 args = [id, "inv_item"])
+#    else:
+#        url = URL(c = "org",
+#                 f = "office",
+#                 args = [id, "inv_item"])
+#    redirect(url)
 
 
 # -----------------------------------------------------------------------------

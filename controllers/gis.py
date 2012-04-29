@@ -1554,6 +1554,82 @@ def layer_mgrs():
     return output
 
 # -----------------------------------------------------------------------------
+def layer_arcrest():
+    """ RESTful CRUD controller """
+
+    if deployment_settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+        auth.permission.fail()
+
+    tablename = "%s_%s" % (module, resourcename)
+    s3mgr.load(tablename)
+
+    # CRUD Strings
+    type = "ArcGIS REST"
+    LAYERS = T(TYPE_LAYERS_FMT % type)
+    ADD_NEW_LAYER = T(ADD_NEW_TYPE_LAYER_FMT % type)
+    EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
+    LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
+    NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
+    s3.crud_strings[tablename] = Storage(
+        title_create=ADD_LAYER,
+        title_display=LAYER_DETAILS,
+        title_list=LAYERS,
+        title_update=EDIT_LAYER,
+        title_search=SEARCH_LAYERS,
+        subtitle_create=ADD_NEW_LAYER,
+        subtitle_list=LIST_LAYERS,
+        label_list_button=LIST_LAYERS,
+        label_create_button=ADD_LAYER,
+        label_delete_button = DELETE_LAYER,
+        msg_record_created=LAYER_ADDED,
+        msg_record_modified=LAYER_UPDATED,
+        msg_record_deleted=LAYER_DELETED,
+        msg_list_empty=NO_LAYERS)
+
+    # Custom Method
+    s3mgr.model.set_method(module, resourcename, method="enable",
+                           action=enable_layer)
+
+    # Pre-processor
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "config":
+                ltable = s3db.gis_layer_config
+                field = ltable.base
+                field.readable = False
+                field.writable = False
+                if r.method != "update":
+                    # Only show Configs with no definition yet for this layer
+                    table = r.table
+                    # Find the records which are used
+                    query = (ltable.layer_id == table.layer_id) & \
+                            (table.id == r.id)
+                    rows = db(query).select(ltable.config_id)
+                    # Filter them out
+                    ltable.config_id.requires = IS_ONE_OF(db,
+                                                         "gis_config.id",
+                                                         "%(name)s",
+                                                         not_filterby="config_id",
+                                                         not_filter_opts=[row.config_id for row in rows]
+                                                         )
+        return True
+    response.s3.prep = prep
+
+    # Post-processor
+    def postp(r, output):
+        if r.interactive and r.method != "import":
+            if not r.component:
+                s3_action_buttons(r, copyable=True)
+                # Inject checkbox to enable layer in default config
+                inject_enable(output)
+        return output
+    response.s3.postp = postp
+
+    output = s3_rest_controller(rheader=s3db.gis_rheader)
+
+    return output
+
+# -----------------------------------------------------------------------------
 def layer_geojson():
     """ RESTful CRUD controller """
 

@@ -4066,6 +4066,7 @@ S3.gis.layers_feature_queries[%i] = {
         if catalogue_layers:
             # Add all Layers from the Catalogue
             layer_types = [
+                ArcRESTLayer,
                 BingLayer,
                 EmptyLayer,
                 GoogleLayer,
@@ -4100,6 +4101,8 @@ S3.gis.layers_feature_queries[%i] = {
                     elif layer_type == "gis_layer_google":
                         # NB v3 doesn't work when initially hidden
                         layer_types = [GoogleLayer]
+                    elif layer_type == "gis_layer_arcrest":
+                        layer_types = [ArcRESTLayer]
                     elif layer_type == "gis_layer_bing":
                         layer_types = [BingLayer]
                     elif layer_type == "gis_layer_tms":
@@ -4396,7 +4399,7 @@ class Layer(object):
             # All OK - add SubLayer
             record["visible"] = _config.visible
             if base and _config.base:
-                # name can't conflict with OSM layers
+                # name can't conflict with OSM/WMS/ArcREST layers
                 record["_base"] = True
                 base = False
             else:
@@ -4492,6 +4495,38 @@ class Layer(object):
             for key, (value, defaults) in values_and_defaults.iteritems():
                 if value not in defaults:
                     output[key] = value
+
+# -----------------------------------------------------------------------------
+class ArcRESTLayer(Layer):
+    """
+        ArcGIS REST Layers from Catalogue
+    """
+
+    tablename = "gis_layer_arcrest"
+    js_array = "S3.gis.layers_arcrest"
+
+    # -------------------------------------------------------------------------
+    class SubLayer(Layer.SubLayer):
+        def as_dict(self):
+            # Mandatory attributes
+            output = {
+                "id": self.layer_id,
+                "type": "arcrest",
+                "name": self.safe_name,
+                "url": self.url,
+            }
+
+            # Attributes which are defaulted client-side if not set
+            self.setup_folder_and_visibility(output)
+            self.add_attributes_if_not_default(
+                output,
+                layers = (self.layers, (0,)),
+                transparent = (self.transparent, (True,)),
+                base = (self.base, (False,)),
+                _base = (self._base, (False,)),
+            )
+
+            return output
 
 # -----------------------------------------------------------------------------
 class BingLayer(Layer):

@@ -88,6 +88,12 @@ function addLayers() {
             addGPXLayer(S3.gis.layers_gpx[i]);
         }
     }
+    // ArcGIS REST
+    if (S3.gis.layers_arcrest) {
+        for (i = 0; i < S3.gis.layers_arcrest.length; i++) {
+            addArcRESTLayer(S3.gis.layers_arcrest[i]);
+        }
+    }
     // CoordinateGrid
     if (S3.gis.CoordinateGrid) {
         addCoordinateGrid();
@@ -140,6 +146,64 @@ function addLayers() {
                 new OpenLayers.Feature.Vector(point)
             );
         }
+    }
+}
+
+// ArcGIS REST
+function addArcRESTLayer(layer) {
+    var name = layer.name;
+    var url = [layer.url];
+    if (undefined != layer.layers) {
+        var layers = layer.layers;
+    } else {
+        // Default layer
+        var layers = 0;
+    }
+    if (undefined != layer.dir) {
+        var dir = layer.dir;
+        if ( $.inArray(dir, S3.gis.dirs) == -1 ) {
+            // Add this folder to the list of folders
+            S3.gis.dirs.push(dir);
+        }
+    } else {
+        // Default folder
+        var dir = '';
+    }
+    if (undefined != layer.base) {
+        var isBaseLayer = layer.base;
+    } else {
+        var isBaseLayer = false;
+    }
+    if (undefined != layer.transparent) {
+        var transparent = layer.transparent;
+    } else {
+        var transparent = true;
+    }
+    if (undefined != layer.visibility) {
+        var visibility = layer.visibility;
+    } else {
+        // Default to visible
+        var visibility = true;
+    }
+
+    var arcRESTLayer = new OpenLayers.Layer.ArcGIS93Rest(
+        name, url, {
+            layers: 'show:' + layers,
+            isBaseLayer: isBaseLayer,
+            transparent: transparent,
+            visibility: visibility,
+            dir: dir,
+            // This is used to Save State
+            layer_id: layer.id,
+            layer_type: 'arcrest'
+        }
+    );
+
+    arcRESTLayer.setVisibility(visibility);
+
+    map.addLayer(arcRESTLayer);
+    if (layer._base) {
+        map.setBaseLayer(arcRESTLayer);
     }
 }
 
@@ -1125,6 +1189,7 @@ function addTMSLayer(layer) {
         map.setBaseLayer(tmsLayer);
     }
 }
+
 // WFS
 // @ToDo: WFS-T Editing: http://www.gistutor.com/openlayers/22-advanced-openlayers-tutorials/47-openlayers-wfs-t-using-a-geoserver-hosted-postgis-layer.html
 function addWFSLayer(layer) {
@@ -1460,6 +1525,7 @@ function addWMSLayer(layer) {
             dir: dir,
             wrapDateLine: true,
             isBaseLayer: isBaseLayer,
+            transparent: transparent,
             // This is used to Save State
             layer_id: layer.id,
             layer_type: 'wms',
@@ -1473,9 +1539,6 @@ function addWMSLayer(layer) {
     }
     if (format) {
         wmsLayer.params.FORMAT = format;
-    }
-    if (transparent) {
-        wmsLayer.params.TRANSPARENT = true;
     }
     if (version) {
         wmsLayer.params.VERSION = version;
