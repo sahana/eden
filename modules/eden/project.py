@@ -684,7 +684,7 @@ class S3ProjectModel(S3Model):
             # disabled until beneficiaries are updated to support both
             # communities and activities
             #next = "beneficiary"
-            next = "task"
+            next = ""
         else:
             next = "task"
         configure(tablename,
