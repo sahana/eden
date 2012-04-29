@@ -1136,6 +1136,7 @@ $(document).ready(function() {
                         report_hide_comments=True,
                         report_footer = inv_send_report_footer,
                         paper_alignment = "Landscape",
+                        report_table_autogrow = "B",
                         **attr
                        )
 
@@ -1773,7 +1774,14 @@ def inv_send_rheader(r):
 
             table = r.table
 
+            site_id = record.site_id
+            org_id = s3db.org_site[site_id].organisation_id
+            logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
+                           TR(TD(logo, _colspan=2),
+                              TH("%s: " % table.send_ref.label),
+                              TD(table.send_ref.represent(record.send_ref))
+                              ),
                            TR( TH("%s: " % table.date.label),
                                table.date.represent(record.date),
                                TH("%s: " % table.delivery_date.label),
@@ -1786,6 +1794,8 @@ def inv_send_rheader(r):
                               ),
                            TR( TH("%s: " % table.status.label),
                                table.status.represent(record.status),
+                             ),
+                           TR(
                                TH("%s: " % table.comments.label),
                                TD(record.comments or "", _colspan=3)
                               )
