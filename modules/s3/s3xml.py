@@ -618,7 +618,6 @@ class S3XML(S3Codec):
                    record,
                    element,
                    rmap,
-                   download_url="",
                    marker=None,
                    ):
         """
@@ -628,7 +627,6 @@ class S3XML(S3Codec):
             @param record: the particular record
             @param element: the XML element
             @param rmap: list of references to encode
-            @param download_url: download URL of this instance
             @param marker: marker dict or filename
         """
 
@@ -639,6 +637,9 @@ class S3XML(S3Codec):
 
         db = current.db
         s3db = current.s3db
+        request = current.request
+        get_vars = request.get_vars
+        settings = current.deployment_settings
 
         LATFIELD = self.Lat
         LONFIELD = self.Lon
@@ -649,28 +650,33 @@ class S3XML(S3Codec):
         # Quicker to download Icons from Static
         # also doesn't require authentication so KML files can work in
         # Google Earth
-        # @ToDo: Remove the Public URL to keep filesize small when
-        # loading off same server? (GeoJSON &layer=xx)
-        download_url = download_url.replace("default/download",
-                                            "static/img/markers")
+        layer_id = get_vars.layer
+        if layer_id:
+            # Use a local URL to keep filesize small when
+            # loading off same server
+            download_url = "/%s/static/img/markers" % request.application
+        else:
+            download_url = "%s/%s/static/img/markers" % \
+                (settings.get_base_public_url(),
+                 request.application)
 
         _marker = None
         marker_url = None
         symbol = gis.DEFAULT_SYMBOL
         popup_label = None
-        popup_fields = None
         popup_url = None
+        tooltips = {}
         if marker:
             try:
-                # Dict
+                # Dict (provided by Feature Layers)
                 _marker = marker["marker"]
                 if _marker:
                     marker_url = "%s/%s" % (download_url, _marker)
                 symbol = marker["gps_marker"] or symbol
                 popup_label = marker["popup_label"]
-                popup_fields = marker["popup_fields"]
+                tooltips = marker["tooltips"]
             except:
-                # String
+                # String (provided by ?)
                 marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
 
         table = resource.table
@@ -696,7 +702,7 @@ class S3XML(S3Codec):
 
             LatLon = None
             WKT = None
-            if "track" in current.request.get_vars:
+            if "track" in get_vars:
                 # Use S3Track
                 try:
                     tracker = S3Trackable(table, record_id=record.id)
@@ -708,11 +714,11 @@ class S3XML(S3Codec):
                                                   _fields=[gtable.lat,
                                                            gtable.lon])
 
-            elif "polygons" in current.request.get_vars:
+            elif "polygons" in get_vars:
                 # Display Polygons not Points
                 if WKTFIELD in fields:
                     query = (ktable.id == r_id)
-                    if current.deployment_settings.get_gis_spatialdb():
+                    if settings.get_gis_spatialdb():
                         if current.auth.permission.format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
                             geojson = db(query).select(ktable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"),
@@ -772,13 +778,10 @@ class S3XML(S3Codec):
                 attr[ATTRIBUTE.sym] = symbol
 
             if LatLon or WKT:
-                if popup_fields:
+                if tooltips and tablename in tooltips:
                     # Feature Layer
-                    # Build the HTML for the onHover Tooltip
-                    tooltip = gis.get_popup_tooltip(table,
-                                                    record,
-                                                    popup_label,
-                                                    popup_fields)
+                    # Retrieve the HTML for the onHover Tooltip
+                    tooltip = tooltips[tablename][record.id]
                     try:
                         # encode suitable for use as XML attribute
                         tooltip = self.xml_encode(tooltip).decode("utf-8")
@@ -872,8 +875,9 @@ class S3XML(S3Codec):
             # Quicker to download Icons from Static
             # also doesn't require authentication so KML files can work in
             # Google Earth
-            marker_download_url = download_url.replace("default/download",
-                                                       "static/img/markers")
+            marker_download_url = "%s/%s/static/img/markers" % \
+                (current.deployment_settings.get_base_public_url(),
+                 current.request.application)
             marker_url = "%s/%s" % (marker_download_url, marker.image)
             attrib[ATTRIBUTE.marker] = marker_url
             symbol = "White Dot"
