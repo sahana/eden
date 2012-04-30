@@ -1848,6 +1848,7 @@ class S3LayerEntityModel(S3Model):
 
         # @ToDo: shapefile, scan, xyz
         layer_types = Storage(gis_layer_feature = T("Feature Layer"),
+                              gis_layer_arcrest = T("ArcGIS REST Layer"),
                               gis_layer_bing = T("Bing Layer"),
                               gis_layer_coordinate = T("Coordinate Layer"),
                               gis_layer_empty = T("No Base Layer"),
@@ -2218,6 +2219,7 @@ class S3MapModel(S3Model):
     names = ["gis_cache",
              "gis_cache2",
              "gis_feature_query",
+             "gis_layer_arcrest",
              "gis_layer_bing",
              "gis_layer_coordinate",
              "gis_layer_empty",
@@ -2303,6 +2305,52 @@ class S3MapModel(S3Model):
         #                     location_id(),
         #                     #track_id(),        # link to the uploaded file?
         #                     *meta_fields())
+
+        # ---------------------------------------------------------------------
+        # ArcGIS REST
+        #
+
+        tablename = "gis_layer_arcrest"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(),
+                             Field("description", label=T("Description")),
+                             Field("url", label=T("Location"),
+                                   requires=IS_NOT_EMPTY(),
+                                   comment=DIV(_class="stickytip",
+                                               _title="%s|%s" % (T("Location"),
+                                                                 "%s:%s" % (T("This should be an export service URL"),
+                                                                            A("http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/export.html",
+                                                                              _href="http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/export.html",
+                                                                              _target="_blank"))))
+                                   ),
+                             Field("layers", "list:integer",
+                                   default=0,
+                                   label=T("Layers")),
+                             Field("base", "boolean", default=False,
+                                    label=T("Base Layer?")),
+                             Field("transparent", "boolean", default=True,
+                                   label=T("Transparent?")),
+                             gis_layer_folder()(),
+                             role_required(),       # Single Role
+                             #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                             *meta_fields())
+
+        configure(tablename,
+                  onaccept=gis_layer_onaccept,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_arcrest=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
 
         # ---------------------------------------------------------------------
         # Bing
@@ -3724,6 +3772,7 @@ def gis_rheader(r, tabs=[]):
          resourcename == "layer_wms" or \
          resourcename == "layer_wfs" or \
          resourcename == "layer_xyz" or \
+         resourcename == "layer_arcrest" or \
          resourcename == "layer_coordinate" or \
          resourcename == "layer_gpx" or \
          resourcename == "layer_js" :

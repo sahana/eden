@@ -12,22 +12,22 @@
      @ToDo: Link to Tasks via link table (optional way of working)
 """
 
-
-req_item_inv_item_btn = dict(url = URL(c = "req",
-                                           f = "req_item_inv_item",
-                                           args = ["[id]"]
-                                        ),
-                                 _class = "action-btn",
-                                 label = str(T("Request from Facility")), # Change to Fulfil? Match?
-                                )
+#
+#req_item_inv_item_btn = dict(url = URL(c = "req",
+#                                           f = "req_item_inv_item",
+#                                           args = ["[id]"]
+#                                        ),
+#                                 _class = "action-btn",
+#                                 label = str(T("Request from Facility")), # Change to Fulfil? Match?
+#                                )
 
 # -----------------------------------------------------------------------------
 # Defined in the Model for use from Multiple Controllers for unified menus
 #
-def req_controller():
-    """
-        Request Controller
-    """
+#def req_controller():
+#    """
+#        Request Controller
+#    """
 #
 #    req_table = s3db.req_req
 #
@@ -38,7 +38,7 @@ def req_controller():
 #        item_id = inv_item.item_id
 #        s3db.req_req_item[request.vars.req_item_id] = dict(site_id = site_id)
 #        response.confirmation = T("%(item)s requested from %(site)s" % {"item":s3db.supply_item_represent(item_id, show_link = False),
-#                                                                        "site":s3db.org_site_represent(site_id, link=False)
+#                                                                        "site":s3db.org_site_represent(site_id, show_link=False)
 #                                                                        })
 #
 #    default_type = request.vars.default_type
@@ -245,45 +245,45 @@ def req_controller():
 #    return output
 
 # ---------------------------------------------------------------------
-def req_skill_controller():
-    """
-        Request Skills Controller
-    """
-
-    tablename = "req_req_skill"
-    table = s3db[tablename]
-
-    s3mgr.configure(tablename,
-                    insertable=False)
-
-    def prep(r):
-        if r.interactive:
-            if r.method != "update" and r.method != "read":
-                # Hide fields which don't make sense in a Create form
-                # - includes one embedded in list_create
-                # - list_fields over-rides, so still visible within list itself
-                s3db.req_hide_quantities(r.table)
-
-        return True
-    response.s3.prep = prep
-
-    # Post-process
-    def postp(r, output):
-        if r.interactive:
-            response.s3.actions = [
-                dict(url = URL(c = "req",
-                               f = "req",
-                               args = ["req_skill", "[id]"]),
-                     _class = "action-btn",
-                     label = str(READ)
-                    )
-                ]
-
-        return output
-    response.s3.postp = postp
-
-    output = s3_rest_controller("req", "req_skill")
-
-    return output
+#def req_skill_controller():
+#    """
+#        Request Skills Controller
+#    """
+#
+#    tablename = "req_req_skill"
+#    table = s3db[tablename]
+#
+#    s3mgr.configure(tablename,
+#                    insertable=False)
+#
+#    def prep(r):
+#        if r.interactive:
+#            if r.method != "update" and r.method != "read":
+#                # Hide fields which don't make sense in a Create form
+#                # - includes one embedded in list_create
+#                # - list_fields over-rides, so still visible within list itself
+#                s3db.req_hide_quantities(r.table)
+#
+#        return True
+#    response.s3.prep = prep
+#
+#    # Post-process
+#    def postp(r, output):
+#        if r.interactive:
+#            response.s3.actions = [
+#                dict(url = URL(c = "req",
+#                               f = "req",
+#                               args = ["req_skill", "[id]"]),
+#                     _class = "action-btn",
+#                     label = str(READ)
+#                    )
+#                ]
+#
+#        return output
+#    response.s3.postp = postp
+#
+#    output = s3_rest_controller("req", "req_skill")
+#
+#    return output
 
 # END =========================================================================
