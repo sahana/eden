@@ -70,7 +70,7 @@ from s3method import S3Method
 from s3import import S3ImportJob
 from s3sync import S3Sync
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     print >> sys.stderr, "S3REST: DEBUG MODE"
     def _debug(m):
@@ -1292,6 +1292,24 @@ class S3Request(object):
         else:
             rcomponents = None
 
+        # Maximum reference resolution depth
+        if "maxdepth" in _vars:
+            maxdepth = _vars["maxdepth"]
+            try:
+                manager.MAX_DEPTH = int(maxdepth)
+            except ValueError:
+                pass
+
+        # References to resolve (field names)
+        if "references" in _vars:
+            references = _vars["references"]
+            if str(references).lower() == "none":
+                references = None
+            elif not isinstance(references, list):
+                references = references.split(",")
+        else:
+            references = [] # all
+
         # Add stylesheet parameters
         args = Storage()
         if stylesheet is not None:
@@ -1317,6 +1335,7 @@ class S3Request(object):
                                      limit=limit,
                                      msince=msince,
                                      dereference=True,
+                                     references=references,
                                      mcomponents=mcomponents,
                                      rcomponents=rcomponents,
                                      stylesheet=stylesheet,
@@ -2293,7 +2312,7 @@ class S3Resource(object):
         if uid in table.fields:
             self._uids = [row[uid] for row in rows]
         self._rows = rows
-        
+
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -2820,6 +2839,7 @@ class S3Resource(object):
                    dereference=True,
                    mcomponents=None,
                    rcomponents=None,
+                   references=[],
                    stylesheet=None,
                    as_tree=False,
                    as_json=False,
@@ -2863,7 +2883,8 @@ class S3Resource(object):
                                 msince=msince,
                                 dereference=dereference,
                                 mcomponents=mcomponents,
-                                rcomponents=rcomponents)
+                                rcomponents=rcomponents,
+                                references=references)
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -2918,7 +2939,8 @@ class S3Resource(object):
                     msince=None,
                     dereference=True,
                     mcomponents=None,
-                    rcomponents=None):
+                    rcomponents=None,
+                    references=[]):
         """
             Export the resource as element tree
 
@@ -2950,7 +2972,8 @@ class S3Resource(object):
             base_url = None
 
         # Split reference/data fields
-        (rfields, dfields) = self.split_fields(skip=skip)
+        (rfields, dfields) = self.split_fields(skip=skip,
+                                               references=references)
 
         # Filter for MCI >= 0 (setting)
         table = self.table
@@ -4157,7 +4180,7 @@ class S3Resource(object):
             return field
 
     # -------------------------------------------------------------------------
-    def split_fields(self, skip=[]):
+    def split_fields(self, skip=[], references=[]):
         """
             Split the readable fields in the resource table into
             reference and non-reference fields.
@@ -4200,7 +4223,9 @@ class S3Resource(object):
                 ftype = str(table[f].type)
                 if (ftype[:9] == "reference" or \
                     ftype[:14] == "list:reference") and \
-                    f not in FIELDS_TO_ATTRIBUTES:
+                    f not in FIELDS_TO_ATTRIBUTES and \
+                    references is not None and \
+                    (references and str(table[f]) in references or not references):
                     rfields.append(f)
                 else:
                     dfields.append(f)
