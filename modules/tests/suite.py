@@ -45,14 +45,14 @@ else:
     login(account="admin")
     
     # List of individual automated test scripts which Suite will run one by one:
+    # Organization Management (ORG) tests
+    org001() # Set up Organizations
+    org002() # Set up Offices
+    
     # Human Resources Management (HRM) tests
     hrm001() # Set up Staff
     hrm002() # Set up New Volunteer
     hrm003() # Set up Training Course
-    
-    # Organization Management (ORG) tests
-    org001() # Set up Organizations
-    org002() # Set up Offices
     
     # Inventory management (INV) tests
     inv001() # Set up Warehouses
@@ -67,7 +67,6 @@ else:
     
     # Log out of testing account
     logout() #
-    
     
     # Cleanup 
     browser.close()

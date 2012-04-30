@@ -11,7 +11,6 @@ import unittest, re, time
 
 def hrm001():
     
-    
     config = current.test_config
     browser = config.browser
     driver = browser

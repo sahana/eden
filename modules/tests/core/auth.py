@@ -4,11 +4,8 @@ __all__ = ["login", "logout", "register"]
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
-
 from gluon import current
-
 from s3 import s3_debug
-
 from .utils import *
 
 # -----------------------------------------------------------------------------
