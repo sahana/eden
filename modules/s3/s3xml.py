@@ -1630,10 +1630,10 @@ class S3XML(S3Codec):
             return obj
         else:
             obj = {}
-            findall = element.findall
+            iterchildren = element.iterchildren
             xpath = element.xpath
             is_single = lambda t, a, v: len(xpath("%s[@%s='%s']" % (t, a, v))) == 1
-            for child in element.iterchildren(tag=etree.Element):
+            for child in iterchildren(tag=etree.Element):
                 tag = child.tag
                 if tag[0] == "{":
                     tag = tag.rsplit("}", 1)[1]
@@ -1657,10 +1657,12 @@ class S3XML(S3Codec):
                         tag = attributes[ATTRIBUTE.field]
                         single = is_single(TAG.data, ATTRIBUTE.field, tag)
                 else:
-                    single = True
-                    for s in child.itersiblings(tag=tag):
-                        single = False
-                        break
+                    for s in iterchildren(tag=tag):
+                        if single is True:
+                            single = False
+                            break
+                        else:
+                            single = True
                 child_obj = element2json(child, native=native)
                 if child_obj:
                     if tag not in obj:
