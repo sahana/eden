@@ -723,7 +723,10 @@ $(function() {
         # If the req_ref is None then set it up
         id = form.vars.id
         if not rrtable[id].req_ref:
-            code = s3db.inv_get_shipping_code("REQ", rrtable[id].site_id, id)
+            code = s3db.inv_get_shipping_code("REQ",
+                                              rrtable[id].site_id,
+                                              s3db.req_req.req_ref,
+                                             )
             db(rrtable.id == id).update(req_ref = code)
         # Configure the next page to go to based on the request type
         tablename = "req_req"
@@ -1831,7 +1834,11 @@ def req_rheader(r, check_page = False):
                 if settings.get_req_use_commit():
                     tabs.append((T("Commitments"), "commit"))
 
-                rheader_tabs = s3_rheader_tabs(r, tabs)
+                if not check_page:
+                    rheader_tabs = s3_rheader_tabs(r, tabs)
+                else:
+                    rheader_tabs = DIV()
+
 
                 site_id = request.vars.site_id
                 if site_id:
@@ -1893,35 +1900,39 @@ def req_rheader(r, check_page = False):
                     transit_status_cells = ("","")
 
                 table = r.table
-
-                rheader = DIV( TABLE(
-                                   TR(
-                                    TH("%s: " % table.date_required.label),
-                                    table.date_required.represent(record.date_required),
-                                    TH( "%s: " % table.commit_status.label),
-                                    table.commit_status.represent(record.commit_status),
-                                    ),
-                                   TR(
-                                    TH( "%s: " % table.date.label),
-                                    table.date.represent(record.date),
-                                    *transit_status_cells
-                                    ),
-                                   TR(
-                                    TH( "%s: " % table.site_id.label),
-                                    table.site_id.represent(record.site_id),
-                                    TH( "%s: " % table.fulfil_status.label),
-                                    table.fulfil_status.represent(record.fulfil_status)
-                                    ),
-                                   TR(
-                                    TH( "%s: " % table.comments.label),
-                                    TD(record.comments or "", _colspan=3)
-                                    ),
+                site_id = record.site_id
+                org_id = s3db.org_site[site_id].organisation_id
+                logo = s3db.org_organisation_logo(org_id)
+                rData = TABLE(
+                               TR(TD(logo, _colspan=2),
+                                  TH("%s: " % table.req_ref.label),
+                                  TD(table.req_ref.represent(record.req_ref))
+                                  ),
+                               TR(
+                                TH("%s: " % table.date_required.label),
+                                table.date_required.represent(record.date_required),
+                                TH( "%s: " % table.commit_status.label),
+                                table.commit_status.represent(record.commit_status),
                                 ),
-                                #commit_btn,
-                                )
-                if not check_page:
-                    rheader.append(rheader_tabs)
-
+                               TR(
+                                TH( "%s: " % table.date.label),
+                                table.date.represent(record.date),
+                                *transit_status_cells
+                                ),
+                               TR(
+                                TH( "%s: " % table.site_id.label),
+                                table.site_id.represent(record.site_id),
+                                TH( "%s: " % table.fulfil_status.label),
+                                table.fulfil_status.represent(record.fulfil_status)
+                                ),
+                               TR(
+                                TH( "%s: " % table.comments.label),
+                                TD(record.comments or "", _colspan=3)
+                                ),
+                               )
+                rheader = DIV (rData,
+                               rheader_tabs,
+                              )
                 return rheader
             #else:
                 # No Record means that we are either a Create or List Create
