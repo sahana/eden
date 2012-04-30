@@ -97,7 +97,7 @@ function s3_gis_tooltipSelect(event) {
         var attributes = feature.attributes;
         var tooltip;
         if (undefined != attributes.popup) {
-            // GeoJSON Feature Layers
+            // GeoJSON Feature Layers or Theme Layers
             tooltip = attributes.popup;
         } else if (undefined != attributes.name) {
             // GeoJSON, GeoRSS or Legacy Features

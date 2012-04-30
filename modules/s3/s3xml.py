@@ -704,6 +704,7 @@ class S3XML(S3Codec):
             WKT = None
             if "track" in get_vars:
                 # Use S3Track
+                # @ToDo: Make this a per-layer lookup instead of per-record
                 try:
                     tracker = S3Trackable(table, record_id=record.id)
                 except SyntaxError:

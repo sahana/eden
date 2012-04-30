@@ -207,6 +207,8 @@
     <xsl:template match="resource[@name='gis_theme_data']">
         <!-- Theme Layer -->
         <xsl:variable name="geometry" select="./geometry/@value"/>
+        <xsl:variable name="name" select="reference[@field='location_id']/text()"/>
+        <xsl:variable name="value" select="data[@field='value']"/>
 
         <type>Feature</type>
         <geometry>  
@@ -220,11 +222,14 @@
                 <xsl:value-of select="@uuid"/>
             </id>
             <name>
-                <xsl:value-of select="reference[@field='location_id']/text()"/>
+                <xsl:value-of select="$name"/>
             </name>
             <value>
-                <xsl:value-of select="data[@field='value']"/>
+                <xsl:value-of select="$value"/>
             </value>
+            <popup>
+                <xsl:value-of select="concat($name, ': ', $value)"/>
+            </popup>
         </properties>
     </xsl:template>
 

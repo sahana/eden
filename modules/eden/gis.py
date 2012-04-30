@@ -1989,6 +1989,7 @@ class S3LayerEntityModel(S3Model):
                     msg_list_empty = T("No Profiles currently have Configurations for this Layer"))
 
         self.configure(tablename,
+                       onvalidation=self.layer_config_onvalidation,
                        onaccept=self.layer_config_onaccept)
 
         # =====================================================================
@@ -2031,6 +2032,16 @@ class S3LayerEntityModel(S3Model):
                 gis_layer_types = layer_types,
                 gis_layer_config_onaccept = self.layer_config_onaccept
             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def layer_config_onvalidation(form):
+        """
+            Ensure that Style JSON can be loaded by json.loads()
+        """
+
+        if "style" in form.vars and form.vars.style:
+            form.vars.style = form.vars.style.replace("'", "\"")
 
     # -------------------------------------------------------------------------
     @staticmethod

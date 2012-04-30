@@ -1986,7 +1986,11 @@ class GIS(object):
                                 tooltip = "%s %s" % (represents[fieldname][value], tooltip)
                                 first = False
                             else:
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
+                                try:
+                                    tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
+                                except:
+                                    # list: type
+                                    tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
 
                     tooltips[record.id] = tooltip
 
@@ -2153,8 +2157,10 @@ class GIS(object):
                 start = datetime.datetime.now()
             represents = {}
             values = [record[fieldname] for record in resource]
-            # Deduplicate
-            values = list(set(values))
+            # Deduplicate including non-hashable types (lists)
+            #values = list(set(values))
+            seen = set()
+            values = [ x for x in values if str(x) not in seen and not seen.add(str(x)) ]
             if fieldname == "type":
                 if tablename == "hrm_human_resource":
                     for value in values:
@@ -2184,7 +2190,7 @@ class GIS(object):
             elif field.type.startswith("list"):
                 # Do the normal represent
                 for value in values:
-                    represents[value] = field.represent(value)
+                    represents[str(value)] = field.represent(value)
             else:
                 # Fallback representation is the value itself
                 for value in values:
@@ -4811,9 +4817,10 @@ class FeatureLayer(Layer):
             if self.skip:
                 # Skip layer
                 return
+            controller = self.controller or self.module
+            function = self.function or self.resource
             url = "%s.geojson?layer=%i&components=None&maxdepth=0&references=location_id&fields=name" % \
-                (URL(self.controller, self.function),
-                 self.id)
+                (URL(controller, function), self.id)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:
@@ -5288,8 +5295,7 @@ class ThemeLayer(Layer):
             }
             self.setup_folder_and_visibility(output)
             self.setup_clustering(output)
-            style = self.style.replace("'","\"")
-            style = json.loads(style)
+            style = json.loads(self.style)
             self.add_attributes_if_not_default(
                 output,
                 style = (style, (None,)),
