@@ -521,7 +521,7 @@ class GIS(object):
             @ToDo: Optimised Geospatial routines rather than this crude hack
         """
 
-        # 
+        #
         # Minimum Bounding Box
         # - gives a minimum width and height in degrees for the region shown.
         # Without this, a map showing a single point would not show any extent around that point.
@@ -578,7 +578,7 @@ class GIS(object):
             if delta_lat > 0:
                 min_lat -= delta_lat
                 max_lat += delta_lat
-            
+
             # Move bounds outward by specified inset.
             min_lon -= bbox_inset
             max_lon += bbox_inset
@@ -1937,6 +1937,7 @@ class GIS(object):
                 controller = frow.controller or resource.prefix
                 function = frow.function or resource.name
             else:
+                marker = None
                 gps_marker = None
                 popup_label = ""
                 popup_fields = "name"
@@ -3675,7 +3676,7 @@ class GIS(object):
             toolbar = "S3.gis.toolbar = true;\n"
         else:
             toolbar = ""
-        
+
         # @ToDo: Could we get this automatically?
         if location_selector:
             loc_select = "S3.gis.loc_select = true;\n"
