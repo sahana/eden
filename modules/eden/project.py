@@ -205,8 +205,10 @@ class S3ProjectModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              # drr uses the separate project_organisation table
                              organisation_id(
-                                          readable=False if drr else True,
-                                          writable=False if drr else True,
+                                          #readable=False if drr else True,
+                                          #writable=False if drr else True,
+                                          readable=True,
+                                          writable=True,
                                         ),
                              Field("name",
                                    label = T("Name"),
@@ -1038,6 +1040,9 @@ class S3ProjectModel(S3Model):
     def project_project_onvalidation(form):
         """ Form validation """
 
+        # if the project has an Host National Society organisation
+        # update organisation_id with its id
+
         if not form.vars.code and "name" in form.vars:
             # Populate code from name
             form.vars.code = form.vars.name
@@ -1345,6 +1350,7 @@ class S3ProjectDRRModel(S3Model):
             2: T("Partner"), # T("Partner National Society")
             3: T("Donor"),
             4: T("Customer"), # T("Beneficiary")?
+            5: T("Super"), # T("Beneficiary")?
         }
         project_organisation_lead_role = 1
 
@@ -1402,7 +1408,9 @@ class S3ProjectDRRModel(S3Model):
         # Resource Configuration
         self.configure(tablename,
                        deduplicate=self.project_organisation_deduplicate,
-                       onvalidation=self.project_organisation_onvalidation)
+                       onvalidation=self.project_organisation_onvalidation,
+                       onaccept=self.project_organisation_onaccept,
+                       ondelete=self.project_organisation_ondelete)
 
         # Reusable Field
 
@@ -1640,6 +1648,10 @@ class S3ProjectDRRModel(S3Model):
     @staticmethod
     def project_organisation_onvalidation(form, lead_role=None):
         """ Form validation """
+        
+        print "onvalidation"
+        import pprint
+        pprint.pprint(form)
 
         db = current.db
         s3db = current.s3db
@@ -1660,6 +1672,77 @@ class S3ProjectDRRModel(S3Model):
             row = db(query).select(otable.id, limitby=(0, 1)).first()
             if row:
                 form.errors.role = T("Lead Implementer for this project is already set, please choose another role.")
+        return
+
+    @staticmethod
+    def project_organisation_onaccept(form):
+        """
+        Record creation post-processing
+        
+        If the added organisation is the lead role, set the project.organisation
+        to point to the same organisation.
+        """
+        print "onaccept"
+        
+        s3 = current.response.s3
+        if form.vars.role == s3.project_organisation_lead_role:
+            db = current.db
+            s3db = current.s3db
+
+            organisation_id = form.vars.organisation_id
+            projorg_tbl = s3db.project_organisation
+            project_tbl = s3db.project_project
+
+            query = (projorg_tbl.id == form.vars.id) & (project_tbl.id == projorg_tbl.project_id)
+            project = db(query).select(project_tbl.id, limitby=(0, 1)).first()
+
+            if project:
+                db(project_tbl.id == project.id).update(organisation_id=organisation_id)
+
+        return
+
+    @staticmethod
+    def project_organisation_ondelete(*args, **kwargs):
+        """
+        Executed when a project organisation record is deleted.
+
+        If the deleted organisation is the lead role on this project,
+        set the project organisation to nothing.
+        """
+        print "ondelete"
+        import pprint
+        print "args"
+        pprint.pprint(args)
+        print "kwargs"
+        pprint.pprint(kwargs)
+        
+        db = current.db
+        s3db = current.s3db
+        
+        # Query for the row that was deleted
+        query = (s3db.project_organisation.id == args[0].get('id'))
+        row = db(query).select(s3db.project_organisation.ALL).first()
+        # Select the project_id out of it
+        print row
+        # Look up the project
+        # Set the project organisation_id to NULL
+        project_id = row.deleted_fk.project_id
+
+        return
+
+        if form.vars.role == s3.project_organisation_lead_role:
+            db = current.db
+            s3db = current.s3db
+
+            organisation_id = form.vars.organisation_id
+            projorg_tbl = s3db.project_organisation
+            project_tbl = s3db.project_project
+
+            query = (projorg_tbl.id == form.vars.id) & (project_tbl.id == projorg_tbl.project_id)
+            project = db(query).select(project_tbl.id, limitby=(0, 1)).first()
+
+            if project:
+                db(project_tbl.id == project.id).update(organisation_id=None)
         return
 
     # ---------------------------------------------------------------------
