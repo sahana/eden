@@ -296,24 +296,25 @@ class S3RL_PDF(S3Codec):
                                     )
         data = []
         # Convert the data into the represent format
-        for record in sqltable.sqlrows.records:
-            row = []
-            cnt = 0
-            for field in fobjs:
-                value = record[resource.tablename][field.name]
-                repr = field.represent
-                if repr:
-                    try:
-                        row.append(repr(value, show_link=False))
-                    except TypeError:
+        if sqltable:
+            for record in sqltable.sqlrows.records:
+                row = []
+                cnt = 0
+                for field in fobjs:
+                    value = record[resource.tablename][field.name]
+                    repr = field.represent
+                    if repr:
                         try:
-                            row.append(repr(value))
-                        except:
-                            row.append(value)
-                else:
-                    row.append(value)
-                cnt += 1
-            data.append(row)
+                            row.append(repr(value, show_link=False))
+                        except TypeError:
+                            try:
+                                row.append(repr(value))
+                            except:
+                                row.append(value)
+                    else:
+                        row.append(value)
+                    cnt += 1
+                data.append(row)
 
         # Now generate the PDF table
         return S3PDFTable(doc,
@@ -1128,20 +1129,23 @@ class S3html2pdf():
                 colspan = 1
                 if "_colspan" in component.attributes:
                     colspan = component.attributes["_colspan"]
-                for detail in component.components:
-                    result = self.select_tag(detail, title=isinstance(component,TH))
-                    if result != None:
-                        row.append(result)
-                        if isinstance(component,TH):
-                            style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
-                            style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
-                        if colspan > 1:
-                            for i in xrange(1,colspan):
-                                row.append("")
-                            style.append(("SPAN", (colCnt, rowCnt), (colCnt+colspan-1, rowCnt)))
-                            colCnt += colspan
-                        else:
-                            colCnt += 1
+                if component.components == []:
+                    row.append("")
+                else:
+                    for detail in component.components:
+                        result = self.select_tag(detail, title=isinstance(component,TH))
+                        if result != None:
+                            row.append(result)
+                            if isinstance(component,TH):
+                                style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
+                                style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
+                            if colspan > 1:
+                                for i in xrange(1,colspan):
+                                    row.append("")
+                                style.append(("SPAN", (colCnt, rowCnt), (colCnt+colspan-1, rowCnt)))
+                                colCnt += colspan
+                            else:
+                                colCnt += 1
         if row == []:
             return None
         return row
