@@ -1632,33 +1632,35 @@ class S3XML(S3Codec):
             obj = {}
             findall = element.findall
             xpath = element.xpath
-            for child in element:
+            is_single = lambda t, a, v: len(xpath("%s[@%s='%s']" % (t, a, v))) == 1
+            for child in element.iterchildren(tag=etree.Element):
                 tag = child.tag
-                if not isinstance(tag, basestring):
-                    continue # skip comment nodes
                 if tag[0] == "{":
                     tag = tag.rsplit("}", 1)[1]
                 collapse = True
                 single = False
+                attributes = child.attrib
                 if native:
-                    is_single = lambda t, a, v: len(xpath("%s[@%s='%s']" % (t, a, v))) == 1
                     if tag == TAG.resource:
-                        resource = child.get(ATTRIBUTE.name)
+                        resource = attributes[ATTRIBUTE.name]
                         tag = "%s_%s" % (PREFIX.resource, resource)
                         collapse = False
                     elif tag == TAG.options:
-                        r = child.get(ATTRIBUTE.resource)
+                        r = attributes[ATTRIBUTE.resource]
                         tag = "%s_%s" % (PREFIX.options, r)
                         single = is_single(TAG.options, ATTRIBUTE.resource, r)
                     elif tag == TAG.reference:
-                        f = child.get(ATTRIBUTE.field)
+                        f = attributes[ATTRIBUTE.field]
                         tag = "%s_%s" % (PREFIX.reference, f)
                         single = is_single(TAG.reference, ATTRIBUTE.field, f)
                     elif tag == TAG.data:
-                        tag = child.get(ATTRIBUTE.field)
+                        tag = attributes[ATTRIBUTE.field]
                         single = is_single(TAG.data, ATTRIBUTE.field, tag)
                 else:
-                    single = len(findall(tag)) == 1
+                    single = True
+                    for s in child.itersiblings(tag=tag):
+                        single = False
+                        break
                 child_obj = element2json(child, native=native)
                 if child_obj:
                     if tag not in obj:
@@ -1667,7 +1669,7 @@ class S3XML(S3Codec):
                         else:
                             obj[tag] = [child_obj]
                     else:
-                        if not isinstance(obj[tag], list):
+                        if type(obj[tag]) is not list:
                             obj[tag] = [obj[tag]]
                         obj[tag].append(child_obj)
 
@@ -1675,7 +1677,7 @@ class S3XML(S3Codec):
             skip_text = False
             tag = element.tag
             for a in attributes:
-                v = element.get(a)
+                v = attributes[a]
                 if native:
                     if a == ATTRIBUTE.name and tag == TAG.resource:
                         continue
