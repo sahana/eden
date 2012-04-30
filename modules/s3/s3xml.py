@@ -673,7 +673,7 @@ class S3XML(S3Codec):
                 if _marker:
                     marker_url = "%s/%s" % (download_url, _marker)
                 symbol = marker["gps_marker"] or symbol
-                popup_label = marker["popup_label"]
+                popup_url = marker["popup_url"]
                 tooltips = marker["tooltips"]
             except:
                 # String (provided by ?)
@@ -791,21 +791,17 @@ class S3XML(S3Codec):
                         attr[ATTRIBUTE.popup] = tooltip
 
                     # Build the URL for the onClick Popup contents
-                    url = URL(resource.prefix,
-                              resource.name).split(".", 1)[0]
-                    popup_url = "%s/%i.plain" % (url,
-                                                 record.id)
+                    # @ToDo: add the Public URL so that layers can be loaded
+                    # off remote Sahana instances
+                    # (make this optional to keep filesize small when not
+                    #  needed?)
+                    popup_url = "%s/%i.plain" % (popup_url, record.id)
+                    attr[ATTRIBUTE.url] = popup_url
+
                 elif popup_label:
                     # Feature Queries
                     # This is the pre-generated HTML for the onHover Tooltip
                     attr[ATTRIBUTE.popup] = popup_label
-
-                if popup_url:
-                    # @ToDo: add the Public URL so that layers can
-                    # be loaded off remote Sahana instances
-                    # (make this optional to keep filesize small
-                    # when not needed?)
-                    attr[ATTRIBUTE.url] = popup_url
 
     # -------------------------------------------------------------------------
     def resource(self, parent, table, record,

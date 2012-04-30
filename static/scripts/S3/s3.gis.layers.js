@@ -404,6 +404,11 @@ function addGeoJSONLayer(layer) {
         // Feature Layers
         var layer_type = 'feature';
     }
+    if (undefined != layer.style) {
+        var style = layer.style;
+    } else {
+        var style = [];
+    }
 
     // Style Rule For Clusters
     var cluster_style = {
@@ -521,20 +526,28 @@ function addGeoJSONLayer(layer) {
                     if (feature.cluster[0].attributes.colour) {
                         // Use colour from features
                         var color = feature.cluster[0].attributes.colour;
-                        if ( color.indexOf('#') == -1) {
-                            // gis_layer_theme
-                            color = '#' + color;
-                        }
                     } else {
                         // default fillColor for Clustered Point
                         var color = '#8087ff';
                     }
                 } else if (feature.attributes.colour) {
-                    // Use colour from feature
+                    // Feature Query: Use colour from feature
                     var color = feature.attributes.colour;
-                    if ( color.indexOf('#') == -1) {
-                        // gis_layer_theme
+                } else if (style.length) {
+                    // Theme Layer: Lookup colour from style rule
+                    var value = feature.attributes.value;
+                    var color;
+                    $.each(style, function(index, elem) { 
+                        if ((value > elem.low) && (value < elem.high)) {
+                            color = elem.fill;
+                            return false;
+                        }
+                    });
+                    if (undefined != color) {
                         color = '#' + color;
+                    } else {
+                        // default fillColor
+                        color = '#000000';
                     }
                 } else {
                     // default fillColor for Unclustered Point
