@@ -21,6 +21,9 @@ if deployment_settings.has_module("cr"):
         location_id = s3db.gis_location_id
         organisation_id = s3db.org_organisation_id
 
+        super_entity = s3mgr.model.super_entity
+        super_link = s3mgr.model.super_link
+
         # -------------------------------------------------------------------------
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)

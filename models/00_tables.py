@@ -19,6 +19,7 @@ import eden.cms
 import eden.delphi
 import eden.doc
 import eden.dvi
+import eden.dvr
 import eden.event
 import eden.fire
 import eden.gis
