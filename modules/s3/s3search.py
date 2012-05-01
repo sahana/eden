@@ -1576,7 +1576,8 @@ class S3Search(S3CRUD):
     # -------------------------------------------------------------------------
     def build_forms(self, r):
         """
-            @todo: docstring
+            Builds a form customised to the module/resource. Includes a link
+            to the create form for this resource.
         """
 
         T = current.T

@@ -1685,13 +1685,13 @@ class S3ProjectDRRModel(S3Model):
             project_organisation = current.s3db.project_organisation
             project_project = current.s3db.project_project
 
-            # Query to get the project ID via the new project organisation
-            # record
-            project_id = (project_organisation.id == form.vars.id) & \
+            # Query to get the project ID via the new project
+            # organisation record
+            project = (project_organisation.id == form.vars.id) & \
                       (project_project.id == project_organisation.project_id)
-            project_id = db(project).select(project_project.id).first()
+            project = db(project).select(project_project.id).first()
 
-            if project_id:
+            if project:
                 # Set the organisation property of the project
                 # to match the new lead organisation
                 db(project_project.id == project.id) \
