@@ -725,7 +725,12 @@ def send_req():
                      args = [req_id]))
 
     # Create a new send record
-    send_id = sendtable.insert(req_ref = r_req.req_ref,
+    code = s3db.inv_get_shipping_code("WB",
+                                      site_id,
+                                      s3db.inv_send.send_ref
+                                     )
+    send_id = sendtable.insert(send_ref = code,
+                               req_ref = r_req.req_ref,
                                sender_id = auth.s3_logged_in_person(),
                                site_id = site_id,
                                date = request.utcnow,
@@ -733,8 +738,6 @@ def send_req():
                                to_site_id = r_req.site_id,
                                status = s3db.inv_ship_status["IN_PROCESS"],
                               )
-    code = s3db.inv_get_shipping_code("WB", site_id, send_id)
-    db(sendtable.id == send_id).update(send_ref = code)
     
     # Get the items for this request that have not been fulfilled (in transit)
     query = (ritable.req_id == req_id) & \
@@ -769,23 +772,29 @@ def send_req():
         req_qnty = req_i.quantity
         req_qnty_in_t = req_i.quantity_transit
         req_qnty_wanted = (req_qnty - req_qnty_in_t) * req_p_qnty
-        if len(inv_items) == 1:
-            inv_i = inv_items[0]
+        # insert the track item records
+        # if their is more than one item match then set the quantity to 0
+        # and add the quantity requested in the comments
+        for inv_i in inv_items:
             # get inv_item.pack_quantity
-            inv_p_qnty = siptable[inv_i.item_pack_id].quantity
-            inv_qnty = inv_i.quantity * inv_p_qnty
-            if inv_qnty > req_qnty_wanted:
-                send_item_quantity = req_qnty_wanted
+            if len(inv_items) == 1:
+                inv_p_qnty = siptable[inv_i.item_pack_id].quantity
+                inv_qnty = inv_i.quantity * inv_p_qnty
+                if inv_qnty > req_qnty_wanted:
+                    send_item_quantity = req_qnty_wanted
+                else:
+                    send_item_quantity = inv_qnty
+                send_item_quantity = send_item_quantity / inv_p_qnty
+                comment = None
             else:
-                send_item_quantity = inv_qnty
-            send_item_quantity = send_item_quantity / inv_p_qnty
-            # Now insert the track item record
+                send_item_quantity = 0
+                comment = "%d items needed to match total request" % req_qnty_wanted
             tracktable.insert(send_id = send_id,
                               send_inv_item_id = inv_i.id,
                               item_id = inv_i.item_id,
                               req_item_id = req_i.id,
                               item_pack_id = inv_i.item_pack_id,
-                              quantity = send_item_quantity,
+                              quantity = 0,
                               status = s3db.inv_tracking_status["IN_PROCESS"],
                               pack_value = inv_i.pack_value,
                               currency = inv_i.currency,
@@ -793,25 +802,8 @@ def send_req():
                               expiry_date = inv_i.expiry_date,
                               owner_org_id = inv_i.owner_org_id,
                               supply_org_id = inv_i.supply_org_id,
+                              comments = comment,
                              )
-        else:
-            # insert the track item records but with the quantity of 0
-            # So the user can then select which inventory to actually send
-            for inv_i in inv_items:
-                tracktable.insert(send_id = send_id,
-                                  send_inv_item_id = inv_item.id,
-                                  item_id = inv_i.item_id,
-                                  req_item_id = req_i.id,
-                                  item_pack_id = inv_i.item_pack_id,
-                                  quantity = 0,
-                                  status = s3db.inv_tracking_status["IN_PROCESS"],
-                                  pack_value = inv_i.pack_value,
-                                  currency = inv_i.currency,
-                                  bin = inv_i.bin,
-                                  expiry_date = inv_i.expiry_date,
-                                  owner_org_id = inv_i.owner_org_id,
-                                  supply_org_id = inv_i.supply_org_id,
-                                 )
     # Redirect to commit
     redirect(URL(c = "inv",
                  f = "send",

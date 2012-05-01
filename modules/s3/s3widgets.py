@@ -378,8 +378,8 @@ class S3AutocompleteWidget(FormWidget):
     def __init__(self,
                  prefix,
                  resourcename,
-                 fieldname="name",
-                 link_filter=None,
+                 fieldname = "name",
+                 link_filter = "",
                  post_process = "",
                  delay = 450,     # milliseconds
                  min_length = 2): # Increase this for large deployments
@@ -411,77 +411,11 @@ class S3AutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        fieldname = self.fieldname
-        _vars = {"filter":"~", "field":fieldname}
-        if self.link_filter is not None:
-            _vars.update(link=self.link_filter)
-        url = URL(c=self.prefix,
-                  f=self.resourcename,
-                  args="search.json",
-                  vars=_vars)
 
-        js_autocomplete = "".join(("""
-var data = { val:$('#%s').val(), accept:false };
-$('#%s').autocomplete({
-    source: '%s',
-    delay: %d,
-    minLength: %d,
-    search: function(event, ui) {
-        $( '#%s_throbber' ).removeClass('hidden').show();
-        return true;
-    },
-    response: function(event, ui, content) {
-        $( '#%s_throbber' ).hide();
-        return content;
-    },
-    focus: function( event, ui ) {
-        $( '#%s' ).val( ui.item.%s );
-        return false;
-    },
-    select: function( event, ui ) {
-        $( '#%s' ).val( ui.item.%s );
-        $( '#%s' ).val( ui.item.id );
-        $( '#%s' ).change();
-        """ % (dummy_input,
-               dummy_input,
-               url,
-               self.delay,
-               self.min_length,
-               dummy_input,
-               dummy_input,
-               dummy_input,
-               fieldname,
-               dummy_input,
-               fieldname,
-               real_input,
-               real_input), self.post_process, """
-        data.accept = true;
-        return false;
-    }
-})
-.data( 'autocomplete' )._renderItem = function( ul, item ) {
-    return $( '<li></li>' )
-        .data( 'item.autocomplete', item )
-        .append( '<a>' + item.%s + '</a>' )
-        .appendTo( ul );
-};
-$('#%s').blur(function() {
-    if (!$('#%s').val()) {
-        $('#%s').val('');
-        data.accept = true;
-    }
-    if (!data.accept) {
-        $('#%s').val(data.val);
-    } else {
-        data.val = $('#%s').val();
-    }
-    data.accept = false;
-});""" % (fieldname,
-          dummy_input,
-          dummy_input,
-          real_input,
-          dummy_input,
-          dummy_input)))
+        # Script defined in static/scripts/S3/S3.js
+        js_autocomplete = "S3.autocomplete('%s','%s','%s','%s','%s','%s',%s,%s);\n" % \
+            (self.fieldname, self.prefix, self.resourcename, real_input,
+             self.link_filter, self.post_process, self.delay, self.min_length)
 
         if value:
             text = str(field.represent(default["value"]))
@@ -2255,7 +2189,7 @@ class CheckboxesWidgetS3(OptionsWidget):
         S3 version of gluon.sqlhtml.CheckboxesWidget:
         - supports also integer-type keys in option sets
 
-        Used in s3aaa
+        Used in s3aaa & S3SearchOptionsWidget
     """
 
     @staticmethod
@@ -2754,12 +2688,6 @@ class S3SearchAutocompleteWidget(FormWidget):
         tablename = self.tablename
 
         modulename, resourcename = tablename.split("_", 1)
-
-        s3_script_dir = "/%s/static/scripts/S3" % request.application
-        if session.s3.debug:
-            response.s3.scripts.append( "%s/s3.search.js" % s3_script_dir )
-        else:
-            response.s3.scripts.append( "%s/s3.search.min.js" % s3_script_dir )
 
         attributes["is_autocomplete"] = True
         attributes["fieldname"] = field.name

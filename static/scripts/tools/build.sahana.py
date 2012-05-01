@@ -183,19 +183,6 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
-    # Also do s3.search.js
-    print "Compressing s3.search.js"
-    inputFilename = os.path.join("..", "S3", "s3.search.js")
-    outputFilename = "s3.search.min.js"
-    input = file(inputFilename, "r").read()
-    minimized = minimize(input)
-    file(outputFilename, "w").write(minimized)
-    try:
-        os.remove("../S3/%s" % outputFilename)
-    except:
-        pass
-    shutil.move(outputFilename, "../S3")
-
     # Also do s3.select_person.js
     print "Compressing s3.select_person.js"
     inputFilename = os.path.join("..", "S3", "s3.select_person.js")

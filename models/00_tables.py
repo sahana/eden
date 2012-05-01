@@ -19,6 +19,7 @@ import eden.cms
 import eden.delphi
 import eden.doc
 import eden.dvi
+import eden.dvr
 import eden.event
 import eden.fire
 import eden.gis
@@ -197,8 +198,7 @@ role_required = S3ReusableField("role_required", db.auth_group,
                                                                 "auth_group.id",
                                                                 "%(role)s",
                                                                 zero=T("Public"))),
-                                widget = S3AutocompleteWidget(
-                                                              "auth",
+                                widget = S3AutocompleteWidget("admin",
                                                               "group",
                                                               fieldname="role"),
                                 represent = s3_auth_group_represent,

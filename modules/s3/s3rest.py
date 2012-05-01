@@ -1292,6 +1292,34 @@ class S3Request(object):
         else:
             rcomponents = None
 
+        # Maximum reference resolution depth
+        if "maxdepth" in _vars:
+            maxdepth = _vars["maxdepth"]
+            try:
+                manager.MAX_DEPTH = int(maxdepth)
+            except ValueError:
+                pass
+
+        # References to resolve (field names)
+        if "references" in _vars:
+            references = _vars["references"]
+            if str(references).lower() == "none":
+                references = []
+            elif not isinstance(references, list):
+                references = references.split(",")
+        else:
+            references = None # all
+
+        # Export field selection
+        if "fields" in _vars:
+            fields = _vars["fields"]
+            if str(fields).lower() == "none":
+                fields = []
+            elif not isinstance(fields, list):
+                fields = fields.split(",")
+        else:
+            fields = None # all
+
         # Add stylesheet parameters
         args = Storage()
         if stylesheet is not None:
@@ -1316,7 +1344,9 @@ class S3Request(object):
         output = resource.export_xml(start=start,
                                      limit=limit,
                                      msince=msince,
+                                     fields=fields,
                                      dereference=True,
+                                     references=references,
                                      mcomponents=mcomponents,
                                      rcomponents=rcomponents,
                                      stylesheet=stylesheet,
@@ -2293,7 +2323,7 @@ class S3Resource(object):
         if uid in table.fields:
             self._uids = [row[uid] for row in rows]
         self._rows = rows
-        
+
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -2817,9 +2847,11 @@ class S3Resource(object):
                    start=None,
                    limit=None,
                    msince=None,
+                   fields=None,
                    dereference=True,
                    mcomponents=None,
                    rcomponents=None,
+                   references=None,
                    stylesheet=None,
                    as_tree=False,
                    as_json=False,
@@ -2861,9 +2893,11 @@ class S3Resource(object):
         tree = self.export_tree(start=start,
                                 limit=limit,
                                 msince=msince,
+                                fields=fields,
                                 dereference=dereference,
                                 mcomponents=mcomponents,
-                                rcomponents=rcomponents)
+                                rcomponents=rcomponents,
+                                references=references)
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -2915,10 +2949,12 @@ class S3Resource(object):
                     start=0,
                     limit=None,
                     skip=[],
+                    fields=None,
                     msince=None,
                     dereference=True,
                     mcomponents=None,
-                    rcomponents=None):
+                    rcomponents=None,
+                    references=None):
         """
             Export the resource as element tree
 
@@ -2950,7 +2986,9 @@ class S3Resource(object):
             base_url = None
 
         # Split reference/data fields
-        (rfields, dfields) = self.split_fields(skip=skip)
+        (rfields, dfields) = self.split_fields(skip=skip,
+                                               data=fields,
+                                               references=references)
 
         # Filter for MCI >= 0 (setting)
         table = self.table
@@ -2969,7 +3007,7 @@ class S3Resource(object):
         if layer_id:
             # We're being called as a GIS Feature Layer, so do lookup per layer
             # and not per-record
-            # Marker & Popup
+            # Marker, Popup & LatLon
             marker = current.gis.get_marker_and_popup(layer_id, self)
         else:
             # Marker provided in request
@@ -3049,7 +3087,9 @@ class S3Resource(object):
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
                 else:
                     url = "/%s/%s" % (prefix, name)
-                rfields, dfields = rresource.split_fields(skip=skip)
+                rfields, dfields = rresource.split_fields(skip=skip,
+                                                          data=fields,
+                                                          references=references)
                 rresource.load()
                 export_resource = rresource.__export_resource
                 for record in rresource:
@@ -4157,12 +4197,14 @@ class S3Resource(object):
             return field
 
     # -------------------------------------------------------------------------
-    def split_fields(self, skip=[]):
+    def split_fields(self, skip=[], data=None, references=None):
         """
             Split the readable fields in the resource table into
             reference and non-reference fields.
 
             @param skip: list of field names to skip
+            @param data: data fields to include (None for all)
+            @param references: foreign key fields to include (None for all)
         """
 
         manager = current.manager
@@ -4200,9 +4242,12 @@ class S3Resource(object):
                 ftype = str(table[f].type)
                 if (ftype[:9] == "reference" or \
                     ftype[:14] == "list:reference") and \
-                    f not in FIELDS_TO_ATTRIBUTES:
+                    f not in FIELDS_TO_ATTRIBUTES and \
+                    (references is None or f in references):
                     rfields.append(f)
-                else:
+                elif data is None or \
+                     f in data or \
+                     f in FIELDS_TO_ATTRIBUTES:
                     dfields.append(f)
             self.rfields = rfields
             self.dfields = dfields

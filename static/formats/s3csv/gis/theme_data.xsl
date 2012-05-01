@@ -14,7 +14,6 @@
          L3...................string..........Data Location L3
          L4...................string..........Data Location L4
          Value................string..........Data Value
-         Colour...............string..........Data Colour
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -140,7 +139,6 @@
             </reference>
 
             <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
-            <data field="colour"><xsl:value-of select="col[@field='Colour']"/></data>
         </resource>
 
     </xsl:template>
