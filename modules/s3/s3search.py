@@ -790,8 +790,6 @@ class S3SearchLocationWidget(S3SearchWidget):
 
         S3SearchWidget.__init__(self, field, name, **attr)
 
-        #
-
     # -------------------------------------------------------------------------
     def widget(self, resource, vars):
         """
@@ -801,7 +799,8 @@ class S3SearchLocationWidget(S3SearchWidget):
             @param vars: the URL GET variables as dict
         """
 
-        if not SHAPELY:
+        format = current.auth.permission.format
+        if format == "plain" or not SHAPELY:
             return None
 
         T = current.T
@@ -1071,6 +1070,10 @@ class S3Search(S3CRUD):
         elif format == "acjson":
             output = self.search_json_autocomplete(r, **attr)
 
+        # Search form for popup on Map Layers
+        elif format == "plain":
+            output = self.search_interactive(r, **attr)
+
         # Not supported
         else:
             r.error(501, current.manager.ERROR.BAD_FORMAT)
@@ -1262,7 +1265,6 @@ class S3Search(S3CRUD):
             if not search_id:
                 r.error(400, manager.ERROR.BAD_RECORD)
             r.post_vars = r.vars
-            manager.load("pr_save_search")
             search_table = s3db.pr_save_search
             _query = (search_table.id == search_id)
             record = db(_query).select(limitby=(0, 1)).first()
@@ -1283,6 +1285,14 @@ class S3Search(S3CRUD):
                                criteria=r.post_vars)
         else:
             search_vars = dict()
+
+        if representation == "plain":
+            # Map popup filter
+            # Return just the advanced form, no results
+            form.append(advanced_form)
+            output["item"] = form
+            response.view = self._view(r, "plain.html")
+            return output
 
         if s3.simple_search:
             form.append(DIV(_id="search-mode", _mode="simple"))
@@ -1591,7 +1601,7 @@ class S3Search(S3CRUD):
         href_add = r.url(method="create", representation=representation)
         insertable = self._config("insertable", True)
         authorised = self.permit("create", tablename)
-        if authorised and insertable:
+        if authorised and insertable and representation != "plain":
             add_link = self.crud_button(ADD, _href=href_add,
                                         _id="add-btn", _class="action-lnk")
         else:
@@ -1612,7 +1622,7 @@ class S3Search(S3CRUD):
 
         # Advanced search form
         if self.__advanced:
-            if self.__simple:
+            if self.__simple and not r.representation == "plain":
                 switch_link = A(T("Simple Search"), _href="#",
                                 _class="action-lnk simple-lnk")
                 _class = "%s hide"
@@ -1677,6 +1687,7 @@ class S3Search(S3CRUD):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
         xml = manager.xml
 
@@ -1685,6 +1696,7 @@ class S3Search(S3CRUD):
 
         resource = self.resource
         table = self.table
+        tablename = self.tablename
 
         _vars = request.vars
 
@@ -1706,8 +1718,9 @@ class S3Search(S3CRUD):
 
             # Default fields to return
             fields = [table.id, field]
-            if table == current.db.org_site:
+            if tablename == "org_site":
                 # Simpler to provide an exception case than write a whole new class
+                table = s3db.org_site
                 fields.append(table.instance_type)
 
             filter = _vars.filter
@@ -1742,8 +1755,7 @@ class S3Search(S3CRUD):
             if "link" in _vars:
                 try:
                     link, lkey, _id, rkey, fkey = _vars.link.split(".")
-                    manager.load(link)
-                    linktable = db[link]
+                    linktable = s3db[link]
                     fq = (linktable[rkey] == table[fkey]) & \
                          (linktable[lkey] == _id)
                     linked = db(fq).select(table._id)

@@ -63,6 +63,7 @@ ol, ul {
     list-style: disc inside none;
 }
 /* Except here */
+ul.x-tab-strip,
 ul.x-tree-node-ct,
 ul.x-tree-root-ct {
     list-style: none outside none;
@@ -245,8 +246,8 @@ a img {
 
 /* Popup text for represents of Long text fields */
 .popup {
-    display:none;
-    position:absolute;
+    display: none;
+    position: absolute;
     border-style: solid;
     background-color: #ffffcc;
     padding: 5px;
@@ -952,6 +953,10 @@ div.item-container {
 .default-text {
     color: #a1a1a1;
     font-style: italic;
+}
+
+ul.ui-autocomplete {
+    z-index: 9999 !important;
 }
 
 /* Map view */

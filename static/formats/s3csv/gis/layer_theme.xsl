@@ -9,11 +9,12 @@
 
          Name.................string..........Layer Name
          Description..........string..........Layer Description
+         Date.................date............Layer Date
+         Style................string..........Layer Style
+         Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
-         Folder...............string..........Layer Folder
-         Date.................date............Layer Date
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -78,6 +79,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>
