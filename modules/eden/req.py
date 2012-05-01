@@ -114,7 +114,7 @@ class S3RequestModel(S3Model):
                                    "string",
                                    label = rn_label,
                                    writable = False,
-                                   represent = s3_string_represent,
+                                   represent = self.req_ref_represent,
                                    )
 
         req_priority_opts = {
@@ -430,6 +430,10 @@ $(function() {
                         method = "check",
                         action=self.req_check)
 
+        # Print Forms
+        self.set_method(tablename,
+                        method="form",
+                        action=self.req_form)
         # Components
         # Documents as a component of Requests
         self.add_component("req_document",
@@ -535,6 +539,69 @@ $(function() {
         else:
             return NONE
 
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_ref_represent(value, show_link=True):
+        """
+            Represent for the Request Reference 
+            if show_link is True then it will generate a link to the pdf
+        """
+        if value:
+
+            if show_link:
+                db = current.db
+                s3db = current.s3db
+    
+                table = s3db.req_req
+                req_row = db(table.req_ref == value).select(table.id,
+                                                            limitby=(0, 1)
+                                                            ).first()
+                return A(value,
+                         _href = URL(f = "req",
+                                     args = [req_row.id, "form"]
+                                    ),
+                        )
+            else:
+                return B(value)
+        else:
+            return current.messages.NONE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_form (r, **attr):
+        """
+            Generate a PDF of a Request Form
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        table = s3db.req_req
+
+        record = table[r.id]
+        req_ref = record.req_ref
+        list_fields = ["item_id",
+                       "item_pack_id",
+                       "quantity",
+                       "quantity_commit",
+                       "quantity_transit",
+                       "quantity_fulfil",
+                      ]
+
+        exporter = r.resource.exporter.pdf
+        return exporter(r,
+                        method = "list",
+                        pdf_title = "Request Form",
+                        pdf_filename = req_ref,
+                        list_fields = list_fields,
+                        pdf_hide_comments = True,
+                        pdf_componentname = "req_req_item",
+                        pdf_header_padding = 12,
+#                        pdf_footer = inv_recv_pdf_footer,
+                        pdf_table_autogrow = "B",
+                        pdf_paper_alignment = "Landscape",
+                        **attr
+                       )
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):
@@ -833,7 +900,6 @@ class S3RequestItemModel(S3Model):
 
         quantities_writable = settings.get_req_quantities_writable()
 
-        req_quantity_represent = self.req_quantity_represent
 
         # -----------------------------------------------------------------
         # Request Items
@@ -858,27 +924,30 @@ class S3RequestItemModel(S3Model):
                                   Field("quantity_commit",
                                         "double",
                                         label = T("Quantity Committed"),
-                                        represent = lambda quantity_commit: \
-                                            req_quantity_represent(quantity_commit,
-                                                                   "commit"),
+                                        represent = self.req_qnty_commit_represent,
+#                                        represent = lambda quantity_commit: \
+#                                            req_quantity_represent(quantity_commit,
+#                                                                   "commit"),
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
                                         writable = quantities_writable),
                                   Field("quantity_transit",
                                         "double",
                                         label = T("Quantity in Transit"),
-                                        represent = lambda quantity_transit: \
-                                            req_quantity_represent(quantity_transit,
-                                                                   "transit"),
+                                        represent = self.req_qnty_transit_represent,
+#                                        represent = lambda quantity_transit: \
+#                                            req_quantity_represent(quantity_transit,
+#                                                                   "transit"),
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
                                         writable = quantities_writable),
                                   Field("quantity_fulfil",
                                         "double",
                                         label = T("Quantity Fulfilled"),
-                                        represent = lambda quantity_fulfil: \
-                                            req_quantity_represent(quantity_fulfil,
-                                                                   "fulfil"),
+                                        represent = self.req_qnty_fulfil_represent,
+#                                        represent = lambda quantity_fulfil: \
+#                                            req_quantity_represent(quantity_fulfil,
+#                                                                   "fulfil"),
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
                                         writable = quantities_writable),
@@ -995,7 +1064,37 @@ $(document).ready(function() {
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def req_quantity_represent(quantity, type):
+    def req_qnty_commit_represent(quantity, show_link=True):
+        """
+            call the generic quantity represent
+        """
+        return S3RequestItemModel.req_quantity_represent(quantity,
+                                                         "commit",
+                                                         show_link)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_qnty_transit_represent(quantity, show_link=True):
+        """
+            call the generic quantity represent
+        """
+        return S3RequestItemModel.req_quantity_represent(quantity,
+                                                         "transit",
+                                                         show_link)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_qnty_fulfil_represent(quantity, show_link=True):
+        """
+            call the generic quantity represent
+        """
+        return S3RequestItemModel.req_quantity_represent(quantity,
+                                                         "fulfil",
+                                                         show_link)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def req_quantity_represent(quantity, type, show_link=True):
         """
             @ToDo: There should be better control of this feature - currently this only works
                    with req_items which are being matched by commit / send / recv
@@ -1003,7 +1102,7 @@ $(document).ready(function() {
 
         settings = current.deployment_settings
 
-        if quantity and not settings.get_req_quantities_writable():
+        if quantity and show_link and not settings.get_req_quantities_writable():
             return TAG[""]( quantity,
                             A(DIV(_class = "quantity %s ajax_more collapsed" % type
                                   ),
