@@ -43,6 +43,7 @@ from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from ..s3 import *
 from layouts import *
+import json
 
 try:
     from lxml import etree, html
@@ -205,10 +206,8 @@ class S3ProjectModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              # drr uses the separate project_organisation table
                              organisation_id(
-                                          #readable=False if drr else True,
-                                          #writable=False if drr else True,
-                                          readable=True,
-                                          writable=True,
+                                          readable=False if drr else True,
+                                          writable=False if drr else True,
                                         ),
                              Field("name",
                                    label = T("Name"),
@@ -1648,11 +1647,6 @@ class S3ProjectDRRModel(S3Model):
     @staticmethod
     def project_organisation_onvalidation(form, lead_role=None):
         """ Form validation """
-        
-        print "onvalidation"
-        import pprint
-        pprint.pprint(form)
-
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
@@ -1678,26 +1672,30 @@ class S3ProjectDRRModel(S3Model):
     def project_organisation_onaccept(form):
         """
         Record creation post-processing
-        
+
         If the added organisation is the lead role, set the project.organisation
         to point to the same organisation.
         """
-        print "onaccept"
-        
         s3 = current.response.s3
-        if form.vars.role == s3.project_organisation_lead_role:
+
+        if str(form.vars.role) == str(s3.project_organisation_lead_role):
             db = current.db
-            s3db = current.s3db
 
             organisation_id = form.vars.organisation_id
-            projorg_tbl = s3db.project_organisation
-            project_tbl = s3db.project_project
+            project_organisation = current.s3db.project_organisation
+            project_project = current.s3db.project_project
 
-            query = (projorg_tbl.id == form.vars.id) & (project_tbl.id == projorg_tbl.project_id)
-            project = db(query).select(project_tbl.id, limitby=(0, 1)).first()
+            # Query to get the project ID via the new project organisation
+            # record
+            project_id = (project_organisation.id == form.vars.id) & \
+                      (project_project.id == project_organisation.project_id)
+            project_id = db(project).select(project_project.id).first()
 
-            if project:
-                db(project_tbl.id == project.id).update(organisation_id=organisation_id)
+            if project_id:
+                # Set the organisation property of the project
+                # to match the new lead organisation
+                db(project_project.id == project.id) \
+                    .update(organisation_id=organisation_id)
 
         return
 
@@ -1707,42 +1705,35 @@ class S3ProjectDRRModel(S3Model):
         Executed when a project organisation record is deleted.
 
         If the deleted organisation is the lead role on this project,
-        set the project organisation to nothing.
+        set the project organisation to None.
         """
-        print "ondelete"
-        import pprint
-        print "args"
-        pprint.pprint(args)
-        print "kwargs"
-        pprint.pprint(kwargs)
-        
         db = current.db
-        s3db = current.s3db
-        
+        s3 = current.response.s3
+
+        project_organisation = current.s3db.project_organisation
+        project_project = current.s3db.project_project
+
         # Query for the row that was deleted
-        query = (s3db.project_organisation.id == args[0].get('id'))
-        row = db(query).select(s3db.project_organisation.ALL).first()
-        # Select the project_id out of it
-        print row
-        # Look up the project
-        # Set the project organisation_id to NULL
-        project_id = row.deleted_fk.project_id
+        deleted_record = (project_organisation.id == args[0].get('id'))
+        deleted_row = db(deleted_record).select(
+                                                project_organisation.deleted_fk,
+                                                project_organisation.role
+                                                ).first()
 
-        return
+        # Get organisation role
+        role = deleted_row.role
 
-        if form.vars.role == s3.project_organisation_lead_role:
-            db = current.db
-            s3db = current.s3db
+        if str(role) == str(s3.project_organisation_lead_role):
+            # Get the project_id
+            deleted_fk = json.loads(deleted_row.deleted_fk)
+            project_id = deleted_fk['project_id']
 
-            organisation_id = form.vars.organisation_id
-            projorg_tbl = s3db.project_organisation
-            project_tbl = s3db.project_project
+            # Query to look up the project
+            project = (project_project.id == project_id)
 
-            query = (projorg_tbl.id == form.vars.id) & (project_tbl.id == projorg_tbl.project_id)
-            project = db(query).select(project_tbl.id, limitby=(0, 1)).first()
+            # Set the project organisation_id to NULL (using None)
+            db(project).update(organisation_id=None)
 
-            if project:
-                db(project_tbl.id == project.id).update(organisation_id=None)
         return
 
     # ---------------------------------------------------------------------

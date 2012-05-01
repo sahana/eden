@@ -212,13 +212,6 @@ def hazard():
 # =============================================================================
 def organisation():
     """ RESTful CRUD controller """
-    
-    import pprint
-    print "controller args"
-    pprint.pprint(args)
-    print "controller kwargs"
-    pprint.pprint(kwargs)
-    
 
     if drr:
         s3mgr.configure("project_organisation",
