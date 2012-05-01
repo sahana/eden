@@ -1,4 +1,5 @@
-__all__ = ["create_staff"]
+# Set up Staff
+__all__ = ["hrm001"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -8,8 +9,8 @@ from s3 import s3_debug
 from tests import *
 import unittest, re, time
 
-def create_staff():
-
+def hrm001():
+    
     config = current.test_config
     browser = config.browser
     driver = browser

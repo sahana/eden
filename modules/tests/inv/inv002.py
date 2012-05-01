@@ -1,4 +1,5 @@
-__all__ = ["create_item"]
+# Set up Items
+__all__ = ["inv002"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -10,7 +11,7 @@ import unittest, re, time
 
 
 
-def create_item():
+def inv002():
     
     config = current.test_config
     browser = config.browser

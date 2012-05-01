@@ -1,4 +1,5 @@
-__all__ = ["create_request"]
+# Create Requests // needs more refining
+__all__ = ["inv005"]
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -8,11 +9,19 @@ from s3 import s3_debug
 from tests import *
 import unittest, re, time
 
-def create_request():
+def inv005():
     
     config = current.test_config
     browser = config.browser
     driver = browser
+    url = "http://127.0.0.1:8000/eden/default/user/login"
+    browser.get(url)
+    driver.find_element_by_css_selector("form").click()
+    driver.find_element_by_id("auth_user_email").clear()
+    driver.find_element_by_id("auth_user_email").send_keys("admin@example.com")
+    driver.find_element_by_id("auth_user_password").clear()
+    driver.find_element_by_id("auth_user_password").send_keys("testing")
+    driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     
     driver.find_element_by_css_selector("#menu_div_dec > a.menu-btn-l > div.menu-btn-r").click()
     driver.find_element_by_link_text("New").click()
@@ -35,10 +44,7 @@ def create_request():
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     driver.find_element_by_link_text("Open").click()
     driver.find_element_by_link_text("Items").click()
-    driver.find_element_by_name("item_id_search_simple_simple").click()
-    driver.find_element_by_name("item_id_search_simple_simple").clear()
-    driver.find_element_by_name("item_id_search_simple_simple").send_keys("Blankets") #test
-    time.sleep(5)
+    w_autocomplete("Sou","req_req_item_item","Soup",False)
     driver.find_element_by_id("req_req_item_quantity").clear()
     driver.find_element_by_id("req_req_item_quantity").send_keys("1000")
     driver.find_element_by_id("req_req_item_pack_value").clear()
@@ -46,7 +52,7 @@ def create_request():
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     driver.find_element_by_css_selector("tr.even > td > a.action-btn").click()
     driver.find_element_by_id("show-add-btn").click()
-    driver.find_element_by_name("item_id_search_simple_simple").send_keys("Rice") #test
+    driver.find_element_by_name("item_id_search_simple").send_keys("Rice") #test
     time.sleep(5)
     driver.find_element_by_id("req_req_item_quantity").clear()
     driver.find_element_by_id("req_req_item_quantity").send_keys("2000")
