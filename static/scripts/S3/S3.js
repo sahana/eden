@@ -69,6 +69,36 @@ function openPopup(url) {
         popupWin = window.open(url, 'popupWin', 'width=640, height=480');
     } else popupWin.focus();
 }
+
+S3.addTooltips = function() {
+    // Help Tooltips
+    $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
+    $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
+    $('.tooltipbody').cluetip({activation: 'hover', sticky: false, splitTitle: '|', showTitle: false});
+    var tipCloseText = '<img src="' + S3.Ap.concat('/static/img/cross2.png') + '" alt="close" />';
+    $('.stickytip').cluetip( {
+    	activation: 'hover',
+    	sticky: true,
+    	closePosition: 'title',
+    	closeText: tipCloseText,
+    	splitTitle: '|'
+    } );
+    $('.errortip').cluetip( {
+        activation: 'click',
+        sticky: true,
+        closePosition: 'title',
+        closeText: tipCloseText,
+        splitTitle: '|'
+    } );
+    $('.ajaxtip').cluetip( {
+    	activation: 'click',
+    	sticky: true,
+    	closePosition: 'title',
+    	closeText: tipCloseText,
+    	width: 380
+    } );
+}
+
 $(document).ready(function() {
     // Web2Py Layer
     $('.error').hide().slideDown('slow')
@@ -90,7 +120,7 @@ $(document).ready(function() {
     try { $('.zoom').fancyZoom( {
         scaleImg: true,
         closeOnClick: true,
-        directory: S3.Ap.concat("/static/media")
+        directory: S3.Ap.concat('/static/media')
     }); } catch(e) {};
 
     // S3 Layer
@@ -188,30 +218,9 @@ $(document).ready(function() {
     });
 
     // Help Tooltips
-    $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
-    $('.tooltipbody').cluetip({activation: 'hover', sticky: false, splitTitle: '|', showTitle: false});
-    var tipCloseText = '<img src="' + S3.Ap.concat('/static/img/cross2.png') + '" alt="close" />';
-    $('.stickytip').cluetip( {
-    	activation: 'hover',
-    	sticky: true,
-    	closePosition: 'title',
-    	closeText: tipCloseText,
-    	splitTitle: '|'
-    } );
-    $('.errortip').cluetip( {
-        activation: 'click',
-        sticky: true,
-        closePosition: 'title',
-        closeText: tipCloseText,
-        splitTitle: '|'
-    } );
-    $('.ajaxtip').cluetip( {
-    	activation: 'click',
-    	sticky: true,
-    	closePosition: 'title',
-    	closeText: tipCloseText,
-    	width: 380
-    } );
+    S3.addTooltips();
+
+    // UTC Offset
     now = new Date();
     $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
 
@@ -696,5 +705,77 @@ function S3FilterFieldChange (setting) {
     });
     // Initially hide or filter field
     selFilterField.change();
+};
+
+// ============================================================================
+/**
+ * Add an Autocomplete to a field - used by S3AutocompleteWidget
+ */
+
+S3.autocomplete = function(fieldname, module, resourcename, input, link, post_process, delay, min_length) {
+    // Optional args
+    if (postprocess == 'undefined') {
+        var postprocess = '';
+    }
+    if (delay == 'undefined') {
+        var delay = 450;
+    }
+    if (min_length == 'undefined') {
+        var min_length = 2;
+    }
+    var real_input = '#' + input;
+    var dummy = 'dummy_' + input;
+    var dummy_input = '#' + dummy;
+    var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
+    if (link != 'undefined') {
+        url += '&link=' + link;
+    }
+    
+    var data = { val:$(dummy_input).val(), accept:false };
+    $(dummy_input).autocomplete({
+        source: url,
+        delay: delay,
+        minLength: min_length,
+        search: function(event, ui) {
+            $( '#' + dummy + '_throbber' ).removeClass('hidden').show();
+            return true;
+        },
+        response: function(event, ui, content) {
+            $( '#' + dummy + '_throbber' ).hide();
+            return content;
+        },
+        focus: function( event, ui ) {
+            $( dummy_input ).val( ui.item[fieldname] );
+            return false;
+        },
+        select: function( event, ui ) {
+            $( dummy_input ).val( ui.item[fieldname] );
+            $( real_input ).val( ui.item.id );
+            $( real_input ).change();
+            if (postprocess) {
+                postprocess();
+            }
+            data.accept = true;
+            return false;
+        }
+    })
+    .data( 'autocomplete' )._renderItem = function( ul, item ) {
+        return $( '<li></li>' )
+            .data( 'item.autocomplete', item )
+            .append( '<a>' + item[fieldname] + '</a>' )
+            .appendTo( ul );
+    };
+    $(dummy_input).blur(function() {
+        if (!$(dummy_input).val()) {
+            $(real_input).val('');
+            data.accept = true;
+        }
+        if (!data.accept) {
+            $(dummy_input).val(data.val);
+        } else {
+            data.val = $(dummy_input).val();
+        }
+        data.accept = false;
+    });
 };
 // ============================================================================

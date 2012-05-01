@@ -271,6 +271,42 @@ def user():
     return output
 
 
+# =============================================================================
+def group():
+    """
+        RESTful CRUD controller
+        - used by role_required autocomplete
+    """
+
+    tablename = "auth_group"
+
+    if not auth.s3_has_role(ADMIN):
+        s3mgr.configure(tablename,
+                        editable=False,
+                        insertable=False,
+                        deletable=False)
+
+    # CRUD Strings
+    ADD_ROLE = T("Add Role")
+    LIST_ROLES = T("List Roles")
+    s3.crud_strings[tablename] = Storage(
+        title_create = ADD_ROLE,
+        title_display = T("Role Details"),
+        title_list = LIST_ROLES,
+        title_update = T("Edit Role"),
+        title_search = T("Search Roles"),
+        subtitle_create = T("Add New Role"),
+        subtitle_list = T("Roles"),
+        label_list_button = LIST_ROLES,
+        label_create_button = ADD_ROLE,
+        msg_record_created = T("Role added"),
+        msg_record_modified = T("Role updated"),
+        msg_record_deleted = T("Role deleted"),
+        msg_list_empty = T("No Roles currently defined"))
+
+    s3mgr.configure(tablename, main="role")
+    return s3_rest_controller("auth", resourcename)
+
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def organisation():
@@ -304,7 +340,6 @@ def organisation():
     output = s3_rest_controller(module, resourcename)
 
     return output
-
 
 # -----------------------------------------------------------------------------
 def user_create_onvalidation (form):

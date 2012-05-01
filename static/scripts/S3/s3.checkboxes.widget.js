@@ -1,4 +1,3 @@
-// 
 /**
  * S3.checkboxes.widget.js
  * 
@@ -6,14 +5,14 @@
  */
 
 jQuery(document).ready(function() {    
-    jQuery(".s3_checkbox_label").cluetip({activation: "hover",  
-                                          positionBy: "auto",
+    jQuery('.s3_checkbox_label').cluetip({activation: 'hover',
+                                          positionBy: 'auto',
                                           local: true,
                                           hideLocal: false,
-                                          showTitle: false, 
+                                          showTitle: false,
                                           topOffset: 0,
                                           mouseOutClose: true,
-                                          arrows: true, 
-                                          clickThrough:true//,           
+                                          arrows: true,
+                                          clickThrough:true
                                          });
-});      
+});
