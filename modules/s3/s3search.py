@@ -1393,7 +1393,7 @@ class S3Search(S3CRUD):
                 resource.add_filter(query)
                 features = resource.select()
                 # get the Marker & Popup details per-Layer if we can
-                marker = gis.get_marker_and_popup(tablename=tablename)
+                marker = gis.get_marker_and_popup(resource=resource)
                 if marker:
                     popup_label = marker["popup_label"]
                     popup_fields = marker["popup_fields"]
@@ -1406,7 +1406,7 @@ class S3Search(S3CRUD):
                                                          args=record.id)
                     if not marker:
                         # We need to add the marker individually to each feature
-                        _marker = gis.get_marker_and_popup(tablename=tablename,
+                        _marker = gis.get_marker_and_popup(resource=resource,
                                                            record=record)
                         feature.marker = _marker["marker"]
                         popup_label = _marker["popup_label"]

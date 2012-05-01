@@ -1251,9 +1251,6 @@ class S3Request(object):
             except ValueError:
                 limit = None
 
-        # Default GIS marker
-        marker = _vars.get("marker", None)
-
         # msince
         msince = _vars.get("msince", None)
         if msince is not None:
@@ -1295,6 +1292,34 @@ class S3Request(object):
         else:
             rcomponents = None
 
+        # Maximum reference resolution depth
+        if "maxdepth" in _vars:
+            maxdepth = _vars["maxdepth"]
+            try:
+                manager.MAX_DEPTH = int(maxdepth)
+            except ValueError:
+                pass
+
+        # References to resolve (field names)
+        if "references" in _vars:
+            references = _vars["references"]
+            if str(references).lower() == "none":
+                references = []
+            elif not isinstance(references, list):
+                references = references.split(",")
+        else:
+            references = None # all
+
+        # Export field selection
+        if "fields" in _vars:
+            fields = _vars["fields"]
+            if str(fields).lower() == "none":
+                fields = []
+            elif not isinstance(fields, list):
+                fields = fields.split(",")
+        else:
+            fields = None # all
+
         # Add stylesheet parameters
         args = Storage()
         if stylesheet is not None:
@@ -1319,8 +1344,9 @@ class S3Request(object):
         output = resource.export_xml(start=start,
                                      limit=limit,
                                      msince=msince,
-                                     marker=marker,
+                                     fields=fields,
                                      dereference=True,
+                                     references=references,
                                      mcomponents=mcomponents,
                                      rcomponents=rcomponents,
                                      stylesheet=stylesheet,
@@ -2249,8 +2275,12 @@ class S3Resource(object):
         xml = manager.xml
         table = self.table
 
+        if DEBUG:
+            _start = datetime.datetime.now()
+
         if self.tablename == "gis_location":
-            fields = [f for f in table if f.name != "wkt"]
+            # Filter out bulky Polygons
+            fields = [f for f in table if f.name not in ("wkt", "the_geom")]
         else:
             fields = [f for f in table]
         fnames = [f.name for f in fields]
@@ -2293,6 +2323,14 @@ class S3Resource(object):
         if uid in table.fields:
             self._uids = [row[uid] for row in rows]
         self._rows = rows
+
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("load of resource %s completed in %s seconds" % \
+                    (self.tablename, duration))
+
         return rows
 
     # -------------------------------------------------------------------------
@@ -2809,10 +2847,11 @@ class S3Resource(object):
                    start=None,
                    limit=None,
                    msince=None,
-                   marker=None,
+                   fields=None,
                    dereference=True,
                    mcomponents=None,
                    rcomponents=None,
+                   references=None,
                    stylesheet=None,
                    as_tree=False,
                    as_json=False,
@@ -2824,7 +2863,6 @@ class S3Resource(object):
             @param limit: maximum number of records to export (slicing)
             @param msince: export only records which have been modified
                             after this datetime
-            @param marker: default GIS marker
             @param dereference: include referenced resources
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
@@ -2848,16 +2886,29 @@ class S3Resource(object):
         args = Storage(args)
 
         # Export as element tree
+        if DEBUG:
+            _start = datetime.datetime.now()
+            tablename = self.tablename
+            _debug("export_tree of %s starting" % tablename)
         tree = self.export_tree(start=start,
                                 limit=limit,
                                 msince=msince,
-                                marker=marker,
+                                fields=fields,
                                 dereference=dereference,
                                 mcomponents=mcomponents,
-                                rcomponents=rcomponents)
+                                rcomponents=rcomponents,
+                                references=references)
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("export_tree of %s completed in %s seconds" % \
+                    (tablename, duration))
 
         # XSLT transformation
         if tree and stylesheet is not None:
+            if DEBUG:
+                _start = datetime.datetime.now()
             tfmt = xml.ISOFORMAT
             args.update(domain=manager.domain,
                         base_url=manager.s3.base_url,
@@ -2866,6 +2917,12 @@ class S3Resource(object):
                         utcnow=datetime.datetime.utcnow().strftime(tfmt),
                         msguid=uuid.uuid4().urn)
             tree = xml.transform(tree, stylesheet, **args)
+            if DEBUG:
+                end = datetime.datetime.now()
+                duration = end - _start
+                duration = '{:.2f}'.format(duration.total_seconds())
+                _debug("transform of %s using %s completed in %s seconds" % \
+                        (tablename, stylesheet, duration))
 
         # Convert into the requested format
         # (Content Headers are set by the calling function)
@@ -2873,7 +2930,15 @@ class S3Resource(object):
             if as_tree:
                 output = tree
             elif as_json:
+                if DEBUG:
+                    _start = datetime.datetime.now()
                 output = xml.tree2json(tree, pretty_print=pretty_print)
+                if DEBUG:
+                    end = datetime.datetime.now()
+                    duration = end - _start
+                    duration = '{:.2f}'.format(duration.total_seconds())
+                    _debug("tree2json of %s completed in %s seconds" % \
+                            (tablename, duration))
             else:
                 output = xml.tostring(tree, pretty_print=pretty_print)
 
@@ -2884,18 +2949,18 @@ class S3Resource(object):
                     start=0,
                     limit=None,
                     skip=[],
+                    fields=None,
                     msince=None,
-                    marker=None,
                     dereference=True,
                     mcomponents=None,
-                    rcomponents=None):
+                    rcomponents=None,
+                    references=None):
         """
             Export the resource as element tree
 
             @param start: index of the first record to export
             @param limit: maximum number of records to export
             @param msince: minimum modification date of the records
-            @param marker: default GIS marker
             @param skip: list of fieldnames to skip
             @param show_urls: show record URLs in the export
             @param mcomponents: components of the master resource to
@@ -2921,9 +2986,11 @@ class S3Resource(object):
             base_url = None
 
         # Split reference/data fields
-        (rfields, dfields) = self.split_fields(skip=skip)
+        (rfields, dfields) = self.split_fields(skip=skip,
+                                               data=fields,
+                                               references=references)
 
-        # Filter for MCI>=0 (setting)
+        # Filter for MCI >= 0 (setting)
         table = self.table
         if xml.filter_mci and "mci" in table.fields:
             mci_filter = (table.mci >= 0)
@@ -2935,12 +3002,21 @@ class S3Resource(object):
         # Load slice
         self.load(start=start, limit=limit)
 
-        layer_id = current.request.get_vars.layer
+        _vars = current.request.get_vars
+        layer_id = _vars.layer
         if layer_id:
-            # We're being called as a GIS Feature Layer, so lookup Marker & Popup
-            marker = current.gis.get_marker_and_popup(layer_id, marker)
+            # We're being called as a GIS Feature Layer, so do lookup per layer
+            # and not per-record
+            # Marker & Popup
+            marker = current.gis.get_marker_and_popup(layer_id, self)
+        else:
+            # Marker provided in request
+            # Q: What does this?
+            marker = _vars.get("marker", None)
 
         # Build the tree
+        if DEBUG:
+            _start = datetime.datetime.now()
         root = etree.Element(xml.TAG.root)
         export_map = Storage()
         reference_map = []
@@ -2965,8 +3041,16 @@ class S3Resource(object):
                                       marker=marker)
             if element is None:
                 results -= 1
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("export_resource of primary resource and components completed in %s seconds" % \
+                duration)
 
         # Add referenced resources to the tree
+        if DEBUG:
+            _start = datetime.datetime.now()
         depth = dereference and manager.MAX_DEPTH or 0
         while reference_map and depth:
             depth -= 1
@@ -3003,7 +3087,9 @@ class S3Resource(object):
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
                 else:
                     url = "/%s/%s" % (prefix, name)
-                rfields, dfields = rresource.split_fields(skip=skip)
+                rfields, dfields = rresource.split_fields(skip=skip,
+                                                          data=fields,
+                                                          references=references)
                 rresource.load()
                 export_resource = rresource.__export_resource
                 for record in rresource:
@@ -3022,6 +3108,12 @@ class S3Resource(object):
                     # Mark as referenced element (for XSLT)
                     if element is not None:
                         element.set(REF, "True")
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("export_resource of referenced resources and their components completed in %s seconds" % \
+                duration)
 
         # Complete the tree
         return xml.tree(None,
@@ -3066,7 +3158,6 @@ class S3Resource(object):
 
         manager = current.manager
         xml = manager.xml
-        download_url = manager.s3.download_url
 
         action = "read"
         representation = "xml"
@@ -3201,6 +3292,8 @@ class S3Resource(object):
             return default
 
         # Do not export the record if it hasn't been modified since msince
+        # NB This can't be moved to tree level as we do want to export records
+        #    which have modified components
         MTIME = xml.MTIME
         if msince is not None:
             if MTIME in record and record[MTIME] <= msince:
@@ -3227,9 +3320,7 @@ class S3Resource(object):
                            show_ids=manager.show_ids)
 
         # GIS-encode the element
-        download_url = manager.s3.download_url
         xml.gis_encode(self, record, element, rmap,
-                       download_url=download_url,
                        marker=marker)
 
         return (element, rmap)
@@ -4106,12 +4197,14 @@ class S3Resource(object):
             return field
 
     # -------------------------------------------------------------------------
-    def split_fields(self, skip=[]):
+    def split_fields(self, skip=[], data=None, references=None):
         """
             Split the readable fields in the resource table into
             reference and non-reference fields.
 
             @param skip: list of field names to skip
+            @param data: data fields to include (None for all)
+            @param references: foreign key fields to include (None for all)
         """
 
         manager = current.manager
@@ -4149,9 +4242,12 @@ class S3Resource(object):
                 ftype = str(table[f].type)
                 if (ftype[:9] == "reference" or \
                     ftype[:14] == "list:reference") and \
-                    f not in FIELDS_TO_ATTRIBUTES:
+                    f not in FIELDS_TO_ATTRIBUTES and \
+                    (references is None or f in references):
                     rfields.append(f)
-                else:
+                elif data is None or \
+                     f in data or \
+                     f in FIELDS_TO_ATTRIBUTES:
                     dfields.append(f)
             self.rfields = rfields
             self.dfields = dfields
