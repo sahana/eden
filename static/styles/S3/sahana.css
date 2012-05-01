@@ -63,6 +63,7 @@ ol, ul {
     list-style: disc inside none;
 }
 /* Except here */
+ul.x-tab-strip,
 ul.x-tree-node-ct,
 ul.x-tree-root-ct {
     list-style: none outside none;
