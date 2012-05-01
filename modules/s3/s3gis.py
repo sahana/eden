@@ -1922,6 +1922,8 @@ class GIS(object):
                     (ltable.symbology_id == symbology_id)
             layer = db(query).select(mtable.image,
                                      ltable.gps_marker,
+                                     ftable.controller,
+                                     ftable.function,
                                      ftable.popup_label,
                                      ftable.popup_fields,
                                      limitby=(0, 1)).first()
@@ -1932,11 +1934,17 @@ class GIS(object):
                 frow = layer.gis_layer_feature
                 popup_label = frow.popup_label
                 popup_fields = frow.popup_fields
+                controller = frow.controller or resource.prefix
+                function = frow.function or resource.name
             else:
                 marker = None
                 gps_marker = None
                 popup_label = ""
                 popup_fields = "name"
+                controller = resource.prefix
+                function = resource.name
+
+            popup_url = URL(controller, function).split(".", 1)[0]
 
             if resource:
                 # Build the Popup Tooltips now so that representations can be
@@ -1978,7 +1986,11 @@ class GIS(object):
                                 tooltip = "%s %s" % (represents[fieldname][value], tooltip)
                                 first = False
                             else:
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
+                                try:
+                                    tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
+                                except:
+                                    # list: type
+                                    tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
 
                     tooltips[record.id] = tooltip
 
@@ -1996,8 +2008,9 @@ class GIS(object):
 
             return dict(marker = marker,
                         gps_marker = gps_marker,
-                        popup_label = popup_label,
                         tooltips = tooltips,
+                        popup_label = popup_label,
+                        popup_url = popup_url,
                         )
 
         elif resource:
@@ -2144,8 +2157,10 @@ class GIS(object):
                 start = datetime.datetime.now()
             represents = {}
             values = [record[fieldname] for record in resource]
-            # Deduplicate
-            values = list(set(values))
+            # Deduplicate including non-hashable types (lists)
+            #values = list(set(values))
+            seen = set()
+            values = [ x for x in values if str(x) not in seen and not seen.add(str(x)) ]
             if fieldname == "type":
                 if tablename == "hrm_human_resource":
                     for value in values:
@@ -2175,7 +2190,7 @@ class GIS(object):
             elif field.type.startswith("list"):
                 # Do the normal represent
                 for value in values:
-                    represents[value] = field.represent(value)
+                    represents[str(value)] = field.represent(value)
             else:
                 # Fallback representation is the value itself
                 for value in values:
@@ -4486,6 +4501,7 @@ class Layer(object):
         fields.append(ltable.enabled)
         fields.append(ltable.visible)
         fields.append(ltable.base)
+        fields.append(ltable.style)
         fields.append(ctable.pe_type)
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.config_id == ctable.id) & \
@@ -4528,7 +4544,9 @@ class Layer(object):
                 base = False
             else:
                 record["_base"] = False
+            record["style"] = _config.style
             if tablename in ["gis_layer_bing", "gis_layer_google"]:
+                # SubLayers handled differently
                 append(record)
             else:
                 append(self.SubLayer(record))
@@ -4799,9 +4817,10 @@ class FeatureLayer(Layer):
             if self.skip:
                 # Skip layer
                 return
-            url = "%s.geojson?layer=%i&components=None" % \
-                (URL(self.module, self.resource),
-                 self.id)
+            controller = self.controller or self.module
+            function = self.function or self.resource
+            url = "%s.geojson?layer=%i&components=None&maxdepth=0&references=location_id&fields=name" % \
+                (URL(controller, function), self.id)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:
@@ -5263,7 +5282,7 @@ class ThemeLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-            url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1" % \
+            url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1&maxdepth=0&references=location_id&fields=value" % \
                 (URL(c="gis", f="theme_data"),
                  self.id)
 
@@ -5274,8 +5293,13 @@ class ThemeLayer(Layer):
                 "name": self.safe_name,
                 "url": url,
             }
-            #
             self.setup_folder_and_visibility(output)
+            self.setup_clustering(output)
+            style = json.loads(self.style)
+            self.add_attributes_if_not_default(
+                output,
+                style = (style, (None,)),
+            )
 
             return output
 

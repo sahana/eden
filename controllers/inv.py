@@ -666,9 +666,14 @@ def send_process():
         s3db.req_update_status(req_id)
     # Create a Receive record
     rtable = s3db.inv_recv
+    code = s3db.inv_get_shipping_code("GRN",
+                                      send_record.to_site_id,
+                                      s3db.inv_recv.recv_ref
+                                     )
     recv_id = rtable.insert(sender_id = send_record.sender_id,
                             send_ref = send_record.send_ref,
                             req_ref = send_record.req_ref,
+                            recv_ref = code,
                             from_site_id = send_record.site_id,
                             eta = send_record.delivery_date,
                             recipient_id = send_record.recipient_id,
@@ -677,8 +682,6 @@ def send_process():
                             status = eden.inv.inv_ship_status["SENT"],
                             type = 1, # 1:"Another Inventory"
                            )
-    code = s3db.inv_get_shipping_code("GRN", send_record.to_site_id, recv_id)
-    db(rtable.id == recv_id).update(recv_ref = code)
     # Change the status for all track items in this shipment to In transit
     # and link to the receive record
     db(tracktable.send_id == send_id).update(status = 2,
@@ -1254,7 +1257,6 @@ def adj():
                     if record.inv_item_id:
                         aitable.item_id.writable = False
                         aitable.item_pack_id.writable = False
-                        aitable.item_id.writable = False
             else:
                 # if an adjustment has been selected and it has been completed
                 # then make the fields read only
@@ -1322,24 +1324,26 @@ def adj_close():
         # if we don't have a stock item then create it
         if adj_item.inv_item_id == None:
             inv_item_id = inv_item_table.insert(site_id = adj_rec.site_id,
-                                         item_id = adj_item.item_id,
-                                         item_pack_id = adj_item.item_pack_id,
-                                         currency = adj_item.currency,
-                                         bin = adj_item.bin,
-                                         pack_value = adj_item.pack_value,
-                                         expiry_date = adj_item.expiry_date,
-                                         quantity = adj_item.new_quantity,
-                                        )
+                                                item_id = adj_item.item_id,
+                                                item_pack_id = adj_item.item_pack_id,
+                                                currency = adj_item.currency,
+                                                bin = adj_item.bin,
+                                                pack_value = adj_item.pack_value,
+                                                expiry_date = adj_item.expiry_date,
+                                                quantity = adj_item.new_quantity,
+                                                owner_org_id = adj_item.old_owner_org_id,
+                                               )
             # and add the inventory item id to the adjustment record
             db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
         # otherwise copy the details to the stock item
         else:
             db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
-                                                             bin = adj_item.bin,
-                                                             pack_value = adj_item.pack_value,
-                                                             expiry_date = adj_item.expiry_date,
-                                                             quantity = adj_item.new_quantity,
-                                                            )
+                                                                 bin = adj_item.bin,
+                                                                 pack_value = adj_item.pack_value,
+                                                                 expiry_date = adj_item.expiry_date,
+                                                                 quantity = adj_item.new_quantity,
+                                                                 owner_org_id = adj_item.new_owner_org_id,
+                                                                )
     # Change the status of the adj record to Complete
     db(atable.id == adj_id).update(status=1)
     # Go to the Inventory of the Site which has adjusted these items

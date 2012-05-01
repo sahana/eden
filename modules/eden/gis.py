@@ -1932,6 +1932,24 @@ class S3LayerEntityModel(S3Model):
 
         # =====================================================================
         #  Layer Config link table
+        
+        # Style is a JSON object with the following structure (only the 3 starred elements are currently parsed):
+        #Style = [{
+        #   low: float,   //*
+        #   high: float,  //*
+        #   fill: string, //*
+        #   fill_opacity: float,
+        #   stroke: stroke
+        #   stroke_opacity: float
+        #   stroke_width: float or int, // OpenLayers wants int, SLD wants float
+        #   marker: {
+        #       image: string,
+        #       height: int,
+        #       width: int
+        #   }
+        #   shape: string,
+        #   label: {}
+        #}]
 
         tablename = "gis_layer_config"
         table = define_table(tablename,
@@ -1943,6 +1961,14 @@ class S3LayerEntityModel(S3Model):
                                    label=T("On by default?")),
                              Field("base", "boolean", default=False,
                                    label=T("Default Base layer?")),
+                             Field("style", "text",
+                                   # Only used by Theme Layers currently
+                                   readable=False,
+                                   writable=False,
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Style"),
+                                                                   T("This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map."))),
+                                   label=T("Style")),
                              *meta_fields())
         # Default to the Layer -> Config view
         # sinne there are many diff layers
@@ -1963,6 +1989,7 @@ class S3LayerEntityModel(S3Model):
                     msg_list_empty = T("No Profiles currently have Configurations for this Layer"))
 
         self.configure(tablename,
+                       onvalidation=self.layer_config_onvalidation,
                        onaccept=self.layer_config_onaccept)
 
         # =====================================================================
@@ -2005,6 +2032,16 @@ class S3LayerEntityModel(S3Model):
                 gis_layer_types = layer_types,
                 gis_layer_config_onaccept = self.layer_config_onaccept
             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def layer_config_onvalidation(form):
+        """
+            Ensure that Style JSON can be loaded by json.loads()
+        """
+
+        if "style" in form.vars and form.vars.style:
+            form.vars.style = form.vars.style.replace("'", "\"")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2063,8 +2100,10 @@ class S3FeatureLayerModel(S3Model):
                         name_field()(),
                         Field("description", label=T("Description")),
                         Field("module",
+                              requires = IS_NOT_EMPTY(),
                               label = T("Module")),
                         Field("resource",
+                              requires = IS_NOT_EMPTY(),
                               label = T("Resource")),
                         Field("trackable", "boolean",
                               label = T("Trackable"),
@@ -2073,6 +2112,16 @@ class S3FeatureLayerModel(S3Model):
                                             _title="%s|%s" % (T("Trackable"),
                                                               T("Whether the resource should be tracked using S3Track rather than just using the Base Location")))),
                         # REST Query added to Map JS to call back to server
+                        Field("controller",
+                              label = T("Controller"),
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s /" % (T("Controller"),
+                                                                T("Optional: The URL to call to access the Features, if different to the Module.")))),
+                        Field("function",
+                              label = T("Function"),
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s /" % (T("Function"),
+                                                                T("Optional: The URL to call to access the Features, if different to the Resource.")))),
                         Field("filter",
                               label = T("REST Filter"),
                               comment = DIV(_class="stickytip",
@@ -3210,9 +3259,10 @@ class S3GISThemeModel(S3Model):
                              #                                                      UNKNOWN_OPT),
                              #      ),
                              Field("date", "datetime", label = T("Date")),
-                             # @ToDo: Colour Ramps
-                             #Field("colourmap", label = T("Color Map")),
                              gis_layer_folder()(),
+                             # Avoid clustering
+                             cluster_distance()(default = 1),
+                             cluster_threshold()(),
                              role_required(),       # Single Role
                              #roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                              *meta_fields())
@@ -3255,9 +3305,6 @@ class S3GISThemeModel(S3Model):
                                 requires = IS_LOCATION(level=["L1", "L2", "L3", "L4"]),
                                 ),
                              Field("value", label = T("Value")),
-                             # Should we have the Colour defined onaccept of the Theme Layer or calculated real-time?
-                             Field("colour", label = T("Color"),
-                                   requires=IS_HTML_COLOUR()),
                              *meta_fields())
 
         ADD_THEME = T("Add Data to Theme Layer")

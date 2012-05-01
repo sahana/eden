@@ -409,7 +409,7 @@ $(document).ready(function() {
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_item_represent(id):
+    def inv_item_represent(id, show_link=True):
         """
         """
 
@@ -1097,7 +1097,10 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not stable[id].send_ref:
-            code = S3TrackingModel.inv_get_shipping_code("WB", stable[id].site_id, id)
+            code = S3TrackingModel.inv_get_shipping_code("WB",
+                                                         stable[id].site_id,
+                                                         s3db.inv_send.send_ref,
+                                                        )
             db(stable.id == id).update(send_ref = code)
 
     # ---------------------------------------------------------------------
@@ -1136,6 +1139,7 @@ $(document).ready(function() {
                         report_hide_comments=True,
                         report_footer = inv_send_report_footer,
                         paper_alignment = "Landscape",
+                        report_table_autogrow = "B",
                         **attr
                        )
 
@@ -1180,7 +1184,10 @@ $(document).ready(function() {
         # If the recv_ref is None then set it up
         id = form.vars.id
         if not rtable[id].recv_ref:
-            code = S3TrackingModel.inv_get_shipping_code("GRN", rtable[id].site_id, id)
+            code = S3TrackingModel.inv_get_shipping_code("GRN",
+                                                         rtable[id].site_id,
+                                                         s3db.inv_recv.recv_ref,
+                                                        )
             db(rtable.id == id).update(recv_ref = code)
 
     # ---------------------------------------------------------------------
@@ -1218,6 +1225,8 @@ $(document).ready(function() {
                         list_fields = list_fields,
                         report_hide_comments=True,
                         report_componentname = "inv_track_item",
+                        report_footer = inv_recv_report_footer,
+                        report_table_autogrow = "B",
                         paper_alignment = "Landscape",
                         **attr
                        )
@@ -1372,14 +1381,26 @@ $(document).ready(function() {
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_get_shipping_code(type, site_id, id):
+    def inv_get_shipping_code(type, site_id, field):
         s3db = current.s3db
+        db = current.db
         if site_id:
             ostable = s3db.org_site
             scode = ostable[site_id].code
-            return "%s-%s-%06d" % (type, scode, id)
+            code = "%s-%s-" % (type, scode)
         else:
-            return "%s-###-%06d" % (type, id)
+            code = "%s-###-" % (type)
+        number = 0
+        if field:
+            query = (field.like("%s%%" % code))
+            ref_row = db(query).select(field,
+                                       limitby=(0, 1),
+                                       orderby=~field).first()
+            if ref_row:
+                ref = ref_row(field)
+                number = int(ref[-6:])
+        return "%s%06d" % (code, number+1)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_onaccept(form):
@@ -1773,7 +1794,14 @@ def inv_send_rheader(r):
 
             table = r.table
 
+            site_id = record.site_id
+            org_id = s3db.org_site[site_id].organisation_id
+            logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
+                           TR(TD(logo, _colspan=2),
+                              TH("%s: " % table.send_ref.label),
+                              TD(table.send_ref.represent(record.send_ref))
+                              ),
                            TR( TH("%s: " % table.date.label),
                                table.date.represent(record.date),
                                TH("%s: " % table.delivery_date.label),
@@ -1786,6 +1814,8 @@ def inv_send_rheader(r):
                               ),
                            TR( TH("%s: " % table.status.label),
                                table.status.represent(record.status),
+                             ),
+                           TR(
                                TH("%s: " % table.comments.label),
                                TD(record.comments or "", _colspan=3)
                               )
@@ -1966,6 +1996,7 @@ def inv_recv_rheader(r):
         record = r.record
         if record:
 
+            s3db = current.s3db
             T = current.T
             s3 = current.response.s3
             auth = current.auth
@@ -1977,36 +2008,40 @@ def inv_recv_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
-
-            rheader = DIV( TABLE(
-                               TR( TH("%s: " % table.status.label),
-                                   table.status.represent(record.status),
-                                  ),
-                               TR( TH( "%s: " % table.eta.label),
-                                   table.eta.represent(record.eta),
-                                   TH( "%s: " % table.date.label),
-                                   table.date.represent(record.date),
-                                  ),
-                               TR( TH( "%s: " % table.from_site_id.label),
-                                   table.from_site_id.represent(record.from_site_id),
-                                   TH( "%s: " % table.site_id.label),
-                                   table.site_id.represent(record.site_id),
-                                  ),
-                               TR( TH( "%s: " % table.sender_id.label),
-                                   s3_fullname(record.sender_id),
-                                   TH( "%s: " % table.recipient_id.label),
-                                   s3_fullname(record.recipient_id),
-                                  ),
-                               TR( TH( "%s: " % table.send_ref.label),
-                                   table.send_ref.represent(record.send_ref),
-                                   TH( "%s: " % table.recv_ref.label),
-                                   table.recv_ref.represent(record.recv_ref),
-                                  ),
-                               TR( TH( "%s: " % table.comments.label),
-                                   TD(record.comments or "", _colspan=2),
-                                  ),
-                                 ),
-                            rheader_tabs
+            site_id = record.site_id
+            org_id = s3db.org_site[site_id].organisation_id
+            logo = s3db.org_organisation_logo(org_id)
+            rData = TABLE(
+                           TR(TD(logo, _colspan=2),
+                              TH("%s: " % table.recv_ref.label),
+                              TD(table.recv_ref.represent(record.recv_ref))
+                              ),
+                           TR( TH("%s: " % table.status.label),
+                               table.status.represent(record.status),
+                              ),
+                           TR( TH( "%s: " % table.eta.label),
+                               table.eta.represent(record.eta),
+                               TH( "%s: " % table.date.label),
+                               table.date.represent(record.date),
+                              ),
+                           TR( TH( "%s: " % table.from_site_id.label),
+                               table.from_site_id.represent(record.from_site_id),
+                               TH( "%s: " % table.site_id.label),
+                               table.site_id.represent(record.site_id),
+                              ),
+                           TR( TH( "%s: " % table.sender_id.label),
+                               s3_fullname(record.sender_id),
+                               TH( "%s: " % table.recipient_id.label),
+                               s3_fullname(record.recipient_id),
+                              ),
+                           TR( TH( "%s: " % table.send_ref.label),
+                               table.send_ref.represent(record.send_ref),
+                               TH( "%s: " % table.recv_ref.label),
+                               table.recv_ref.represent(record.recv_ref),
+                              ),
+                           TR( TH( "%s: " % table.comments.label),
+                               TD(record.comments or "", _colspan=3),
+                              ),
                             )
 
             rfooter = TAG[""]()
@@ -2058,7 +2093,42 @@ def inv_recv_rheader(r):
                         rfooter.append(cancel_btn_confirm)
 
             s3.rfooter = rfooter
+            rheader = DIV (rData,
+                           rheader_tabs,
+                          )
             return rheader
+    return None
+# ---------------------------------------------------------------------
+def inv_recv_report_footer(r):
+    record = r.record
+    if record:
+        footer = DIV (TABLE (TR(TH(T("Delivered By")),
+                                TH(T("Date")),
+                                TH(T("Function")),
+                                TH(T("Name")),
+                                TH(T("Signature")),
+                                ),
+                             TR(TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                            TR(TH(T("Received By")),
+                                TH(T("Date")),
+                                TH(T("Function")),
+                                TH(T("Name")),
+                                TH(T("Signature / Stamp")),
+                                ),
+                             TR(TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                TD(),
+                                ),
+                            )
+                     )
+        return footer
     return None
 
 # =============================================================================
@@ -2176,6 +2246,7 @@ class S3AdjustModel(S3Model):
                          3 : T("Damaged"),
                          4 : T("Expired"),
                          5 : T("Found"),
+                         6 : T("Transfer Ownership"),
                         }
 
         # CRUD strings
@@ -2236,6 +2307,13 @@ class S3AdjustModel(S3Model):
                                         "string",
                                         length = 16,
                                         ),
+                                  org_id(name = "old_owner_org_id",
+                                         label = "Current owning Organization",
+                                         ondelete = "SET NULL",
+                                         writable = False), # which org owned this item
+                                  org_id(name = "new_owner_org_id",
+                                         label = "Transfer ownership to Organization",
+                                         ondelete = "SET NULL"), # which org owns this item
                                   adj_id(),
                                   s3.comments(),
                                   *s3.meta_fields()
@@ -2323,12 +2401,13 @@ class S3AdjustModel(S3Model):
                                     pack_value = inv_item.pack_value,
                                     expiry_date = inv_item.expiry_date,
                                     bin = inv_item.bin,
+                                    old_owner_org_id = inv_item.owner_org_id,
                                    )
 
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_adj_represent(id):
+    def inv_adj_represent(id, show_link=True):
         """
         """
 
@@ -2341,17 +2420,21 @@ class S3AdjustModel(S3Model):
             send_row = db(table.id == id).select(table.adjustment_date,
                                                  table.adjuster_id,
                                                  limitby=(0, 1)).first()
-            return SPAN(table.adjuster_id.represent(send_row.adjuster_id),
-                        " - ",
-                        table.adjustment_date.represent(send_row.adjustment_date)
-                        )
+            repr = "%s - %s" % (table.adjuster_id.represent(send_row.adjuster_id,
+                                                            show_link),
+                                table.adjustment_date.represent(send_row.adjustment_date)
+                                )
+            if show_link:
+                return SPAN(repr)
+            else:
+                return repr
         else:
             return current.messages.NONE
 
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def inv_adj_item_represent(id):
+    def inv_adj_item_represent(id, show_link=True):
         """
         """
 
@@ -2366,12 +2449,15 @@ class S3AdjustModel(S3Model):
                                                  table.new_quantity,
                                                  table.item_pack_id,
                                                  limitby=(0, 1)).first()
-            return SPAN(table.item_id.represent(adj_row.item_id),
-                        ": ",
-                        (adj_row.new_quantity - adj_row.old_quantity),
-                        " ",
-                        table.item_pack_id.represent(adj_row.item_pack_id)
-                        )
+            repr = "%s:%s %s" % (table.item_id.represent(adj_row.item_id,
+                                                           show_link = show_link),
+                                   (adj_row.new_quantity - adj_row.old_quantity),
+                                   table.item_pack_id.represent(adj_row.item_pack_id),
+                                )
+            if show_link:
+                return SPAN(repr)
+            else:
+                return repr
         else:
             return current.messages.NONE
 

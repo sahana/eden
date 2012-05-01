@@ -121,6 +121,11 @@ class S3RL_PDF(S3Codec):
                  * use_colour:      True to add colour to the cells. default False
                  * report_groupby:  How to group the results
                  * report_hide_comments: don't show the comments in a table
+                 * report_table_autogrow: Indicates that a table should grow to
+                                          fill the available space. Valid values:
+                                          H - Horizontal
+                                          V - Vertical
+                                          B - Both
         """
         if not PILImported:
             current.session.warning = self.ERROR.PIL_ERROR
@@ -135,6 +140,7 @@ class S3RL_PDF(S3Codec):
         self.list_fields = attr.get("list_fields")
         self.report_groupby = attr.get("report_groupby")
         self.report_hide_comments = attr.get("report_hide_comments")
+        self.table_autogrow = attr.get("report_table_autogrow")
         # Get the title & filename
         now = request.now.isoformat()[:19].replace("T", " ")
         title = attr.get("report_title")
@@ -174,6 +180,8 @@ class S3RL_PDF(S3Codec):
         # Get data for the body of the text
         data = None
         body_flowable = None
+
+        doc.calc_body_size(header_flowable, footer_flowable)
         if attr.get("report_componentname"):
             componentname = attr.get("report_componentname")
             (prefix, component) = componentname.split("_",1) 
@@ -288,29 +296,32 @@ class S3RL_PDF(S3Codec):
                                     )
         data = []
         # Convert the data into the represent format
-        for record in sqltable.sqlrows.records:
-            row = []
-            cnt = 0
-            for field in fobjs:
-                value = record[resource.tablename][field.name]
-                repr = field.represent
-                if repr:
-                    try:
-                        row.append(repr(value, show_link=False))
-                    except TypeError:
+        if sqltable:
+            for record in sqltable.sqlrows.records:
+                row = []
+                cnt = 0
+                for field in fobjs:
+                    value = record[resource.tablename][field.name]
+                    repr = field.represent
+                    if repr:
                         try:
-                            row.append(repr(value))
-                        except:
-                            row.append(value)
-                else:
-                    row.append(value)
-                cnt += 1
-            data.append(row)
+                            row.append(repr(value, show_link=False))
+                        except TypeError:
+                            try:
+                                row.append(repr(value))
+                            except:
+                                row.append(value)
+                    else:
+                        row.append(value)
+                    cnt += 1
+                data.append(row)
 
         # Now generate the PDF table
         return S3PDFTable(doc,
                           raw_data = data,
-                          list_fields = flabel
+                          list_fields = flabel,
+                          autogrow = self.table_autogrow,
+                          body_height = doc.body_height,
                          ).build()
         
 # -------------------------------------------------------------------------
@@ -401,16 +412,12 @@ class EdenDocTemplate(BaseDocTemplate):
                                 self.topMargin - \
                                 self.bottomMargin
 
-    def build(self,
-              header_flowable,
-              body_flowable,
-              footer_flowable,
-              canvasmaker=canvas.Canvas):
+    def calc_body_size(self,
+                       header_flowable,
+                       footer_flowable,
+                      ):
         """
-            Build the document using the flowables.
-
-            Set up the page templates that the document can use
-
+            Helper function to calculate the various sizes of the page
         """
         self._calc()    # in case we changed margins sizes etc
         self.height = self.pagesize[1]
@@ -422,9 +429,6 @@ class EdenDocTemplate(BaseDocTemplate):
         self.printable_height = self.height - \
                                 self.topMargin - \
                                 self.bottomMargin
-        self.header_flowable = header_flowable
-        self.body_flowable = body_flowable
-        self.footer_flowable = footer_flowable
         header_size = self.get_flowable_size(header_flowable)
         footer_size = self.get_flowable_size(footer_flowable)
         self.header_height = header_size[1]
@@ -433,6 +437,23 @@ class EdenDocTemplate(BaseDocTemplate):
                            self.header_height - \
                            self.footer_height
 
+    def build(self,
+              header_flowable,
+              body_flowable,
+              footer_flowable,
+              canvasmaker=canvas.Canvas):
+        """
+            Build the document using the flowables.
+
+            Set up the page templates that the document can use
+
+        """
+        self.header_flowable = header_flowable
+        self.body_flowable = body_flowable
+        self.footer_flowable = footer_flowable
+        self.calc_body_size(header_flowable,
+                            footer_flowable,
+                           )
         showBoundary = 0 # for debugging set to 1, otherwise 0
 
         body_frame = Frame(self.leftMargin,
@@ -563,7 +584,9 @@ class S3PDFTable(object):
                  raw_data,
                  list_fields=None,
                  groupby=None,
-                 hide_comments=False
+                 hide_comments=False,
+                 autogrow = False,
+                 body_height = 0,
                 ):
         """
             Method to create a table object
@@ -588,6 +611,8 @@ class S3PDFTable(object):
         self.list_fields = list_fields
         self.report_groupby = groupby
         self.hideComments = hide_comments
+        self.autogrow = autogrow
+        self.body_height = body_height
         self.data = []
         self.subheadingList = []
         self.labels = []
@@ -634,6 +659,7 @@ class S3PDFTable(object):
                          )
         self.tempDoc.build(None, [tempTable], None)
         self.newColWidth = [tempTable._colWidths]
+        self.rowHeights = [tempTable._rowHeights]
         self.pages.append(self.data)
         if not self.tweakDoc(tempTable):
             #print "Need to split the table"
@@ -653,12 +679,39 @@ class S3PDFTable(object):
         content = []
         currentPage = 0
         totalPagesAcross = len(self.newColWidth)
+        if self.autogrow == "H" or self.autogrow == "B":
+            printable_width = self.pdf.printable_width
+            # expand the columns to use all the available space
+            newColWidth = []
+            for cols in self.newColWidth:
+                col_width = 0
+                for col in cols:
+                    col_width += col
+                if col_width < printable_width:
+                    surplus = printable_width - col_width
+                    proportion = surplus / col_width
+                    newcols = []
+                    for col in cols:
+                        newcols.append(col+col*proportion)
+                    newColWidth.append(newcols)
+            self.newColWidth = newColWidth
         startRow = 0
         for page in self.pages:
             if page == []:
                 currentPage += 1
                 continue
             colWidths = self.newColWidth[currentPage % totalPagesAcross]
+            if self.autogrow == "V" or self.autogrow == "B":
+                row_height = self.rowHeights[0][0]
+                rows = len(page)
+                if self.body_height > row_height * rows:
+                    rowCnt = int(self.body_height/row_height)
+                    extra_rows = rowCnt - rows
+                    if extra_rows:
+                        cells = len(colWidths)
+                        row = [""] * cells
+                        extra = [row] * extra_rows
+                        page = page + extra
             endCol = len(colWidths) - 1
             rowCnt = len(page)
             self.style = self.tableStyle(startRow, rowCnt, endCol)
@@ -672,7 +725,6 @@ class S3PDFTable(object):
             # add a page break, except for the last page.
             if currentPage + 1 < len(self.pages):
                 content.append(PageBreak())
-#            content.append(Spacer(1, .5 * inch))
             currentPage += 1
             if currentPage % totalPagesAcross == 0:
                 startRow += rowCnt - 1 # Don't include the heading
@@ -888,6 +940,7 @@ class S3PDFTable(object):
             style.append(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
         else:
             style.append(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
+            style.append(("INNERGRID", (0, 0), (-1, -1), 0.2, colors.lightgrey))
         if self.report_groupby != None:
             style.append(("LEFTPADDING", (0, 0), (-1, -1), 20))
         rowColourCnt = 0 # used to alternate the colours correctly when we have subheadings
@@ -911,8 +964,6 @@ class S3PDFTable(object):
                         style.append(("BACKGROUND", (0, i), (endCol, i),
                                       self.oddColour))
                         rowColourCnt += 1
-                else:
-                    style.append(("LINEBELOW", (0, i), (endCol, i), 1, colors.lightgrey))
         style.append(("BOX", (0, 0), (-1,-1), 1, Color(0, 0, 0)))
         return style
 
@@ -997,6 +1048,7 @@ class S3html2pdf():
     def parse_img (self,
                    html
                   ):
+        import os
         I = None
         from reportlab.platypus import Image
         if "_src" in html.attributes:
@@ -1048,20 +1100,18 @@ class S3html2pdf():
                 ]
         content = []
         rowCnt = 0
-        colWidths = []
         result = None
         for component in html.components:
             if self.exclude_tag(component):
                 continue
             if isinstance(component,TR):
-                result = self.parse_tr(component, style, rowCnt, colWidths)
+                result = self.parse_tr(component, style, rowCnt)
                 rowCnt += 1
             if result != None:
                 content.append(result)
         if content == []:
             return None
         table = Table(content,
-                      colWidths=colWidths,
                       style=style,
                       hAlign="LEFT",
                       vAlign="Top",
@@ -1069,29 +1119,33 @@ class S3html2pdf():
         cw = table._colWidths
         return [table]
 
-    def parse_tr (self, html, style, rowCnt, colWidths):
+    def parse_tr (self, html, style, rowCnt):
         row = []
         colCnt = 0
         for component in html.components:
             if isinstance(component,(TH,TD)):
                 if self.exclude_tag(component):
                     continue
-                for detail in component.components:
-                    result = self.select_tag(detail, title=isinstance(component,TH))
-                    if result != None:
-                        try:
-                            width = result[0].drawWidth
-                        except:
-                            width = None
-                        if colCnt == len(colWidths):
-                            colWidths.append(width)
-                        elif width > colWidths[colCnt]:
-                            colWidths.append(width)
-                        row.append(result)
-                        if isinstance(component,TH):
-                            style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
-                            style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
-                        colCnt += 1
+                colspan = 1
+                if "_colspan" in component.attributes:
+                    colspan = component.attributes["_colspan"]
+                if component.components == []:
+                    row.append("")
+                else:
+                    for detail in component.components:
+                        result = self.select_tag(detail, title=isinstance(component,TH))
+                        if result != None:
+                            row.append(result)
+                            if isinstance(component,TH):
+                                style.append(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
+                                style.append(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), "Helvetica-Bold"))
+                            if colspan > 1:
+                                for i in xrange(1,colspan):
+                                    row.append("")
+                                style.append(("SPAN", (colCnt, rowCnt), (colCnt+colspan-1, rowCnt)))
+                                colCnt += colspan
+                            else:
+                                colCnt += 1
         if row == []:
             return None
         return row
