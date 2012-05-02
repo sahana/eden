@@ -811,6 +811,11 @@ def config():
                         field = ltable.visible
                         field.readable = False
                         field.writable = False
+                    elif type in ("gis_layer_theme",
+                                  ):
+                        field = ltable.style
+                        field.readable = True
+                        field.writable = True
                 else:
                     # Only show Layers not yet in this config
                     # Find the records which are used
@@ -884,6 +889,8 @@ def config():
                             vars.visible = layer["visible"]
                         else:
                             vars.visible = False
+                        if "style" in layer:
+                            vars.style = json.dumps(layer["style"])
                         # Update or Insert?
                         query = (ltable.config_id == id) & \
                                 (ltable.layer_id == layer_id)

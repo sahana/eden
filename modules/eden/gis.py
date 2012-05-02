@@ -1289,7 +1289,7 @@ class S3GISConfigModel(S3Model):
                                                          "%(name)s"),
                                     represent = self.gis_config_represent,
                                     label = T("Map Configuration"),
-                                    ondelete = "RESTRICT")
+                                    ondelete = "CASCADE")
 
         ADD_CONFIG = T("Add Map Configuration")
         LIST_CONFIGS = T("List Map Configurations")
