@@ -935,6 +935,12 @@ function addLayerPropertiesButton() {
                                 Ext.get('s3_gis_layer_filter_tab').load({
                                     url: search_url,
                                     discardUrl: false,
+                                    callback: function() {
+                                        // Activate Help Tooltips
+                                        S3.addTooltips();
+                                        // Handle Options Widgets with collapsed options
+                                        S3.search.select_letter_label();
+                                    },
                                     // @ToDo: i18n
                                     text: 'Loading...',
                                     timeout: 30,
@@ -998,6 +1004,10 @@ function addLayerPropertiesButton() {
                             }
                             return false;
                         })
+                        // Activate Help Tooltips
+                        S3.addTooltips();
+                        // Activate RoleRequired autocomplete
+                        S3.autocomplete('role', 'admin', 'group', 'gis_layer_' + layer_type + '_role_required');
                     }
                 });
             }

@@ -68,6 +68,7 @@ import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3method import S3Method
+from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
 
 SHAPELY = False
@@ -1924,6 +1925,8 @@ class GIS(object):
                                      ltable.gps_marker,
                                      ftable.controller,
                                      ftable.function,
+                                     ftable.trackable,
+                                     #ftable.polygons,
                                      ftable.popup_label,
                                      ftable.popup_fields,
                                      limitby=(0, 1)).first()
@@ -1934,6 +1937,8 @@ class GIS(object):
                 frow = layer.gis_layer_feature
                 popup_label = frow.popup_label
                 popup_fields = frow.popup_fields
+                trackable = frow.trackable
+                #polygons = frow.polygons
                 controller = frow.controller or resource.prefix
                 function = frow.function or resource.name
             else:
@@ -1941,60 +1946,58 @@ class GIS(object):
                 gps_marker = None
                 popup_label = ""
                 popup_fields = "name"
+                trackable = False
+                #polygons = False
                 controller = resource.prefix
                 function = resource.name
 
             popup_url = URL(controller, function).split(".", 1)[0]
 
-            if resource:
-                # Build the Popup Tooltips now so that representations can be
-                # looked-up in bulk rather than as a separate lookup per record
-                table = resource.table
-                tablename = resource.tablename
-                tooltips = {}
-                #for record in resource:
-                #    tooltip = GIS.get_popup_tooltip(table, record,
-                #                                    popup_label, popup_fields)
-                #    tooltips[record.id] = tooltip
-                if popup_label:
-                    _tooltip = "(%s)" % current.T(popup_label)
-                else:
-                    _tooltip = ""
+            table = resource.table
+            tablename = resource.tablename
 
-                if popup_fields:
-                    popup_fields = popup_fields.split("/")
+            # Build the Popup Tooltips now so that representations can be
+            # looked-up in bulk rather than as a separate lookup per record
+            if popup_label:
+                _tooltip = "(%s)" % current.T(popup_label)
+            else:
+                _tooltip = ""
 
+            if popup_fields:
+                popup_fields = popup_fields.split("/")
+
+            if popup_fields:
+                represents = {}
+                for fieldname in popup_fields:
+                    try:
+                        field = table[fieldname]
+                    except:
+                        # This field isn't in the table
+                        popup_fields.remove(fieldname)
+                    else:
+                        _represents = GIS.get_representation(field, resource)
+                        represents[fieldname] = _represents
+
+            tooltips = {}
+            for record in resource:
+                tooltip = _tooltip
                 if popup_fields:
-                    represents = {}
+                    first = True
                     for fieldname in popup_fields:
-                        try:
-                            field = table[fieldname]
-                        except:
-                            # This field isn't in the table
-                            popup_fields.remove(fieldname)
-                        else:
-                            _represents = GIS.get_representation(field, resource)
-                            represents[fieldname] = _represents
+                        value = record[fieldname]
+                        if first:
+                            tooltip = "%s %s" % (represents[fieldname][value], tooltip)
+                            first = False
+                        elif value:
+                            try:
+                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
+                            except:
+                                # list: type
+                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
 
-                for record in resource:
-                    tooltip = _tooltip
-                    if popup_fields:
-                        first = True
-                        for fieldname in popup_fields:
-                            value = record[fieldname]
-                            if first:
-                                tooltip = "%s %s" % (represents[fieldname][value], tooltip)
-                                first = False
-                            else:
-                                try:
-                                    tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
-                                except:
-                                    # list: type
-                                    tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
+                tooltips[record.id] = tooltip
 
-                    tooltips[record.id] = tooltip
-
-                tooltips[tablename] = tooltips
+            tooltips[tablename] = tooltips
 
             if DEBUG:
                 end = datetime.datetime.now()
@@ -2006,8 +2009,61 @@ class GIS(object):
                 _debug("marker/tooltip lookup of layer %s completed in %s seconds" % \
                         (layer_name, duration))
 
+            # Lookup the LatLons now so that it can be done as a single
+            # query rather than per record
+            if DEBUG:
+                start = datetime.datetime.now()
+            latlons = {}
+            if trackable:
+                # Use S3Track
+                ids = resource._ids
+                try:
+                    tracker = S3Trackable(table, record_id=ids)
+                except SyntaxError:
+                    # This table isn't trackable
+                    pass
+                else:
+                    gtable = s3db.gis_location
+                    _latlons = tracker.get_location(_fields=[gtable.lat,
+                                                             gtable.lon])
+                    index = 0
+                    for id in ids:
+                        latlons[id] = (_latlons[index].lat, _latlons[index].lon)
+                        index += 1
+
+            # @ToDo: Support Polygons in Feature Layers
+            #elif polygons:
+            if not latlons:
+                gtable = s3db.gis_location
+                if "location_id" in table.fields:
+                    query = (table.id.belongs(resource._ids)) & \
+                            (table.location_id == gtable.id)
+                elif "site_id" in table.fields:
+                    stable = s3db.org_site
+                    query = (table.id.belongs(resource._ids)) & \
+                            (table.site_id == stable.id) & \
+                            (stable.location_id == gtable.id)
+                else:
+                    # Can't display this resource on the Map
+                    return None
+                rows = db(query).select(table.id,
+                                        gtable.lat,
+                                        gtable.lon)
+                for row in rows:
+                    latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
+
+            latlons[tablename] = latlons
+
+            if DEBUG:
+                end = datetime.datetime.now()
+                duration = end - start
+                duration = '{:.2f}'.format(duration.total_seconds())
+                _debug("latlons lookup of layer %s completed in %s seconds" % \
+                        (layer_name, duration))
+
             return dict(marker = marker,
                         gps_marker = gps_marker,
+                        latlons = latlons,
                         tooltips = tooltips,
                         popup_label = popup_label,
                         popup_url = popup_url,

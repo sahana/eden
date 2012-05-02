@@ -1657,10 +1657,14 @@ function addXYZLayer(layer) {
 // Support Vector Layers
 function showThrobber() {
     $('#layer_throbber').show().removeClass('hidden');
+    S3.gis.layers_loading++;
 }
 
 function hideThrobber() {
-    $('#layer_throbber').hide().addClass('hidden');
+    S3.gis.layers_loading--;
+    if (S3.gis.layers_loading <= 0) {
+        $('#layer_throbber').hide().addClass('hidden');
+    }
 }
 
 // Support GeoJSON Layers

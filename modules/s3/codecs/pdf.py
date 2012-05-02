@@ -83,6 +83,9 @@ try:
 except ImportError:
     reportLabImported = False
 
+PDF_WIDTH = 0
+PDF_HEIGHT = 1
+
 # =============================================================================
 
 class S3RL_PDF(S3Codec):
@@ -110,22 +113,25 @@ class S3RL_PDF(S3Codec):
             @param r: either an S3Request object or a callback
             @param attr: dictionary of parameters:
                  * list_fields:     Fields to include in list views
-                 * report_componentname: The name of the component to use
+                 * pdf_componentname: The name of the component to use
                                          This should be a component of the resource
-                 * report_title:    The title of the report
-                 * report_filename: The filename of the report
-                 * report_header:   The header (maybe a callback)
-                 * rHeader:         used if report_header doesn't exist
-                 * report_footer:   The footer (maybe a callback)
-                 * rFooter:         used if report_footer doesn't exist
+                 * pdf_title:    The title of the report
+                 * pdf_filename: The filename of the report
+                 * pdf_header:   The header (maybe a callback)
+                 * rHeader:         used if pdf_header doesn't exist
+                 * pdf_header_padding: add this amount of space between the header and the body
+                 * pdf_footer:   The footer (maybe a callback)
+                 * rFooter:         used if pdf_footer doesn't exist
+                 * pdf_footer_padding: add this amount of space between the body and the footer
                  * use_colour:      True to add colour to the cells. default False
-                 * report_groupby:  How to group the results
-                 * report_hide_comments: don't show the comments in a table
-                 * report_table_autogrow: Indicates that a table should grow to
+                 * pdf_groupby:  How to group the results
+                 * pdf_hide_comments: don't show the comments in a table
+                 * pdf_table_autogrow: Indicates that a table should grow to
                                           fill the available space. Valid values:
                                           H - Horizontal
                                           V - Vertical
                                           B - Both
+                * pdf_paper_alignment: Portrait (default) or Landscape
         """
         if not PILImported:
             current.session.warning = self.ERROR.PIL_ERROR
@@ -138,43 +144,46 @@ class S3RL_PDF(S3Codec):
         response = current.response
         self.r = r
         self.list_fields = attr.get("list_fields")
-        self.report_groupby = attr.get("report_groupby")
-        self.report_hide_comments = attr.get("report_hide_comments")
-        self.table_autogrow = attr.get("report_table_autogrow")
+        self.pdf_groupby = attr.get("pdf_groupby")
+        self.pdf_hide_comments = attr.get("pdf_hide_comments")
+        self.table_autogrow = attr.get("pdf_table_autogrow")
+        self.pdf_header_padding = attr.get("pdf_header_padding",0)
+        self.pdf_footer_padding = attr.get("pdf_footer_padding",0)
         # Get the title & filename
         now = request.now.isoformat()[:19].replace("T", " ")
-        title = attr.get("report_title")
+        title = attr.get("pdf_title")
         if title == None:
             title = "Report"
         docTitle = "%s %s" % (title, now)
-        filename = attr.get("report_filename")
-        if filename == None:
+        self.filename = attr.get("pdf_filename")
+        if self.filename == None:
             self.filename = "%s_%s.pdf" % (title, now)
-        else:
-            self.filename = "%s_%s.pdf" % (filename, now)
         # get the pdf document template
         paper_size = attr.get("paper_size")
-        paper_alignment = attr.get("paper_alignment","Portrait")
+        pdf_paper_alignment = attr.get("pdf_paper_alignment","Portrait")
         doc = EdenDocTemplate(title=docTitle,
                               paper_size = paper_size,
-                              paper_alignment = paper_alignment)
+                              paper_alignment = pdf_paper_alignment)
         # Get the header
         header_flowable = None
-        header = attr.get("report_header")
+        header = attr.get("pdf_header")
         if not header:
             header = attr.get("rheader")
         if header:
             header_flowable = self.get_html_flowable(header,
                                                      doc.printable_width)
-
+            if self.pdf_header_padding:
+                header_flowable.append(Spacer(1,self.pdf_header_padding))    
         # Get the footer
         footer_flowable = None
-        footer = attr.get("report_footer")
+        footer = attr.get("pdf_footer")
         if not footer:
             footer = attr.get("rFooter")
         if footer:
             footer_flowable = self.get_html_flowable(footer,
                                                      doc.printable_width)
+            if self.pdf_footer_padding:
+                footer_flowable.append(Spacer(1,self.pdf_footer_padding))    
         # Build report template
 
         # Get data for the body of the text
@@ -182,8 +191,8 @@ class S3RL_PDF(S3Codec):
         body_flowable = None
 
         doc.calc_body_size(header_flowable, footer_flowable)
-        if attr.get("report_componentname"):
-            componentname = attr.get("report_componentname")
+        if attr.get("pdf_componentname"):
+            componentname = attr.get("pdf_componentname")
             (prefix, component) = componentname.split("_",1) 
             resource = current.manager.define_resource(request.controller,
                                                        request.function,
@@ -261,7 +270,7 @@ class S3RL_PDF(S3Codec):
             for field in fields:
                 if field.type == "id":
                     continue
-                if self.report_hide_comments and field.name == "comments":
+                if self.pdf_hide_comments and field.name == "comments":
                     continue
                 fnames.append(field.name)
                 flabel.append(field.label)
@@ -392,8 +401,8 @@ class EdenDocTemplate(BaseDocTemplate):
                 size = f.wrap(self.printable_width,
                               self.printable_height)
                 if size[0] > w:
-                    w = size[0]
-                h += size[1]
+                    w = size[PDF_WIDTH]
+                h += size[PDF_HEIGHT]
         return (w, h)
 
     def _calc(self):
@@ -402,8 +411,8 @@ class EdenDocTemplate(BaseDocTemplate):
         else:
             self.pagesize = portrait(self.paper_size)
         BaseDocTemplate._calc(self)
-        self.height = self.pagesize[1]
-        self.width = self.pagesize[0]
+        self.height = self.pagesize[PDF_HEIGHT]
+        self.width = self.pagesize[PDF_WIDTH]
         self.printable_width = self.width - \
                                self.leftMargin - \
                                self.rightMargin - \
@@ -420,8 +429,8 @@ class EdenDocTemplate(BaseDocTemplate):
             Helper function to calculate the various sizes of the page
         """
         self._calc()    # in case we changed margins sizes etc
-        self.height = self.pagesize[1]
-        self.width = self.pagesize[0]
+        self.height = self.pagesize[PDF_HEIGHT]
+        self.width = self.pagesize[PDF_WIDTH]
         self.printable_width = self.width - \
                                self.leftMargin - \
                                self.rightMargin - \
@@ -431,8 +440,8 @@ class EdenDocTemplate(BaseDocTemplate):
                                 self.bottomMargin
         header_size = self.get_flowable_size(header_flowable)
         footer_size = self.get_flowable_size(footer_flowable)
-        self.header_height = header_size[1]
-        self.footer_height = footer_size[1]
+        self.header_height = header_size[PDF_HEIGHT]
+        self.footer_height = footer_size[PDF_HEIGHT]
         self.body_height = self.printable_height - \
                            self.header_height - \
                            self.footer_height
@@ -499,17 +508,25 @@ class EdenDocTemplate(BaseDocTemplate):
 
     def add_page_decorators(self, canvas, doc):
         if self.header_flowable:
+            top = self.bottomMargin + self.printable_height
             for flow in self.header_flowable:
+                height = self.get_flowable_size(flow)[PDF_HEIGHT]
+                bottom = top - height
                 flow.drawOn(canvas,
                             self.leftMargin,
-                            self.bottomMargin + self.footer_height + self.body_height
+                            bottom
                            )
+                top = bottom
         if self.footer_flowable:
+            top = self.bottomMargin + self.footer_height
             for flow in self.footer_flowable:
+                height = self.get_flowable_size(flow)[PDF_HEIGHT]
+                bottom = top - height
                 flow.drawOn(canvas,
                             self.leftMargin,
-                            self.bottomMargin,
+                            bottom
                            )
+                top = bottom
 
     def addParagraph(self, text, style=None, append=True):
         """
@@ -595,7 +612,7 @@ class S3PDFTable(object):
             @param raw_data: A list of rows
             @param list_fields: A list of field names
             @param groupby: A field name that is to be used as a sub-group
-                   All the records that share the same report_groupby value
+                   All the records that share the same pdf_groupby value
                    will be clustered together
             @param hide_comments: Any comment field will be hidden
         """
@@ -609,7 +626,7 @@ class S3PDFTable(object):
         self.pdf = document
         self.raw_data = raw_data
         self.list_fields = list_fields
-        self.report_groupby = groupby
+        self.pdf_groupby = groupby
         self.hideComments = hide_comments
         self.autogrow = autogrow
         self.body_height = body_height
@@ -941,7 +958,7 @@ class S3PDFTable(object):
         else:
             style.append(("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey))
             style.append(("INNERGRID", (0, 0), (-1, -1), 0.2, colors.lightgrey))
-        if self.report_groupby != None:
+        if self.pdf_groupby != None:
             style.append(("LEFTPADDING", (0, 0), (-1, -1), 20))
         rowColourCnt = 0 # used to alternate the colours correctly when we have subheadings
         for i in range(rowCnt):
@@ -982,12 +999,22 @@ class S3html2pdf():
         self.pageWidth = pageWidth
         self.fontsize = 10
         styleSheet = getSampleStyleSheet()
-        self.normalstyle = styleSheet["Normal"]
-        self.normalstyle.fontName = "Helvetica"
-        self.normalstyle.fontSize = 9
+        self.plainstyle = styleSheet["Normal"]
+        self.plainstyle.fontName = "Helvetica"
+        self.plainstyle.fontSize = 9
+        self.boldstyle = deepcopy(styleSheet["Normal"])
+        self.boldstyle.fontName = "Helvetica-Bold"
+        self.boldstyle.fontSize = 10
         self.titlestyle = deepcopy(styleSheet["Normal"])
         self.titlestyle.fontName = "Helvetica-Bold"
-        self.titlestyle.fontSize = 10
+        self.titlestyle.fontSize = 16
+        self.normalstyle = self.plainstyle
+        # To add more pdf styles define the style above (just like the titlestyle)
+        # Then add the style and the name to the lookup dict below
+        # These can then be added to the html in the code as follows:
+        # TD("Waybill", _class="pdf_title")
+        self.style_lookup = {"pdf_title": self.titlestyle
+                            }
 
     def parse(self, html):
         result = self.select_tag(html)
@@ -1008,15 +1035,19 @@ class S3html2pdf():
             return self.parse_div(html)
         elif (isinstance(html, str) or isinstance(html, lazyT)):
             if title:
-                return [Paragraph(html, self.titlestyle)]
+                para = [Paragraph(html, self.boldstyle)]
             else:
-                return [Paragraph(html, self.normalstyle)]
+                para = [Paragraph(html, self.normalstyle)]
+            self.normalstyle = self.plainstyle
+            return para 
         return None
 
     def exclude_tag(self, html):
         try:
             if html.attributes["_class"] in self.exclude_class_list:
                 return True
+            if html.attributes["_class"] in self.style_lookup:
+                self.normalstyle = self.style_lookup[html.attributes["_class"]]
         except:
             pass
         return False

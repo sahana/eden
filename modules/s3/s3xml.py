@@ -48,7 +48,6 @@ from gluon.storage import Storage
 import gluon.contrib.simplejson as json
 
 from s3codec import S3Codec
-from s3track import S3Trackable
 
 try:
     from lxml import etree
@@ -666,6 +665,7 @@ class S3XML(S3Codec):
         popup_label = None
         popup_url = None
         tooltips = {}
+        latlons = {}
         if marker:
             try:
                 # Dict (provided by Feature Layers)
@@ -675,6 +675,7 @@ class S3XML(S3Codec):
                 symbol = marker["gps_marker"] or symbol
                 popup_url = marker["popup_url"]
                 tooltips = marker["tooltips"]
+                latlons = marker["latlons"]
             except:
                 # String (provided by ?)
                 marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
@@ -702,21 +703,16 @@ class S3XML(S3Codec):
 
             LatLon = None
             WKT = None
-            if "track" in get_vars:
-                # Use S3Track
-                # @ToDo: Make this a per-layer lookup instead of per-record
-                try:
-                    tracker = S3Trackable(table, record_id=record.id)
-                except SyntaxError:
-                    pass
-                else:
-                    gtable = s3db.gis_location
-                    LatLon = tracker.get_location(as_rows=True,
-                                                  _fields=[gtable.lat,
-                                                           gtable.lon])
+            if latlons:
+                # Use the value calculated in gis.get_marker_and_tooltip()
+                LatLon = latlons[tablename][record.id]
+                lat = LatLon[0]
+                lon = LatLon[1]
 
             elif "polygons" in get_vars:
                 # Display Polygons not Points
+                # e.g. Theme Layers
+                # @ToDo: Move this to GIS & do it 1/layer instead of 1/record
                 if WKTFIELD in fields:
                     query = (ktable.id == r_id)
                     if settings.get_gis_spatialdb():
@@ -761,17 +757,19 @@ class S3XML(S3Codec):
 
             if not LatLon and not WKT:
                 # Normal Location lookup
+                # e.g. Feature Queries
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
-                                                      limitby=(0, 1))
-            if LatLon:
-                LatLon = LatLon.first()
+                                                      limitby=(0, 1)).first()
                 lat = LatLon[LATFIELD]
                 lon = LatLon[LONFIELD]
+                
+            if LatLon:
                 if lat is None or lon is None:
+                    # Cannot display on Map
                     continue
-                attr[ATTRIBUTE.lat] = "%.6f" % lat
-                attr[ATTRIBUTE.lon] = "%.6f" % lon
+                attr[ATTRIBUTE.lat] = "%.4f" % lat
+                attr[ATTRIBUTE.lon] = "%.4f" % lon
                 if not marker_url:
                     marker = gis.get_marker()
                     marker_url = "%s/%s" % (download_url, marker.image)

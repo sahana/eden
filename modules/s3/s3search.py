@@ -1622,7 +1622,7 @@ class S3Search(S3CRUD):
 
         # Advanced search form
         if self.__advanced:
-            if self.__simple:
+            if self.__simple and not r.representation == "plain":
                 switch_link = A(T("Simple Search"), _href="#",
                                 _class="action-lnk simple-lnk")
                 _class = "%s hide"
@@ -1687,6 +1687,7 @@ class S3Search(S3CRUD):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
         xml = manager.xml
 
@@ -1695,6 +1696,7 @@ class S3Search(S3CRUD):
 
         resource = self.resource
         table = self.table
+        tablename = self.tablename
 
         _vars = request.vars
 
@@ -1716,8 +1718,9 @@ class S3Search(S3CRUD):
 
             # Default fields to return
             fields = [table.id, field]
-            if table == current.db.org_site:
+            if tablename == "org_site":
                 # Simpler to provide an exception case than write a whole new class
+                table = s3db.org_site
                 fields.append(table.instance_type)
 
             filter = _vars.filter
@@ -1752,8 +1755,7 @@ class S3Search(S3CRUD):
             if "link" in _vars:
                 try:
                     link, lkey, _id, rkey, fkey = _vars.link.split(".")
-                    manager.load(link)
-                    linktable = db[link]
+                    linktable = s3db[link]
                     fq = (linktable[rkey] == table[fkey]) & \
                          (linktable[lkey] == _id)
                     linked = db(fq).select(table._id)

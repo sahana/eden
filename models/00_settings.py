@@ -549,7 +549,7 @@ from eden.menus import *
 from eden.layouts import *
 
 # Create a Storage for menus
-current.menu = Storage(main=MM(), options=None)
+menu = current.menu = Storage(main=MM(), options=None)
 
 ##########
 # Messages
