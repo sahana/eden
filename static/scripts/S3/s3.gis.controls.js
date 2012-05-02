@@ -97,7 +97,7 @@ function s3_gis_tooltipSelect(event) {
         var attributes = feature.attributes;
         var tooltip;
         if (undefined != attributes.popup) {
-            // GeoJSON Feature Layers
+            // GeoJSON Feature Layers or Theme Layers
             tooltip = attributes.popup;
         } else if (undefined != attributes.name) {
             // GeoJSON, GeoRSS or Legacy Features
@@ -902,21 +902,58 @@ function addLayerPropertiesButton() {
                         if (S3.gis.propertiesWindow) {
                             S3.gis.propertiesWindow.close();
                         }
-                        S3.gis.propertiesWindow = new Ext.Window({
-                            width: 280,
-                            height: 350,
-                            layout: 'fit',
-                            // @ToDo: i18n
-                            title: 'Layer Properties',
-                            items: [
-                                {
-                                // Tab to View/Edit Basic Details
+                        if (layer_type == 'feature') {
+                            var tabPanel = new Ext.TabPanel({
+                                activeTab: 0,
+                                items: [
+                                    {
+                                        // Tab to View/Edit Basic Details
+                                        // @ToDo: i18n
+                                        title: 'Layer Properties',
+                                        html: response.responseText
+                                    }, {
+                                        // Tab for Search Widget
+                                        // @ToDo: i18n
+                                        title: 'Filter',
+                                        id: 's3_gis_layer_filter_tab',
+                                        html: ''
+                                    }
+                                    // @ToDo: Tab for Styling (esp. Thematic Mapping)
+                                    ]
+                            });
+                            tabPanel.items.items[1].on('activate', function() {
+                                // Find which search form to load
+                                // @ToDo: Look for overrides (e.g. Warehouses/Staff/Volunteers)
+                                // @ToDo: Read current filter settings to default widgets to
+                                var search_url;
+                                Ext.iterate(S3.gis.layers_features, function(key, val, obj) {
+                                    if (key.id == node.layer.layer_id) {
+                                        //search_url = S3.Ap.concat('/' + module + '/' + resource + '/search.plain');
+                                        search_url = key.url.replace(/.geojson.+/, '/search.plain');
+                                    }
+                                });
+                                Ext.get('s3_gis_layer_filter_tab').load({
+                                    url: search_url,
+                                    discardUrl: false,
+                                    // @ToDo: i18n
+                                    text: 'Loading...',
+                                    timeout: 30,
+                                    scripts: false
+                                });
+                            });
+                        } else {
+                            var tabPanel = new Ext.Panel({
+                                // View/Edit Basic Details
+                                // @ToDo: i18n
+                                title: 'Layer Properties',
                                 html: response.responseText
-                                }
-                            // @ToDo: Tab for Search Widget
-                            // @ToDo: Tab for Styling (esp. Thematic Mapping)
-                            ]
-                        })
+                            });
+                        }
+                        S3.gis.propertiesWindow = new Ext.Window({
+                            width: 400,
+                            layout: 'fit',
+                            items: [ tabPanel ]
+                        });
                         S3.gis.propertiesWindow.show();
                         // Set the form to use AJAX submission
                         $('#plain form').submit(function() {
@@ -926,7 +963,7 @@ function addLayerPropertiesButton() {
                             var ids = [];
                             Ext.iterate(fields, function(key, val, obj) {
                                 if (val.id && (val.id.indexOf('gis_layer_') != -1)) {
-                                       ids.push(val.id);
+                                    ids.push(val.id);
                                 }
                             });
                             var pcs = [];
@@ -950,13 +987,14 @@ function addLayerPropertiesButton() {
                             }
                             if (pcs.length > 0) {
                                 var query = pcs.join("&");
-                                $.ajax({type: 'POST',
-                                            url: update_url,
-                                            data: query,
-                                            success: function(msg) {
-                                                $('#plain').html(msg);
-                                            }
-                                        });
+                                $.ajax({
+                                    type: 'POST',
+                                    url: update_url,
+                                    data: query,
+                                    success: function(msg) {
+                                        $('#plain').html(msg);
+                                    }
+                                });
                             }
                             return false;
                         })

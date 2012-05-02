@@ -112,6 +112,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='gis_cache']">
+        <!-- GeoRSS or KML -->
         <type>Feature</type>
         <geometry>
             <type>
@@ -145,19 +146,12 @@
             <marker>
                 <xsl:value-of select="data[@field='marker']"/>
             </marker>
-            <!--
-            <popup>
-                <xsl:value-of select="@popup"/>
-            </popup>
-            <url>
-                <xsl:value-of select="@url"/>
-            </url>
-            -->
         </properties>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='gis_feature_query']">
+        <!-- Feature Query -->
         <type>Feature</type>
         <geometry>
             <type>
@@ -210,8 +204,39 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='gis_theme_data']">
+        <!-- Theme Layer -->
+        <xsl:variable name="geometry" select="./geometry/@value"/>
+        <xsl:variable name="name" select="reference[@field='location_id']/text()"/>
+        <xsl:variable name="value" select="data[@field='value']"/>
+
+        <type>Feature</type>
+        <geometry>  
+            <xsl:attribute name="value">
+                <!-- Use pre-prepared GeoJSON -->
+                <xsl:value-of select="$geometry"/>
+            </xsl:attribute>
+        </geometry>
+        <properties>
+            <id>
+                <xsl:value-of select="@uuid"/>
+            </id>
+            <name>
+                <xsl:value-of select="$name"/>
+            </name>
+            <value>
+                <xsl:value-of select="$value"/>
+            </value>
+            <popup>
+                <xsl:value-of select="concat($name, ': ', $value)"/>
+            </popup>
+        </properties>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="resource">
         <xsl:if test="./reference[@field='location_id']">
+        <!-- Feature Layer -->
         
             <xsl:variable name="geometry" select="./geometry/@value"/>
             <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
@@ -241,11 +266,6 @@
                                 </name>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="data[@field='colour']!=''">
-                            <colour>
-                                <xsl:value-of select="data[@field='colour']"/>
-                            </colour>
-                        </xsl:if>
                         <xsl:if test="reference[@field='location_id']/@marker!=''">
                             <marker>
                                 <xsl:value-of select="reference[@field='location_id']/@marker"/>
@@ -344,10 +364,11 @@
                                 </name>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="data[@field='colour']!=''">
-                            <colour>
-                                <xsl:value-of select="data[@field='colour']"/>
-                            </colour>
+                        <xsl:if test="data[@field='value']!=''">
+                            <!-- Theme Layer -->
+                            <value>
+                                <xsl:value-of select="data[@field='value']"/>
+                            </value>
                         </xsl:if>
                         <xsl:if test="reference[@field='location_id']/@marker!=''">
                             <marker>

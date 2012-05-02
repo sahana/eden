@@ -209,9 +209,6 @@ def human_resource():
                     field = table.type
                     field.readable = False
                     field.writable = False
-            elif r.representation == "plain":
-                # Don't redirect Map popups
-                pass
             elif r.id:
                 # Redirect to person controller
                 vars = {"human_resource.id": r.id}
@@ -233,7 +230,8 @@ def human_resource():
                                    vars = {"hrm_id": "[id]"}),
                         "_class": "action-btn",
                         "label": str(T("Send Message"))})
-        elif r.representation == "plain":
+        elif r.representation == "plain" and \
+             r.method !="search":
             # Map Popups
             output = hrm_map_popup(r)
         return output

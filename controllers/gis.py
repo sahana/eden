@@ -2029,6 +2029,9 @@ def layer_theme():
                 field = ltable.base
                 field.readable = False
                 field.writable = False
+                field = ltable.style
+                field.readable = True
+                field.writable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
