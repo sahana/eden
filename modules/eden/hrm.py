@@ -1446,8 +1446,7 @@ class S3HRSkillModel(S3Model):
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 NONE),
-                                   readable=False,
-                                   writable=False
+                                   writable = True if s3_has_role("HR_EDITOR") else False,
                                    ),
                              comments(),
                              *meta_fields())
@@ -2492,6 +2491,7 @@ def hrm_rheader(r, tabs=[]):
             tabs = [(T("Person Details"), None),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
+                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
@@ -2513,6 +2513,7 @@ def hrm_rheader(r, tabs=[]):
                     (hr_record, "human_resource"),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
+                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),

@@ -667,9 +667,15 @@ class S3PersonModel(S3Model):
                                                                        T("Nationality of the person.")))),
                                    represent = lambda code: \
                                                gis.get_country(code, key_type="code") or UNKNOWN_OPT),
-                             Field("occupation",
+                             Field("religion", length=128,
+                                   label = T("Religion"),
+                                   requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
+                                   represent = lambda opt: \
+                                    pr_religion_opts.get(opt, UNKNOWN_OPT),
+                                   ),
+                             Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
-                                   length=128), # Mayon Compatibility
+                                   ), 
                              # Field("picture", "upload",
                                    # autodelete=True,
                                    # label = T("Picture"),
