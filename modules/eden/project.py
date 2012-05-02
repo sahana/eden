@@ -32,6 +32,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
+           "S3ProjectAnnualBudgetModel",
            "project_rheader",
            "S3ProjectTaskVirtualfields"]
 
@@ -451,6 +452,9 @@ class S3ProjectModel(S3Model):
 
         # Beneficiaries
         add_component("project_beneficiary", project_project="project_id")
+
+        # Add Annual Budgets as a component of Project
+        add_component("project_annual_budget", project_project="project_id")
 
         # Tasks
         add_component("project_task",
@@ -1700,7 +1704,7 @@ class S3ProjectDRRModel(S3Model):
         return
 
     @staticmethod
-    def project_organisation_ondelete(*args, **kwargs):
+    def project_organisation_ondelete(row):
         """
         Executed when a project organisation record is deleted.
 
@@ -1714,7 +1718,7 @@ class S3ProjectDRRModel(S3Model):
         project_project = current.s3db.project_project
 
         # Query for the row that was deleted
-        deleted_record = (project_organisation.id == args[0].get('id'))
+        deleted_record = (project_organisation.id == row.get('id'))
         deleted_row = db(deleted_record).select(
                                                 project_organisation.deleted_fk,
                                                 project_organisation.role
@@ -2859,6 +2863,97 @@ class S3ProjectTaskIReportModel(S3Model):
 
         return
 
+
+class S3ProjectAnnualBudgetModel(S3Model):
+    """
+    Project Budget Model
+
+    This model holds the annual budget entries for projects
+    """
+    names = ['project_annual_budget',]
+
+    def model(self):
+        T = current.T
+        s3 = current.response.s3
+        currency_type = s3.currency_type
+
+        self.define_table(
+            "project_annual_budget",
+            self.project_project_id(requires=IS_ONE_OF(current.db, "project_project.id", "%(name)s")),
+            Field(
+                "year",
+                'integer',
+                default=None, # make it current year
+                required=True,
+                requires=IS_INT_IN_RANGE(1950, 3000),
+                notnull=True,
+                label="Year",
+                comment=None,
+            ),
+            Field(
+                "amount",
+                'double',
+                default=0.00,
+                required=True,
+                requires=IS_FLOAT_AMOUNT(),
+                notnull=True,
+                label="Amount",
+                comment=None,
+            ),
+            currency_type(required=True),
+            *s3.meta_fields()
+        )
+
+
+        # CRUD Strings
+        s3.crud_strings["project_annual_budget"] = Storage(
+            title_create = T("New Annual Budget"),
+            title_display = T("Annual Budget"),
+            title_list = T("List Annual Budgets"),
+            title_update = T("Edit Annual Budget"),
+            title_search = T("Search Annual Budgets"),
+            title_upload = T("Import Annual Budget data"),
+            title_report = T("Report on Annual Budgets"),
+            subtitle_create = T("Add a new annual budget"),
+            subtitle_list = T("List of all annual budgets"),
+            subtitle_report = T("Annual Budget Reports"),
+            label_list_button = T("List Annual Budgets"),
+            label_create_button = T("New Annual Budget"),
+            msg_record_created = T("New annual budget created"),
+            msg_record_modified = T("Annual budget updated"),
+            msg_record_deleted = T("Annual budget deleted"),
+            msg_list_empty = T("No annual budgets found")
+        )
+
+        self.configure("project_annual_budget",
+            list_fields=[
+                "id",
+                "year",
+                "amount",
+                "currency_type",
+            ]
+        )
+
+        self.project_annual_budget_id = S3ReusableField(
+            "annual_budget_id", current.db.project_annual_budget,
+            label = T("Annual Budget"),
+            sortby="year",
+            requires = IS_NULL_OR(IS_ONE_OF(current.db, "project_annual_budget.id", "%(name)s")),
+            represent = lambda id, row=None: \
+                (id and [current.db.project_annual_budget[id].year] or [NONE])[0],
+            comment = S3AddResourceLink(c="project",
+                f="annual_budget",
+                title="Add an Annual Budget",
+            ),
+            ondelete = "CASCADE"
+        )
+
+        # Pass variables back to global scope (response.s3.*)
+        return dict(
+        )
+
+
+
 def project_assignee_represent(id):
     """ Represent the Person a Task is assigned-to or list views """
 
@@ -2953,6 +3048,9 @@ def project_rheader(r, tabs=[]):
             append((T("Attachments"), "document"))
         if record.calendar:
             append((T("Calendar"), "timeline"))
+        if staff:
+            append((T("Annual Budgets"), "annual_budget"))
+
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 

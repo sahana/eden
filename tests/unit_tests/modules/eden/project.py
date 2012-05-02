@@ -13,9 +13,11 @@ from gluon.globals import Request
 from eden.project import *
 
 db = test_db  # Rename the test database so that functions will use it instead of the real database
-execfile("applications/eden/controllers/project.py", globals())
+#execfile("applications/eden/controllers/project.py", globals())
 
-db(db.project_project.id>0).delete()  # Clear the database
+db(db.org_organisation.id>0).delete()
+db(db.project_project.id>0).delete()
+db(db.project_organisation.id>0).delete()
 db.commit()
 
 # =============================================================================
@@ -23,14 +25,17 @@ class ProjectOrganisationTests(unittest.TestCase):
     """ Project Tests """
 
     def setUp(self):
-        request = Request()  # Use a clean Request object
+        #request = Request()  # Use a clean Request object
+        db.project_project.insert(name="Test Project")
+        db.org_organisation.insert(name="Test Organisation")
+        db.commit()
 
     def test_project_organisation_ondelete(self):
         # Set variables for the test function
-        request.post_vars["game_id"] = 1
-        request.post_vars["username"] = "spiffytech"
+        #request.post_vars["game_id"] = 1
+        #request.post_vars["username"] = "spiffytech"
 
-        resp = list_active_games()
+        S3ProjectDRRModel.project_organisation_ondelete()
         db.commit()
         self.assertEquals(0, len(resp["games"]))
 

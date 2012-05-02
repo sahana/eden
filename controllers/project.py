@@ -318,7 +318,7 @@ def activity():
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact")]
     if drr:
-        tabs.append((T("Beneficiaries"), "beneficiary"))
+        #tabs.append((T("Beneficiaries"), "beneficiary"))
         tabs.append((T("Documents"), "document"))
     else:
         tabs.append((T("Tasks"), "task"))
@@ -381,15 +381,12 @@ def community():
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact"),
             (T("Beneficiaries"), "beneficiary"),
-            #(T("Tasks"), "task"),
-            #(T("Documents"), "document"),
             ]
 
     rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
                               rheader=rheader,
                               csv_template="community")
-
 
 # -----------------------------------------------------------------------------
 def activity_contact():
