@@ -676,8 +676,8 @@ def send_process():
     req_ref = send_record.req_ref
     query = (rrtable.req_ref == req_ref)
     req_rec = db(query).select(rrtable.id, limitby = (0, 1)).first()
-    req_id = req_rec.id
-    if req_id:
+    if req_rec and req_rec.id:
+        req_id = req_rec.id
         for track_item in track_items:
             if track_item.req_item_id:
                 req_i = ritable[track_item.req_item_id]

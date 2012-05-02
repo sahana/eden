@@ -441,17 +441,17 @@ $(document).ready(function() {
             ctn = s3_string_represent(record.inv_inv_item.item_source_no)
             org = s3db.org_organisation_represent(record.inv_inv_item.supply_org_id)
             if record.inv_inv_item.expiry_date:
-                exp_date = " expires: %s" % s3_date_represent(record.inv_inv_item.expiry_date)
+                exp_date = "expires:%s" % s3_date_represent(record.inv_inv_item.expiry_date)
             else:
                 exp_date = ""
             bin = s3_string_represent(record.inv_inv_item.bin)
-            return "%s (%s%s) %s %s %s" % (record.supply_item.name,
-                                         record.supply_item.um,
-                                         exp_date,
-                                         ctn,
-                                         org,
-                                         bin,
-                                        )
+            rep_strings = [str for str in [record.supply_item.name,
+                                           exp_date,
+                                           ctn,
+                                           org,
+                                           bin
+                                           ] if str]
+            return " - ".join(rep_strings)
         else:
             return None
 
