@@ -63,7 +63,7 @@ Collaborate
 
 * **Developing** You can take the last code from the repository and experiment with it. When you're done, you can send us a "Merge request". 
 
-* **Documenting** Right now the documentation is a bit insufficient. If you want to document e-cidadania, feel free to do it. We use Sphinx (1.0.7) to generate the documents.
+* **Documenting** Right now the documentation is a bit insufficient. If you want to document e-cidadania, feel free to do it. We use Sphinx (1.1.3) to generate the documents.
 
 * **Translating** e-cidadania achieves to be international. If you want to translate it to your language just follow the steps in the documentation an send your catalog to us, we will include it ASAP.
 
