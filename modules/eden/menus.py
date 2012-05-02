@@ -597,7 +597,6 @@ class S3OptionsMenu:
                     )
                 )
 
-
     # -------------------------------------------------------------------------
     def dvi(self):
         """ DVI / Disaster Victim Identification """
@@ -630,6 +629,18 @@ class S3OptionsMenu:
                         M("List All"),
                     ),
                     M("Dashboard", f="index"),
+                )
+
+    # -------------------------------------------------------------------------
+    def dvr(self):
+        """ DVR Menu """
+
+        return M(c="dvr")(
+                    M("Cases", f="case")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search")
+                    ),
                 )
 
     # -------------------------------------------------------------------------
