@@ -42,3 +42,4 @@ def hrm002():
     driver.find_element_by_id("ui-menu-2-0").click()
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
 
+    s3_debug("hrm002 test: Pass")

@@ -39,7 +39,7 @@ def login(account="normal"):
     try:
         elem = browser.find_element_by_xpath("//div[@class='confirmation']")
     except NoSuchElementException:
-        s3_debug("Login failed")
+        s3_debug("Login failed.. so registering account")
         # Try registering
         register(account)
     else:

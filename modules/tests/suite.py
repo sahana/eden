@@ -46,19 +46,21 @@ else:
     
     # List of individual automated test scripts which Suite will run one by one:
     # Organization Management (ORG) tests
-    org001() # Set up Organizations
-    org002() # Set up Offices
+    org001() # Setup Organizations
+    org002() # Setup Offices
     
     # Human Resources Management (HRM) tests
-    hrm001() # Set up Staff
-    hrm002() # Set up New Volunteer
-    hrm003() # Set up Training Course
+    hrm001() # Setup Staff
+    hrm002() # Setup New Volunteer
+    hrm003() # Setup Training Course
+    hrm004() # Setup Training Event
+    hrm005() # Assign staff to Organization
     
     # Inventory management (INV) tests
-    inv001() # Set up Warehouses
-    inv002() # Set up Items
-    inv003() # Set up Catalogues
-    inv004() # Set up Categories
+    inv001() # Setup Warehouses     // needs more refining
+    inv002() # Setup Items        // needs more refining
+    inv003() # Setup Catalogues // needs more refining
+    inv004() # Setup Categories // needs more refining
     inv005() # Create Requests // needs more refining
     inv006() # Match Requests // needs more refining
     

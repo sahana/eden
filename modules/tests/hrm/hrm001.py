@@ -44,4 +44,4 @@ def hrm001():
     w_autocomplete("Buch","hrm_human_resource_site","Bucharest RFAAT Centre (Test) (Office)",False)
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
     
-    
+    s3_debug("hrm001 test: Pass")
