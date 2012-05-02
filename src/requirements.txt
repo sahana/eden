@@ -1,6 +1,5 @@
 django==1.4
 PIL
-django-wysiwyg
 django-grappelli
 feedparser
 python-dateutil==1.5
