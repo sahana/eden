@@ -36,7 +36,7 @@ from django.views.generic.create_update import update_object
 from django.db.models import F
 from django.http import HttpResponse
 
-from apps.ecidadania.proposals.models import Proposal
+from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal
 from core.spaces.models import Space
 
@@ -191,3 +191,139 @@ class ListProposals(ListView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
 
+#
+# Proposal Sets
+#
+
+class ListProposalSet(ListView):
+
+    """
+    List all the proposal set in a space.
+    
+    .. versionadded: 0.1.5
+    
+    :rtype: Object list
+    :context: setlist
+    """
+    paginate_by = 20
+    context_object_name = 'setlist'
+    
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        objects = ProposalSet.objects.all()
+        return objects
+    
+    def get_context_data(self, **kwargs):
+        context = super(ListProposalSet, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+    
+class ViewProposalSet(ListView):
+
+    """
+    List all the proposals inside a proposals set.
+    
+    .. versionadded 0.1.5
+    
+    :rtype: Object list
+    :context: proposalset
+    """
+    paginate_by = 50
+    context_object_name = 'proposalset'
+    
+    def get_queryset(self):
+        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        objects = get_object_or_404(Proposal, proposalset=self.kwargs['set_id'])
+        return objects
+    
+    def get_context_data(self, **kwargs):
+        context = super(ViewProposalSet, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+
+class AddProposalSet(FormView):
+
+    """
+    Create a new prpoposal set, it can be related to a debate or be in free mode,
+    which is not linked to anything. If it's linked to a debate, people can
+    make their proposals related to the debate notes.
+    
+    .. versionadded: 0.1.5
+    
+    :rtype: Form object
+    :context: form, get_place
+    """
+    form_class = ProposalSetForm
+    template_name = 'proposals/proposalset_add.html'
+    
+    def get_success_url(self):
+        return '/spaces/' + self.kwargs['space_name']
+    
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        form_uncommited = form.save(commit=False)
+        form_uncommited.space = self.space
+        form_uncommited.author = self.request.user
+        form_uncommited.save()
+        return super(AddProposalSet, self).form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super(AddProposalSet, self).get_context_data(**kwargs)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = self.space
+        return context
+        
+    @method_decorator(permission_required('proposals.add_proposalset'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddProposalSet, self).dispatch(*args, **kwargs)
+        
+class EditProposalSet(UpdateView):
+
+    """
+    Modify an already created proposal set.
+    
+    .. versionadded: 0.1.5
+    
+    :rtype: Form object
+    :context: form, get_place
+    """
+    model = ProposalSet
+    template_name = 'proposals/proposalset_edit.html'
+    
+    def get_success_url(self):
+        return '/spaces/{0}/proposal/{1}/'.format(self.kwargs['space_name'], self.kwargs['set_id'])
+        
+    def get_object(self):
+        propset_id = self.kwargs['set_id']
+        return get_object_or_404(ProposalSet, pk = propset_id)
+        
+    def get_context_data(self, **kwargs):
+        context = super(EditProposalSet, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context
+        
+    @method_decorator(permission_required('proposals.edit_proposalset'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditProposalSet, self).dispatch(*args, **kwargs)
+
+class DeleteProposalSet(DeleteView):
+
+    """
+    Delete a proposal set.
+    
+    .. versionadded: 0.1.5
+    
+    :rtype: Confirmation
+    :context: get_place
+    """
+    def get_object(self):
+        return get_object_or_404(ProposalSet, pk = self.kwargs['set_id'])
+
+    def get_success_url(self):
+        current_space = self.kwargs['space_name']
+        return '/spaces/{0}'.format(current_space)
+
+    def get_context_data(self, **kwargs):
+        context = super(DeleteProposalSet, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        return context                 
