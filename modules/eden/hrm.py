@@ -1446,7 +1446,8 @@ class S3HRSkillModel(S3Model):
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 NONE),
-                                   writable = True if s3_has_role("HR_EDITOR") else False,
+                                   readable=False,
+                                   writable=False
                                    ),
                              comments(),
                              *meta_fields())
@@ -1742,7 +1743,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Course Certificates registered"))
 
         # =====================================================================
-        # Mission Record
+        # Professional Exepericen (Mission Record)
         #
         # These are an element of credentials:
         # - a minimum number of hours of active duty need to be done
@@ -1756,6 +1757,7 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              person_id(),
                              organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             Field("job_title", label=T("Job Title")),
                              Field("start_date", "date",
                                    label=T("Start Date"),
                                    requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
@@ -2491,7 +2493,6 @@ def hrm_rheader(r, tabs=[]):
             tabs = [(T("Person Details"), None),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
@@ -2513,12 +2514,11 @@ def hrm_rheader(r, tabs=[]):
                     (hr_record, "human_resource"),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
                     (T("Credentials"), "credential"),
-                    (T("Mission Record"), "experience"),
+                    (T("Experience"), "experience"),
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
                    ]
