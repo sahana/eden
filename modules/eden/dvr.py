@@ -37,7 +37,8 @@ from ..s3 import *
 # =============================================================================
 class S3DVRModel(S3Model):
     """
-        Allow an individual or household to 
+        Allow an individual or household to register to receive compensation
+            &/or Distributions of Relief Items
     """
 
     names = ["dvr_case",
@@ -91,6 +92,7 @@ class S3DVRModel(S3Model):
                                         represent = lambda opt: dvr_status_opts.get(opt, NONE),
                                         label= T("Status")),
                                   multi_activity_id(),
+                                  s3.comments(),
                                   *s3.meta_fields())
 
         # CRUD Strings

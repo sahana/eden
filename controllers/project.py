@@ -35,8 +35,6 @@ def create():
 def project():
     """ RESTful CRUD controller """
 
-    resourcename = "project"
-
     if "tasks" in request.get_vars:
         # Return simplified controller to pick a Project for which to list the Open Tasks
         s3mgr.load("project_project")
@@ -192,9 +190,7 @@ def project():
     response.s3.postp = postp
 
     rheader = s3db.project_rheader
-    return s3_rest_controller(module, resourcename,
-                              rheader=rheader,
-                              interactive_report=True,
+    return s3_rest_controller(rheader=rheader,
                               csv_template="project")
 
 # =============================================================================
@@ -225,7 +221,6 @@ def organisation():
                      _class="action-btn")
 
         return s3_rest_controller(list_btn=list_btn,
-                                  interactive_report=True,
                                   csv_template="organisation")
     else:
         tabs = [
@@ -259,7 +254,7 @@ def beneficiary():
                            args="report", vars=request.get_vars),
                  _class="action-btn")
 
-    return s3_rest_controller(interactive_report=True)
+    return s3_rest_controller()
 
 # =============================================================================
 def activity_type():
@@ -325,8 +320,7 @@ def activity():
         #tabs.append((T("Attachments"), "document"))
 
     rheader = lambda r: s3db.project_rheader(r, tabs)
-    return s3_rest_controller(interactive_report=True,
-                              rheader=rheader,
+    return s3_rest_controller(rheader=rheader,
                               csv_template="activity")
 
 # -----------------------------------------------------------------------------

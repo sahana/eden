@@ -294,9 +294,14 @@ def s3_mark_required(fields,
     _required = False
     for field in fields:
         if field.writable:
-            required = field.required or field.notnull or \
-                        mark_required and field.name in mark_required
             validators = field.requires
+            if isinstance(validators, IS_EMPTY_OR):
+                # Allow notnull fields to be marked as not required if we populate them onvalidation
+                labels[field.name] = "%s:" % field.label
+                continue
+            else:
+                required = field.required or field.notnull or \
+                            mark_required and field.name in mark_required
             if not validators and not required:
                 labels[field.name] = "%s:" % field.label
                 continue

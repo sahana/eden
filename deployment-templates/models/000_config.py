@@ -92,13 +92,13 @@ deployment_settings.base.migrate = True
 # To pre-populate the database On 1st run should specify directory(s) in 
 # /private/prepopulate/
 # eg:
-# ["default"]
+# ["default"] (1 is a shortcut for this)
 # ["demo/Standard"]
 # ["demo/IFRC_Train"]
 # ["roles", "user"]
-# Unless doing a manual DB migration, where prepopulate = []
-# In Production, prepopulate = [] (to save 1x DAL hit every page)
-deployment_settings.base.prepopulate = ["default"]
+# Unless doing a manual DB migration, where prepopulate = 0
+# In Production, prepopulate = 0 (to save 1x DAL hit every page)
+deployment_settings.base.prepopulate = 1
 # NOTE: the web UI will not be accessible while the DB is empty,
 # instead run:
 #   python web2py.py -N -S eden -M
@@ -497,6 +497,12 @@ deployment_settings.modules = OrderedDict([
             restricted = True,
             module_type = 2,
         )),
+    ("cms", Storage(
+          name_nice = T("Content Management"),
+          #description = "Content Management System",
+          restricted = True,
+          module_type = 10,
+      )),
     ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
@@ -653,12 +659,6 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
-    ("cms", Storage(
-          name_nice = T("Content Management"),
-          #description = "Content Management System",
-          restricted = True,
-          module_type = 10,
-      )),
     ("member", Storage(
            name_nice = T("Members"),
            #description = "Membership Management System",
@@ -671,6 +671,12 @@ deployment_settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 1,
     #   )),
+    #("flood", Storage(
+    #        name_nice = T("Flood Warnings"),
+    #        #description = "Flood Gauges show water levels in various parts of the country",
+    #        restricted = False,
+    #        module_type = 10
+    #    )),
     #("patient", Storage(
     #        name_nice = T("Patient Tracking"),
     #        #description = "Tracking of Patients",
@@ -683,11 +689,4 @@ deployment_settings.modules = OrderedDict([
     #       restricted = False,
     #       module_type = 10
     #   )),
-    # This module has very limited functionality
-    #("flood", Storage(
-    #        name_nice = T("Flood Alerts"),
-    #        #description = "Flood Alerts show water levels in various parts of the country",
-    #        restricted = False,
-    #        module_type = 10
-    #    )),
 ])

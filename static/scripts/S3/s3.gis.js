@@ -24,7 +24,8 @@ S3.gis.options = {
     projection: S3.gis.projection_current,
     // Use Manual stylesheet download (means can be done in HEAD to not delay pageload)
     theme: null,
-    paddingForPopups: new OpenLayers.Bounds(50, 10, 200, 300),
+    // This means that Images get hidden by scrollbars
+    //paddingForPopups: new OpenLayers.Bounds(50, 10, 200, 300),
     units: S3.gis.units,
     maxResolution: S3.gis.maxResolution,
     maxExtent: S3.gis.maxExtent,

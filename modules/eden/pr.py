@@ -675,7 +675,7 @@ class S3PersonModel(S3Model):
                                    ),
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
-                                   ), 
+                                   ),
                              # Field("picture", "upload",
                                    # autodelete=True,
                                    # label = T("Picture"),
@@ -2901,13 +2901,9 @@ def pr_contacts(r, **attr):
     response.view = "pr/contacts.html"
 
     # RHeader for consistency
-    controller = current.request.controller
-    if controller == "hrm":
-        rheader = s3db.hrm_rheader(r)
-    elif controller == "member":
-        rheader = s3db.member_rheader(r)
-    elif controller == "pr":
-        rheader = s3db.pr_rheader(r)
+    rheader = attr.get("rheader", None)
+    if callable(rheader):
+        rheader = rheader(r)
 
     return dict(
             title = T("Contacts"),
