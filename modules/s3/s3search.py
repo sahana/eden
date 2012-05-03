@@ -298,7 +298,7 @@ class S3SearchSimpleWidget(S3SearchWidget):
             for value in values:
                 field_queries = None
 
-                # Create a queries that test the current
+                # Create a set of queries that test the current
                 # value against each field
                 for field in self.field:
                     field_query = S3FieldSelector(field).like(value)
@@ -495,8 +495,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param vars: the URL GET variables as dict
         """
+        print self.field
 
-        resource, field, kfield = self._get_reference_resource(resource)
+        #resource, field, kfield = self._get_reference_resource(resource)
+        field = self.field
 
         T = current.T
 
@@ -515,7 +517,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             _field = resource.table[field]
         except:
             field_type = "virtual"
-            raise NotImplementedError
         else:
             field_type = str(_field.type)
 
@@ -523,7 +524,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
             opt_keys = (True, False)
         else:
             # Find unique values of options for that field
-            rows = resource.select(_field, groupby=_field)
+            rows = resource.sqltable(field, groupby=field)
             if field_type.startswith("list"):
                 opt_keys = []
                 for row in rows:
@@ -705,16 +706,16 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 value = [value]
 
             try:
-                field = self.field
-                field = resource.table[field]
+                table_field = resource.table[self.field]
             except:
-                # field is virtual
-                raise NotImplementedError
+                table_field = None
 
-            if str(field.type).startswith("list"):
-                query = S3FieldSelector(field.name).contains(value)
+            # What do we do if we need to search within a virtual field
+            # that is a list:* ?
+            if table_field and str(table_field.type).startswith("list"):
+                query = S3FieldSelector(self.field).contains(value)
             else:
-                query = S3FieldSelector(field.name).belongs(value)
+                query = S3FieldSelector(self.field).belongs(value)
 
             return query
         else:
