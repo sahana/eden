@@ -380,6 +380,8 @@ def person():
         @ToDo: Volunteers should be redirected to vol/person?
     """
 
+    super_key = s3mgr.model.super_key
+
     # Custom Method for Contacts
     s3mgr.model.set_method("pr", resourcename,
                            method="contacts",

@@ -11,7 +11,7 @@ if auth.permission.format in ("html"):
     # -> To customize, replace the standard components by the desired items
     # -> Put right-hand menu options in reverse order!
     #
-    current.menu.main(
+    menu.main(
 
         # Standard modules-menu
         S3MainMenu.menu_modules(),

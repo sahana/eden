@@ -1,24 +1,27 @@
 /**
     S3Search Static JS Code
 */
+
+S3.search = Object();
+
 // ============================================================================
-function fncSearchAutocompleteTimer() {
+
+S3.search.AutocompleteTimer = function() {
 	// Cancel previous timer
 	try {
 		clearTimeout(S3.TimeoutVar[$(this).attr('id')]);
 	} catch(err) {};
 	var selSearchDiv = $(this);
-	var fncSearchAutocompleteAjaxArg = function() { fncSearchAutocompleteAjax(selSearchDiv); };
+	var fncSearchAutocompleteAjaxArg = function() { S3.search.AutocompleteAjax(selSearchDiv); };
 	S3.TimeoutVar[$(this).attr('id')] = setTimeout( fncSearchAutocompleteAjaxArg, 400);
 };
 
-function fncSearchAutocompleteAjax(selSearchDiv) {
+S3.search.AutocompleteAjax = function(selSearchDiv) {
 
     // Cancel previous request
     try {
         S3.JSONRequest[selSearchDiv.attr('id')].abort();
     } catch(err) {};
-
 
     var selSearchForm = selSearchDiv.parent();
     var selHiddenInput = selSearchForm.parent().find('.hidden_input');
@@ -121,13 +124,21 @@ function fncSearchAutocompleteAjax(selSearchDiv) {
     });
 };
 
-function CancelEnterPress(e){
+S3.search.CancelEnterPress = function(e){
     if(e.which === 13){
         return false;
     }
 };
 
-//wait for the DOM to be loaded
+S3.search.select_letter_label = function() {
+    /* Expanding & Collapsing Letters */
+    $('.search_select_letter_label').click( function () {
+        $('#' + $(this).attr('id').replace('label', 'widget')).slideToggle();
+        $(this).toggleClass('expanded');
+    });
+}
+
+// wait for the DOM to be loaded
 $(document).ready(function() {
     /* Search Form handling */
     if ( undefined == $('.advanced-form').val() ) {
@@ -169,21 +180,18 @@ $(document).ready(function() {
     }
 
     /* Expanding & Collapsing Letters */
-    $('.search_select_letter_label').click( function () {
-        $('#' + $(this).attr('id').replace('label', 'widget')).slideToggle();
-        $(this).toggleClass('expanded');
-    });
+    S3.search.select_letter_label();
 
     /* Search AutoComplete */
 
     // Events to capture autocomplete input
-    $('div.simple-form').keyup( fncSearchAutocompleteTimer )
-    					.click( fncSearchAutocompleteTimer )
-    					.keypress(CancelEnterPress);
+    $('div.simple-form').keyup( S3.search.AutocompleteTimer )
+    					.click( S3.search.AutocompleteTimer )
+    					.keypress(S3.search.CancelEnterPress);
 
-    $('div.advanced-form').keyup( fncSearchAutocompleteTimer )
-    					  .click( fncSearchAutocompleteTimer )
-    					  .keypress(CancelEnterPress);
+    $('div.advanced-form').keyup( S3.search.AutocompleteTimer )
+    					  .click( S3.search.AutocompleteTimer )
+    					  .keypress(S3.search.ancelEnterPress);
 
     // Select Item for Autocomplete
     $('.search_autocomplete_result_list li span').live('click', function() {

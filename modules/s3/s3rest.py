@@ -3007,7 +3007,7 @@ class S3Resource(object):
         if layer_id:
             # We're being called as a GIS Feature Layer, so do lookup per layer
             # and not per-record
-            # Marker & Popup
+            # Marker, Popup & LatLon
             marker = current.gis.get_marker_and_popup(layer_id, self)
         else:
             # Marker provided in request

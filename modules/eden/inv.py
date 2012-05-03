@@ -49,6 +49,7 @@ SHIP_STATUS_IN_PROCESS = 0
 SHIP_STATUS_RECEIVED   = 1
 SHIP_STATUS_SENT       = 2
 SHIP_STATUS_CANCEL     = 3
+SHIP_STATUS_RETURNING  = 4
 
 # To pass to global scope
 inv_ship_status = {
@@ -56,13 +57,16 @@ inv_ship_status = {
                     "RECEIVED"   : SHIP_STATUS_RECEIVED,
                     "SENT"       : SHIP_STATUS_SENT,
                     "CANCEL"     : SHIP_STATUS_CANCEL,
+                    "RETURNING"  : SHIP_STATUS_RETURNING,
                 }
 
 T = current.T
 shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
                     SHIP_STATUS_RECEIVED:   T("Received"),
                     SHIP_STATUS_SENT:       T("Sent"),
-                    SHIP_STATUS_CANCEL:     T("Canceled") }
+                    SHIP_STATUS_CANCEL:     T("Canceled"),
+                    SHIP_STATUS_RETURNING:  T("Returning"),
+                  }
 
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
@@ -73,22 +77,25 @@ TRACK_STATUS_TRANSIT    = 2
 TRACK_STATUS_UNLOADING  = 3
 TRACK_STATUS_ARRIVED    = 4
 TRACK_STATUS_CANCELED   = 5
+TRACK_STATUS_RETURNING  = 6
 
 inv_tracking_status = {
                         "UNKNOWN"    : TRACK_STATUS_UNKNOWN,
-                        "IN_PROCESS"  : TRACK_STATUS_PREPARING,
+                        "IN_PROCESS" : TRACK_STATUS_PREPARING,
                         "SENT"       : TRACK_STATUS_TRANSIT,
                         "UNLOADING"  : TRACK_STATUS_UNLOADING,
                         "RECEIVED"   : TRACK_STATUS_ARRIVED,
                         "CANCEL"     : TRACK_STATUS_CANCELED,
+                        "RETURNING"  : TRACK_STATUS_RETURNING,
                       }
 
-tracking_status = {0 : T("Unknown"),
-                   1 : T("Preparing"),
-                   2 : T("In transit"),
-                   3 : T("Unloading"),
-                   4 : T("Arrived"),
-                   5 : T("Canceled"),
+tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
+                   TRACK_STATUS_PREPARING : T("Preparing"),
+                   TRACK_STATUS_TRANSIT   : T("In transit"),
+                   TRACK_STATUS_UNLOADING : T("Unloading"),
+                   TRACK_STATUS_ARRIVED   : T("Arrived"),
+                   TRACK_STATUS_CANCELED  : T("Canceled"),
+                   TRACK_STATUS_RETURNING : T("Returning"),
                    }
 
 itn_label = T("Item Source Tracking Number")
@@ -331,7 +338,7 @@ $(document).ready(function() {
                                       "owner_org_id",
                                       "supply_org_id",
                                       ],
-                       report_hide_comments = True,
+                       pdf_hide_comments = True,
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
                        report_options = report_options,
@@ -617,22 +624,27 @@ class S3TrackingModel(S3Model):
                                   Field("transport_type",
                                         "string",
                                         label = T("Type of Transport"),
+                                        represent = s3_string_represent,
                                         ),
                                   Field("vehicle_plate_no",
                                         "string",
                                         label = T("Vehicle Plate Number"),
+                                        represent = s3_string_represent,
                                         ),
                                   Field("driver_name",
                                         "string",
                                         label = T("Name of Driver"),
+                                        represent = s3_string_represent,
                                         ),
                                   Field("time_in",
                                         "time",
                                         label = T("Time In"),
+                                        represent = s3_string_represent,
                                         ),
                                   Field("time_out",
                                         "time",
                                         label = T("Time Out"),
+                                        represent = s3_string_represent,
                                         ),
                                   s3.comments(),
                                   *s3.meta_fields())
@@ -965,6 +977,12 @@ $(document).ready(function() {
                                         represent = self.qnty_recv_repr,
                                         readable = False,
                                         writable = False,),
+                                  Field("return_quantity",
+                                        "double",
+                                        label = T("Quantity Returned"),
+                                        represent = self.qnty_recv_repr,
+                                        readable = False,
+                                        writable = False,),
                                   currency_type("currency"),
                                   Field("pack_value",
                                         "double",
@@ -1041,6 +1059,7 @@ $(document).ready(function() {
                                       "send_id",
                                       "quantity",
                                       "bin",
+                                      "return_quantity",
                                       "recv_id",
                                       "recv_quantity",
                                       "recv_bin",
@@ -1117,8 +1136,7 @@ $(document).ready(function() {
         table.date.readable = True
 
         record = table[r.id]
-        site_id = record.site_id
-        site = table.site_id.represent(site_id,False)
+        send_ref = record.send_ref
         # hide the inv_item field
         tracktable.send_inv_item_id.readable = False
         tracktable.recv_inv_item_id.readable = False
@@ -1131,15 +1149,16 @@ $(document).ready(function() {
                       ]
         exporter = r.resource.exporter.pdf
         return exporter(r,
-                        method="list",
-                        report_componentname = "inv_track_item",
-                        report_title="Waybill",
-                        report_filename="Waybill-%s" % site,
+                        method = "list",
+                        pdf_componentname = "inv_track_item",
+                        pdf_title = "Waybill",
+                        pdf_filename = send_ref,
                         list_fields = list_fields,
-                        report_hide_comments=True,
-                        report_footer = inv_send_report_footer,
-                        paper_alignment = "Landscape",
-                        report_table_autogrow = "B",
+                        pdf_hide_comments = True,
+                        pdf_header_padding = 12,
+                        pdf_footer = inv_send_pdf_footer,
+                        pdf_paper_alignment = "Landscape",
+                        pdf_table_autogrow = "B",
                         **attr
                        )
 
@@ -1207,8 +1226,7 @@ $(document).ready(function() {
         table.site_id.represent = s3db.org_site_represent
 
         record = table[r.id]
-        site_id = record.site_id
-        site = table.site_id.represent(site_id,False)
+        recv_ref = record.recv_ref
         list_fields = ["item_id",
                        "item_source_no",
                        "item_pack_id",
@@ -1219,15 +1237,16 @@ $(document).ready(function() {
 
         exporter = r.resource.exporter.pdf
         return exporter(r,
-                        method="list",
-                        report_title="Goods Received Note",
-                        report_filename="GRN-%s" % site,
+                        method = "list",
+                        pdf_title = "Goods Received Note",
+                        pdf_filename = recv_ref,
                         list_fields = list_fields,
-                        report_hide_comments=True,
-                        report_componentname = "inv_track_item",
-                        report_footer = inv_recv_report_footer,
-                        report_table_autogrow = "B",
-                        paper_alignment = "Landscape",
+                        pdf_hide_comments = True,
+                        pdf_componentname = "inv_track_item",
+                        pdf_header_padding = 12,
+                        pdf_footer = inv_recv_pdf_footer,
+                        pdf_table_autogrow = "B",
+                        pdf_paper_alignment = "Landscape",
                         **attr
                        )
 
@@ -1254,10 +1273,10 @@ $(document).ready(function() {
         exporter = r.resource.exporter.pdf
         return exporter(r,
                         method="list",
-                        report_title="Donation Certificate",
-                        report_filename="DC-%s" % site,
-                        report_hide_comments=True,
-                        report_componentname = "inv_track_item",
+                        pdf_title="Donation Certificate",
+                        pdf_filename="DC-%s" % site,
+                        pdf_hide_comments=True,
+                        pdf_componentname = "inv_track_item",
                         **attr
                        )
 
@@ -1798,8 +1817,10 @@ def inv_send_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(logo, _colspan=2),
-                              TH("%s: " % table.send_ref.label),
+                           TR(TD("Waybill", _colspan=2, _class="pdf_title"),
+                              TD(logo, _colspan=2),
+                              ),
+                           TR(TH("%s: " % table.send_ref.label),
                               TD(table.send_ref.represent(record.send_ref))
                               ),
                            TR( TH("%s: " % table.date.label),
@@ -1861,6 +1882,28 @@ def inv_send_rheader(r):
                                    TH("%s: " % rcitable.quantity.label),
                                    record.req_commit_item.quantity,
                                   ))
+            elif record.status == SHIP_STATUS_RETURNING:
+                    tracktable = current.s3db.inv_track_item
+                    query = (tracktable.send_id == record.id) & \
+                            (tracktable.return_quantity == None)
+                    row = current.db(query).select(tracktable.id,
+                                        limitby=(0, 1)).first()
+                    if row == None:
+                        return_btn = A( T("Complete Returns"),
+                                      _href = URL(c = "inv",
+                                                  f = "return_process",
+                                                  args = [record.id]
+                                                  ),
+                                      _id = "return_process",
+                                      _class = "action-btn"
+                                      )
+                        return_btn_confirm = SCRIPT("S3ConfirmClick('#return_process', '%s')"
+                                                  % T("Do you want to complete the return process?") )
+                        rfooter.append(return_btn)
+                        rfooter.append(return_btn_confirm)
+                    else:
+                        msg = T("You need to check all item quantities before you can complete the return process")
+                        rfooter.append(SPAN(msg))
             else:
                 cn_btn = A( T("Waybill"),
                               _href = URL(f = "send",
@@ -1899,6 +1942,20 @@ def inv_send_rheader(r):
                                 s3db.inv_send[record.id] = \
                                     dict(status = SHIP_STATUS_RECEIVED)
                             else:
+                                return_btn = A( T("Manage Returns"),
+                                                _href = URL(f = "send_returns",
+                                                            args = [record.id],
+                                                            vars = None,
+                                                            ),
+                                                _id = "send_return",
+                                                _class = "action-btn",
+                                                _title = T("Only use this button to accept back into stock some items that were returned from a delivery to beneficiaries who do not record the shipment details directly into the system")
+                                                )
+
+                                return_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
+                                                             % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                                rfooter.append(return_btn)
+                                rfooter.append(return_btn_confirm)
                                 receive_btn = A( T("Confirm Shipment Received"),
                                                 _href = URL(f = "send",
                                                             args = [record.id],
@@ -1939,7 +1996,7 @@ def inv_send_rheader(r):
     return None
 
 # ---------------------------------------------------------------------
-def inv_send_report_footer(r):
+def inv_send_pdf_footer(r):
     record = r.record
     if record:
         footer = DIV (TABLE (TR(TH(T("Commodities Loaded")),
@@ -2012,8 +2069,10 @@ def inv_recv_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(logo, _colspan=2),
-                              TH("%s: " % table.recv_ref.label),
+                           TR(TD("Goods Receive Notice", _colspan=2, _class="pdf_title"),
+                              TD(logo, _colspan=2),
+                              ),
+                           TR(TH("%s: " % table.recv_ref.label),
                               TD(table.recv_ref.represent(record.recv_ref))
                               ),
                            TR( TH("%s: " % table.status.label),
@@ -2099,7 +2158,7 @@ def inv_recv_rheader(r):
             return rheader
     return None
 # ---------------------------------------------------------------------
-def inv_recv_report_footer(r):
+def inv_recv_pdf_footer(r):
     record = r.record
     if record:
         footer = DIV (TABLE (TR(TH(T("Delivered By")),

@@ -79,6 +79,7 @@ class S3ProjectModel(S3Model):
              "project_community_contact",
              "project_project_id",
              "project_activity_id",
+             "project_multi_activity_id",
              "project_hfa_opts",
              "project_project_represent",
              ]
@@ -766,6 +767,21 @@ class S3ProjectModel(S3Model):
                                                                   tooltip=ACTIVITY_TOOLTIP),
                                       ondelete = "CASCADE")
 
+        multi_activity_id = S3ReusableField("activity_id", "list:reference project_activity",
+                                            sortby="name",
+                                            label = T("Activities"),
+                                            requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                            "project_activity.id",
+                                                                            "%(name)s",
+                                                                            multiple=True,
+                                                                            sort=True)),
+                                            widget = S3MultiSelectWidget(),
+                                            represent = multi_activity_represent,
+                                            comment = S3AddResourceLink(ADD_ACTIVITY,
+                                                                        c="project", f="activity",
+                                                                        tooltip=ACTIVITY_TOOLTIP),
+                                            ondelete = "SET NULL")
+
         # Components
 
         # Beneficiaries
@@ -991,6 +1007,7 @@ class S3ProjectModel(S3Model):
             project_project_id = project_id,
             project_activity_id = activity_id,
             project_community_id = community_id,
+            project_multi_activity_id = multi_activity_id,
             project_hfa_opts = project_hfa_opts,
             project_project_represent = self.project_represent,
         )
@@ -1001,12 +1018,17 @@ class S3ProjectModel(S3Model):
         dummy = S3ReusableField("dummy_id", "integer",
                                 readable=False,
                                 writable=False)
+                                
+        multi_activity_id = S3ReusableField("activity_id", "list:integer",
+                                            readable=False,
+                                            writable=False)
 
         return Storage(
             project_project_id = lambda: dummy("project_id"),
             project_activity_id = lambda: dummy("activity_id"),
             project_community_id = lambda: dummy("community_id"),
-            project_project_represent = lambda v, r: current.messages.NONE
+            project_project_represent = lambda v, r: current.messages.NONE,
+            project_multi_activity_id = multi_activity_id
         )
 
     @staticmethod
@@ -3707,5 +3729,42 @@ class S3ProjectTimeVirtualfields:
             return "-"
 
         return thisdate.date().strftime("%d %B")
+
+# =============================================================================
+def multi_activity_represent(opt):
+    """
+        Activity representation
+        for multiple=True options
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    NONE = current.messages.NONE
+
+    table = s3db.project_activity
+    set = db(table.id > 0).select(table.id,
+                                  table.name).as_dict()
+
+    if not set:
+        return NONE
+
+    if isinstance(opt, (list, tuple)):
+        opts = opt
+        try:
+            vals = [str(set.get(o)["name"]) for o in opts]
+        except:
+            return None
+    elif isinstance(opt, int):
+        opts = [opt]
+        vals = str(set.get(opt)["name"])
+    else:
+        return NONE
+
+    if len(opts) > 1:
+        vals = ", ".join(vals)
+    else:
+        vals = len(vals) and vals[0] or ""
+    return vals
 
 # END =========================================================================
