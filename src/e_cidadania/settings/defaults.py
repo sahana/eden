@@ -190,7 +190,7 @@ LOGGING = {
 
 # Tell django what environment you will run. Options: development, production. 
 # Default: development
-from e_cidadania.settings.production import *
+from e_cidadania.settings.development import *
 
 # Combine all the apps in the django variable INSTALLED_APPS
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
