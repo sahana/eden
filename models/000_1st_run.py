@@ -56,8 +56,8 @@ if update_check_needed:
     #        at once -- it will die on the first fatal error encountered.
     try:
         import s3 as s3base
-    except Exception, errmsg:
-        errors.extend(errmsg)
+    except Exception, e:
+        errors.extend(e.message)
 
     # Report (non-fatal) warnings.
     if warnings:

@@ -14,6 +14,7 @@ S3.gis.dirs = new Array();
 
 // Add Layers from the Catalogue
 function addLayers() {
+    var i;
     /* Base Layers */
     // OSM
     if (S3.gis.layers_osm) {
@@ -55,8 +56,8 @@ function addLayers() {
                 isBaseLayer: true,
                 displayInLayerSwitcher: true,
                 // This is used to Save State
-                layer_id: S3.gis.EmptyLayer.id,
-                layer_type: 'empty'
+                s3_layer_id: S3.gis.EmptyLayer.id,
+                s3_layer_type: 'empty'
             }
         );
         map.addLayer(layer);
@@ -203,8 +204,8 @@ function addArcRESTLayer(layer) {
             transparent: transparent,
             dir: dir,
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'arcrest'
+            s3_layer_id: layer.id,
+            s3_layer_type: 'arcrest'
         }
     );
 
@@ -227,8 +228,8 @@ function addBingLayers() {
             type: 'Aerial',
             name: bing.Aerial.name,
             // This is used to Save State
-            layer_id: bing.Aerial.id,
-            layer_type: 'bing'
+            s3_layer_id: bing.Aerial.id,
+            s3_layer_type: 'bing'
         });
         map.addLayer(layer);
         if (Bing.Base == 'aerial') {
@@ -241,8 +242,8 @@ function addBingLayers() {
             type: 'Road',
             name: bing.Road.name,
             // This is used to Save State
-            layer_id: bing.Road.id,
-            layer_type: 'bing'
+            s3_layer_id: bing.Road.id,
+            s3_layer_type: 'bing'
         });
         map.addLayer(layer);
         if (Bing.Base == 'road') {
@@ -255,8 +256,8 @@ function addBingLayers() {
             type: 'AerialWithLabels',
             name: bing.Hybrid.name,
             // This is used to Save State
-            layer_id: bing.Hybrid.id,
-            layer_type: 'bing'
+            s3_layer_id: bing.Hybrid.id,
+            s3_layer_type: 'bing'
         });
         map.addLayer(layer);
         if (Bing.Base == 'hybrid') {
@@ -272,8 +273,8 @@ function addCoordinateGrid() {
         shortName: 'grid',
         visibility: S3.gis.CoordinateGrid.visibility,
         // This is used to Save State
-        layer_id: S3.gis.CoordinateGrid.id,
-        layer_type: 'coordinate'
+        s3_layer_id: S3.gis.CoordinateGrid.id,
+        s3_layer_type: 'coordinate'
     }));
 }
 
@@ -623,9 +624,35 @@ function addGeoJSONLayer(layer) {
         cluster_style,
         cluster_options
     );
+    if (style.length) {
+        var rules = [];
+        var fill;
+        $.each(style, function(index, elem) {
+            fill = '#' + elem.fill;
+            var rule = new OpenLayers.Rule({
+                filter: new OpenLayers.Filter.Comparison({
+                    type: OpenLayers.Filter.Comparison.BETWEEN,
+                    property: 'value',
+                    lowerBoundary: elem.low,
+                    upperBoundary: elem.high
+                }),
+                symbolizer: {
+                    fillColor: fill,
+                    strokeColor: fill,
+                    // @ToDo: Have the Legend to use a Square but the actual features to use a circle
+                    graphicName: 'circle',
+                    pointRadius: 10,
+                },
+                title: elem.low + '-' + elem.high
+            });
+            rules.push(rule);
+        });
+        style_cluster.addRules(rules);
+    }
     // Define StyleMap, Using 'style_cluster' rule for 'default' styling intent
     var featureClusterStyleMap = new OpenLayers.StyleMap({
         'default': style_cluster,
+        // @ToDo: Customise the Select Style too
         'select': {
             fillColor: '#ffdc33',
             strokeColor: '#ff9933'
@@ -663,11 +690,12 @@ function addGeoJSONLayer(layer) {
                     threshold: cluster_threshold
                 })
             ],
-            // This is used to Save State
-            layer_id: layer.id,
-            layer_type: layer_type,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
+            // These is used to Save State
+            s3_layer_id: layer.id,
+            s3_layer_type: layer_type,
+            s3_style: style,
             styleMap: featureClusterStyleMap,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
@@ -702,8 +730,8 @@ function addGoogleLayers() {
                     type: G_SATELLITE_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Satellite.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Satellite.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -717,8 +745,8 @@ function addGoogleLayers() {
                     type: G_NORMAL_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Maps.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Maps.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -732,8 +760,8 @@ function addGoogleLayers() {
                     type: G_HYBRID_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Hybrid.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Hybrid.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -747,8 +775,8 @@ function addGoogleLayers() {
                     type: G_PHYSICAL_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: google.Terrain.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Terrain.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -762,8 +790,8 @@ function addGoogleLayers() {
                     type: G_MAPMAKER_NORMAL_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: layer.id,
-                    layer_type: 'google'
+                    s3_layer_id: layer.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -777,8 +805,8 @@ function addGoogleLayers() {
                     type: G_MAPMAKER_HYBRID_MAP,
                     sphericalMercator: true,
                     // This is used to Save State
-                    layer_id: layer.id,
-                    layer_type: 'google'
+                    s3_layer_id: layer.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -794,8 +822,8 @@ function addGoogleLayers() {
                     type: 'satellite',
                     numZoomLevels: 22,
                     // This is used to Save State
-                    layer_id: google.Satellite.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Satellite.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -808,8 +836,8 @@ function addGoogleLayers() {
                 google.Maps.name, {
                     numZoomLevels: 20,
                     // This is used to Save State
-                    layer_id: google.Maps.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Maps.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -823,8 +851,8 @@ function addGoogleLayers() {
                     type: 'hybrid',
                     numZoomLevels: 20,
                     // This is used to Save State
-                    layer_id: google.Hybrid.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Hybrid.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -837,8 +865,8 @@ function addGoogleLayers() {
                 google.Terrain.name, {
                     type: 'terrain',
                     // This is used to Save State
-                    layer_id: google.Terrain.id,
-                    layer_type: 'google'
+                    s3_layer_id: google.Terrain.id,
+                    s3_layer_type: 'google'
                 }
             );
             map.addLayer(layer);
@@ -931,8 +959,8 @@ function addGPXLayer(layer) {
                 })
             ],
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'gpx',
+            s3_layer_id: layer.id,
+            s3_layer_type: 'gpx',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -1044,8 +1072,8 @@ function addKMLLayer(layer) {
                 })
             ],
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'kml',
+            s3_layer_id: layer.id,
+            s3_layer_type: 'kml',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
             style: style_marker,
@@ -1133,8 +1161,8 @@ function addOSMLayer(layer) {
             numZoomLevels: numZoomLevels,
             isBaseLayer: isBaseLayer,
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'openstreetmap'
+            s3_layer_id: layer.id,
+            s3_layer_type: 'openstreetmap'
         }
     );
     if (undefined != layer.attribution) {
@@ -1203,8 +1231,8 @@ function addTMSLayer(layer) {
         name, url, {
             dir: dir,
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'tms',
+            s3_layer_id: layer.id,
+            s3_layer_type: 'tms',
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels
@@ -1443,8 +1471,8 @@ function addWFSLayer(layer) {
         ],
         dir: dir,
         // This is used to Save State
-        layer_id: layer.id,
-        layer_type: 'wfs',
+        s3_layer_id: layer.id,
+        s3_layer_type: 'wfs',
         projection: projection,
         //outputFormat: "json",
         //readFormat: new OpenLayers.Format.GeoJSON(),
@@ -1557,8 +1585,8 @@ function addWMSLayer(layer) {
             isBaseLayer: isBaseLayer,
             transparent: transparent,
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'wms',
+            s3_layer_id: layer.id,
+            s3_layer_type: 'wms',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             queryable: queryable,
             visibility: visibility
@@ -1637,8 +1665,8 @@ function addXYZLayer(layer) {
         name, url, {
             dir: dir,
             // This is used to Save State
-            layer_id: layer.id,
-            layer_type: 'xyz',
+            s3_layer_id: layer.id,
+            s3_layer_type: 'xyz',
             layername: layername,
             type: format,
             numZoomLevels: numZoomLevels

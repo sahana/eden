@@ -112,7 +112,7 @@ function addMapUI() {
     S3.gis.portal.map = S3.gis.mapPanel;
 
     if (S3.i18n.gis_legend || S3.gis.layers_wms) {
-        for (i = 0; i < map.layers.length; i++) {
+        for (var i = 0; i < map.layers.length; i++) {
             // Ensure that legendPanel knows about the Markers for our Feature layers
             if (map.layers[i].legendURL) {
                 S3.gis.mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
@@ -129,7 +129,7 @@ function addMapUI() {
 
     // Layer Tree
     addLayerTree();
-    items = [S3.gis.layerTree];
+    var items = [S3.gis.layerTree];
 
     // WMS Browser
     if (S3.gis.wms_browser_url) {
@@ -341,7 +341,7 @@ function addLayerTree() {
 
     // User-specified Folders
     var dirs = S3.gis.dirs;
-    for (i = 0; i < dirs.length; i++) {
+    for (var i = 0; i < dirs.length; i++) {
         var folder = dirs[i];
         var child = {
             text: dirs[i],
