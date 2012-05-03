@@ -24,7 +24,24 @@ The proposal administration allows to edit every proposal made in the system.
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from apps.ecidadania.proposals.models import Proposal
+from apps.ecidadania.proposals.models import Proposal, ProposalSet
+
+class ProposalSetAdmin(admin.ModelAdmin):
+
+    """
+    Basic ProposalSet administration interface.
+
+    :list_display: name, author
+    :search: none
+    """
+
+    list_display = ('name', 'author')
+
+    fieldsets = [
+        (None, {'fields':
+            ['name']})
+    ]
+
 
 class ProposalAdmin(admin.ModelAdmin):
 
@@ -56,4 +73,5 @@ class ProposalAdmin(admin.ModelAdmin):
     ]
     
     
+admin.site.register(ProposalSet, ProposalSetAdmin)
 admin.site.register(Proposal, ProposalAdmin)
