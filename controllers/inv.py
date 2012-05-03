@@ -676,7 +676,7 @@ def send_process():
     req_ref = send_record.req_ref
     query = (rrtable.req_ref == req_ref)
     req_rec = db(query).select(rrtable.id, limitby = (0, 1)).first()
-    if req_rec and req_rec.id:
+    if req_rec:
         req_id = req_rec.id
         for track_item in track_items:
             if track_item.req_item_id:
@@ -940,9 +940,11 @@ def recv():
         recvtable.eta.readable = False
         recvtable.req_ref.writable = True
         if status == SHIP_STATUS_IN_PROCESS:
-            recvtable.sender_id.writable = True
             recvtable.send_ref.writable = True
             recvtable.recv_ref.readable = False
+            recvtable.sender_id.readable = False
+            recvtable.from_site_id.writable = False
+            recvtable.from_site_id.readable = False
         else:
             # Make all fields writable False
             for field in recvtable.fields:
@@ -1222,14 +1224,17 @@ def recv_process():
     # Move each item to the site
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
-        s3.inv_track_item_onaccept( Storage(vars=Storage(track_item) ) )
+        # exclude the quantity so that it is not deleted from the warehouse again
+        row=Storage(track_item)
+        del row.quantity
+        s3.inv_track_item_onaccept( Storage(vars=row ) )
 
     # if this is linked to a request then update the fulfil quantity
     req_ref = recv_record.req_ref
     query = (rrtable.req_ref == req_ref)
     req_rec = db(query).select(rrtable.id, limitby = (0, 1)).first()
-    req_id = req_rec.id
-    if req_id:
+    if req_rec:
+        req_id = req_rec.id
         for track_item in track_rows:
             if track_item.req_item_id:
                 req_i = ritable[track_item.req_item_id]
