@@ -22,15 +22,20 @@ Proposal data models are the ones to store the data inside the DB.
 """
 
 import datetime
+from django.core import urlresolvers
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from apps.thirdparty.tagging.fields import TagField
 from apps.thirdparty.tagging.models import Tag
 from core.spaces.models import Space
+from apps.ecidadania.debate.models import Debate
 
 CLOSE_REASONS = (
     (1, _('Economically not viable')),
@@ -39,18 +44,29 @@ CLOSE_REASONS = (
     (4, _('Offtopic'))
 )
 
-class BaseClass(models.Model):
+class BaseProposalAbstractModel(models.Model):
 
     """
     Abstract base class for titles and descriptions (dummy models)
     """
-    title = models.CharField(_('Title'), max_length=200)
+    content_type = models.ForeignKey(ContentType,
+            verbose_name=_('content_type'),
+            related_name="content_type_set_for_%(class)s" )
+    object_pk = models.TextField(_('object ID'))
+    content_object = generic.GenericForeignKey(ct_field="content_type", fk_field="object_pk")
 
     class Meta:
         abstract = True
 
+    def get_content_object_url(self):
 
-class Category(BaseClass):
+        return urlresolvers.reverse(
+            "proposal-url-redirect",
+            args = (self.content_type_id, self.object_pk)
+        )
+
+
+class Category(BaseProposalAbstractModel):
 
     """
     Dummy class for proposal categories. Inherits directly from :class:`BaseClass`
@@ -58,7 +74,43 @@ class Category(BaseClass):
     """
     pass
 
-class Proposal(models.Model):
+class ProposalSet(BaseProposalAbstractModel):
+
+    """
+    ProposalSet date model. This will contain a group of proposal
+    which will be created after the debate using the debate note after it is finished.
+
+    :automatically filled fields: space, author, pub_date, debate
+    :user filled fields: Name
+
+    """
+
+    name = models.CharField(_('Name'), max_length=100, unique=True)
+    space = models.ForeignKey(Space, blank=True, null=True)
+    pub_date = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User, blank=True, null=True)
+    debate = models.ForeignKey(Debate, blank=True, null=True)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _('ProposalSet')
+        verbose_name_plural = _('ProposalSets')
+        get_latest_by = 'pub_date'
+        permission = (
+            ('view', 'Can view the object'),
+        )
+
+
+    def get_absolute_url(self):
+        return ('view-proposalset',(), {
+            'space_name': self.space.url,
+            'set_id': self.id
+        })
+
+
+class Proposal(BaseProposalAbstractModel):
 
     """
     Proposal data model. This will store the user proposal in a similar
@@ -78,6 +130,8 @@ class Proposal(models.Model):
     code = models.CharField(_('Code'), max_length=50, blank=True,
                             null=True)
     title = models.CharField(_('Title'), max_length=100, unique=True)
+    proposalset = models.ForeignKey(ProposalSet, related_name='proposal_in',
+                                    blank=True, null=True)
     description = models.TextField(_('Description'), max_length=300)
     space = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
@@ -93,6 +147,9 @@ class Proposal(models.Model):
                                   related_name='proposal_closed_by')
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
+    merged = models.NullBooleanField(default=False, blank=True)
+    merged_proposals = models.ManyToManyField(ProposalSet, blank=True, null=True)
+
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
                                             null=True, blank=True)
