@@ -314,7 +314,7 @@ function addGoogleEarthControl(toolbar) {
 // Supports GE Control
 function addGoogleEarthKmlLayers() {
     if (S3.gis.layers_features) {
-        for (i = 0; i < S3.gis.layers_features.length; i++) {
+        for (var i = 0; i < S3.gis.layers_features.length; i++) {
             var layer = S3.gis.layers_features[i];
             if (undefined != layer.visibility) {
                 var visibility = layer.visibility;
@@ -703,12 +703,13 @@ function getState() {
     // Layers
     // - Visible
     // @ToDo: Popups
-    // @ToDo: Filter
+    // @ToDo: Filters
+    // @ToDo: WMS Browser
     var layers = [];
     var layer_config;
-    var base_id = map.baseLayer.options.layer_id;
+    var base_id = map.baseLayer.s3_layer_id;
     Ext.iterate(map.layers, function(key, val, obj) {
-        var id = key.options.layer_id;
+        var id = key.s3_layer_id;
         layer_config = {
             id: id
         }
@@ -717,7 +718,10 @@ function getState() {
             layer_config['visible'] = key.visibility;
         }
         if (id == base_id) {
-            layer_config['base'] = true;   
+            layer_config['base'] = true;
+        }
+        if (key.s3_style) {
+            layer_config['style'] = key.s3_style;
         }
         layers.push(layer_config);
     });
@@ -892,8 +896,8 @@ function addLayerPropertiesButton() {
             }
             var node = S3.gis.layerTree.root.findChildBy(isSelected, null, true);
             if (node) {
-                var layer_type = node.layer.layer_type;
-                var url = S3.Ap.concat('/gis/layer_' + layer_type + '.plain?layer_' + layer_type + '.layer_id=' + node.layer.layer_id + '&update=1');
+                var layer_type = node.layer.s3_layer_type;
+                var url = S3.Ap.concat('/gis/layer_' + layer_type + '.plain?layer_' + layer_type + '.layer_id=' + node.layer.s3_layer_id + '&update=1');
                 Ext.Ajax.request({
                     url: url,
                     method: 'GET',
@@ -927,7 +931,7 @@ function addLayerPropertiesButton() {
                                 // @ToDo: Read current filter settings to default widgets to
                                 var search_url;
                                 Ext.iterate(S3.gis.layers_features, function(key, val, obj) {
-                                    if (key.id == node.layer.layer_id) {
+                                    if (key.id == node.layer.s3_layer_id) {
                                         //search_url = S3.Ap.concat('/' + module + '/' + resource + '/search.plain');
                                         search_url = key.url.replace(/.geojson.+/, '/search.plain');
                                     }

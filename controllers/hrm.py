@@ -929,7 +929,7 @@ def training():
                 (orgtable.pe_id.belongs(orgs))
         response.s3.filter = query
 
-    output = s3_rest_controller(interactive_report = True)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
