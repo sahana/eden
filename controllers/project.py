@@ -85,6 +85,7 @@ def project():
                                                     filterby="project_id",
                                                     filter_opts=[r.id],
                                                     sort=True))
+
         if r.interactive:
             if r.component is not None:
                 if r.component_name == "organisation":
@@ -122,6 +123,33 @@ def project():
                         statuses = response.s3.project_task_active_statuses
                         filter = (r.component.table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
+                elif r.component_name == "human_resource":
+                    from eden.hrm import hrm_human_resource_represent
+
+                    # We can pass the human resource type filter in the URL
+                    group = r.vars.get('group', None)
+
+                    # These values are defined in hrm_type_opts
+                    if group:
+                        if group == "staff":
+                            group = 1
+                        elif group == "volunteer":
+                            group = 2
+
+                        # Use the group to filter the component list
+                        filter_by_type = (db.hrm_human_resource.type == group)
+                        r.resource.add_component_filter("human_resource", filter_by_type)
+
+                        # Use the group to filter the form widget for adding a new record
+                        r.component.table.human_resource_id.requires = IS_ONE_OF(
+                            db,
+                            "hrm_human_resource.id",
+                            hrm_human_resource_represent,
+                            filterby="type",
+                            filter_opts=(group,),
+                            orderby="hrm_human_resource.person_id",
+                            sort=True
+                        )
 
             elif not r.id and r.function == "index":
                 r.method = "search"

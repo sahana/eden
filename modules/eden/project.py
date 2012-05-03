@@ -76,7 +76,7 @@ class S3ProjectModel(S3Model):
              "project_activity_type",
              "project_activity",
              "project_community",
-             "project_activity_contact",
+             "project_community_contact",
              "project_project_id",
              "project_activity_id",
              "project_hfa_opts",
@@ -456,6 +456,40 @@ class S3ProjectModel(S3Model):
         # Add Annual Budgets as a component of Project
         add_component("project_annual_budget", project_project="project_id")
 
+        # Project Human Resources
+        #
+        # Add human resources as a component to projects.
+        define_table(
+            "project_human_resource",
+            project_id(),
+            # ToDo: replace with an autocomplete widget for
+            #       hrm_human_resource records.
+            Field(
+                "human_resource_id",
+                db.hrm_human_resource,
+                requires=IS_ONE_OF(
+                    db,
+                    "hrm_human_resource.id",
+                    self.hrm_human_resource_represent,
+                    orderby="hrm_human_resource.person_id",
+                    sort=True
+                ),
+                widget=None
+            ),
+            *s3.meta_fields()
+        )
+        configure("project_human_resource",
+            list_fields=[
+                "project_id",
+                "human_resource_id$person_id",
+                "human_resource_id$organisation_id",
+                "human_resource_id$job_title",
+                "human_resource_id$status"
+            ],
+            onvalidation=self.project_human_resource_onvalidation
+        )
+        add_component("project_human_resource", project_project="project_id")
+
         # Tasks
         add_component("project_task",
                       project_project=Storage(
@@ -733,16 +767,6 @@ class S3ProjectModel(S3Model):
                                       ondelete = "CASCADE")
 
         # Components
-
-        # Contact Persons
-#        add_component("pr_person",
-#                      project_activity=Storage(
-#                            name="contact",
-#                            link="project_activity_contact",
-#                            joinby="activity_id",
-#                            key="person_id",
-#                            actuate="hide",
-#                            autodelete=False))
 
         # Beneficiaries
         # Disabled until beneficiaries are updated to support both
@@ -1305,6 +1329,26 @@ class S3ProjectModel(S3Model):
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+        return
+
+    @staticmethod
+    def project_human_resource_onvalidation(form):
+        """
+        Prevent the same hrm_human_resource record being added more than once.
+        """
+        # The project human resource table
+        hr = current.s3db.project_human_resource
+
+        # Fetch the first row that has the same project and human resource ids
+        row = current.db(
+            (hr.human_resource_id == form.vars.human_resource_id) & \
+            (hr.project_id == form.request_vars.project_id)
+        ).select(hr.id, limitby=(0, 1)).first()
+
+        # If we found a row we have a duplicate. Return an error to the user.
+        if row:
+            form.errors.human_resource_id = current.T("Record already exists")
 
         return
 
@@ -3050,6 +3094,8 @@ def project_rheader(r, tabs=[]):
             append((T("Calendar"), "timeline"))
         if staff:
             append((T("Annual Budgets"), "annual_budget"))
+        append((T("Staff"), "human_resource"))
+        append((T("Volunteers"), "human_resource"))
 
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
