@@ -1446,7 +1446,8 @@ class S3HRSkillModel(S3Model):
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 NONE),
-                                   writable = True if s3_has_role("HR_EDITOR") else False,
+                                   readable=False,
+                                   writable=False
                                    ),
                              comments(),
                              *meta_fields())
@@ -1742,7 +1743,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Course Certificates registered"))
 
         # =====================================================================
-        # Mission Record
+        # Professional Exepericen (Mission Record)
         #
         # These are an element of credentials:
         # - a minimum number of hours of active duty need to be done
@@ -1756,6 +1757,7 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              person_id(),
                              organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             Field("job_title", label=T("Job Title")),
                              Field("start_date", "date",
                                    label=T("Start Date"),
                                    requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
@@ -1775,21 +1777,21 @@ class S3HRSkillModel(S3Model):
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Mission"),
-            title_display = T("Mission Details"),
-            title_list = T("Missions"),
-            title_update = T("Edit Mission"),
-            title_search = T("Search Missions"),
-            subtitle_create = T("Add Mission"),
-            subtitle_list = T("Missions"),
-            label_list_button = T("List Missions"),
-            label_create_button = T("Add New Mission"),
-            label_delete_button = T("Delete Mission"),
-            msg_record_created = T("Mission added"),
-            msg_record_modified = T("Mission updated"),
-            msg_record_deleted = T("Mission deleted"),
-            msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Missions registered"))
+            title_create = T("Add Professional Experience"),
+            title_display = T("Professional Experience Details"),
+            title_list = T("Professional Experience"),
+            title_update = T("Edit Professional Experience"),
+            title_search = T("Search Professional Experience"),
+            subtitle_create = T("Add Professional Experience"),
+            subtitle_list = T("Professional Experience"),
+            label_list_button = T("List of Professional Experience"),
+            label_create_button = T("Add New Professional Experience"),
+            label_delete_button = T("Delete Professional Experience"),
+            msg_record_created = T("Professional Experience added"),
+            msg_record_modified = T("Professional Experience updated"),
+            msg_record_deleted = T("Professional Experience deleted"),
+            msg_no_match = T("No Professional Experience found"),
+            msg_list_empty = T("Currently no Professional Experience entered"))
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -2491,12 +2493,11 @@ def hrm_rheader(r, tabs=[]):
             tabs = [(T("Person Details"), None),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
                     #(T("Credentials"), "credential"),
-                    (T("Mission Record"), "experience"),
+                    (T("Experience"), "experience"),
                     (T("Positions"), "human_resource"),
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
@@ -2513,12 +2514,11 @@ def hrm_rheader(r, tabs=[]):
                     (hr_record, "human_resource"),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
                     (T("Credentials"), "credential"),
-                    (T("Mission Record"), "experience"),
+                    (T("Experience"), "experience"),
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
                    ]
