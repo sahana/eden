@@ -23,18 +23,15 @@ Proposal module URLs.
 
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
-from apps.ecidadania.proposals.views import ListProposalSet, AddProposalSet, ViewProposalSet, EditProposalSet, \
-    DeleteProposalSet, ListProposals, ViewProposal, DeleteProposal, EditProposal, AddProposal
+from apps.ecidadania.proposals.views import ListProposalSet, AddProposalSet, \
+    ViewProposalSet, EditProposalSet, DeleteProposalSet, ListProposals, \
+    ViewProposal, DeleteProposal, EditProposal, AddProposal
 
 urlpatterns = patterns('apps.ecidadania.proposals.views',
 
     url(r'^$', ListProposalSet.as_view(), name='list-proposalset'),
 
-    url(_(r'addset/'), AddProposalSet.as_view(), name='add-proposalset'),
-
-    url(_(r'^add/'), AddProposal.as_view(), name='add-proposal'),
-
-    url(_(r'^p/'), ListProposals.as_view(), name='list-proposals'),
+    url(_(r'^addset/'), AddProposalSet.as_view(), name='add-proposalset'),
 
     url(_(r'^(?P<set_id>\w+)/$'), ViewProposalSet.as_view(), name='view-proposalset'),
 
@@ -42,13 +39,16 @@ urlpatterns = patterns('apps.ecidadania.proposals.views',
 
     url(_(r'^(?P<set_id\w+/delete/$)'), DeleteProposalSet.as_view(), name='delete-proposalset'),
 
+    url(_(r'^add_support_vote/'), 'vote_proposal'),
+    
+    url(_(r'^add/'), AddProposal.as_view(), name='add-proposal'),
+
+    url(_(r'^p/'), ListProposals.as_view(), name='list-proposals'),
+    
     url(_(r'^p/(?P<prop_id>\w+)/edit/$'), EditProposal.as_view(), name='edit-proposal'),
 
     url(_(r'^p/(?P<prop_id>\w+)/delete/$'), DeleteProposal.as_view(), name='delete-proposal'),
 
     url(r'^p/(?P<prop_id>\w+)/', ViewProposal.as_view(), name='view-proposal'),
-
-    url(_(r'^add_support_vote/'), 'vote_proposal'),
-
 )
 

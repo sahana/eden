@@ -44,6 +44,7 @@ CLOSE_REASONS = (
     (4, _('Offtopic'))
 )
 
+
 class BaseProposalAbstractModel(models.Model):
 
     """
@@ -74,6 +75,7 @@ class Category(BaseProposalAbstractModel):
     """
     pass
 
+
 class ProposalSet(BaseProposalAbstractModel):
 
     """
@@ -98,9 +100,6 @@ class ProposalSet(BaseProposalAbstractModel):
         verbose_name = _('ProposalSet')
         verbose_name_plural = _('ProposalSets')
         get_latest_by = 'pub_date'
-        permission = (
-            ('view', 'Can view the object'),
-        )
 
 
     def get_absolute_url(self):
@@ -172,9 +171,6 @@ class Proposal(BaseProposalAbstractModel):
         verbose_name = _('Proposal')
         verbose_name_plural = _('Proposals')
         get_latest_by = 'pub_date'
-        permissions = (
-            ('view', 'Can view the object'),
-        )
 
     @models.permalink
     def get_absolute_url(self):

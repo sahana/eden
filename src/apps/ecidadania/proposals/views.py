@@ -37,7 +37,8 @@ from django.db.models import F
 from django.http import HttpResponse
 
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
-from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal
+from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
+     ProposalSetForm
 from core.spaces.models import Space
 
 
