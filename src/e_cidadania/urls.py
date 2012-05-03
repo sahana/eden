@@ -82,7 +82,7 @@ urlpatterns += i18n_patterns('',
     
     #(r'^api/', include('e_cidadania.apps.api.urls')),
     
-    # Static content #### FOR DEVELOPMENT!! ####
+#    # Static content #### FOR DEVELOPMENT!! ####
     url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': 'static'}),
 
