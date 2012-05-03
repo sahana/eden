@@ -56,7 +56,7 @@ GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHx
 FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
 
 ADMINS = (
-    ('', ''),
+    ('admin', 'admin@admin.org'),
 )
 
 MANAGERS = ADMINS
@@ -197,6 +197,7 @@ ECIDADANIA_MODULES = (
     'apps.ecidadania.staticpages',
     'apps.ecidadania.cal',
     'extras.custom_tags',
+    #'debug_toolbar',
 )
 
 INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
