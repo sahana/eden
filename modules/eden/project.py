@@ -3116,8 +3116,8 @@ def project_rheader(r, tabs=[]):
             append((T("Calendar"), "timeline"))
         if staff:
             append((T("Annual Budgets"), "annual_budget"))
-        append((T("Staff"), "human_resource"))
-        append((T("Volunteers"), "human_resource"))
+        append((T("Staff"), "human_resource", dict(group="staff")))
+        append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
