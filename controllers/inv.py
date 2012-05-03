@@ -296,15 +296,12 @@ def inv_item():
                     deletable=False,
                    )
     rheader = response.s3.inv_warehouse_rheader
-    output =  s3_rest_controller("inv",
-                                 "inv_item",
-                                 rheader=rheader,
+    output =  s3_rest_controller(rheader=rheader,
                                  csv_extra_fields = [
                                                      dict(label="Organisation",
                                                           field=s3db.org_organisation_id(comment=None)
                                                           )
                                                      ],
-                                 interactive_report = True,
                                 )
     if "add_btn" in output:
         del output["add_btn"]

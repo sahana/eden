@@ -125,19 +125,35 @@ def ireport():
     response.s3.prep = prep
 
     # Post-processor
-    def user_postp(r, output):
-        if not r.component:
-            s3_action_buttons(r, deletable=False)
-            # if deployment_settings.has_module("assess"):
-                # response.s3.actions.append({"url" : URL(c="assess", f="basic_assess",
-                                                        # vars = {"ireport_id":"[id]"}),
-                                            # "_class" : "action-btn",
-                                            # "label" : "Assess"})
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                s3_action_buttons(r, deletable=False)
+                # if deployment_settings.has_module("assess"):
+                    # response.s3.actions.append({"url" : URL(c="assess", f="basic_assess",
+                                                            # vars = {"ireport_id":"[id]"}),
+                                                # "_class" : "action-btn",
+                                                # "label" : "Assess"})
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            # Look for a Photo
+            # @ToDo: The default photo not the 1st
+            ptable = s3db.doc_image
+            query = (ptable.doc_id == r.record.doc_id) & \
+                    (ptable.deleted == False)
+            image = db(query).select(ptable.file,
+                                     limitby=(0, 1)).first()
+            if image and image.file:
+                url = URL(c="default", f="download", args=image.file)
+                output["item"].append(IMG(_src=url,
+                                          # @ToDo: capture the size on upload & have controller resize where-required on-download
+                                          _width=400,
+                                          _height=400))
         return output
-    response.s3.postp = user_postp
+    response.s3.postp = postp
 
-    output = s3_rest_controller(rheader=response.s3.irs_rheader,
-                                interactive_report = True)
+    output = s3_rest_controller(rheader=response.s3.irs_rheader)
 
     # @ToDo: Add 'Dispatch' button to send OpenGeoSMS
     #try:

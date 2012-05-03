@@ -1,2 +1,2 @@
 UUID,Name,Region,Default,Zoom,Lat,Lon,Projection,Symbology,Marker,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
-SITE_DEFAULT,US,United States,Los Angeles County,4,38.93,-100.17,900913,US,marker_red,19.0,71.3,-179.2,179.8,
+SITE_DEFAULT,US,United States,Georgia,4,38.93,-100.17,900913,US,marker_red,19.0,71.3,-179.2,179.8,

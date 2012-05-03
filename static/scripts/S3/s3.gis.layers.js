@@ -1704,6 +1704,8 @@ function s3_gis_loadDetails(url, id, popup) {
         'success': function(data) {
             $('#' + id).html(data);
             popup.updateSize();
+            // Resize when images are loaded
+            //popup.registerImageListeners();
         },
         'error': function(request, status, error) {
             if (error == 'UNAUTHORIZED') {

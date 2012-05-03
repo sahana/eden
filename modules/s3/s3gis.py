@@ -397,6 +397,7 @@ class GIS(object):
                 warning = "HTTPError"
                 return warning
 
+        filenames = []
         if file[:2] == "PK":
             # Unzip
             fp = StringIO(file)
@@ -422,7 +423,6 @@ class GIS(object):
             path = os.path.join(request.folder, "static", "cache", "kml")
             if not os.path.exists(path):
                 os.makedirs(path)
-            filenames = []
             for _file in files:
                 filename = _file.filename
                 if filename != main:
