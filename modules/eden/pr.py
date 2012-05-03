@@ -1345,10 +1345,11 @@ class S3PersonAddressModel(S3Model):
         # Address
         #
         pr_address_type_opts = {
-            1:T("Home Address"),
-            2:T("Office Address"),
-            3:T("Holiday Address"),
-            9:T("other")
+            1:T("Current Home Address"),
+            2:T("Permanent Home Address"),
+            3:T("Office Address"),
+            #3:T("Holiday Address"),
+            9:T("Other Address")
         }
 
         tablename = "pr_address"
