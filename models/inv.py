@@ -25,7 +25,6 @@ if session.s3.show_inv == None:
 #                              csv_extra_fields = [
 #                                dict(label="Organisation",
 #                                     field=s3db.org_organisation_id(comment=None))],
-#                              interactive_report = True
 #                              )
 
 # -----------------------------------------------------------------------------

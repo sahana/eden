@@ -387,9 +387,6 @@ class S3IRSModel(S3Model):
         # Resource Configuration
         configure(tablename,
                   super_entity = ("sit_situation", "doc_entity"),
-                  # Open tabs after creation
-                  create_next = URL(args=["[id]", "update"]),
-                  update_next = URL(args=["[id]", "update"]),
                   search_method = ireport_search,
                   report_options=Storage(
                       search=[
@@ -498,7 +495,7 @@ class S3IRSModel(S3Model):
         if settings.has_module("fire"):
             create_next = URL(args=["[id]", "human_resource"])
         else:
-            create_next = URL(args=["[id]", "update"])
+            create_next = URL(args=["[id]", "image"])
 
         configure("irs_ireport",
                   create_onaccept=self.ireport_onaccept,

@@ -200,7 +200,8 @@ class S3RequestModel(S3Model):
                                                       #minimum=request.utcnow - datetime.timedelta(days=1),
                                                       minimum=request.utcnow.date() - datetime.timedelta(days=1),
                                                       error_message="%s %%(min)s!" %
-                                                          T("Enter a valid future date")))],
+                                                            T("Enter a valid past date"),
+                                                        format = s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=0,
                                         #                          future=8760), # Hours, so 1 year

@@ -713,6 +713,19 @@ function S3FilterFieldChange (setting) {
  */
 
 S3.autocomplete = function(fieldname, module, resourcename, input, link, post_process, delay, min_length) {
+    var real_input = '#' + input;
+    var dummy = 'dummy_' + input;
+    var dummy_input = '#' + dummy;
+
+    if ($(dummy_input) == 'undefined') {
+        return true;
+    }
+
+    var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
+    if (link != 'undefined') {
+        url += '&link=' + link;
+    }
+    
     // Optional args
     if (postprocess == 'undefined') {
         var postprocess = '';
@@ -723,15 +736,10 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
     if (min_length == 'undefined') {
         var min_length = 2;
     }
-    var real_input = '#' + input;
-    var dummy = 'dummy_' + input;
-    var dummy_input = '#' + dummy;
-    var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
-    if (link != 'undefined') {
-        url += '&link=' + link;
-    }
-    
-    var data = { val:$(dummy_input).val(), accept:false };
+    var data = {
+        val: $(dummy_input).val(),
+        accept: false
+    };
     $(dummy_input).autocomplete({
         source: url,
         delay: delay,
@@ -778,4 +786,22 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
         data.accept = false;
     });
 };
+
+// ============================================================================
+/**
+ * Add a Slider to a field - used by S3SliderWidget
+ */
+
+S3.slider = function(fieldname, minval, maxval, steprange, value) {
+    $( '#' + fieldname ).slider({
+        min: parseFloat(minval),
+        max: parseFloat(maxval),
+        step: parseFloat(steprange),
+        value: parseFloat(value),
+        slide: function (event, ui) {
+            $( '#' + fieldname + '_input' ).val( ui.value );
+        }
+    });
+}
+
 // ============================================================================

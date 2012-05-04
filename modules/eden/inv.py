@@ -434,24 +434,24 @@ $(document).ready(function() {
                                   itable.item_source_no,
                                   itable.bin,
                                   itable.expiry_date,
-                                  itable.supply_org_id,
+                                  itable.owner_org_id,
                                   limitby = (0, 1)).first()
         if record:
             s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
             ctn = s3_string_represent(record.inv_inv_item.item_source_no)
-            org = s3db.org_organisation_represent(record.inv_inv_item.supply_org_id)
+            org = s3db.org_organisation_represent(record.inv_inv_item.owner_org_id)
             if record.inv_inv_item.expiry_date:
-                exp_date = " expires: %s" % s3_date_represent(record.inv_inv_item.expiry_date)
+                exp_date = "expires:%s" % s3_date_represent(record.inv_inv_item.expiry_date)
             else:
                 exp_date = ""
             bin = s3_string_represent(record.inv_inv_item.bin)
-            return "%s (%s%s) %s %s %s" % (record.supply_item.name,
-                                         record.supply_item.um,
-                                         exp_date,
-                                         ctn,
-                                         org,
-                                         bin,
-                                        )
+            rep_strings = [str for str in [record.supply_item.name,
+                                           exp_date,
+                                           ctn,
+                                           org,
+                                           bin
+                                           ] if str]
+            return " - ".join(rep_strings)
         else:
             return None
 
@@ -1529,9 +1529,10 @@ $(document).ready(function() {
                                                   track_pack_quantity
                                                  )
                 db(ritable.id == record.req_item_id).update(quantity_fulfil = quantity_fulfil)
+                s3db.req_update_status(req_id)
 
             db(tracktable.id == id).update(recv_inv_item_id = inv_item_id,
-                                           status = 4)
+                                           status = TRACK_STATUS_ARRIVED)
             # If the receive quantity doesn't equal the sent quantity
             # then an adjustment needs to be set up
             if record.quantity != record.recv_quantity:
@@ -1585,13 +1586,26 @@ $(document).ready(function() {
         tracktable = s3db.inv_track_item
         inv_item_table = s3db.inv_inv_item
         ritable = s3db.req_req_item
+        siptable = s3db.supply_item_pack
         record = tracktable[id]
         if record.status != 1:
             return False
         # if this is linked to a request
         # then remove these items from the quantity in transit
         if record.req_item_id:
-            db(ritable.id == record.req_item_id).update(quantity_transit = ritable.quantity_transit - record.quantity)
+
+            req_id = record.req_item_id
+            req_item = ritable[req_id]
+            req_quantity = req_item.quantity_transit
+            req_pack_quantity = siptable[req_item.item_pack_id].quantity
+            track_pack_quantity = siptable[record.item_pack_id].quantity
+            quantity_transit = s3db.supply_item_add(req_quantity,
+                                                   req_pack_quantity,
+                                                   - record.quantity,
+                                                   track_pack_quantity
+                                                  )
+            db(ritable.id == req_id).update(quantity_transit = quantity_transit)
+            s3db.req_update_status(req_id)
         # Check that we have a link to a warehouse
         if record.send_inv_item_id:
             trackTotal = record.quantity
@@ -1619,8 +1633,9 @@ def inv_tabs(r):
     if settings.has_module("inv") and \
         auth.s3_has_permission("read", "inv_inv_item"):
         collapse_tabs = settings.get_inv_collapse_tabs()
+        tablename, record = s3_rheader_resource(r)
         if collapse_tabs and not \
-            (r.tablename == "org_office" and r.record.type == 5): # 5 = Warehouse
+            (tablename == "org_office" and record.type == 5): # 5 = Warehouse
             # Test if the tabs are collapsed
             show_collapse = True
             show_inv = r.get_vars.show_inv

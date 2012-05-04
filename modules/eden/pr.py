@@ -667,9 +667,15 @@ class S3PersonModel(S3Model):
                                                                        T("Nationality of the person.")))),
                                    represent = lambda code: \
                                                gis.get_country(code, key_type="code") or UNKNOWN_OPT),
-                             Field("occupation",
+                             Field("religion", length=128,
+                                   label = T("Religion"),
+                                   requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
+                                   represent = lambda opt: \
+                                    pr_religion_opts.get(opt, UNKNOWN_OPT),
+                                   ),
+                             Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
-                                   length=128), # Mayon Compatibility
+                                   ),
                              # Field("picture", "upload",
                                    # autodelete=True,
                                    # label = T("Picture"),
@@ -1339,10 +1345,11 @@ class S3PersonAddressModel(S3Model):
         # Address
         #
         pr_address_type_opts = {
-            1:T("Home Address"),
-            2:T("Office Address"),
-            3:T("Holiday Address"),
-            9:T("other")
+            1:T("Current Home Address"),
+            2:T("Permanent Home Address"),
+            3:T("Office Address"),
+            #3:T("Holiday Address"),
+            9:T("Other Address")
         }
 
         tablename = "pr_address"
@@ -2894,13 +2901,9 @@ def pr_contacts(r, **attr):
     response.view = "pr/contacts.html"
 
     # RHeader for consistency
-    controller = current.request.controller
-    if controller == "hrm":
-        rheader = s3db.hrm_rheader(r)
-    elif controller == "member":
-        rheader = s3db.member_rheader(r)
-    elif controller == "pr":
-        rheader = s3db.pr_rheader(r)
+    rheader = attr.get("rheader", None)
+    if callable(rheader):
+        rheader = rheader(r)
 
     return dict(
             title = T("Contacts"),
