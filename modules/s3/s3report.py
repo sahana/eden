@@ -119,58 +119,63 @@ class S3Cube(S3CRUD):
             default_options = Storage()
 
         # Get the URL options
-        report_options_keys = ['rows', 'cols', 'fact', 'aggregate', 'totals']
-        url_options = Storage([(k, v) for k, v in r.get_vars.iteritems()
-                                      if k[0] != "_" and v])
+        url_options = Storage([(k, v) for k, v in
+                               r.get_vars.iteritems() if v])
 
         # Figure out which set of form values to use
         # POST > GET > session > table defaults > list view
         if r.http == "POST":
             form_values = r.post_vars
+
+            # The totals option is used to turn OFF the totals cols/rows but
+            # post vars only contain checkboxes that are enabled and checked.
+            if "totals" not in r.post_vars:
+                form_values["totals"] = "off"
         elif url_options:
             form_values = url_options
+            # Without the _formname the form won't validate
+            # we put it in here so that URL query strings don't need to
+            if not form_values._formname:
+                form_values._formname = "report"
         elif session_options:
             form_values = session_options
         elif default_options:
             form_values = default_options
+            # Without the _formname the form won't validate
+            # we put it in here so that URL query strings don't need to
+            if not form_values._formname:
+                form_values._formname = "report"
         else:
             form_values = Storage()
 
         # Generate the report and resource filter form
         show_form = attr.get("interactive_report", True)
         if show_form:
-            # The totals option is used to turn OFF the totals cols/rows but
-            # post vars only contain checkboxes that are enabled and checked.
-            if r.http == "POST" and "totals" not in r.post_vars:
-                r.post_vars["totals"] = "off"
-
+            # Build the form and prepopulate with values we've got
             form = self._create_form(form_values)
 
-            if form.accepts(form_values, session,
-                            formname="report",
-                            keepvalues=True):
-                # This validates the form values against the form and
-                # populates the form.vars property
-                pass
-            else:
-                # The user has not submitted the report form and so we use
-                # the form values from the fallback
-                form.vars = form_values
+            # Validate the form. This populates form.vars (values) and
+            # form.errors (field errors).
+            # We only compare to the session if POSTing to prevent cross-site
+            # scripting.
+            if r.http == "POST" and \
+                form.accepts(form_values, session, formname="report", keepvalues=True) or \
+                form.accepts(form_values, formname="report", keepvalues=True):
 
+                # The form is valid so save the form values into the session
+                if 'report_options' not in session.s3:
+                    session.s3.report_options = Storage()
+
+                session.s3.report_options[tablename] = Storage([(k, v) for k, v in
+                                                        form_values.iteritems() if v])
+            
+            # Use the values to generate the query filter
             query, errors = self._process_filter_options(form)
 
             if not errors:
                 self.resource.add_filter(query)
         else:
             form = None
-
-        # Save the form values into the session
-        if form_values:
-            if 'report_options' not in session.s3:
-                session.s3.report_options = Storage()
-
-            session.s3.report_options[tablename] = Storage([(k, v) for k, v in form.vars.iteritems()
-                                                                   if k[0] != "_" and v])
 
         # Get rows, cols, facts and aggregate
         rows = form_values.get("rows", None)

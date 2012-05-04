@@ -305,7 +305,13 @@ class S3AssetModel(S3Model):
                             rows=report_fields,
                             cols=report_fields,
                             facts=report_fields,
-                            methods=["count", "list"]
+                            methods=["count", "list"],
+                            defaults=Storage(
+                                aggregate="count",
+                                cols="L1",
+                                fact="number",
+                                rows="item_id$item_category_id"
+                            )
                         ),
                   list_fields=["id",
                                "number",
@@ -320,7 +326,7 @@ class S3AssetModel(S3Model):
                                #"L2",
                                #"L3",
                                "comments",
-                               "weight",
+                               #"weight",
                                ])
 
         # Log as component of Assets
