@@ -423,6 +423,14 @@ deployment_settings.req.generate_req_number = True
 #deployment_settings.project.drr = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
+deployment_settings.project.organisation_roles = {
+    1: T("Lead Implementer"), # T("Host National Society")
+    2: T("Partner"), # T("Partner National Society")
+    3: T("Donor"),
+    4: T("Customer"), # T("Beneficiary")?
+    5: T("Super"), # T("Beneficiary")?
+}
+deployment_settings.project.organisation_lead_role = 1
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False
