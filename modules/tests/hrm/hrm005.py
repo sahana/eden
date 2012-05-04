@@ -1,4 +1,4 @@
-# Set up Training Event
+# Assign staff to Organization
 __all__ = ["hrm005"]
 # Selenium WebDriver
 from selenium import webdriver

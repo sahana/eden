@@ -55,6 +55,8 @@ else:
     hrm003() # Setup Training Course
     hrm004() # Setup Training Event
     hrm005() # Assign staff to Organization
+    hrm006() # Assign Staff to office
+    hrm007() # Assign staff to warehouse
     
     # Inventory management (INV) tests
     inv001() # Setup Warehouses     // needs more refining
