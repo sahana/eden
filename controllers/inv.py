@@ -276,8 +276,8 @@ def inv_item():
 
 
     # Limit site_id to sites the user has permissions for
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=T("You do not have permission for any site to add an inventory item."))
+    auth.permitted_facilities(table=table,
+                              error_msg=T("You do not have permission for any site to add an inventory item."))
 
     if len(request.args) > 1 and request.args[1] == "track_item":
         # remove CRUD generated buttons in the tabs
@@ -390,8 +390,7 @@ def send():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission for any facility to send a shipment.")
-    auth.permission.permitted_facilities(table=sendtable,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=sendtable, error_msg=error_msg)
 
     # Set Validator for checking against the number of items in the warehouse
     vars = request.vars
@@ -905,8 +904,7 @@ def recv():
         error_msg = T("You do not have permission for any facility to add an order.")
     else:
         error_msg = T("You do not have permission for any facility to receive a shipment.")
-    auth.permission.permitted_facilities(table=recvtable,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=recvtable, error_msg=error_msg)
 
     # The inv_recv record might be created when the shipment is send and so it
     # might not have the recipient identified. If it is null then set it to
@@ -1008,7 +1006,7 @@ def recv():
             tracktable.recv_bin.readable = True
             tracktable.recv_bin.writable = True
 
-        
+
     def prep(r):
         if r.component:
             # if we have a component then set the track_item attributes
@@ -1365,8 +1363,7 @@ def adj():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=table, error_msg=error_msg)
 
     def prep(r):
         if r.interactive:
@@ -1422,8 +1419,7 @@ def adj_close():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=table, error_msg=error_msg)
 
     adj_id = request.args[0]
     adj_rec = atable[adj_id]

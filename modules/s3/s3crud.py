@@ -1269,12 +1269,10 @@ class S3CRUD(S3Method):
 
                 if vars.id:
                     if record_id is None:
+                        # Set record ownership
                         auth = current.auth
-                        # Set record ownership properly
-                        auth.s3_set_record_owner(table,
-                                                 vars.id)
-                        auth.s3_make_session_owner(table,
-                                                   vars.id)
+                        auth.s3_set_record_owner(table, vars.id)
+                        auth.s3_make_session_owner(table, vars.id)
                     # Store session vars
                     self.resource.lastid = str(vars.id)
                     manager.store_session(prefix, name, vars.id)
@@ -1605,7 +1603,7 @@ class S3CRUD(S3Method):
 
         # Open-action (Update or Read)
         if editable and has_permission("update", table) and \
-        not ownership_required(table, "update"):
+           not ownership_required("update", table):
             if not update_url:
                 update_url = URL(args = args + ["update"])
             s3crud.action_button(labels.UPDATE, update_url)
@@ -1618,7 +1616,7 @@ class S3CRUD(S3Method):
         if deletable and has_permission("delete", table):
             if not delete_url:
                 delete_url = URL(args = args + ["delete"])
-            if ownership_required(table, "delete"):
+            if ownership_required("delete", table):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
                 rows = db(query).select(table._id)

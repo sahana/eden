@@ -2,6 +2,17 @@
 
 """ Utilities """
 
+# =============================================================================
+# AAA - set user roles and check controller access permission
+#
+auth.s3_set_roles()
+
+if not auth.permission.has_permission("read"):
+    auth.permission.fail()
+
+# =============================================================================
+# Global definitions
+#
 s3_action_buttons = s3base.S3CRUD.action_buttons
 
 # -----------------------------------------------------------------------------
@@ -472,7 +483,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             model = s3mgr.model
             listadd = model.get_config(tablename, "listadd", True)
             editable = model.get_config(tablename, "editable", True) and \
-                       not auth.permission.ownership_required(table, "update")
+                       not auth.permission.ownership_required("update", table)
             deletable = model.get_config(tablename, "deletable", True)
             copyable = model.get_config(tablename, "copyable", False)
 

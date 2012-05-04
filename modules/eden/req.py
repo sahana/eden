@@ -1504,17 +1504,6 @@ class S3CommitModel(S3Model):
 
         vars = form.vars
 
-        # Update owned_by_group to the organisation's owned_by_group
-        # @ToDo: Facility
-        if vars.organisation_id:
-            otable = s3db.org_organisation
-            query = (otable.id == vars.organisation_id)
-            org = db(query).select(otable.owned_by_organisation,
-                                   limitby=(0, 1)).first()
-            if org:
-                query = (table.id == vars.id)
-                db(query).update(owned_by_organisation=org.owned_by_organisation)
-
         rtable = s3db.req_req
         if vars.type == 3: # People
             # If no organisation_id, then this is a single person commitment, so create the commit_person record automatically

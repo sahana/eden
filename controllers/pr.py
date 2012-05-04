@@ -225,7 +225,7 @@ def person():
             (T("Skills"), "competency"),
             (T("Training"), "training"),
         ]
-        
+
     # Configuration tabs
     if deployment_settings.get_save_search_widget():
         tabs = tabs + [(T("Saved Searches"), "save_search"),
