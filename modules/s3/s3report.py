@@ -35,7 +35,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Cube"]
+__all__ = ["S3Cube", "S3Report", "S3ContingencyTable"]
 
 import sys
 import datetime
