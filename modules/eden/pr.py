@@ -453,7 +453,7 @@ class S3PersonEntity(S3Model):
                                       limitby=(0, 1)).first()
         else:
             return
-        if record:
+        if record and record.deleted_fk:
             data = json.loads(record.deleted_fk)
             pe_id = data.get("pe_id", None)
             if pe_id:
