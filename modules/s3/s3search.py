@@ -2416,8 +2416,8 @@ class S3PersonSearch(S3Search):
                     value1, value2 = value.split(" ", 1)
                     value2 = value2.strip()
                     query = (field.lower().like(value1 + "%")) & \
-                            (field2.lower().like(value2 + "%")) | \
-                            (field3.lower().like(value2 + "%"))
+                            ((field2.lower().like(value2 + "%")) | \
+                             (field3.lower().like(value2 + "%")))
                 else:
                     value = value.strip()
                     query = ((field.lower().like(value + "%")) | \

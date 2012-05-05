@@ -509,6 +509,8 @@ class S3Config(Storage):
         return self.supply.get("use_alt_name", True)
     def get_req_use_req_number(self):
         return self.req.get("use_req_number", True)
+    def get_req_generate_req_number(self):
+        return self.req.get("generate_req_number", True)
     def get_req_req_type(self):
         return self.req.get("req_type", ["Stock", "People", "Other"])
 
