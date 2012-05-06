@@ -409,9 +409,7 @@ def location():
     output = s3_rest_controller(csv_extra_fields = [
                                     dict(label="Country",
                                          field=country())
-                                ],
-                                interactive_report = True
-                                )
+                                ])
 
     _map = vars.get("_map", None)
     if _map and isinstance(output, dict):
@@ -813,6 +811,9 @@ def config():
                         field.writable = False
                     elif type in ("gis_layer_theme",
                                   ):
+                        field = ltable.base
+                        field.readable = False
+                        field.writable = False
                         field = ltable.style
                         field.readable = True
                         field.writable = True
@@ -962,7 +963,7 @@ def symbology():
     def prep(r):
         if r.interactive:
             if r.component_name == "layer_entity":
-                s3.crud_strings[tablename] = Storage(
+                s3.crud_strings["gis_layer_entity"] = Storage(
                     title_create=T("Configure Layer for this Symbology"),
                     title_display=LAYER_DETAILS,
                     title_list=LAYERS,
@@ -982,7 +983,7 @@ def symbology():
                     ltable = s3db.gis_layer_symbology
                     # Find the records which are used
                     query = (ltable.layer_id == table.layer_id) & \
-                            (ltable.config_id == r.id)
+                            (ltable.symbology_id == r.id)
                     rows = db(query).select(table.layer_id)
                     # Filter them out
                     # Restrict Layers to those which have Markers

@@ -786,4 +786,22 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
         data.accept = false;
     });
 };
+
+// ============================================================================
+/**
+ * Add a Slider to a field - used by S3SliderWidget
+ */
+
+S3.slider = function(fieldname, minval, maxval, steprange, value) {
+    $( '#' + fieldname ).slider({
+        min: parseFloat(minval),
+        max: parseFloat(maxval),
+        step: parseFloat(steprange),
+        value: parseFloat(value),
+        slide: function (event, ui) {
+            $( '#' + fieldname + '_input' ).val( ui.value );
+        }
+    });
+}
+
 // ============================================================================

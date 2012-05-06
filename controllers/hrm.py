@@ -237,7 +237,7 @@ def human_resource():
         return output
     response.s3.postp = postp
 
-    output = s3_rest_controller(interactive_report=True)
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------

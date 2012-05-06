@@ -397,6 +397,7 @@ class GIS(object):
                 warning = "HTTPError"
                 return warning
 
+        filenames = []
         if file[:2] == "PK":
             # Unzip
             fp = StringIO(file)
@@ -422,7 +423,6 @@ class GIS(object):
             path = os.path.join(request.folder, "static", "cache", "kml")
             if not os.path.exists(path):
                 os.makedirs(path)
-            filenames = []
             for _file in files:
                 filename = _file.filename
                 if filename != main:
@@ -4861,8 +4861,9 @@ class FeatureLayer(Layer):
                 if record_module not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
-                if not current.auth.permission(c=record.module,
-                                               f=record.resource):
+                if not current.auth.permission.has_permission("read",
+                                                              c=record.module,
+                                                              f=record.resource):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:

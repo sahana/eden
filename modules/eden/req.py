@@ -200,7 +200,8 @@ class S3RequestModel(S3Model):
                                                       #minimum=request.utcnow - datetime.timedelta(days=1),
                                                       minimum=request.utcnow.date() - datetime.timedelta(days=1),
                                                       error_message="%s %%(min)s!" %
-                                                          T("Enter a valid future date")))],
+                                                            T("Enter a valid past date"),
+                                                        format = s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=0,
                                         #                          future=8760), # Hours, so 1 year
@@ -1502,17 +1503,6 @@ class S3CommitModel(S3Model):
         table = s3db.req_commit
 
         vars = form.vars
-
-        # Update owned_by_group to the organisation's owned_by_group
-        # @ToDo: Facility
-        if vars.organisation_id:
-            otable = s3db.org_organisation
-            query = (otable.id == vars.organisation_id)
-            org = db(query).select(otable.owned_by_organisation,
-                                   limitby=(0, 1)).first()
-            if org:
-                query = (table.id == vars.id)
-                db(query).update(owned_by_organisation=org.owned_by_organisation)
 
         rtable = s3db.req_req
         if vars.type == 3: # People

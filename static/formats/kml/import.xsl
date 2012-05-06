@@ -387,91 +387,103 @@
     <!-- ****************************************************************** -->
     <!-- Locations Hierarchy -->
     <xsl:template name="L1">
-        <xsl:variable name="unique-list" select="//kml:Placemark[not(kml:ExtendedData/kml:Data[@name=$L1]/kml:value=following::kml:ExtendedData/kml:Data[@name=$L1]/kml:value)]" />
-        <xsl:for-each select="$unique-list">
-            <resource name="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
-                </data>
-                <xsl:if test="$country">
-                    <reference field="parent" resource="gis_location">
-                        <xsl:attribute name="uuid">
-                            <xsl:text>urn:iso:std:iso:3166:-1:code:</xsl:text>
-                            <xsl:call-template name="uppercase">
-                                <xsl:with-param name="string" select="$country"/>
-                            </xsl:call-template>
+            <xsl:variable name="unique-list" select="//kml:Placemark[not(kml:ExtendedData/kml:Data[@name=$L1]/kml:value=following::kml:ExtendedData/kml:Data[@name=$L1]/kml:value)]" />
+            <xsl:for-each select="$unique-list">
+                <xsl:variable name="Name" select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
+                <xsl:if test="$Name!=''">
+                    <resource name="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Name"/>
                         </xsl:attribute>
-                    </reference>
+                        <data field="name">
+                            <xsl:value-of select="$Name"/>
+                        </data>
+                        <xsl:if test="$country">
+                            <reference field="parent" resource="gis_location">
+                                <xsl:attribute name="uuid">
+                                    <xsl:text>urn:iso:std:iso:3166:-1:code:</xsl:text>
+                                    <xsl:call-template name="uppercase">
+                                        <xsl:with-param name="string" select="$country"/>
+                                    </xsl:call-template>
+                                </xsl:attribute>
+                            </reference>
+                        </xsl:if>
+                    </resource>
                 </xsl:if>
-            </resource>
-        </xsl:for-each>
+            </xsl:for-each>
     </xsl:template>
 
     <xsl:template name="L2">
         <xsl:variable name="unique-list" select="//kml:Placemark[not(kml:ExtendedData/kml:Data[@name=$L2]/kml:value=following::kml:ExtendedData/kml:Data[@name=$L2]/kml:value)]" />
         <xsl:for-each select="$unique-list">
-            <resource name="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L2]/kml:value/text()"/>
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L2]/kml:value/text()"/>
-                </data>
-                <reference field="parent" resource="gis_location">
+            <xsl:variable name="Name" select="./kml:ExtendedData/kml:Data[@name=$L2]/kml:value/text()"/>
+            <xsl:if test="$Name!=''">
+                <resource name="gis_location">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
+                        <xsl:value-of select="$Name"/>
                     </xsl:attribute>
-                </reference>
-            </resource>
+                    <data field="name">
+                        <xsl:value-of select="$Name"/>
+                    </data>
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </xsl:for-each>
     </xsl:template>
 
     <xsl:template name="L3">
         <xsl:variable name="unique-list" select="//kml:Placemark[not(kml:ExtendedData/kml:Data[@name=$L3]/kml:value=following::kml:ExtendedData/kml:Data[@name=$L3]/kml:value)]" />
         <xsl:for-each select="$unique-list">
-            <resource name="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L3]/kml:value/text()"/>
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L3]/kml:value/text()"/>
-                </data>
-                <reference field="parent" resource="gis_location">
+            <xsl:variable name="Name" select="./kml:ExtendedData/kml:Data[@name=$L3]/kml:value/text()"/>
+            <xsl:if test="$Name!=''">
+                <resource name="gis_location">
                     <xsl:attribute name="tuid">
-                        <xsl:choose>
-                            <xsl:when test="$country='jp'">
-                                <!-- Special case for Japan: L3 goes direct to L1 -->
-                                <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L2]/kml:value/text()"/>
-                            </xsl:otherwise>
-                        </xsl:choose>
+                        <xsl:value-of select="$Name"/>
                     </xsl:attribute>
-                </reference>
-            </resource>
+                    <data field="name">
+                        <xsl:value-of select="$Name"/>
+                    </data>
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:choose>
+                                <xsl:when test="$country='jp'">
+                                    <!-- Special case for Japan: L3 goes direct to L1 -->
+                                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L1]/kml:value/text()"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L2]/kml:value/text()"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </xsl:for-each>
     </xsl:template>
 
     <xsl:template name="L4">
         <xsl:variable name="unique-list" select="//kml:Placemark[not(kml:ExtendedData/kml:Data[@name=$L4]/kml:value=following::kml:ExtendedData/kml:Data[@name=$L4]/kml:value)]" />
         <xsl:for-each select="$unique-list">
-            <resource name="gis_location">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L4]/kml:value/text()"/>
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L4]/kml:value/text()"/>
-                </data>
-                <reference field="parent" resource="gis_location">
+            <xsl:variable name="Name" select="./kml:ExtendedData/kml:Data[@name=$L4]/kml:value/text()"/>
+            <xsl:if test="$Name!=''">
+                <resource name="gis_location">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L3]/kml:value/text()"/>
+                        <xsl:value-of select="$Name"/>
                     </xsl:attribute>
-                </reference>
-            </resource>
+                    <data field="name">
+                        <xsl:value-of select="$Name"/>
+                    </data>
+                    <reference field="parent" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="./kml:ExtendedData/kml:Data[@name=$L3]/kml:value/text()"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </xsl:for-each>
     </xsl:template>
 

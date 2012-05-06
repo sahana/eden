@@ -2,8 +2,6 @@
 
 """ Sahana Eden Person Registry Model
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -40,32 +38,35 @@ __all__ = ["S3PersonEntity",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
-            # Representation Methods
+           # Representation Methods
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
            "pr_rheader",
-            # Custom Resource Methods
+           # Custom Resource Methods
            "pr_contacts",
            "pr_profile",
-            # Hierarchy Manipulation
+           # Hierarchy Manipulation
            "pr_update_affiliations",
            "pr_add_affiliation",
            "pr_remove_affiliation",
-            # PE Helpers
+           # PE Helpers
            "pr_get_pe_id",
-            # Back-end Role Tools
+           # Back-end Role Tools
            "pr_define_role",
            "pr_delete_role",
            "pr_add_to_role",
            "pr_remove_from_role",
-            # Hierarchy Lookup
+           # Hierarchy Lookup
+           "pr_realm",
            "pr_get_role_paths",
            "pr_get_role_branches",
            "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
-            # Internal Path Tools
+           "pr_ancestors",
+           "pr_descendants",
+           # Internal Path Tools
            "pr_rebuild_path",
            "pr_role_rebuild_path"]
 
@@ -461,7 +462,7 @@ class S3PersonEntity(S3Model):
 class S3OrgAuthModel(S3Model):
     """ Organisation-based Authorization Model """
 
-    names = ["pr_restriction", "pr_delegation"]
+    names = ["pr_delegation"]
 
     def model(self):
 
@@ -472,19 +473,6 @@ class S3OrgAuthModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
         meta_fields = s3.meta_fields
-
-        # ---------------------------------------------------------------------
-        # Restriction: Person Entity <-> Auth Membership Link
-        # This restricts the permissions assigned by an auth-group membership
-        # to the records owned by this person entity.
-        #
-        mtable = auth.settings.table_membership
-        tablename = "pr_restriction"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             Field("membership_id", mtable,
-                                   ondelete="CASCADE"),
-                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Delegation: Role <-> Auth Group Link
@@ -1345,10 +1333,11 @@ class S3PersonAddressModel(S3Model):
         # Address
         #
         pr_address_type_opts = {
-            1:T("Home Address"),
-            2:T("Office Address"),
-            3:T("Holiday Address"),
-            9:T("other")
+            1:T("Current Home Address"),
+            2:T("Permanent Home Address"),
+            3:T("Office Address"),
+            #3:T("Holiday Address"),
+            9:T("Other Address")
         }
 
         tablename = "pr_address"
@@ -3329,6 +3318,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     master_pe = pr_get_pe_id(master)
     affiliate_pe = pr_get_pe_id(affiliate)
 
+    role_id = None
     if master_pe and affiliate_pe:
         rtable = s3db.pr_role
         query = (rtable.pe_id == master_pe) & \
@@ -3344,7 +3334,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
             role_id = row.id
         if role_id:
             pr_add_to_role(role_id, affiliate_pe)
-    return
+    return role_id
 
 # =============================================================================
 def pr_remove_affiliation(master, affiliate, role=None):
@@ -3411,8 +3401,11 @@ def pr_get_pe_id(entity, record_id=None):
                 if isinstance(f, Row) and "pe_id" in f:
                     return f["pe_id"]
             return None
-    else:
+    elif isinstance(entity, (long, int)) or \
+         isinstance(entity, basestring) and entity.isdigit():
         return entity
+    else:
+        return None
     if not hasattr(table, "_tablename"):
         table = s3db.table(table, None)
     record = None
@@ -3730,8 +3723,6 @@ def pr_get_ancestors(pe_id):
         @param roles: list of roles to limit the search
 
         @returns: a list of PE-IDs
-
-        @todo: be able to filter by entity_type and subtype
     """
 
     db = current.db
@@ -3761,6 +3752,134 @@ def pr_get_ancestors(pe_id):
     ancestors = S3MultiPath.all_nodes(paths)
 
     return ancestors
+
+# =============================================================================
+def pr_realm(entity):
+    """
+        Get the default realm (=the immediate OU ancestors) of an entity
+
+        @param entity: the entity (pe_id)
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    if not entity:
+        return []
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == entity) & \
+            (rtable.deleted != True) & \
+            (rtable.role_type == OU)
+    rows = db(query).select(rtable.pe_id)
+    realm = [row.pe_id for row in rows]
+    return realm
+
+# =============================================================================
+def pr_ancestors(entities):
+    """
+        Find all ancestor entities of the given entities in the
+        OU hierarchy.
+
+        @param pe_id: the person entity ID
+        @param roles: list of roles to limit the search
+
+        @returns: Storage of lists of PE-IDs
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    if not entities:
+        return Storage()
+
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id.belongs(entities)) & \
+            (rtable.deleted != True) & \
+            (rtable.role_type == OU)
+    rows = db(query).select(rtable.ALL, atable.pe_id)
+
+    ancestors = Storage([(pe_id, []) for pe_id in entities])
+    r = rtable._tablename
+    a = atable._tablename
+    for row in rows:
+        pe_id = row[a].pe_id
+        paths = ancestors[pe_id]
+        role = row[r]
+        path = S3MultiPath([role.pe_id])
+        if role.path is None:
+            ppath = pr_role_rebuild_path(role)
+        else:
+            ppath = S3MultiPath(role.path)
+        path.extend(role.pe_id, ppath, cut=pe_id)
+        paths.append(path)
+    for pe_id in ancestors:
+        ancestors[pe_id] = S3MultiPath.all_nodes(ancestors[pe_id])
+    return ancestors
+
+# =============================================================================
+def pr_descendants(pe_ids, skip=[]):
+
+    db = current.db
+    s3db = current.s3db
+
+    pe_ids = [i for i in pe_ids if i not in skip]
+    if not pe_ids:
+        return []
+
+    etable = s3db.pr_pentity
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+
+    query = (rtable.deleted != True) & \
+            (rtable.pe_id.belongs(pe_ids)) & \
+            (rtable.role_type == OU) & \
+            (atable.role_id == rtable.id) & \
+            (atable.deleted != True) & \
+            (etable.pe_id == atable.pe_id)
+
+    rows = db(query).select(rtable.pe_id,
+                            atable.pe_id,
+                            etable.instance_type)
+    r = rtable._tablename
+    e = etable._tablename
+    a = atable._tablename
+
+    nodes = []
+    result = Storage()
+    for row in rows:
+        parent = row[r].pe_id
+        child = row[a].pe_id
+        if row[e].instance_type != "pr_person":
+            if parent not in result:
+                result[parent] = [child]
+            else:
+                result[parent].append(child)
+        if child not in nodes:
+            nodes.append(child)
+
+    skip = skip + pe_ids
+    descendants = pr_descendants(nodes, skip=skip)
+
+    for child in descendants:
+        for parent in result:
+            if child in result[parent]:
+                for node in descendants[child]:
+                    if node not in result[parent]:
+                        result[parent].append(node)
+    for x in result:
+        for y in result:
+            if x in result[y]:
+                result[y].extend([i for i in result[x] if i not in result[y] and i != y])
+
+    return result
 
 # =============================================================================
 def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):

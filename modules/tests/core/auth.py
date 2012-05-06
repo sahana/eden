@@ -4,11 +4,8 @@ __all__ = ["login", "logout", "register"]
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
-
 from gluon import current
-
 from s3 import s3_debug
-
 from .utils import *
 
 # -----------------------------------------------------------------------------
@@ -42,7 +39,7 @@ def login(account="normal"):
     try:
         elem = browser.find_element_by_xpath("//div[@class='confirmation']")
     except NoSuchElementException:
-        s3_debug("Login failed")
+        s3_debug("Login failed.. so registering account")
         # Try registering
         register(account)
     else:

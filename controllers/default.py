@@ -232,7 +232,7 @@ def index():
         response.view = "default/index.html"
         auth.permission.controller = "org"
         auth.permission.function = "site"
-        permitted_facilities = auth.permission.permitted_facilities(redirect_on_error=False)
+        permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
         manage_facility_box = ""
         if permitted_facilities:
             facility_list = s3_represent_facilities(db, permitted_facilities,
@@ -514,7 +514,7 @@ def user():
                 else:
                     removed.append(opt_in)
             ptable = s3db.pr_person
-            putable = s3db.pr_person_user 
+            putable = s3db.pr_person_user
             query = (putable.user_id == request.post_vars.id) & \
                     (putable.pe_id == ptable.pe_id)
             person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id

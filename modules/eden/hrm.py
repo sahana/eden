@@ -335,61 +335,64 @@ class S3HRModel(S3Model):
             @param user_id: the auth_user record ID of the person the
                             record belongs to.
 
-            @todo: rewrite for new OrgAuth model (pr_restriction)
+            @todo: rewrite for new OrgAuth model
             @todo: combine with pr_human_resource_update_affiliation?
         """
 
-        db = current.db
-        auth = current.auth
+        # @todo: invalid action, rewrite for new model
+        return
 
-        htable = db.hrm_human_resource
-        utable = auth.settings.table_user
-        mtable = auth.settings.table_membership
+        #db = current.db
+        #auth = current.auth
 
-        org_role = record.owned_by_organisation
+        #htable = db.hrm_human_resource
+        #utable = auth.settings.table_user
+        #mtable = auth.settings.table_membership
 
-        if record.deleted:
-            try:
-                fk = json.loads(record.deleted_fk)
-                organisation_id = fk.get("organisation_id", None)
-                site_id = fk.get("site_id", None)
-                person_id = fk.get("person_id", None)
-            except:
-                return
-        else:
-            organisation_id = record.get("organisation_id", None)
-            site_id = record.get("site_id", None)
-            person_id = record.get("person_id", None)
+        #org_role = record.owned_by_organisation
 
-        if record.deleted or record.status != 1:
-            remove_org_role = True
-            if org_role:
-                if organisation_id and person_id:
-                    # Check whether the person has another active
-                    # HR record in the same organisation
-                    query = (htable.person_id == person_id) & \
-                            (htable.organisation_id == organisation_id) & \
-                            (htable.id != record.id) & \
-                            (htable.status == 1) & \
-                            (htable.deleted != True)
-                    if db(query).select(htable.id, limitby=(0, 1)).first():
-                        remove_org_role = False
-                if remove_org_role:
-                    query = (mtable.user_id == user_id) & \
-                            (mtable.group_id == org_role)
-                    db(query).delete()
-            # @todo:
-            # Remove from "staff" group (all memberships for the site)
-        else:
-            if org_role:
-                query = (mtable.user_id == user_id) & \
-                        (mtable.group_id == org_role)
-                role = db(query).select(limitby=(0, 1)).first()
-                if not role:
-                    mtable.insert(user_id = user_id,
-                                  group_id = org_role)
-            # @todo:
-            # Add to "staff" group with restriction to the site
+        #if record.deleted:
+            #try:
+                #fk = json.loads(record.deleted_fk)
+                #organisation_id = fk.get("organisation_id", None)
+                #site_id = fk.get("site_id", None)
+                #person_id = fk.get("person_id", None)
+            #except:
+                #return
+        #else:
+            #organisation_id = record.get("organisation_id", None)
+            #site_id = record.get("site_id", None)
+            #person_id = record.get("person_id", None)
+
+        #if record.deleted or record.status != 1:
+            #remove_org_role = True
+            #if org_role:
+                #if organisation_id and person_id:
+                    ## Check whether the person has another active
+                    ## HR record in the same organisation
+                    #query = (htable.person_id == person_id) & \
+                            #(htable.organisation_id == organisation_id) & \
+                            #(htable.id != record.id) & \
+                            #(htable.status == 1) & \
+                            #(htable.deleted != True)
+                    #if db(query).select(htable.id, limitby=(0, 1)).first():
+                        #remove_org_role = False
+                #if remove_org_role:
+                    #query = (mtable.user_id == user_id) & \
+                            #(mtable.group_id == org_role)
+                    #db(query).delete()
+            ## @todo:
+            ## Remove from "staff" group (all memberships for the site)
+        #else:
+            #if org_role:
+                #query = (mtable.user_id == user_id) & \
+                        #(mtable.group_id == org_role)
+                #role = db(query).select(limitby=(0, 1)).first()
+                #if not role:
+                    #mtable.insert(user_id = user_id,
+                                  #group_id = org_role)
+            ## @todo:
+            ## Add to "staff" group with restriction to the site
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -460,7 +463,7 @@ class S3HRModel(S3Model):
                                       htable.site_id,
                                       htable.organisation_id,
                                       # Needed by hrm_update_staff_role()
-                                      htable.owned_by_organisation,
+                                      #htable.owned_by_organisation,
                                       htable.status,
                                       htable.deleted,
                                       htable.deleted_fk,
@@ -1446,7 +1449,8 @@ class S3HRSkillModel(S3Model):
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 NONE),
-                                   writable = True if s3_has_role("HR_EDITOR") else False,
+                                   readable=False,
+                                   writable=False
                                    ),
                              comments(),
                              *meta_fields())
@@ -1742,7 +1746,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Course Certificates registered"))
 
         # =====================================================================
-        # Mission Record
+        # Professional Exepericen (Mission Record)
         #
         # These are an element of credentials:
         # - a minimum number of hours of active duty need to be done
@@ -1756,6 +1760,7 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              person_id(),
                              organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             Field("job_title", label=T("Job Title")),
                              Field("start_date", "date",
                                    label=T("Start Date"),
                                    requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
@@ -1775,21 +1780,21 @@ class S3HRSkillModel(S3Model):
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Mission"),
-            title_display = T("Mission Details"),
-            title_list = T("Missions"),
-            title_update = T("Edit Mission"),
-            title_search = T("Search Missions"),
-            subtitle_create = T("Add Mission"),
-            subtitle_list = T("Missions"),
-            label_list_button = T("List Missions"),
-            label_create_button = T("Add New Mission"),
-            label_delete_button = T("Delete Mission"),
-            msg_record_created = T("Mission added"),
-            msg_record_modified = T("Mission updated"),
-            msg_record_deleted = T("Mission deleted"),
-            msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Missions registered"))
+            title_create = T("Add Professional Experience"),
+            title_display = T("Professional Experience Details"),
+            title_list = T("Professional Experience"),
+            title_update = T("Edit Professional Experience"),
+            title_search = T("Search Professional Experience"),
+            subtitle_create = T("Add Professional Experience"),
+            subtitle_list = T("Professional Experience"),
+            label_list_button = T("List of Professional Experience"),
+            label_create_button = T("Add New Professional Experience"),
+            label_delete_button = T("Delete Professional Experience"),
+            msg_record_created = T("Professional Experience added"),
+            msg_record_modified = T("Professional Experience updated"),
+            msg_record_deleted = T("Professional Experience deleted"),
+            msg_no_match = T("No Professional Experience found"),
+            msg_list_empty = T("Currently no Professional Experience entered"))
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -2491,12 +2496,11 @@ def hrm_rheader(r, tabs=[]):
             tabs = [(T("Person Details"), None),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
                     #(T("Credentials"), "credential"),
-                    (T("Mission Record"), "experience"),
+                    (T("Experience"), "experience"),
                     (T("Positions"), "human_resource"),
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
@@ -2513,12 +2517,11 @@ def hrm_rheader(r, tabs=[]):
                     (hr_record, "human_resource"),
                     #(address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Identity"), "identity"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
                     (T("Credentials"), "credential"),
-                    (T("Mission Record"), "experience"),
+                    (T("Experience"), "experience"),
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
                    ]

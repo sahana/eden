@@ -104,8 +104,8 @@ class S3DelphiModel(S3Model):
         user_id = S3ReusableField("user_id", db.auth_user, notnull=True,
                                   label = T("User"),
                                   requires = IS_ONE_OF(db, "auth_user.id",
-                                                       s3_user_represent),
-                                  represent = s3_user_represent)
+                                                       s3_auth_user_represent),
+                                  represent = s3_auth_user_represent)
 
         # Memberships as component of Groups
         self.add_component("delphi_membership",
@@ -402,7 +402,7 @@ class S3DelphiModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def solution_represent(id):
-    
+
         db = current.db
         s3db = current.s3db
         messages = current.messages

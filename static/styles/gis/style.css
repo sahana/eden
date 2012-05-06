@@ -110,33 +110,34 @@ div.olControlMousePosition {
 }
 
 .olLayerGeoRSSDescription {
-    float:left;
-    width:100%;
-    overflow:auto;
-    font-size:1.0em;
+    float: left;
+    width: 100%;
+    overflow: auto;
+    font-size: 1.0em;
 }
 .olLayerGeoRSSClose {
-    float:right;
-    color:gray;
-    font-size:1.2em;
-    margin-right:6px;
-    font-family:sans-serif;
+    float: right;
+    color: gray;
+    font-size: 1.2em;
+    margin-right: 6px;
+    font-family: sans-serif;
 }
 .olLayerGeoRSSTitle {
-    float:left;font-size:1.2em;
+    float: left;
+    font-size: 1.2em;
 }
 
 .olPopupContent {
-    padding:5px;
+    padding: 5px;
     overflow: auto;
 }    
 .olControlNavToolbar { 
-    width:0px;
-    height:0px;
+    width: 0px;
+    height: 0px;
 }    
 .olControlNavToolbar div { 
-  display:block;
-  width:  28px;
+  display: block;
+  width: 28px;
   height: 28px;
   top: 300px;
   left: 6px;
@@ -146,7 +147,7 @@ div.olControlMousePosition {
 .olControlNavigationHistory {
    background-image: url("../../img/gis/openlayers/theme_default/navigation_history.png");
    background-repeat: no-repeat;
-   width:  24px;
+   width: 24px;
    height: 24px;
 
 }
@@ -181,7 +182,7 @@ div.olControlMousePosition {
   background-repeat: no-repeat;
 }
 .olControlEditingToolbar  {
-    float:right;
+    float: right;
     right: 0px;
     height: 30px; 
     width: 200px;
@@ -189,7 +190,7 @@ div.olControlMousePosition {
 .olControlEditingToolbar div { 
   background-image: url("../../img/gis/openlayers/theme_default/editing_tool_bar.png");
   background-repeat: no-repeat;
-  float:right;
+  float: right;
   width:  24px;
   height: 24px;
   margin: 5px;

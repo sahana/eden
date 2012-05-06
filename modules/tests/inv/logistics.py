@@ -86,6 +86,6 @@ def requests():
     w_autocomplete("Beat",
                  "req_req_requester",
                  "Beatriz de Carvalho",
-                )
+                 )
 
     assert 0, "Keep the browser window open"

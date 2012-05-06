@@ -3095,7 +3095,7 @@ class S3SliderWidget(FormWidget):
         @author: Daniel Klischies (daniel.klischies@freenet.de)
 
         @ToDo: The range of the slider should ideally be picked up from the Validator
-               Show the value of the slider numerically as well as simply a position
+        @ToDo: Show the value of the slider numerically as well as simply a position
     """
 
     def __init__(self,
@@ -3112,42 +3112,27 @@ class S3SliderWidget(FormWidget):
 
         response = current.response
 
-        divid = str(field).replace(".", "_")
-        sliderdiv = DIV(_id=divid, **attributes)
-        inputid = "%s_input" % divid
+        fieldname = str(field).replace(".", "_")
+        sliderdiv = DIV(_id=fieldname, **attributes)
+        inputid = "%s_input" % fieldname
         localfield = str(field).split(".")
         sliderinput = INPUT(_name=localfield[1],
                             _id=inputid,
                             _class="hidden",
                             _value=self.value)
-        s3_script_dir = "/%s/static/scripts" % current.request.application
-        if current.session.s3.debug:
-            response.s3.scripts.append( "%s/S3/jquery.ui.slider.js" % s3_script_dir )
-        else:
-            response.s3.scripts.append( "%s/S3/jquery.ui.slider.js" % s3_script_dir )
 
-        response.s3.jquery_ready.append("""
-$( '#%s' ).slider({slide: function (event, ui) { $( '#%s' ).val( ui.value ); }});
-$( '#%s' ).slider('option', 'min', parseFloat('%f'));
-$( '#%s' ).slider('option', 'max', parseFloat('%f'));
-$( '#%s' ).slider('option', 'step', parseFloat('%f'));
-$( '#%s' ).slider('option', 'value', parseFloat('%f'));
-
-""" % (divid,
-       inputid,
-       divid,
-       self.minval,
-       divid,
-       self.maxval,
-       divid,
-       self.steprange,
-       divid,
-       self.value))
+        response.s3.jquery_ready.append("S3.slider('%s','%f','%f','%f','%f');\n" % \
+          (fieldname,
+           self.minval,
+           self.maxval,
+           self.steprange,
+           self.value))
 
         return TAG[""](sliderdiv, sliderinput)
 
 
-class S3OptionsMatrixWidget(FormWidget):
+# -----------------------------------------------------------------------------
+class S3OptionsMatrixWidget(object):
     """
         Constructs a two dimensional array/grid of checkboxes
         with row and column headers.
@@ -3219,8 +3204,9 @@ class S3OptionsMatrixWidget(FormWidget):
 
         current.response.s3.scripts.append( "/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application )
 
-        # If the table has an id attribute, activate the jQuery plugin for it.
-        if "_id" in attributes:
-            current.response.s3.jquery_ready.append("$('#{0}').s3optionsmatrix();".format(attributes.get('_id')))
+        return TABLE(grid_header,
+                     TBODY(grid_rows),
+                     _id=self._id,
+                     _class="s3optionsmatrix")
 
-        return TABLE(header, TBODY(grid_rows), **attributes)
+# END =========================================================================

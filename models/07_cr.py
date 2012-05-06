@@ -171,7 +171,11 @@ if deployment_settings.has_module("cr"):
                                              )
 
         # -------------------------------------------------------------------------
-        resourcename = "shelter"
+        cr_shelter_opts = {
+            1 : T("Closed"),
+            2 : T("Open")
+        }
+        
         tablename = "cr_shelter"
         table = db.define_table(tablename,
                                 super_link("site_id", "org_site"),
@@ -198,9 +202,13 @@ if deployment_settings.has_module("cr"):
                                       label = T("Population"),
                                       requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
                                       represent=lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                                Field("status", "integer",
+                                      requires = IS_NULL_OR(IS_IN_SET(cr_shelter_opts)),
+                                      represent = lambda opt: \
+                                        cr_shelter_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                      label = T("Status")),
                                 Field("source",
                                       label = T("Source")),
-                                #document_id(), # Better to have multiple Documents on a Tab
                                 s3_comments(),
                                 *(address_fields() + s3_meta_fields()))
 
@@ -273,6 +281,7 @@ if deployment_settings.has_module("cr"):
                         onvalidation=address_onvalidation,
                         list_fields=["id",
                                      "name",
+                                     "status",
                                      "shelter_type_id",
                                      "shelter_service_id",
                                      "capacity",
