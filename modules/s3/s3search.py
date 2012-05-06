@@ -402,16 +402,14 @@ class S3SearchMinMaxWidget(S3SearchWidget):
 
         T = current.T
 
-        tablename = self.search_field.keys()[0]
-        search_field = self.search_field[tablename][0]
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
         if select_min and select_max:
-            vmin = value.get("min_%s" % search_field.name, None)
-            vmax = value.get("max_%s" % search_field.name, None)
+            vmin = value.get("min_%s" % self.field, None)
+            vmax = value.get("max_%s" % self.field, None)
             if vmax is not None and vmin is not None and vmin > vmax:
-                errors["max_%s" % search_field.name] = \
+                errors["max_%s" % self.field] = \
                      T("Maximum must be greater than minimum")
 
         return errors or None
@@ -425,32 +423,30 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             @param value: the value returned from the widget
         """
 
-        db = current.db
-
-        tablename = self.search_field.keys()[0]
-        search_field = self.search_field[tablename][0]
-
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
-        min_query = max_query = None
+        min_query = max_query = query = None
+
         if select_min:
-            v = value.get("min_%s" % search_field.name, None)
+            v = value.get("min_%s" % self.field, None)
             if v is not None and str(v):
-                min_query = (search_field >= v)
+                min_query = S3FieldSelector(self.field) >= v
+
         if select_max:
-            v = value.get("max_%s" % search_field.name, None)
+            v = value.get("max_%s" % self.field, None)
             if v is not None and str(v):
-                max_query = (search_field <= v)
-        query = self.master_query[tablename]
-        if min_query is not None or max_query is not None:
-            if min_query is not None:
-                query = query & min_query
+                max_query = S3FieldSelector(self.field) <= v
+
+        if min_query is not None:
+            query = min_query
+
             if max_query is not None:
                 query = query & max_query
         else:
-            query = None
-        return (query)
+            query = max_query
+
+        return query
 
 # =============================================================================
 
