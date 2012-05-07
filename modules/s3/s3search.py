@@ -57,6 +57,7 @@ __all__ = ["S3SearchWidget",
            "S3LocationSearch",
            "S3OrganisationSearch",
            "S3PersonSearch",
+           "S3HRSearch",
            "S3PentitySearch"]
 
 MAX_RESULTS = 1000
@@ -2450,6 +2451,97 @@ class S3PersonSearch(S3Search):
 
 # =============================================================================
 
+
+class S3HRSearch(S3Search):
+    """
+        Search method with specifics for HRM records (full name search)
+    """
+
+    def search_json(self, r, **attr):
+        """
+            JSON search method for S3HumanResourceAutocompleteWidget
+
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        xml = current.manager.xml
+        s3db = current.s3db
+
+        output = None
+        request = self.request
+        response = current.response
+        resource = self.resource
+        pr_table = s3db.pr_person
+        table = self.table
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = request.vars # should be request.get_vars?
+
+        # JQueryUI Autocomplete uses "term" instead of "value"
+        # (old JQuery Autocomplete uses "q" instead of "value")
+        value = _vars.value or _vars.term or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower()
+
+        filter = _vars.filter
+        limit = int(_vars.limit or 0)
+
+        if filter and value:
+
+            field = pr_table.first_name
+            field2 = pr_table.middle_name
+            field3 = pr_table.last_name
+
+            # Fields to return
+            fields = [table.id, field, field2, field3]
+
+            if filter == "~":
+                # pr_person Autocomplete
+                if " " in value:
+                    value1, value2 = value.split(" ", 1)
+                    value2 = value2.strip()
+                    query = (pr_table.id == table.person_id) & \
+                            ((field.lower().like(value1 + "%")) & \
+                            ((field2.lower().like(value2 + "%")) | \
+                             (field3.lower().like(value2 + "%"))))
+                else:
+                    value = value.strip()
+                    query = (pr_table.id == table.person_id) & \
+                            ((field.lower().like(value + "%")) | \
+                            (field2.lower().like(value + "%")) | \
+                            (field3.lower().like(value + "%")))
+
+            else:
+                output = xml.json_message(False,
+                                          400,
+                                          "Unsupported filter! Supported filters: ~")
+                raise HTTP(400, body=output)
+
+        resource.add_filter(query)
+
+        if filter == "~":
+            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+                output = json([dict(id="",
+                                   name="Search results are over %d. Please input more characters." \
+                                   % MAX_SEARCH_RESULTS)])
+
+        if output is None:
+            output = resource.exporter.json(resource,
+                                            start=0,
+                                            limit=limit,
+                                            fields=fields,
+                                            orderby=field)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
+
+# =============================================================================
 class S3PentitySearch(S3Search):
     """
         Search method with specifics for Pentity records (full name search)
