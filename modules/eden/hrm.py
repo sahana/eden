@@ -335,61 +335,64 @@ class S3HRModel(S3Model):
             @param user_id: the auth_user record ID of the person the
                             record belongs to.
 
-            @todo: rewrite for new OrgAuth model (pr_restriction)
+            @todo: rewrite for new OrgAuth model
             @todo: combine with pr_human_resource_update_affiliation?
         """
 
-        db = current.db
-        auth = current.auth
+        # @todo: invalid action, rewrite for new model
+        return
 
-        htable = db.hrm_human_resource
-        utable = auth.settings.table_user
-        mtable = auth.settings.table_membership
+        #db = current.db
+        #auth = current.auth
 
-        org_role = record.owned_by_organisation
+        #htable = db.hrm_human_resource
+        #utable = auth.settings.table_user
+        #mtable = auth.settings.table_membership
 
-        if record.deleted:
-            try:
-                fk = json.loads(record.deleted_fk)
-                organisation_id = fk.get("organisation_id", None)
-                site_id = fk.get("site_id", None)
-                person_id = fk.get("person_id", None)
-            except:
-                return
-        else:
-            organisation_id = record.get("organisation_id", None)
-            site_id = record.get("site_id", None)
-            person_id = record.get("person_id", None)
+        #org_role = record.owned_by_organisation
 
-        if record.deleted or record.status != 1:
-            remove_org_role = True
-            if org_role:
-                if organisation_id and person_id:
-                    # Check whether the person has another active
-                    # HR record in the same organisation
-                    query = (htable.person_id == person_id) & \
-                            (htable.organisation_id == organisation_id) & \
-                            (htable.id != record.id) & \
-                            (htable.status == 1) & \
-                            (htable.deleted != True)
-                    if db(query).select(htable.id, limitby=(0, 1)).first():
-                        remove_org_role = False
-                if remove_org_role:
-                    query = (mtable.user_id == user_id) & \
-                            (mtable.group_id == org_role)
-                    db(query).delete()
-            # @todo:
-            # Remove from "staff" group (all memberships for the site)
-        else:
-            if org_role:
-                query = (mtable.user_id == user_id) & \
-                        (mtable.group_id == org_role)
-                role = db(query).select(limitby=(0, 1)).first()
-                if not role:
-                    mtable.insert(user_id = user_id,
-                                  group_id = org_role)
-            # @todo:
-            # Add to "staff" group with restriction to the site
+        #if record.deleted:
+            #try:
+                #fk = json.loads(record.deleted_fk)
+                #organisation_id = fk.get("organisation_id", None)
+                #site_id = fk.get("site_id", None)
+                #person_id = fk.get("person_id", None)
+            #except:
+                #return
+        #else:
+            #organisation_id = record.get("organisation_id", None)
+            #site_id = record.get("site_id", None)
+            #person_id = record.get("person_id", None)
+
+        #if record.deleted or record.status != 1:
+            #remove_org_role = True
+            #if org_role:
+                #if organisation_id and person_id:
+                    ## Check whether the person has another active
+                    ## HR record in the same organisation
+                    #query = (htable.person_id == person_id) & \
+                            #(htable.organisation_id == organisation_id) & \
+                            #(htable.id != record.id) & \
+                            #(htable.status == 1) & \
+                            #(htable.deleted != True)
+                    #if db(query).select(htable.id, limitby=(0, 1)).first():
+                        #remove_org_role = False
+                #if remove_org_role:
+                    #query = (mtable.user_id == user_id) & \
+                            #(mtable.group_id == org_role)
+                    #db(query).delete()
+            ## @todo:
+            ## Remove from "staff" group (all memberships for the site)
+        #else:
+            #if org_role:
+                #query = (mtable.user_id == user_id) & \
+                        #(mtable.group_id == org_role)
+                #role = db(query).select(limitby=(0, 1)).first()
+                #if not role:
+                    #mtable.insert(user_id = user_id,
+                                  #group_id = org_role)
+            ## @todo:
+            ## Add to "staff" group with restriction to the site
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -460,7 +463,7 @@ class S3HRModel(S3Model):
                                       htable.site_id,
                                       htable.organisation_id,
                                       # Needed by hrm_update_staff_role()
-                                      htable.owned_by_organisation,
+                                      #htable.owned_by_organisation,
                                       htable.status,
                                       htable.deleted,
                                       htable.deleted_fk,

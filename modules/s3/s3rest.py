@@ -638,7 +638,9 @@ class S3Request(object):
                 extension = ext
         auth = manager.auth
         if c or f:
-            if not auth.permission(c=self.controller, f=self.function):
+            if not auth.permission.has_permission("read",
+                                                  c=self.controller,
+                                                  f=self.function):
                 auth.permission.fail()
 
         # Allow override of request attributes

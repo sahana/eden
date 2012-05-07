@@ -64,10 +64,12 @@ if len(pop_list) > 0:
                     rules["oacl"] = parseACL(row["oacl"])
                 if row["uacl"]:
                     rules["uacl"] = parseACL(row["uacl"])
-                if "org" in row and row["org"]:
-                    rules["organisation"] = row["org"]
-                if "facility" in row and row["facility"]:
-                    rules["facility"] = row["facility"]
+                #if "org" in row and row["org"]:
+                    #rules["organisation"] = row["org"]
+                #if "facility" in row and row["facility"]:
+                    #rules["facility"] = row["facility"]
+                if "entity" in row and row["entity"]:
+                    rules["entity"] = row["entity"]
                 if "hidden" in row and row["hidden"]:
                     extra_param["hidden"] = row["hidden"]
                 if "system" in row and row["system"]:
@@ -174,7 +176,7 @@ if len(pop_list) > 0:
 
                 # Allow unauthenticated users to view the list of organisations
                 # so they can select an organisation when registering
-                dict(t="org_organisation", uacl=acl.READ, organisation="all"),
+                dict(t="org_organisation", uacl=acl.READ, entity="any"),
                 # Allow unauthenticated users to view the Map
                 dict(c="gis", uacl=acl.READ, oacl=default_oacl),
                 # Allow unauthenticated users to cache Map feeds

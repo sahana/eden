@@ -1283,7 +1283,7 @@ def survey_getQuestionFromName(name, series_id):
         for row in locList.items():
             if row[1] == name:
                 return survey_getQuestionFromName(row[0],series_id)
-        
+
     question = {}
     question["qstn_id"] = record.survey_question.id
     question["code"] = record.survey_question.code
@@ -2248,7 +2248,6 @@ def survey_series_rheader(r, tabs=[]):
             record = survey_getSeries(series_id)
         if record != None:
             # Tabs
-            #if auth.permission(c="survey", f = "newAssessment") & auth.permission.CREATE:
             if auth.s3_has_permission("create", "survey_complete"):
                 tabs = [(T("Details"), None),
                         (T("Enter Completed Assessment"), "newAssessment/"),

@@ -52,7 +52,7 @@ def index():
         zoom = int(request.vars["zoom"])
     else:
         zoom = 7
-        
+
     if request.vars.get("coords", None) is not None:
         lon, lat = map(float, request.vars["coords"].split(","))
     else:
@@ -81,7 +81,7 @@ def index():
 
 def climate_overlay_data():
     kwargs = dict(request.vars)
-    
+
     arguments = {}
     errors = []
     for kwarg_name, converter in dict(
@@ -97,10 +97,10 @@ def climate_overlay_data():
             except TypeError:
                 errors.append("%s is wrong type" % kwarg_name)
             except AssertionError, assertion_error:
-                errors.append("%s: %s" % (kwarg_name, assertion_error))                
+                errors.append("%s: %s" % (kwarg_name, assertion_error))
     if kwargs:
         errors.append("Unexpected arguments: %s" % kwargs.keys())
-    
+
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
@@ -132,7 +132,7 @@ def climate_overlay_data():
 
 def climate_csv_location_data():
     kwargs = dict(request.vars)
-    
+
     arguments = {}
     errors = []
     for kwarg_name, converter in dict(
@@ -148,10 +148,10 @@ def climate_csv_location_data():
             except TypeError:
                 errors.append("%s is wrong type" % kwarg_name)
             except AssertionError, assertion_error:
-                errors.append("%s: %s" % (kwarg_name, assertion_error))                
+                errors.append("%s: %s" % (kwarg_name, assertion_error))
     if kwargs:
         errors.append("Unexpected arguments: %s" % kwargs.keys())
-    
+
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
@@ -241,7 +241,7 @@ def stations():
     for place_row in db(
         (table.id == db.climate_place_elevation.id) &
         (table.id == db.climate_place_station_id.id) &
-        (table.id == db.climate_place_station_name.id) 
+        (table.id == db.climate_place_station_name.id)
     ).select(
         table.id,
         table.longitude,
@@ -287,17 +287,17 @@ def purchase():
                      args = ["login"],
                      vars = {"_next":URL(c ="climate",
                                          f = "purchase")}))
-    
-    if not s3_has_role(1):
+
+    if not s3_has_role(ADMIN):
         table.paid.writable = False
         table.price.writable = False
         response.s3.filter = (db.climate_purchase.created_by == auth.user.id)
-    
+
     def prep(r):
-        if not s3_has_role(1) and r.record and r.record.paid:
+        if not s3_has_role(ADMIN) and r.record and r.record.paid:
             for f in table.fields:
                 table[f].writable = False
-                
+
         if r.method == "read":
             response.s3.rfooter = DIV(
                 T("Please make your payment in person at the DHM office, or by bank Transfer to:"),
@@ -312,14 +312,14 @@ def purchase():
                 )
             )
         return True
-    
+
     def rheader(r):
         record = r.record
         if record and record.paid:
-            # these are the parameters to download the data export file 
+            # these are the parameters to download the data export file
             # see models/climate.py for more details
             return A(
-                "Download this data", 
+                "Download this data",
                 _href='/eden/climate/download_purchased_data?purchase_id=%(record_id)s'% {
                     "record_id": record.id,
                     "station_id": record.station_id,
@@ -331,9 +331,9 @@ def purchase():
             )
         else:
             return None
-    
+
     response.s3.prep = prep
-    
+
     output = s3_rest_controller(rheader = rheader)
     output["addheader"] = T("Please enter the details of the data you wish to purchase")
     return output
@@ -355,9 +355,9 @@ def prices():
             )
         )
     else:
-        if s3_has_role(1):
+        if s3_has_role(ADMIN):
             return s3_rest_controller()
-    
+
 
 # =============================================================================
 def save_query():
@@ -403,7 +403,7 @@ def download_purchased_data():
         db.climate_purchase.id == purchase_id
     ).select().first()
     if climate_purchase is not None and climate_purchase.paid:
-        sample_table = SampleTable.with_id(climate_purchase.parameter_id)        
+        sample_table = SampleTable.with_id(climate_purchase.parameter_id)
         parameter_name = repr(sample_table)
         # climate_purchase.station_id is currently actually the place_id
         place_id = climate_purchase.station_id
@@ -414,12 +414,12 @@ def download_purchased_data():
             db.climate_place_station_name.name,
             db.climate_place_station_id.station_id
         ).first()
-        
+
         station_id = station.climate_place_station_id.station_id
         station_name = station.climate_place_station_name.name
         date_from = climate_purchase.date_from
         date_to = climate_purchase.date_to
-        
+
         csv_data = sample_table.csv_data(
             place_id = place_id,
             date_from = date_from,
@@ -437,7 +437,7 @@ def download_purchased_data():
         return csv_data
     else:
         return
-    
+
 def get_years():
     from datetime import datetime, timedelta
     response.headers["Expires"] = (

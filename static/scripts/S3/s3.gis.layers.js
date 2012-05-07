@@ -641,7 +641,7 @@ function addGeoJSONLayer(layer) {
                     strokeColor: fill,
                     // @ToDo: Have the Legend to use a Square but the actual features to use a circle
                     graphicName: 'circle',
-                    pointRadius: 10,
+                    pointRadius: 10
                 },
                 title: elem.low + '-' + elem.high
             });

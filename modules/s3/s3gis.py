@@ -4861,8 +4861,9 @@ class FeatureLayer(Layer):
                 if record_module not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
-                if not current.auth.permission(c=record.module,
-                                               f=record.resource):
+                if not current.auth.permission.has_permission("read",
+                                                              c=record.module,
+                                                              f=record.resource):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:

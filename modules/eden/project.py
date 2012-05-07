@@ -413,7 +413,6 @@ class S3ProjectModel(S3Model):
                   super_entity="doc_entity",
                   deduplicate=self.project_project_deduplicate,
                   onvalidation=self.project_project_onvalidation,
-                  onaccept=self.project_project_onaccept,
                   create_next=URL(c="project", f="project",
                                   args=["[id]", next]),
                   search_method=project_search,
@@ -937,27 +936,6 @@ class S3ProjectModel(S3Model):
         if not form.vars.code and "name" in form.vars:
             # Populate code from name
             form.vars.code = form.vars.name
-        return
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_project_onaccept(form):
-        """ Set the project to be owned by the customer """
-
-        db = current.db
-        s3db = current.s3db
-
-        if "organisation_id" in form.vars:
-            # Set Project to be owned by this Customer
-            organisation_id = form.vars.organisation_id
-            otable = s3db.org_organisation
-            query = (otable.id == organisation_id)
-            role = db(query).select(otable.owned_by_organisation,
-                                    limitby=(0, 1)).first()
-            if role:
-                table = s3db.project_project
-                query = (table.id == form.vars.id)
-                db(query).update(owned_by_organisation=role.owned_by_organisation)
         return
 
     # ---------------------------------------------------------------------
@@ -1949,6 +1927,7 @@ class S3ProjectTaskModel(S3Model):
                   super_entity="doc_entity",
                   copyable=True,
                   orderby="project_task.priority",
+                  owner_entity=self.task_owner_entity,
                   onvalidation=self.task_onvalidation,
                   create_next=URL(f="task", args=["[id]"]),
                   create_onaccept=self.task_create_onaccept,
@@ -2198,6 +2177,26 @@ class S3ProjectTaskModel(S3Model):
         else:
             return NONE
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_owner_entity(table, record):
+        """ Set the task owner entity to the project's owner entity """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
+
+        task_id = record.id
+        query = (ltable.task_id == task_id) & \
+                (ltable.project_id == ptable.id)
+        project = db(query).select(ptable.owned_by_entity,
+                                   limitby=(0, 1)).first()
+        if project:
+            return project.owned_by_entity
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2254,25 +2253,6 @@ class S3ProjectTaskModel(S3Model):
             if vars.activity_id:
                 link_id = ltable.insert(task_id = id,
                                         activity_id = _vars.activity_id)
-
-        # Find the associated Project
-        ptable = db.project_project
-        ltable = db.project_task_project
-        query = (ltable.task_id == id) & \
-                (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.organisation_id,
-                                   limitby=(0, 1)).first()
-        if project:
-            # Set Task to be owned by this Organisation
-            organisation_id = project.organisation_id
-            otable = s3db.org_organisation
-            query = (otable.id == organisation_id)
-            role = db(query).select(otable.owned_by_organisation,
-                                    limitby=(0, 1)).first()
-            if role:
-                table = s3db.project_task
-                query = (table.id == vars.id)
-                db(query).update(owned_by_organisation=role.owned_by_organisation)
 
         # Make sure the task is also linked to the project
         # when created under an activity
@@ -2336,7 +2316,7 @@ class S3ProjectTaskModel(S3Model):
 
         if changed:
             table = s3db.project_comment
-            text = s3_user_represent(current.auth.user.id)
+            text = s3_auth_user_represent(current.auth.user.id)
             for var in changed:
                 text = "%s\n%s" % (text, changed[var])
             table.insert(task_id=id,

@@ -18,8 +18,8 @@ if session.s3.show_inv == None:
 #    table = s3db.inv_inv_item
 #
 #    # Limit site_id to sites the user has permissions for
-#    auth.permission.permitted_facilities(table=table,
-#                                         error_msg=T("You do not have permission for any site to add an inventory item."))
+#    auth.permitted_facilities(table=table,
+#                              error_msg=T("You do not have permission for any site to add an inventory item."))
 #
 #    return s3_rest_controller("inv", "inv_item",
 #                              csv_extra_fields = [
@@ -38,8 +38,7 @@ if session.s3.show_inv == None:
 #        error_msg = T("You do not have permission for any facility to add an order.")
 #    else:
 #        error_msg = T("You do not have permission for any facility to receive a shipment.")
-#    auth.permission.permitted_facilities(table=table,
-#                                         error_msg=error_msg)
+#    auth.permitted_facilities(table=table, error_msg=error_msg)
 #
 #    def prep(r):
 #        if r.interactive:
@@ -67,8 +66,7 @@ if session.s3.show_inv == None:
 #
 #    # Limit site_id to sites the user has permissions for
 #    error_msg = T("You do not have permission for any facility to send a shipment.")
-#    auth.permission.permitted_facilities(table=table,
-#                                         error_msg=error_msg)
+#    auth.permitted_facilities(table=table, error_msg=error_msg)
 #
 #    # Set Validator for checking against the number of items in the warehouse
 #    vars = request.vars
