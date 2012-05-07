@@ -389,11 +389,13 @@ class S3ProjectModel(S3Model):
         else:
             next = "activity"
 
+        LEAD_ROLE = settings.project.organisation_lead_role
+
         if drr:
             table.virtualfields.append(S3ProjectVirtualfields())
             list_fields=["id",
                          "name",
-                         (T("Lead Organisation"), "organisation"),
+                         (settings.project.organisation_roles[LEAD_ROLE], "organisation"),
                          "sector_id",
                          "start_date",
                          "end_date",
@@ -1377,6 +1379,7 @@ class S3ProjectDRRModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         currency_type = s3.currency_type
         #location_id = self.gis_location_id
@@ -1394,14 +1397,8 @@ class S3ProjectDRRModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Organisation
         #
-        project_organisation_roles = {
-            1: T("Lead Implementer"), # T("Host National Society")
-            2: T("Partner"), # T("Partner National Society")
-            3: T("Donor"),
-            4: T("Customer"), # T("Beneficiary")?
-            5: T("Super"), # T("Beneficiary")?
-        }
-        project_organisation_lead_role = 1
+        project_organisation_roles = settings.project.organisation_roles
+        project_organisation_lead_role = settings.project.organisation_lead_role
 
         organisation_help = T("Add all organizations which are involved in different roles in this project")
 
@@ -3372,10 +3369,11 @@ class S3ProjectVirtualfields:
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
+        settings = current.deployment_settings
+        LEAD_ROLE = settings.project.organisation_lead_role
 
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
-        LEAD_ROLE = s3.project_organisation_lead_role
         query = (ltable.deleted != True) & \
                 (ltable.project_id == self.project_project.id) & \
                 (ltable.role == LEAD_ROLE) & \
@@ -3399,10 +3397,11 @@ class S3ProjectActivityVirtualfields:
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
+        settings = current.deployment_settings
+        LEAD_ROLE = settings.project.organisation_lead_role
 
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
-        LEAD_ROLE = s3.project_organisation_lead_role
         query = (ltable.deleted != True) & \
                 (ltable.project_id == self.project_activity.project_id) & \
                 (ltable.role == LEAD_ROLE) & \
