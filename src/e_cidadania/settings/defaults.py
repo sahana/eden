@@ -35,10 +35,6 @@ print "Current working dir: %s" % cwd
 AUTH_PROFILE_MODULE = "accounts.UserProfile"
 ACCOUNT_ACTIVATION_DAYS = 2
 LOGIN_REDIRECT_URL = '/accounts/'
-GOOGLE_MAPS_API_KEY = 'ABQIAAAATqrYeRgzMa92HeAJ337iJhRIU2G0euEtM3XnBHtmv6MD_woHxRSapJw6ROu7OKaPDPIwetftitHBcw'
-
-# Calendar
-FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
 
 # Languages for the platform.
 LANGUAGES = (
@@ -46,9 +42,13 @@ LANGUAGES = (
     ('en_GB', 'English'),
     ('gl_ES', 'Galego'),
 )
+
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
+
+# Calendar
+FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
 
 # Configuration related to media and static content directories
 MEDIA_ROOT = cwd + '/uploads/'
@@ -188,6 +188,7 @@ LOGGING = {
     }
 }
 
+# SELECT ENVIROMENT
 # Tell django what environment you will run. Options: development, production. 
 # Default: development
 from e_cidadania.settings.development import *
