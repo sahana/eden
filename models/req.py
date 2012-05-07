@@ -156,8 +156,8 @@
 #            type = r.record.type
 #            if type == 1: # Items
 #                # Limit site_id to facilities the user has permissions for
-#                auth.permission.permitted_facilities(table=r.table,
-#                                                     error_msg=T("You do not have permission for any facility to make a commitment."))
+#                auth.permitted_facilities(table=r.table,
+#                                          error_msg=T("You do not have permission for any facility to make a commitment."))
 #                if r.interactive:
 #                    # Redirect to the Items tab after creation
 #                    s3mgr.configure(table,
@@ -170,8 +170,7 @@
 #                # Check if user is affiliated to an Organisation
 #                if is_affiliated():
 #                    # Limit organisation_id to organisations the user has permissions for
-#                    auth.permission.permitted_organisations(table=r.table,
-#                                                            redirect_on_error=False)
+#                    auth.permitted_organisations(table=r.table, redirect_on_error=False)
 #                    table.organisation_id.readable = True
 #                    table.organisation_id.writable = True
 #                else:
@@ -193,8 +192,8 @@
 #        else:
 #            # Limit site_id to facilities the user has permissions for
 #            # @ToDo: Non-Item requests shouldn't be bound to a Facility?
-#            auth.permission.permitted_facilities(table=r.table,
-#                                                 error_msg=T("You do not have permission for any facility to make a request."))
+#            auth.permitted_facilities(table=r.table,
+#                                      error_msg=T("You do not have permission for any facility to make a request."))
 #
 #        return True
 #    response.s3.prep = prep

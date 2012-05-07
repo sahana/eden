@@ -61,7 +61,7 @@ s3_meta_created_by = S3ReusableField("created_by", db.auth_user,
                                      default=session.auth.user.id
                                                 if auth.is_logged_in()
                                                 else None,
-                                     represent=s3_user_represent,
+                                     represent=s3_auth_user_represent,
                                      ondelete="RESTRICT")
 
 # Last author of a record
@@ -75,7 +75,7 @@ s3_meta_modified_by = S3ReusableField("modified_by", db.auth_user,
                                       update=session.auth.user.id
                                                 if auth.is_logged_in()
                                                 else None,
-                                      represent=s3_user_represent,
+                                      represent=s3_auth_user_represent,
                                       ondelete="RESTRICT")
 
 def s3_authorstamp():
@@ -94,7 +94,8 @@ s3_meta_owned_by_user = S3ReusableField("owned_by_user", db.auth_user,
                                                     if auth.is_logged_in()
                                                     else None,
                                         represent=lambda id: \
-                                            id and s3_user_represent(id) or UNKNOWN_OPT,
+                                            id and s3_auth_user_represent(id) or \
+                                                   UNKNOWN_OPT,
                                         ondelete="RESTRICT")
 
 # Role of users who collectively own the record
@@ -104,14 +105,6 @@ s3_meta_owned_by_group = S3ReusableField("owned_by_group", "integer",
                                          requires=None,
                                          default=None,
                                          represent=s3_auth_group_represent)
-
-# Role of the Organisation the record belongs to
-s3_meta_owned_by_organisation = S3ReusableField("owned_by_organisation", "integer",
-                                                readable=False,
-                                                writable=False,
-                                                requires=None,
-                                                default=None,
-                                                represent=s3_auth_group_represent)
 
 # Person Entity owning the record
 s3_meta_owned_by_entity = S3ReusableField("owned_by_entity", "integer",
@@ -127,7 +120,6 @@ s3_meta_owned_by_entity = S3ReusableField("owned_by_entity", "integer",
 def s3_ownerstamp():
     return (s3_meta_owned_by_user(),
             s3_meta_owned_by_group(),
-            s3_meta_owned_by_organisation(),
             s3_meta_owned_by_entity())
 
 # Make available for S3Models
@@ -158,7 +150,6 @@ def s3_meta_fields():
               s3_meta_modified_by(),
               s3_meta_owned_by_user(),
               s3_meta_owned_by_group(),
-              s3_meta_owned_by_organisation(),
               s3_meta_owned_by_entity())
 
     return fields
@@ -178,7 +169,6 @@ response.s3.all_meta_field_names = [field.name for field in
      s3_meta_modified_by(),
      s3_meta_owned_by_user(),
      s3_meta_owned_by_group(),
-     s3_meta_owned_by_organisation(),
      s3_meta_owned_by_entity(),
     ]]
 

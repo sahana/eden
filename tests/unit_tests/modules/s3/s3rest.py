@@ -10,6 +10,8 @@ from gluon.dal import Query
 
 # =============================================================================
 class Test_s3mgr_raises_on_nonexistent_modules(unittest.TestCase):
+    """ Legacy Test Case """
+
     def test(test):
         test.assertRaises(Exception, s3mgr.load, "something that doesn't exist")
 
@@ -236,7 +238,7 @@ class S3ResourceTests(unittest.TestCase):
 class S3ResourceFilterTests(unittest.TestCase):
 
     def setUp(self):
-        pass
+        auth.s3_impersonate("admin@example.com")
 
     def testGetQueryJoinsInnerField(self):
 
@@ -353,15 +355,13 @@ class S3ResourceFilterTests(unittest.TestCase):
         rfilter = resource.rfilter
         self.assertNotEqual(rfilter, None)
 
-        # This will fail in 1st run as there is no ANONYMOUS role yet
+        # This will fail in 1st run as there is no ADMIN role yet
         self.assertEqual(str(rfilter.mquery), "((project_project.deleted <> 'T') AND "
-                                              "((project_project.owned_by_organisation IS NULL) OR "
-                                              "(project_project.owned_by_organisation IN (3))))")
+                                              "(project_project.id > 0))")
 
         query = rfilter.get_query()
         self.assertEqual(str(query), "((((project_project.deleted <> 'T') AND "
-                                     "((project_project.owned_by_organisation IS NULL) OR "
-                                     "(project_project.owned_by_organisation IN (3)))) AND "
+                                     "(project_project.id > 0)) AND "
                                      "((org_organisation.name = 'test') AND "
                                      "(project_task.description = 'test'))) AND "
                                      "(project_project.organisation_id = org_organisation.id))")
@@ -395,13 +395,11 @@ class S3ResourceFilterTests(unittest.TestCase):
         component.build_query()
         rfilter = component.rfilter
         query = rfilter.get_query()
-        # This will fail in 1st run as there is no ANONYMOUS role yet
+        # This will fail in 1st run as there is no ADMIN role yet
         self.assertEqual(str(query), "((((project_task.deleted <> 'T') AND "
-                                     "((project_task.owned_by_organisation IS NULL) OR "
-                                     "(project_task.owned_by_organisation IN (3)))) AND "
+                                     "(project_task.id > 0)) AND "
                                      "(((((project_project.deleted <> 'T') AND "
-                                     "((project_project.owned_by_organisation IS NULL) OR "
-                                     "(project_project.owned_by_organisation IN (3)))) AND "
+                                     "(project_project.id > 0)) AND "
                                      "(org_organisation.name = 'test')) AND "
                                      "(project_project.organisation_id = org_organisation.id)) AND "
                                      "(project_task.description = 'test'))) AND "
@@ -426,20 +424,18 @@ class S3ResourceFilterTests(unittest.TestCase):
         rfilter = component.rfilter
         query = rfilter.get_query()
 
-        # This will fail in 1st run as there is no ANONYMOUS role yet
-        self.assertEqual(str(query),"((((((pr_identity.deleted <> 'T') AND "
-                                    "((pr_identity.owned_by_organisation IS NULL) OR "
-                                    "(pr_identity.owned_by_organisation IN (3)))) AND "
-                                    "((((pr_person.deleted <> 'T') AND "
-                                    "((pr_person.owned_by_organisation IS NULL) OR "
-                                    "(pr_person.owned_by_organisation IN (3)))) AND "
-                                    "(org_organisation.name = 'test')) AND "
-                                    "(pr_identity.value = 'test'))) AND "
-                                    "((pr_identity.person_id = pr_person.id) AND "
-                                    "(pr_identity.deleted <> 'T'))) AND "
-                                    "((hrm_human_resource.person_id = pr_person.id) AND "
-                                    "(hrm_human_resource.deleted <> 'T'))) AND "
-                                    "(hrm_human_resource.organisation_id = org_organisation.id))")
+        # This will fail in 1st run as there is no ADMIN role yet
+        self.assertEqual(str(query), "((((((pr_identity.deleted <> 'T') AND "
+                                     "(pr_identity.id > 0)) AND "
+                                     "((((pr_person.deleted <> 'T') AND "
+                                     "(pr_person.id > 0)) AND "
+                                     "(org_organisation.name = 'test')) AND "
+                                     "(pr_identity.value = 'test'))) AND "
+                                     "((pr_identity.person_id = pr_person.id) AND "
+                                     "(pr_identity.deleted <> 'T'))) AND "
+                                     "((hrm_human_resource.person_id = pr_person.id) AND "
+                                     "(hrm_human_resource.deleted <> 'T'))) AND "
+                                     "(hrm_human_resource.organisation_id = org_organisation.id))")
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
@@ -454,16 +450,14 @@ class S3ResourceFilterTests(unittest.TestCase):
         rfilter = component.rfilter
         query = rfilter.get_query()
 
-        # This will fail in 1st run as there is no ANONYMOUS role yet
-        self.assertEqual(str(query),"((((project_activity.deleted <> 'T') AND "
-                                    "((project_activity.owned_by_organisation IS NULL) OR "
-                                    "(project_activity.owned_by_organisation IN (3)))) AND "
-                                    "(((project_project.deleted <> 'T') AND "
-                                    "((project_project.owned_by_organisation IS NULL) OR "
-                                    "(project_project.owned_by_organisation IN (3)))) AND "
-                                    "(project_project.id = 1))) AND "
-                                    "((project_activity.project_id = project_project.id) AND "
-                                    "(project_activity.deleted <> 'T')))")
+        # This will fail in 1st run as there is no ADMIN role yet
+        self.assertEqual(str(query), "((((project_activity.deleted <> 'T') AND "
+                                     "(project_activity.id > 0)) AND "
+                                     "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "(project_project.id = 1))) AND "
+                                     "((project_activity.project_id = project_project.id) AND "
+                                     "(project_activity.deleted <> 'T')))")
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
@@ -479,11 +473,9 @@ class S3ResourceFilterTests(unittest.TestCase):
         component = resource.components["competency"]
         query = component.get_query()
         self.assertEqual(str(query), "((((hrm_competency.deleted <> 'T') AND "
-                                     "((hrm_competency.owned_by_organisation IS NULL) OR "
-                                     "(hrm_competency.owned_by_organisation IN (3)))) AND "
+                                     "(hrm_competency.id > 0)) AND "
                                      "((((pr_person.deleted <> 'T') AND "
-                                     "((pr_person.owned_by_organisation IS NULL) OR "
-                                     "(pr_person.owned_by_organisation IN (3)))) AND "
+                                     "(pr_person.id > 0)) AND "
                                      "(pr_person.id = 1)) AND "
                                      "(hrm_competency.id = 1))) AND "
                                      "((hrm_competency.person_id = pr_person.id) AND "
@@ -524,8 +516,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         query = rfilter.get_query()
         self.assertEqual(str(query), "(((((project_project.deleted <> 'T') AND "
-                                     "((project_project.owned_by_organisation IS NULL) OR "
-                                     "(project_project.owned_by_organisation IN (3)))) AND "
+                                     "(project_project.id > 0)) AND "
                                      "(LOWER(org_organisation.name) LIKE '%test%')) AND "
                                      "(project_project.organisation_id = org_organisation.id)) AND "
                                      "(NOT (LOWER(project_task.description) LIKE '%test%')))")
@@ -541,6 +532,9 @@ class S3ResourceFilterTests(unittest.TestCase):
         self.assertEqual(parse_value("NONE,1"), [None, "1"])
         self.assertEqual(parse_value('"NONE",1'), ["NONE", "1"])
         self.assertEqual(parse_value('"NONE,1"'), "NONE,1")
+
+    def tearDown(self):
+        auth.s3_impersonate(None)
 
 # =============================================================================
 def run_suite(*test_classes):

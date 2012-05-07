@@ -84,7 +84,6 @@ class S3XML(S3Codec):
     IGNORE_FIELDS = [
             "id",
             "deleted_fk",
-            "owned_by_organisation",
             "owned_by_entity"]
 
     FIELDS_TO_ATTRIBUTES = [

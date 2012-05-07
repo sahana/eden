@@ -185,8 +185,8 @@ def req():
             type = r.record.type
             if type == 1: # Items
                 # Limit site_id to facilities the user has permissions for
-                auth.permission.permitted_facilities(table=r.table,
-                                                     error_msg=T("You do not have permission for any facility to make a commitment."))
+                auth.permitted_facilities(table=r.table,
+                                          error_msg=T("You do not have permission for any facility to make a commitment."))
                 if r.interactive:
                     # Redirect to the Items tab after creation
                     s3mgr.configure(table,
@@ -199,8 +199,8 @@ def req():
                 # Check if user is affiliated to an Organisation
                 if is_affiliated():
                     # Limit organisation_id to organisations the user has permissions for
-                    auth.permission.permitted_organisations(table=r.table,
-                                                            redirect_on_error=False)
+                    auth.permitted_organisations(table=r.table,
+                                                 redirect_on_error=False)
                     table.organisation_id.readable = True
                     table.organisation_id.writable = True
                 else:
@@ -222,8 +222,8 @@ def req():
         else:
             # Limit site_id to facilities the user has permissions for
             # @ToDo: Non-Item requests shouldn't be bound to a Facility?
-            auth.permission.permitted_facilities(table=r.table,
-                                                 error_msg=T("You do not have permission for any facility to make a request."))
+            auth.permitted_facilities(table=r.table,
+                                      error_msg=T("You do not have permission for any facility to make a request."))
 
         return True
     response.s3.prep = prep
@@ -461,14 +461,13 @@ def commit():
             if r.record:
                 if r.record.type == 1: # Items
                     # Limit site_id to facilities the user has permissions for
-                    auth.permission.permitted_facilities(table=table,
-                                                         error_msg=T("You do not have permission for any facility to make a commitment.") )
+                    auth.permitted_facilities(table=table,
+                                              error_msg=T("You do not have permission for any facility to make a commitment.") )
 
                 else:
                     # Non-Item commits can have an Organisation
                     # Limit organisation_id to organisations the user has permissions for
-                    auth.permission.permitted_organisations(table=r.table,
-                                                            redirect_on_error=False)
+                    auth.permitted_organisations(table=r.table, redirect_on_error=False)
                     table.organisation_id.readable = True
                     table.organisation_id.writable = True
                     # Non-Item commits shouldn't have a From Inventory
@@ -738,7 +737,7 @@ def send_req():
                                to_site_id = r_req.site_id,
                                status = s3db.inv_ship_status["IN_PROCESS"],
                               )
-    
+
     # Get the items for this request that have not been fulfilled (in transit)
     query = (ritable.req_id == req_id) & \
             (ritable.quantity_transit < ritable.quantity) & \

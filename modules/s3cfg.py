@@ -166,7 +166,7 @@ class S3Config(Storage):
         return self.auth.get("registration_volunteer", False)
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", False)
-        
+
     # @ToDo: Deprecate
     def get_aaa_default_uacl(self):
         return self.aaa.get("default_uacl", self.aaa.acl.READ)
@@ -582,6 +582,7 @@ class S3Config(Storage):
         if not self.modules:
             # Provide a minimal list of core modules
             _modules = [
+                "default",      # Default
                 "admin",        # Admin
                 "gis",          # GIS
                 "pr",           # Person Registry
