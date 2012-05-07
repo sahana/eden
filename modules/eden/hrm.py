@@ -48,6 +48,7 @@ class S3HRModel(S3Model):
 
     names = ["hrm_human_resource",
              "hrm_human_resource_id",
+             "hrm_autocomplete_search",
              "hrm_human_resource_search",
              "hrm_type_opts"
             ]
@@ -194,7 +195,7 @@ class S3HRModel(S3Model):
                                             sortby = ["type", "status"],
                                             requires = hrm_human_resource_requires,
                                             represent = hrm_human_resource_represent,
-                                            widget = S3PersonAutocompleteWidget(),
+                                            widget = S3PersonAutocompleteWidget("hrm"),
                                             comment = T("Enter some characters to bring up a list of possible matches"),
                                             #widget = S3SearchAutocompleteWidget(tablename="hrm_human_resource",
                                             #                                    represent=lambda id: \
@@ -204,6 +205,7 @@ class S3HRModel(S3Model):
                                             label = T("Human Resource"),
                                             ondelete = "RESTRICT")
 
+        hrm_autocomplete_search = S3HRSearch()
         human_resource_search = S3Search(
             simple=(self.human_resource_search_simple_widget("simple")),
             advanced=(self.human_resource_search_simple_widget("advanced"),
@@ -305,6 +307,7 @@ class S3HRModel(S3Model):
         return Storage(
                     hrm_human_resource_id = human_resource_id,
                     hrm_human_resource_search = human_resource_search,
+                    hrm_autocomplete_search = hrm_autocomplete_search,
                     hrm_type_opts = hrm_type_opts
                 )
 

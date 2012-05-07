@@ -605,10 +605,14 @@ class S3PersonAutocompleteWidget(FormWidget):
         Renders a pr_person SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses 3 name fields
 
+        To make this widget use the HR table, set the controller to "hrm"
+
         @ToDo: Migrate to template (initial attempt failed)
     """
 
     def __init__(self,
+                 controller = "pr",
+                 function = "person_search",
                  post_process = "",
                  delay = 450,   # milliseconds
                  min_length=2): # Increase this for large deployments
@@ -616,6 +620,8 @@ class S3PersonAutocompleteWidget(FormWidget):
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
+        self.c = controller
+        self.f = function
 
     def __call__(self, field, value, **attributes):
 
@@ -633,7 +639,8 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        url = URL(c="pr", f="person_search",
+        url = URL(c=self.c,
+                  f=self.f,
                   args="search.json",
                   vars={"filter":"~"})
 
@@ -754,7 +761,6 @@ $('#%s').blur(function() {
                         INPUT(**attr),
                         requires = field.requires
                       )
-
 
 # -----------------------------------------------------------------------------
 class S3SiteAutocompleteWidget(FormWidget):
@@ -2449,41 +2455,6 @@ class S3AddPersonWidget(FormWidget):
                        ac_row,
                        table,
                        divider)
-
-# -----------------------------------------------------------------------------
-class S3HumanResourceAutocompleteWidget(FormWidget):
-    def __init__(self,
-                 post_process = "",
-                 delay = 450,   # milliseconds
-                 min_length=2): # Increase this for large deployments
-
-        self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
-
-    def __call__(self, field, value, attributes):
-        return S3GenericAutocompleteTemplate(
-            post_process = self.post_process,
-            delay = self.delay,
-            min_length = self.min_length,
-            attributes = attributes,
-            field = field,
-            value = value,
-            name_getter = "function (item) { return item.represent; }",
-            source = (
-                "function (request, response) {"
-                    "$.ajax({"
-                        "url: S3.Ap.concat('/hrm/human_resource/search.acjson?"
-                            "simple_form=True"
-                            "&human_resource_search_simple_simple='+request.term+'"
-                            "&get_fieldname=person_id"
-                        "'),"
-                        "dataType: 'json',"
-                        "success: response"
-                    "});"
-                "}"
-            )
-        )
 
 # -----------------------------------------------------------------------------
 class S3AutocompleteOrAddWidget(FormWidget):

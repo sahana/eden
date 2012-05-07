@@ -84,8 +84,7 @@ class S3RequestModel(S3Model):
         settings = current.deployment_settings
 
         org_site_represent = self.org_site_represent
-#        human_resource_id = self.hrm_human_resource_id
-        human_resource_id = self.pr_person_id
+        human_resource_id = self.hrm_human_resource_id
         event_id = self.event_event_id
 
         messages = current.messages
@@ -554,15 +553,15 @@ $(function() {
                 req_row = db(table.req_ref == value).select(table.id,
                                                             limitby=(0, 1)
                                                             ).first()
-                return A(value,
-                         _href = URL(f = "req",
-                                     args = [req_row.id, "form"]
-                                    ),
-                        )
-            else:
-                return B(value)
-        else:
-            return current.messages.NONE
+                if req_row:
+                    return A(value,
+                             _href = URL(f = "req",
+                                         args = [req_row.id, "form"]
+                                        ),
+                            )
+        if value:
+            return B(value)
+        return current.messages.NONE
 
     # ---------------------------------------------------------------------
     @staticmethod
