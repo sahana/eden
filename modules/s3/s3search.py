@@ -87,9 +87,7 @@ class S3SearchWidget(object):
             @keyword label: a label for the search widget
             @keyword comment: a comment for the search widget
         """
-
         self.other = None
-
         self.field = field
 
         if not self.field:
@@ -401,15 +399,17 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         errors = dict()
 
         T = current.T
+        tablename = self.search_field.keys()[0]
+        search_field = self.search_field[tablename][0]
 
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
         if select_min and select_max:
-            vmin = value.get("min_%s" % self.field, None)
-            vmax = value.get("max_%s" % self.field, None)
+            vmin = value.get("min_%s" % search_field.name, None)
+            vmax = value.get("max_%s" % search_field.name, None)
             if vmax is not None and vmin is not None and vmin > vmax:
-                errors["max_%s" % self.field] = \
+                errors["max_%s" % search_field.name] = \
                      T("Maximum must be greater than minimum")
 
         return errors or None
@@ -422,6 +422,8 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param value: the value returned from the widget
         """
+        tablename = self.search_field.keys()[0]
+        search_field = self.search_field[tablename][0]
 
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
@@ -429,12 +431,12 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         min_query = max_query = query = None
 
         if select_min:
-            v = value.get("min_%s" % self.field, None)
+            v = value.get("min_%s" % search_field.name, None)
             if v is not None and str(v):
                 min_query = S3FieldSelector(self.field) >= v
 
         if select_max:
-            v = value.get("max_%s" % self.field, None)
+            v = value.get("max_%s" % search_field.name, None)
             if v is not None and str(v):
                 max_query = S3FieldSelector(self.field) <= v
 
@@ -844,9 +846,9 @@ class S3SearchLocationWidget(S3SearchWidget):
         """
 
         #gis = current.gis
-        table = resource.table
-        s3db = current.s3db
-        locations = s3db.gis_location
+        # table = resource.table
+        # s3db = current.s3db
+        # locations = s3db.gis_location
 
         # Get master query and search fields
         #self.build_master_query(resource)
