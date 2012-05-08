@@ -39,6 +39,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonPresence",
            "S3PersonDescription",
            # Representation Methods
+           "pr_get_entities",
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
@@ -2567,6 +2568,149 @@ class S3PersonDescription(S3Model):
 # Representation Methods
 # =============================================================================
 #
+def pr_get_entities(pe_ids=None,
+                    types=None,
+                    represent=True,
+                    group=False,
+                    as_list=False,
+                    show_label=False,
+                    default_label="[No ID Tag]"):
+    """
+        Get representations of person entities. Depending on the group
+        and as_list parameters, this function returns a list or Storage
+        of entity representations (either pe_ids or string representations).
+
+        @param pe_ids: a list of pe_ids (filters the results)
+        @param types: a list of instance types (filters the results)
+        @param represent: provide string representations
+        @param group: group results by instance type (returns a Storage
+                      with the instance types as keys)
+        @param as_list: return flat lists instead of dicts (ignored if
+                        represent=False because that would return a flat
+                        list of pe_ids anyway)
+        @param show_label: show the PE label
+        @param default_label: the default label
+    """
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    DEFAULT = T("None (no such record)")
+
+    pe_table = s3db.pr_pentity
+
+    if pe_ids is None:
+        pe_ids = []
+    elif not isinstance(pe_ids, (list, tuple)):
+        pe_ids = [pe_ids]
+    pe_ids = [long(pe_id) for pe_id in set(pe_ids)]
+    query = (pe_table.deleted != True)
+    if types:
+        if not isinstance(types, (list, tuple)):
+            types = [types]
+        query &= (pe_table.instance_type.belongs(types))
+    if pe_ids:
+        query &= (pe_table.pe_id.belongs(pe_ids))
+    rows = db(query).select(pe_table.pe_id,
+                            pe_table.pe_label,
+                            pe_table.instance_type)
+
+    entities = Storage()
+    labels = Storage()
+
+    for row in rows:
+        pe_id = row.pe_id
+        instance_type = row.instance_type
+        if instance_type not in entities:
+            entities[instance_type] = []
+        entities[instance_type].append(pe_id)
+        labels[pe_id] = row.pe_label
+
+    type_repr = pe_table.instance_type.represent
+
+    repr_grp = Storage()
+    repr_flt = Storage()
+    repr_all = []
+
+    for instance_type in entities:
+        if types and instance_type not in types:
+            continue
+        repr_all.extend(entities[instance_type])
+        if not represent:
+            repr_grp[instance_type] = entities[instance_type]
+            continue
+        table = s3db.table(instance_type)
+        if not table:
+            continue
+
+        instance_type_nice = type_repr(instance_type)
+
+        ids = entities[instance_type]
+        query = (table.deleted != True) & \
+                (table.pe_id.belongs(ids))
+
+        if instance_type not in repr_grp:
+            repr_grp[instance_type] = Storage()
+        repr_g = repr_grp[instance_type]
+        repr_f = repr_flt
+
+        if instance_type == "pr_person":
+            rows = db(query).select(table.pe_id,
+                                    table.first_name,
+                                    table.middle_name,
+                                    table.last_name)
+
+            for row in rows:
+                pe_id = row.pe_id
+                if show_label:
+                    label = labels.get(pe_id, None) or default_label
+                    pe_str = "%s %s (%s)" % (s3_fullname(row),
+                                             label,
+                                             instance_type_nice)
+                else:
+                    pe_str = "%s (%s)" % (s3_fullname(row),
+                                          instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+        elif "name" in table.fields:
+            rows = db(query).select(table.pe_id,
+                                    table.name)
+            for row in rows:
+                pe_id = row.pe_id
+                if show_label and "pe_label" in table.fields:
+                    label = labels.get(pe_id, None) or default_label
+                    pe_str = "%s %s (%s)" % (row.name,
+                                             label,
+                                             instance_type_nice)
+                else:
+                    pe_str = "%s (%s)" % (row.name,
+                                          instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+        else:
+            for pe_id in pe_ids:
+                label = labels.get(pe_id, None) or default_label
+                pe_str = "[%s] (%s)" % (label,
+                                        instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+    if represent:
+        if group and as_list:
+            return Storage([(t, repr_grp[t].values()) for t in repr_grp])
+        elif group:
+            return repr_grp
+        elif as_list:
+            return repr_flt.values()
+        else:
+            return repr_flt
+    else:
+        if group:
+            return repr_grp
+        else:
+            return repr_all
+
+# =============================================================================
 def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
