@@ -60,6 +60,7 @@ __all__ = ["S3PersonEntity",
            "pr_remove_from_role",
            # Hierarchy Lookup
            "pr_realm",
+           "pr_realm_users",
            "pr_get_role_paths",
            "pr_get_role_branches",
            "pr_get_path",
@@ -3921,6 +3922,54 @@ def pr_realm(entity):
     rows = db(query).select(rtable.pe_id)
     realm = [row.pe_id for row in rows]
     return realm
+
+# =============================================================================
+def pr_realm_users(realm, roles=None, role_types=OU):
+    """
+        Get all users in a realm
+
+        @param realm: the realm (list of pe_ids)
+        @param roles: list of pr_role names to limit the lookup to
+        @param role_types: list of pr_role role types to limit the lookup to
+
+        @note: role_types overrides roles
+    """
+
+    db = current.db
+    s3db = current.s3db
+    auth = current.auth
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+    ltable = s3db.pr_person_user
+    utable = auth.settings.table_user
+
+    if not isinstance(realm, (list, tuple)):
+        realm = [realm]
+    query = (rtable.deleted != True) & \
+            (rtable.pe_id.belongs(realm))
+    if roles is not None:
+        if not isinstance(roles, (list, tuple)):
+            roles = [roles]
+        query &= (rtable.role.belongs(roles))
+    elif role_types is not None:
+        if not isinstance(role_types, (list, tuple)):
+            role_types = [role_types]
+        query &= (rtable.role_type.belongs(role_types))
+    query &= (atable.deleted != True) & \
+             (atable.role_id == rtable.id) & \
+             (atable.pe_id == ltable.pe_id) & \
+             (ltable.deleted != True) & \
+             (ltable.user_id == utable.id) & \
+             (utable.deleted != True)
+    rows = db(query).select(utable.id, utable.email)
+    if rows:
+        if auth.settings.username_field:
+            return Storage([(row.id, row.username) for row in rows])
+        else:
+            return Storage([(row.id, row.email) for row in rows])
+    else:
+        return Storage()
 
 # =============================================================================
 def pr_ancestors(entities):
