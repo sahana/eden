@@ -145,7 +145,8 @@ class AuthS3(Auth):
                               AUTHENTICATED = "AUTHENTICATED",
                               ANONYMOUS = "ANONYMOUS",
                               EDITOR = "EDITOR",
-                              MAP_ADMIN = "MAP_ADMIN")
+                              MAP_ADMIN = "MAP_ADMIN",
+                              ORG_ADMIN = "ORG_ADMIN")
 
     def __init__(self):
 
