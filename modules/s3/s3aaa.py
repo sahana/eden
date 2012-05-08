@@ -145,7 +145,8 @@ class AuthS3(Auth):
                               AUTHENTICATED = "AUTHENTICATED",
                               ANONYMOUS = "ANONYMOUS",
                               EDITOR = "EDITOR",
-                              MAP_ADMIN = "MAP_ADMIN")
+                              MAP_ADMIN = "MAP_ADMIN",
+                              ORG_ADMIN = "ORG_ADMIN")
 
     def __init__(self):
 
@@ -2000,12 +2001,15 @@ class AuthS3(Auth):
         assigned_groups = [g.group_id for g in assigned]
 
         # Add missing memberships
-        system_roles = map(str, self.get_system_roles().values())
+        sr = self.get_system_roles()
+        unrestrictable = [str(sr.ADMIN),
+                          str(sr.ANONYMOUS),
+                          str(sr.AUTHENTICATED)]
         for group_id in group_ids:
             if group_id not in assigned_groups:
                 membership = {"user_id": user_id,
                               "group_id": group_id}
-                if for_pe is not None and str(group_id) not in system_roles:
+                if for_pe is not None and str(group_id) not in unrestrictable:
                     membership["pe_id"] = for_pe
                 membership_id = mtable.insert(**membership)
 
@@ -5086,7 +5090,8 @@ class S3RoleManager(S3Method):
                                   A(CANCEL,
                                     _href=cancel, _class="action-lnk")))))
 
-                if form.accepts(request.post_vars, session):
+                if form.accepts(request.post_vars, session,
+                                formname="user_%s_roles" % user_id):
                     assign = form.vars.roles
                     for role in roles:
                         query = (mtable.deleted != True) & \
