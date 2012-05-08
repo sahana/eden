@@ -5090,7 +5090,8 @@ class S3RoleManager(S3Method):
                                   A(CANCEL,
                                     _href=cancel, _class="action-lnk")))))
 
-                if form.accepts(request.post_vars, session):
+                if form.accepts(request.post_vars, session,
+                                formname="user_%s_roles" % user_id):
                     assign = form.vars.roles
                     for role in roles:
                         query = (mtable.deleted != True) & \
