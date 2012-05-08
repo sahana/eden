@@ -206,13 +206,13 @@ if len(pop_list) > 0:
                 uid=sysroles.ORG_ADMIN,
                 system=True, protected=True)
 
-    # Enable shortcuts (needed by default.py)
-    system_roles = auth.get_system_roles()
-    ADMIN = system_roles.ADMIN
-    AUTHENTICATED = system_roles.AUTHENTICATED
-    ANONYMOUS = system_roles.ANONYMOUS
-    EDITOR = system_roles.EDITOR
-    MAP_ADMIN = system_roles.MAP_ADMIN
-    ORG_ADMIN = system_roles.ORG_ADMIN
+# Enable shortcuts (needed by default.py)
+system_roles = auth.get_system_roles()
+ADMIN = system_roles.ADMIN
+AUTHENTICATED = system_roles.AUTHENTICATED
+ANONYMOUS = system_roles.ANONYMOUS
+EDITOR = system_roles.EDITOR
+MAP_ADMIN = system_roles.MAP_ADMIN
+ORG_ADMIN = system_roles.ORG_ADMIN
 
 # END =========================================================================
