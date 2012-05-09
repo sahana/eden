@@ -77,12 +77,13 @@ def project():
     # Pre-process
     def prep(r):
         btable = s3db.project_beneficiary
-        btable.activity_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                    "project_activity.id",
+        btable.community_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                    "project_community.id",
                                                     "%(name)s",
                                                     filterby="project_id",
                                                     filter_opts=[r.id],
                                                     sort=True))
+
         if r.interactive:
             if r.component is not None:
                 if r.component_name == "organisation":
@@ -100,7 +101,7 @@ def project():
                             del project_organisation_roles[host_role]
                             otable.role.requires = \
                                 IS_NULL_OR(IS_IN_SET(project_organisation_roles))
-                elif r.component_name == "activity":
+                elif r.component_name in ("activity", "community"):
                     # Default the Location Selector list of countries to those found in the project
                     countries = r.record.countries_id
                     if countries:
@@ -120,6 +121,33 @@ def project():
                         statuses = response.s3.project_task_active_statuses
                         filter = (r.component.table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
+                elif r.component_name == "human_resource":
+                    from eden.hrm import hrm_human_resource_represent
+
+                    # We can pass the human resource type filter in the URL
+                    group = r.vars.get('group', None)
+
+                    # These values are defined in hrm_type_opts
+                    if group:
+                        if group == "staff":
+                            group = 1
+                        elif group == "volunteer":
+                            group = 2
+
+                        # Use the group to filter the component list
+                        filter_by_type = (db.hrm_human_resource.type == group)
+                        r.resource.add_component_filter("human_resource", filter_by_type)
+
+                        # Use the group to filter the form widget for adding a new record
+                        r.component.table.human_resource_id.requires = IS_ONE_OF(
+                            db,
+                            "hrm_human_resource.id",
+                            hrm_human_resource_represent,
+                            filterby="type",
+                            filter_opts=(group,),
+                            orderby="hrm_human_resource.person_id",
+                            sort=True
+                        )
 
             elif not r.id and r.function == "index":
                 r.method = "search"
@@ -315,7 +343,7 @@ def activity():
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact")]
     if drr:
-        tabs.append((T("Beneficiaries"), "beneficiary"))
+        #tabs.append((T("Beneficiaries"), "beneficiary"))
         tabs.append((T("Documents"), "document"))
     else:
         tabs.append((T("Tasks"), "task"))
@@ -324,6 +352,65 @@ def activity():
     rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(rheader=rheader,
                               csv_template="activity")
+
+
+def community():
+    """
+    RESTful CRUD controller to display project community information
+    """
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component is not None:
+                if r.component_name == "document":
+                    doc_table = s3db.doc_document
+                    doc_table.organisation_id.readable = False
+                    doc_table.person_id.readable = False
+                    doc_table.location_id.readable = False
+                    doc_table.organisation_id.writable = False
+                    doc_table.person_id.writable = False
+                    doc_table.location_id.writable = False
+
+        return True
+    response.s3.prep = prep
+
+    # Pre-process
+    def postp(r, output):
+        if r.representation == "plain":
+            def represent(record, field):
+                if field.represent:
+                    return field.represent(record[field])
+                else:
+                    return record[field]
+            # Add VirtualFields to Map Popup
+            # Can't inject into SQLFORM, so need to simply replace
+            item = TABLE()
+            table.id.readable = False
+            table.location_id.readable = False
+            fields = [table[f] for f in table.fields if table[f].readable]
+            record = r.record
+            for field in fields:
+                item.append(TR(TD(field.label), TD(represent(record, field))))
+            hierarchy = gis.get_location_hierarchy()
+            item.append(TR(TD(hierarchy["L4"]), TD(record["name"])))
+            for field in ["L3", "L2", "L1"]:
+                item.append(TR(TD(hierarchy[field]), TD(record[field])))
+            output["item"] = item
+        return output
+    response.s3.postp = postp
+
+    tabs = [(T("Details"), None),
+            (T("Contact Persons"), "contact"),
+            (T("Beneficiaries"), "beneficiary"),
+            ]
+
+    rheader = lambda r: s3db.project_rheader(r, tabs)
+    return s3_rest_controller(interactive_report=True,
+                              rheader=rheader,
+                              csv_template="community")
 
 # -----------------------------------------------------------------------------
 def activity_contact():

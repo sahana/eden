@@ -1957,11 +1957,16 @@ class AuthS3(Auth):
 
             @param user_id: the record ID of the user account
             @param group_id: the record ID(s)/UID(s) of the group
-            @param for_pe: the PE-ID to restrict the group membership
-                           to (will be ignored for system roles)
+            @param for_pe: the person entity (pe_id) to restrict the group
+                           membership to, possible values:
 
-            @note: strings or lists of strings are assumed to be
-                   group UIDs
+                           - None: use default realm (entities the user is
+                             affiliated with)
+                           - 0: site-wide realm (no entity-restriction)
+                           - X: restrict to records owned by entity X
+
+            @note: strings are assumed to be group UIDs
+            @note: for_pe will be ignored for ADMIN, ANONYMOUS and AUTHENTICATED
         """
 
         db = current.db
@@ -2017,13 +2022,15 @@ class AuthS3(Auth):
 
             @param user_id: the record ID of the user account
             @param group_id: the record ID(s)/UID(s) of the role
-            @param for_pe: only remove the group membership that is
-                           restricted to this PE (will be ignored for
-                           system roles), if an empty list is specified,
-                           all memberships in this group will be removed
+            @param for_pe: only remove the group membership for this
+                           realm, possible values:
 
-            @note: strings or lists of strings are assumed to be
-                   role UIDs
+                           - None: only remove for the default realm
+                           - 0: only remove for the site-wide realm
+                           - X: only remove for entity X
+                           - []: remove for any realms
+
+            @note: strings are assumed to be role UIDs
         """
 
         if not group_id:
@@ -2084,9 +2091,15 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def s3_has_role(self, role, for_pe=None):
         """
-            Check whether the currently logged-in user has a role
+            Check whether the currently logged-in user has a certain role
+            (auth_group membership).
 
             @param role: the record ID or UID of the role
+            @param for_pe: check for this particular realm, possible values:
+
+                           None - for any entity
+                           0 - site-wide
+                           X - for entity X
         """
 
         # Allow override
@@ -2135,11 +2148,8 @@ class AuthS3(Auth):
         # Check the realm
         if role in realms:
             realm = realms[role]
-            if realm is None or \
-               for_pe is not None and not for_pe or \
-               for_pe in realm:
+            if realm is None or for_pe is None or for_pe in realm:
                 return True
-
         return False
 
     # -------------------------------------------------------------------------

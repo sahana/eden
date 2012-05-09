@@ -1294,6 +1294,7 @@ class S3OptionsMenu:
                                        cols="name",
                                        fact="time_actual",
                                        aggregate="sum")),
+                        M("Community Report", f="community", m="report"),
                         M("Project Time Report", f="time", m="report",
                           vars=Storage(rows="project",
                                        cols="person_id",
