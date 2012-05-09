@@ -121,11 +121,11 @@ class S3Exporter(object):
         attributes = dict()
 
         if orderby is not None:
-            attributes.update(orderby=orderby)
+            attributes["orderby"] = orderby
 
         limitby = resource.limitby(start=start, limit=limit)
         if limitby is not None:
-            attributes.update(limitby=limitby)
+            attributes["limitby"] = limitby
 
         # Get the rows and return as json
         rows = resource.select(*fields, **attributes)

@@ -39,6 +39,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonPresence",
            "S3PersonDescription",
            # Representation Methods
+           "pr_get_entities",
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
@@ -59,6 +60,7 @@ __all__ = ["S3PersonEntity",
            "pr_remove_from_role",
            # Hierarchy Lookup
            "pr_realm",
+           "pr_realm_users",
            "pr_get_role_paths",
            "pr_get_role_branches",
            "pr_get_path",
@@ -69,6 +71,8 @@ __all__ = ["S3PersonEntity",
            # Internal Path Tools
            "pr_rebuild_path",
            "pr_role_rebuild_path"]
+
+import re
 
 import gluon.contrib.simplejson as json
 
@@ -451,7 +455,7 @@ class S3PersonEntity(S3Model):
                                       limitby=(0, 1)).first()
         else:
             return
-        if record:
+        if record and record.deleted_fk:
             data = json.loads(record.deleted_fk)
             pe_id = data.get("pe_id", None)
             if pe_id:
@@ -664,22 +668,6 @@ class S3PersonModel(S3Model):
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
                                    ),
-                             # Field("picture", "upload",
-                                   # autodelete=True,
-                                   # label = T("Picture"),
-                                   # requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                                   # error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
-                                   # represent = lambda image: image and \
-                                                        # DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                           # args=image),
-                                                                  # _height=60,
-                                                                  # _alt=T("View Picture")),
-                                                                  # _href=URL(c="default", f="download",
-                                                                            # args=image))) or
-                                                            # T("No Picture"),
-                                   # comment = DIV(_class="tooltip",
-                                                 # _title="%s|%s" % (T("Picture"),
-                                                                   # T("Upload an image file here.")))),
                              Field("opt_in",
                                    "string", # list of mailing lists which link to teams
                                    default=False,
@@ -1336,7 +1324,7 @@ class S3PersonAddressModel(S3Model):
             1:T("Current Home Address"),
             2:T("Permanent Home Address"),
             3:T("Office Address"),
-            #3:T("Holiday Address"),
+            #4:T("Holiday Address"),
             9:T("Other Address")
         }
 
@@ -2567,6 +2555,149 @@ class S3PersonDescription(S3Model):
 # Representation Methods
 # =============================================================================
 #
+def pr_get_entities(pe_ids=None,
+                    types=None,
+                    represent=True,
+                    group=False,
+                    as_list=False,
+                    show_label=False,
+                    default_label="[No ID Tag]"):
+    """
+        Get representations of person entities. Depending on the group
+        and as_list parameters, this function returns a list or Storage
+        of entity representations (either pe_ids or string representations).
+
+        @param pe_ids: a list of pe_ids (filters the results)
+        @param types: a list of instance types (filters the results)
+        @param represent: provide string representations
+        @param group: group results by instance type (returns a Storage
+                      with the instance types as keys)
+        @param as_list: return flat lists instead of dicts (ignored if
+                        represent=False because that would return a flat
+                        list of pe_ids anyway)
+        @param show_label: show the PE label
+        @param default_label: the default label
+    """
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    DEFAULT = T("None (no such record)")
+
+    pe_table = s3db.pr_pentity
+
+    if pe_ids is None:
+        pe_ids = []
+    elif not isinstance(pe_ids, (list, tuple)):
+        pe_ids = [pe_ids]
+    pe_ids = [long(pe_id) for pe_id in set(pe_ids)]
+    query = (pe_table.deleted != True)
+    if types:
+        if not isinstance(types, (list, tuple)):
+            types = [types]
+        query &= (pe_table.instance_type.belongs(types))
+    if pe_ids:
+        query &= (pe_table.pe_id.belongs(pe_ids))
+    rows = db(query).select(pe_table.pe_id,
+                            pe_table.pe_label,
+                            pe_table.instance_type)
+
+    entities = Storage()
+    labels = Storage()
+
+    for row in rows:
+        pe_id = row.pe_id
+        instance_type = row.instance_type
+        if instance_type not in entities:
+            entities[instance_type] = []
+        entities[instance_type].append(pe_id)
+        labels[pe_id] = row.pe_label
+
+    type_repr = pe_table.instance_type.represent
+
+    repr_grp = Storage()
+    repr_flt = Storage()
+    repr_all = []
+
+    for instance_type in entities:
+        if types and instance_type not in types:
+            continue
+        repr_all.extend(entities[instance_type])
+        if not represent:
+            repr_grp[instance_type] = entities[instance_type]
+            continue
+        table = s3db.table(instance_type)
+        if not table:
+            continue
+
+        instance_type_nice = type_repr(instance_type)
+
+        ids = entities[instance_type]
+        query = (table.deleted != True) & \
+                (table.pe_id.belongs(ids))
+
+        if instance_type not in repr_grp:
+            repr_grp[instance_type] = Storage()
+        repr_g = repr_grp[instance_type]
+        repr_f = repr_flt
+
+        if instance_type == "pr_person":
+            rows = db(query).select(table.pe_id,
+                                    table.first_name,
+                                    table.middle_name,
+                                    table.last_name)
+
+            for row in rows:
+                pe_id = row.pe_id
+                if show_label:
+                    label = labels.get(pe_id, None) or default_label
+                    pe_str = "%s %s (%s)" % (s3_fullname(row),
+                                             label,
+                                             instance_type_nice)
+                else:
+                    pe_str = "%s (%s)" % (s3_fullname(row),
+                                          instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+        elif "name" in table.fields:
+            rows = db(query).select(table.pe_id,
+                                    table.name)
+            for row in rows:
+                pe_id = row.pe_id
+                if show_label and "pe_label" in table.fields:
+                    label = labels.get(pe_id, None) or default_label
+                    pe_str = "%s %s (%s)" % (row.name,
+                                             label,
+                                             instance_type_nice)
+                else:
+                    pe_str = "%s (%s)" % (row.name,
+                                          instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+        else:
+            for pe_id in pe_ids:
+                label = labels.get(pe_id, None) or default_label
+                pe_str = "[%s] (%s)" % (label,
+                                        instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+    if represent:
+        if group and as_list:
+            return Storage([(t, repr_grp[t].values()) for t in repr_grp])
+        elif group:
+            return repr_grp
+        elif as_list:
+            return repr_flt.values()
+        else:
+            return repr_flt
+    else:
+        if group:
+            return repr_grp
+        else:
+            return repr_all
+
+# =============================================================================
 def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
@@ -2763,7 +2894,6 @@ def pr_contacts(r, **attr):
             Emergency Contacts
 
         @ToDo: Fix Map in Address' LocationSelector
-        @ToDo: Allow Address Create's LocationSelector to work in Debug mode
     """
 
     from itertools import groupby
@@ -2784,7 +2914,9 @@ def pr_contacts(r, **attr):
                                  atable.type,
                                  atable.building_name,
                                  atable.address,
+                                 atable.L3,
                                  atable.postcode,
+                                 atable.L0,
                                  orderby=atable.type)
 
     address_groups = {}
@@ -2793,6 +2925,10 @@ def pr_contacts(r, **attr):
 
     address_wrapper = DIV(H2(T("Addresses")),
                           DIV(A(T("Add"), _class="addBtn", _id="address-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="address-add_throbber",
+                                  _class="throbber hidden"),
                               _class="margin"))
 
     items = address_groups.items()
@@ -2800,17 +2936,17 @@ def pr_contacts(r, **attr):
     for address_type, details in items:
         address_wrapper.append(H3(opts[address_type]))
         for detail in details:
-            building_name = detail.building_name or ""
-            if building_name:
-                building_name = "%s, " % building_name
-            address = detail.address or ""
-            if address:
-                address = "%s, " % address
-            postcode = detail.postcode or ""
+            text = ",".join((detail.building_name or "",
+                             detail.address or "",
+                             detail.L3 or "",
+                             detail.postcode or "",
+                             detail.L0 or "",
+                            ))
+            text = re.sub(",+", ",", text)
+            if text[0] == ",":
+                text = text[1:]
             address_wrapper.append(P(
-                SPAN("%s%s%s" % (building_name,
-                                 address,
-                                 postcode)),
+                SPAN(text),
                 A(T("Edit"), _class="editBtn fright"),
                 _id="address-%s" % detail.id,
                 _class="address",
@@ -2830,10 +2966,29 @@ def pr_contacts(r, **attr):
 
     contacts_wrapper = DIV(H2(T("Contacts")),
                            DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="contact-add_throbber",
+                                  _class="throbber hidden"),
                                _class="margin"))
 
 
     items = contact_groups.items()
+    def mysort(key):
+        """ Sort Contact Types by Priority"""
+        keys = {
+                "SMS": 1,
+                "EMAIL": 2,
+                "WORK_PHONE": 3,
+                "SKYPE": 4,
+                "RADIO": 5,
+                "TWITTER": 6,
+                "FACEBOOK": 7,
+                "FAX": 8,
+                "OTHER": 9
+            }
+        return keys[key[0]]
+    items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
     for contact_type, details in items:
         contacts_wrapper.append(H3(opts[contact_type]))
@@ -2856,6 +3011,10 @@ def pr_contacts(r, **attr):
 
     emergency_wrapper = DIV(H2(T("Emergency Contacts")),
                             DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="emergency-add_throbber",
+                                  _class="throbber hidden"),
                                 _class="margin"))
 
     for contact in emergency:
@@ -2881,8 +3040,13 @@ def pr_contacts(r, **attr):
     # Add the javascript
     response = current.response
     s3 = response.s3
-    s3.scripts.append(URL(c="static", f="scripts",
-                          args=["S3", "s3.contacts.js"]))
+    if current.session.s3.debug:
+        s3.scripts.append(URL(c="static", f="scripts",
+                              args=["S3", "s3.contacts.js"]))
+    else:
+        s3.scripts.append(URL(c="static", f="scripts",
+                              args=["S3", "s3.contacts.min.js"]))
+
     s3.js_global.append("personId = %s;" % person.id);
 
     # Custom View
@@ -3777,6 +3941,54 @@ def pr_realm(entity):
     rows = db(query).select(rtable.pe_id)
     realm = [row.pe_id for row in rows]
     return realm
+
+# =============================================================================
+def pr_realm_users(realm, roles=None, role_types=OU):
+    """
+        Get all users in a realm
+
+        @param realm: the realm (list of pe_ids)
+        @param roles: list of pr_role names to limit the lookup to
+        @param role_types: list of pr_role role types to limit the lookup to
+
+        @note: role_types overrides roles
+    """
+
+    db = current.db
+    s3db = current.s3db
+    auth = current.auth
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+    ltable = s3db.pr_person_user
+    utable = auth.settings.table_user
+
+    if not isinstance(realm, (list, tuple)):
+        realm = [realm]
+    query = (rtable.deleted != True) & \
+            (rtable.pe_id.belongs(realm))
+    if roles is not None:
+        if not isinstance(roles, (list, tuple)):
+            roles = [roles]
+        query &= (rtable.role.belongs(roles))
+    elif role_types is not None:
+        if not isinstance(role_types, (list, tuple)):
+            role_types = [role_types]
+        query &= (rtable.role_type.belongs(role_types))
+    query &= (atable.deleted != True) & \
+             (atable.role_id == rtable.id) & \
+             (atable.pe_id == ltable.pe_id) & \
+             (ltable.deleted != True) & \
+             (ltable.user_id == utable.id) & \
+             (utable.deleted != True)
+    rows = db(query).select(utable.id, utable.email)
+    if rows:
+        if auth.settings.username_field:
+            return Storage([(row.id, row.username) for row in rows])
+        else:
+            return Storage([(row.id, row.email) for row in rows])
+    else:
+        return Storage()
 
 # =============================================================================
 def pr_ancestors(entities):

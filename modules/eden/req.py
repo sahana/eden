@@ -84,8 +84,7 @@ class S3RequestModel(S3Model):
         settings = current.deployment_settings
 
         org_site_represent = self.org_site_represent
-#        human_resource_id = self.hrm_human_resource_id
-        human_resource_id = self.pr_person_id
+        human_resource_id = self.hrm_human_resource_id
         event_id = self.event_event_id
 
         messages = current.messages
@@ -153,9 +152,6 @@ class S3RequestModel(S3Model):
                                         represent = lambda opt: \
                                             req_type_opts.get(opt, UNKNOWN_OPT),
                                         label = T("Request Type")),
-                                  Field("request_number",
-                                        unique = True,
-                                        label = T("Request Number")),
                                   req_ref(),
                                   Field("date", # DO NOT CHANGE THIS
                                         "datetime",
@@ -307,8 +303,8 @@ class S3RequestModel(S3Model):
             table.type.default = k
 
         if not settings.get_req_use_req_number():
-            table.request_number.readable = False
-            table.request_number.writable = False
+            table.req_ref.readable = False
+            table.req_ref.writable = False
 
         # CRUD strings
         ADD_REQUEST = T("Make Request")
@@ -349,7 +345,7 @@ class S3RequestModel(S3Model):
                        ]
 
         if settings.get_req_use_req_number():
-            list_fields.append("request_number")
+            list_fields.append("req_ref")
         list_fields.append("priority")
         list_fields.append("commit_status")
         list_fields.append("transit_status")
@@ -557,15 +553,15 @@ $(function() {
                 req_row = db(table.req_ref == value).select(table.id,
                                                             limitby=(0, 1)
                                                             ).first()
-                return A(value,
-                         _href = URL(f = "req",
-                                     args = [req_row.id, "form"]
-                                    ),
-                        )
-            else:
-                return B(value)
-        else:
-            return current.messages.NONE
+                if req_row:
+                    return A(value,
+                             _href = URL(f = "req",
+                                         args = [req_row.id, "form"]
+                                        ),
+                            )
+        if value:
+            return B(value)
+        return current.messages.NONE
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -580,7 +576,11 @@ $(function() {
         table = s3db.req_req
 
         record = table[r.id]
-        req_ref = record.req_ref
+
+        if settings.get_req_use_req_number():
+            filename = record.req_ref
+        else:
+            filename = None
         list_fields = ["item_id",
                        "item_pack_id",
                        "quantity",
@@ -593,7 +593,7 @@ $(function() {
         return exporter(r,
                         method = "list",
                         pdf_title = "Request Form",
-                        pdf_filename = req_ref,
+                        pdf_filename = filename,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
                         pdf_componentname = "req_req_item",
@@ -790,7 +790,7 @@ $(function() {
 
         # If the req_ref is None then set it up
         id = form.vars.id
-        if not rrtable[id].req_ref:
+        if settings.get_req_use_req_number() and not rrtable[id].req_ref:
             code = s3db.inv_get_shipping_code("REQ",
                                               rrtable[id].site_id,
                                               s3db.req_req.req_ref,
@@ -859,12 +859,12 @@ $(function() {
             return
         if job.tablename == "req_req":
             table = job.table
-            if "request_number" in job.data:
-                request_number = job.data.request_number
+            if "req_ref" in job.data:
+                request_number = job.data.req_ref
             else:
                 return
 
-            query = (table.request_number == request_number)
+            query = (table.req_ref == request_number)
             _duplicate = db(query).select(table.id,
                                           limitby=(0, 1)).first()
             if _duplicate:
@@ -1863,7 +1863,7 @@ def req_skill_onaccept(form):
         # Add a Task to which the People can be assigned
 
         # Get the request record
-        record = db(query).select(rtable.request_number,
+        record = db(query).select(rtable.req_ref,
                                   rtable.purpose,
                                   rtable.priority,
                                   rtable.requester_id,
@@ -1884,7 +1884,7 @@ def req_skill_onaccept(form):
             organisation = None
 
         table = s3db.project_task
-        task = table.insert(name=record.request_number,
+        task = table.insert(name=record.req_ref,
                             description=record.purpose,
                             priority=record.priority,
                             location_id=location,
@@ -1992,11 +1992,15 @@ def req_rheader(r, check_page = False):
                 site_id = record.site_id
                 org_id = s3db.org_site[site_id].organisation_id
                 logo = s3db.org_organisation_logo(org_id)
-                rData = TABLE(
-                               TR(TD(logo, _colspan=2),
+                if settings.get_req_use_req_number():
+                    logoTR = TR(TD(logo, _colspan=2),
                                   TH("%s: " % table.req_ref.label),
                                   TD(table.req_ref.represent(record.req_ref))
-                                  ),
+                                )
+                else:
+                    logoTR = TR(TD(logo, _colspan=2))
+                rData = TABLE(
+                               logoTR,
                                TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),

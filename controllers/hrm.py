@@ -90,6 +90,7 @@ def index():
 def human_resource():
     """
         HR Controller
+        - combined (unused, except for Imports)
     """
 
     tablename = "hrm_human_resource"
@@ -238,6 +239,210 @@ def human_resource():
     response.s3.postp = postp
 
     output = s3_rest_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def staff():
+    """
+        Staff Controller
+    """
+
+    tablename = "hrm_human_resource"
+    table = s3db[tablename]
+
+    _type = table.type
+    _type.default = 1
+    response.s3.filter = (_type == 1)
+    _type.readable = False
+    _type.writable = False
+    table.site_id.writable = True
+    table.site_id.readable = True
+    list_fields = ["id",
+                   "person_id",
+                   "job_title",
+                   "organisation_id",
+                   "site_id",
+                   "site_contact",
+                   "end_date",
+                   "status",
+                  ]
+    s3mgr.configure(tablename,
+                    list_fields = list_fields)
+    s3.crud_strings[tablename].update(
+        title_create = T("Add Staff Member"),
+        title_list = T("Staff"),
+        title_search = T("Search Staff"),
+        title_upload = T("Import Staff"),
+    )
+    if "expiring" in request.get_vars:
+        response.s3.filter = response.s3.filter & \
+                             (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
+        s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
+        # Remove the big Add button
+        s3mgr.configure(tablename,
+                        insertable=False)
+    # Remove Type filter from the Search widget
+    human_resource_search = s3mgr.model.get_config(tablename,
+                                                   "search_method")
+    human_resource_search._S3Search__advanced.pop(1)
+    s3mgr.configure(tablename,
+                    search_method = human_resource_search)
+
+    def prep(r):
+        if r.interactive:
+            # Assume staff only between 16-81
+            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
+
+            table = r.table
+            table.site_id.comment = DIV(DIV(_class="tooltip",
+                                            _title="%s|%s|%s" % (T("Facility"),
+                                                                 T("The site where this position is based."),
+                                                                 T("Enter some characters to bring up a list of possible matches."))))
+            if r.method != "read":
+                # Don't want to see in Create forms
+                # inc list_create (list_fields over-rides)
+                field = table.status
+                field.writable = False
+                field.readable = False
+
+            if r.method == "create" and r.component is None:
+                field = table.type
+                field.readable = False
+                field.writable = False
+            elif r.id:
+                # Redirect to person controller
+                vars = {
+                    "human_resource.id": r.id,
+                    "group": "staff"
+                }
+                redirect(URL(f="person",
+                             vars=vars))
+        return True
+    response.s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                s3_action_buttons(r, deletable=False)
+                if "msg" in deployment_settings.modules:
+                    # @ToDo: Remove this now that we have it in Events?
+                    response.s3.actions.append({
+                        "url": URL(f="compose",
+                                   vars = {"hrm_id": "[id]"}),
+                        "_class": "action-btn",
+                        "label": str(T("Send Message"))})
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            output = hrm_map_popup(r)
+        return output
+    response.s3.postp = postp
+
+    output = s3_rest_controller("hrm", "human_resource")
+    return output
+
+# -----------------------------------------------------------------------------
+def volunteer():
+    """
+        Volunteer Controller
+    """
+
+    tablename = "hrm_human_resource"
+    table = s3db[tablename]
+
+    _type = table.type
+    _type.default = 2
+    response.s3.filter = (_type == 2)
+    _type.readable = False
+    _type.writable = False
+    _location = table.location_id
+    _location.writable = True
+    _location.readable = True
+    _location.label = T("Home Address")
+    table.site_contact.writable = False
+    table.site_contact.readable = False
+    list_fields = ["id",
+                   "person_id",
+                   "job_title",
+                   "organisation_id",
+                   "location_id",
+                   "status",
+                  ]
+    s3mgr.configure(tablename,
+                    list_fields = list_fields)
+    table.job_title.label = T("Volunteer Role")
+    s3.crud_strings[tablename].update(
+        title_create = T("Add Volunteer"),
+        title_display = T("Volunteer Information"),
+        title_list = T("Volunteers"),
+        title_search = T("Search Volunteers"),
+        title_upload = T("Import Volunteers"),
+        subtitle_create = T("Add New Volunteer"),
+        subtitle_list = T("Volunteers"),
+        label_create_button = T("Add Volunteer"),
+        msg_record_created = T("Volunteer added"),
+    )
+    # Remove inappropriate filters from the Search widget
+    human_resource_search = s3mgr.model.get_config(tablename,
+                                                   "search_method")
+    # Facility
+    human_resource_search._S3Search__advanced.pop(6)
+    # Type
+    human_resource_search._S3Search__advanced.pop(1)
+    s3mgr.configure(tablename,
+                    search_method = human_resource_search)
+
+    def prep(r):
+        if r.interactive:
+            # Assume staff only between 12-81
+            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+
+            table = r.table
+            table.site_id.comment = DIV(DIV(_class="tooltip",
+                                            _title="%s|%s|%s" % (T("Facility"),
+                                                                 T("The site where this position is based."),
+                                                                 T("Enter some characters to bring up a list of possible matches."))))
+            if r.method != "read":
+                # Don't want to see in Create forms
+                # inc list_create (list_fields over-rides)
+                field = table.status
+                field.writable = False
+                field.readable = False
+
+            if r.method == "create" and r.component is None:
+                field = table.type
+                field.readable = False
+                field.writable = False
+            elif r.id:
+                # Redirect to person controller
+                vars = {
+                    "human_resource.id": r.id,
+                    "group": "volunteer"
+                }
+                redirect(URL(f="person",
+                             vars=vars))
+        return True
+    response.s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                s3_action_buttons(r, deletable=False)
+                if "msg" in deployment_settings.modules:
+                    # @ToDo: Remove this now that we have it in Events?
+                    response.s3.actions.append({
+                        "url": URL(f="compose",
+                                   vars = {"hrm_id": "[id]"}),
+                        "_class": "action-btn",
+                        "label": str(T("Send Message"))})
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            output = hrm_map_popup(r)
+        return output
+    response.s3.postp = postp
+
+    output = s3_rest_controller("hrm", "human_resource")
     return output
 
 # -----------------------------------------------------------------------------
@@ -665,6 +870,20 @@ def person():
                                 orgname=orgname,
                                 replace_option=T("Remove existing data before import"))
     return output
+
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        Person REST controller
+        - limited to just search.json for use in Autocompletes
+        - allows differential access permissions
+    """
+    s3mgr.configure("hrm_human_resource",
+                    search_method = s3db.hrm_autocomplete_search,
+                   )
+    response.s3.prep = lambda r: r.representation == "json" and \
+                                 r.method == "search"
+    return s3_rest_controller(module, "human_resource")
 
 # =============================================================================
 # Teams

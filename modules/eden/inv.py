@@ -668,6 +668,10 @@ class S3TrackingModel(S3Model):
             msg_record_deleted = T("Sent Shipment canceled"),
             msg_list_empty = T("No Sent Shipments"))
 
+        if not settings.get_req_use_req_number():
+            table.req_ref.readable = False
+            table.req_ref.writable = False
+
         # Reusable Field
         send_id = S3ReusableField( "send_id", db.inv_send, sortby="date",
                                    requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -813,6 +817,10 @@ class S3TrackingModel(S3Model):
             recv_id_label = T("Order")
         else:
             recv_id_label = T("Receive Shipment")
+
+        if not settings.get_req_use_req_number():
+            table.req_ref.readable = False
+            table.req_ref.writable = False
 
         # Reusable Field
         recv_id = S3ReusableField("recv_id", db.inv_recv, sortby="date",
@@ -1478,7 +1486,7 @@ $(document).ready(function() {
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
-        if tracktable[id].status == 3:
+        if tracktable[id].status == TRACK_STATUS_UNLOADING:
             recv_rec = rtable[record.recv_id]
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \

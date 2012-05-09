@@ -1,4 +1,6 @@
 $('#address-add').click(function () {
+    // Show a Spinner
+    $('#address-add_throbber').removeClass('hidden').show();
     var button = $(this);
     // Remove any existing form
     $('#popup').remove()
@@ -11,9 +13,13 @@ $('#address-add').click(function () {
         button.after('<div></div>');
         // Load the Form into the iframe
         button.next().html(data);
+        // Activate the Location Selector
+        s3_gis_locationselector_activate();
         // Modify the submission URL
         var url2 = S3.Ap.concat('/pr/address/create?person=' + personId);
         $('#popup').find('form').attr('action', url2);
+        // Hide the spinner
+        $('#address-add_throbber').hide();
     });
 });
 
@@ -21,6 +27,8 @@ $('.address').each(function () {
     var address = $(this);
     var id = address.attr('id').match(/\d+/);
     address.find('a.editBtn').click(function () {
+        // Show a Spinner
+        $('#address-add_throbber').removeClass('hidden').show();
         // Download the form
         var url = S3.Ap.concat('/pr/address/' + id + '.iframe/update')
         $.get(url, function(data) {
@@ -32,14 +40,20 @@ $('.address').each(function () {
             address.after('<div></div>');
             // Load the Form into the iframe
             address.next().html(data);
+            // Activate the Location Selector
+            s3_gis_locationselector_activate();
             // Modify the submission URL
             var url2 = S3.Ap.concat('/pr/address/' + id + '/update?person=' + personId);
             $('#popup').find('form').attr('action', url2);
+            // Hide the spinner
+            $('#address-add_throbber').hide();
         });
     });
 });
 
 $('#contact-add').click(function () {
+    // Show a Spinner
+    $('#contact-add_throbber').removeClass('hidden').show();
     var button = $(this);
     // Remove any existing form
     $('#popup').remove()
@@ -52,9 +66,13 @@ $('#contact-add').click(function () {
         button.after('<div></div>');
         // Load the Form into the iframe
         button.next().html(data);
+        // Activate the Location Selector
+        s3_gis_locationselector_activate();
         // Modify the submission URL
         var url2 = S3.Ap.concat('/pr/contact/create?person=' + personId);
         $('#popup').find('form').attr('action', url2);
+        // Hide the spinner
+        $('#contact-add_throbber').hide();
     });
 });
 
@@ -99,6 +117,8 @@ $('.contact').each(function () {
 });
 
 $('#emergency-add').click(function () {
+    // Show a Spinner
+    $('#emergency-add_throbber').removeClass('hidden').show();
     var button = $(this);
     // Remove any existing form
     $('#popup').remove()
@@ -114,6 +134,8 @@ $('#emergency-add').click(function () {
         // Modify the submission URL
         var url2 = S3.Ap.concat('/pr/contact_emergency/create?person=' + personId);
         $('#popup').find('form').attr('action', url2);
+        // Hide the spinner
+        $('#emergency-add_throbber').hide();
     });
 });
 
@@ -121,6 +143,8 @@ $('.emergency').each(function () {
     var emergency = $(this);
     var id = emergency.attr('id').match(/\d+/);
     emergency.find('a.editBtn').click(function () {
+        // Show a Spinner
+        $('#emergency-add_throbber').removeClass('hidden').show();
         // Download the form
         var url = S3.Ap.concat('/pr/contact_emergency/' + id + '.iframe/update')
         $.get(url, function(data) {
@@ -135,6 +159,8 @@ $('.emergency').each(function () {
             // Modify the submission URL
             var url2 = S3.Ap.concat('/pr/contact_emergency/' + id + '/update?person=' + personId);
             $('#popup').find('form').attr('action', url2);
+            // Hide the spinner
+            $('#emergency-add_throbber').hide();
         });
     });
 });

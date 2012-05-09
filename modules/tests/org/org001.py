@@ -12,6 +12,13 @@ from tests import *
 
 def org001():
 
+    org_table = current.s3db.org_organisation
+    name = "Romanian Food Assistance Association (Test)"
+    query = ((org_table.name == name) & (org_table.deleted == "F"))
+    org_id = current.db(query).select(org_table.id,limitby=(0, 1)).first()
+    if org_id:
+        print "org001 Not run"
+        return False
     config = current.test_config
     browser = config.browser
     driver = browser
@@ -19,7 +26,7 @@ def org001():
     driver.find_element_by_link_text("New").click()
     driver.find_element_by_id("org_organisation_name").click()
     driver.find_element_by_id("org_organisation_name").clear()
-    driver.find_element_by_id("org_organisation_name").send_keys("Romanian Food Assistance Association (Test)")
+    driver.find_element_by_id("org_organisation_name").send_keys(name)
     driver.find_element_by_id("org_organisation_acronym").clear()
     driver.find_element_by_id("org_organisation_acronym").send_keys("RFAAT")
     driver.find_element_by_id("org_organisation_type").send_keys("Institution")
