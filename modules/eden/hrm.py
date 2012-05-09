@@ -195,15 +195,11 @@ class S3HRModel(S3Model):
                                             sortby = ["type", "status"],
                                             requires = hrm_human_resource_requires,
                                             represent = hrm_human_resource_represent,
-                                            widget = S3PersonAutocompleteWidget("hrm"),
-                                            comment = T("Enter some characters to bring up a list of possible matches"),
-                                            #widget = S3SearchAutocompleteWidget(tablename="hrm_human_resource",
-                                            #                                    represent=lambda id: \
-                                            #                                        hrm_human_resource_represent(id,
-                                            #                                                                     none_value = None),
-                                            #                                    ),
                                             label = T("Human Resource"),
-                                            ondelete = "RESTRICT")
+                                            comment = T("Enter some characters to bring up a list of possible matches"),
+                                            widget = S3PersonAutocompleteWidget("hrm"),
+                                            ondelete = "RESTRICT"
+                                            )
 
         hrm_autocomplete_search = S3HRSearch()
         human_resource_search = S3Search(
