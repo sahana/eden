@@ -811,45 +811,34 @@ class S3OptionsMenu:
         show_staff = lambda i: settings.get_hrm_show_staff()
         show_vols = lambda i: settings.get_hrm_show_vols()
 
-        staff = dict(group="staff")
-        volunteers = dict(group="volunteer")
-
         return M(c="hrm")(
-                    M("Staff", f="human_resource",
-                      check=[manager_mode, show_staff], vars=staff)(
-                        M("New Staff Member", m="create",
-                          vars=staff),
-                        M("List All",
-                          vars=staff),
-                        M("Search", m="search",
-                          vars=staff),
+                    M("Staff", f="staff",
+                      check=[manager_mode, show_staff])(
+                        M("New Staff Member", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
                         M("Report", m="report",
-                          vars=Storage(group="staff",
-                                       rows="course",
+                          vars=Storage(rows="course",
                                        cols="L1",
                                        fact="person_id",
                                        aggregate="count")),
                         M("Report Expiring Contracts",
-                          vars=dict(group="staff", expiring=1)),
+                          vars=dict(expiring=1)),
                         M("Import", f="person", m="import",
-                          vars=staff, p="create"),
+                          vars={"group":"staff"}, p="create"),
                     ),
-                    M("Volunteers", f="human_resource",
-                      check=[manager_mode, show_vols], vars=volunteers)(
-                        M("New Volunteer", m="create",
-                          vars=volunteers),
-                        M("List All",
-                          vars=volunteers),
-                        M("Search", m="search",
-                          vars=volunteers),
+                    M("Volunteers", f="volunteer",
+                      check=[manager_mode, show_vols])(
+                        M("New Volunteer", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
                         M("Report", m="report",
-                          vars=Storage(group="volunteer",
-                                       rows="course",
+                          vars=Storage(rows="course",
                                        cols="L1",
                                        fact="person_id",
                                        aggregate="count")),
                         M("Import", f="person", m="import",
-                          vars=volunteers, p="create"),
+                          vars={"group":"volunteer"}, p="create"),
                     ),
                     M("Teams", f="group",
                       check=manager_mode)(

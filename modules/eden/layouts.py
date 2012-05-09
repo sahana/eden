@@ -330,11 +330,18 @@ def homepage(module=None, *match, **attr):
     layout = S3MainMenuLayout
     c = [module] + list(match)
 
-    if module is None:
-        module = "default"
-    if module in all_modules:
-        m = all_modules[module]
-        module = m.name_nice
-    return layout(module, c=c, f="index", **attr)
+    if "name" in attr:
+        name = attr["name"]
+        attr.pop("name")
+    else:
+        if module is None:
+            module = "default"
+        if module in all_modules:
+            m = all_modules[module]
+            name = m.name_nice
+        else:
+            name = module
+
+    return layout(name, c=c, f="index", **attr)
 
 # END =========================================================================
