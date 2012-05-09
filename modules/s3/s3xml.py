@@ -760,10 +760,10 @@ class S3XML(S3Codec):
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
                                                       limitby=(0, 1)).first()
-
-            if LatLon:
                 lat = LatLon[LATFIELD]
                 lon = LatLon[LONFIELD]
+
+            if LatLon:
                 if lat is None or lon is None:
                     # Cannot display on Map
                     continue

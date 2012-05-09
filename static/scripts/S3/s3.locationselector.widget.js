@@ -6,7 +6,11 @@
 
 // Main jQuery function
 $(function() {
+    // Moved to sub-function to be able to fire on inserted form
+    s3_gis_locationselector_jQuery_onReady();
+});
 
+function s3_gis_locationselector_jQuery_onReady() {
     if ( typeof(S3.gis.location_id) == 'undefined' ) {
         // This page doesn't include the Location Selector Widget
     } else {
@@ -121,10 +125,15 @@ $(function() {
             }
         });
     }
-});
+}
 
 // Main Ext function
 Ext.onReady(function(){
+    // Moved to sub-function to be able to fire on inserted form
+    s3_gis_locationselector_Ext_onReady();
+});
+
+function s3_gis_locationselector_Ext_onReady() {
     // Map Popup
     var mapButton = Ext.get('gis_location_map-btn');
     if (mapButton) {
@@ -140,7 +149,13 @@ Ext.onReady(function(){
             }
         });
     }
-});
+}
+
+function s3_gis_locationselector_activate() {
+    // Called after form is inserted into page to activate
+    s3_gis_locationselector_jQuery_onReady();
+    s3_gis_locationselector_Ext_onReady();
+}
 
 function s3_gis_autocompletes() {
     s3_gis_autocomplete(1);

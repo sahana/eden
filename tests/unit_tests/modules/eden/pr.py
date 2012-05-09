@@ -16,6 +16,58 @@ class PRTests(unittest.TestCase):
     def setUp(self):
         pass
 
+    def testGetRealmUsers(self):
+
+        try:
+
+            auth.s3_impersonate("admin@example.com")
+            admin_id = auth.user.id
+            admin_pe_id = auth.s3_user_pe_id(admin_id)
+            auth.s3_impersonate("normaluser@example.com")
+            user_id = auth.user.id
+            user_pe_id = auth.s3_user_pe_id(user_id)
+            auth.s3_impersonate(None)
+
+            organisations = s3db.pr_get_entities(types="org_organisation", as_list=True, represent=False)
+            org = organisations[0]
+
+            users = s3db.pr_realm_users(org)
+            self.assertEqual(users, Storage())
+
+            s3db.pr_add_affiliation(org, admin_pe_id, role="Volunteer", role_type=9)
+            s3db.pr_add_affiliation(org, user_pe_id, role="Staff")
+
+            users = s3db.pr_realm_users(org)
+            self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users(org, roles="Volunteer")
+            self.assertFalse(user_id in users)
+            self.assertTrue(admin_id in users)
+
+            users = s3db.pr_realm_users(org, roles="Staff")
+            self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users(org, roles=["Staff", "Volunteer"])
+            self.assertTrue(user_id in users)
+            self.assertTrue(admin_id in users)
+
+            users = s3db.pr_realm_users(org, role_types=1)
+            self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users(org, role_types=9)
+            self.assertFalse(user_id in users)
+            self.assertTrue(admin_id in users)
+
+            users = s3db.pr_realm_users(org, role_types=None)
+            self.assertTrue(user_id in users)
+            self.assertTrue(admin_id in users)
+
+        finally:
+            db.rollback()
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """

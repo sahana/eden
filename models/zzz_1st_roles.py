@@ -191,6 +191,7 @@ if len(pop_list) > 0:
                 "Editor - can access & make changes to any unprotected data",
                 uid=sysroles.EDITOR,
                 system=True, protected=True)
+
     # MapAdmin
     create_role("MapAdmin",
                 "MapAdmin - allowed access to edit the MapService Catalogue",
@@ -199,13 +200,19 @@ if len(pop_list) > 0:
                 uid=sysroles.MAP_ADMIN,
                 system=True, protected=True)
 
-    # Enable shortcuts (needed by default.py)
-    auth.get_system_roles()
-    system_roles = session.s3.system_roles
-    ADMIN = system_roles.ADMIN
-    AUTHENTICATED = system_roles.AUTHENTICATED
-    ANONYMOUS = system_roles.ANONYMOUS
-    EDITOR = system_roles.EDITOR
-    MAP_ADMIN = system_roles.MAP_ADMIN
+    # OrgAdmin (policies 6, 7 and 8)
+    create_role("OrgAdmin",
+                "OrgAdmin - allowed to manage user roles for entity realms",
+                uid=sysroles.ORG_ADMIN,
+                system=True, protected=True)
+
+# Enable shortcuts (needed by default.py)
+system_roles = auth.get_system_roles()
+ADMIN = system_roles.ADMIN
+AUTHENTICATED = system_roles.AUTHENTICATED
+ANONYMOUS = system_roles.ANONYMOUS
+EDITOR = system_roles.EDITOR
+MAP_ADMIN = system_roles.MAP_ADMIN
+ORG_ADMIN = system_roles.ORG_ADMIN
 
 # END =========================================================================
