@@ -21,6 +21,21 @@ def w_autocomplete(search,
                  quiet = True,
                 ):
     """ helper function to find a search string in an autocomplete """
+    def clickAutoitem(automenu, autoitem):
+        """ helper function to click the selected menu item """
+        menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
+        menuitem.click()
+        # wait for throbber to close
+        time.sleep(1)
+        giveup = 0
+        while browser.find_element_by_id(throbber_id).is_displayed:
+            time.sleep(1)
+            giveup += 1
+            if giveup == 20:
+                return False
+        # throbber has closed and data was found, return
+        return True
+
     import time 
     config = current.test_config
     browser = config.browser
@@ -43,37 +58,37 @@ def w_autocomplete(search,
         except:
             menu = None
         while menu:
-            # for each item in the menu it will have an id starting from 0
-            autoitem = 0
-            if not quiet:
-                print "Looking for element ui-menu-%s-%s" %(automenu,automenu)
             try:
-                menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
+                # Try and get the value directly
+                menu_items = menu.text.splitlines()
+                autoitem = 0
+                for linkText in menu_items:
+                    if needle in linkText:
+                        # found the text need to click on it to get the db id
+                        return clickAutoitem(automenu, autoitem)
+                    autoitem += 1
             except:
-                menuitem = None
-            while menuitem:
-                linkText = menuitem.text
+                # for each item in the menu it will have an id starting from 0
+                autoitem = 0
                 if not quiet:
-                    print "Looking for %s found %s" %(needle, linkText)
-                if needle in linkText:
-                    # found the text need to click on it to get the db id
-                    menuitem.click()
-                    # wait for throbber to close
-                    time.sleep(1)
-                    giveup = 0
-                    while browser.find_element_by_id(throbber_id).is_displayed:
-                        time.sleep(1)
-                        giveup += 1
-                        if giveup == 20:
-                            return
-                    # throbber has closed and data was found, return
-                    return
-                autoitem += 1
+                    print "Looking for element ui-menu-%s-%s" %(automenu,autoitem)
                 try:
-                    menuitem = browser.find_element_by_id("%s-%s" % (menu,automenu))
+                    menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
                 except:
                     menuitem = None
-            # end of looping through each menu item
+                while menuitem:
+                    linkText = menuitem.text
+                    if not quiet:
+                        print "Looking for %s found %s" %(needle, linkText)
+                    if needle in linkText:
+                        # found the text need to click on it to get the db id
+                        return clickAutoitem(automenu, autoitem)
+                    autoitem += 1
+                    try:
+                        menuitem = browser.find_element_by_id("%s-%s" % (menu,automenu))
+                    except:
+                        menuitem = None
+                # end of looping through each menu item
             automenu += 1
             try:
                 menu = browser.find_element_by_id("ui-menu-%s" % automenu)

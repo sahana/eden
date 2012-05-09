@@ -21,7 +21,7 @@
          Scenario.......................scenario_scenario.name & event_event.scenario_id
          Event..........................event_event.name, & req_req.event_id
          Request Type...................req_req.type
-         Request Number.................req_req.request_number
+         Request Number.................req_req.req_ref
          Date Requested.................req_req.date
          Time Requested.................req_req.time_requested
          Priority.......................req_req.priority
@@ -253,7 +253,7 @@
                             <xsl:value-of select="$Event"/>
                         </xsl:attribute>
                     </reference>
-                    <data field="request_number"><xsl:value-of select="col[@field='Request Number']"/></data>
+                    <data field="req_ref"><xsl:value-of select="col[@field='Request Number']"/></data>
                     <data field="date"><xsl:value-of select="col[@field='Date Requested']"/></data>
                     <data field="time_requested"><xsl:value-of select="col[@field='Time Requested']"/></data>
                     <reference field="requester_id" resource="hrm_human_resource">

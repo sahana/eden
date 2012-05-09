@@ -2973,7 +2973,9 @@ class S3MapModel(S3Model):
         # WMS
         #
 
-        wms_img_formats = ["image/jpeg", "image/png", "image/bmp", "image/tiff", "image/gif", "image/svg+xml"]
+        wms_img_formats = ["image/jpeg", "image/jpeg;mode=24bit", "image/png",
+                           "image/gif", "image/bmp", "image/tiff",
+                           "image/svg+xml"]
 
         tablename = "gis_layer_wms"
         table = define_table(tablename,

@@ -666,6 +666,20 @@ def person():
                                 replace_option=T("Remove existing data before import"))
     return output
 
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        Person REST controller
+        - limited to just search.json for use in Autocompletes
+        - allows differential access permissions
+    """
+    s3mgr.configure("hrm_human_resource",
+                    search_method = s3db.hrm_autocomplete_search,
+                   )
+    response.s3.prep = lambda r: r.representation == "json" and \
+                                 r.method == "search"
+    return s3_rest_controller(module, "human_resource")
+
 # =============================================================================
 # Teams
 # =============================================================================

@@ -389,13 +389,13 @@ class S3ProjectModel(S3Model):
         else:
             next = "activity"
 
-        LEAD_ROLE = settings.project.organisation_lead_role
+        LEAD_ROLE = settings.get_project_organisation_lead_role()
 
         if drr:
             table.virtualfields.append(S3ProjectVirtualfields())
             list_fields=["id",
                          "name",
-                         (settings.project.organisation_roles[LEAD_ROLE], "organisation"),
+                         (settings.get_project_organisation_roles()[LEAD_ROLE], "organisation"),
                          "sector_id",
                          "start_date",
                          "end_date",
@@ -1019,7 +1019,7 @@ class S3ProjectModel(S3Model):
         dummy = S3ReusableField("dummy_id", "integer",
                                 readable=False,
                                 writable=False)
-                                
+
         multi_activity_id = S3ReusableField("activity_id", "list:integer",
                                             readable=False,
                                             writable=False)
@@ -1397,8 +1397,8 @@ class S3ProjectDRRModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Organisation
         #
-        project_organisation_roles = settings.project.organisation_roles
-        project_organisation_lead_role = settings.project.organisation_lead_role
+        project_organisation_roles = settings.get_project_organisation_roles()
+        project_organisation_lead_role = settings.get_project_organisation_lead_role()
 
         organisation_help = T("Add all organizations which are involved in different roles in this project")
 
@@ -3370,7 +3370,7 @@ class S3ProjectVirtualfields:
         s3db = current.s3db
         s3 = current.response.s3
         settings = current.deployment_settings
-        LEAD_ROLE = settings.project.organisation_lead_role
+        LEAD_ROLE = settings.get_project_organisation_lead_role()
 
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
@@ -3398,7 +3398,7 @@ class S3ProjectActivityVirtualfields:
         s3db = current.s3db
         s3 = current.response.s3
         settings = current.deployment_settings
-        LEAD_ROLE = settings.project.organisation_lead_role
+        LEAD_ROLE = settings.get_project_organisation_lead_role()
 
         otable = s3db.org_organisation
         ltable = s3db.project_organisation

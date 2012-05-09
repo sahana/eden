@@ -170,6 +170,19 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # Also do s3.contacts.js
+    print "Compressing s3.contacts.js"
+    inputFilename = os.path.join("..", "S3", "s3.contacts.js")
+    outputFilename = "s3.contacts.min.js"
+    input = file(inputFilename, "r").read()
+    minimized = minimize(input)
+    file(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Also do s3.report.js
     print "Compressing s3.report.js"
     inputFilename = os.path.join("..", "S3", "s3.report.js")
@@ -430,6 +443,7 @@ def main(argv):
             docss()
         else:
             dojs(parameter2, warnings=closure_warnings)
+            docss()
     print "Done."
 
 if __name__ == "__main__":
