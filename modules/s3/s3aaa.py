@@ -1836,6 +1836,8 @@ class AuthS3(Auth):
                                owner in delegations[group_id]:
                                 # Duplicate
                                 continue
+                            if partner not in pmap:
+                                continue
 
                             # Find the realm
                             if group_id not in delegations:
