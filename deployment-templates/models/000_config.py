@@ -294,9 +294,11 @@ deployment_settings.gis.display_L0 = False
 # 3: Apply Controller ACLs
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
-# 6: Apply Controller, Function, Table & Organisation ACLs
+# 6: Apply Controller, Function, Table ACLs and Entity Realm
+# 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+# 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#deployment_settings.security.policy = 6 # Organisation-ACLs
+#deployment_settings.security.policy = 7 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl
 #deployment_settings.aaa.default_uacl =  acl.READ   # User ACL
 #deployment_settings.aaa.default_oacl =  acl.CREATE | acl.READ | acl.UPDATE # Owner ACL

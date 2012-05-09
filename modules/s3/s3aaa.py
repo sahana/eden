@@ -5064,8 +5064,14 @@ class S3RoleManager(S3Method):
 
             use_realms = auth.permission.entity_realm
             unassignable = [sr.ANONYMOUS, sr.AUTHENTICATED]
+            if user_id == auth.user.id:
+                # Users cannot remove their own ADMIN permission
+                unassignable.append(sr.ADMIN)
 
             if r.representation == "html":
+
+                arrow = TD(IMG(_src="/%s/static/img/arrow-turn.png" % request.application),
+                           _style="text-align:center; vertical-align:middle; width:48px;")
 
                 # Get current memberships
                 mtable = auth.settings.table_membership
@@ -5130,8 +5136,7 @@ class S3RoleManager(S3Method):
 
                     # Remove button
                     if remove:
-                        submit_row = TR(TD(IMG(_src="/%s/static/img/arrow-turn.png" % request.application),
-                                        _style="text-align:center; vertical-align:middle;"),
+                        submit_row = TR(arrow,
                                         TD(INPUT(_id="submit_delete_button",
                                                 _type="submit",
                                                 _value=T("Remove"))))
@@ -5181,28 +5186,25 @@ class S3RoleManager(S3Method):
                 else:
                     help_txt = ""
 
-                trow = TR(TH("Role"))
+                trow = TR(TH("Role", _colspan="2"))
                 if use_realms:
                     trow.append(TH(T("For Entity")))
-                trow.append(TH())
                 thead = THEAD(trow)
 
                 # Roles selector
                 gtable = auth.settings.table_group
                 query = (gtable.deleted != True) & \
                         (~(gtable.id.belongs(unassignable)))
-                rows = db(query).select(gtable.id,
-                                        gtable.role)
-                select_grp = SELECT(OPTION("",
-                                           _value=None,
-                                           _selected="selected"),
+                rows = db(query).select(gtable.id, gtable.role)
+                select_grp = SELECT(OPTION(_value=None, _selected="selected"),
                                     _name="group_id")
-                for row in rows:
-                    if row.id in unrestrictable and \
-                       row.id in assigned:
-                        continue
-                    select_grp.append(OPTION(row.role,
-                                             _value=row.id))
+                options = [(row.role, row.id)
+                           for row in rows
+                            if row.id not in unrestrictable or \
+                               row.id not in assigned]
+                options.sort()
+                [select_grp.append(OPTION(role, _value=gid))
+                 for role, gid in options]
 
                 # Entity Selector
                 if use_realms:
@@ -5214,11 +5216,12 @@ class S3RoleManager(S3Method):
                                    _value=T("Add"))
 
                 # Assemble form
-                trow = TR(select_grp, _class="odd")
+                trow = TR(TD(select_grp, _colspan="2"), _class="odd")
+                srow = TR(arrow, TD(submit_btn))
                 if use_realms:
-                    trow.append(select_ent)
-                trow.append(submit_btn)
-                addform = FORM(DIV(TABLE(thead, TBODY(trow),
+                    trow.append(TD(select_ent))
+                    srow.append(TD())
+                addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
                                          _class="dataTable display")))
 
                 # Process Add-Form
@@ -5302,6 +5305,9 @@ class S3RoleManager(S3Method):
 
             if r.representation == "html":
 
+                arrow = TD(IMG(_src="/%s/static/img/arrow-turn.png" % request.application),
+                           _style="text-align:center; vertical-align:middle; width:48px;")
+
                 # Get current memberships
                 mtable = auth.settings.table_membership
                 utable = auth.settings.table_user
@@ -5345,19 +5351,30 @@ class S3RoleManager(S3Method):
                     # Rows
                     i = 0
                     trows = []
+                    remove = False
                     for row in rows:
                         _class = i % 2 and "even" or "odd"
                         i += 1
                         trow = TR(_class=_class)
 
+                        # User cannot remove themselves from the ADMIN role
+                        if row[utable.id] == auth.user.id and \
+                           group_id == sr.ADMIN:
+                            removable = False
+                        else:
+                            removable = True
+
                         # Row selector
-                        if assignable:
+                        if assignable and removable:
+                            remove = True
                             trow.append(TD(INPUT(_type="checkbox",
                                                  _name="d_%s" % row[mtable.id],
                                                  _class="remove_item")))
+                        else:
+                            trow.append(TD())
                         # Name
                         name = "%s %s" % (row[utable.first_name],
-                                        row[utable.last_name])
+                                          row[utable.last_name])
                         trow.append(TD(name))
 
                         # Username
@@ -5373,9 +5390,8 @@ class S3RoleManager(S3Method):
                         trows.append(trow)
 
                     # Remove button
-                    if assignable:
-                        submit_row = TR(TD(IMG(_src="/%s/static/img/arrow-turn.png" % request.application),
-                                        _style="text-align:center; vertical-align:middle;"),
+                    if assignable and remove:
+                        submit_row = TR(arrow,
                                         TD(INPUT(_id="submit_delete_button",
                                                 _type="submit",
                                                 _value=T("Remove"))),
@@ -5422,10 +5438,9 @@ class S3RoleManager(S3Method):
                     help_txt = ""
 
                 # Form header
-                trow = TR(TH(T("User")))
+                trow = TR(TH(T("User"), _colspan="2"))
                 if use_realms:
                     trow.append(TH(T("For Entity")))
-                trow.append(TH())
                 thead = THEAD(trow)
 
                 # User selector
@@ -5442,12 +5457,12 @@ class S3RoleManager(S3Method):
                                             _value=None,
                                             _selected="selected"),
                                         _name="user_id")
-                    for row in rows:
-                        name = "%s (%s %s)" % (row[username],
-                                            row.first_name,
-                                            row.last_name)
-                        select_usr.append(OPTION(name,
-                                                 _value=row.id))
+                    options = [("%s (%s %s)" % (row[username],
+                                                row.first_name,
+                                                row.last_name),
+                                row.id) for row in rows]
+                    options.sort()
+                    [select_usr.append(OPTION(name, _value=uid)) for name, uid in options]
 
                     # Entity selector
                     if use_realms:
@@ -5455,15 +5470,19 @@ class S3RoleManager(S3Method):
 
                     # Add button
                     submit_btn = INPUT(_id="submit_add_button",
-                                    _type="submit",
-                                    _value=T("Add"))
+                                       _type="submit",
+                                       _value=T("Add"))
+
+
 
                     # Assemble form
-                    trow = TR(select_usr, _class="odd")
+                    trow = TR(TD(select_usr, _colspan="2"), _class="odd")
+                    srow = TR(arrow,
+                              TD(submit_btn))
                     if use_realms:
-                        trow.append(self._entity_select())
-                    trow.append(submit_btn)
-                    addform = FORM(DIV(TABLE(thead, TBODY(trow),
+                        trow.append(TD(self._entity_select()))
+                        srow.append(TD())
+                    addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
                                              _class="dataTable display")))
                 elif not assignable:
                     addform = FORM(DIV(T("This role can not be assigned to users.")))
