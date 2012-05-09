@@ -256,7 +256,7 @@ function addGeolocateControl(toolbar) {
 
 // Supports GeoLocate control
 // Needs to be in global scope as activated by user
-var s3_gis_pulsate = function(feature) {
+function s3_gis_pulsate(feature) {
     var point = feature.geometry.getCentroid(),
         bounds = feature.geometry.getBounds(),
         radius = Math.abs((bounds.right - bounds.left) / 2),

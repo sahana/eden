@@ -355,14 +355,27 @@
         // use "parser-inserted scripts" for guaranteed execution order
         // http://hsivonen.iki.fi/script-execution/
         var scriptTags = new Array(jsFiles.length);
-        var host = OpenLayers._getScriptLocation() + "lib/";
+        if (undefined != 'S3.Ap') {
+            // Sahana loader, required when running in pr_contacts()
+            var host = S3.Ap.concat('/static/scripts/gis/openlayers/lib/');
+        } else {
+            // Revert to normal OpenLayers loader
+            var host = OpenLayers._getScriptLocation() + "lib/";
+        }
+        var src, script;
         for (var i=0, len=jsFiles.length; i<len; i++) {
-            scriptTags[i] = "<script src='" + host + jsFiles[i] +
-                                   "'></script>"; 
+            //scriptTags[i] = "<script src='" + host + jsFiles[i] + "'></script>"; 
+            src = host + jsFiles[i];
+            script = document.createElement('script');
+            script.src = src;
+            // Maintain execution order
+            script.async = false;
+            document.getElementsByTagName('head')[0].appendChild(script);
         }
-        if (scriptTags.length > 0) {
-            document.write(scriptTags.join(""));
-        }
+        // Doesn't work when inserted into the page after load or when using an async loader
+        //if (scriptTags.length > 0) {
+        //    document.write(scriptTags.join(""));
+        //}
     }
 })();
 

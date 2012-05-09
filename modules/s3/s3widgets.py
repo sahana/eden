@@ -41,6 +41,7 @@ __all__ = ["S3HiddenWidget",
            "S3OrganisationAutocompleteWidget",
            "S3PersonAutocompleteWidget",
            "S3SiteAutocompleteWidget",
+           "S3TrainingAutocompleteWidget",
            "S3LocationSelectorWidget",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
@@ -537,10 +538,7 @@ class S3LocationAutocompleteWidget(FormWidget):
             field,
             value,
             attributes,
-            transform_value = lambda value: value,
             source = repr(url),
-            name_getter = "function (item) { return item.name }",
-            id_getter = "function (item) { return item.id }"
         )
 
 # -----------------------------------------------------------------------------
@@ -549,6 +547,7 @@ class S3OrganisationAutocompleteWidget(FormWidget):
     """
         Renders an org_organisation SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses name & acronym fields
+        for the represent (S3OrganisationSearch also uses these of the actual search).
 
         @ToDo: Add an option to hide the widget completely when using the Org from the Profile
                - i.e. prevent user overrides
@@ -584,8 +583,8 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             transform_value = transform_value,
             source = repr(
                 URL(c="org", f="organisation",
-                      args="search.json",
-                      vars={"filter":"~"})
+                    args="search.json",
+                    vars={"filter":"~"})
             ),
             name_getter = """function (item) {
     var name = '';
@@ -597,7 +596,6 @@ class S3OrganisationAutocompleteWidget(FormWidget):
     }
     return name;
 }""",
-            id_getter = "function (item) { return item.id }"
         )
 
 # -----------------------------------------------------------------------------
@@ -925,6 +923,55 @@ $('#%s').blur(function() {
                       )
 
 # -----------------------------------------------------------------------------
+class S3TrainingAutocompleteWidget(FormWidget):
+
+    """
+        Renders an hrm_training_event SELECT as an INPUT field with AJAX Autocomplete.
+        Differs from the S3AutocompleteWidget in that it uses course, site and date fields
+        for the represent (S3TrainingSearch also uses the first 2 for the actual search).
+
+        @ToDo: S3Search-style Filters instead of pure AC
+    """
+
+    def __init__(self,
+                 post_process = "",
+                 delay = 450,     # milliseconds
+                 min_length = 2): # Increase this for large deployments
+
+        self.post_process = post_process
+        self.delay = delay
+        self.min_length = min_length
+
+    def __call__(self, field, value, **attributes):
+
+        return S3GenericAutocompleteTemplate(
+            self.post_process,
+            self.delay,
+            self.min_length,
+            field,
+            value,
+            attributes,
+            source = repr(
+                URL(c="hrm", f="training_event",
+                    args="search.json",
+                    vars={"filter":"~"})
+            ),
+            name_getter = """function (item) {
+    var name = '';
+    if (item.course != null) {
+        name += item.course;
+    }
+    if (item.site != '') {
+        name += ' (' + item.site + ')';
+    }
+    if (item.date != '') {
+        name += ' [' + item.date + ']';
+    }
+    return name;
+}""",
+        )
+
+# -----------------------------------------------------------------------------
 def S3GenericAutocompleteTemplate(
     post_process,
     delay,
@@ -932,10 +979,10 @@ def S3GenericAutocompleteTemplate(
     field,
     value,
     attributes,
-    transform_value,
     source,
-    name_getter,
-    id_getter,
+    name_getter = "function (item) { return item.name }",
+    id_getter = "function (item) { return item.id }",
+    transform_value = lambda value: value,
 ):
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
@@ -2422,9 +2469,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
             attributes = attributes,
             field = field,
             value = value,
-            name_getter = "function (item) { alert(item.represent); return item.represent; }",
-            id_getter = "function (item) { alert(item.id);  return item.id }",
-            transform_value = lambda value: value,
+            name_getter = "function (item) { return item.represent; }",
             source = (
                 "function (request, response) {"
                     "$.ajax({"

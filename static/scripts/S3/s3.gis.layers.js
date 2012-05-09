@@ -6,12 +6,6 @@
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  */
 
-/* Global vars */
-// Layers
-S3.gis.layers_all = new Array();
-S3.gis.format_geojson = new OpenLayers.Format.GeoJSON();
-S3.gis.dirs = new Array();
-
 // Add Layers from the Catalogue
 function addLayers() {
     var i;

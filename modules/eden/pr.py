@@ -70,6 +70,8 @@ __all__ = ["S3PersonEntity",
            "pr_rebuild_path",
            "pr_role_rebuild_path"]
 
+import re
+
 import gluon.contrib.simplejson as json
 
 from gluon import *
@@ -664,22 +666,6 @@ class S3PersonModel(S3Model):
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
                                    ),
-                             # Field("picture", "upload",
-                                   # autodelete=True,
-                                   # label = T("Picture"),
-                                   # requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                                   # error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
-                                   # represent = lambda image: image and \
-                                                        # DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                           # args=image),
-                                                                  # _height=60,
-                                                                  # _alt=T("View Picture")),
-                                                                  # _href=URL(c="default", f="download",
-                                                                            # args=image))) or
-                                                            # T("No Picture"),
-                                   # comment = DIV(_class="tooltip",
-                                                 # _title="%s|%s" % (T("Picture"),
-                                                                   # T("Upload an image file here.")))),
                              Field("opt_in",
                                    "string", # list of mailing lists which link to teams
                                    default=False,
@@ -1336,7 +1322,7 @@ class S3PersonAddressModel(S3Model):
             1:T("Current Home Address"),
             2:T("Permanent Home Address"),
             3:T("Office Address"),
-            #3:T("Holiday Address"),
+            #4:T("Holiday Address"),
             9:T("Other Address")
         }
 
@@ -2763,7 +2749,6 @@ def pr_contacts(r, **attr):
             Emergency Contacts
 
         @ToDo: Fix Map in Address' LocationSelector
-        @ToDo: Allow Address Create's LocationSelector to work in Debug mode
     """
 
     from itertools import groupby
@@ -2784,7 +2769,9 @@ def pr_contacts(r, **attr):
                                  atable.type,
                                  atable.building_name,
                                  atable.address,
+                                 atable.L3,
                                  atable.postcode,
+                                 atable.L0,
                                  orderby=atable.type)
 
     address_groups = {}
@@ -2793,6 +2780,10 @@ def pr_contacts(r, **attr):
 
     address_wrapper = DIV(H2(T("Addresses")),
                           DIV(A(T("Add"), _class="addBtn", _id="address-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="address-add_throbber",
+                                  _class="throbber hidden"),
                               _class="margin"))
 
     items = address_groups.items()
@@ -2800,17 +2791,17 @@ def pr_contacts(r, **attr):
     for address_type, details in items:
         address_wrapper.append(H3(opts[address_type]))
         for detail in details:
-            building_name = detail.building_name or ""
-            if building_name:
-                building_name = "%s, " % building_name
-            address = detail.address or ""
-            if address:
-                address = "%s, " % address
-            postcode = detail.postcode or ""
+            text = ",".join((detail.building_name or "",
+                             detail.address or "",
+                             detail.L3 or "",
+                             detail.postcode or "",
+                             detail.L0 or "",
+                            ))
+            text = re.sub(",+", ",", text)
+            if text[0] == ",":
+                text = text[1:]
             address_wrapper.append(P(
-                SPAN("%s%s%s" % (building_name,
-                                 address,
-                                 postcode)),
+                SPAN(text),
                 A(T("Edit"), _class="editBtn fright"),
                 _id="address-%s" % detail.id,
                 _class="address",
@@ -2830,10 +2821,29 @@ def pr_contacts(r, **attr):
 
     contacts_wrapper = DIV(H2(T("Contacts")),
                            DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="contact-add_throbber",
+                                  _class="throbber hidden"),
                                _class="margin"))
 
 
     items = contact_groups.items()
+    def mysort(key):
+        """ Sort Contact Types by Priority"""
+        keys = {
+                "SMS": 1,
+                "EMAIL": 2,
+                "WORK_PHONE": 3,
+                "SKYPE": 4,
+                "RADIO": 5,
+                "TWITTER": 6,
+                "FACEBOOK": 7,
+                "FAX": 8,
+                "OTHER": 9
+            }
+        return keys[key[0]]
+    items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
     for contact_type, details in items:
         contacts_wrapper.append(H3(opts[contact_type]))
@@ -2856,6 +2866,10 @@ def pr_contacts(r, **attr):
 
     emergency_wrapper = DIV(H2(T("Emergency Contacts")),
                             DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="emergency-add_throbber",
+                                  _class="throbber hidden"),
                                 _class="margin"))
 
     for contact in emergency:
@@ -2881,8 +2895,13 @@ def pr_contacts(r, **attr):
     # Add the javascript
     response = current.response
     s3 = response.s3
-    s3.scripts.append(URL(c="static", f="scripts",
-                          args=["S3", "s3.contacts.js"]))
+    if current.session.s3.debug:
+        s3.scripts.append(URL(c="static", f="scripts",
+                              args=["S3", "s3.contacts.js"]))
+    else:
+        s3.scripts.append(URL(c="static", f="scripts",
+                              args=["S3", "s3.contacts.min.js"]))
+
     s3.js_global.append("personId = %s;" % person.id);
 
     # Custom View
