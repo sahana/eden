@@ -25,11 +25,11 @@ Plase refer to the 'configuration' section of the documentation for guidance.
 """
 
 import os
-from settings import __version__, __status__
+from e_cidadania.settings import __version__, __status__
 
 # Get the current working directory so we can fill automatically other variables.
 cwd = os.path.dirname(os.path.realpath(__file__)).strip('settings')
-print "Current working dir: %s" % cwd
+#print "Current working dir: %s" % cwd
 
 # Extending the user profile a bit more
 AUTH_PROFILE_MODULE = "accounts.UserProfile"
@@ -52,10 +52,10 @@ FIRST_WEEK_DAY = 0 # '0' for Monday, '6' for Sunday
 
 # Configuration related to media and static content directories
 MEDIA_ROOT = cwd + '/uploads/'
-print MEDIA_ROOT
+#print "Media root: %s" % MEDIA_ROOT
 MEDIA_URL = '/uploads/'
 STATIC_ROOT = cwd + '/static/'
-print STATIC_ROOT
+#print "Static root: %s" % STATIC_ROOT
 STATIC_URL = '/static'
 ADMIN_MEDIA_PREFIX = STATIC_URL + '/grappelli/'
 

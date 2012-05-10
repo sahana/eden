@@ -12,13 +12,14 @@ Requirements
 
 **Dependencies**
 
-- django 1.3
+- Python 2.7 or later (not 3.x series)
+- django 1.4
 - PIL *(Python Imaging Library)*
-- python-datetime *(versión 1.5)*
+- python-datetime *(version 1.5)*
 - django-tagging
-- django-wysiwyg
-- django-grappelli (para la administración)
+- django-grappelli
 - feedparser
+- pyyaml
 
 You can install all the required dependencies automatically with this command:
 
@@ -29,19 +30,38 @@ You can install all the required dependencies automatically with this command:
 Downloading platform
 --------------------
 
+Official download page
+......................
+
 .. note:: The download section in the official website is not available yet.
 
 The are several ways to download e-cidadania. The most simple of them is going to
 the `downloads <http://ecidadania.org/downloads>`_ page in the website and download
 the latest stable or development versions, ready to use.
 
-Stable version
+GitHub packages
 ...............
+
+Other way of downloading it is through the Github downloads page, which
+autogenerates a .zip and .tar.gz files based on the repository tags. You can
+find it in:
+
+::
+    `https://github.com/cidadania/e-cidadania/downloads <https://github.com/cidadania/e-cidadania/downloads>`_
+
+From repository
+...............
+
+See :ref:`development version`
+
+Stable version
+..............
 
 You can find the latest stable version in the download page in ecidadania.org::
 
-    http://ecidadania.org/downloads
+    http://ecidadania.org/en/downloads
 
+.. _dev-version-label:
 
 Development version
 ...................
@@ -49,32 +69,38 @@ Development version
 Development version is available through various places. We use `GIT <http://git-scm.com/>`_
 as control version system, so you will have to install it in your computer.
 
-    **Gitorious:** *(official repository)*::
-
-        git clone git://gitorious.org/e-cidadania/mainline.git
-
-    **GitHub** *(secondary repository)*::
+    **GitHub** *(official repository)*::
 
         git clone git://github.com/oscarcp/e-cidadania.git
+
+    **Gitorious:** *(secondary repository)*::
+
+        git clone git://gitorious.org/e-cidadania/mainline.git
 
     **Repo.or.cz** *(official mirror)*::
 
         git clone git://repo.or.cz/e_cidadania.git
+        
 
-Installing with Apache 2
-------------------------
+Installing
+----------
 
-This section is in developent.
+There is no proper installation process in e-cidadania, you just need to copy
+the *src/* directory to the folder where you want it to be, and after that
+configure in your CGI server how to execute it.
 
-Installing with nginx + FastCGI
--------------------------------
+In the case you want to do some testing of the e-cidadania platform before getting
+into proper deployment, you just hace to copy the *src/* directory and execute
+the following commands inside it since e-cidadania comes by default configured
+in a development enviroment::
 
-.. note:: The installtion through FastCGI should work for other web servers since
-          FastCGI is the one who handles e-cidadania, and the server only serves
-          the static content.
+    ./manage.py syncdb # This will create all the database objects
+    
+    ./manage.py collectstatic # This will copy all the static content to *static/*
+    
+    ./manage.py runserver
+    
+This last command will execute the development server in the port 8000 of your
+machine, so you just need to type **localhost:8000" inside a web browser.
 
-The installation with nginx and FastCGI...
-
-This section is in development.
-
-Now you can continue to "Configuration".
+Now you can continue to :doc:`Configuration"

@@ -35,3 +35,4 @@ Agradecementos
 - CESGA (Centro de Supercomputación de Galicia)
 - Concello de Ferrol
 - NovaCaixaGalicia
+- Google

@@ -4,12 +4,14 @@ Configuration
 The e-cidadania platform is almost ready-to-use after unpacking, but you will have
 to edit the `settings.py` file if you want to install it in production.
 
-The e-cidadania setting have been splitted into three major files::
+The e-cidadania setting have been splitted into three major files:
 
-settings/
-    defaults.py
-    development.py
-    production.py
+::
+
+    settings/
+        defaults.py
+        development.py
+        production.py
     
 Defaults.py
 -----------
@@ -118,7 +120,7 @@ An example of a database on a DreamHost shared server is this::
 **EMAIL SETTINGS**
     The email settings are pretty straightforward, so we will not explain them here.
     
-    .. warnign:: Django 1.4 still doesn't have support for SSL emails, you will
+    .. warning:: Django 1.4 still doesn't have support for SSL emails, you will
                  need to use unsecure email addresses.
 
 Other settings
