@@ -1980,19 +1980,28 @@ class AuthS3(Auth):
 
         # Find the group IDs
         query = None
+        uuids = None
         if isinstance(group_id, (list, tuple)):
             if isinstance(group_id[0], str):
+                uuids = group_id
                 query = (gtable.uuid.belongs(group_id))
             else:
                 group_ids = group_id
         elif isinstance(group_id, str) and not group_id.isdigit():
+            uuids = [group_id]
             query = (gtable.uuid == group_id)
         else:
             group_ids = [group_id]
         if query is not None:
             query = (gtable.deleted != True) & query
-            groups = db(query).select(gtable.id)
+            groups = db(query).select(gtable.id, gtable.uuid)
             group_ids = [g.id for g in groups]
+            missing = [uuid for uuid in uuids
+                       if uuid not in [g.uuid for g in groups]]
+            for m in missing:
+                group_id = self.s3_create_role(m, uid=m)
+                if group_id:
+                    group_ids.append(group_id)
 
         # Find the assigned groups
         query = (mtable.deleted != True) & \

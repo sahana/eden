@@ -259,6 +259,52 @@ class S3AuthTests(unittest.TestCase):
             #auth.s3_delete_role("TESTGROUP")
             #db.rollback()
 
+    def testAssignRole(self):
+
+        UUID1 = "TESTAUTOCREATEDROLE1"
+        UUID2 = "TESTAUTOCREATEDROLE2"
+
+        uuids = [UUID1, UUID2]
+
+        table = auth.settings.table_group
+        query1 = (table.deleted != True) & (table.uuid == UUID1)
+        query2 = (table.deleted != True) & (table.uuid == UUID2)
+
+        auth.s3_impersonate("admin@example.com")
+        user_id = auth.user.id
+
+        row = db(query1).select(limitby=(0, 1)).first()
+        self.assertEqual(row, None)
+        row = db(query2).select(limitby=(0, 1)).first()
+        self.assertEqual(row, None)
+
+        auth.s3_assign_role(user_id, uuids, for_pe=0)
+        row = db(query1).select(limitby=(0, 1)).first()
+        self.assertNotEqual(row, None)
+        self.assertTrue(row.id > 0)
+        self.assertTrue(row.role == UUID1)
+        self.assertTrue(row.uuid == UUID1)
+        row = db(query2).select(limitby=(0, 1)).first()
+        self.assertNotEqual(row, None)
+        self.assertTrue(row.id > 0)
+        self.assertTrue(row.role == UUID2)
+        self.assertTrue(row.uuid == UUID2)
+
+        auth.s3_delete_role(UUID1)
+        row = db(query1).select(limitby=(0, 1)).first()
+        self.assertEqual(row, None)
+        row = db(query2).select(limitby=(0, 1)).first()
+        self.assertNotEqual(row, None)
+        self.assertTrue(row.id > 0)
+        self.assertTrue(row.role == UUID2)
+        self.assertTrue(row.uuid == UUID2)
+
+        auth.s3_delete_role(UUID2)
+        row = db(query1).select(limitby=(0, 1)).first()
+        self.assertEqual(row, None)
+        row = db(query2).select(limitby=(0, 1)).first()
+        self.assertEqual(row, None)
+
     # -------------------------------------------------------------------------
     # Record Ownership
     #
