@@ -87,7 +87,8 @@ def dt_filter(search_string=" ",
 
 # -----------------------------------------------------------------------------
 def dt_row_cnt(check = (),
-              quiet = True):
+              quiet = True,
+              utObj = None):
     """ return the rows that are being displayed and the total rows in the dataTable """
     config = current.test_config
     browser = config.browser
@@ -107,14 +108,22 @@ def dt_row_cnt(check = (),
         if len(check ) == 3:
             expected = "Showing %d to %d of %d entries" % check
             actual = "Showing %d to %d of %d entries" % (start, end, length)
-            assert (start, end, length) == check, "Expected result of '%s' doesn't equal '%s'" % (expected, actual)
+            msg = "Expected result of '%s' doesn't equal '%s'" % (expected, actual)
+            if utObj != None:
+                utObj.assertEqual((start, end, length) == check, msg)
+            else:
+                assert (start, end, length) == check, msg
         elif len(check) == 4:
             expected = "Showing %d to %d of %d entries (filtered from %d total entries)" % check
             if filtered:
                 actual = "Showing %d to %d of %d entries (filtered from %d total entries)" % (start, end, length, filtered)
             else:
                 actual = "Showing %d to %d of %d entries" % (start, end, length)
-            assert (start, end, length, filtered) == check, "Expected result of '%s' doesn't equal '%s'" % (expected, actual)
+            msg = "Expected result of '%s' doesn't equal '%s'" % (expected, actual)
+            if utObj != None:
+                utObj.assertEqual((start, end, length) == check, msg)
+            else:
+                assert (start, end, length, filtered) == check, msg
     if len(words) > 10:
         return (start, end, length, filtered)
     else:
