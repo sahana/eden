@@ -42,9 +42,9 @@ from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
+from gluon.contrib import simplejson as json
 from ..s3 import *
 from layouts import *
-import json
 
 try:
     from lxml import etree, html
@@ -116,6 +116,7 @@ class S3ProjectModel(S3Model):
         meta_fields = s3.meta_fields
         super_link = self.super_link
 
+        # ---------------------------------------------------------------------
         # Theme
         # @ToDo: Move to link table to move to S3ProjectDRRModel
         #
@@ -154,6 +155,7 @@ class S3ProjectModel(S3Model):
                                          widget = lambda f, v: \
                                                   CheckboxesWidgetS3.widget(f, v, cols = 3))
 
+        # ---------------------------------------------------------------------
         # Hazard
         # @ToDo: Move to link table to move to S3ProjectDRRModel
         #
@@ -190,6 +192,7 @@ class S3ProjectModel(S3Model):
                                           ondelete = "RESTRICT",
                                           widget = lambda f, v: CheckboxesWidgetS3.widget(f, v, cols = 3))
 
+        # ---------------------------------------------------------------------
         # Project
         #
 
@@ -382,17 +385,15 @@ class S3ProjectModel(S3Model):
                     )
                 )
 
-
         # Resource Configuration
         if drr:
             next = "organisation"
         else:
             next = "activity"
 
-        LEAD_ROLE = settings.get_project_organisation_lead_role()
-
         if drr:
             table.virtualfields.append(S3ProjectVirtualfields())
+            LEAD_ROLE = settings.get_project_organisation_lead_role()
             list_fields=["id",
                          "name",
                          (settings.get_project_organisation_roles()[LEAD_ROLE], "organisation"),
@@ -431,6 +432,7 @@ class S3ProjectModel(S3Model):
                                      label = T("Project"),
                                      ondelete = "CASCADE")
 
+        # ---------------------------------------------------------------------
         # Custom Methods
         self.set_method(tablename,
                         method="timeline",
@@ -446,51 +448,8 @@ class S3ProjectModel(S3Model):
         # Activities
         add_component("project_activity", project_project="project_id")
 
-        # Add Project Community as a component of Project
-        add_component("project_community", project_project="project_id")
-
         # Milestones
         add_component("project_milestone", project_project="project_id")
-
-        # Beneficiaries
-        add_component("project_beneficiary", project_project="project_id")
-
-        # Add Annual Budgets as a component of Project
-        add_component("project_annual_budget", project_project="project_id")
-
-        # Project Human Resources
-        #
-        # Add human resources as a component to projects.
-        define_table(
-            "project_human_resource",
-            project_id(),
-            # ToDo: replace with an autocomplete widget for
-            #       hrm_human_resource records.
-            Field(
-                "human_resource_id",
-                db.hrm_human_resource,
-                requires=IS_ONE_OF(
-                    db,
-                    "hrm_human_resource.id",
-                    self.hrm_human_resource_represent,
-                    orderby="hrm_human_resource.person_id",
-                    sort=True
-                ),
-                widget=None
-            ),
-            *s3.meta_fields()
-        )
-        configure("project_human_resource",
-            list_fields=[
-                "project_id",
-                "human_resource_id$person_id",
-                "human_resource_id$organisation_id",
-                "human_resource_id$job_title",
-                "human_resource_id$status"
-            ],
-            onvalidation=self.project_human_resource_onvalidation
-        )
-        add_component("project_human_resource", project_project="project_id")
 
         # Tasks
         add_component("project_task",
@@ -502,6 +461,39 @@ class S3ProjectModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
+        # Communities
+        add_component("project_community", project_project="project_id")
+
+        # Beneficiaries
+        add_component("project_beneficiary", project_project="project_id")
+
+        # Annual Budgets
+        add_component("project_annual_budget", project_project="project_id")
+
+        # Human Resources
+        add_component("project_human_resource", project_project="project_id")
+
+        # ---------------------------------------------------------------------
+        # Project Human Resources
+        #
+        define_table("project_human_resource",
+                     project_id(),
+                     human_resource_id(),
+                     *s3.meta_fields()
+                    )
+
+        configure("project_human_resource",
+                  list_fields=[
+                      "project_id",
+                      "human_resource_id$person_id",
+                      "human_resource_id$organisation_id",
+                      "human_resource_id$job_title",
+                      "human_resource_id$status"
+                    ],
+                onvalidation=self.project_human_resource_onvalidation
+                )
+
+        # ---------------------------------------------------------------------
         # Activity Type
         #
         tablename = "project_activity_type"
@@ -573,6 +565,7 @@ class S3ProjectModel(S3Model):
                                                     CheckboxesWidgetS3.widget(f, v, col=3),
                                                  ondelete = "RESTRICT")
 
+        # ---------------------------------------------------------------------
         # Project Activity
         #
         tablename = "project_activity"
@@ -785,6 +778,7 @@ class S3ProjectModel(S3Model):
 
         # Components
 
+        # ---------------------------------------------------------------------
         # Beneficiaries
         # Disabled until beneficiaries are updated to support both
         # communities and activities
@@ -801,6 +795,7 @@ class S3ProjectModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
+        # ---------------------------------------------------------------------
         # Project Community
         #
         tablename = "project_community"
@@ -935,6 +930,7 @@ class S3ProjectModel(S3Model):
                       project_community="community_id")
 
 
+        # ---------------------------------------------------------------------
         # Project Community Contact Person
         #
         tablename = "project_community_contact"
@@ -1002,6 +998,7 @@ class S3ProjectModel(S3Model):
                                (T("Email"), "email"),
                                (T("Mobile Phone"), "sms")])
 
+        # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
         return dict(
@@ -1013,13 +1010,14 @@ class S3ProjectModel(S3Model):
             project_project_represent = self.project_represent,
         )
 
+    # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
                                 readable=False,
                                 writable=False)
-                                
+
         multi_activity_id = S3ReusableField("activity_id", "list:integer",
                                             readable=False,
                                             writable=False)
@@ -1032,6 +1030,7 @@ class S3ProjectModel(S3Model):
             project_multi_activity_id = multi_activity_id
         )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def multiref_represent(opts, tablename, represent_string = "%(name)s"):
         """
@@ -1069,6 +1068,7 @@ class S3ProjectModel(S3Model):
 
         return vals
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_represent(id, row=None, show_link=True):
         """ FK representation """
@@ -1086,6 +1086,7 @@ class S3ProjectModel(S3Model):
         else:
             return NONE
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_project_onvalidation(form):
         """ Form validation """
@@ -1098,7 +1099,14 @@ class S3ProjectModel(S3Model):
             form.vars.code = form.vars.name
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
+
+
+
+
+
+
 
     def project_project_deduplicate(item):
         """ Import item de-duplication """
@@ -1124,6 +1132,7 @@ class S3ProjectModel(S3Model):
                     item.method = item.METHOD.UPDATE
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_timeline(r, **attr):
         """
@@ -1179,6 +1188,7 @@ class S3ProjectModel(S3Model):
         else:
             raise HTTP(501, BADMETHOD)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def hfa_opts_represent(opt, row=None):
         """ Option representation """
@@ -1196,6 +1206,7 @@ class S3ProjectModel(S3Model):
         vals = [project_hfa_opts.get(o, NONE) for o in opts]
         return ", ".join(vals)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_activity_onvalidation(form):
         """
@@ -1220,6 +1231,7 @@ class S3ProjectModel(S3Model):
                         form.vars.name = parent.name
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_activity_onaccept(form):
         """
@@ -1236,6 +1248,7 @@ class S3ProjectModel(S3Model):
                 current.response.s3.lx_update(atable, vars.id)
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_activity_deduplicate(item):
         """ Import item de-duplication """
@@ -1274,10 +1287,12 @@ class S3ProjectModel(S3Model):
             item.method = item.METHOD.UPDATE
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_community_onaccept(form):
         """
         """
+
         location_id = form.vars.location_id
 
         if location_id:
@@ -1287,10 +1302,12 @@ class S3ProjectModel(S3Model):
 
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_community_onvalidation(form):
         """
         """
+
         location_id = form.vars.location_id
 
         if location_id:
@@ -1308,6 +1325,7 @@ class S3ProjectModel(S3Model):
                     form.vars.name = parent.name
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_community_deduplicate(item):
         """ Import item de-duplication """
@@ -1336,10 +1354,12 @@ class S3ProjectModel(S3Model):
 
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_human_resource_onvalidation(form):
         """
-        Prevent the same hrm_human_resource record being added more than once.
+            Prevent the same hrm_human_resource record being added more than
+            once.
         """
         # The project human resource table
         hr = current.s3db.project_human_resource
@@ -1579,6 +1599,7 @@ class S3ProjectDRRModel(S3Model):
                                   # populated automatically
                                   project_id(readable=False,
                                              writable=False),
+                                  #activity_id(comment=None),
                                   community_id(comment=None),
                                   beneficiary_type_id(empty=False),
                                   Field("number", "integer",
@@ -1614,6 +1635,7 @@ class S3ProjectDRRModel(S3Model):
 
         # Resource Configuration
         report_fields=[
+                      #"activity_id",
                       "community_id",
                       (T("Beneficiary Type"), "beneficiary_type_id"),
                       "project_id",
@@ -1690,10 +1712,11 @@ class S3ProjectDRRModel(S3Model):
         return Storage(
         )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_organisation_onvalidation(form, lead_role=None):
         """ Form validation """
+
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
@@ -1715,14 +1738,16 @@ class S3ProjectDRRModel(S3Model):
                 form.errors.role = T("Lead Implementer for this project is already set, please choose another role.")
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_organisation_onaccept(form):
         """
-        Record creation post-processing
+            Record creation post-processing
 
-        If the added organisation is the lead role, set the project.organisation
-        to point to the same organisation.
+            If the added organisation is the lead role, set the
+            project.organisation to point to the same organisation.
         """
+
         s3 = current.response.s3
 
         if str(form.vars.role) == str(s3.project_organisation_lead_role):
@@ -1746,26 +1771,27 @@ class S3ProjectDRRModel(S3Model):
 
         return
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def project_organisation_ondelete(row):
         """
-        Executed when a project organisation record is deleted.
+            Executed when a project organisation record is deleted.
 
-        If the deleted organisation is the lead role on this project,
-        set the project organisation to None.
+            If the deleted organisation is the lead role on this project,
+            set the project organisation to None.
         """
+
         db = current.db
+        s3db = current.s3db
         s3 = current.response.s3
 
-        project_organisation = current.s3db.project_organisation
-        project_project = current.s3db.project_project
+        potable = s3db.project_organisation
+        ptable = s3db.project_project
 
         # Query for the row that was deleted
-        deleted_record = (project_organisation.id == row.get('id'))
-        deleted_row = db(deleted_record).select(
-                                                project_organisation.deleted_fk,
-                                                project_organisation.role
-                                                ).first()
+        deleted_record = (potable.id == row.get('id'))
+        deleted_row = db(deleted_record).select(potable.deleted_fk,
+                                                potable.role).first()
 
         # Get organisation role
         role = deleted_row.role
@@ -1776,7 +1802,7 @@ class S3ProjectDRRModel(S3Model):
             project_id = deleted_fk['project_id']
 
             # Query to look up the project
-            project = (project_project.id == project_id)
+            project = (ptable.id == project_id)
 
             # Set the project organisation_id to NULL (using None)
             db(project).update(organisation_id=None)
@@ -2867,10 +2893,13 @@ class S3ProjectTaskIReportModel(S3Model):
         self.configure(tablename,
                        onaccept=self.task_ireport_onaccept)
 
+        # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
-        return dict()
+        return dict(
+            )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def task_ireport_onaccept(form):
         """
@@ -2908,42 +2937,45 @@ class S3ProjectTaskIReportModel(S3Model):
 
         return
 
-
+# =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
     """
-    Project Budget Model
+        Project Budget Model
 
-    This model holds the annual budget entries for projects
+        This model holds the annual budget entries for projects
     """
-    names = ['project_annual_budget',]
+
+    names = ["project_annual_budget"]
 
     def model(self):
+
         T = current.T
+        db = current.db
         s3 = current.response.s3
         currency_type = s3.currency_type
 
         self.define_table(
             "project_annual_budget",
-            self.project_project_id(requires=IS_ONE_OF(current.db, "project_project.id", "%(name)s")),
-            Field(
-                "year",
-                'integer',
-                default=None, # make it current year
-                required=True,
-                requires=IS_INT_IN_RANGE(1950, 3000),
-                notnull=True,
-                label="Year",
-                comment=None,
+            self.project_project_id(requires=IS_ONE_OF(db,
+                                                       "project_project.id",
+                                                       "%(name)s")),
+            Field("year",
+                  "integer",
+                  default=None, # make it current year
+                  required=True,
+                  requires=IS_INT_IN_RANGE(1950, 3000),
+                  notnull=True,
+                  label="Year",
+                  comment=None,
             ),
-            Field(
-                "amount",
-                'double',
-                default=0.00,
-                required=True,
-                requires=IS_FLOAT_AMOUNT(),
-                notnull=True,
-                label="Amount",
-                comment=None,
+            Field("amount",
+                  "double",
+                  default=0.00,
+                  required=True,
+                  requires=IS_FLOAT_AMOUNT(),
+                  notnull=True,
+                  label="Amount",
+                  comment=None,
             ),
             currency_type(required=True),
             *s3.meta_fields()
@@ -2971,21 +3003,23 @@ class S3ProjectAnnualBudgetModel(S3Model):
         )
 
         self.configure("project_annual_budget",
-            list_fields=[
-                "id",
-                "year",
-                "amount",
-                "currency_type",
-            ]
+                       list_fields=[
+                            "id",
+                            "year",
+                            "amount",
+                            "currency_type",
+                        ]
         )
 
         self.project_annual_budget_id = S3ReusableField(
-            "annual_budget_id", current.db.project_annual_budget,
+            "annual_budget_id", db.project_annual_budget,
             label = T("Annual Budget"),
             sortby="year",
-            requires = IS_NULL_OR(IS_ONE_OF(current.db, "project_annual_budget.id", "%(name)s")),
+            requires = IS_NULL_OR(IS_ONE_OF(db,
+                                            "project_annual_budget.id",
+                                            "%(name)s")),
             represent = lambda id, row=None: \
-                (id and [current.db.project_annual_budget[id].year] or [NONE])[0],
+                (id and [db.project_annual_budget[id].year] or [NONE])[0],
             comment = S3AddResourceLink(c="project",
                 f="annual_budget",
                 title="Add an Annual Budget",
@@ -2997,8 +3031,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
         return dict(
         )
 
-
-
+# =============================================================================
 def project_assignee_represent(id):
     """ Represent the Person a Task is assigned-to or list views """
 
@@ -3081,7 +3114,7 @@ def project_rheader(r, tabs=[]):
         staff = True
         if staff or drr:
             append((T("Activities"), "activity"))
-        if staff:
+        if drr:
             append((T("Communities"), "community"))
         if staff and milestones:
             append((T("Milestones"), "milestone"))
@@ -3097,7 +3130,6 @@ def project_rheader(r, tabs=[]):
             append((T("Annual Budgets"), "annual_budget"))
         append((T("Staff"), "human_resource", dict(group="staff")))
         append((T("Volunteers"), "human_resource", dict(group="volunteer")))
-
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -3334,6 +3366,7 @@ def project_rheader(r, tabs=[]):
 
     return rheader
 
+# =============================================================================
 def task_notify(form):
     """
         If the task is assigned to someone then notify them
@@ -3402,6 +3435,7 @@ class S3ProjectActivityVirtualfields:
 
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
+
         query = (ltable.deleted != True) & \
                 (ltable.project_id == self.project_activity.project_id) & \
                 (ltable.role == LEAD_ROLE) & \
@@ -3457,7 +3491,7 @@ class S3ProjectActivityVirtualfields:
         else:
             return None
 
-
+# =============================================================================
 class S3ProjectCommunityVirtualfields:
     """ Virtual fields for the project_community table """
 
@@ -3528,7 +3562,6 @@ class S3ProjectCommunityVirtualfields:
         else:
             return None
 
-
 # =============================================================================
 class S3ProjectBeneficiaryVirtualfields:
     """ Virtual fields for the project_beneficiary table """
@@ -3538,17 +3571,20 @@ class S3ProjectBeneficiaryVirtualfields:
     @staticmethod
     def _get_community_location(community_id):
         """
-        Grab the first location from the database for this community and
-        return the location tree
+            Grab the first location from the database for this community and
+            return the location tree
         """
+
         db = current.db
         s3db = current.s3db
 
         # The project_community database table
-        tbl = s3db.project_community
-        query = (tbl.id == community_id)
+        ctable = s3db.project_community
+        query = (ctable.id == community_id)
 
-        community = db(query).select(tbl.location_id, limitby=(0,1)).first()
+
+        community = db(query).select(ctable.location_id, limitby=(0,1)).first()
+
 
         parents = Storage()
         if community:
@@ -3571,6 +3607,11 @@ class S3ProjectBeneficiaryVirtualfields:
     def L1(self):
         parents = self._get_community_location(self.project_beneficiary.community_id)
 
+
+
+
+
+
         if "L1" in parents:
             return parents["L1"]
         else:
@@ -3579,6 +3620,11 @@ class S3ProjectBeneficiaryVirtualfields:
     def L2(self):
         parents = self._get_community_location(self.project_beneficiary.community_id)
 
+
+
+
+
+
         if "L2" in parents:
             return parents["L2"]
         else:
@@ -3586,6 +3632,11 @@ class S3ProjectBeneficiaryVirtualfields:
 
     def L3(self):
         parents = self._get_community_location(self.project_beneficiary.community_id)
+
+
+
+
+
 
         if "L3" in parents:
             return parents["L3"]
@@ -3599,6 +3650,7 @@ class S3ProjectCommunityContactVirtualFields:
     extra_fields = ["person_id"]
 
     def email(self):
+
         db = current.db
         s3db = current.s3db
 
@@ -3614,6 +3666,7 @@ class S3ProjectCommunityContactVirtualFields:
         return ", ".join([item.value for item in items])
 
     def sms(self):
+
         db = current.db
         s3db = current.s3db
 

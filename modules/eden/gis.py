@@ -934,7 +934,7 @@ class S3GISConfigModel(S3Model):
         GIS Config model: Web Map Context
         - Site config
         - Personal config
-        - @ToDo: OU config (Organisation &/or Team)
+        - OU config (Organisation &/or Team)
     """
 
     names = ["gis_config",

@@ -12,13 +12,11 @@
         <h4>{{=T("Staff")}}</h4>
         <ul>
             {{=LI(A(T("Add staff members"),
-                    _href=URL(f="human_resource",
-                              args=["create"],
-                              vars=dict(group="staff"))))}}
+                    _href=URL(f="staff",
+                              args=["create"])))}}
             {{if ns:}}
                 {{=LI(A(T("See all") + " %s " % ns + T("staff members"),
-                        _href=URL(f="human_resource",
-                                  vars={"human_resource.type":"1"})))}}
+                        _href=URL(f="staff")))}}
             {{pass}}
         </ul>
         {{else:}}{{pass}}
@@ -26,13 +24,11 @@
         <h4>{{=T("Volunteer Management")}}</h4>
         <ul>
             {{=LI(A(T("Add volunteers"),
-                    _href=URL(f="human_resource",
-                              args=["create"],
-                              vars=dict(group="volunteer"))))}}
+                    _href=URL(f="volunteer",
+                              args=["create"])))}}
             {{if nv:}}
                 {{=LI(A(T("See all") + " %s " % nv + T("volunteers"),
-                        _href=URL(f="human_resource",
-                                  vars={"human_resource.type":"2"})))}}
+                        _href=URL(f="volunteer")))}}
             {{pass}}
         </ul>
         {{else:}}{{pass}}
