@@ -606,7 +606,7 @@ class S3PersonAutocompleteWidget(FormWidget):
         To make this widget use the HR table, set the controller to "hrm"
 
         @ToDo: Migrate to template (initial attempt failed)
-    """
+   """
 
     def __init__(self,
                  controller = "pr",
@@ -2453,6 +2453,7 @@ class S3AddPersonWidget(FormWidget):
                        ac_row,
                        table,
                        divider)
+
 
 # -----------------------------------------------------------------------------
 class S3AutocompleteOrAddWidget(FormWidget):

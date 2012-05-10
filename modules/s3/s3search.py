@@ -2477,6 +2477,8 @@ class S3PersonSearch(S3Search):
         return output
 
 # =============================================================================
+
+
 class S3HRSearch(S3Search):
     """
         Search method with specifics for HRM records (full name search)
