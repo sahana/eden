@@ -5,3 +5,4 @@
 ,"PH","Philippine Red Cross","organisation","Philippines","Philippines",6,12.567606,122.419227,900913,"IFRC",4,21,114,130,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"TL","Timor-Leste Red Cross Society","organisation","Timor-Leste","Timor-Leste",8,-8.88,125.92,900913,"IFRC",-9.5,-8.4,124.04,127.3,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"NZ","New Zealand Red Cross","organisation","New Zealand","New Zealand",6,-41.99,172.34,900913,"IFRC",-53,-28,165,180,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+,"US","American Red Cross","organisation","United States","United States",4,39.1348,-98.41,900913,"IFRC",0,90,-180,-50,"L1","http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
