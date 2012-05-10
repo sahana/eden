@@ -97,7 +97,7 @@ deployment_settings.base.migrate = True
 #
 # The prepopulate flag is used to determine what data will be used to
 # populate the system when it has a clean database, it will take a list
-# of directory names, the base directory is private/prepopulate, 
+# of directory names, the base directory is private/prepopulate,
 # and should not be included. Each folder must include a file tasks.cfg
 # which indicates what to import.
 # If multiple folders are included then the files will be imported in order.
@@ -294,9 +294,11 @@ deployment_settings.gis.display_L0 = False
 # 3: Apply Controller ACLs
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
-# 6: Apply Controller, Function, Table & Organisation ACLs
+# 6: Apply Controller, Function, Table ACLs and Entity Realm
+# 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+# 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#deployment_settings.security.policy = 6 # Organisation-ACLs
+#deployment_settings.security.policy = 7 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl
 #deployment_settings.aaa.default_uacl =  acl.READ   # User ACL
 #deployment_settings.aaa.default_oacl =  acl.CREATE | acl.READ | acl.UPDATE # Owner ACL
