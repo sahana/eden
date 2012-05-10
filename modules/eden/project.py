@@ -1017,7 +1017,7 @@ class S3ProjectModel(S3Model):
         dummy = S3ReusableField("dummy_id", "integer",
                                 readable=False,
                                 writable=False)
-                                
+
         multi_activity_id = S3ReusableField("activity_id", "list:integer",
                                             readable=False,
                                             writable=False)

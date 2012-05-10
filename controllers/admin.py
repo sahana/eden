@@ -33,8 +33,6 @@ def role():
         Role Manager
 
         @author: Dominic König <dominic@aidiq.com>
-
-        @ToDo: Prevent (or warn?) users from renaming Staff Roles
     """
 
     module = "auth"
