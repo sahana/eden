@@ -42,6 +42,11 @@ class AddPost(FormView):
     Create a new post. Only registered users belonging to a concrete group
     are allowed to create news. only site administrators will be able to
     post news in the index page.
+    
+    .. versionadded: 0.1
+    
+    :parameters: space_name
+    :context: get_place
     """
     form_class = NewsForm
     template_name = 'news/post_add.html'
@@ -94,6 +99,9 @@ class EditPost(UpdateView):
 
     """
     Edit an existent post.
+    
+    :parameters: space_name, post_id
+    :context: get_place
     """
     model = Post
     template_name = 'news/post_edit.html'

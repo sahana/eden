@@ -1,11 +1,71 @@
 Configuration
 =============
 
-The e-cidadania platform is almost ready-to-use adter unpacking, but you will have
-to edit the `settings.py` file.
+The e-cidadania platform is almost ready-to-use after unpacking, but you will have
+to edit the `settings.py` file if you want to install it in production.
+
+The e-cidadania setting have been splitted into three major files:
+
+::
+
+    settings/
+        defaults.py
+        development.py
+        production.py
+    
+Defaults.py
+-----------
+
+This file stablishes the common settings accross the both environments. Most of
+this settings are e-cidadania specific, we will specify here the ones you can
+modify safely.
+
+**SECRET_KEY** (hash)
+    It's **obligatory** to modify this value before deployment. Tis key is used
+    for generating the CSRF and some other security features in django.
+
+**MEDIA_ROOT** (directory)
+    e-cidadania comes with this directory set by default for development but you
+    will have to modify it to suit the directory where you media content or user
+    uploaded content will be.
+
+**MEDIA_URL** (URL slug)
+    This will be the accesible URL for the media content. e-cidadania comes with
+    it set to "uploads/" but you can modify it at any time.
+
+**STATIC_ROOT** (directory)
+    This directory works the same as MEDIA_ROOT but for static content
+    (JavaScript, CSS, images, etc.). e-cidadania comes with it set by default for
+    development but you will have to modify it to where you static content will
+    be stored.
+
+**STATIC_URL** (URL slug)
+    This will be the accesible URL for the static content. e-cidadania comes with
+    it set to "static/" but you can modify it at any time.
+
+**SELECT_ENVIROMENT** (python import)
+    This is not a proper value, but a python import. You will have to select
+    between the two deployment files: development and production. The syntax is
+    the same as every python import.
+    
+    *For development (default)*::
+    from e_cidadania.settings.development import *
+    
+    *For production*::
+    from e_cidadania.settings.production import *
+    
+This are the main settign that you will have to modify to make the deployment of
+e-cidadania, you shouldn't need to modify the rest unless you want a very
+specific deployment.
+
+development.py and production.py
+--------------------------------
+
+*development.py* and *production.py* are minor configuration files with all the
+parameters we think you will need to make a development or production server.
 
 Database
---------
+........
 
 **Configuring the database**::
 
@@ -21,70 +81,62 @@ Database
     }
     
 First of all will be to set up the database. By default e-cidadania is set up to
-use a local SQLite3 database, which will be useful if Lo primero de todo será configurar la base de datos. Por defecto, e-cidadania
-viene configurado para utilizar una base de datos local SQLite3, que puede
-servirte para hacer pruebas si lo necesitas pero no se debe utilizar bajo ningún
-concepto en producción.
+use a local SQLite3 database, which will be useful to make tests, but we don't
+recommend to use it in production.
 
-Un ejemplo de base de datos en un servidor compartido de DreamHost es este::
+An example of a database on a DreamHost shared server is this::
 
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'ecidadania_database',
+            'NAME': 'superb_database',
             'USER': 'databaseadmin',
             'PASSWORD': 'somepassword',
-            'HOST': 'mysql.ecidadania.org',
+            'HOST': 'mysql.myserver.org',
             'PORT': '',
         }
     }
 
-Debug mode
-----------
+**DEBUG** (Boolean True, False)
+    The debug mode is meant for development only, it overrides some of the
+    security systems of django and offers a detailed output when django crashes.
+    This setting is meant to not be modified by the user.
+    
+**TIMEZONE**
+    Time zone that e-cidadania will use as default.
 
-Debug mode comes activated by default and is strongly recommended to deactivate it
-to start using e-cidadania in production. To do it you need to deactivate it in
-the `settings.py` file::
+**LANGUAGE_CODE**
+    Main language that e-cidadania will use for the users. It uses the language
+    code format, p.e. en-US (United States english)
+    
+**CACHES**
+    Configure the cache backcend for django. Please refer to the django
+    documentation so you can select a cache according to your needs.
 
-    DEBUG = False
+**ADMINS** (python dictionary)
+    List of *name*, *email* tuples with the administrators data. This is used
+    in case e-cidadania has to send some report or django sends an error log.
+
+**EMAIL SETTINGS**
+    The email settings are pretty straightforward, so we will not explain them here.
+    
+    .. warning:: Django 1.4 still doesn't have support for SSL emails, you will
+                 need to use unsecure email addresses.
+
+Other settings
+--------------
+
+The settings are not meant to be modified by the administrator, but he can change
+them if seen fit.
 
 User profiles
--------------
+.............
 
 *ACCOUNT_ACTIVATION_DAYS* (number)
 
     This variable specifies how many days the user has to activate the user account
     since he receibes the confirmation e-mail.
 
-*GOOGLE_MAPS_API_KEY* (hash)
-
-    Google API key to use the maps interface. You shall create your own API key even
-    if e-cidadania comes with one of his own. That's because the API is domain
-    dependant.
-
-E-mail
-------
-
-*ADMINS* (list)
-
-    Administrators and e-mail adresses list for the server error notifications. It
-    only works if DEBUG = False
-    
-*EMAIL_HOST* (server)
-
-    Mail server from which e-mails will be sent to the users.
-    
-*DEFAULT_FROM_EMAIL*
-
-    Default e-mail address from which the mails will be sent it other is not
-    specified.
-
-Language
---------
-
-*LANGUAGE_CODE* (language code)
-
-    Default language for the django installation.
 
 Plugins
 -------

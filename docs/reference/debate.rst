@@ -1,10 +1,10 @@
-:mod:`apps.debate` --- Debates
-==============================
+:mod:`apps.ecidadania.debate` --- Debates
+=========================================
 
 :mod:`debate.admin` --- Administration
 --------------------------------------
 
-.. automodule:: e_cidadania.apps.debate.admin
+.. automodule:: apps.ecidadania.debate.admin
 
 .. autoclass:: DebateAdmin(admin.ModelAdmin)
     :members:
@@ -15,7 +15,7 @@
 :mod:`debate.models` --- Data models
 ------------------------------------
 
-.. automodule:: e_cidadania.apps.debate.models
+.. automodule:: apps.ecidadania.debate.models
 
 .. autoclass:: Debate(models.Model)
     :members:
@@ -26,7 +26,7 @@
 :mod:`debate.forms` --- Forms
 -----------------------------
 
-.. automodule:: e_cidadania.apps.debate.forms
+.. automodule:: apps.ecidadania.debate.forms
 
 .. autoclass:: DebateForm(ModelForm)
     :members:
@@ -37,7 +37,7 @@
 :mod:`debate.views` --- Views
 -----------------------------
 
-.. automodule:: e_cidadania.apps.debate.views
+.. automodule:: apps.ecidadania.debate.views
 
 .. autofunction:: add_new_debate(request, space_name)
 

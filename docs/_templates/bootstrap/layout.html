@@ -1,0 +1,93 @@
+{% extends "basic/layout.html" %}
+{% set script_files = script_files + ['_static/bootstrap.js'] %}
+{% set css_files = ['_static/bootstrap.css'] + css_files %}
+
+{# Sidebar: Rework into our Boostrap nav section. #}
+{% macro navBar() %}
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <a class="brand" href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a>
+          <ul class="nav">
+            {% block sidebartoc %}
+              {% include "globaltoc.html" %}
+              {% include "localtoc.html" %}
+            {% endblock %}
+            {% block sidebarrel %}
+              {% include "relations.html" %}
+            {% endblock %}
+            {% block sidebarsourcelink %}
+              {% include "sourcelink.html" %}
+            {% endblock %}
+          </ul>
+          <div class="navbar-form pull-right">
+            {% block sidebarsearch %}
+              {% include "searchbox.html" %}
+            {% endblock %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+{%- block extrahead %}
+<script type="text/javascript">
+function patchToc() {
+  alert("Me estoy ejecutando");
+
+  $(".dropdown-menu").each(function() {
+    $(this).find("ul").each(function(index, item){
+      var $item = $(item);
+      $item.addClass('unstyled');
+    });
+    $(this).find("li").each(function() {
+      $(this).parent().prepend(this);
+    });
+  });
+}
+
+$(document).ready(function () {
+  patchToc();
+  $('.dropdown-toggle').dropdown();
+});
+</script>
+{% endblock %}
+
+{% block header %}{{ navBar() }}{% endblock %}
+
+{# Silence the sidebar's, relbar's #}
+{% block sidebar1 %}{% endblock %}
+{% block sidebar2 %}{% endblock %}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+
+{%- block content %}
+<div class="container">
+   {% block body %} {% endblock %}
+</div>
+{%- endblock %}
+
+{%- block footer %}
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right"><a href="#">Back to top</a></p>
+    <p>
+    {%- if show_copyright %}
+      {%- if hasdoc('copyright') %}
+        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}<br/>
+      {%- else %}
+        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}<br/>
+      {%- endif %}
+    {%- endif %}
+    {%- if last_updated %}
+      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}<br/>
+    {%- endif %}
+    {%- if show_sphinx %}
+      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
+    {%- endif %}
+    </p>
+  </div>
+</footer>
+{%- endblock %}
+

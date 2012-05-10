@@ -1,10 +1,10 @@
-:mod:`apps.spaces` --- Spaces/Processes
+:mod:`core.spaces` --- Spaces/Processes
 =======================================
 
 :mod:`spaces.admin` --- Administration
 --------------------------------------
 
-.. automodule:: e_cidadania.apps.spaces.admin
+.. automodule:: core.spaces.admin
 
 .. autoclass:: EntityAdmin(admin.ModelAdmin)
     :members:
@@ -18,13 +18,13 @@
 .. autoclass:: DocumentAdmin(admin.ModelAdmin)
     :members:
     
-.. autoclass:: MeetingAdmin(admin.ModelAdmin)
+.. autoclass:: EventAdmin(admin.ModelAdmin)
     :members:
 
 :mod:`spaces.models` --- Data models
 ------------------------------------
 
-.. automodule:: e_cidadania.apps.spaces.models
+.. automodule:: core.spaces.models
 
 .. autoclass:: Space(models.Model)
     :members:
@@ -35,16 +35,13 @@
 .. autoclass:: Document(models.Model)
     :members:
 
-.. autoclass:: MeetingType(models.Model)
-    :members:
-
-.. autoclass:: Meeting(models.Model)
+.. autoclass:: Event(models.Model)
     :members:
     
 :mod:`spaces.forms` --- Forms
 -----------------------------
 
-.. automodule:: e_cidadania.apps.spaces.forms
+.. automodule:: core.spaces.forms
 
 .. autoclass:: SpaceForm(ModelForm)
     :members:
@@ -52,15 +49,15 @@
 .. autoclass:: DocForm(ModelForm)
     :members:
     
-.. autoclass:: MeetingForm(ModelForm)
+.. autoclass:: EventForm(ModelForm)
     :members:
 
 :mod:`EntityFormSet` --- modelformset_factory
 
 :mod:`spaces.views` --- Views
----------------------------------
+-----------------------------
 
-.. automodule:: e_cidadania.apps.spaces.views    
+.. automodule:: core.spaces.views    
  
 General spaces views
 ....................
@@ -96,24 +93,24 @@ Document views
 .. autoclass:: DeleteDocument(DeleteView)
     :members:
 
-.. autofunction:: add_doc(request, space_name)
+.. autoclass:: AddDocument(FormView)
 
-.. autofunction:: edit_doc(request, space_name, doc_id)
+.. autoclass:: EditDocument(UpdateView)
 
 
 Meeting views
 .............
 
-.. autoclass:: ListMeetings(ListView)
+.. autoclass:: ListEvents(ListView)
     :members:
 
-.. autoclass:: ViewMeeting(DetailView)
+.. autoclass:: ViewEvent(DetailView)
     :members:
 
-.. autoclass:: DeleteMeeting(DeleteView)
+.. autoclass:: DeleteEvent(DeleteView)
     :members:
     
-.. autofunction:: add_meeting(request, space_name)
+.. autoclass:: AddEvent(FormView)
 
-.. autofunction:: edit_meeting(request, space_name, meeting_id)
+.. autoclass:: EditEvent(UpdateView)
 

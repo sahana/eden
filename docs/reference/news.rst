@@ -1,10 +1,10 @@
-:mod:`apps.news` --- News
-=========================
+:mod:`apps.ecidadania.news` --- News
+====================================
 
 :mod:`news.admin` --- Administration
 ------------------------------------
 
-.. automodule:: e_cidadania.apps.news.admin
+.. automodule:: apps.ecidadania.news.admin
 
 .. autoclass:: PostAdmin(admin.ModelAdmin)
     :members:
@@ -12,7 +12,7 @@
 :mod:`news.models` --- Data models
 ----------------------------------
 
-.. automodule:: e_cidadania.apps.news.models
+.. automodule:: apps.ecidadania.news.models
 
 .. autoclass:: Post(models.Model)
     :members:
@@ -20,7 +20,7 @@
 :mod:`news.forms` --- Forms
 ---------------------------
 
-.. automodule:: e_cidadania.apps.news.forms
+.. automodule:: apps.ecidadania.news.forms
 
 .. autoclass:: NewsForm(ModelForm)
     :members:
@@ -28,14 +28,14 @@
 :mod:`news.views` --- Views
 ---------------------------
 
-.. automodule:: e_cidadania.apps.news.views
+.. automodule:: apps.ecidadania.news.views
 
 .. autoclass:: ViewPost(DetailView)
     :members:
 
-.. autofunction:: add_post(request, space_name)
+.. autoclass:: AddPost(FormView)
 
-.. autofunction:: edit_post(request, space_name, post_id)
+.. autoclass:: EditPost(UpdateView)
 
 .. autoclass:: DeletePost(DeleteView)
     :members:

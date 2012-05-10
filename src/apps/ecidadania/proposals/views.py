@@ -46,7 +46,8 @@ class AddProposal(FormView):
 
     """
     Create a new proposal.
-
+    
+    :parameters: space_name
     :rtype: HTML Form
     :context: form, get_place
     """
@@ -114,6 +115,7 @@ class EditProposal(UpdateView):
 
     :rtype: HTML Form
     :context: get_place
+    :parameters: space_name, prop_id
     """
     model = Proposal
     template_name = 'proposals/proposal_edit.html'
