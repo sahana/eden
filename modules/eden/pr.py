@@ -3884,7 +3884,6 @@ def pr_get_ancestors(pe_id):
         paths).
 
         @param pe_id: the person entity ID
-        @param roles: list of roles to limit the search
 
         @returns: a list of PE-IDs
     """
@@ -3996,8 +3995,7 @@ def pr_ancestors(entities):
         Find all ancestor entities of the given entities in the
         OU hierarchy.
 
-        @param pe_id: the person entity ID
-        @param roles: list of roles to limit the search
+        @param entities:
 
         @returns: Storage of lists of PE-IDs
     """
@@ -4038,6 +4036,8 @@ def pr_ancestors(entities):
 
 # =============================================================================
 def pr_descendants(pe_ids, skip=[]):
+    """
+    """
 
     db = current.db
     s3db = current.s3db
