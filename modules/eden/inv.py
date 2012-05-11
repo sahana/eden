@@ -353,8 +353,7 @@ $(document).ready(function() {
                     inv_item_represent = self.inv_item_represent,
                     inv_prep = self.inv_prep,
                 )
-    # ---------------------------------------------------------------------
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_inv_item_onvalidate(form):
         """
@@ -366,10 +365,10 @@ $(document).ready(function() {
         itable = s3db.inv_inv_item
         stable = s3db.org_site
 
-        # If their is a tracking number check that it is unique within the org
+        # If there is a tracking number check that it is unique within the org
         if form.vars.item_source_no:
             if form.record.item_source_no and form.record.item_source_no == form.vars.item_source_no:
-                # the tracking number hasn't changes so no validation needed
+                # the tracking number hasn't changed so no validation needed
                 pass
             else:
                 query = (itable.track_org_id == form.vars.track_org_id) & \
@@ -380,6 +379,7 @@ $(document).ready(function() {
                     form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % (form.vars.item_source_no,
                                                                                                     org_repr(record.track_org_id))
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_prep(r):
         """
@@ -414,7 +414,7 @@ $(document).ready(function() {
                     filter = (s3db.inv_send.status == SHIP_STATUS_SENT)
                     #r.resource.add_component_filter("send", filter)
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_item_represent(id, show_link=True):
         """
