@@ -551,6 +551,7 @@ class S3OrganisationAutocompleteWidget(FormWidget):
 
         @ToDo: Add an option to hide the widget completely when using the Org from the Profile
                - i.e. prevent user overrides
+        @ToDo: Support Branches in the represents
     """
 
     def __init__(self,
@@ -587,11 +588,8 @@ class S3OrganisationAutocompleteWidget(FormWidget):
                     vars={"filter":"~"})
             ),
             name_getter = """function (item) {
-    var name = '';
-    if (item.name != null) {
-        name += item.name;
-    }
-    if (item.acronym != '') {
+    var name = item.name;
+    if (item.acronym) {
         name += ' (' + item.acronym + ')';
     }
     return name;
@@ -608,7 +606,7 @@ class S3PersonAutocompleteWidget(FormWidget):
         To make this widget use the HR table, set the controller to "hrm"
 
         @ToDo: Migrate to template (initial attempt failed)
-    """
+   """
 
     def __init__(self,
                  controller = "pr",
@@ -2455,6 +2453,7 @@ class S3AddPersonWidget(FormWidget):
                        ac_row,
                        table,
                        divider)
+
 
 # -----------------------------------------------------------------------------
 class S3AutocompleteOrAddWidget(FormWidget):

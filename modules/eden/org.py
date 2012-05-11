@@ -234,6 +234,7 @@ class S3OrganisationModel(S3Model):
                                    length=128,           # Mayon Compatibility
                                    label = T("Name")),
                              Field("acronym", length=8, label = T("Acronym"),
+                                   represent = lambda val: val or "",
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Acronym"),
                                                                    T("Acronym of the organization's name, eg. IFRC.")))),
@@ -459,6 +460,16 @@ class S3OrganisationModel(S3Model):
                                     actuate="embed",
                                     autocomplete="name",
                                     autodelete=False))
+        # For imports
+        add_component("org_organisation",
+                      org_organisation=Storage(
+                                    name="parent",
+                                    link="org_organisation_branch",
+                                    joinby="branch_id",
+                                    key="organisation_id",
+                                    actuate="embed",
+                                    autocomplete="name",
+                                    autodelete=False))
 
         # Assets
         # @ToDo
@@ -502,7 +513,8 @@ class S3OrganisationModel(S3Model):
         tablename = "org_organisation_branch"
         table = define_table(tablename,
                              organisation_id(),
-                             organisation_id("branch_id"),
+                             organisation_id("branch_id",
+                                             label=T("Branch")),
                              *meta_fields())
 
         # CRUD strings
@@ -662,15 +674,16 @@ class S3OrganisationModel(S3Model):
             db = current.db
             table = item.table
             name = "name" in item.data and item.data.name
-            query = (table.name.lower() == name.lower())
-            duplicate = db(query).select(table.id,
-                                         table.name,
-                                         limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                # Retain the correct spelling of the name
-                item.data.name = duplicate.name
-                item.method = item.METHOD.UPDATE
+            if name:
+                query = (table.name.lower() == name.lower())
+                duplicate = db(query).select(table.id,
+                                             table.name,
+                                             limitby=(0, 1)).first()
+                if duplicate:
+                    item.id = duplicate.id
+                    # Retain the correct spelling of the name
+                    item.data.name = duplicate.name
+                    item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -1372,27 +1385,39 @@ def org_organisation_represent(id, showlink=False, acronym=True):
 
     db = current.db
     s3db = current.s3db
-    NONE = current.messages.NONE
 
     if isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
         org = id
     else:
-        table = s3db.org_organisation
-        query = (table.id == id)
-        org = db(query).select(table.name,
-                               table.acronym,
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
+        query = (otable.id == id)
+        left = btable.on(btable.branch_id == otable.id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               btable.organisation_id,
+                               left = left,
                                limitby = (0, 1)).first()
     if org:
-        represent = org.name
-        if acronym and org.acronym:
+        represent = org.org_organisation.name
+        if "org_organisation_branch" in org:
+            # We're a Branch
+            query = (otable.id == org.org_organisation_branch.organisation_id)
+            parent = db(query).select(otable.name,
+                                      limitby = (0, 1)).first()
+            if parent:
+                represent = "%s, %s" % (parent.name,
+                                        represent)
+
+        elif acronym and org.org_organisation.acronym:
             represent = "%s (%s)" % (represent,
-                                     org.acronym)
+                                     org.org_organisation.acronym)
         if showlink:
             represent = A(represent,
                           _href = URL(c="org", f="organisation", args = [id]))
     else:
-        represent = NONE
+        represent = current.messages.NONE
 
     return represent
 
@@ -1643,9 +1668,6 @@ def org_organisation_controller():
     gis = current.gis
     s3 = current.response.s3
     manager = current.manager
-
-    tablename = "org_office"
-    table = s3db[tablename]
 
     # Pre-process
     def prep(r):

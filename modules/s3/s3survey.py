@@ -747,7 +747,11 @@ class DataMatrixBuilder():
             self.postponeLayoutUpdate = andThenPostpone
 
     def addArea(self, element, row, col):
-        widgetObj = self.widgetList[element]
+        try:
+            widgetObj = self.widgetList[element]
+        except:
+            _debug("Unable to find element %s in the template" % element)
+            return self.matrix.addCell(row, col, "", [])
         widgetObj.startPosn = (col, row)
         if self.labelLeft:
             widgetObj.labelLeft = (self.labelLeft == "True")
@@ -777,7 +781,11 @@ class DataMatrixBuilder():
         return (endrow, endcol)
 
     def addData(self, element, row, col):
-        widgetObj = self.widgetList[element]
+        try:
+            widgetObj = self.widgetList[element]
+        except:
+            _debug("Unable to find element %s in the template" % element)
+            return self.matrix.addCell(row, col, "", [])
         widgetObj.startPosn = (col, row)
         self.widgetsInList.append(widgetObj)
         if self.labelLeft:

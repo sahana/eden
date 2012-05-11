@@ -2318,6 +2318,7 @@ class S3OrganisationSearch(S3Search):
     """
         Search method with specifics for Organisation records
         - searches name & acronym
+        @ToDo: Support Branches in the represents
     """
 
     def search_json(self, r, **attr):
@@ -2476,6 +2477,8 @@ class S3PersonSearch(S3Search):
         return output
 
 # =============================================================================
+
+
 class S3HRSearch(S3Search):
     """
         Search method with specifics for HRM records (full name search)

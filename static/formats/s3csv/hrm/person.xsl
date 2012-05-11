@@ -8,7 +8,7 @@
          Column headers defined in this stylesheet:
 
          Organisation...................required.....organisation name
-         Acronym........................optional.....organisation acronym
+         Branch.........................optional.....branch organisation name
          Type...........................optional.....HR type (staff|volunteer)
          Office.........................optional.....office name (required for staff)
          Office Lat.....................optional.....office latitude
@@ -77,25 +77,42 @@
              match="row"
              use="col[@field='Organisation']"/>
 
+    <xsl:key name="branches" match="row"
+             use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
+
     <xsl:key name="offices"
              match="row"
-             use="concat(col[@field='Organisation'], '/', col[@field='Office'])"/>
+             use="concat(col[@field='Organisation'], '/', col[@field='Branch'], '/', col[@field='Office'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
-            <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('orgs',
-                                                        col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation"/>
+            <!-- Top-level Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs', col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName">
+                        <xsl:value-of select="col[@field='Organisation']/text()"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="BranchName"></xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Branches -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branches', concat(col[@field='Organisation'], '/', col[@field='Branch']))[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName"></xsl:with-param>
+                    <xsl:with-param name="BranchName">
+                        <xsl:value-of select="col[@field='Branch']/text()"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Offices -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('offices',
                                                         concat(col[@field='Organisation'], '/',
+                                                               col[@field='Branch'], '/',
                                                                col[@field='Office']))[1])]">
                 <xsl:call-template name="Office"/>
             </xsl:for-each>
@@ -108,25 +125,39 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
+        <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
 
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
+        <!-- Create the Organisation/Branch -->
         <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrgName"/></data>
             <xsl:choose>
-                <xsl:when test="col[@field='Acronym']!=''">
-                    <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
+                <xsl:when test="$OrgName!=''">
+                    <!-- This is the Organisation -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$OrgName"/></data>
                 </xsl:when>
-                <!-- This will be totally wrong if the person uses hotmail.com or the like
-                <xsl:when test="col[@field='Email']!=''">
-                    <xsl:variable name="OrgAcronym"
-                                  select="substring-before(substring-after(col[@field='Email'],'@'),'.')"/>
-                    <data field="acronym"><xsl:value-of select="$OrgAcronym"/></data>
-                </xsl:when> -->
+                <xsl:when test="$BranchName!=''">
+                    <!-- This is the Branch -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$BranchName"/></data>
+                </xsl:when>
             </xsl:choose>
+
+            <xsl:if test="$BranchName!=''">
+                <!-- Nest the Top-Level -->
+                <resource name="org_organisation_branch">
+                    <reference field="organisation_id">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Organisation']"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
     </xsl:template>
@@ -135,6 +166,7 @@
     <xsl:template name="Office">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
 
         <xsl:if test="$OfficeName!=''">
@@ -147,11 +179,18 @@
                 <data field="name"><xsl:value-of select="$OfficeName"/></data>
 
                 <!-- Link to Organisation -->
-                <reference field="organisation_id" resource="org_organisation">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
-                </reference>
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </reference>
 
                 <xsl:choose>
                     <!-- Don't create null locations which over-write good locations imported via office.csv -->
@@ -192,6 +231,7 @@
     <xsl:template match="row">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
 
@@ -232,6 +272,7 @@
             <!-- HR record -->
             <xsl:call-template name="HumanResource">
                 <xsl:with-param name="OrgName" select="$OrgName"/>
+                <xsl:with-param name="BranchName" select="$BranchName"/>
                 <xsl:with-param name="OfficeName" select="$OfficeName"/>
             </xsl:call-template>
 
@@ -259,6 +300,7 @@
     <xsl:template name="HumanResource">
 
         <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
         <xsl:param name="OfficeName"/>
         <xsl:variable name="Projects" select="col[@field='Projects']"/>
 
@@ -286,7 +328,14 @@
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:attribute>
             </reference>
 
