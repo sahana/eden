@@ -40,6 +40,7 @@ __all__ = ["S3RequestManager",
            "S3FieldSelector",
            "S3TypeConverter"]
 
+import re
 import sys
 import datetime
 import time
@@ -5822,8 +5823,8 @@ class S3ResourceQuery:
             r = convert(l, r)
             result = contains(r, l)
         elif op == self.LIKE:
-            # @todo: resolve % wildcards properly
-            result = str(r) in str(l)
+            pattern = re.escape(str(r)).replace("\\%", ".*").replace(".*.*", "\\%")
+            return re.match(pattern, str(l)) is not None
         else:
             r = convert(l, r)
             if op == self.LT:
