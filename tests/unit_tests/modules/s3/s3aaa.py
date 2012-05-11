@@ -305,6 +305,53 @@ class S3AuthTests(unittest.TestCase):
         row = db(query2).select(limitby=(0, 1)).first()
         self.assertEqual(row, None)
 
+    def testGetRoles(self):
+
+        UUID = "TESTAUTOCREATEDROLE"
+        role_id = auth.s3_create_role(UUID, uid=UUID)
+
+        try:
+            auth.s3_impersonate("normaluser@example.com")
+            user_id = auth.user.id
+
+            auth.s3_assign_role(user_id, role_id, for_pe=None)
+            roles = auth.s3_get_roles(user_id)
+            self.assertTrue(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=None)
+            self.assertTrue(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=0)
+            self.assertFalse(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=1)
+            self.assertFalse(role_id in roles)
+            auth.s3_retract_role(user_id, role_id, for_pe=None)
+
+            auth.s3_assign_role(user_id, role_id, for_pe=0)
+            roles = auth.s3_get_roles(user_id)
+            self.assertTrue(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=None)
+            self.assertFalse(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=0)
+            self.assertTrue(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=1)
+            self.assertFalse(role_id in roles)
+            auth.s3_retract_role(user_id, role_id, for_pe=0)
+
+            auth.s3_assign_role(user_id, role_id, for_pe=1)
+            roles = auth.s3_get_roles(user_id)
+            self.assertTrue(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=None)
+            self.assertFalse(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=0)
+            self.assertFalse(role_id in roles)
+            roles = auth.s3_get_roles(user_id, for_pe=1)
+            self.assertTrue(role_id in roles)
+            auth.s3_retract_role(user_id, role_id, for_pe=1)
+
+        finally:
+
+            auth.s3_delete_role(UUID)
+            auth.s3_impersonate(None)
+
     # -------------------------------------------------------------------------
     # Record Ownership
     #

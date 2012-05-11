@@ -2107,6 +2107,29 @@ class AuthS3(Auth):
         return
 
     # -------------------------------------------------------------------------
+    def s3_get_roles(self, user_id, for_pe=[]):
+        """
+            Lookup all roles which have been assigned to user for an entity
+
+            @param user_id: the user_id
+            @param for_pe: the entity (pe_id) or list of entities
+        """
+        mtable = self.settings.table_membership
+
+        if not user_id:
+            return []
+
+        query = (mtable.deleted != True) & \
+                (mtable.user_id == user_id)
+        if isinstance(for_pe, (list, tuple)):
+            if len(for_pe):
+                query &= (mtable.pe_id.belongs(for_pe))
+        else:
+            query &= (mtable.pe_id == for_pe)
+        rows = current.db(query).select(mtable.group_id)
+        return list(set([row.group_id for row in rows]))
+
+    # -------------------------------------------------------------------------
     def s3_has_role(self, role, for_pe=None):
         """
             Check whether the currently logged-in user has a certain role
