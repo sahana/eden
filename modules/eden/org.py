@@ -388,6 +388,8 @@ class S3OrganisationModel(S3Model):
                     comment = T("Search for an Organization by name or acronym"),
                     field = [ "name",
                               "acronym",
+                              "parent.name",
+                              "parent.acronym",
                             ]
                     ),
                     S3SearchOptionsWidget(
@@ -1380,16 +1382,22 @@ class S3OfficeModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-def org_organisation_represent(id, showlink=False, acronym=True):
-    """ Represent an Organisation in option fields or list views """
+def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
+    """
+        Represent an Organisation in option fields or list views
+
+        @param showlink: whether to make the output into a hyperlink
+        @param acronym: whether to show any acronym present
+        @param parent: whether to show the parent Org for branches
+    """
 
     db = current.db
     s3db = current.s3db
 
-    if isinstance(id, Row):
+    if not parent and isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
         org = id
-    else:
+    elif parent:
         otable = s3db.org_organisation
         btable = s3db.org_organisation_branch
         query = (otable.id == id)
@@ -1399,20 +1407,32 @@ def org_organisation_represent(id, showlink=False, acronym=True):
                                btable.organisation_id,
                                left = left,
                                limitby = (0, 1)).first()
-    if org:
-        represent = org.org_organisation.name
-        if "org_organisation_branch" in org:
-            # We're a Branch
-            query = (otable.id == org.org_organisation_branch.organisation_id)
-            parent = db(query).select(otable.name,
-                                      limitby = (0, 1)).first()
-            if parent:
-                represent = "%s, %s" % (parent.name,
-                                        represent)
+    else:
+        otable = s3db.org_organisation
+        query = (otable.id == id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               limitby = (0, 1)).first()
 
-        elif acronym and org.org_organisation.acronym:
-            represent = "%s (%s)" % (represent,
-                                     org.org_organisation.acronym)
+    if org:
+        if parent:
+            represent = org.org_organisation.name
+            if "org_organisation_branch" in org:
+                # We're a Branch
+                query = (otable.id == org.org_organisation_branch.organisation_id)
+                parent = db(query).select(otable.name,
+                                          limitby = (0, 1)).first()
+                if parent:
+                    represent = "%s, %s" % (parent.name,
+                                            represent)
+            elif acronym and org.org_organisation.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.org_organisation.acronym)
+        else:
+            represent = org.name
+            if acronym and org.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.acronym)
         if showlink:
             represent = A(represent,
                           _href = URL(c="org", f="organisation", args = [id]))
@@ -1678,6 +1698,10 @@ def org_organisation_controller():
                 htable = s3db.hrm_human_resource
                 htable.person_id.widget = None
                 htable.person_id.writable = False
+
+            elif r.component_name == "branch":
+                s3db.org_organisation_branch.branch_id.represent = lambda val: \
+                    s3db.org_organisation_represent(val, parent=False)
 
             elif r.component_name == "office" and \
                  r.method and r.method != "read":
