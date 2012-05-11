@@ -2365,10 +2365,10 @@ class S3OrganisationSearch(S3Search):
             fields = [table.id, field, field2, field3]
 
             if filter == "~":
-                query = (S3FieldSelector("parent.name").like(value + "%")) | \
-                        (S3FieldSelector("parent.acronym").like(value + "%")) | \
-                        (S3FieldSelector("organisation.name").like(value + "%")) | \
-                        (S3FieldSelector("organisation.acronym").like(value + "%"))
+                query = (S3FieldSelector("parent.name").lower().like(value + "%")) | \
+                        (S3FieldSelector("parent.acronym").lower().like(value + "%")) | \
+                        (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
+                        (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
 
             else:
                 output = xml.json_message(False,
@@ -2750,7 +2750,7 @@ class S3TrainingSearch(S3Search):
         if filter and value:
 
             s3db = current.s3db
-            ctable = s3db.hrm_course 
+            ctable = s3db.hrm_course
             field = ctable.name
             stable = s3db.org_site
             field2 = stable.name
