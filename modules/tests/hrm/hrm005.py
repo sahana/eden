@@ -25,5 +25,6 @@ def hrm005():
     driver.find_element_by_id("pr_person_email").send_keys("herculano@icandomybest.com")
     driver.find_element_by_id("hrm_human_resource_job_title").send_keys("Staff")
     driver.find_element_by_css_selector("input[type=\"submit\"]").click()
+    driver.find_element_by_link_text("Home").click()
 
     s3_debug("hrm005 test: Pass")
