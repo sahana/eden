@@ -4699,7 +4699,6 @@ class S3Resource(object):
         return 0
 
 # =============================================================================
-
 class S3ResourceFilter:
     """ Class representing a resource filter """
 
@@ -5494,9 +5493,11 @@ class S3FieldSelector:
         return resource.resolve_selector(self.name)
 
 # =============================================================================
-
 class S3ResourceQuery:
-    """ Helper class representing a resource query """
+    """
+        Helper class representing a resource query
+        - unlike DAL Query objects, these can be converted to/from URL filters
+    """
 
     # Supported operators
     NOT = "not"
@@ -5590,7 +5591,7 @@ class S3ResourceQuery:
     def query(self, resource):
         """
             Convert this S3ResourceQuery into a DAL query, ignoring virtual
-            fields (the neccessary joins for this query can be constructed
+            fields (the necessary joins for this query can be constructed
             with the joins() method)
 
             @param resource: the resource to resolve the query against
