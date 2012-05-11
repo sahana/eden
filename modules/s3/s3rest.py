@@ -3984,6 +3984,7 @@ class S3Resource(object):
 
         if "$" in selector:
             selector, tail = selector.split("$", 1)
+            distinct = True
         else:
             tail = None
         if "." in selector:

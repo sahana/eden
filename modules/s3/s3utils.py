@@ -770,6 +770,9 @@ def s3_auth_user_represent(id):
 def s3_auth_group_represent(opt):
     """ Represent user groups by their role names """
 
+    if not opt:
+        return current.messages.NONE
+
     auth = current.auth
     s3db = current.s3db
 

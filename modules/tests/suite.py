@@ -54,18 +54,22 @@ else:
 =======
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
-    login(account="admin")
+#    login(account="admin")
     globals()[test]()
 
 else:
     # Run all Tests
 >>>>>>> 8933169430b6badd4a2c6515d3aeeb83d8e67120
     # Log into admin testing account
-    login(account="admin")
+#    login(account="admin")
     
+    suite = unittest.TestLoader().loadTestsFromTestCase(Logistics)
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Org001))
+    unittest.TextTestRunner(verbosity=2).run(suite)
+#    inventory()
     # List of individual automated test scripts which Suite will run one by one:
     # Organization Management (ORG) tests
-    org001() # Setup Organizations
+#    org001() # Setup Organizations
     org002() # Setup Offices
     
     # Human Resources Management (HRM) tests

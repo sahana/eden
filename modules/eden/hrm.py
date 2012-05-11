@@ -48,6 +48,7 @@ class S3HRModel(S3Model):
 
     names = ["hrm_human_resource",
              "hrm_human_resource_id",
+             "hrm_autocomplete_search",
              "hrm_human_resource_search",
              "hrm_type_opts"
             ]
@@ -194,16 +195,13 @@ class S3HRModel(S3Model):
                                             sortby = ["type", "status"],
                                             requires = hrm_human_resource_requires,
                                             represent = hrm_human_resource_represent,
-                                            widget = S3PersonAutocompleteWidget(),
-                                            comment = T("Enter some characters to bring up a list of possible matches"),
-                                            #widget = S3SearchAutocompleteWidget(tablename="hrm_human_resource",
-                                            #                                    represent=lambda id: \
-                                            #                                        hrm_human_resource_represent(id,
-                                            #                                                                     none_value = None),
-                                            #                                    ),
                                             label = T("Human Resource"),
-                                            ondelete = "RESTRICT")
+                                            comment = T("Enter some characters to bring up a list of possible matches"),
+                                            widget = S3PersonAutocompleteWidget("hrm"),
+                                            ondelete = "RESTRICT"
+                                            )
 
+        hrm_autocomplete_search = S3HRSearch()
         human_resource_search = S3Search(
             simple=(self.human_resource_search_simple_widget("simple")),
             advanced=(self.human_resource_search_simple_widget("advanced"),
@@ -305,6 +303,7 @@ class S3HRModel(S3Model):
         return Storage(
                     hrm_human_resource_id = human_resource_id,
                     hrm_human_resource_search = human_resource_search,
+                    hrm_autocomplete_search = hrm_autocomplete_search,
                     hrm_type_opts = hrm_type_opts
                 )
 
@@ -451,7 +450,11 @@ class S3HRModel(S3Model):
         ltable = s3db.pr_person_user
         htable = s3db.hrm_human_resource
 
-        vars = form.vars
+        if "vars" in form:
+            vars = form.vars
+        else:
+            # Coming from s3_register callback
+            vars = form
 
         # Get the full record
         id = vars.id
@@ -1273,9 +1276,9 @@ class S3HRSkillModel(S3Model):
         course_id = S3ReusableField("course_id", db.hrm_course,
                                     sortby = "name",
                                     label = T("Course"),
-                                    requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                    "hrm_course.id",
-                                                                    "%(name)s")),
+                                    requires = IS_ONE_OF(db,
+                                                         "hrm_course.id",
+                                                         "%(name)s"),
                                     represent = lambda id: \
                                         (id and [db.hrm_course[id].name] or [NONE])[0],
                                     comment = course_help,
@@ -1361,17 +1364,17 @@ class S3HRSkillModel(S3Model):
                                             comment = course_help,
                                             ondelete = "RESTRICT",
                                             # Comment this to use a Dropdown & not an Autocomplete
-                                            widget = S3AutocompleteWidget("hrm",
-                                                                          "training_event")
+                                            widget = S3TrainingAutocompleteWidget()
                                             )
 
-        training_event_search = S3Search(
+        training_event_search = S3TrainingSearch(
             advanced=(
                       S3SearchSimpleWidget(
                         name = "training_event_search_simple",
                         label = T("Text"),
-                        comment = T("You can search by course name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
+                        comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
                         field = ["course_id$name",
+                                 "site_id$name",
                                  "comments",
                                 ]
                     ),
@@ -2428,19 +2431,25 @@ def hrm_training_event_represent(id):
 
     table = s3db.hrm_training_event
     ctable = s3db.hrm_course
+    stable = s3db.org_site
     query = (table.id == id) & \
             (table.course_id == ctable.id)
+    left = table.on(table.site_id == stable.site_id)
     event = db(query).select(ctable.name,
-                             table.site_id,
+                             stable.name,
                              table.start_date,
                              #table.instructor,
+                             left = left,
                              limitby = (0, 1)).first()
     if event:
-        site = table.site_id.represent(event.hrm_training_event.site_id)
-        start_date = table.start_date.represent(event.hrm_training_event.start_date)
-        represent = "%s (%s, %s)" % (event.hrm_course.name,
-                                     site,
-                                     start_date)
+        represent = event.hrm_course.name
+        site = event.org_site.name
+        if site:
+            represent = "%s (%s)" % (represent, site)
+        start_date = event.hrm_training_event.start_date
+        if start_date:
+            start_date = table.start_date.represent(start_date)
+            represent = "%s [%s]" % (represent, start_date)
     else:
         represent = current.messages.NONE
 

@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 
 """
-    ######################################################################
-    DEPRECATION WARNING
- 
-    This class is being replaced by the S3RL_PDF codec
-
-    Initially the reporting features will be replaced, with the OCR
-    process being removed at a later stage.
-    ######################################################################
-
     Resource PDF Tools
 
     @see: U{B{I{S3XRC}} <http://eden.sahanafoundation.org/wiki/S3XRC>}
 
     @requires: U{B{I{ReportLab}} <http://www.reportlab.com>}
 
-    @author: Graeme Foster <graeme[at]acm.org>
+    ######################################################################
+    DEPRECATION WARNING
+
+    This class is being replaced by the S3RL_PDF codec
+
+    Initially the reporting features will be replaced, with the OCR
+    process being removed at a later stage.
+    ######################################################################
 
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
@@ -426,7 +424,7 @@ class S3PDF(S3Method):
                 if "rheader" in attr and attr["rheader"]:
                     self.extractrHeader(attr["rheader"])
                     self.addSpacer(3)
-                elif componentname: 
+                elif componentname:
                     self.addrHeader(self.resource,
                                     list_fields,
                                     report_hide_comments=report_hide_comments)

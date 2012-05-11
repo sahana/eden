@@ -99,11 +99,6 @@ deployment_settings.base.migrate = True
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
 deployment_settings.base.prepopulate = 1
-# NOTE: the web UI will not be accessible while the DB is empty,
-# instead run:
-#   python web2py.py -N -S eden -M
-# to create the db structure, then exit and re-import the data.
-
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
 deployment_settings.base.cdn = False
@@ -292,9 +287,11 @@ deployment_settings.gis.display_L0 = False
 # 3: Apply Controller ACLs
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
-# 6: Apply Controller, Function, Table & Organisation ACLs
+# 6: Apply Controller, Function, Table ACLs and Entity Realm
+# 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+# 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#deployment_settings.security.policy = 6 # Organisation-ACLs
+#deployment_settings.security.policy = 7 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl
 #deployment_settings.aaa.default_uacl =  acl.READ   # User ACL
 #deployment_settings.aaa.default_oacl =  acl.CREATE | acl.READ | acl.UPDATE # Owner ACL
@@ -346,7 +343,8 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.show_quantity_transit = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
-#deployment_settings.req.use_req_number = False
+deployment_settings.req.use_req_number = True
+deployment_settings.req.generate_req_number = True
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
@@ -420,6 +418,15 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.project.drr = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
+# Uncomment this to customise
+#deployment_settings.project.organisation_roles = {
+#    1: T("Lead Implementer"), # T("Host National Society")
+#    2: T("Partner"), # T("Partner National Society")
+#    3: T("Donor"),
+#    4: T("Customer"), # T("Beneficiary")?
+#    5: T("Super"), # T("Beneficiary")?
+#}
+#deployment_settings.project.organisation_lead_role = 1
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False

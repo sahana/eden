@@ -36,7 +36,7 @@
         Comments......................comments
         Send Comments.................inv_send.comments
         Receiving Comments............inv_recv.comments
-        Request Number................req_req.request_number
+        Request Number................req_req.req_ref
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -643,7 +643,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('req_req/',$reqNum)"/>
             </xsl:attribute>
-            <data field="request_number"><xsl:value-of select="$reqNum"/></data>
+            <data field="req_ref"><xsl:value-of select="$reqNum"/></data>
         </resource>
 
     </xsl:template>

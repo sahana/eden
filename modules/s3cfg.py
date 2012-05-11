@@ -509,6 +509,8 @@ class S3Config(Storage):
         return self.supply.get("use_alt_name", True)
     def get_req_use_req_number(self):
         return self.req.get("use_req_number", True)
+    def get_req_generate_req_number(self):
+        return self.req.get("generate_req_number", True)
     def get_req_req_type(self):
         return self.req.get("req_type", ["Stock", "People", "Other"])
 
@@ -575,6 +577,17 @@ class S3Config(Storage):
     # Save Search and Subscription
     def get_save_search_widget(self):
         return self.save_search.get("widget", True)
+    def get_project_organisation_roles(self):
+        T = current.T
+        return self.project.get("organisation_roles", {
+                1: T("Lead Implementer"), # T("Host National Society")
+                2: T("Partner"), # T("Partner National Society")
+                3: T("Donor"),
+                4: T("Customer"), # T("Beneficiary")?
+                5: T("Supplier"), # T("Beneficiary")?
+            })
+    def get_project_organisation_lead_role(self):
+        return self.project.get("organisation_lead_role", 1)
 
     # -------------------------------------------------------------------------
     # Active modules list
