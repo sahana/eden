@@ -90,7 +90,7 @@ inv_tracking_status = {
                       }
 
 tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
-                   TRACK_STATUS_PREPARING : T("Preparing"),
+                   TRACK_STATUS_PREPARING : T("In Process"),
                    TRACK_STATUS_TRANSIT   : T("In transit"),
                    TRACK_STATUS_UNLOADING : T("Unloading"),
                    TRACK_STATUS_ARRIVED   : T("Arrived"),
@@ -889,18 +889,18 @@ class S3TrackingModel(S3Model):
                         field="status",
                         cols = 2
                       ),
-                      S3SearchOptionsWidget(
-                        name="recv_search_grn",
-                        label=T("GRN Status"),
-                        field="grn_status",
-                        cols = 2
-                      ),
-                      S3SearchOptionsWidget(
-                        name="recv_search_cert",
-                        label=T("Certificate Status"),
-                        field="grn_status",
-                        cols = 2
-                      ),
+#                      S3SearchOptionsWidget(
+#                        name="recv_search_grn",
+#                        label=T("GRN Status"),
+#                        field="grn_status",
+#                        cols = 2
+#                      ),
+#                      S3SearchOptionsWidget(
+#                        name="recv_search_cert",
+#                        label=T("Certificate Status"),
+#                        field="grn_status",
+#                        cols = 2
+#                      ),
             ))
 
         # Redirect to the Items tabs after creation
@@ -1313,11 +1313,14 @@ $(document).ready(function() {
                 send_row = db(table.send_ref == value).select(table.id,
                                                               limitby=(0, 1)
                                                              ).first()
-                return A(value,
-                         _href = URL(f = "send",
-                                     args = [send_row.id, "form"]
-                                    ),
-                        )
+                if send_row:
+                    return A(value,
+                             _href = URL(f = "send",
+                                         args = [send_row.id, "form"]
+                                        ),
+                            )
+                else:
+                    return B(value)
             else:
                 return B(value)
         else:
