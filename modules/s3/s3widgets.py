@@ -551,6 +551,7 @@ class S3OrganisationAutocompleteWidget(FormWidget):
 
         @ToDo: Add an option to hide the widget completely when using the Org from the Profile
                - i.e. prevent user overrides
+        @ToDo: Support Branches in the represents
     """
 
     def __init__(self,
@@ -587,11 +588,8 @@ class S3OrganisationAutocompleteWidget(FormWidget):
                     vars={"filter":"~"})
             ),
             name_getter = """function (item) {
-    var name = '';
-    if (item.name != null) {
-        name += item.name;
-    }
-    if (item.acronym != '') {
+    var name = item.name;
+    if (item.acronym) {
         name += ' (' + item.acronym + ')';
     }
     return name;

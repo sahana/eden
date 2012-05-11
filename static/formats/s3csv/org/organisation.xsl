@@ -6,22 +6,11 @@
     <!-- **********************************************************************
          Organisation - CSV Import Stylesheet
 
-         2011-Jun-13 / Graeme Foster <graeme AT acm DOT org>
-
-         - use for import to org/organisation resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be org/organisation/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
-         Name....................org_organisation
+         Organisation............org_organisation (the master org's name)
+         Branch..................org_organisation (the branch org's name)
+
+         all of the following are for the branch, unless the branch field is empty:
          Acronym.................org_organisation
          Type....................org_organisation
          Sector..................org_sector
@@ -38,7 +27,7 @@
     <xsl:include href="../../xml/countries.xsl"/>
     <xsl:include href="../../xml/commons.xsl"/>
 
-    <!-- Organisation types, see models/05_org.py -->
+    <!-- Organisation types, see modules/eden/org.py -->
     <org:type code="1">Government</org:type>
     <org:type code="2">Embassy</org:type>
     <org:type code="3">International NGO</org:type>
@@ -52,16 +41,49 @@
     <org:type code="12">Institution</org:type>
     <org:type code="13">Red Cross / Red Crescent</org:type>
 
+    <!-- Indexes for faster processing -->
+    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
+            <!-- Branches -->
             <xsl:apply-templates select="table/row"/>
+
+            <!-- Top-level Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName">
+                        <xsl:value-of select="col[@field='Organisation']/text()"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="BranchName"></xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
+
+        <!-- Create the Branches -->
+        <xsl:if test="$BranchName!=''">
+            <xsl:call-template name="Organisation">
+                <xsl:with-param name="OrgName"></xsl:with-param>
+                <xsl:with-param name="BranchName">
+                    <xsl:value-of select="$BranchName"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+        <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
 
         <!-- Create the sectors -->
         <xsl:variable name="sector" select="col[@field='Sector']"/>
@@ -69,39 +91,88 @@
             <xsl:with-param name="list" select="$sector"/>
         </xsl:call-template>
 
-        <!-- Create the Organisation -->
+        <!-- Create the Organisation/Branch -->
         <resource name="org_organisation">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
+            <xsl:choose>
+                <xsl:when test="$OrgName!=''">
+                    <!-- This is the Organisation -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$OrgName"/></data>
+                </xsl:when>
+                <xsl:when test="$BranchName!=''">
+                    <!-- This is the Branch -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$BranchName"/></data>
+                </xsl:when>
+            </xsl:choose>
 
+            <xsl:if test="col[@field='Acronym']!=''">
+                <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
+            </xsl:if>
+            
             <xsl:variable name="typename" select="col[@field='Type']"/>
-            <xsl:variable name="typecode" select="document('')//org:type[text()=normalize-space($typename)]/@code"/>
-            <xsl:if test="$typecode">
-                <data field="type"><xsl:value-of select="$typecode"/></data>
+            <xsl:if test="$typename!=''">
+                <xsl:variable name="typecode" select="document('')//org:type[text()=normalize-space($typename)]/@code"/>
+                <xsl:if test="$typecode">
+                    <data field="type"><xsl:value-of select="$typecode"/></data>
+                </xsl:if>
             </xsl:if>
 
-            <data field="country">
-                <xsl:value-of select="col[@field='Country']"/>
-                <!--<xsl:call-template name="iso2countryname">
-                    <xsl:with-param name="country" select="col[@field='country']"/>
-                </xsl:call-template>-->
-            </data>
-            <data field="region"><xsl:value-of select="col[@field='Region']"/></data>
-            <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
-            <data field="twitter"><xsl:value-of select="col[@field='Twitter']"/></data>
-            <data field="donation_phone"><xsl:value-of select="col[@field='Donation Phone']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Country']!=''">
+                <data field="country">
+                    <xsl:value-of select="col[@field='Country']"/>
+                    <!--<xsl:call-template name="iso2countryname">
+                        <xsl:with-param name="country" select="col[@field='country']"/>
+                    </xsl:call-template>-->
+                </data>
+            </xsl:if>
+            <xsl:if test="col[@field='Region']!=''">
+                <data field="region"><xsl:value-of select="col[@field='Region']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Website']!=''">
+                <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Twitter']!=''">
+                <data field="twitter"><xsl:value-of select="col[@field='Twitter']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Donation Phone']!=''">
+                <data field="donation_phone"><xsl:value-of select="col[@field='Donation Phone']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
 
-            <reference field="sector_id" resource="org_sector">
-                <xsl:variable name="qlist">
-                    <xsl:call-template name="quoteList">
-                        <xsl:with-param name="list" select="$sector"/>
-                    </xsl:call-template>
-                </xsl:variable>
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('[', $qlist, ']')"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$sector!=''">
+                <reference field="sector_id" resource="org_sector">
+                    <xsl:variable name="qlist">
+                        <xsl:call-template name="quoteList">
+                            <xsl:with-param name="list" select="$sector"/>
+                        </xsl:call-template>
+                    </xsl:variable>
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('[', $qlist, ']')"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
+            <xsl:if test="$OrgName!=''">
+                <!-- Nest all the Branches -->
+                <xsl:for-each select="//row[col[@field='Organisation']=$OrgName]">
+                    <xsl:if test="col[@field='Branch']!=''">
+                        <resource name="org_organisation_branch">
+                            <reference field="branch_id">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat($OrgName,col[@field='Branch'])"/>
+                                </xsl:attribute>
+                            </reference>
+                        </resource>
+                    </xsl:if>
+                </xsl:for-each>
+            </xsl:if>
 
         </resource>
 
