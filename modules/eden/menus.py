@@ -1016,6 +1016,20 @@ class S3OptionsMenu:
         session = current.session
         ADMIN = session.s3.system_roles.ADMIN
 
+        # Do we have a series_id?
+        series_id = False
+        vars = Storage()
+        try:
+            series_id = int(current.request.args[0])
+        except:
+            try:
+                (dummy, series_id) = current.request.vars["viewing"].split(".")
+                series_id = int(series_id)
+            except:
+                pass
+        if series_id:
+            vars.viewing = "survey_complete.%s" % series_id
+
         return M(c="survey")(
                     M("Assessment Templates", f="template")(
                         #M("New", m="create"),
@@ -1037,7 +1051,7 @@ class S3OptionsMenu:
                         M("Import Template Layout", f="formatter",
                           m="import", p="create"),
                         M("Import Completed Assessment Forms", f="complete",
-                          m="import", p="create"),
+                          m="import", p="create", vars=vars, check=series_id),
                     ),
                 )
 
