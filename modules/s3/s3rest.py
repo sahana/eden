@@ -40,6 +40,7 @@ __all__ = ["S3RequestManager",
            "S3FieldSelector",
            "S3TypeConverter"]
 
+import re
 import sys
 import datetime
 import time
@@ -4698,7 +4699,6 @@ class S3Resource(object):
         return 0
 
 # =============================================================================
-
 class S3ResourceFilter:
     """ Class representing a resource filter """
 
@@ -5354,6 +5354,11 @@ class S3ResourceFilter:
 class S3FieldSelector:
     """ Helper class to construct a resource query """
 
+    LOWER = "lower"
+    UPPER = "upper"
+
+    OPERATORS = [LOWER, UPPER]
+
     def __init__(self, name, type=None):
         """ Constructor """
 
@@ -5361,6 +5366,8 @@ class S3FieldSelector:
             raise SyntaxError("name required")
         self.name = name
         self.type = type
+
+        self.op = None
 
     # -------------------------------------------------------------------------
     def __lt__(self, value):
@@ -5399,12 +5406,37 @@ class S3FieldSelector:
         return S3ResourceQuery(S3ResourceQuery.CONTAINS, self, value)
 
     # -------------------------------------------------------------------------
+    def lower(self):
+        self.op = self.LOWER
+        return self
+
+    # -------------------------------------------------------------------------
+    def upper(self):
+        self.op = self.UPPER
+        return self
+
+    # -------------------------------------------------------------------------
+    def expr(self, val):
+        if not self.op:
+            return val
+        elif val is not None:
+            if self.op == self.LOWER and \
+               hasattr(val, "lower") and callable(val.lower):
+                return val.lower()
+            elif self.op == self.UPPER and \
+                 hasattr(val, "upper") and callable(val.upper):
+                return val.upper()
+        return val
+
+    # -------------------------------------------------------------------------
     def represent(self, resource):
 
         try:
             lfield = resource.resolve_selector(self.name)
         except:
             return "#undef#_%s" % self.name
+        if self.op is not None:
+            return "%s.%s()" % (lfield.colname, self.op)
         return lfield.colname
 
     # -------------------------------------------------------------------------
@@ -5447,6 +5479,8 @@ class S3FieldSelector:
             value = row[tname][fname]
         else:
             raise KeyError("Field not found: %s" % field)
+        if isinstance(field, S3FieldSelector):
+            return field.expr(value)
         return value
 
     # -------------------------------------------------------------------------
@@ -5459,9 +5493,11 @@ class S3FieldSelector:
         return resource.resolve_selector(self.name)
 
 # =============================================================================
-
 class S3ResourceQuery:
-    """ Helper class representing a resource query """
+    """
+        Helper class representing a resource query
+        - unlike DAL Query objects, these can be converted to/from URL filters
+    """
 
     # Supported operators
     NOT = "not"
@@ -5555,7 +5591,7 @@ class S3ResourceQuery:
     def query(self, resource):
         """
             Convert this S3ResourceQuery into a DAL query, ignoring virtual
-            fields (the neccessary joins for this query can be constructed
+            fields (the necessary joins for this query can be constructed
             with the joins() method)
 
             @param resource: the resource to resolve the query against
@@ -5596,6 +5632,7 @@ class S3ResourceQuery:
             lfield = lf.field
             if lfield is None:
                 return None # virtual field
+            lfield = l.expr(lfield)
         elif isinstance(l, Field):
             lfield = l
         else:
@@ -5608,6 +5645,7 @@ class S3ResourceQuery:
             rfield = lf.field
             if rfield is None:
                 return None # virtual field
+            rfield = r.expr(rfield)
         else:
             rfield = r
 
@@ -5655,7 +5693,7 @@ class S3ResourceQuery:
             else:
                 q = l.belongs(r)
         elif op == self.LIKE:
-            q = l.lower().like("%%%s%%" % str(r).lower())
+            q = l.like(str(r))
         elif op == self.LT:
             q = l < r
         elif op == self.LE:
@@ -5786,7 +5824,8 @@ class S3ResourceQuery:
             r = convert(l, r)
             result = contains(r, l)
         elif op == self.LIKE:
-            result = str(r) in str(l)
+            pattern = re.escape(str(r)).replace("\\%", ".*").replace(".*.*", "\\%")
+            return re.match(pattern, str(l)) is not None
         else:
             r = convert(l, r)
             if op == self.LT:
@@ -5864,7 +5903,7 @@ class S3ResourceQuery:
             elif op == self.BELONGS:
                 return "(%s in %s)" % (l, r)
             elif op == self.LIKE:
-                return "(%s in %s)" % (r, l)
+                return "(%s like %s)" % (l, r)
             elif op == self.LT:
                 return "(%s < %s)" % (l, r)
             elif op == self.LE:

@@ -2317,8 +2317,8 @@ class S3LocationSearch(S3Search):
 class S3OrganisationSearch(S3Search):
     """
         Search method with specifics for Organisation records
-        - searches name & acronym
-        @ToDo: Support Branches in the represents
+        - searches name & acronym for both this organisation & the parent of
+          branches
     """
 
     def search_json(self, r, **attr):
@@ -2356,15 +2356,19 @@ class S3OrganisationSearch(S3Search):
 
         if filter and value:
 
+            btable = current.s3db.org_organisation_branch
             field = table.name
             field2 = table.acronym
+            field3 = btable.organisation_id
 
             # Fields to return
-            fields = [table.id, field, field2]
+            fields = [table.id, field, field2, field3]
 
             if filter == "~":
-                query = (field.lower().like(value + "%")) | \
-                        (field2.lower().like(value + "%"))
+                query = (S3FieldSelector("parent.name").lower().like(value + "%")) | \
+                        (S3FieldSelector("parent.acronym").lower().like(value + "%")) | \
+                        (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
+                        (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
 
             else:
                 output = xml.json_message(False,
@@ -2381,11 +2385,35 @@ class S3OrganisationSearch(S3Search):
                                    % MAX_SEARCH_RESULTS)])
 
         if output is None:
-            output = resource.exporter.json(resource,
-                                            start=0,
-                                            limit=limit,
-                                            fields=fields,
-                                            orderby=field)
+            attributes = dict(orderby=field)
+            limitby = resource.limitby(start=0, limit=limit)
+            if limitby is not None:
+                attributes["limitby"] = limitby
+            rows = resource.select(*fields, **attributes)
+            output = []
+            append = output.append
+            db = current.db
+            for row in rows:
+                name = row[table].name
+                parent = None
+                if "org_organisation_branch" in row:
+                    query = (table.id == row[btable].organisation_id)
+                    parent = db(query).select(table.name,
+                                              limitby = (0, 1)).first()
+                    if parent:
+                        name = "%s > %s" % (parent.name,
+                                            name)
+                if not parent:
+                    acronym = row[table].acronym
+                    if acronym:
+                        name = "%s (%s)" % (name,
+                                            acronym)
+                record = dict(
+                    id = row[table].id,
+                    name = name,
+                    )
+                append(record)
+            output = json(output)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -2477,8 +2505,6 @@ class S3PersonSearch(S3Search):
         return output
 
 # =============================================================================
-
-
 class S3HRSearch(S3Search):
     """
         Search method with specifics for HRM records (full name search)
@@ -2724,7 +2750,7 @@ class S3TrainingSearch(S3Search):
         if filter and value:
 
             s3db = current.s3db
-            ctable = s3db.hrm_course 
+            ctable = s3db.hrm_course
             field = ctable.name
             stable = s3db.org_site
             field2 = stable.name

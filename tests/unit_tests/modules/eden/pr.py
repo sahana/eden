@@ -65,6 +65,14 @@ class PRTests(unittest.TestCase):
             self.assertTrue(user_id in users)
             self.assertTrue(admin_id in users)
 
+            # None as realm should give a list of all current users
+            table = auth.settings.table_user
+            query = (table.deleted != True)
+            rows = db(query).select(table.id)
+            all_users = [row.id for row in rows]
+            users = s3db.pr_realm_users(None)
+            self.assertTrue(all([u in users for u in all_users]))
+
         finally:
             db.rollback()
 
