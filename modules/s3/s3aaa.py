@@ -3510,7 +3510,11 @@ class S3Permission(object):
                 _debug("*** GRANTED ***")
                 return True
             else:
-                permitted = racl == self.READ
+                if self.page_restricted(c=c, f=f):
+                    permitted = racl == self.READ
+                else:
+                    _debug("==> unrestricted page")
+                    permitted = True
                 if permitted:
                     _debug("*** GRANTED ***")
                 else:
