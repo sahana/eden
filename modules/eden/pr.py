@@ -3484,7 +3484,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     s3db = current.s3db
 
     if not role:
-        return
+        return None
 
     master_pe = pr_get_pe_id(master)
     affiliate_pe = pr_get_pe_id(affiliate)
