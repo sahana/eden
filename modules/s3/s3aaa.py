@@ -2742,8 +2742,10 @@ class AuthS3(Auth):
                 pass
             else:
                 user_id = None
-                if PID in row:
-                    # Records which link to a person_id shall be owned by that person
+                # Records which link to a person_id shall be owned by that person
+                if tablename == "pr_person":
+                    user_id = self.s3_get_user_id(row[table._id])
+                elif PID in row:
                     user_id = self.s3_get_user_id(row[PID])
                 if not user_id and self.s3_logged_in() and self.user:
                     # Fallback to current user
