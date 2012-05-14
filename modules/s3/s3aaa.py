@@ -1705,7 +1705,8 @@ class AuthS3(Auth):
             # Get all current auth_memberships of the user
             mtable = self.settings.table_membership
             query = (mtable.deleted != True) & \
-                    (mtable.user_id == user_id)
+                    (mtable.user_id == user_id) & \
+                    (mtable.group_id != None)
             rows = db(query).select(mtable.group_id, mtable.pe_id)
 
             # Add all group_ids to session.s3.roles
@@ -2776,8 +2777,7 @@ class AuthS3(Auth):
                 # Otherwise, do a fallback cascade
                 else:
                     get_pe_id = s3db.pr_get_pe_id
-                    if EID in row:
-                        # Person Entities own their own records and
+                    if EID in row and tablename not in ("pr_person", "dvi_body"):
                         owner_entity = row[EID]
                     elif OID in row:
                         owner_entity = get_pe_id(otablename, row[OID])
