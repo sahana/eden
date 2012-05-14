@@ -70,6 +70,7 @@ class S3LocationModel(S3Model):
         session = current.session
 
         messages = current.messages
+        NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         system_roles = session.s3.system_roles

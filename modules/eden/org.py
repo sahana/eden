@@ -340,10 +340,6 @@ class S3OrganisationModel(S3Model):
                                                       title=T("Organization"),
                                                       tooltip=help)
 
-        # This deepcopy stuff causes an error about NoneTypes not being copyable.
-        #from_organisation_comment = copy.deepcopy(organisation_comment)
-        #from_organisation_comment[0]["_href"] = organisation_comment[0]["_href"].replace("popup", "popup&child=from_organisation_id")
-
         organisation_id = S3ReusableField("organisation_id",
                                           db.org_organisation, sortby="name",
                                           requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
