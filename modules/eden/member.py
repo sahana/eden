@@ -259,7 +259,7 @@ def member_rheader(r, tabs=[]):
     # Tabs
     tabs = [(T("Person Details"), None),
             (T("Membership Details"), "membership"),
-            #(T("Addresses"), "address"),
+            (T("Addresses"), "address"),
             #(T("Contacts"), "contact"),
             (T("Contacts"), "contacts"),
            ]

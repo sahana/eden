@@ -189,7 +189,6 @@ class S3HRModel(S3Model):
             msg_record_deleted = T("Record deleted"),
             msg_list_empty = T("No staff or volunteers currently registered"))
 
-        # Used by Scenarios, Events, Tasks & RAT
         human_resource_id = S3ReusableField("human_resource_id",
                                             db.hrm_human_resource,
                                             sortby = ["type", "status"],
@@ -450,9 +449,9 @@ class S3HRModel(S3Model):
         ltable = s3db.pr_person_user
         htable = s3db.hrm_human_resource
 
-        if "vars" in form:
+        try:
             vars = form.vars
-        else:
+        except:
             # Coming from s3_register callback
             vars = form
 
@@ -2498,12 +2497,12 @@ def hrm_rheader(r, tabs=[]):
         # Tabs
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
-            #if group == "staff":
-            #    address_tab_name = T("Home Address")
-            #else:
-            #    address_tab_name = T("Addresses")
+            if group == "staff":
+                address_tab_name = T("Home Address")
+            else:
+                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
-                    #(address_tab_name, "address"),
+                    (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
@@ -2518,13 +2517,13 @@ def hrm_rheader(r, tabs=[]):
             # Configure for HR manager mode
             if group == "staff":
                 hr_record = T("Staff Record")
-                #address_tab_name = T("Home Address")
+                address_tab_name = T("Home Address")
             elif group == "volunteer":
                 hr_record = T("Volunteer Record")
-                #address_tab_name = T("Addresses")
+                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
-                    #(address_tab_name, "address"),
+                    (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
