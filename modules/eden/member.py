@@ -276,14 +276,16 @@ def member_rheader(r, tabs=[]):
                                   ptable.middle_name,
                                   ptable.last_name,
                                   limitby=(0, 1)).first()
-        rheader = DIV(DIV(s3_avatar_represent(person.id,
-                                              "pr_person",
-                                              _class="fleft"),
-                          _style="padding-bottom:10px;"),
-                      TABLE(
-            TR(TH(s3_fullname(person))),
-            ), rheader_tabs)
-        
+        if person is not None:
+            rheader = DIV(DIV(s3_avatar_represent(person.id,
+                                                  "pr_person",
+                                                  _class="fleft"),
+                              _style="padding-bottom:10px;"),
+                          TABLE(
+                            TR(TH(s3_fullname(person))),
+                         ), rheader_tabs)
+        else:
+            rheader = None
     elif resourcename == "person":
         rheader = DIV(DIV(s3_avatar_represent(record.id,
                                               "pr_person",
