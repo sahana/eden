@@ -2892,8 +2892,6 @@ def pr_contacts(r, **attr):
             Addresses (pr_address)
             Contacts (pr_contact)
             Emergency Contacts
-
-        @ToDo: Fix Map in Address' LocationSelector
     """
 
     from itertools import groupby
@@ -2908,49 +2906,51 @@ def pr_contacts(r, **attr):
     person = r.record
 
     # Addresses
-    atable = s3db.pr_address
-    query = (atable.pe_id == person.pe_id)
-    addresses = db(query).select(atable.id,
-                                 atable.type,
-                                 atable.building_name,
-                                 atable.address,
-                                 atable.L3,
-                                 atable.postcode,
-                                 atable.L0,
-                                 orderby=atable.type)
+    # - removed since can't get Google Maps displaying in Location Selector when loaded async
+    # - even when loaded into page before async load of map
+    # atable = s3db.pr_address
+    # query = (atable.pe_id == person.pe_id)
+    # addresses = db(query).select(atable.id,
+                                 # atable.type,
+                                 # atable.building_name,
+                                 # atable.address,
+                                 # atable.L3,
+                                 # atable.postcode,
+                                 # atable.L0,
+                                 # orderby=atable.type)
 
-    address_groups = {}
-    for key, group in groupby(addresses, lambda a: a.type):
-        address_groups[key] = list(group)
+    # address_groups = {}
+    # for key, group in groupby(addresses, lambda a: a.type):
+        # address_groups[key] = list(group)
 
-    address_wrapper = DIV(H2(T("Addresses")),
-                          DIV(A(T("Add"), _class="addBtn", _id="address-add"),
-                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
-                                  _height=32, _width=32,
-                                  _id="address-add_throbber",
-                                  _class="throbber hidden"),
-                              _class="margin"))
+    # address_wrapper = DIV(H2(T("Addresses")),
+                          # DIV(A(T("Add"), _class="action-btn", _id="address-add"),
+                              # IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  # _height=32, _width=32,
+                                  # _id="address-add_throbber",
+                                  # _class="throbber hidden"),
+                              # _class="margin"))
 
-    items = address_groups.items()
-    opts = s3db.pr_address_type_opts
-    for address_type, details in items:
-        address_wrapper.append(H3(opts[address_type]))
-        for detail in details:
-            text = ",".join((detail.building_name or "",
-                             detail.address or "",
-                             detail.L3 or "",
-                             detail.postcode or "",
-                             detail.L0 or "",
-                            ))
-            text = re.sub(",+", ",", text)
-            if text[0] == ",":
-                text = text[1:]
-            address_wrapper.append(P(
-                SPAN(text),
-                A(T("Edit"), _class="editBtn fright"),
-                _id="address-%s" % detail.id,
-                _class="address",
-                ))
+    # items = address_groups.items()
+    # opts = s3db.pr_address_type_opts
+    # for address_type, details in items:
+        # address_wrapper.append(H3(opts[address_type]))
+        # for detail in details:
+            # text = ",".join((detail.building_name or "",
+                             # detail.address or "",
+                             # detail.L3 or "",
+                             # detail.postcode or "",
+                             # detail.L0 or "",
+                            # ))
+            # text = re.sub(",+", ",", text)
+            # if text[0] == ",":
+                # text = text[1:]
+            # address_wrapper.append(P(
+                # SPAN(text),
+                # A(T("Edit"), _class="editBtn action-btn fright"),
+                # _id="address-%s" % detail.id,
+                # _class="address",
+                # ))
 
     # Contacts
     ctable = s3db.pr_contact
@@ -2965,13 +2965,12 @@ def pr_contacts(r, **attr):
         contact_groups[key] = list(group)
 
     contacts_wrapper = DIV(H2(T("Contacts")),
-                           DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
+                           DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
                               IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
                                   _height=32, _width=32,
                                   _id="contact-add_throbber",
                                   _class="throbber hidden"),
                                _class="margin"))
-
 
     items = contact_groups.items()
     def mysort(key):
@@ -2995,7 +2994,7 @@ def pr_contacts(r, **attr):
         for detail in details:
             contacts_wrapper.append(P(
                 SPAN(detail.value),
-                A(T("Edit"), _class="editBtn fright"),
+                A(T("Edit"), _class="editBtn action-btn fright"),
                 _id="contact-%s" % detail.id,
                 _class="contact",
                 ))
@@ -3010,7 +3009,7 @@ def pr_contacts(r, **attr):
                                  etable.phone)
 
     emergency_wrapper = DIV(H2(T("Emergency Contacts")),
-                            DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
+                            DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
                               IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
                                   _height=32, _width=32,
                                   _id="emergency-add_throbber",
@@ -3026,13 +3025,13 @@ def pr_contacts(r, **attr):
             relationship = "%s, "% relationship
         emergency_wrapper.append(P(
             SPAN("%s%s%s" % (name, relationship, contact.phone)),
-            A(T("Edit"), _class="editBtn fright"),
+            A(T("Edit"), _class="editBtn action-btn fright"),
             _id="emergency-%s" % contact.id,
             _class="emergency",
             ))
 
     # Overall content
-    content = DIV(address_wrapper,
+    content = DIV(#address_wrapper,
                   contacts_wrapper,
                   emergency_wrapper,
                   _class="contacts-wrapper")
@@ -3047,7 +3046,15 @@ def pr_contacts(r, **attr):
         s3.scripts.append(URL(c="static", f="scripts",
                               args=["S3", "s3.contacts.min.js"]))
 
+    #s3.js_global.append("controller='%s';" % current.request.controller)
     s3.js_global.append("personId = %s;" % person.id);
+
+    # Load the Google JS now as can't load it async
+    # @ToDo: Is this worth making conditional on this being their default base layer?
+    #apikey = current.deployment_settings.get_gis_api_google()
+    #if apikey:
+    #    s3.scripts.append("http://www.google.com/jsapi?key=%s" % apikey)
+    #s3.scripts.append("http://maps.google.com/maps/api/js?v=3.6&sensor=false")
 
     # Custom View
     response.view = "pr/contacts.html"
