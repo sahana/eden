@@ -1654,7 +1654,8 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader, for_pe=self.org1)
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+        self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                     "(dvi_body.owned_by_entity IS NULL)) OR "
                                      "(((dvi_body.owned_by_user = %s) OR "
                                      "(((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1676,14 +1677,16 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor, for_pe=self.org1)
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+        self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                     "(dvi_body.owned_by_entity IS NULL)) OR "
                                      "(((dvi_body.owned_by_user = %s) OR "
                                      "(((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL)) AND "
                                      "(dvi_body.owned_by_entity IS NULL))) OR "
                                      "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
         query = accessible_query("update", table, c="dvi", f="body")
-        self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+        self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                     "(dvi_body.owned_by_entity IS NULL)) OR "
                                      "(((dvi_body.owned_by_user = %s) OR "
                                      "(((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1716,7 +1719,8 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader, for_pe=self.org1)
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+        self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                     "(dvi_body.owned_by_entity IS NULL)) OR "
                                      "(((dvi_body.owned_by_user = %s) OR "
                                      "(((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1741,7 +1745,8 @@ class S3AccessibleQueryTests(unittest.TestCase):
 
         # Re-check queries
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        qstr = ("((dvi_body.owned_by_entity IN (%s,%s)) OR "
+        qstr = ("(((dvi_body.owned_by_entity IN (%s,%s)) OR "
+                "(dvi_body.owned_by_entity IS NULL)) OR "
                 "(((dvi_body.owned_by_user = %s) OR "
                 "(((dvi_body.owned_by_user IS NULL) AND "
                 "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1768,14 +1773,16 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor, for_pe=self.org1)
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+        self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                     "(dvi_body.owned_by_entity IS NULL)) OR "
                                      "(((dvi_body.owned_by_user = %s) OR "
                                      "(((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL)) AND "
                                      "(dvi_body.owned_by_entity IS NULL))) OR "
                                      "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
         query = accessible_query("update", table, c="dvi", f="body")
-        self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+        self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                     "(dvi_body.owned_by_entity IS NULL)) OR "
                                      "(((dvi_body.owned_by_user = %s) OR "
                                      "(((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1790,7 +1797,8 @@ class S3AccessibleQueryTests(unittest.TestCase):
         auth.s3_impersonate("normaluser@example.com")
 
         # Re-check queries
-        qstr = ("((dvi_body.owned_by_entity IN (%s,%s)) OR "
+        qstr = ("(((dvi_body.owned_by_entity IN (%s,%s)) OR "
+                "(dvi_body.owned_by_entity IS NULL)) OR "
                 "(((dvi_body.owned_by_user = %s) OR "
                 "(((dvi_body.owned_by_user IS NULL) AND "
                 "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1839,14 +1847,16 @@ class S3AccessibleQueryTests(unittest.TestCase):
 
             # User should only be able to access records of org3
             query = accessible_query("read", table, c="dvi", f="body")
-            self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+            self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                         "(dvi_body.owned_by_entity IS NULL)) OR "
                                          "(((dvi_body.owned_by_user = %s) OR "
                                          "(((dvi_body.owned_by_user IS NULL) AND "
                                          "(dvi_body.owned_by_group IS NULL)) AND "
                                          "(dvi_body.owned_by_entity IS NULL))) OR "
                                          "(dvi_body.owned_by_group IN (2,3))))" % (self.org3, auth.user.id))
             query = accessible_query("update", table, c="dvi", f="body")
-            self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+            self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                         "(dvi_body.owned_by_entity IS NULL)) OR "
                                          "(((dvi_body.owned_by_user = %s) OR "
                                          "(((dvi_body.owned_by_user IS NULL) AND "
                                          "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1867,7 +1877,8 @@ class S3AccessibleQueryTests(unittest.TestCase):
 
             # User should now be able to read records of org1 and org3, but update only org3
             query = accessible_query("read", table, c="dvi", f="body")
-            qstr = ("((dvi_body.owned_by_entity IN (%s,%s)) OR "
+            qstr = ("(((dvi_body.owned_by_entity IN (%s,%s)) OR "
+                    "(dvi_body.owned_by_entity IS NULL)) OR "
                     "(((dvi_body.owned_by_user = %s) OR "
                     "(((dvi_body.owned_by_user IS NULL) AND "
                     "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1876,7 +1887,8 @@ class S3AccessibleQueryTests(unittest.TestCase):
             self.assertTrue(str(query) == qstr % (self.org1, self.org3, auth.user.id) or
                             str(query) == qstr % (self.org3, self.org1, auth.user.id))
             query = accessible_query("update", table, c="dvi", f="body")
-            qstr = ("((dvi_body.owned_by_entity = %s) OR "
+            qstr = ("(((dvi_body.owned_by_entity = %s) OR "
+                    "(dvi_body.owned_by_entity IS NULL)) OR "
                     "(((dvi_body.owned_by_user = %s) OR "
                     "(((dvi_body.owned_by_user IS NULL) AND "
                     "(dvi_body.owned_by_group IS NULL)) AND "
@@ -1892,14 +1904,16 @@ class S3AccessibleQueryTests(unittest.TestCase):
 
             # Check queries again
             query = accessible_query("read", table, c="dvi", f="body")
-            self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+            self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                         "(dvi_body.owned_by_entity IS NULL)) OR "
                                          "(((dvi_body.owned_by_user = %s) OR "
                                          "(((dvi_body.owned_by_user IS NULL) AND "
                                          "(dvi_body.owned_by_group IS NULL)) AND "
                                          "(dvi_body.owned_by_entity IS NULL))) OR "
                                          "(dvi_body.owned_by_group IN (2,3))))" % (self.org3, auth.user.id))
             query = accessible_query("update", table, c="dvi", f="body")
-            self.assertEqual(str(query), "((dvi_body.owned_by_entity = %s) OR "
+            self.assertEqual(str(query), "(((dvi_body.owned_by_entity = %s) OR "
+                                         "(dvi_body.owned_by_entity IS NULL)) OR "
                                          "(((dvi_body.owned_by_user = %s) OR "
                                          "(((dvi_body.owned_by_user IS NULL) AND "
                                          "(dvi_body.owned_by_group IS NULL)) AND "

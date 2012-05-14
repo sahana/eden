@@ -3448,10 +3448,11 @@ class S3Permission(object):
         elif not entities:
             return None
         elif OENT in table.fields:
+            public = (table[OENT] == None)
             if len(entities) == 1:
-                return (table[OENT] == entities[0])
+                return (table[OENT] == entities[0]) | public
             else:
-                return (table[OENT].belongs(entities))
+                return (table[OENT].belongs(entities)) | public
         return None
 
     # -------------------------------------------------------------------------

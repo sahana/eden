@@ -81,7 +81,8 @@ class S3Config(Storage):
         self.CURRENCIES = {
             "USD" :T("United States Dollars"),
             "EUR" :T("Euros"),
-            "GBP" :T("Great British Pounds")
+            "GBP" :T("Great British Pounds"),
+            "CHF" :T("Swiss Francs")
         }
 
     # -------------------------------------------------------------------------
