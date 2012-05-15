@@ -414,7 +414,7 @@ class AuthS3(Auth):
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
 
-        if security_policy not in (1, 2, 3, 4, 5, 6) and \
+        if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
            not settings.table_permission:
             # Permissions table (group<->permission)
             # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
@@ -2636,7 +2636,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = current.deployment_settings.security.policy
+        policy = current.deployment_settings.get_security_policy()
 
         # Simple policy
         if policy == 1:
@@ -2721,7 +2721,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = current.deployment_settings.security.policy
+        policy = current.deployment_settings.get_security_policy()
 
         if policy == 1:
             # "simple" security policy: show all records
