@@ -345,6 +345,9 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.use_commit = False
 deployment_settings.req.use_req_number = True
 deployment_settings.req.generate_req_number = True
+deployment_settings.req.req_name = "Request Issue"
+deployment_settings.req.req_form_name = "Request Issue Form"
+deployment_settings.req.req_field_name = "Request Issue Number"
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
@@ -390,6 +393,13 @@ deployment_settings.req.generate_req_number = True
 #    msg_list_empty = T("No Requests for Volunteers"))
 
 # Inventory Management
+deployment_settings.inv.inv_name = "Tally Out"
+deployment_settings.inv.inv_form_name = "Tally Out Sheet"
+deployment_settings.inv.inv_field_name = "Tally Out Number"
+
+deployment_settings.inv.grn_name = "Acknowledgement Receipt for Donations Received"
+deployment_settings.inv.grn_form_name = "Acknowledgement Receipt for Donations Received Form"
+deployment_settings.inv.grn_shortname = "ARDR"
 #deployment_settings.inv.collapse_tabs = False
 # Use the term 'Order' instead of 'Shipment'
 #deployment_settings.inv.shipment_name = "order"

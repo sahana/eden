@@ -101,8 +101,9 @@ tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
 itn_label = T("Item Source Tracking Number")
 # Overwrite the label until we have a better way to do this
 itn_label = T("CTN")
-wn_label = T("Waybill Number")
-grn_label = T("Goods Received Note Number")
+settings = current.deployment_settings
+wn_label = T(settings.get_inv_field_name())
+grn_label = T("%(GRN)s Number") % dict(GRN=settings.get_grn_shortname())
 po_label = T("Purchase Order Number")
 # =============================================================================
 class S3InventoryModel(S3Model):
@@ -788,10 +789,11 @@ class S3TrackingModel(S3Model):
                                         represent = lambda opt: ship_doc_status.get(opt, UNKNOWN_OPT),
                                         default = SHIP_DOC_PENDING,
                                         widget = radio_widget,
-                                        label = T("GRN Status"),
+                                        label = T("%(GRN)s Status") % dict(GRN=settings.get_grn_shortname()),
                                         comment = DIV( _class="tooltip",
-                                                       _title="%s|%s" % (T("GRN Status"),
-                                                                         T("Has the GRN (Goods Received Note) been completed?"))),
+                                                       _title="%s|%s" % (T("%(GRN)s Status") % dict(GRN=settings.get_grn_shortname()),
+                                                                         T("Has the %(GRN)s (%(GRN_name)s) form been completed?") % dict(GRN=settings.get_grn_shortname(),
+                                                                                                                                         GRN_name=settings.get_grn_name()))),
                                         ),
                                   Field("cert_status",
                                         "integer",
@@ -1165,7 +1167,7 @@ $(document).ready(function() {
         return exporter(r,
                         method = "list",
                         pdf_componentname = "inv_track_item",
-                        pdf_title = "Waybill",
+                        pdf_title = current.deployment_settings.get_inv_name(),
                         pdf_filename = send_ref,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
@@ -1255,11 +1257,10 @@ $(document).ready(function() {
                        "bin"
                        
                       ]
-
         exporter = r.resource.exporter.pdf
         return exporter(r,
                         method = "list",
-                        pdf_title = "Goods Received Note",
+                        pdf_title = T(current.deployment_settings.get_grn_form_name()),
                         pdf_filename = recv_ref,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
@@ -1313,7 +1314,7 @@ $(document).ready(function() {
     @staticmethod
     def inv_send_ref_represent(value, show_link=True):
         """
-            Represent for the Waybill number, 
+            Represent for the Tall Out number, 
             if show_link is True then it will generate a link to the pdf
         """
         if value:
@@ -1856,7 +1857,7 @@ def inv_send_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD("Waybill", _colspan=2, _class="pdf_title"),
+                           TR(TD("TALLY OUT SHEET", _colspan=2, _class="pdf_title"),
                               TD(logo, _colspan=2),
                               ),
                            TR(TH("%s: " % table.send_ref.label),
@@ -1944,7 +1945,7 @@ def inv_send_rheader(r):
                         msg = T("You need to check all item quantities before you can complete the return process")
                         rfooter.append(SPAN(msg))
             else:
-                cn_btn = A( T("Waybill"),
+                cn_btn = A( T(current.deployment_settings.get_inv_name()),
                               _href = URL(f = "send",
                                           args = [record.id, "form"]
                                           ),
@@ -2108,7 +2109,7 @@ def inv_recv_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD("Goods Receive Notice", _colspan=2, _class="pdf_title"),
+                           TR(TD(T(current.deployment_settings.get_grn_form_name()), _colspan=2, _class="pdf_title"),
                               TD(logo, _colspan=2),
                               ),
                            TR(TH("%s: " % table.recv_ref.label),
