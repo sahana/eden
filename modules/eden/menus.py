@@ -921,6 +921,11 @@ class S3OptionsMenu:
                                        aggregate="sum")),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
+                    M("Reports", c="inv", f="inv_item")(
+                        M("Monetization", c="inv", f="inv_item", vars=dict(report="mon")),
+                        M("Summary of Releases", c="inv", f="inv_inv_item", vars=dict(report="rel")),
+                        M("Summary of Incoming Supplies", c="inv", f="inv_inv_item", vars=dict(report="inc")),
+                    ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),
                         M("List All"),

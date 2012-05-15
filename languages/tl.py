@@ -1,7 +1,6 @@
 # coding: utf8
 {
 '%(system_name)s - Verify Email': '%(system_name)s - I-verify ang Email',
-'%(system_name)s access granted': '%(system_name)s access granted',
 '%I:%M %p': '%I:%M %p',
 '%I:%M:%S %p': '%I:%M:%S %p',
 '%Y-%m-%d %H:%M:%S': '%Y-%m-%d %H:%M:%S',

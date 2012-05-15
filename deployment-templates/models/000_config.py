@@ -178,27 +178,13 @@ deployment_settings.L10n.utc_offset = "UTC +0000"
 #deployment_settings.L10n.date_format = T("%m-%d-%Y")
 #deployment_settings.L10n.time_format = T("%H:%M:%S")
 #deployment_settings.L10n.datetime_format = T("%m-%d-%Y %H:%M:%S")
-# Religions used in Person Registry
-# @ToDo: find a better code
-# http://eden.sahanafoundation.org/ticket/594
-deployment_settings.L10n.religions = {
-    "none":T("none"),
-    "christian":T("Christian"),
-    "muslim":T("Muslim"),
-    "jewish":T("Jewish"),
-    "buddhist":T("Buddhist"),
-    "hindu":T("Hindu"),
-    "bahai":T("Bahai"),
-    "other":T("other")
-}
-# Make last name in person/user records mandatory
-#deployment_settings.L10n.mandatory_lastname = True
-
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 deployment_settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 #deployment_settings.L10n.thousands_separator = ","
+# Make last name in person/user records mandatory
+#deployment_settings.L10n.mandatory_lastname = True
 
 # Finance settings
 #deployment_settings.fin.currencies = {
@@ -343,8 +329,11 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.show_quantity_transit = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
-deployment_settings.req.use_req_number = True
-deployment_settings.req.generate_req_number = True
+#deployment_settings.req.use_req_number = False
+#deployment_settings.req.generate_req_number = False
+#deployment_settings.req.req_name = "Request Issue"
+#deployment_settings.req.req_form_name = "Request Issue Form"
+#deployment_settings.req.req_field_name = "Request Issue Number"
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
@@ -393,6 +382,20 @@ deployment_settings.req.generate_req_number = True
 #deployment_settings.inv.collapse_tabs = False
 # Use the term 'Order' instead of 'Shipment'
 #deployment_settings.inv.shipment_name = "order"
+#deployment_settings.inv.inv_name = "Tally Out"
+#deployment_settings.inv.inv_form_name = "Tally Out Sheet"
+#deployment_settings.inv.inv_field_name = "Tally Out Number"
+#deployment_settings.inv.grn_name = "Acknowledgement Receipt for Donations Received"
+#deployment_settings.inv.grn_form_name = "Acknowledgement Receipt for Donations Received Form"
+#deployment_settings.inv.grn_shortname = "ARDR"
+#deployment_settings.inv.shipment_types = {
+#         0: T("-"),
+#         1: T("Other Warehouse"),
+#         2: T("Donation"),
+#         3: T("Foreign Donation"),
+#         4: T("Local Purchases"),
+#         5: T("Confiscated Goods from Bureau Of Customs")
+#    }
 
 # Supply
 #deployment_settings.supply.use_alt_name = False
