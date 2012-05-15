@@ -368,7 +368,7 @@ class S3HRModel(S3Model):
         ltable = s3db.pr_person_user
         htable = s3db.hrm_human_resource
 
-        if hasattr(form, "vars"):
+        if "vars" in form:
             vars = form.vars
         else:
             # Coming from s3_register callback
