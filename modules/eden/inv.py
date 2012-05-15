@@ -709,11 +709,7 @@ class S3TrackingModel(S3Model):
         # =====================================================================
         # Received (In/Receive / Donation / etc)
         #
-        inv_recv_type = { 0: NONE,
-                          1: T("Other Warehouse"),
-                          2: T("Donation"),
-                          3: T("Supplier"),
-                        }
+        inv_recv_type = settings.get_inv_shipment_types()
 
         ship_doc_status = { SHIP_DOC_PENDING  : T("Pending"),
                             SHIP_DOC_COMPLETE : T("Complete") }
@@ -757,7 +753,7 @@ class S3TrackingModel(S3Model):
                                          default = auth.user.site_id if auth.is_logged_in() else None,
                                          readable = True,
                                          writable = True,
-                                         notnull = True,
+										 notnull = True,
                                          widget = S3SiteAutocompleteWidget(),
                                          represent=org_site_represent),
                                   Field("date", "date",
@@ -777,7 +773,6 @@ class S3TrackingModel(S3Model):
                                         label = T("Type"),
                                         default = 0,
                                         ),
-                                  
                                   Field("status",
                                         "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(shipment_status)),
@@ -957,6 +952,7 @@ class S3TrackingModel(S3Model):
                                         default = 1,
                                         represent = lambda opt: tracking_status[opt],
                                         writable = False),
+					
                                   inv_item_id(name="send_inv_item_id",
                                               ondelete = "RESTRICT",
                                               script = SCRIPT("""
@@ -975,7 +971,7 @@ $(document).ready(function() {
                                 ),  # original inventory
                                   item_id(ondelete = "RESTRICT"),      # supply item
                                   item_pack_id(ondelete = "SET NULL"), # pack table
-                                  Field("quantity",
+									Field("quantity",
                                         "double",
                                         label = T("Quantity Sent"),
                                         notnull = True,
@@ -1044,36 +1040,37 @@ $(document).ready(function() {
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
-        LIST_TRACK_ITEMS = T("List of Shipping Items")
+        LIST_TRACK_ITEMS = T("List of Shipment Items")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_TRACK_ITEM,
-            title_display = T("Sent Item Details"),
+            title_display = T("Shipment Item Details"),
             title_list = LIST_TRACK_ITEMS,
-            title_update = T("Edit Sent Item"),
-            title_search = T("Search Sent Items"),
-            subtitle_create = T("Add New Sent Item"),
+            title_update = T("Edit Shipment Item"),
+            title_search = T("Search Shipment Items"),
+            subtitle_create = T("Add New Shpment Item"),
             subtitle_list = T("Shipment Items"),
             label_list_button = LIST_TRACK_ITEMS,
             label_create_button = ADD_TRACK_ITEM,
-            label_delete_button = T("Delete Sent Item"),
+            label_delete_button = T("Delete Shipment Item"),
             msg_record_created = T("Item Added to Shipment"),
-            msg_record_modified = T("Sent Item updated"),
-            msg_record_deleted = T("Sent Item deleted"),
-            msg_list_empty = T("No Sent Items currently registered"))
+            msg_record_modified = T("Shipment Item updated"),
+            msg_record_deleted = T("Shipment Item deleted"),
+            msg_list_empty = T("No Shipment Items"))
 
         # Resource configuration
         self.configure(tablename,
                        list_fields = ["id",
                                       "status",
                                       "item_id",
-                                      (T("Weight (kg)"), "weight"),
+									  (T("Weight (kg)"), "weight"),
                                       (T("Volume (m3)"), "volume"),
                                       "item_pack_id",
                                       "send_id",
                                       "quantity",
-                                      "bin",
+									  "currency",
+									  "pack_value",
+									  "bin",
                                       "return_quantity",
-                                      "recv_id",
                                       "recv_quantity",
                                       "recv_bin",
                                       "owner_org_id",
@@ -1139,7 +1136,7 @@ $(document).ready(function() {
     @staticmethod
     def inv_send_form (r, **attr):
         """
-            Generate a PDF of a Consignment Note
+            Generate a PDF of a Consignment Note/ ---Waybill
         """
 
         s3db = current.s3db
@@ -1160,7 +1157,9 @@ $(document).ready(function() {
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
-                       "bin",
+					   "currency",
+					   "pack_value",
+					   "bin",
                       ]
         exporter = r.resource.exporter.pdf
         return exporter(r,
@@ -1235,21 +1234,26 @@ $(document).ready(function() {
         s3db = current.s3db
 
         table = s3db.inv_recv
+        track_table = s3db.inv_track_item
         table.date.readable = True
         table.site_id.readable = True
+        track_table.recv_quantity.readable = True
         table.site_id.label = T("By Warehouse")
         table.site_id.represent = s3db.org_site_represent
 
         record = table[r.id]
         recv_ref = record.recv_ref
         list_fields = ["item_id",
-                       (T("Weight (kg)"), "weight"),
+                       T("Weight (kg)"), "weight"),
                        (T("Volume (m3)"), "volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
-                       "bin",
-                       "adj_item_id",
+                       "recv_quantity",
+					   "currency",
+					   "pack_value",
+                       "bin"
+                       
                       ]
 
         exporter = r.resource.exporter.pdf
@@ -1466,7 +1470,7 @@ $(document).ready(function() {
             stock_item = inv_item_table[form.vars.send_inv_item_id]
             stock_quantity = stock_item.quantity
             stock_pack = siptable[stock_item.item_pack_id].quantity
-            if form.record:
+	    if form.record:
                 if form.record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
                     old_track_pack_quantity = siptable[form.record.item_pack_id].quantity
@@ -1483,7 +1487,7 @@ $(document).ready(function() {
                                        new_track_pack_quantity
                                       )
             db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = newTotal)
-        if form.vars.send_id and form.vars.recv_id:
+	if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
         id = form.vars.id
@@ -2368,10 +2372,9 @@ class S3AdjustModel(S3Model):
                                   item_id(ondelete = "RESTRICT"),      # supply item
                                   Field("reason",
                                         "integer",
-                                        required = True,
                                         requires = IS_IN_SET(adjust_reason),
                                         default = 1,
-                                        represent = lambda opt: adjust_reason[opt],
+                                        represent = lambda opt: adjust_reason.get(opt, current.messages.UNKNOWN_OPT),
                                         writable = False),
                                   inv_item_id(ondelete = "RESTRICT",
                                         writable = False),  # original inventory
@@ -2514,8 +2517,7 @@ class S3AdjustModel(S3Model):
             send_row = db(table.id == id).select(table.adjustment_date,
                                                  table.adjuster_id,
                                                  limitby=(0, 1)).first()
-            repr = "%s - %s" % (table.adjuster_id.represent(send_row.adjuster_id,
-                                                            show_link),
+            repr = "%s - %s" % (table.adjuster_id.represent(send_row.adjuster_id),
                                 table.adjustment_date.represent(send_row.adjustment_date)
                                 )
             if show_link:
@@ -2651,7 +2653,7 @@ class InvItemVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
     extra_fields = ["pack_value",
-                    "quantity",
+                    "quantity"
                     ]
 
     def total_value(self):
@@ -2678,26 +2680,14 @@ class InvItemVirtualFields:
         except:
             # not available
             return current.messages.NONE
-        
-# =============================================================================
-class InvTrackItemVirtualFields:
-    """ Virtual fields as dimension classes for reports """
 
-    extra_fields = ["volume",
-                    "weight"
-                    ]
 
-    def volume(self):
-        try:
-            return self.inv_track_item.item_id.volume
-        except:
-            # not available
-            return current.messages.NONE
 
-    def weight(self):
-        try:
-            return self.inv_track_item.item_id.weight
-        except:
-            # not available
-            return current.messages.NONE
+
+
+
+
+
+
+
 # END =========================================================================

@@ -4319,8 +4319,9 @@ S3.gis.layers_feature_queries[%i] = {
                     for script in layer.scripts:
                         if "google.com" in script:
                             # Uses document.write, so can't load async
-                            html_append(SCRIPT(_type="text/javascript",
-                                               _src=script))
+                            script = SCRIPT(_type="text/javascript",
+                                            _src=script)
+                            html_append(script)
                         else:
                             add_javascript(script, ready=ready)
             except Exception, exception:
