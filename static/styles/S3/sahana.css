@@ -145,6 +145,9 @@ button {
 .fright {
     float: right !important;
 }
+.fcenter {
+    float: center !important;
+}
 /* Text aligns */
 .tacenter {
     text-align: center !important;
