@@ -395,7 +395,6 @@ def s3_sessions():
     """
         Extend session to support:
             Multiple flash classes
-            Roles caching
             Settings
                 Debug mode
                 Security mode
@@ -410,26 +409,6 @@ def s3_sessions():
     session.confirmation = []
     session.information = []
     session.warning = []
-
-    if not session.s3.system_roles:
-        auth.get_system_roles()
-
-    # @todo: have a function in AuthS3 to retrieve all roles
-    roles = []
-    if auth.is_logged_in():
-        user_id = auth.user.id
-        _memberships = db.auth_membership
-        # Cache this & invalidate when memberships are changed?
-        memberships = db(_memberships.user_id == user_id).select(
-                         _memberships.group_id)
-        roles = [m.group_id for m in memberships]
-    if session.s3.system_roles.ANONYMOUS:
-        roles.append(session.s3.system_roles.ANONYMOUS)
-
-    session.s3.roles = roles
-    # Check controller permission:
-    if not auth.permission():
-        auth.permission.fail()
 
     # Are we running in debug mode?
     session.s3.debug = s3.debug
@@ -458,7 +437,7 @@ def s3_sessions():
 s3_sessions()
 
 # Shortcuts for system role IDs, see modules/s3aaa.py/AuthS3
-system_roles = session.s3.system_roles
+system_roles = auth.get_system_roles()
 ADMIN = system_roles.ADMIN
 AUTHENTICATED = system_roles.AUTHENTICATED
 ANONYMOUS = system_roles.ANONYMOUS

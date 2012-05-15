@@ -66,6 +66,7 @@ class S3DocumentLibrary(S3Model):
         add_component = self.add_component
         comments = s3.comments
         configure = self.configure
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         meta_fields = s3.meta_fields
         super_link = self.super_link
@@ -94,14 +95,14 @@ class S3DocumentLibrary(S3Model):
         table = define_table(tablename,
                              super_link("site_id", "org_site"),
                              super_link("doc_id", doc_entity),
+                             Field("file", "upload", autodelete=True),
                              Field("name", length=128,
                                    notnull=True,
+                                   # Allow Name to be added onvalidation
+                                   requires = IS_NULL_OR(IS_LENGTH(128)),
                                    label=T("Name")),
-                             Field("file", "upload", autodelete=True),
                              Field("url", label=T("URL"),
-                                   requires = [IS_NULL_OR(IS_URL()),
-                                               IS_NULL_OR(IS_NOT_ONE_OF(db,
-                                                                        "%s.url" % tablename))],
+                                   requires = IS_NULL_OR(IS_URL()),
                                    represent = lambda url: \
                                                url and A(url,_href=url) or NONE),
                              person_id(label=T("Author"),
@@ -133,7 +134,7 @@ class S3DocumentLibrary(S3Model):
         DOCUMENT = T("Reference Document")
         ADD_DOCUMENT = T("Add Reference Document")
         LIST_DOCUMENTS = T("List Documents")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_DOCUMENT,
             title_display = T("Document Details"),
             title_list = LIST_DOCUMENTS,
@@ -154,11 +155,14 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  #mark_required=["file"],
                   onvalidation=self.document_onvalidation)
 
         # ---------------------------------------------------------------------
         # Images
+        #
+        # @ToDo: Field to determine which is the default image to use for
+        #        e.g. a Map popup (like the profile picture)
+        #        readable/writable=False except in the cases where-needed
         #
         doc_image_type_opts = {
             1:T("Photograph"),
@@ -172,15 +176,17 @@ class S3DocumentLibrary(S3Model):
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
                              super_link("doc_id", doc_entity),
-                             Field("name", length=128,
-                                   notnull=True,
-                                   label=T("Name")),
                              Field("file", "upload", autodelete=True,
                                    requires = IS_NULL_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))),
                                    # upload folder needs to be visible to the download() function as well as the upload
                                    uploadfolder = os.path.join(request.folder,
                                                                "uploads",
                                                                "images")),
+                             Field("name", length=128,
+                                   notnull=True,
+                                   # Allow Name to be added onvalidation
+                                   requires = IS_NULL_OR(IS_LENGTH(128)),
+                                   label=T("Name")),
                              Field("url", label=T("URL"),
                                    requires = IS_NULL_OR(IS_URL())),
                              Field("type", "integer",
@@ -207,7 +213,7 @@ class S3DocumentLibrary(S3Model):
        # CRUD Strings
         ADD_IMAGE = T("Add Photo")
         LIST_IMAGES = T("List Photos")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_IMAGE,
             title_display = T("Photo Details"),
             title_list = LIST_IMAGES,
@@ -278,6 +284,7 @@ class S3DocumentLibrary(S3Model):
         db = current.db
         s3db = current.s3db
         request = current.request
+        vars = form.vars
 
         if document:
             tablename = "doc_document"
@@ -288,8 +295,8 @@ class S3DocumentLibrary(S3Model):
 
         table = s3db[tablename]
 
-        doc = form.vars.file
-        url = form.vars.url
+        doc = vars.file
+        url = vars.url
         if not hasattr(doc, "file"):
             id = request.post_vars.id
             if id:
@@ -305,12 +312,14 @@ class S3DocumentLibrary(S3Model):
         # Do a checksum on the file to see if it's a duplicate
         if isinstance(doc, cgi.FieldStorage) and doc.filename:
             f = doc.file
-            form.vars.checksum = doc_checksum(f.read())
+            vars.checksum = doc_checksum(f.read())
             f.seek(0)
+            if not vars.name:
+                vars.name = doc.filename
 
-        if form.vars.checksum is not None:
+        if vars.checksum is not None:
             # Duplicate allowed if original version is deleted
-            query = ((table.checksum == form.vars.checksum) & \
+            query = ((table.checksum == vars.checksum) & \
                      (table.deleted == False))
             result = db(query).select(table.name,
                                       limitby=(0, 1)).first()

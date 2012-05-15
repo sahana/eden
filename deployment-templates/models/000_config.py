@@ -86,27 +86,19 @@ deployment_settings.base.migrate = True
 # To just create the .table files:
 #deployment_settings.base.fake_migrate = True
 
-# Enable/disable pre-population of the database.
-# Should be non-zero on 1st_run to pre-populate the database
-# - unless doing a manual DB migration
-# Then set to zero in Production (to save 1x DAL hit every page)
-# NOTE: the web UI will not be accessible while the DB is empty,
-# instead run:
-#   python web2py.py -N -S eden -M
-# to create the db structure, then exit and re-import the data.
-# This is a simple status flag with the following meanings
-# 0 - No pre-population
-# 1 - Base data entered in the database
-# 2 - Regression (data used by the regression tests)
-# 3 - Scalability testing
-# 4-9 Reserved
-# 10 - User (data required by the user typically for specialised test)
-# 11-19 Reserved
-# 20+ Demo (Data required for a default demo)
-#     Each subsequent Demos can take any unique number >= 20
-#     The actual demo will be defined by the file demo_folders.cfg
+# Pre-Populate
+# http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
+# Configure/disable pre-population of the database.
+# To pre-populate the database On 1st run should specify directory(s) in 
+# /private/prepopulate/
+# eg:
+# ["default"] (1 is a shortcut for this)
+# ["demo/Standard"]
+# ["demo/IFRC_Train"]
+# ["roles", "user"]
+# Unless doing a manual DB migration, where prepopulate = 0
+# In Production, prepopulate = 0 (to save 1x DAL hit every page)
 deployment_settings.base.prepopulate = 1
-
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
 deployment_settings.base.cdn = False
@@ -193,7 +185,7 @@ deployment_settings.L10n.religions = {
     "none":T("none"),
     "christian":T("Christian"),
     "muslim":T("Muslim"),
-	"jewish":T("Jewish"),
+    "jewish":T("Jewish"),
     "buddhist":T("Buddhist"),
     "hindu":T("Hindu"),
     "bahai":T("Bahai"),
@@ -295,9 +287,11 @@ deployment_settings.gis.display_L0 = False
 # 3: Apply Controller ACLs
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
-# 6: Apply Controller, Function, Table & Organisation ACLs
+# 6: Apply Controller, Function, Table ACLs and Entity Realm
+# 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+# 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#deployment_settings.security.policy = 6 # Organisation-ACLs
+#deployment_settings.security.policy = 7 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl
 #deployment_settings.aaa.default_uacl =  acl.READ   # User ACL
 #deployment_settings.aaa.default_oacl =  acl.CREATE | acl.READ | acl.UPDATE # Owner ACL
@@ -349,7 +343,8 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.show_quantity_transit = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
-#deployment_settings.req.use_req_number = False
+deployment_settings.req.use_req_number = True
+deployment_settings.req.generate_req_number = True
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
@@ -398,13 +393,20 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.inv.collapse_tabs = False
 # Use the term 'Order' instead of 'Shipment'
 #deployment_settings.inv.shipment_name = "order"
-
+deployment_settings.inv.shipment_types = {
+         0: T("-"),
+         1: T("Other Warehouse"),
+         2: T("Donation"),
+         3: T("Foreign Donation"),
+         4: T("Local Purchases"),
+         5: T("Confiscated Goods from Bureau Of Customs")
+                  }
 # Supply
 #deployment_settings.supply.use_alt_name = False
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 
-# Organsiation Management
+# Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #deployment_settings.org.site_code_len = 3
 
@@ -423,6 +425,15 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.project.drr = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
+# Uncomment this to customise
+#deployment_settings.project.organisation_roles = {
+#    1: T("Lead Implementer"), # T("Host National Society")
+#    2: T("Partner"), # T("Partner National Society")
+#    3: T("Donor"),
+#    4: T("Customer"), # T("Beneficiary")?
+#    5: T("Super"), # T("Beneficiary")?
+#}
+#deployment_settings.project.organisation_lead_role = 1
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False
@@ -467,14 +478,14 @@ deployment_settings.modules = OrderedDict([
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-     # Uncomment to enable internal support requests
-     #("support", Storage(
-     #        name_nice = T("Support"),
-     #        #description = "Support Requests",
-     #        restricted = True,
-     #        module_type = None  # This item is handled separately for the menu
-     #    )),
-     ("gis", Storage(
+    # Uncomment to enable internal support requests
+    #("support", Storage(
+    #        name_nice = T("Support"),
+    #        #description = "Support Requests",
+    #        restricted = True,
+    #        module_type = None  # This item is handled separately for the menu
+    #    )),
+    ("gis", Storage(
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
@@ -500,6 +511,12 @@ deployment_settings.modules = OrderedDict([
             restricted = True,
             module_type = 2,
         )),
+    ("cms", Storage(
+          name_nice = T("Content Management"),
+          #description = "Content Management System",
+          restricted = True,
+          module_type = 10,
+      )),
     ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
@@ -656,12 +673,6 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
-    ("cms", Storage(
-          name_nice = T("Content Management"),
-          #description = "Content Management System",
-          restricted = True,
-          module_type = 10,
-      )),
     ("member", Storage(
            name_nice = T("Members"),
            #description = "Membership Management System",
@@ -674,6 +685,12 @@ deployment_settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 1,
     #   )),
+    #("flood", Storage(
+    #        name_nice = T("Flood Warnings"),
+    #        #description = "Flood Gauges show water levels in various parts of the country",
+    #        restricted = False,
+    #        module_type = 10
+    #    )),
     #("patient", Storage(
     #        name_nice = T("Patient Tracking"),
     #        #description = "Tracking of Patients",
@@ -686,11 +703,4 @@ deployment_settings.modules = OrderedDict([
     #       restricted = False,
     #       module_type = 10
     #   )),
-    # This module has very limited functionality
-    #("flood", Storage(
-    #        name_nice = T("Flood Alerts"),
-    #        #description = "Flood Alerts show water levels in various parts of the country",
-    #        restricted = False,
-    #        module_type = 10
-    #    )),
 ])

@@ -49,9 +49,9 @@ def warehouse():
 
     if "viewing" in request.get_vars:
         viewing = request.get_vars.viewing
-        tn, record = viewing.split(".", 1)
+        tn, id = viewing.split(".", 1)
         if tn == "org_office":
-            request.args.insert(0, record)
+            request.args.insert(0, id)
 
     s3.crud_strings[tablename] = s3.org_warehouse_crud_strings
 
@@ -276,8 +276,8 @@ def inv_item():
 
 
     # Limit site_id to sites the user has permissions for
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=T("You do not have permission for any site to add an inventory item."))
+    auth.permitted_facilities(table=table,
+                              error_msg=T("You do not have permission for any site to add an inventory item."))
 
     if len(request.args) > 1 and request.args[1] == "track_item":
         # remove CRUD generated buttons in the tabs
@@ -296,15 +296,12 @@ def inv_item():
                     deletable=False,
                    )
     rheader = response.s3.inv_warehouse_rheader
-    output =  s3_rest_controller("inv",
-                                 "inv_item",
-                                 rheader=rheader,
+    output =  s3_rest_controller(rheader=rheader,
                                  csv_extra_fields = [
                                                      dict(label="Organisation",
                                                           field=s3db.org_organisation_id(comment=None)
                                                           )
                                                      ],
-                                 interactive_report = True,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -393,8 +390,7 @@ def send():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission for any facility to send a shipment.")
-    auth.permission.permitted_facilities(table=sendtable,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=sendtable, error_msg=error_msg)
 
     # Set Validator for checking against the number of items in the warehouse
     vars = request.vars
@@ -437,8 +433,6 @@ def send():
         tracktable.item_id.readable = False
         tracktable.recv_quantity.readable = False
         tracktable.return_quantity.readable = False
-        tracktable.currency.readable = False
-        tracktable.pack_value.readable = False
         tracktable.expiry_date.readable = False
         tracktable.owner_org_id.readable = False
         tracktable.supply_org_id.readable = False
@@ -450,6 +444,8 @@ def send():
             tracktable.quantity.writable = True
             tracktable.comments.writable = True
             # hide some fields
+            tracktable.currency.readable = False
+            tracktable.pack_value.readable = False
             tracktable.item_source_no.readable = False
         elif status == TRACK_STATUS_ARRIVED:
             # Shipment arrived display some extra fields at the destination
@@ -457,9 +453,13 @@ def send():
             tracktable.recv_quantity.readable = True
             tracktable.return_quantity.readable = True
             tracktable.recv_bin.readable = True
+            tracktable.currency.readable = True
+            tracktable.pack_value.readable = True
         elif status == TRACK_STATUS_RETURNING:
             tracktable.return_quantity.readable = True
             tracktable.return_quantity.writable = True
+            tracktable.currency.readable = True
+            tracktable.pack_value.readable = True
 
     def prep(r):
         # Default to the Search tab in the location selector
@@ -474,6 +474,8 @@ def send():
                                "item_pack_id",
                                "bin",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "recv_quantity",
                                "return_quantity",
                                "owner_org_id",
@@ -486,6 +488,8 @@ def send():
                                "item_id",
                                "item_pack_id",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "return_quantity",
                                "bin",
                                "owner_org_id",
@@ -497,6 +501,8 @@ def send():
                                "item_id",
                                "item_pack_id",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
@@ -568,10 +574,7 @@ def send():
 
 
     response.s3.prep = prep
-    output = s3_rest_controller("inv",
-                                "send",
-                                rheader=s3.inv_send_rheader,
-                               )
+    output = s3_rest_controller(rheader=s3.inv_send_rheader)
     return output
 
 # ==============================================================================
@@ -676,8 +679,8 @@ def send_process():
     req_ref = send_record.req_ref
     query = (rrtable.req_ref == req_ref)
     req_rec = db(query).select(rrtable.id, limitby = (0, 1)).first()
-    req_id = req_rec.id
-    if req_id:
+    if req_rec:
+        req_id = req_rec.id
         for track_item in track_items:
             if track_item.req_item_id:
                 req_i = ritable[track_item.req_item_id]
@@ -882,14 +885,14 @@ def send_cancel():
 
     # Change the track items status to canceled and then delete them
     # If they are linked to a request then the in transit total will also be reduced
-    # Records can only be deleted if the status is 1 (prepare)
+    # Records can only be deleted if the status is In Process (or preparing)
     # so change the status before we delete
-    db(tracktable.send_id == send_id).update(status = 1)
+    db(tracktable.send_id == send_id).update(status = eden.inv.inv_tracking_status["IN_PROCESS"])
     track_rows = db(tracktable.send_id == send_id).select(tracktable.id)
     for track_item in track_rows:
         s3.inv_track_item_deleting(track_item.id)
-    # Now change the status to 4 (cancelled)
-    db(tracktable.send_id == send_id).update(status = 4)
+    # Now change the status to (cancelled)
+    db(tracktable.send_id == send_id).update(status = eden.inv.inv_tracking_status["CANCEL"])
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 
@@ -911,8 +914,7 @@ def recv():
         error_msg = T("You do not have permission for any facility to add an order.")
     else:
         error_msg = T("You do not have permission for any facility to receive a shipment.")
-    auth.permission.permitted_facilities(table=recvtable,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=recvtable, error_msg=error_msg)
 
     # The inv_recv record might be created when the shipment is send and so it
     # might not have the recipient identified. If it is null then set it to
@@ -940,9 +942,11 @@ def recv():
         recvtable.eta.readable = False
         recvtable.req_ref.writable = True
         if status == SHIP_STATUS_IN_PROCESS:
-            recvtable.sender_id.writable = True
             recvtable.send_ref.writable = True
             recvtable.recv_ref.readable = False
+            recvtable.sender_id.readable = False
+            recvtable.from_site_id.writable = False
+            recvtable.from_site_id.readable = False
         else:
             # Make all fields writable False
             for field in recvtable.fields:
@@ -1012,7 +1016,7 @@ def recv():
             tracktable.recv_bin.readable = True
             tracktable.recv_bin.writable = True
 
-        
+
     def prep(r):
         if r.component:
             # if we have a component then set the track_item attributes
@@ -1026,6 +1030,7 @@ def recv():
                 set_track_attr(track_record.status)
             else:
                 set_track_attr(TRACK_STATUS_PREPARING)
+
 
             if r.record and r.record.status == SHIP_STATUS_IN_PROCESS:
                 s3.crud_strings.inv_recv.title_update = \
@@ -1070,9 +1075,7 @@ def recv():
                                 editable=True,
                                )
 
-    output = s3_rest_controller("inv", "recv",
-                                rheader=eden.inv.inv_recv_rheader,
-                                )
+    output = s3_rest_controller(rheader=eden.inv.inv_recv_rheader)
     return output
 
 
@@ -1222,24 +1225,10 @@ def recv_process():
     # Move each item to the site
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
-        s3.inv_track_item_onaccept( Storage(vars=Storage(track_item) ) )
-
-    # if this is linked to a request then update the fulfil quantity
-    req_ref = recv_record.req_ref
-    query = (rrtable.req_ref == req_ref)
-    req_rec = db(query).select(rrtable.id, limitby = (0, 1)).first()
-    req_id = req_rec.id
-    if req_id:
-        for track_item in track_rows:
-            if track_item.req_item_id:
-                req_i = ritable[track_item.req_item_id]
-                req_p_qnty = siptable[req_i.item_pack_id].quantity
-                t_qnty = track_item.quantity
-                t_pack_id = track_item.item_pack_id
-                inv_p_qnty = siptable[t_pack_id].quantity
-                transit_quantity = t_qnty * inv_p_qnty / req_p_qnty
-                db(ritable.id == track_item.req_item_id).update(quantity_fulfil = ritable.quantity_fulfil + transit_quantity)
-        s3db.req_update_status(req_id)
+        # exclude the quantity so that it is not deleted from the warehouse again
+        row=Storage(track_item)
+        del row.quantity
+        s3.inv_track_item_onaccept( Storage(vars=row ) )
 
     session.confirmation = T("Shipment Items Received")
     redirect(URL(c = "inv",
@@ -1276,6 +1265,7 @@ def recv_cancel():
     tracktable = s3db.inv_track_item
     inv_item_table = s3db.inv_inv_item
     ritable = s3db.req_req_item
+    siptable = s3db.supply_item_pack
     if not auth.s3_has_permission("delete",
                                   rtable,
                                   record_id=recv_id):
@@ -1301,7 +1291,7 @@ def recv_cancel():
     for recv_item in recv_items:
         inv_item_id = recv_item.recv_inv_item_id
         # This assumes that the inv_item has the quantity
-        db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity - recv_item.quantity)
+        db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity - recv_item.recv_quantity)
         db(tracktable.recv_id == recv_id).update(status = 2) # In transit
         # @todo potential problem in that the send id should be the same for all track items but is not explicitly checked
         if send_id == None and recv_item.send_id != None:
@@ -1309,9 +1299,20 @@ def recv_cancel():
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
         # if this is linked to a request
-        # then remove these items from the quantity in transit
+        # then remove these items from the quantity in fulfil
         if track_item.req_item_id:
-            db(ritable.id == track_item.req_item_id).update(quantity_fulfil = ritable.quantity_fulfil - track_item.quantity)
+            req_id = track_item.req_item_id
+            req_item = ritable[req_id]
+            req_quantity = req_item.quantity_fulfil
+            req_pack_quantity = siptable[req_item.item_pack_id].quantity
+            track_pack_quantity = siptable[track_item.item_pack_id].quantity
+            quantity_fulfil = s3db.supply_item_add(req_quantity,
+                                                   req_pack_quantity,
+                                                   - track_item.recv_quantity,
+                                                   track_pack_quantity
+                                                  )
+            db(ritable.id == req_id).update(quantity_fulfil = quantity_fulfil)
+            s3db.req_update_status(req_id)
     # Now set the recv record to cancelled and the send record to sent
     rtable[recv_id] = dict(date = request.utcnow,
                            status = eden.inv.inv_ship_status["CANCEL"],
@@ -1360,10 +1361,7 @@ def track_item():
                     deletable=False,
                    )
 
-    output = s3_rest_controller("inv",
-                                "track_item",
-                                rheader=response.s3.inv_warehouse_rheader,
-                               )
+    output = s3_rest_controller(rheader=response.s3.inv_warehouse_rheader)
     return output
 
 # =============================================================================
@@ -1375,8 +1373,7 @@ def adj():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=table, error_msg=error_msg)
 
     def prep(r):
         if r.interactive:
@@ -1418,10 +1415,7 @@ def adj():
                         deletable=False,
                        )
 
-    output = s3_rest_controller("inv",
-                                "adj",
-                                rheader=s3.inv_adj_rheader,
-                               )
+    output = s3_rest_controller(rheader=s3.inv_adj_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1435,8 +1429,7 @@ def adj_close():
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permission.permitted_facilities(table=table,
-                                         error_msg=error_msg)
+    auth.permitted_facilities(table=table, error_msg=error_msg)
 
     adj_id = request.args[0]
     adj_rec = atable[adj_id]

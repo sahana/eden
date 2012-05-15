@@ -1,0 +1,2 @@
+UUID,Name,Region,Default,Zoom,Lat,Lon,Projection,Symbology,MinLat,MaxLat,MinLon,MaxLon,WMS Browser
+SITE_DEFAULT,Default,United States,Georgia,7,32.8426532,-83.6967449,900913,US,0,90,-150,-50,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"

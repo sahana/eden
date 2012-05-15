@@ -35,7 +35,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Cube"]
+__all__ = ["S3Cube", "S3Report", "S3ContingencyTable"]
 
 import sys
 import datetime
@@ -48,7 +48,7 @@ from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate
-from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT
+from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
 
 
 # =============================================================================
@@ -119,42 +119,63 @@ class S3Cube(S3CRUD):
             default_options = Storage()
 
         # Get the URL options
-        report_options_keys = ['rows', 'cols', 'fact', 'aggregate', 'totals']
-        url_options = Storage([(k, v) for k, v in r.get_vars.iteritems()
-                                      if k in report_options_keys and v])
+        url_options = Storage([(k, v) for k, v in
+                               r.get_vars.iteritems() if v])
 
+        # Figure out which set of form values to use
+        # POST > GET > session > table defaults > list view
         if r.http == "POST":
             form_values = r.post_vars
+
+            # The totals option is used to turn OFF the totals cols/rows but
+            # post vars only contain checkboxes that are enabled and checked.
+            if "totals" not in r.post_vars:
+                form_values["totals"] = "off"
         elif url_options:
             form_values = url_options
+            # Without the _formname the form won't validate
+            # we put it in here so that URL query strings don't need to
+            if not form_values._formname:
+                form_values._formname = "report"
         elif session_options:
             form_values = session_options
         elif default_options:
             form_values = default_options
+            # Without the _formname the form won't validate
+            # we put it in here so that URL query strings don't need to
+            if not form_values._formname:
+                form_values._formname = "report"
         else:
             form_values = Storage()
 
-        # Generate form -------------------------------------------------------
-        #
+        # Generate the report and resource filter form
         show_form = attr.get("interactive_report", True)
         if show_form:
+            # Build the form and prepopulate with values we've got
             form = self._create_form(form_values)
-            if form.accepts(form_values, session,
-                            formname="report",
-                            keepvalues=True):
-                query, errors = self._process_filter_options(form)
-                if r.http == "POST" and not errors:
-                    self.resource.add_filter(query)
-                if "totals" not in r.post_vars:
-                    r.post_vars["totals"] = "off"
+
+            # Validate the form. This populates form.vars (values) and
+            # form.errors (field errors).
+            # We only compare to the session if POSTing to prevent cross-site
+            # scripting.
+            if r.http == "POST" and \
+                form.accepts(form_values, session, formname="report", keepvalues=True) or \
+                form.accepts(form_values, formname="report", keepvalues=True):
+
+                # The form is valid so save the form values into the session
+                if 'report_options' not in session.s3:
+                    session.s3.report_options = Storage()
+
+                session.s3.report_options[tablename] = Storage([(k, v) for k, v in
+                                                        form_values.iteritems() if v])
+            
+            # Use the values to generate the query filter
+            query, errors = self._process_filter_options(form)
+
+            if not errors:
+                self.resource.add_filter(query)
         else:
             form = None
-
-        if form_values:
-            if 'report_options' not in session.s3:
-                session.s3.report_options = Storage()
-            session.s3.report_options[tablename] = Storage([(k, v) for k, v in form_values.iteritems()
-                                                                   if k in report_options_keys and v])
 
         # Get rows, cols, facts and aggregate
         rows = form_values.get("rows", None)
@@ -343,11 +364,11 @@ class S3Cube(S3CRUD):
         select_fact = _select_field(report_fact, _id="fact", _name="fact",
                                     form_values=form_values)
 
+        # totals are "on" or True by default
         show_totals = True
-        if request.env.request_method == "GET" and \
-           "totals" in form_values:
+        if "totals" in form_values:
             show_totals = form_values["totals"]
-            if show_totals.lower() in ("false", "off"):
+            if str(show_totals).lower() in ("false", "off"):
                 show_totals = False
 
         show_totals = INPUT(_type="checkbox", _id="totals", _name="totals",
@@ -362,7 +383,7 @@ class S3Cube(S3CRUD):
         form = FORM()
 
         # Append filter widgets, if configured
-        filter_widgets = self._build_filter_widgets()
+        filter_widgets = self._build_filter_widgets(form_values)
         if filter_widgets:
             form.append(TABLE(filter_widgets, _id="filter_options"))
 
@@ -404,7 +425,7 @@ class S3Cube(S3CRUD):
         return form
 
     # -------------------------------------------------------------------------
-    def _build_filter_widgets(self):
+    def _build_filter_widgets(self, form_values=None):
         """
             Builds the filter form widgets
         """
@@ -420,7 +441,7 @@ class S3Cube(S3CRUD):
         if not filter_widgets:
             return None
 
-        vars = request.vars
+        vars = form_values if form_values else request.vars
         trows = []
         for widget in filter_widgets:
             name = widget.attr["_name"]
@@ -449,6 +470,9 @@ class S3Cube(S3CRUD):
             Processes the filter widgets into a filter query
 
             @param form: the filter form
+            
+            @rtype: tuple
+            @return: A tuple containing (query object, validation errors)
         """
 
         session = current.session
@@ -1260,7 +1284,7 @@ class S3ContingencyTable(TABLE):
                 value = value and len(value) or 0
             if not len(totals) and append is not None:
                 append(value)
-            totals.append(str(value))
+            totals.append(IS_NUMBER.represent(value))
         totals = " / ".join(totals)
         return totals
 

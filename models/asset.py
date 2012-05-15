@@ -53,8 +53,7 @@ def asset_controller():
     response.s3.postp = postp
 
     output = s3_rest_controller("asset", "asset",
-                                rheader=eden.asset.asset_rheader,
-                                interactive_report=True)
+                                rheader=eden.asset.asset_rheader)
     return output
 
 # END =========================================================================

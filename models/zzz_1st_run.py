@@ -47,14 +47,14 @@ if len(pop_list) > 0:
         #                     timeout=300, # seconds
         #                     repeats=0    # unlimited
         #                    )
-        
+
         #Process the msg_log for unparsed messages.
         #s3task.schedule_task("process_log",
         #                    period=300,  # seconds
         #                    timeout=300, # seconds
         #                    repeats=0    # unlimited
         #                     )
-        
+
     # Person Registry
     tablename = "pr_person"
     table = db[tablename]
@@ -133,7 +133,7 @@ if len(pop_list) > 0:
                                    "private",
                                    "import",
                                    "countries.csv")
-        table.import_from_csv_file(open(import_file, "r"))
+        table.import_from_csv_file(open(import_file, "r")) #, id_map=True)
         query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
         map_admin = db(query).select(db.auth_group.id,
                                      limitby=(0, 1)).first().id

@@ -128,10 +128,24 @@
 
         var len = jsfiles.length;
         var allScriptTags = new Array(len);
-        var host = getScriptLocation() + "lib/";    
-        for (var i=0; i<len; i++) {
-            allScriptTags[i] = "<script src='" + host + jsfiles[i] +"'></script>"; 
+        if (undefined != 'S3.Ap') {
+            // Sahana loader, required when running in pr_contacts()
+            var host = S3.Ap.concat('/static/scripts/gis/GeoExt/lib/');
+        } else {
+            // Revert to normal OpenLayers loader
+            var host = OpenLayers._getScriptLocation() + "lib/";
         }
-        document.write(allScriptTags.join(""));
+        var src, script;
+        for (var i=0; i<len; i++) {
+            //allScriptTags[i] = "<script src='" + host + jsfiles[i] +"'></script>"; 
+            // document.write doesn't work when loaded by async loaders
+            src = host + jsfiles[i];
+            script = document.createElement('script');
+            script.src = src;
+            // Maintain execution order
+            script.async = false;
+            document.getElementsByTagName('head')[0].appendChild(script);
+        }
+        //document.write(allScriptTags.join(""));
     }
 })();

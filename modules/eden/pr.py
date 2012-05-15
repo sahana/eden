@@ -2,8 +2,6 @@
 
 """ Sahana Eden Person Registry Model
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -40,34 +38,41 @@ __all__ = ["S3PersonEntity",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
-            # Representation Methods
+           # Representation Methods
+           "pr_get_entities",
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
            "pr_rheader",
-            # Custom Resource Methods
+           # Custom Resource Methods
            "pr_contacts",
            "pr_profile",
-            # Hierarchy Manipulation
+           # Hierarchy Manipulation
            "pr_update_affiliations",
            "pr_add_affiliation",
            "pr_remove_affiliation",
-            # PE Helpers
+           # PE Helpers
            "pr_get_pe_id",
-            # Back-end Role Tools
+           # Back-end Role Tools
            "pr_define_role",
            "pr_delete_role",
            "pr_add_to_role",
            "pr_remove_from_role",
-            # Hierarchy Lookup
+           # Hierarchy Lookup
+           "pr_realm",
+           "pr_realm_users",
            "pr_get_role_paths",
            "pr_get_role_branches",
            "pr_get_path",
            "pr_get_ancestors",
            "pr_get_descendants",
-            # Internal Path Tools
+           "pr_ancestors",
+           "pr_descendants",
+           # Internal Path Tools
            "pr_rebuild_path",
            "pr_role_rebuild_path"]
+
+import re
 
 import gluon.contrib.simplejson as json
 
@@ -450,7 +455,7 @@ class S3PersonEntity(S3Model):
                                       limitby=(0, 1)).first()
         else:
             return
-        if record:
+        if record and record.deleted_fk:
             data = json.loads(record.deleted_fk)
             pe_id = data.get("pe_id", None)
             if pe_id:
@@ -461,7 +466,7 @@ class S3PersonEntity(S3Model):
 class S3OrgAuthModel(S3Model):
     """ Organisation-based Authorization Model """
 
-    names = ["pr_restriction", "pr_delegation"]
+    names = ["pr_delegation"]
 
     def model(self):
 
@@ -472,19 +477,6 @@ class S3OrgAuthModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
         meta_fields = s3.meta_fields
-
-        # ---------------------------------------------------------------------
-        # Restriction: Person Entity <-> Auth Membership Link
-        # This restricts the permissions assigned by an auth-group membership
-        # to the records owned by this person entity.
-        #
-        mtable = auth.settings.table_membership
-        tablename = "pr_restriction"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             Field("membership_id", mtable,
-                                   ondelete="CASCADE"),
-                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Delegation: Role <-> Auth Group Link
@@ -675,23 +667,7 @@ class S3PersonModel(S3Model):
                                    ),
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
-                                   ), 
-                             # Field("picture", "upload",
-                                   # autodelete=True,
-                                   # label = T("Picture"),
-                                   # requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                                   # error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
-                                   # represent = lambda image: image and \
-                                                        # DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                           # args=image),
-                                                                  # _height=60,
-                                                                  # _alt=T("View Picture")),
-                                                                  # _href=URL(c="default", f="download",
-                                                                            # args=image))) or
-                                                            # T("No Picture"),
-                                   # comment = DIV(_class="tooltip",
-                                                 # _title="%s|%s" % (T("Picture"),
-                                                                   # T("Upload an image file here.")))),
+                                   ),
                              Field("opt_in",
                                    "string", # list of mailing lists which link to teams
                                    default=False,
@@ -1345,10 +1321,11 @@ class S3PersonAddressModel(S3Model):
         # Address
         #
         pr_address_type_opts = {
-            1:T("Home Address"),
-            2:T("Office Address"),
-            3:T("Holiday Address"),
-            9:T("other")
+            1:T("Current Home Address"),
+            2:T("Permanent Home Address"),
+            3:T("Office Address"),
+            #4:T("Holiday Address"),
+            9:T("Other Address")
         }
 
         tablename = "pr_address"
@@ -2578,6 +2555,149 @@ class S3PersonDescription(S3Model):
 # Representation Methods
 # =============================================================================
 #
+def pr_get_entities(pe_ids=None,
+                    types=None,
+                    represent=True,
+                    group=False,
+                    as_list=False,
+                    show_label=False,
+                    default_label="[No ID Tag]"):
+    """
+        Get representations of person entities. Depending on the group
+        and as_list parameters, this function returns a list or Storage
+        of entity representations (either pe_ids or string representations).
+
+        @param pe_ids: a list of pe_ids (filters the results)
+        @param types: a list of instance types (filters the results)
+        @param represent: provide string representations
+        @param group: group results by instance type (returns a Storage
+                      with the instance types as keys)
+        @param as_list: return flat lists instead of dicts (ignored if
+                        represent=False because that would return a flat
+                        list of pe_ids anyway)
+        @param show_label: show the PE label
+        @param default_label: the default label
+    """
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    DEFAULT = T("None (no such record)")
+
+    pe_table = s3db.pr_pentity
+
+    if pe_ids is None:
+        pe_ids = []
+    elif not isinstance(pe_ids, (list, tuple)):
+        pe_ids = [pe_ids]
+    pe_ids = [long(pe_id) for pe_id in set(pe_ids)]
+    query = (pe_table.deleted != True)
+    if types:
+        if not isinstance(types, (list, tuple)):
+            types = [types]
+        query &= (pe_table.instance_type.belongs(types))
+    if pe_ids:
+        query &= (pe_table.pe_id.belongs(pe_ids))
+    rows = db(query).select(pe_table.pe_id,
+                            pe_table.pe_label,
+                            pe_table.instance_type)
+
+    entities = Storage()
+    labels = Storage()
+
+    for row in rows:
+        pe_id = row.pe_id
+        instance_type = row.instance_type
+        if instance_type not in entities:
+            entities[instance_type] = []
+        entities[instance_type].append(pe_id)
+        labels[pe_id] = row.pe_label
+
+    type_repr = pe_table.instance_type.represent
+
+    repr_grp = Storage()
+    repr_flt = Storage()
+    repr_all = []
+
+    for instance_type in entities:
+        if types and instance_type not in types:
+            continue
+        repr_all.extend(entities[instance_type])
+        if not represent:
+            repr_grp[instance_type] = entities[instance_type]
+            continue
+        table = s3db.table(instance_type)
+        if not table:
+            continue
+
+        instance_type_nice = type_repr(instance_type)
+
+        ids = entities[instance_type]
+        query = (table.deleted != True) & \
+                (table.pe_id.belongs(ids))
+
+        if instance_type not in repr_grp:
+            repr_grp[instance_type] = Storage()
+        repr_g = repr_grp[instance_type]
+        repr_f = repr_flt
+
+        if instance_type == "pr_person":
+            rows = db(query).select(table.pe_id,
+                                    table.first_name,
+                                    table.middle_name,
+                                    table.last_name)
+
+            for row in rows:
+                pe_id = row.pe_id
+                if show_label:
+                    label = labels.get(pe_id, None) or default_label
+                    pe_str = "%s %s (%s)" % (s3_fullname(row),
+                                             label,
+                                             instance_type_nice)
+                else:
+                    pe_str = "%s (%s)" % (s3_fullname(row),
+                                          instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+        elif "name" in table.fields:
+            rows = db(query).select(table.pe_id,
+                                    table.name)
+            for row in rows:
+                pe_id = row.pe_id
+                if show_label and "pe_label" in table.fields:
+                    label = labels.get(pe_id, None) or default_label
+                    pe_str = "%s %s (%s)" % (row.name,
+                                             label,
+                                             instance_type_nice)
+                else:
+                    pe_str = "%s (%s)" % (row.name,
+                                          instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+        else:
+            for pe_id in pe_ids:
+                label = labels.get(pe_id, None) or default_label
+                pe_str = "[%s] (%s)" % (label,
+                                        instance_type_nice)
+                repr_g[pe_id] = repr_f[pe_id] = pe_str
+
+    if represent:
+        if group and as_list:
+            return Storage([(t, repr_grp[t].values()) for t in repr_grp])
+        elif group:
+            return repr_grp
+        elif as_list:
+            return repr_flt.values()
+        else:
+            return repr_flt
+    else:
+        if group:
+            return repr_grp
+        else:
+            return repr_all
+
+# =============================================================================
 def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
@@ -2772,9 +2892,6 @@ def pr_contacts(r, **attr):
             Addresses (pr_address)
             Contacts (pr_contact)
             Emergency Contacts
-
-        @ToDo: Fix Map in Address' LocationSelector
-        @ToDo: Allow Address Create's LocationSelector to work in Debug mode
     """
 
     from itertools import groupby
@@ -2789,43 +2906,51 @@ def pr_contacts(r, **attr):
     person = r.record
 
     # Addresses
-    atable = s3db.pr_address
-    query = (atable.pe_id == person.pe_id)
-    addresses = db(query).select(atable.id,
-                                 atable.type,
-                                 atable.building_name,
-                                 atable.address,
-                                 atable.postcode,
-                                 orderby=atable.type)
+    # - removed since can't get Google Maps displaying in Location Selector when loaded async
+    # - even when loaded into page before async load of map
+    # atable = s3db.pr_address
+    # query = (atable.pe_id == person.pe_id)
+    # addresses = db(query).select(atable.id,
+                                 # atable.type,
+                                 # atable.building_name,
+                                 # atable.address,
+                                 # atable.L3,
+                                 # atable.postcode,
+                                 # atable.L0,
+                                 # orderby=atable.type)
 
-    address_groups = {}
-    for key, group in groupby(addresses, lambda a: a.type):
-        address_groups[key] = list(group)
+    # address_groups = {}
+    # for key, group in groupby(addresses, lambda a: a.type):
+        # address_groups[key] = list(group)
 
-    address_wrapper = DIV(H2(T("Addresses")),
-                          DIV(A(T("Add"), _class="addBtn", _id="address-add"),
-                              _class="margin"))
+    # address_wrapper = DIV(H2(T("Addresses")),
+                          # DIV(A(T("Add"), _class="action-btn", _id="address-add"),
+                              # IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  # _height=32, _width=32,
+                                  # _id="address-add_throbber",
+                                  # _class="throbber hidden"),
+                              # _class="margin"))
 
-    items = address_groups.items()
-    opts = s3db.pr_address_type_opts
-    for address_type, details in items:
-        address_wrapper.append(H3(opts[address_type]))
-        for detail in details:
-            building_name = detail.building_name or ""
-            if building_name:
-                building_name = "%s, " % building_name
-            address = detail.address or ""
-            if address:
-                address = "%s, " % address
-            postcode = detail.postcode or ""
-            address_wrapper.append(P(
-                SPAN("%s%s%s" % (building_name,
-                                 address,
-                                 postcode)),
-                A(T("Edit"), _class="editBtn fright"),
-                _id="address-%s" % detail.id,
-                _class="address",
-                ))
+    # items = address_groups.items()
+    # opts = s3db.pr_address_type_opts
+    # for address_type, details in items:
+        # address_wrapper.append(H3(opts[address_type]))
+        # for detail in details:
+            # text = ",".join((detail.building_name or "",
+                             # detail.address or "",
+                             # detail.L3 or "",
+                             # detail.postcode or "",
+                             # detail.L0 or "",
+                            # ))
+            # text = re.sub(",+", ",", text)
+            # if text[0] == ",":
+                # text = text[1:]
+            # address_wrapper.append(P(
+                # SPAN(text),
+                # A(T("Edit"), _class="editBtn action-btn fright"),
+                # _id="address-%s" % detail.id,
+                # _class="address",
+                # ))
 
     # Contacts
     ctable = s3db.pr_contact
@@ -2840,18 +2965,36 @@ def pr_contacts(r, **attr):
         contact_groups[key] = list(group)
 
     contacts_wrapper = DIV(H2(T("Contacts")),
-                           DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
+                           DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="contact-add_throbber",
+                                  _class="throbber hidden"),
                                _class="margin"))
 
-
     items = contact_groups.items()
+    def mysort(key):
+        """ Sort Contact Types by Priority"""
+        keys = {
+                "SMS": 1,
+                "EMAIL": 2,
+                "WORK_PHONE": 3,
+                "SKYPE": 4,
+                "RADIO": 5,
+                "TWITTER": 6,
+                "FACEBOOK": 7,
+                "FAX": 8,
+                "OTHER": 9
+            }
+        return keys[key[0]]
+    items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
     for contact_type, details in items:
         contacts_wrapper.append(H3(opts[contact_type]))
         for detail in details:
             contacts_wrapper.append(P(
                 SPAN(detail.value),
-                A(T("Edit"), _class="editBtn fright"),
+                A(T("Edit"), _class="editBtn action-btn fright"),
                 _id="contact-%s" % detail.id,
                 _class="contact",
                 ))
@@ -2866,7 +3009,11 @@ def pr_contacts(r, **attr):
                                  etable.phone)
 
     emergency_wrapper = DIV(H2(T("Emergency Contacts")),
-                            DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
+                            DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
+                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                                  _height=32, _width=32,
+                                  _id="emergency-add_throbber",
+                                  _class="throbber hidden"),
                                 _class="margin"))
 
     for contact in emergency:
@@ -2878,13 +3025,13 @@ def pr_contacts(r, **attr):
             relationship = "%s, "% relationship
         emergency_wrapper.append(P(
             SPAN("%s%s%s" % (name, relationship, contact.phone)),
-            A(T("Edit"), _class="editBtn fright"),
+            A(T("Edit"), _class="editBtn action-btn fright"),
             _id="emergency-%s" % contact.id,
             _class="emergency",
             ))
 
     # Overall content
-    content = DIV(address_wrapper,
+    content = DIV(#address_wrapper,
                   contacts_wrapper,
                   emergency_wrapper,
                   _class="contacts-wrapper")
@@ -2892,21 +3039,30 @@ def pr_contacts(r, **attr):
     # Add the javascript
     response = current.response
     s3 = response.s3
-    s3.scripts.append(URL(c="static", f="scripts",
-                          args=["S3", "s3.contacts.js"]))
+    if current.session.s3.debug:
+        s3.scripts.append(URL(c="static", f="scripts",
+                              args=["S3", "s3.contacts.js"]))
+    else:
+        s3.scripts.append(URL(c="static", f="scripts",
+                              args=["S3", "s3.contacts.min.js"]))
+
+    #s3.js_global.append("controller='%s';" % current.request.controller)
     s3.js_global.append("personId = %s;" % person.id);
+
+    # Load the Google JS now as can't load it async
+    # @ToDo: Is this worth making conditional on this being their default base layer?
+    #apikey = current.deployment_settings.get_gis_api_google()
+    #if apikey:
+    #    s3.scripts.append("http://www.google.com/jsapi?key=%s" % apikey)
+    #s3.scripts.append("http://maps.google.com/maps/api/js?v=3.6&sensor=false")
 
     # Custom View
     response.view = "pr/contacts.html"
 
     # RHeader for consistency
-    controller = current.request.controller
-    if controller == "hrm":
-        rheader = s3db.hrm_rheader(r)
-    elif controller == "member":
-        rheader = s3db.member_rheader(r)
-    elif controller == "pr":
-        rheader = s3db.pr_rheader(r)
+    rheader = attr.get("rheader", None)
+    if callable(rheader):
+        rheader = rheader(r)
 
     return dict(
             title = T("Contacts"),
@@ -3328,11 +3484,12 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     s3db = current.s3db
 
     if not role:
-        return
+        return None
 
     master_pe = pr_get_pe_id(master)
     affiliate_pe = pr_get_pe_id(affiliate)
 
+    role_id = None
     if master_pe and affiliate_pe:
         rtable = s3db.pr_role
         query = (rtable.pe_id == master_pe) & \
@@ -3348,7 +3505,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
             role_id = row.id
         if role_id:
             pr_add_to_role(role_id, affiliate_pe)
-    return
+    return role_id
 
 # =============================================================================
 def pr_remove_affiliation(master, affiliate, role=None):
@@ -3415,8 +3572,11 @@ def pr_get_pe_id(entity, record_id=None):
                 if isinstance(f, Row) and "pe_id" in f:
                     return f["pe_id"]
             return None
-    else:
+    elif isinstance(entity, (long, int)) or \
+         isinstance(entity, basestring) and entity.isdigit():
         return entity
+    else:
+        return None
     if not hasattr(table, "_tablename"):
         table = s3db.table(table, None)
     record = None
@@ -3731,11 +3891,8 @@ def pr_get_ancestors(pe_id):
         paths).
 
         @param pe_id: the person entity ID
-        @param roles: list of roles to limit the search
 
         @returns: a list of PE-IDs
-
-        @todo: be able to filter by entity_type and subtype
     """
 
     db = current.db
@@ -3765,6 +3922,186 @@ def pr_get_ancestors(pe_id):
     ancestors = S3MultiPath.all_nodes(paths)
 
     return ancestors
+
+# =============================================================================
+def pr_realm(entity):
+    """
+        Get the default realm (=the immediate OU ancestors) of an entity
+
+        @param entity: the entity (pe_id)
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    if not entity:
+        return []
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == entity) & \
+            (rtable.deleted != True) & \
+            (rtable.role_type == OU)
+    rows = db(query).select(rtable.pe_id)
+    realm = [row.pe_id for row in rows]
+    return realm
+
+# =============================================================================
+def pr_realm_users(realm, roles=None, role_types=OU):
+    """
+        Get all users in a realm
+
+        @param realm: the realm (list of pe_ids)
+        @param roles: list of pr_role names to limit the lookup to
+        @param role_types: list of pr_role role types to limit the lookup to
+
+        @note: role_types overrides roles
+    """
+
+    db = current.db
+    s3db = current.s3db
+    auth = current.auth
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+    ltable = s3db.pr_person_user
+    utable = auth.settings.table_user
+
+    if realm is None:
+        query = (utable.deleted != True)
+    else:
+        if not isinstance(realm, (list, tuple)):
+            realm = [realm]
+        query = (rtable.deleted != True) & \
+                (rtable.pe_id.belongs(realm))
+        if roles is not None:
+            if not isinstance(roles, (list, tuple)):
+                roles = [roles]
+            query &= (rtable.role.belongs(roles))
+        elif role_types is not None:
+            if not isinstance(role_types, (list, tuple)):
+                role_types = [role_types]
+            query &= (rtable.role_type.belongs(role_types))
+        query &= (atable.deleted != True) & \
+                (atable.role_id == rtable.id) & \
+                (atable.pe_id == ltable.pe_id) & \
+                (ltable.deleted != True) & \
+                (ltable.user_id == utable.id) & \
+                (utable.deleted != True)
+    rows = db(query).select(utable.id, utable.email)
+    if rows:
+        if auth.settings.username_field:
+            return Storage([(row.id, row.username) for row in rows])
+        else:
+            return Storage([(row.id, row.email) for row in rows])
+    else:
+        return Storage()
+
+# =============================================================================
+def pr_ancestors(entities):
+    """
+        Find all ancestor entities of the given entities in the
+        OU hierarchy.
+
+        @param entities:
+
+        @returns: Storage of lists of PE-IDs
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    atable = s3db.pr_affiliation
+    rtable = s3db.pr_role
+
+    if not entities:
+        return Storage()
+
+    query = (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id.belongs(entities)) & \
+            (rtable.deleted != True) & \
+            (rtable.role_type == OU)
+    rows = db(query).select(rtable.ALL, atable.pe_id)
+
+    ancestors = Storage([(pe_id, []) for pe_id in entities])
+    r = rtable._tablename
+    a = atable._tablename
+    for row in rows:
+        pe_id = row[a].pe_id
+        paths = ancestors[pe_id]
+        role = row[r]
+        path = S3MultiPath([role.pe_id])
+        if role.path is None:
+            ppath = pr_role_rebuild_path(role)
+        else:
+            ppath = S3MultiPath(role.path)
+        path.extend(role.pe_id, ppath, cut=pe_id)
+        paths.append(path)
+    for pe_id in ancestors:
+        ancestors[pe_id] = S3MultiPath.all_nodes(ancestors[pe_id])
+    return ancestors
+
+# =============================================================================
+def pr_descendants(pe_ids, skip=[]):
+    """
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    pe_ids = [i for i in pe_ids if i not in skip]
+    if not pe_ids:
+        return []
+
+    etable = s3db.pr_pentity
+    rtable = s3db.pr_role
+    atable = s3db.pr_affiliation
+
+    query = (rtable.deleted != True) & \
+            (rtable.pe_id.belongs(pe_ids)) & \
+            (rtable.role_type == OU) & \
+            (atable.role_id == rtable.id) & \
+            (atable.deleted != True) & \
+            (etable.pe_id == atable.pe_id)
+
+    rows = db(query).select(rtable.pe_id,
+                            atable.pe_id,
+                            etable.instance_type)
+    r = rtable._tablename
+    e = etable._tablename
+    a = atable._tablename
+
+    nodes = []
+    result = Storage()
+    for row in rows:
+        parent = row[r].pe_id
+        child = row[a].pe_id
+        if row[e].instance_type != "pr_person":
+            if parent not in result:
+                result[parent] = [child]
+            else:
+                result[parent].append(child)
+        if child not in nodes:
+            nodes.append(child)
+
+    skip = skip + pe_ids
+    descendants = pr_descendants(nodes, skip=skip)
+
+    for child in descendants:
+        for parent in result:
+            if child in result[parent]:
+                for node in descendants[child]:
+                    if node not in result[parent]:
+                        result[parent].append(node)
+    for x in result:
+        for y in result:
+            if x in result[y]:
+                result[y].extend([i for i in result[x] if i not in result[y] and i != y])
+
+    return result
 
 # =============================================================================
 def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):

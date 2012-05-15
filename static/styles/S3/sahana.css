@@ -262,7 +262,7 @@ table {
 }
 
 /* Now to layout elements... */
-/* Unused in default Sahana THeme
+/* Unused in default Sahana Theme
 #container {
     background: none repeat scroll 0 0 #FFFFFF;
     margin: 0 auto;
@@ -1561,7 +1561,7 @@ li input + a {
 }
 
 .contacts-wrapper p {
-   margin-bottom: 5px;
+   margin-bottom: 10px;
 }
 .contacts-wrapper div.margin {
    margin-bottom: 10px;

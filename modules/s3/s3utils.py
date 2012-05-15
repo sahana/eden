@@ -41,14 +41,13 @@ __all__ = ["URL2",
            "s3_split_multi_value",
            "s3_get_db_field_value",
            "s3_filter_staff",
-           "s3_format_fullname",
            "s3_fullname",
            "s3_represent_facilities",
            "s3_represent_multiref",
            "s3_comments_represent",
            "s3_url_represent",
-           "s3_user_represent",
            "s3_avatar_represent",
+           "s3_auth_user_represent",
            "s3_auth_group_represent",
            "sort_dict_by_values",
            "jaro_winkler",
@@ -294,9 +293,14 @@ def s3_mark_required(fields,
     _required = False
     for field in fields:
         if field.writable:
-            required = field.required or field.notnull or \
-                        mark_required and field.name in mark_required
             validators = field.requires
+            if isinstance(validators, IS_EMPTY_OR):
+                # Allow notnull fields to be marked as not required if we populate them onvalidation
+                labels[field.name] = "%s:" % field.label
+                continue
+            else:
+                required = field.required or field.notnull or \
+                            mark_required and field.name in mark_required
             if not validators and not required:
                 labels[field.name] = "%s:" % field.label
                 continue
@@ -449,7 +453,7 @@ def s3_filter_staff(r):
 # =============================================================================
 def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
     """
-        Returns the full name of a person
+        Formats the full name of a person
 
         @param fname: the person's pr_person.first_name value
         @param mname: the person's pr_person.middle_name value
@@ -684,22 +688,6 @@ def s3_url_represent(url):
     return A(url, _href=url, _target="blank")
 
 # =============================================================================
-def s3_user_represent(id):
-    """ Represent a User as their email address """
-
-    db = current.db
-    s3db = current.s3db
-    cache = s3db.cache
-
-    table = s3db.auth_user
-    user = db(table.id == id).select(table.email,
-                                     limitby=(0, 1),
-                                     cache=cache).first()
-    if user:
-        return user.email
-    return None
-
-# =============================================================================
 def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
     """ Represent a User as their profile picture or Gravatar """
 
@@ -764,43 +752,47 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
                _height=50, _width=50)
 
 # =============================================================================
-def s3_auth_group_represent(opt):
-    """ Represent a user group (role) by its name """
+def s3_auth_user_represent(id):
+    """ Represent a user as their email address """
 
+    db = current.db
     s3db = current.s3db
 
-    table = s3db.auth_group
-    set = current.db(table.id > 0).select(table.id,
-                                          table.role,
-                                          cache=s3db.cache).as_dict()
+    table = s3db.auth_user
+    user = db(table.id == id).select(table.email,
+                                     limitby=(0, 1),
+                                     cache=s3db.cache).first()
+    if user:
+        return user.email
+    return None
 
-    if isinstance(opt, (list, tuple)):
-        opts = opt
-        vals = [str(set.get(o)["role"]) for o in opts]
-        multiple = True
-    elif isinstance(opt, int):
-        opts = [opt]
-        try:
-            vals = str(set.get(opt)["role"])
-        except:
-            return current.messages.NONE
-        multiple = False
-    else:
-        try:
-            opt = int(opt)
-        except:
-            return current.messages.NONE
-        else:
-            opts = [opt]
-            vals = str(set.get(opt)["role"])
-            multiple = False
+# =============================================================================
+def s3_auth_group_represent(opt):
+    """ Represent user groups by their role names """
 
-    if multiple:
-        if len(opts) > 1:
-            vals = ", ".join(vals)
-        else:
-            vals = len(vals) and vals[0] or ""
-    return vals
+    if not opt:
+        return current.messages.NONE
+
+    auth = current.auth
+    s3db = current.s3db
+
+    table = auth.settings.table_group
+    groups = current.db(table.id > 0).select(table.id,
+                                             table.role,
+                                             cache=s3db.cache).as_dict()
+    if not isinstance(opt, (list, tuple)):
+        opt = [opt]
+    roles = []
+    for o in opt:
+        try:
+            key = int(o)
+        except ValueError:
+            continue
+        if key in groups:
+            roles.append(groups[key]["role"])
+    if not roles:
+        return current.messages.NONE
+    return ", ".join(roles)
 
 # =============================================================================
 def sort_dict_by_values(adict):
@@ -1007,10 +999,10 @@ def soundex(name, len=4):
 def search_vars_represent(search_vars):
         """
             Returns Search Criteria in a Human Readable Form
-        
+
             @author: Pratyush Nigam
         """
-    
+
         import cPickle
         import re
         s = ""
@@ -1027,7 +1019,7 @@ def search_vars_represent(search_vars):
                         st = str(j)
                         if st[0] == '_':
                             continue
-                        else:                         
+                        else:
                             st = st.replace("_search_", " ")
                             st = st.replace("_advanced", "")
                             st = st.replace("_simple", "")
@@ -1047,7 +1039,7 @@ def search_vars_represent(search_vars):
             s = s + "</p>"
         except:
             raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
-            
+
         return XML(s)
 
 # END =========================================================================

@@ -225,7 +225,7 @@ def person():
             (T("Skills"), "competency"),
             (T("Training"), "training"),
         ]
-        
+
     # Configuration tabs
     if deployment_settings.get_save_search_widget():
         tabs = tabs + [(T("Saved Searches"), "save_search"),
@@ -251,11 +251,14 @@ def address():
     # CRUD pre-process
     def prep(r):
         person_id = request.get_vars.get("person", None)
-        if person_id:
+        controller = request.get_vars.get("controller", None)
+        if person_id and controller:
             s3mgr.configure("pr_address",
-                            create_next=URL(f="person",
+                            create_next=URL(c=controller,
+                                            f="person",
                                             args=[person_id, "contacts"]),
-                            update_next=URL(f="person",
+                            update_next=URL(c=controller,
+                                            f="person",
                                             args=[person_id, "contacts"])
                             )
             if r.method == "create":

@@ -64,10 +64,12 @@ if len(pop_list) > 0:
                     rules["oacl"] = parseACL(row["oacl"])
                 if row["uacl"]:
                     rules["uacl"] = parseACL(row["uacl"])
-                if "org" in row and row["org"]:
-                    rules["organisation"] = row["org"]
-                if "facility" in row and row["facility"]:
-                    rules["facility"] = row["facility"]
+                #if "org" in row and row["org"]:
+                    #rules["organisation"] = row["org"]
+                #if "facility" in row and row["facility"]:
+                    #rules["facility"] = row["facility"]
+                if "entity" in row and row["entity"]:
+                    rules["entity"] = row["entity"]
                 if "hidden" in row and row["hidden"]:
                     extra_param["hidden"] = row["hidden"]
                 if "system" in row and row["system"]:
@@ -174,7 +176,7 @@ if len(pop_list) > 0:
 
                 # Allow unauthenticated users to view the list of organisations
                 # so they can select an organisation when registering
-                dict(t="org_organisation", uacl=acl.READ, organisation="all"),
+                dict(t="org_organisation", uacl=acl.READ, entity="any"),
                 # Allow unauthenticated users to view the Map
                 dict(c="gis", uacl=acl.READ, oacl=default_oacl),
                 # Allow unauthenticated users to cache Map feeds
@@ -189,6 +191,7 @@ if len(pop_list) > 0:
                 "Editor - can access & make changes to any unprotected data",
                 uid=sysroles.EDITOR,
                 system=True, protected=True)
+
     # MapAdmin
     create_role("MapAdmin",
                 "MapAdmin - allowed access to edit the MapService Catalogue",
@@ -197,13 +200,19 @@ if len(pop_list) > 0:
                 uid=sysroles.MAP_ADMIN,
                 system=True, protected=True)
 
-    # Enable shortcuts (needed by default.py)
-    auth.get_system_roles()
-    system_roles = session.s3.system_roles
-    ADMIN = system_roles.ADMIN
-    AUTHENTICATED = system_roles.AUTHENTICATED
-    ANONYMOUS = system_roles.ANONYMOUS
-    EDITOR = system_roles.EDITOR
-    MAP_ADMIN = system_roles.MAP_ADMIN
+    # OrgAdmin (policies 6, 7 and 8)
+    create_role("OrgAdmin",
+                "OrgAdmin - allowed to manage user roles for entity realms",
+                uid=sysroles.ORG_ADMIN,
+                system=True, protected=True)
+
+# Enable shortcuts (needed by default.py)
+system_roles = auth.get_system_roles()
+ADMIN = system_roles.ADMIN
+AUTHENTICATED = system_roles.AUTHENTICATED
+ANONYMOUS = system_roles.ANONYMOUS
+EDITOR = system_roles.EDITOR
+MAP_ADMIN = system_roles.MAP_ADMIN
+ORG_ADMIN = system_roles.ORG_ADMIN
 
 # END =========================================================================

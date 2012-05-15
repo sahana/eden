@@ -70,6 +70,7 @@ class S3LocationModel(S3Model):
         session = current.session
 
         messages = current.messages
+        NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         system_roles = session.s3.system_roles
@@ -934,7 +935,7 @@ class S3GISConfigModel(S3Model):
         GIS Config model: Web Map Context
         - Site config
         - Personal config
-        - @ToDo: OU config (Organisation &/or Team)
+        - OU config (Organisation &/or Team)
     """
 
     names = ["gis_config",
@@ -1289,7 +1290,7 @@ class S3GISConfigModel(S3Model):
                                                          "%(name)s"),
                                     represent = self.gis_config_represent,
                                     label = T("Map Configuration"),
-                                    ondelete = "RESTRICT")
+                                    ondelete = "CASCADE")
 
         ADD_CONFIG = T("Add Map Configuration")
         LIST_CONFIGS = T("List Map Configurations")
@@ -2973,7 +2974,9 @@ class S3MapModel(S3Model):
         # WMS
         #
 
-        wms_img_formats = ["image/jpeg", "image/png", "image/bmp", "image/tiff", "image/gif", "image/svg+xml"]
+        wms_img_formats = ["image/jpeg", "image/jpeg;mode=24bit", "image/png",
+                           "image/gif", "image/bmp", "image/tiff",
+                           "image/svg+xml"]
 
         tablename = "gis_layer_wms"
         table = define_table(tablename,
