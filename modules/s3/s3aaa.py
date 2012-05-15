@@ -40,6 +40,7 @@ __all__ = ["AuthS3",
 import datetime
 import re
 import time
+import uuid
 import urllib
 from urllib import urlencode
 import urllib2
@@ -1705,7 +1706,8 @@ class AuthS3(Auth):
             # Get all current auth_memberships of the user
             mtable = self.settings.table_membership
             query = (mtable.deleted != True) & \
-                    (mtable.user_id == user_id)
+                    (mtable.user_id == user_id) & \
+                    (mtable.group_id != None)
             rows = db(query).select(mtable.group_id, mtable.pe_id)
 
             # Add all group_ids to session.s3.roles
@@ -2216,6 +2218,233 @@ class AuthS3(Auth):
         return [m.user_id for m in members]
 
     # -------------------------------------------------------------------------
+    def s3_delegate_role(self,
+                         group_id,
+                         entity,
+                         receiver=None,
+                         role=None,
+                         role_type=None):
+        """
+            Delegate a role (auth_group) from one entity to another
+
+            @param group_id: the role ID or UID (or a list of either)
+            @param entity: the delegating entity
+            @param receiver: the pe_id of the receiving entity (or a list of pe_ids)
+            @param role: the affiliation role
+            @param role_type: the role type for the affiliation role (default=9)
+
+            @note: if role is None, a new role of role_type 0 will be created
+                   for each entity in receiver and used for the delegation
+                   (1:1 delegation)
+            @note: if both receiver and role are specified, the delegation will
+                   add all receivers to this role and create a 1:N delegation to
+                   this role. If the role does not exist, it will be created (using
+                   the given role type)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not self.permission.delegations:
+            return False
+        dtable = s3db.table("pr_delegation")
+        rtable = s3db.table("pr_role")
+        atable = s3db.table("pr_affiliation")
+        if dtable is None or \
+           rtable is None or \
+           atable is None:
+            return False
+        if not group_id or not entity or not receiver and not role:
+            return False
+
+        # Find the group IDs
+        gtable = self.settings.table_group
+        query = None
+        uuids = None
+        if isinstance(group_id, (list, tuple)):
+            if isinstance(group_id[0], str):
+                uuids = group_id
+                query = (gtable.uuid.belongs(group_id))
+            else:
+                group_ids = group_id
+        elif isinstance(group_id, str) and not group_id.isdigit():
+            uuids = [group_id]
+            query = (gtable.uuid == group_id)
+        else:
+            group_ids = [group_id]
+        if query is not None:
+            query = (gtable.deleted != True) & query
+            groups = db(query).select(gtable.id, gtable.uuid)
+            group_ids = [g.id for g in groups]
+            missing = [u for u in uuids if u not in [g.uuid for g in groups]]
+            for m in missing:
+                group_id = self.s3_create_role(m, uid=m)
+                if group_id:
+                    group_ids.append(group_id)
+        if not group_ids:
+            return False
+
+        if receiver is not None:
+            if not isinstance(receiver, (list, tuple)):
+                receiver = [receiver]
+            query = (dtable.deleted != True) & \
+                    (dtable.group_id.belongs(group_ids)) & \
+                    (dtable.role_id == rtable.id) & \
+                    (rtable.deleted != True) & \
+                    (atable.role_id == rtable.id) & \
+                    (atable.deleted != True) & \
+                    (atable.pe_id.belongs(receiver))
+            rows = db(query).select(atable.pe_id)
+            assigned = [row.pe_id for row in rows]
+            receivers = [r for r in receiver if r not in assigned]
+        else:
+            receivers = None
+
+        if role_type is None:
+            role_type = 9 # Other
+
+        roles = []
+        if role is None:
+            if receivers is None:
+                return False
+            for pe_id in receivers:
+                role_name = "__DELEGATION__%s__%s__" % (entity, pe_id)
+                query = (rtable.role == role_name)
+                role = db(query).select(limitby=(0, 1)).first()
+                if role is not None:
+                    if role.deleted:
+                        role.update_record(deleted=False,
+                                           role_type=0)
+                    role_id = role.id
+                else:
+                    role_id = s3db.pr_add_affiliation(entity, pe_id,
+                                                      role=role_name,
+                                                      role_type=0)
+                if role_id:
+                    roles.append(role_id)
+        else:
+            query = (rtable.deleted != True) & \
+                    (rtable.pe_id == entity) & \
+                    (rtable.role == role)
+            row = db(query).select(rtable.id, limitby=(0, 1)).first()
+            if row is None:
+                role_id = rtable.insert(pe_id = entity,
+                                        role = role,
+                                        role_type = role_type)
+            else:
+                role_id = row.id
+            if role_id:
+                if receivers is not None:
+                    for pe_id in receivers:
+                        atable.insert(role_id=role_id,
+                                      pe_id=pe_id)
+                        pr_rebuild_path(pe_id, clear=True)
+                roles.append(role_id)
+
+        for role_id in roles:
+            for group_id in group_ids:
+                dtable.insert(role_id=role_id, group_id=group_id)
+
+        # Update roles for current user if required
+        self.s3_set_roles()
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def s3_remove_delegation(self,
+                             group_id,
+                             entity,
+                             receiver=None,
+                             role=None):
+        """
+            Remove a delegation.
+
+            @param group_id: the auth_group ID or UID (or a list of either)
+            @param entity: the delegating entity
+            @param receiver: the receiving entity
+            @param role: the affiliation role
+
+            @note: if receiver is specified, only 1:1 delegations (to role_type 0)
+                   will be removed, but not 1:N delegations => to remove for 1:N
+                   you must specify the role instead of the receiver
+            @note: if both receiver and role are None, all delegations with this
+                   group_id will be removed for the entity
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not self.permission.delegations:
+            return False
+        dtable = s3db.table("pr_delegation")
+        rtable = s3db.table("pr_role")
+        atable = s3db.table("pr_affiliation")
+        if dtable is None or \
+           rtable is None or \
+           atable is None:
+            return False
+        if not group_id or not entity or not receiver and not role:
+            return False
+
+        # Find the group IDs
+        gtable = self.settings.table_group
+        query = None
+        uuids = None
+        if isinstance(group_id, (list, tuple)):
+            if isinstance(group_id[0], str):
+                uuids = group_id
+                query = (gtable.uuid.belongs(group_id))
+            else:
+                group_ids = group_id
+        elif isinstance(group_id, str) and not group_id.isdigit():
+            uuids = [group_id]
+            query = (gtable.uuid == group_id)
+        else:
+            group_ids = [group_id]
+        if query is not None:
+            query = (gtable.deleted != True) & query
+            groups = db(query).select(gtable.id, gtable.uuid)
+            group_ids = [g.id for g in groups]
+        if not group_ids:
+            return False
+
+        # Get all delegations
+        query = (dtable.deleted != True) & \
+                (dtable.group_id.belongs(group_ids)) & \
+                (dtable.role_id == rtable.id) & \
+                (rtable.pe_id == entity) & \
+                (atable.role_id == rtable.id)
+        if receiver:
+            if not isinstance(receiver, (list, tuple)):
+                receiver = [receiver]
+            query &= (atable.pe_id.belongs(receiver))
+        elif role:
+            query &= (rtable.role == role)
+        rows = db(query).select(dtable.id,
+                                dtable.group_id,
+                                rtable.id,
+                                rtable.role_type)
+
+        # Remove properly
+        rmv = Storage()
+        for row in rows:
+            if not receiver or row[rtable.role_type] == 0:
+                deleted_fk = {"role_id": row[rtable.id],
+                              "group_id": row[dtable.group_id]}
+                rmv[row[dtable.id]] = json.dumps(deleted_fk)
+        for record_id in rmv:
+            query = (dtable.id == record_id)
+            data = {"role_id": None,
+                    "group_id": None,
+                    "deleted_fk": rmv[record_id]}
+            db(query).update(**data)
+
+        # Maybe update the current user's delegations?
+        if len(rmv):
+            self.s3_set_roles()
+        return True
+
+    # -------------------------------------------------------------------------
     # ACL management
     # -------------------------------------------------------------------------
     def s3_update_acls(self, role, *acls):
@@ -2343,7 +2572,6 @@ class AuthS3(Auth):
             return True
 
         db = current.db
-        session = current.session
 
         sr = self.get_system_roles()
 
@@ -2351,7 +2579,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = session.s3.security_policy
+        policy = current.deployment_settings.security.policy
 
         # Simple policy
         if policy == 1:
@@ -2436,7 +2664,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = session.s3.security_policy
+        policy = current.deployment_settings.security.policy
 
         if policy == 1:
             # "simple" security policy: show all records
@@ -2741,8 +2969,10 @@ class AuthS3(Auth):
                 pass
             else:
                 user_id = None
-                if PID in row:
-                    # Records which link to a person_id shall be owned by that person
+                # Records which link to a person_id shall be owned by that person
+                if tablename == "pr_person":
+                    user_id = self.s3_get_user_id(row[table._id])
+                elif PID in row:
                     user_id = self.s3_get_user_id(row[PID])
                 if not user_id and self.s3_logged_in() and self.user:
                     # Fallback to current user
@@ -2776,8 +3006,7 @@ class AuthS3(Auth):
                 # Otherwise, do a fallback cascade
                 else:
                     get_pe_id = s3db.pr_get_pe_id
-                    if EID in row:
-                        # Person Entities own their own records and
+                    if EID in row and tablename not in ("pr_person", "dvi_body"):
                         owner_entity = row[EID]
                     elif OID in row:
                         owner_entity = get_pe_id(otablename, row[OID])
@@ -3446,10 +3675,11 @@ class S3Permission(object):
         elif not entities:
             return None
         elif OENT in table.fields:
+            public = (table[OENT] == None)
             if len(entities) == 1:
-                return (table[OENT] == entities[0])
+                return (table[OENT] == entities[0]) | public
             else:
-                return (table[OENT].belongs(entities))
+                return (table[OENT].belongs(entities)) | public
         return None
 
     # -------------------------------------------------------------------------
@@ -3507,7 +3737,11 @@ class S3Permission(object):
                 _debug("*** GRANTED ***")
                 return True
             else:
-                permitted = racl == self.READ
+                if self.page_restricted(c=c, f=f):
+                    permitted = racl == self.READ
+                else:
+                    _debug("==> unrestricted page")
+                    permitted = True
                 if permitted:
                     _debug("*** GRANTED ***")
                 else:

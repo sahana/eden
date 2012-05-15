@@ -105,7 +105,8 @@
                 {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
                 {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
                 <div id='content' class='clearfix'>
-                    {{include}}
+                  {{#include "breadcrumbs.html"}} 
+                  {{include}}
                 </div>
             </div>
         </div>
