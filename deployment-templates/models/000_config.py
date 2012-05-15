@@ -185,7 +185,7 @@ deployment_settings.L10n.religions = {
     "none":T("none"),
     "christian":T("Christian"),
     "muslim":T("Muslim"),
-	"jewish":T("Jewish"),
+    "jewish":T("Jewish"),
     "buddhist":T("Buddhist"),
     "hindu":T("Hindu"),
     "bahai":T("Bahai"),
@@ -406,7 +406,7 @@ deployment_settings.inv.shipment_types = {
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 
-# Organsiation Management
+# Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #deployment_settings.org.site_code_len = 3
 
@@ -478,14 +478,14 @@ deployment_settings.modules = OrderedDict([
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-     # Uncomment to enable internal support requests
-     #("support", Storage(
-     #        name_nice = T("Support"),
-     #        #description = "Support Requests",
-     #        restricted = True,
-     #        module_type = None  # This item is handled separately for the menu
-     #    )),
-     ("gis", Storage(
+    # Uncomment to enable internal support requests
+    #("support", Storage(
+    #        name_nice = T("Support"),
+    #        #description = "Support Requests",
+    #        restricted = True,
+    #        module_type = None  # This item is handled separately for the menu
+    #    )),
+    ("gis", Storage(
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,

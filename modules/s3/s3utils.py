@@ -785,11 +785,11 @@ def s3_auth_group_represent(opt):
     roles = []
     for o in opt:
         try:
-            key = int(opt)
+            key = int(o)
         except ValueError:
             continue
         if key in groups:
-            roles.append(groups[key])
+            roles.append(groups[key]["role"])
     if not roles:
         return current.messages.NONE
     return ", ".join(roles)

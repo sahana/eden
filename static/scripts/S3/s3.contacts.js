@@ -1,3 +1,4 @@
+/* Addresses not done in this controller for now as can't load Google Maps properly
 $('#address-add').click(function () {
     // Show a Spinner
     $('#address-add_throbber').removeClass('hidden').show();
@@ -16,7 +17,7 @@ $('#address-add').click(function () {
         // Activate the Location Selector
         s3_gis_locationselector_activate();
         // Modify the submission URL
-        var url2 = S3.Ap.concat('/pr/address/create?person=' + personId);
+        var url2 = S3.Ap.concat('/pr/address/create?person=' + personId + '&controller=' + controller);
         $('#popup').find('form').attr('action', url2);
         // Hide the spinner
         $('#address-add_throbber').hide();
@@ -43,13 +44,14 @@ $('.address').each(function () {
             // Activate the Location Selector
             s3_gis_locationselector_activate();
             // Modify the submission URL
-            var url2 = S3.Ap.concat('/pr/address/' + id + '/update?person=' + personId);
+            var url2 = S3.Ap.concat('/pr/address/' + id + '/update?person=' + personId + '&controller=' + controller);
             $('#popup').find('form').attr('action', url2);
             // Hide the spinner
             $('#address-add_throbber').hide();
         });
     });
 });
+*/
 
 $('#contact-add').click(function () {
     // Show a Spinner
