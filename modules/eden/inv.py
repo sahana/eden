@@ -757,6 +757,7 @@ class S3TrackingModel(S3Model):
                                          default = auth.user.site_id if auth.is_logged_in() else None,
                                          readable = True,
                                          writable = True,
+                                         notnull = True,
                                          widget = S3SiteAutocompleteWidget(),
                                          represent=org_site_represent),
                                   Field("date", "date",
@@ -776,6 +777,7 @@ class S3TrackingModel(S3Model):
                                         label = T("Type"),
                                         default = 0,
                                         ),
+                                  
                                   Field("status",
                                         "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(shipment_status)),
@@ -1038,6 +1040,7 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1063,6 +1066,8 @@ $(document).ready(function() {
                        list_fields = ["id",
                                       "status",
                                       "item_id",
+                                      (T("Weight (kg)"), "weight"),
+                                      (T("Volume (m3)"), "volume"),
                                       "item_pack_id",
                                       "send_id",
                                       "quantity",
@@ -1150,6 +1155,8 @@ $(document).ready(function() {
         tracktable.recv_inv_item_id.readable = False
 
         list_fields = ["item_id",
+                       (T("Weight (kg)"), "weight"),
+                       (T("Volume (m3)"), "volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -1236,6 +1243,8 @@ $(document).ready(function() {
         record = table[r.id]
         recv_ref = record.recv_ref
         list_fields = ["item_id",
+                       (T("Weight (kg)"), "weight"),
+                       (T("Volume (m3)"), "volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -2642,7 +2651,7 @@ class InvItemVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
     extra_fields = ["pack_value",
-                    "quantity"
+                    "quantity",
                     ]
 
     def total_value(self):
@@ -2669,5 +2678,26 @@ class InvItemVirtualFields:
         except:
             # not available
             return current.messages.NONE
+        
+# =============================================================================
+class InvTrackItemVirtualFields:
+    """ Virtual fields as dimension classes for reports """
 
+    extra_fields = ["volume",
+                    "weight"
+                    ]
+
+    def volume(self):
+        try:
+            return self.inv_track_item.item_id.volume
+        except:
+            # not available
+            return current.messages.NONE
+
+    def weight(self):
+        try:
+            return self.inv_track_item.item_id.weight
+        except:
+            # not available
+            return current.messages.NONE
 # END =========================================================================
