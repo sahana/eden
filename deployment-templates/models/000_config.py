@@ -393,7 +393,14 @@ deployment_settings.req.generate_req_number = True
 #deployment_settings.inv.collapse_tabs = False
 # Use the term 'Order' instead of 'Shipment'
 #deployment_settings.inv.shipment_name = "order"
-
+deployment_settings.inv.shipment_types = {
+         0: T("-"),
+         1: T("Other Warehouse"),
+         2: T("Donation"),
+         3: T("Foreign Donation"),
+         4: T("Local Purchases"),
+         5: T("Confiscated Goods from Bureau Of Customs")
+                  }
 # Supply
 #deployment_settings.supply.use_alt_name = False
 # Do not edit after deployment
