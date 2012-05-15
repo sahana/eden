@@ -433,8 +433,6 @@ def send():
         tracktable.item_id.readable = False
         tracktable.recv_quantity.readable = False
         tracktable.return_quantity.readable = False
-        tracktable.currency.readable = False
-        tracktable.pack_value.readable = False
         tracktable.expiry_date.readable = False
         tracktable.owner_org_id.readable = False
         tracktable.supply_org_id.readable = False
@@ -446,6 +444,8 @@ def send():
             tracktable.quantity.writable = True
             tracktable.comments.writable = True
             # hide some fields
+            tracktable.currency.readable = False
+            tracktable.pack_value.readable = False
             tracktable.item_source_no.readable = False
         elif status == TRACK_STATUS_ARRIVED:
             # Shipment arrived display some extra fields at the destination
@@ -453,9 +453,13 @@ def send():
             tracktable.recv_quantity.readable = True
             tracktable.return_quantity.readable = True
             tracktable.recv_bin.readable = True
+            tracktable.currency.readable = True
+            tracktable.pack_value.readable = True
         elif status == TRACK_STATUS_RETURNING:
             tracktable.return_quantity.readable = True
             tracktable.return_quantity.writable = True
+            tracktable.currency.readable = True
+            tracktable.pack_value.readable = True
 
     def prep(r):
         # Default to the Search tab in the location selector
@@ -470,6 +474,8 @@ def send():
                                "item_pack_id",
                                "bin",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "recv_quantity",
                                "return_quantity",
                                "owner_org_id",
@@ -482,6 +488,8 @@ def send():
                                "item_id",
                                "item_pack_id",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "return_quantity",
                                "bin",
                                "owner_org_id",
@@ -493,6 +501,8 @@ def send():
                                "item_id",
                                "item_pack_id",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
