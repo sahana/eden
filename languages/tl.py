@@ -1,5 +1,6 @@
 # coding: utf8
 {
+'%(module)s not installed': '%(module)s not installed',
 '%(system_name)s - Verify Email': '%(system_name)s - I-verify ang Email',
 '%I:%M %p': '%I:%M %p',
 '%I:%M:%S %p': '%I:%M:%S %p',
@@ -569,6 +570,7 @@
 'Registration is still pending approval from Approver (%s) - please wait until confirmation received.': 'Nakabinbin pa ang pagpaparehistro sa pag-apruba mula sa Taga-apruba (%s) - mangyaring maghintay hanggang sa matanggap ang pagkumpirma.',
 'Registration key': 'Key ng pagpaparehistro',
 'Registration successful': 'Matagumpay ang pagpaparehistro',
+'Relief Goods Inventory and Monitoring System': 'Relief Goods Inventory and Monitoring System',
 'Remote Error': 'Malayuang Error',
 'Repeat your password': 'Ulitin ang iyong password',
 'Report To Facility': 'Mag-ulat Sa Pasilidad',
