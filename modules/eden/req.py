@@ -58,7 +58,7 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
-rn_label = T("Requisition Number")
+rn_label = T(current.deployment_settings.get_req_field_name())
 
 # =============================================================================
 class S3RequestModel(S3Model):
@@ -592,7 +592,7 @@ $(function() {
         exporter = r.resource.exporter.pdf
         return exporter(r,
                         method = "list",
-                        pdf_title = "Request Form",
+                        pdf_title = current.deployment_settings.get_req_form_name(),
                         pdf_filename = filename,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
@@ -602,7 +602,7 @@ $(function() {
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )
+                       )        
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):
@@ -2000,7 +2000,9 @@ def req_rheader(r, check_page = False):
                 else:
                     logoTR = TR(TD(logo, _colspan=2))
                 rData = TABLE(
-                               logoTR,
+                              TR(TD("REQUEST ISSUE FORM", _colspan=2, _class="pdf_title"),
+                              TD(logo, _colspan=2),
+                              ),
                                TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),
