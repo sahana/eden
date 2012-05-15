@@ -168,8 +168,7 @@ class S3MainMenu:
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
                             MM("Login", m="login",
-                               vars=dict(_next=login_next),
-                               check=self_registration),
+                               vars=dict(_next=login_next)),
                             MM("Register", m="register",
                                vars=dict(_next=login_next),
                                check=self_registration),

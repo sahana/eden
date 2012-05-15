@@ -81,7 +81,8 @@ class S3Config(Storage):
         self.CURRENCIES = {
             "USD" :T("United States Dollars"),
             "EUR" :T("Euros"),
-            "GBP" :T("Great British Pounds")
+            "GBP" :T("Great British Pounds"),
+            "CHF" :T("Swiss Francs")
         }
 
     # -------------------------------------------------------------------------
@@ -526,7 +527,16 @@ class S3Config(Storage):
             * order
         """
         return self.inv.get("shipment_name", "shipment")
-
+    def get_inv_shipment_types(self):
+        T = current.T
+        return self.inv.get("shipment_types", { 0: current.messages.NONE,
+                          1: T("Other Warehouse"),
+                          2: T("Local Donation"),
+                          3: T("Foreign Donation"),
+                          4: T("Local Purchases"),
+                          #5: T("Confiscated Goods")
+                        })
+    
     # -------------------------------------------------------------------------
     # Supply
     def get_supply_catalog_default(self):
