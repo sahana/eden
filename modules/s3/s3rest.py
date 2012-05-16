@@ -4886,8 +4886,20 @@ class S3ResourceFilter:
             else:
                 self._add_vfltr(f, component=component, master=master)
 
+            skip_master = False
             alias = self.resource.alias
             if not master and component and component != alias:
+                alias = component
+                skip_master = True
+            if alias in self.cvfltr:
+                # simply append the query -> the risk for and the impact
+                # of a possible query duplication is smaller (by orders
+                # of magnitude!) than the necessary effort for query
+                # de-duplication
+                self.cvfltr[alias].append(f)
+            else:
+                self.cvfltr[alias] = [f]
+            if skip_master:
                 return
 
             joins, distinct = f.joins(self.resource)
@@ -5388,6 +5400,22 @@ class S3ResourceFilter:
                     )
 
         return represent
+
+    # -------------------------------------------------------------------------
+    def serialize_url(self):
+        """
+            Serialize this filter as URL query
+
+            @returns: a Storage of URL GET variables
+        """
+        resource = self.resource
+
+        url_vars = Storage()
+        for f in self.cvfltr.values():
+            for q in f:
+                sub = q.serialize_url(resource=resource)
+                url_vars.update(sub)
+        return url_vars
 
 # =============================================================================
 
