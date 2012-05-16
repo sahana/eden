@@ -371,8 +371,11 @@ class S3HRModel(S3Model):
         if "vars" in form:
             # e.g. coming from staff/create
             vars = form.vars
+        elif "id" in form:
+            # e.g. coming from user/create
+            vars = form
         elif hasattr(form, "vars"):
-            # e.g.coming from user/create
+            # SQLFORM e.g. ?
             vars = form.vars
         else:
             # e.g. Coming from s3_register callback
