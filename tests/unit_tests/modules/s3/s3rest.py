@@ -673,6 +673,32 @@ class S3ResourceFilterTests(unittest.TestCase):
         self.assertEqual(len(u.keys()), 1)
         self.assertEqual(u[k], "Test*,Other*")
 
+    def testSerializeResourceFilterURL(self):
+
+        url_query = {"project.organisation_id$name__like": "*test*",
+                     "task.description__like!": "*test*"}
+
+        resource = s3mgr.define_resource("project", "project", vars=url_query)
+        rfilter = resource.rfilter
+        url_vars = rfilter.serialize_url()
+        self.assertEqual(len(url_vars), len(url_query))
+        for k in url_query:
+            self.assertTrue(k in url_vars)
+            self.assertEqual(url_vars[k], url_query[k])
+
+        FS = s3base.S3FieldSelector
+        q = FS("first_name").like(["Test%", "Other%"])
+        resource = s3mgr.define_resource("pr", "person")
+        resource.add_filter(q)
+        rfilter = resource.rfilter
+        u = rfilter.serialize_url()
+        k = "person.first_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*,Other*")
+
     def testParseValue(self):
 
         parse_value = s3base.S3ResourceFilter._parse_value
