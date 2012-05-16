@@ -394,7 +394,7 @@ class S3SupplyModel(S3Model):
                                          sort=True),
                     represent = self.supply_item_represent,
                     label = T("Item"),
-                    widget = S3AutocompleteWidget("supply", 
+                    widget = S3AutocompleteWidget("supply",
                                          "item"),
                     #widget = S3SearchAutocompleteWidget(
                     #                get_fieldname = "item_id",
