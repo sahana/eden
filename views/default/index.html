@@ -1,10 +1,12 @@
 {{extend "layout.html"}}
 <div id='home'>
 {{try:}}
-<h2>{{=title}}</h2>
+<h2 align='center'>{{=title}}</h2>
 {{except:}}{{pass}}
 {{=XML(item)}}
-<div id='menu_box_1'>
+<table width="50%" align="center">
+<tr><td>
+<div id='menu_box_center'>
 {{try:}}
 {{=sit_dec_res_box}}
 {{except:}}{{pass}}
@@ -34,6 +36,8 @@
 {{=manage_facility_box}}
 {{=org_box}}
 </div>
+</td></tr>
+</table>
 <div id='menu_box_2'>
 <!-- More boxes can go here -->
 </div>
