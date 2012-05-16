@@ -414,7 +414,7 @@ class AuthS3(Auth):
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
 
-        if security_policy not in (1, 2, 3, 4, 5, 6) and \
+        if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
            not settings.table_permission:
             # Permissions table (group<->permission)
             # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
@@ -2445,6 +2445,63 @@ class AuthS3(Auth):
         return True
 
     # -------------------------------------------------------------------------
+    def s3_get_delegations(self, entity, role_type=0, by_role=False):
+        """
+            Lookup delegations for an entity, ordered either by
+            receiver (by_role=False) or by affiliation role (by_role=True)
+
+            @param entity: the delegating entity (pe_id)
+            @param role_type: limit the lookup to this affiliation role type,
+                              (can use 0 to lookup 1:1 delegations)
+            @param by_role: group by affiliation roles
+
+            @returns: a Storage {<receiver>: [group_ids]}, or
+                      a Storage {<rolename>: {entities:[pe_ids], groups:[group_ids]}}
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not entity or not self.permission.delegations:
+            return None
+        dtable = s3db.table("pr_delegation")
+        rtable = s3db.table("pr_role")
+        atable = s3db.table("pr_affiliation")
+        if None in (dtable, rtable, atable):
+            return None
+
+        query = (rtable.deleted != True) & \
+                (dtable.deleted != True) & \
+                (atable.deleted != True) & \
+                (rtable.pe_id == entity) & \
+                (dtable.role_id == rtable.id) & \
+                (atable.role_id == rtable.id)
+        if role_type is not None:
+            query &= (rtable.role_type == role_type)
+        rows = db(query).select(atable.pe_id,
+                                rtable.role,
+                                dtable.group_id)
+        delegations = Storage()
+        for row in rows:
+            receiver = row[atable.pe_id]
+            role = row[rtable.role]
+            group_id = row[dtable.group_id]
+            if by_role:
+                if role not in delegations:
+                    delegations[role] = Storage(entities=[], groups=[])
+                delegation = delegations[role]
+                if receiver not in delegation.entities:
+                    delegation.entities.append(receiver)
+                if group_id not in delegation.groups:
+                    delegation.groups.append(group_id)
+            else:
+                if receiver not in delegations:
+                    delegations[receiver] = [group_id]
+                else:
+                    delegations[receiver].append(group_id)
+        return delegations
+
+    # -------------------------------------------------------------------------
     # ACL management
     # -------------------------------------------------------------------------
     def s3_update_acls(self, role, *acls):
@@ -2579,7 +2636,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = current.deployment_settings.security.policy
+        policy = current.deployment_settings.get_security_policy()
 
         # Simple policy
         if policy == 1:
@@ -2664,7 +2721,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = current.deployment_settings.security.policy
+        policy = current.deployment_settings.get_security_policy()
 
         if policy == 1:
             # "simple" security policy: show all records

@@ -7,9 +7,7 @@
 
          PFIF 1.2 Import Templates
 
-         Version 0.4 / 2011-05-09 / by nursix
-
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-2012 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -32,11 +30,12 @@
          FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
          OTHER DEALINGS IN THE SOFTWARE.
 
-        @todo: automatically report persons missing if no explicit found-note?
+         @note: must adapt the PFIF namespace identifier in this stylesheet
+                to be able to parse other versions
+         @todo: automatically report persons missing if no explicit found-note?
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
-    <xsl:include href="../xml/commons.xsl"/>
     <xsl:include href="../xml/countries.xsl"/>
 
     <!-- ****************************************************************** -->
@@ -52,24 +51,26 @@
         </s3xml>
     </xsl:template>
 
-    <xsl:template match="text()"/>
-
     <!-- ****************************************************************** -->
-    <!-- pfif:person -->
-
     <xsl:template match="pfif:person">
         <xsl:if test="./pfif:person_record_id/text()">
+
+            <!-- use the person_record_id as UUID -->
             <xsl:variable name="uuid">
                 <xsl:value-of select="./pfif:person_record_id/text()"/>
             </xsl:variable>
 
             <resource name="pr_person">
+
+                <!-- Meta data -->
                 <xsl:attribute name="uuid">
                     <xsl:value-of select="$uuid"/>
                 </xsl:attribute>
                 <xsl:attribute name="modified_on">
                     <xsl:value-of select="./pfif:entry_date/text()"/>
                 </xsl:attribute>
+
+                <!-- Base data -->
                 <data field="first_name">
                     <xsl:value-of select="normalize-space(./pfif:first_name/text())"/>
                 </data>
@@ -136,16 +137,10 @@
                     </resource>
                 </xsl:if>
 
-                <!-- PhotoURL: save external URL -->
-                <xsl:if test="./pfif:photo_url">
-                    <data field="picture">
-                        <xsl:attribute name="url">
-                            <xsl:value-of select="./pfif:photo_url/@text()"/>
-                        </xsl:attribute>
-                    </data>
-                </xsl:if>
+                <!-- Photo URL -->
+                <xsl:apply-templates select="./pfif:photo_url"/>
 
-                <!-- Add notes -->
+                <!-- Notes -->
                 <xsl:apply-templates select="//pfif:note[pfif:person_record_id=$uuid]"/>
 
             </resource>
@@ -153,8 +148,17 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- pfif:note -->
+    <xsl:template match="pfif:photo_url">
+        <xsl:if test="./text()!=''">
+            <resource name="pr_image">
+                <data field="url">
+                    <xsl:value-of select="./pfif:photo_url/text()"/>
+                </data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template match="pfif:note">
         <resource name="pr_note">
 
@@ -201,5 +205,10 @@
             </data>
         </resource>
     </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="text()"/>
+
+    <!-- ****************************************************************** -->
 
 </xsl:stylesheet>
