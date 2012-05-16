@@ -60,7 +60,7 @@ inv_ship_status = {
                     "RETURNING"  : SHIP_STATUS_RETURNING,
                 }
 
-T = current.T  
+T = current.T
 shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
                     SHIP_STATUS_RECEIVED:   T("Received"),
                     SHIP_STATUS_SENT:       T("Sent"),
@@ -773,6 +773,7 @@ class S3TrackingModel(S3Model):
                                          default = auth.user.site_id if auth.is_logged_in() else None,
                                          readable = True,
                                          writable = True,
+                                         notnull = True,
                                          widget = S3SiteAutocompleteWidget(),
                                          represent=org_site_represent),
                                   Field("date", "date",
@@ -1004,7 +1005,7 @@ $(document).ready(function() {
                                 ),  # original inventory
                                   item_id(ondelete = "RESTRICT"),      # supply item
                                   item_pack_id(ondelete = "SET NULL"), # pack table
-				  Field("quantity",
+                                  Field("quantity",
                                         "double",
                                         label = T("Quantity Sent"),
                                         notnull = True,
@@ -1069,7 +1070,7 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
-        #table.virtualfields.append(TrackItemVirtualFields())
+        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1095,6 +1096,8 @@ $(document).ready(function() {
                        list_fields = ["id",
                                       "status",
                                       "item_id",
+                                      (T("Weight (kg)"), "weight"),
+                                      (T("Volume (m3)"), "volume"),
                                       "item_pack_id",
                                       "send_id",
                                       "quantity",
@@ -1183,6 +1186,8 @@ $(document).ready(function() {
         tracktable.recv_inv_item_id.readable = False
 
         list_fields = ["item_id",
+                       (T("Weight (kg)"), "weight"),
+                       (T("Volume (m3)"), "volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -1274,6 +1279,8 @@ $(document).ready(function() {
         record = table[r.id]
         recv_ref = record.recv_ref
         list_fields = ["item_id",
+                       (T("Weight (kg)"), "weight"),
+                       (T("Volume (m3)"), "volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -2704,6 +2711,26 @@ class InvItemVirtualFields:
     def item_category(self):
         try:
             return self.inv_inv_item.item_id.item_category_id.name
+        except:
+            # not available
+            return current.messages.NONE
+
+# =============================================================================
+class InvTrackItemVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    extra_fields = []
+
+    def volume(self):
+        try:
+            return self.inv_track_item.item_id.volume
+        except:
+            # not available
+            return current.messages.NONE
+
+    def weight(self):
+        try:
+            return self.inv_track_item.item_id.weight
         except:
             # not available
             return current.messages.NONE
