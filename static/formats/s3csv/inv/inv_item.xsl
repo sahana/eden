@@ -39,7 +39,7 @@
          Width..................supply_item.width
          Height.................supply_item.height
          Volume.................supply_item.volume
-         Tracking number........Tracking Number
+         Tracking Number........Tracking Number
          Bin....................bin
          Expiry Date............expiry_date
          Supplier/Donor.........supply_org_id
@@ -154,11 +154,13 @@
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
-            <reference field="owner_org_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Organisation/Department']/text()"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="col[@field='Organisation/Department']!=''">
+                <reference field="owner_org_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Organisation/Department']/text()"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
             <!-- Link to Supplier/Donor org -->
             <reference field="supply_org_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
@@ -168,7 +170,7 @@
             <data field="quantity"><xsl:value-of select="col[@field='Quantity']/text()"/></data>
             <data field="pack_value"><xsl:value-of select="col[@field='Unit Value']/text()"/></data>
             <data field="currency"><xsl:value-of select="col[@field='Currency']/text()"/></data>
-            <data field="tracking_no"><xsl:value-of select="col[@field='Tracking number']/text()"/></data>
+            <data field="tracking_no"><xsl:value-of select="col[@field='Tracking Number']/text()"/></data>
             <data field="bin"><xsl:value-of select="col[@field='Bin']/text()"/></data>
             <data field="expiry_date"><xsl:value-of select="col[@field='Expiry Date']/text()"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']/text()"/></data>
@@ -193,20 +195,21 @@
     <xsl:template name="Organisation">
         <xsl:param name="OrgName"/>
 
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrgName"/></data>
-        </resource>
-
+        <xsl:if test="$OrgName!=''">
+            <resource name="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$OrgName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$OrgName"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
 
     <!-- ****************************************************************** -->
     <xsl:template name="Warehouse">
         <xsl:variable name="warehouse" select="col[@field='Warehouse']/text()"/>
-        <xsl:variable name="orgnaisation" select="col[@field='Warehouse Organisation']/text()"/>
+        <xsl:variable name="organisation" select="col[@field='Warehouse Organisation']/text()"/>
 
         <resource name="org_office">
             <xsl:attribute name="tuid">
@@ -217,7 +220,7 @@
             <!-- Link to Warehouse Organisation org -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$orgnaisation"/>
+                    <xsl:value-of select="$organisation"/>
                 </xsl:attribute>
             </reference>
        </resource>
@@ -295,7 +298,7 @@
                 </xsl:attribute>
             </reference>
             <!-- Nest to Supply Item Pack (UM)-->
-            <resource resource="supply_item_pack">
+            <resource name="supply_item_pack">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$pack_tuid"/>
                 </xsl:attribute>
