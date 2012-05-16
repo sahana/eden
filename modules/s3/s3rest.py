@@ -5957,6 +5957,98 @@ class S3ResourceQuery:
             else:
                 return "(%s ?%s? %s)" % (l, op, r)
 
+    # -------------------------------------------------------------------------
+    def serialize_url(self, resource=None):
+        """
+            Serialize this query as URL query
+
+            @returns: a Storage of URL variables
+        """
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        url_query = Storage()
+        def _serialize(n, o, v, invert):
+            try:
+                if isinstance(v, list):
+                    v = ",".join([S3TypeConverter.convert(str, val) for val in v])
+                else:
+                    v = S3TypeConverter.convert(str, v)
+            except:
+                return
+            if "." not in n:
+                if resource is not None:
+                    n = "%s.%s" % (resource.alias, n)
+                else:
+                    return
+            if o == self.LIKE:
+                v = v.replace("%", "*")
+            if o == self.EQ:
+                operator = ""
+            else:
+                operator = "__%s" % o
+            if invert:
+                operator = "%s!" % operator
+            url_query["%s%s" % (n, operator)] = v
+            return
+        if op == self.AND:
+            lu = l.serialize_url()
+            url_query.update(lu)
+            ru = r.serialize_url()
+            url_query.update(ru)
+        elif op == self.OR:
+            sub = self._or()
+            if sub is None:
+                # This OR-subtree is not serializable
+                return url_query
+            n, o, v, invert = sub
+            _serialize(n, o, v, invert)
+        elif op == self.NOT:
+            lu = l.serialize_url()
+            for k in lu:
+                url_query["%s!" % k] = lu[k]
+        elif isinstance(l, S3FieldSelector):
+            _serialize(l.name, op, r, False)
+        return url_query
+
+    # -------------------------------------------------------------------------
+    def _or(self):
+        """
+            Helper method to URL-serialize an OR-subtree in a query in
+            alternative field selector syntax if they all use the same
+            operator and value (this is needed to URL-serialize an
+            S3SearchSimpleWidget query).
+        """
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        if self.op == self.AND:
+            return None
+        elif self.op == self.NOT:
+            lname, lop, lval, linv = l._or()
+            return (lname, lop, lval, not linv)
+        elif self.op == self.OR:
+            lvars = l._or()
+            rvars = r._or()
+            if lvars is None or rvars is None:
+                return None
+            lname, lop, lval, linv = lvars
+            rname, rop, rval, rinv = rvars
+            if lop != rop or linv != rinv:
+                return None
+            if lname == rname:
+                return (lname, lop, [lval, rval], linv)
+            elif lval == rval:
+                return ("%s|%s" % (lname, rname), lop, lval, linv)
+            else:
+                return None
+        else:
+            return (self.left.name, self.op, self.right, False)
+
 # =============================================================================
 
 class S3TypeConverter:

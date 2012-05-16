@@ -2678,7 +2678,7 @@ def run_suite(*test_classes):
         tests = loader.loadTestsFromTestCase(test_class)
         suite.addTests(tests)
     if suite is not None:
-        unittest.TextTestRunner().run(suite)
+        unittest.TextTestRunner(verbosity=2).run(suite)
     return
 
 if __name__ == "__main__":
