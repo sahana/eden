@@ -86,6 +86,8 @@ class S3SupplyModel(S3Model):
         organisation_id = self.org_organisation_id
         organisation_represent = self.org_organisation_represent
 
+        NONE = current.messages.NONE
+
         # Shortcuts
         add_component = self.add_component
         comments = s3.comments

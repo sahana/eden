@@ -221,14 +221,14 @@ def inv_item():
     table = s3db.inv_inv_item
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
 
-    s3mgr.configure("inv_inv_item", 
+    s3mgr.configure("inv_inv_item",
                     list_fields = ["id",
                                       "site_id",
                                       "item_id",
                                       (T("Item Code"), "item_code"),
                                       (T("Category"), "item_category"),
                                       "quantity",
-                                      "pack_value",                                      
+                                      "pack_value",
                                       ]
                     )
 
