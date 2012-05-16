@@ -3903,7 +3903,7 @@ class S3Resource(object):
         fields = []
         append = fields.append
 
-        for s in selectors:
+        for s in slist:
 
             # Allow to override the field label
             if isinstance(s, tuple):
