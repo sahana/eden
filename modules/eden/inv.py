@@ -1038,7 +1038,7 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
-        table.virtualfields.append(InvTrackItemVirtualFields())
+        #table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1246,7 +1246,7 @@ $(document).ready(function() {
         record = table[r.id]
         recv_ref = record.recv_ref
         list_fields = ["item_id",
-                       T("Weight (kg)"), "weight"),
+                       (T("Weight (kg)"), "weight"),
                        (T("Volume (m3)"), "volume"),
                        "item_source_no",
                        "item_pack_id",

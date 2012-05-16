@@ -98,7 +98,7 @@ deployment_settings.base.migrate = True
 # ["roles", "user"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-deployment_settings.base.prepopulate = 1
+deployment_settings.base.prepopulate = ["RGIMS"]
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
 deployment_settings.base.cdn = False
