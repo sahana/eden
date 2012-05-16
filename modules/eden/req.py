@@ -555,7 +555,7 @@ $(function() {
                                                             ).first()
                 if req_row:
                     return A(value,
-                             _href = URL(f = "req",
+                             _href = URL(c = "req", f = "req",
                                          args = [req_row.id, "form"]
                                         ),
                             )
