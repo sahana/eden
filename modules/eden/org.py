@@ -835,6 +835,8 @@ class S3SiteModel(S3Model):
                                   label = T("Facility"),
                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                   represent = org_site_represent,
+                                  orderby = "org_site.name",
+                                  sort = True,
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget = S3SiteAutocompleteWidget(),
                                   comment = DIV(_class="tooltip",
@@ -1689,7 +1691,12 @@ def org_organisation_controller():
     def prep(r):
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
-            if r.component_name == "human_resource" and r.component_id:
+            if not r.component and r.method not in ["read", "update", "delete"]:
+                # Filter out branches
+                btable = s3db.org_organisation_branch
+                s3.filter = (btable.id > 0) & \
+                            (r.table.id != btable.branch_id)
+            elif r.component_name == "human_resource" and r.component_id:
                 # Workaround until widget is fixed:
                 htable = s3db.hrm_human_resource
                 htable.person_id.widget = None
