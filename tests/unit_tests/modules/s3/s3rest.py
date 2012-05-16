@@ -503,8 +503,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testParseURLQuery(self):
 
-        url_query = {"project.organisation_id$name__like": "test",
-                     "task.description__like!": "test"}
+        url_query = {"project.organisation_id$name__like": "*test*",
+                     "task.description__like!": "*test*"}
 
         resource = s3mgr.define_resource("project", "project", vars=url_query)
 
@@ -523,8 +523,32 @@ class S3ResourceFilterTests(unittest.TestCase):
         query = rfilter.get_query()
         self.assertEqual(str(query), "((((project_project.deleted <> 'T') AND "
                                      "(project_project.id > 0)) AND "
-                                     "(org_organisation.name LIKE 'test')) AND "
-                                     "(NOT (project_task.description LIKE 'test')))")
+                                     "(LOWER(org_organisation.name) LIKE '%test%')) AND "
+                                     "(NOT (LOWER(project_task.description) LIKE '%test%')))")
+
+    def testParseURLQueryWithAlternativeSelectors(self):
+
+        url_query = {"project.organisation_id$name|task.description__like": "Test*"}
+
+        resource = s3mgr.define_resource("project", "project", vars=url_query)
+
+        rfilter = resource.rfilter
+        fjoins = rfilter.get_left_joins()
+        self.assertNotEqual(fjoins, None)
+        self.assertTrue(isinstance(fjoins, list))
+        self.assertEqual(fjoins[0], "org_organisation ON "
+                                    "(project_project.organisation_id = org_organisation.id)")
+        self.assertEqual(fjoins[1], "project_task_project ON "
+                                    "((project_task_project.project_id = project_project.id) AND "
+                                    "(project_task_project.deleted <> 'T'))")
+        self.assertEqual(fjoins[2], "project_task ON "
+                                    "(project_task_project.task_id = project_task.id)")
+
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
+                                     "(LOWER(project_task.description) LIKE 'test%')))")
 
     def testParseValue(self):
 

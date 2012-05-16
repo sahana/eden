@@ -5057,22 +5057,60 @@ class S3ResourceFilter:
             # Parse the value
             v = S3ResourceFilter._parse_value(val)
 
-            # Build a S3ResourceQuery
-            try:
-                q = S3ResourceQuery(op, S3FieldSelector(fs), v)
-            except SyntaxError:
-                # Invalid query, skip
-                continue
-            except KeyError:
-                # Invalid operand, skip
-                continue
+            if "|" in fs:
+                selectors = fs.split("|")
+            else:
+                selectors = [fs]
 
-            # Invert operation
-            if invert:
-                q = ~q
+            q = None
+            prefix = None
+            for fs in selectors:
+
+                # Check prefix
+                if "." in fs:
+                    a = fs.split(".", 1)[0]
+                    if prefix is None:
+                        prefix = a
+                elif prefix is not None:
+                    fs = "%s.%s" % (prefix, fs)
+                else:
+                    # Invalid selector
+                    q = None
+                    break
+
+                # Build a S3ResourceQuery
+                rquery = None
+                try:
+                    if op == S3ResourceQuery.LIKE and \
+                       isinstance(v, basestring):
+                        # Auto-lowercase and replace wildcard
+                        f = S3FieldSelector(fs).lower()
+                        v = v.replace("*", "%").lower()
+                    else:
+                        f = S3FieldSelector(fs)
+                    rquery = S3ResourceQuery(op, f, v)
+                except (SyntaxError, KeyError):
+                    q = None
+                    break
+
+                # Invert operation
+                if invert:
+                    rquery = ~rquery
+
+                # Add to subquery
+                if q is None:
+                    q = rquery
+                else:
+                    q |= rquery
+
+            if q is None:
+                continue
 
             # Append to query
-            alias, f = fs.split(".", 1)
+            if len(selectors) > 1:
+                alias = resource.alias
+            else:
+                alias = selectors[0].split(".", 1)[0]
             if alias not in query:
                 query[alias] = [q]
             else:
