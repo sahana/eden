@@ -540,8 +540,8 @@ class S3ResourceFilterTests(unittest.TestCase):
         query = rfilter.get_query()
         self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
                                      "(project_project.id > 0)) AND "
-                                     "((org_organisation.name LIKE 'Test*') OR "
-                                     "(org_organisation.name LIKE 'Other*')))")
+                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
+                                     "(LOWER(org_organisation.name) LIKE 'other%')))")
 
     def testParseURLQueryWithAlternativeSelectors(self):
 

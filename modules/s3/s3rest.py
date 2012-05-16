@@ -5081,11 +5081,13 @@ class S3ResourceFilter:
                 # Build a S3ResourceQuery
                 rquery = None
                 try:
-                    if op == S3ResourceQuery.LIKE and \
-                       isinstance(v, basestring):
+                    if op == S3ResourceQuery.LIKE:
                         # Auto-lowercase and replace wildcard
                         f = S3FieldSelector(fs).lower()
-                        v = v.replace("*", "%").lower()
+                        if isinstance(v, basestring):
+                            v = v.replace("*", "%").lower()
+                        elif isinstance(v, list):
+                            v = [x.replace("*", "%").lower() for x in v]
                     else:
                         f = S3FieldSelector(fs)
                     rquery = S3ResourceQuery(op, f, v)
