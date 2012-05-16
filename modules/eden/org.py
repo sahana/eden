@@ -332,7 +332,7 @@ class S3OrganisationModel(S3Model):
                                                  label=ADD_ORGANIZATION,
                                                  title=T("Organization"),
                                                  tooltip=help)
-        
+
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
                                                       vars=dict(child="from_organisation_id"),
@@ -1441,8 +1441,8 @@ def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
 def org_organisation_logo(id, type="png"):
     """
         Return a logo of the organisation with the given id, if one exists
-        
-        The id can either be the id of the organisation 
+
+        The id can either be the id of the organisation
                or a Row of the organisation
 
         The type can either be png or bmp and is the format of the saved image
@@ -1471,7 +1471,7 @@ def org_organisation_logo(id, type="png"):
                       )
         return logo
     return DIV() # no logo so return an empty div
-    
+
 
 # =============================================================================
 def org_site_represent(id, show_link=True):
