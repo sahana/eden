@@ -754,7 +754,7 @@ class S3TrackingModel(S3Model):
                                          default = auth.user.site_id if auth.is_logged_in() else None,
                                          readable = True,
                                          writable = True,
-										 notnull = True,
+                                         notnull = True,
                                          widget = S3SiteAutocompleteWidget(),
                                          represent=org_site_represent),
                                   Field("date", "date",
@@ -973,7 +973,7 @@ $(document).ready(function() {
                                 ),  # original inventory
                                   item_id(ondelete = "RESTRICT"),      # supply item
                                   item_pack_id(ondelete = "SET NULL"), # pack table
-									Field("quantity",
+                                  Field("quantity",
                                         "double",
                                         label = T("Quantity Sent"),
                                         notnull = True,
@@ -1038,7 +1038,7 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
-        #table.virtualfields.append(InvTrackItemVirtualFields())
+        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1064,7 +1064,7 @@ $(document).ready(function() {
                        list_fields = ["id",
                                       "status",
                                       "item_id",
-									  (T("Weight (kg)"), "weight"),
+                                      (T("Weight (kg)"), "weight"),
                                       (T("Volume (m3)"), "volume"),
                                       "item_pack_id",
                                       "send_id",
@@ -2682,13 +2682,24 @@ class InvItemVirtualFields:
             # not available
             return current.messages.NONE
 
+# =============================================================================
+class InvTrackItemVirtualFields:
+    """ Virtual fields as dimension classes for reports """
 
+    extra_fields = []
 
+    def volume(self):
+        try:
+            return self.inv_track_item.item_id.volume
+        except:
+            # not available
+            return current.messages.NONE
 
-
-
-
-
-
+    def weight(self):
+        try:
+            return self.inv_track_item.item_id.weight
+        except:
+            # not available
+            return current.messages.NONE
 
 # END =========================================================================

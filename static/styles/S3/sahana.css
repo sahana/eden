@@ -1413,6 +1413,10 @@ li input + a {
 	width: auto;
 }
 
+#menu_box_center {
+	width: 655px;
+}
+
 #menu_box_1 {
 	width: auto;
 	float: left;
