@@ -58,7 +58,7 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
-rn_label = T(("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname()))
+rn_label = T("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname())
 
 # =============================================================================
 class S3RequestModel(S3Model):
@@ -602,7 +602,7 @@ $(function() {
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )
+                       )        
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):
@@ -1992,6 +1992,10 @@ def req_rheader(r, check_page = False):
                 site_id = record.site_id
                 org_id = s3db.org_site[site_id].organisation_id
                 logo = s3db.org_organisation_logo(org_id)
+                headerTR = TR(TD(settings.get_req_form_name(),
+                                 _colspan=2, _class="pdf_title"),
+                              TD(logo, _colspan=2),
+                              )
                 if settings.get_req_use_req_number():
                     numberTR = TR(TH("%s: " % table.req_ref.label),
                                   TD(table.req_ref.represent(record.req_ref))

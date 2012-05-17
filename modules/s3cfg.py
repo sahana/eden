@@ -527,7 +527,6 @@ class S3Config(Storage):
         return self.req.get("generate_req_number", True)
     def get_req_req_type(self):
         return self.req.get("req_type", ["Stock", "People", "Other"])
-
     def get_req_form_name(self):
         return self.req.get("req_form_name", "Requisition Form")
     def get_req_shortname(self):
@@ -561,7 +560,6 @@ class S3Config(Storage):
         return self.inv.get("send_ref_field_name", "Waybill Number")
     def get_send_shortname(self):
         return self.inv.get("send_shortname", "WB")
-
     def get_recv_form_name(self):
         return self.inv.get("recv_form_name", "Goods Received Note")
     def get_recv_shortname(self):
