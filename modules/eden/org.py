@@ -332,7 +332,7 @@ class S3OrganisationModel(S3Model):
                                                  label=ADD_ORGANIZATION,
                                                  title=T("Organization"),
                                                  tooltip=help)
-        
+
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
                                                       vars=dict(child="from_organisation_id"),
@@ -835,6 +835,8 @@ class S3SiteModel(S3Model):
                                   label = T("Facility"),
                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                   represent = org_site_represent,
+                                  orderby = "org_site.name",
+                                  sort = True,
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget = S3SiteAutocompleteWidget(),
                                   comment = DIV(_class="tooltip",
@@ -1441,8 +1443,8 @@ def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
 def org_organisation_logo(id, type="png"):
     """
         Return a logo of the organisation with the given id, if one exists
-        
-        The id can either be the id of the organisation 
+
+        The id can either be the id of the organisation
                or a Row of the organisation
 
         The type can either be png or bmp and is the format of the saved image
@@ -1471,7 +1473,7 @@ def org_organisation_logo(id, type="png"):
                       )
         return logo
     return DIV() # no logo so return an empty div
-    
+
 
 # =============================================================================
 def org_site_represent(id, show_link=True):
@@ -1689,7 +1691,12 @@ def org_organisation_controller():
     def prep(r):
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
-            if r.component_name == "human_resource" and r.component_id:
+            if not r.component and r.method not in ["read", "update", "delete"]:
+                # Filter out branches
+                btable = s3db.org_organisation_branch
+                s3.filter = (btable.id > 0) & \
+                            (r.table.id != btable.branch_id)
+            elif r.component_name == "human_resource" and r.component_id:
                 # Workaround until widget is fixed:
                 htable = s3db.hrm_human_resource
                 htable.person_id.widget = None

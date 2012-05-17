@@ -1037,7 +1037,6 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
-        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1063,8 +1062,8 @@ $(document).ready(function() {
                        list_fields = ["id",
                                       "status",
                                       "item_id",
-                                      (T("Weight (kg)"), "weight"),
-                                      (T("Volume (m3)"), "volume"),
+                                      (T("Weight (kg)"), "item_id$weight"),
+                                      (T("Volume (m3)"), "item_id$volume"),
                                       "item_pack_id",
                                       "send_id",
                                       "quantity",
@@ -2284,7 +2283,6 @@ class S3AdjustModel(S3Model):
                                             ondelete = "RESTRICT",
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="adjuster_id")),
-
                                   self.super_link("site_id",
                                                   "org_site",
                                                   ondelete = "SET NULL",
@@ -2293,6 +2291,8 @@ class S3AdjustModel(S3Model):
                                                   readable = True,
                                                   writable = True,
                                                   empty = False,
+                                                  orderby = "org_site.name",
+                                                  sort = True,
                                                   represent=org_site_represent),
                                   Field("adjustment_date",
                                         "date",
@@ -2677,26 +2677,6 @@ class InvItemVirtualFields:
     def item_category(self):
         try:
             return self.inv_inv_item.item_id.item_category_id.name
-        except:
-            # not available
-            return current.messages.NONE
-
-# =============================================================================
-class InvTrackItemVirtualFields:
-    """ Virtual fields as dimension classes for reports """
-
-    extra_fields = []
-
-    def volume(self):
-        try:
-            return self.inv_track_item.item_id.volume
-        except:
-            # not available
-            return current.messages.NONE
-
-    def weight(self):
-        try:
-            return self.inv_track_item.item_id.weight
         except:
             # not available
             return current.messages.NONE

@@ -226,11 +226,9 @@ class S3XML(S3Codec):
         self.error = None
 
         if args:
-            _args = [(k, "'%s'" % args[k]) for k in args]
-            _args = dict(_args)
+            _args = dict([(k, "'%s'" % args[k]) for k in args])
         else:
             _args = None
-        _args = None # Temp code added by Graeme please remove
         stylesheet = self.parse(stylesheet_path)
 
         if stylesheet:
@@ -761,10 +759,11 @@ class S3XML(S3Codec):
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
                                                       limitby=(0, 1)).first()
+                if LatLon:
+                    lat = LatLon[LATFIELD]
+                    lon = LatLon[LONFIELD]
 
             if LatLon:
-                lat = LatLon[LATFIELD]
-                lon = LatLon[LONFIELD]
                 if lat is None or lon is None:
                     # Cannot display on Map
                     continue
