@@ -1,4 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Admin,Survey,survey_admin@example.com,testing,SURVEY_ADMIN,Example.com
-Editor,Survey,survey_editor@example.com,testing,SURVEY_EDIT,Example.com
-Reader,Survey,survey_reader@example.com,testing,SURVEY_READ,Example.com
+Assessment ,Reader,survey_reader@example.com,eden,survey_reader,Timor-Leste Red Cross Society
+Assessment ,Data Entry,survey_data_entry@example.com,eden,survey_data_entry,Timor-Leste Red Cross Society
+Assessment ,Editor,survey_editor@example.com,eden,survey_editor,Timor-Leste Red Cross Society
+Assessment ,Super Editor,survey_super@example.com,eden,survey_super,Timor-Leste Red Cross Society
