@@ -369,9 +369,16 @@ class S3HRModel(S3Model):
         htable = s3db.hrm_human_resource
 
         if "vars" in form:
+            # e.g. coming from staff/create
+            vars = form.vars
+        elif "id" in form:
+            # e.g. coming from user/create
+            vars = form
+        elif hasattr(form, "vars"):
+            # SQLFORM e.g. ?
             vars = form.vars
         else:
-            # Coming from s3_register callback
+            # e.g. Coming from s3_register callback
             vars = form
 
         # Get the full record
@@ -2116,12 +2123,14 @@ S3FilterFieldChange({
 
         if delete:
             # I really wish this weren't neccesary, but I really need to get that person_id!
-            def reduction(a, b):
-                a.update({b["f"]: b["k"]})
-                return a
-            data = reduce(reduction, eval(data.deleted_fk), {})
-
-        person_id = data["person_id"]
+            #def reduction(a, b):
+            #    a.update({b["f"]: b["k"]})
+            #    return a
+            #data = reduce(reduction, eval(data.deleted_fk), {})
+            deleted_fks = json.loads(data.deleted_fk)
+            person_id = deleted_fks["person_id"]
+        else:
+            person_id = data["person_id"]
 
         ctable = s3db.hrm_certification
         cctable = s3db.hrm_course_certificate

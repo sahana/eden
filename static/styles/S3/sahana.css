@@ -145,6 +145,9 @@ button {
 .fright {
     float: right !important;
 }
+.fcenter {
+    float: center !important;
+}
 /* Text aligns */
 .tacenter {
     text-align: center !important;
@@ -259,7 +262,7 @@ table {
 }
 
 /* Now to layout elements... */
-/* Unused in default Sahana Theme
+/* Unused in default Sahana THeme
 #container {
     background: none repeat scroll 0 0 #FFFFFF;
     margin: 0 auto;
@@ -1410,6 +1413,10 @@ li input + a {
 	width: auto;
 }
 
+#menu_box_center {
+	width: 655px;
+}
+
 #menu_box_1 {
 	width: auto;
 	float: left;
@@ -1558,7 +1565,7 @@ li input + a {
 }
 
 .contacts-wrapper p {
-   margin-bottom: 10px;
+   margin-bottom: 5px;
 }
 .contacts-wrapper div.margin {
    margin-bottom: 10px;

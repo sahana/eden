@@ -194,7 +194,10 @@ class S3NavigationItem(object):
         elif isinstance(args, str):
             args = args.split("/")
         self.args = args
-        self.vars = vars
+        if vars:
+            self.vars = vars
+        else:
+            self.vars = Storage()
         self.extension = extension
 
         # Table and method
