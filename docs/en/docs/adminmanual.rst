@@ -4,6 +4,53 @@ Administration manual
 This is a small introductory manual to teach you about how to use e-cidadania
 without messing everything up :).
 
+Users
+-----
+
+Restricting user registration
+`````````````````````````````
+.. note:: This behaviour will change on e-cidadania 0.2
+
+e-cidadania has a basic automated registration system that the administrator can
+activate or deactivate at his own will. By default, e-cidadania comes with
+registrarion activated, but if for some reason the administrator wants to block
+that registration system (passing to manual mode) he just has toactivate when he considers removing the comment symbol (sharp).
+
+*apps/userprofile/urls/en.py:107*::
+
+   # url(r'^register/$', register, name='signup'),
+
+If the platform is well set up, the registration system should take care of
+everything.
+
+Permissions
+```````````
+
+Groups
+``````
+
+Spaces
+------
+
+What are they
+`````````````
+
+How spaces work
+```````````````
+
+Modules
+-------
+
+Debates
+```````
+
+Proposals
+`````````
+
+Voting
+``````
+
+
 User registration
 -----------------
 
@@ -52,7 +99,8 @@ Modules
 
 e-cidadania is a modular platform. Even its basic features (news, documents,
 spaces, proposals) are modules that can be replaced at any moment without affecting
-the general application structure.
+the general application structure. There are some special permissions for the
+debates module which are explained here too.
 
 Moderation
 ..........
@@ -73,6 +121,11 @@ tasks which are: creation, editing and deletion.
   Usually in forums a moderator can delete user entries. In e-cidadania that is
   not the objective. User generated content must be preserved, it only can be
   deleted by platform administrators.
+  
+**Move note**
+  This permission is for the debate system. IT allows or restricts the user
+  capability of moving notes across the debate. The notes moving task is reserved
+  for the space administrators.
 
 Frequent errors
 ---------------

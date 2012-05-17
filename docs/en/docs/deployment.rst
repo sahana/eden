@@ -6,12 +6,12 @@ Apache 2
 
 .. note:: This section is still on development.
 
-nginx + FastCGI
----------------
+nginx + uWSGI
+-------------
 
-.. note:: The installation through FastCGI should work for other server types, since
-          FastCGI is the one who executes e-cidadania while the server just serves
-          the static content.
+.. note:: The installation through uwsgi works for other servers, not just nginx,
+          since it's uWSGI who executes the e-cidadania instance while the server
+          just serves the static content.
 
 .. warning:: This section is still on development.
 

@@ -138,8 +138,10 @@ User profiles
     since he receibes the confirmation e-mail.
 
 
-Plugins
--------
+Extensions
+----------
 
 .. note:: This section is still on development.
 
+Etensions are django applications that you can attach to e-cidadania to improve
+its functionalities.
