@@ -1556,4 +1556,7 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
+#==============================================================================
+def kit():
+    return s3_rest_controller()
 # END =========================================================================
