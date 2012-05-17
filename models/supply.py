@@ -28,7 +28,7 @@ def supply_item_controller():
                     deletable=False)
 
     return s3_rest_controller("supply", "item",
-                              rheader=eden.supply.supply_item_rheader)
+                              rheader=s3db.supply_item_rheader)
 
 # ---------------------------------------------------------------------
 def item_entity_controller():

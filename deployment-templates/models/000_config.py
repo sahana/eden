@@ -74,8 +74,8 @@ deployment_settings.auth.registration_requires_approval = False
 deployment_settings.auth.always_notify_approver = True
 
 # Base settings
-deployment_settings.base.system_name = T("Sahana Eden Humanitarian Management Platform")
-deployment_settings.base.system_name_short = T("Sahana Eden")
+deployment_settings.base.system_name = T("Relief Goods Inventory and Monitoring System")
+deployment_settings.base.system_name_short = T("RGIMS")
 
 # Set this to the Public URL of the instance
 deployment_settings.base.public_url = "http://127.0.0.1:8000"
@@ -98,7 +98,7 @@ deployment_settings.base.migrate = True
 # ["roles", "user"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-deployment_settings.base.prepopulate = 1
+deployment_settings.base.prepopulate = ["RGIMS"]
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
 deployment_settings.base.cdn = False
@@ -171,42 +171,29 @@ deployment_settings.L10n.languages = OrderedDict([
 # Default language for Language Toolbar (& GIS Locations in future)
 deployment_settings.L10n.default_language = "en"
 # Display the language toolbar
-deployment_settings.L10n.display_toolbar = True
+deployment_settings.L10n.display_toolbar = False
 # Default timezone for users
-deployment_settings.L10n.utc_offset = "UTC +0000"
+deployment_settings.L10n.utc_offset = "UTC +0800"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #deployment_settings.L10n.date_format = T("%m-%d-%Y")
 #deployment_settings.L10n.time_format = T("%H:%M:%S")
 #deployment_settings.L10n.datetime_format = T("%m-%d-%Y %H:%M:%S")
-# Religions used in Person Registry
-# @ToDo: find a better code
-# http://eden.sahanafoundation.org/ticket/594
-deployment_settings.L10n.religions = {
-    "none":T("none"),
-    "christian":T("Christian"),
-    "muslim":T("Muslim"),
-    "jewish":T("Jewish"),
-    "buddhist":T("Buddhist"),
-    "hindu":T("Hindu"),
-    "bahai":T("Bahai"),
-    "other":T("other")
-}
-# Make last name in person/user records mandatory
-#deployment_settings.L10n.mandatory_lastname = True
-
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 deployment_settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 #deployment_settings.L10n.thousands_separator = ","
+# Make last name in person/user records mandatory
+#deployment_settings.L10n.mandatory_lastname = True
 
 # Finance settings
-#deployment_settings.fin.currencies = {
-#    "USD" :T("United States Dollars"),
-#    "EUR" :T("Euros"),
-#    "GBP" :T("Great British Pounds")
-#}
-#deployment_settings.fin.currency_default = "USD" # Dollars
+deployment_settings.fin.currencies = {
+    "USD" :T("United States Dollars"),
+    "EUR" :T("Euros"),
+    "GBP" :T("Great British Pounds"),
+    "PHP" :T("Philippine Peso")
+}
+deployment_settings.fin.currency_default = "PHP" # Dollars
 #deployment_settings.fin.currency_writable = False # False currently breaks things
 
 # PDF settings
@@ -343,15 +330,15 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.show_quantity_transit = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
-deployment_settings.req.use_req_number = True
-deployment_settings.req.generate_req_number = True
+#deployment_settings.req.use_req_number = False
+deployment_settings.req.generate_req_number = False
 deployment_settings.req.req_name = "Request Issue"
 deployment_settings.req.req_form_name = "Request Issue Form"
 deployment_settings.req.req_field_name = "Request Issue Number"
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
-#deployment_settings.req.req_type = ["Stock"]
+deployment_settings.req.req_type = ["Stock"]
 
 # Custom Crud Strings for specific req_req types
 #deployment_settings.req.req_crud_strings = dict()
@@ -393,10 +380,12 @@ deployment_settings.req.req_field_name = "Request Issue Number"
 #    msg_list_empty = T("No Requests for Volunteers"))
 
 # Inventory Management
+#deployment_settings.inv.collapse_tabs = False
+# Use the term 'Order' instead of 'Shipment'
+#deployment_settings.inv.shipment_name = "order"
 deployment_settings.inv.inv_name = "Tally Out"
 deployment_settings.inv.inv_form_name = "Tally Out Sheet"
 deployment_settings.inv.inv_field_name = "Tally Out Number"
-
 deployment_settings.inv.grn_name = "Acknowledgement Receipt for Donations Received"
 deployment_settings.inv.grn_form_name = "Acknowledgement Receipt for Donations Received Form"
 deployment_settings.inv.grn_shortname = "ARDR"
@@ -543,12 +532,12 @@ deployment_settings.modules = OrderedDict([
             restricted = True,
             module_type = 2,
         )),
-    ("cms", Storage(
-          name_nice = T("Content Management"),
-          #description = "Content Management System",
-          restricted = True,
-          module_type = 10,
-      )),
+    # ("cms", Storage(
+          # name_nice = T("Content Management"),
+          ##description = "Content Management System",
+          # restricted = True,
+          # module_type = 10,
+      # )),
     ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
@@ -587,48 +576,48 @@ deployment_settings.modules = OrderedDict([
             module_type = 5,
         )),
     # Vehicle depends on Assets
-    ("vehicle", Storage(
-            name_nice = T("Vehicles"),
+    # ("vehicle", Storage(
+            # name_nice = T("Vehicles"),
             #description = "Manage Vehicles",
-            restricted = True,
-            module_type = 10,
-        )),
+            # restricted = True,
+            # module_type = 10,
+        # )),
     ("req", Storage(
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
             module_type = 10,
         )),
-    ("project", Storage(
-            name_nice = T("Projects"),
+    # ("project", Storage(
+            # name_nice = T("Projects"),
             #description = "Tracking of Projects, Activities and Tasks",
-            restricted = True,
-            module_type = 2
-        )),
-    ("survey", Storage(
-            name_nice = T("Surveys"),
+            # restricted = True,
+            # module_type = 2
+        # )),
+    # ("survey", Storage(
+            # name_nice = T("Surveys"),
             #description = "Create, enter, and manage surveys.",
-            restricted = True,
-            module_type = 5,
-        )),
-    ("cr", Storage(
-            name_nice = T("Shelters"),
+            # restricted = True,
+            # module_type = 5,
+        # )),
+    # ("cr", Storage(
+            # name_nice = T("Shelters"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-            restricted = True,
-            module_type = 10
-        )),
-    ("hms", Storage(
-            name_nice = T("Hospitals"),
+            # restricted = True,
+            # module_type = 10
+        # )),
+    # ("hms", Storage(
+            # name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
-            restricted = True,
-            module_type = 10
-        )),
-    ("irs", Storage(
-            name_nice = T("Incidents"),
+            # restricted = True,
+            # module_type = 10
+        # )),
+    # ("irs", Storage(
+            # name_nice = T("Incidents"),
             #description = "Incident Reporting System",
-            restricted = False,
-            module_type = 10
-        )),
+            # restricted = False,
+            # module_type = 10
+        # )),
     #("impact", Storage(
     #        name_nice = T("Impacts"),
     #        #description = "Used by Assess",
@@ -643,18 +632,18 @@ deployment_settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    ("scenario", Storage(
-            name_nice = T("Scenarios"),
+    # ("scenario", Storage(
+            # name_nice = T("Scenarios"),
             #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-            restricted = True,
-            module_type = 10,
-        )),
-    ("event", Storage(
-            name_nice = T("Events"),
+            # restricted = True,
+            # module_type = 10,
+        # )),
+    # ("event", Storage(
+            # name_nice = T("Events"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-            restricted = True,
-            module_type = 10,
-        )),
+            # restricted = True,
+            # module_type = 10,
+        # )),
     # NB Budget module depends on Project Tracking Module
     # @ToDo: Rewrite in a modern style
     #("budget", Storage(
@@ -684,33 +673,33 @@ deployment_settings.modules = OrderedDict([
     #        restricted = False,
     #        module_type = 10,
     #    )),
-    ("dvi", Storage(
-           name_nice = T("Disaster Victim Identification"),
+    # ("dvi", Storage(
+           # name_nice = T("Disaster Victim Identification"),
            #description = "Disaster Victim Identification",
-           restricted = True,
-           module_type = 10,
-           #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-           #audit_read = True,     # Can enable Audit for just an individual module here
-           #audit_write = True
-       )),
-    ("mpr", Storage(
-           name_nice = T("Missing Person Registry"),
-           #description = "Helps to report and search for missing persons",
-           restricted = False,
-           module_type = 10,
-       )),
-    ("dvr", Storage(
-           name_nice = T("Disaster Victim Registry"),
+           # restricted = True,
+           # module_type = 10,
+           # access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
+           # audit_read = True,     # Can enable Audit for just an individual module here
+           # audit_write = True
+       # )),
+    # ("mpr", Storage(
+           # name_nice = T("Missing Person Registry"),
+          # description = "Helps to report and search for missing persons",
+           # restricted = False,
+           # module_type = 10,
+       # )),
+    # ("dvr", Storage(
+           # name_nice = T("Disaster Victim Registry"),
            #description = "Allow affected individuals & households to register to receive compensation and distributions",
-           restricted = False,
-           module_type = 10,
-       )),
-    ("member", Storage(
-           name_nice = T("Members"),
-           #description = "Membership Management System",
-           restricted = True,
-           module_type = 10,
-       )),
+           # restricted = False,
+           # module_type = 10,
+       # )),
+    # ("member", Storage(
+           # name_nice = T("Members"),
+          # description = "Membership Management System",
+           # restricted = True,
+           # module_type = 10,
+       # )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),
     #       #description = "Fire Station Management",

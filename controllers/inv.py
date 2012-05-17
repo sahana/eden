@@ -221,7 +221,7 @@ def inv_item():
     table = s3db.inv_inv_item
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
 
-    s3mgr.configure("inv_inv_item", 
+    s3mgr.configure("inv_inv_item",
                     list_fields = ["id",
                                       "site_id",
                                       "item_id",
@@ -229,7 +229,7 @@ def inv_item():
                                       (T("Category"), "item_category"),
                                       "quantity",
                                       "pack_value",      
-                                      "status",                                
+                                      "status",
                                       ]
                     )
 
@@ -1561,4 +1561,7 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
+#==============================================================================
+def kit():
+    return s3_rest_controller()
 # END =========================================================================
