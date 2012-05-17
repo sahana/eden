@@ -2000,11 +2000,11 @@ def req_rheader(r, check_page = False):
                     numberTR = DIV()
                 rData = TABLE(
                                TR(
+                                  TD(logo, _colspan=2),
                                   TD(settings.get_req_form_name(),
-                                     _colspan=2, _class="pdf_title"),
-                                  TD(logo, _colspan=2)
+                                     _colspan=2, _class="pdf_title")
                                   ),
-                               numberTR(),
+                               numberTR,
                                TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),
