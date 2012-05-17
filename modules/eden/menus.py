@@ -213,6 +213,7 @@ class S3MainMenu:
                         restrict=[ADMIN], **attr)(
                             MM("Settings", f="settings"),
                             MM("Users", f="user"),
+                            MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Tickets", f="errors"),
@@ -907,37 +908,46 @@ class S3OptionsMenu:
                     #M("Home", f="index"),
                     M("Warehouses", c="inv", f="warehouse")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("List All"),
                         M("Search", m="search"),
-                        M("Import", m="import", p="create"),
+                        M("Import", m="import", p="create", restrict=[ADMIN]),
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
-                        M("Search Warehouse Stock", f="inv_item", m="search"),
                         M("Adjust Stock Levels", f="adj"),
-                        M("Report", f="inv_item", m="report",
+                        M("Search", f="inv_item", m="search"),
+                        M("Import", f="inv_item", m="import", p="create", restrict=[ADMIN]),
+                    ),
+                    M("Reports", c="inv", f="inv_item")(
+                        M("Stock Report", f="inv_item", m="report",
                           vars=Storage(rows="item_id",
                                        cols="site_id",
                                        fact="quantity",
                                        aggregate="sum")),
-                        M("Import", f="inv_item", m="import", p="create"),
-                    ),
-                    M("Reports", c="inv", f="inv_item")(
-                        M("Monetization", c="inv", f="inv_item", vars=dict(report="mon")),
-                        M("Summary of Releases", c="inv", f="inv_inv_item", vars=dict(report="rel")),
-                        M("Summary of Incoming Supplies", c="inv", f="inv_inv_item", vars=dict(report="inc")),
+                        M("Monetization", c="inv", f="inv_item", m="search", vars=dict(report="mon")),
+                        M("Summary of Releases", c="inv", f="track_item", m="search", vars=dict(report="rel")),
+                        M("Summary of Incoming Supplies", c="inv", f="track_item", m="search", vars=dict(report="inc")),
+                        M("Utilization Report", c="inv", f="track_item", m="search", vars=dict(report="util")),
+                        M("Expiration Report", c="inv", f="track_item", m="search", vars=dict(report="exp")),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),
-                        M("List All"),
-                        M(inv_recv_search, m="search"),
+                        #M("List All"),
+                        M("Search", m="search"),
                     ),
                     M("Sent Shipments", c="inv", f="send")(
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Items", c="supply", f="item")(
+                    M("Requests", c="req", f="req")(
                         M("New", m="create"),
                         M("List All"),
+                        M("List All Requested Items", f="req_item"),
+                        #M("List All Requested Skills", f="req_skill"),
+                        #M("Search Requested Items", f="req_item", m="search"),
+                    ),
+                    M("Items", c="supply", f="item")(
+                        M("New", m="create"),
+                        #M("List All"),
                         M("Search", f="catalog_item", m="search"),
                     ),
                     # Catalog Items moved to be next to the Item Categories
@@ -946,26 +956,19 @@ class S3OptionsMenu:
                        #M("List All"),
                        #M("Search", m="search"),
                     #),
-                    M("Catalogs", c="supply", f="catalog")(
-                        M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
-                    ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("New Item Category", m="create"),
                         M("List All"),
                     ),
-                    M("Requests", c="req", f="req")(
+                    M("Catalogs", c="supply", f="catalog")(
                         M("New", m="create"),
                         M("List All"),
-                        M("List All Requested Items", f="req_item"),
-                        M("List All Requested Skills", f="req_skill"),
-                        #M("Search Requested Items", f="req_item", m="search"),
+                        #M("Search", m="search"),
                     ),
-                    M("Commitments", c="req", f="commit")(
-                        M("List All")
-                    ),
+                    #M("Commitments", c="req", f="commit")(
+                        #M("List All")
+                    #),
                 )
 
     # -------------------------------------------------------------------------
@@ -1337,9 +1340,9 @@ class S3OptionsMenu:
                         M("List All Requested Skills", f="req_skill"),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
-                    M("Commitments", f="commit")(
-                        M("List All")
-                    ),
+                    #M("Commitments", f="commit")(
+                    #    M("List All")
+                    #),
                 )
 
     # -------------------------------------------------------------------------
