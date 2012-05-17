@@ -884,6 +884,11 @@ div#table-container td.totals_header {
     width: 100%;
 }
 
+table.dataTable .row_selected td{
+	background-color: #ddd;
+	border: 1px solid #aaa;
+}
+
 table.dataTable tr td{
     vertical-align: top;
 }
